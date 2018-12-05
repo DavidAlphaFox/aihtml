@@ -1,9 +1,17 @@
 -module(ai_mustache).
 
+-export([compile/1]).
+
 -record(state, {
   section_regex = undefined,
   tag_regex = undefined
 }).
+
+compile(Body) ->
+  State = state(),
+  CompiledTemplate = replace(Body),
+  tag(CompiledTemplate,State).
+
 
 state()->
     %% 匹配以下模式
@@ -21,30 +29,17 @@ replace(T) ->
   re:replace(T, "\"", "\\\"", [global,{return,binary}]).
 
 
-
-compile(List)->
-    fun(Ctx)-> 
-        lists:foldl(fun(Item,Acc)->
-            RB = case Item of
-                    {render,Render}-> Render(Ctx);
-                    {binary,Bin}-> Bin
-                end,
-            <<Acc/binary,RB/binary>>
-        end,<<"">>,List)
-    end.
-
-
 tag(T, State) ->
 	Regex = State#state.tag_regex,
 	Res = re:run(T,Regex,[{capture,all,binary}]),
 	tag(Res,T,Regex,[]).
-tag(continue,T,Regex,Acc)->
+tag(T,Regex,Acc)->
 	Res = re:run(T,Regex,[{capture,all,binary}]),
-	tag(Res,T,Regex,Acc);
+	tag(Res,T,Regex,Acc).
 tag({match,[_,Front,K,Content,Back]},_T,Regex,Acc)->
 	Kind = tag_kind(K),
 	Tag1 = compile_tag(Kind, Content),
-	tag(continue,Back,Regex,[Tag1,{binary,Front}|Acc]);  
+	tag(Back,Regex,[Tag1,{binary,Front}|Acc]);  
 tag(nomatch,T,_Regex,Acc)->
 	Tag = lists:reverse([{binary,T}|Acc]),
 	compile_tag_function(Tag).
@@ -54,7 +49,7 @@ tag_kind(<<">">>)-> partial;
 tag_kind(<<"{">>)-> raw;
 tag_kind(<<"&">>)-> raw;
 tag_kind(<<"!">>)-> comment.
-compile_tag(comment,Key)->{binary,<<"">>};
+compile_tag(comment,_Key)->{binary,<<"">>};
 compile_tag(_,Key)->
 	Fun = fun(Ctx)->
     		case maps:get(Key, Ctx,undefined) of
