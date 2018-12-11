@@ -71,35 +71,28 @@ compile_section(<<"#">>, Name, Content, State) ->
 compile_section(<<"^">>,Name,Content,State)->
     Section = sections(Content, State),
     compile_section(Name,Section,false).
-compile_section(Name,Section,Expect)->
-    RenderExpect = 
-        fun(Ctx)->
-            case Section of 
-                {binary,SectionData} -> SectionData;
-                {function,SectionFun} -> SectionFun(Ctx)
-            end
-        end,
-    RenderList = 
-        fun(Items)->
-            case Section of 
-                {binary,SectionData} -> SectionData;
-                {function,SectionFun} -> 
-                    lists:foldl(fun(Item,Acc)->
-                        R = SectionFun(Item),
-                        <<Acc/binary,R/binary>>
-                    end,<<"">>,Items)                  
-            end
-        end,        
-                    
+compile_section(Name,Section,Expect)->      
     Fun = 
         fun(Ctx)->
             case maps:get(Name,Ctx,undefined) of 
                 undefined -> <<"">>;
-                Expect -> RenderExpect(Ctx);
+                Expect ->
+                    case Section of 
+                        {binary,SectionData} -> SectionData;
+                        {function,SectionFun} -> SectionFun(Ctx)
+                    end;
                 MayFun when erlang:is_function(MayFun) -> 
                     Items = MayFun(Ctx),
                     Value = erlang:length(Items) > 0,
-                    if  Value == Expect -> RenderList(Items);
+                    if  Value == Expect -> 
+                            case Section of 
+                                {binary,SectionData} -> SectionData;
+                                {function,SectionFun} -> 
+                                    lists:foldl(fun(Item,Acc)->
+                                        R = SectionFun(Item),
+                                        <<Acc/binary,R/binary>>
+                                    end,<<"">>,Items)                  
+                            end;
                         true -> <<"">>
                     end;
                 _ -> <<"">>
@@ -130,12 +123,43 @@ tag_kind(<<"{">>)-> raw;
 tag_kind(<<"&">>)-> raw;
 tag_kind(<<"!">>)-> comment.
 compile_tag(comment,_Key)-> empty;
+compile_tag(raw,Key)->
+    Fun = 
+        fun(Ctx)->
+            Value =
+                if erlang:is_map(Ctx) -> maps:get(Key, Ctx,undefined);
+                    true -> proplists:get(Key,Ctx)
+                end,
+    		case Value  of
+				undefined -> <<"">>;
+	    		Value -> ai_string:to_string(Value)
+		 	end
+		end,
+	{function,Fun};
+compile_tag(partial,Key)->
+    Fun = 
+        fun(Ctx) ->
+            InnerContext =  
+                if  erlang:is_map(Ctx) -> maps:get({context,Key}, Ctx,undefined);
+                    true -> proplists:get({context,Key},Ctx)
+                end,
+            InnerFun = 
+                if  erlang:is_map(Ctx) -> maps:get({function,Key}, Ctx,undefined);
+                    true -> proplists:get({function,Key},Ctx)
+                end,
+            InnerFun(InnerContext)
+        end,
+    {function,Fun};
 compile_tag(_,Key)->
 	Fun = 
         fun(Ctx)->
-    		case maps:get(Key, Ctx,undefined) of
+            Value =
+                if erlang:is_map(Ctx) -> maps:get(Key, Ctx,undefined);
+                    true -> proplists:get(Key,Ctx)
+                end,
+    		case Value  of
 				undefined -> <<"">>;
-	    		Value -> ai_string:to_string(Value)
+	    		Value -> ai_string:html_escape(Value)
 		 	end
 		end,
 	{function,Fun}.
