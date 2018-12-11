@@ -1,6 +1,6 @@
 -module(ai_mustache).
 
--export([compile/1]).
+-export([compile/1,render/2]).
 
 -record(state, {
   section_regex = undefined,
@@ -8,6 +8,11 @@
   level = 0
 }).
 
+render(Body,Ctx)->
+    case compile(Body) of 
+        {ok,Fun}-> Fun(Ctx);
+        Error -> Error
+    end.
 compile(Body) ->
   State = state(),
   CompiledTemplate = replace(Body),
