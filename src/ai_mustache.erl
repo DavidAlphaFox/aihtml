@@ -76,28 +76,50 @@ compile_section(<<"#">>, Name, Content, State) ->
 compile_section(<<"^">>,Name,Content,State)->
     Section = sections(Content, State),
     compile_section(Name,Section,false).
-compile_section(Name,Section,Expect)->      
+compile_section(Name,{function,Section},Expect)->
     Fun = 
         fun(Ctx)->
-            case maps:get(Name,Ctx,undefined) of 
+            case ai_mustache_context:get(Name,Ctx) of 
                 undefined -> <<"">>;
-                Expect ->
-                    case Section of 
-                        {binary,SectionData} -> SectionData;
-                        {function,SectionFun} -> SectionFun(Ctx)
+                Expect -> Section(Ctx);
+                MayList when erlang:is_list(MayList)->
+                    if ( MayList == []) /= Expect ->
+                            lists:foldl(fun(Item,Acc)->
+                                TempCtx = ai_mustache_context:merge(Ctx,Item),
+                                R = Section(TempCtx),
+                                <<Acc/binary,R/binary>>
+                            end,<<"">>,MayList);
+                        true -> <<"">>
                     end;
                 MayFun when erlang:is_function(MayFun) -> 
                     Items = MayFun(Ctx),
+                    if  (Items == []) /= Expect -> 
+                            lists:foldl(fun(Item,Acc)->
+                                TempCtx = ai_mustache_context:merge(Ctx,Item),
+                                R = Section(TempCtx),
+                                <<Acc/binary,R/binary>>
+                            end,<<"">>,Items);
+                        true -> <<"">>
+                    end;
+                _ -> <<"">>
+            end
+        end,
+    {function,Fun};
+compile_section(Name,{binary,Section},Expect)->      
+    Fun = 
+        fun(Ctx)->
+            case ai_mustache_context:get(Name,Ctx) of 
+                undefined -> <<"">>;
+                Expect -> Section;
+                MayList when erlang:is_list(MayList)->
+                    Value = erlang:length(MayList) > 0,
+                    if  Value == Expect -> Section;
+                        true -> <<"">>
+                    end;
+                MayFun when erlang:is_function(MayFun)->
+                    Items = MayFun(Ctx),
                     Value = erlang:length(Items) > 0,
-                    if  Value == Expect -> 
-                            case Section of 
-                                {binary,SectionData} -> SectionData;
-                                {function,SectionFun} -> 
-                                    lists:foldl(fun(Item,Acc)->
-                                        R = SectionFun(Item),
-                                        <<Acc/binary,R/binary>>
-                                    end,<<"">>,Items)                  
-                            end;
+                    if  Value == Expect -> Section;
                         true -> <<"">>
                     end;
                 _ -> <<"">>
@@ -131,11 +153,7 @@ compile_tag(comment,_Key)-> empty;
 compile_tag(raw,Key)->
     Fun = 
         fun(Ctx)->
-            Value =
-                if erlang:is_map(Ctx) -> maps:get(Key, Ctx,undefined);
-                    true -> proplists:get(Key,Ctx)
-                end,
-    		case Value  of
+    		case ai_mustache_context:get(Key,Ctx)   of
 				undefined -> <<"">>;
 	    		Value -> ai_string:to_string(Value)
 		 	end
@@ -144,25 +162,15 @@ compile_tag(raw,Key)->
 compile_tag(partial,Key)->
     Fun = 
         fun(Ctx) ->
-            InnerContext =  
-                if  erlang:is_map(Ctx) -> maps:get({context,Key}, Ctx,undefined);
-                    true -> proplists:get({context,Key},Ctx)
-                end,
-            InnerFun = 
-                if  erlang:is_map(Ctx) -> maps:get({function,Key}, Ctx,undefined);
-                    true -> proplists:get({function,Key},Ctx)
-                end,
+            InnerContext =  ai_mustache_context:get({context,Key},Ctx),
+            InnerFun = ai_mustache_context:get({function,Key},Ctx),
             InnerFun(InnerContext)
         end,
     {function,Fun};
 compile_tag(_,Key)->
 	Fun = 
         fun(Ctx)->
-            Value =
-                if erlang:is_map(Ctx) -> maps:get(Key, Ctx,undefined);
-                    true -> proplists:get(Key,Ctx)
-                end,
-    		case Value  of
+    		case ai_mustache_context:get(Key,Ctx) of
 				undefined -> <<"">>;
 	    		Value -> ai_string:html_escape(Value)
 		 	end
@@ -170,7 +178,33 @@ compile_tag(_,Key)->
 	{function,Fun}.
 to_function(List) ->
     FilterdList = lists:filter(fun(I)-> I /= empty end,List),
-    case FilterdList of 
+    {L1,Rest} = lists:foldl(fun(I,{Acc,NeedMerge})->
+            case I of 
+                {function,_}-> 
+                    Value = erlang:length(NeedMerge),
+                    if
+                        Value == 0 -> {Acc ++ [I],NeedMerge};
+                        true ->
+                            MergeBinary = lists:foldl(fun(Bin,BinAcc)->
+                                    <<BinAcc/binary,Bin/binary>>
+                                end,<<>>,NeedMerge),
+                            {Acc ++ [{binary,MergeBinary},I],[]}
+                    end;
+                {binary,Bin}->
+                    {Acc,NeedMerge ++ [Bin]}
+            end
+        end,{[],[]},FilterdList),
+    L2 = %% 合并binary
+        case Rest of 
+            [] -> L1;
+            _ ->
+                MergeBinary = 
+                    lists:foldl(fun(Bin,BinAcc)->
+                        <<BinAcc/binary,Bin/binary>>
+                        end,<<>>,Rest),
+                L1 ++ [{binary,MergeBinary}]
+        end,
+    case L2 of 
         [] -> empty;
         [One] -> One;
         _ ->
@@ -181,7 +215,7 @@ to_function(List) ->
                             {binary,Bin}-> Bin
                         end,
                     <<Acc/binary,RB/binary>>
-                end,<<"">>,List)
+                end,<<"">>,L2)
             end,
             {function,Fun}
     end.
