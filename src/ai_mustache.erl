@@ -112,14 +112,12 @@ compile_section(Name,{binary,Section},Expect)->
                 undefined -> <<"">>;
                 Expect -> Section;
                 MayList when erlang:is_list(MayList)->
-                    Value = erlang:length(MayList) > 0,
-                    if  Value == Expect -> Section;
+                    if  ( MayList == []) /= Expect -> Section;
                         true -> <<"">>
                     end;
                 MayFun when erlang:is_function(MayFun)->
                     Items = MayFun(Ctx),
-                    Value = erlang:length(Items) > 0,
-                    if  Value == Expect -> Section;
+                    if (Items == []) /= Expect -> Section;
                         true -> <<"">>
                     end;
                 _ -> <<"">>
@@ -162,9 +160,8 @@ compile_tag(raw,Key)->
 compile_tag(partial,Key)->
     Fun = 
         fun(Ctx) ->
-            InnerContext =  ai_mustache_context:get_value({context,Key},Ctx),
-            InnerFun = ai_mustache_context:get_value({function,Key},Ctx),
-            InnerFun(InnerContext)
+            Partial = ai_mustache_context:get_value(Key,Ctx),
+            Partial(Ctx) 
         end,
     {function,Fun};
 compile_tag(_,Key)->
