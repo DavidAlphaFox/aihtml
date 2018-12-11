@@ -2,7 +2,7 @@
 
 -export([new/0,new/1,to_list/1,module/2]).
 -export([ merge/2 ]).
--export([ get/2 ]).
+-export([ get_value/2 ]).
 
 -define(MODULE_KEY, '__mod__').
 -define(NEW_EXIT(Data), exit({improper_ctx, Data})).
@@ -44,7 +44,7 @@ module(Ctx) ->
 %% Module
 %% ===================================================================
 
-get(Key, Ctx) ->
+get_value(Key, Ctx) ->
     case maps:get(Key, Ctx,undefined) of
         undefined -> 
             case get_from_module(Key, Ctx) of 

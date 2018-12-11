@@ -79,7 +79,7 @@ compile_section(<<"^">>,Name,Content,State)->
 compile_section(Name,{function,Section},Expect)->
     Fun = 
         fun(Ctx)->
-            case ai_mustache_context:get(Name,Ctx) of 
+            case ai_mustache_context:get_value(Name,Ctx) of 
                 undefined -> <<"">>;
                 Expect -> Section(Ctx);
                 MayList when erlang:is_list(MayList)->
@@ -108,7 +108,7 @@ compile_section(Name,{function,Section},Expect)->
 compile_section(Name,{binary,Section},Expect)->      
     Fun = 
         fun(Ctx)->
-            case ai_mustache_context:get(Name,Ctx) of 
+            case ai_mustache_context:get_value(Name,Ctx) of 
                 undefined -> <<"">>;
                 Expect -> Section;
                 MayList when erlang:is_list(MayList)->
@@ -153,7 +153,7 @@ compile_tag(comment,_Key)-> empty;
 compile_tag(raw,Key)->
     Fun = 
         fun(Ctx)->
-    		case ai_mustache_context:get(Key,Ctx)   of
+    		case ai_mustache_context:get_value(Key,Ctx)   of
 				undefined -> <<"">>;
 	    		Value -> ai_string:to_string(Value)
 		 	end
@@ -162,15 +162,15 @@ compile_tag(raw,Key)->
 compile_tag(partial,Key)->
     Fun = 
         fun(Ctx) ->
-            InnerContext =  ai_mustache_context:get({context,Key},Ctx),
-            InnerFun = ai_mustache_context:get({function,Key},Ctx),
+            InnerContext =  ai_mustache_context:get_value({context,Key},Ctx),
+            InnerFun = ai_mustache_context:get_value({function,Key},Ctx),
             InnerFun(InnerContext)
         end,
     {function,Fun};
 compile_tag(_,Key)->
 	Fun = 
         fun(Ctx)->
-    		case ai_mustache_context:get(Key,Ctx) of
+    		case ai_mustache_context:get_value(Key,Ctx) of
 				undefined -> <<"">>;
 	    		Value -> ai_string:html_escape(Value)
 		 	end
