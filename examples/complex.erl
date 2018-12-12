@@ -14,7 +14,9 @@ get_value(<<"link">>,Ctx) ->
   ai_mustache_context:get_value(<<"current">>,Ctx);
 
 get_value(<<"list">>,_Ctx) -> true;
-get_value(<<"empty">>,_Ctx) -> false.
+get_value(<<"empty">>,_Ctx) -> false;
+get_value(Any,_Ctx)->
+  io:format("get value for ~p~n",[Any]).
 
 
 %%---------------------------------------------------------------------------
@@ -24,9 +26,7 @@ start() ->
   code:add_patha("../deps/ailib/ebin"),
   {ok,Body} = file:read_file("./complex.mustache"),
   {ok,Partial} = file:read_file("./_item.mustache"),
-  {ok,PartialFun} = ai_mustache:compile(Partial),
-  Ctx = ai_mustache_context:new(),
-  Ctx0 = ai_mustache_context:module(complex,Ctx),
-  Ctx1 = ai_mustache_context:partial(<<"_item">>,PartialFun,Ctx0),
-  Output = ai_mustache:render(Body,Ctx1),
-  io:format(Output, []).
+  {module,Module} = ai_mustache_compiler:compile(complex,Body),
+  {module,PartialModule} = ai_mustache_compiler:compile(item,Partial),
+  Output = Module:render(#{<<"_item">> =>PartialModule}),
+  io:format("~ts", [Output]).
