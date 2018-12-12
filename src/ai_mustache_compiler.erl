@@ -226,7 +226,8 @@ generate({section,Name,Blocks,Expect})->
         "Fun = fun(BlockCtx,BlockAcc0) -> true = erlang:is_map(BlockCtx),true = erlang:is_binary(BlockAcc0), ",
         Body/binary," end, ">>,
      Acc3 = <<Acc2/binary,"case get_value(<<\"",Name/binary,"\">>,Ctx) of ">>,
-     Acc4 = <<Acc3/binary, "undefined -> Acc0; ",ExpectStr/binary,"-> Fun(Ctx,Acc0); " >>,
+     Acc4 = <<Acc3/binary, "undefined -> if false == ",ExpectStr/binary,"-> Fun(Ctx,Acc0); 
+        true -> Acc0 end; ", ExpectStr/binary,"-> Fun(Ctx,Acc0); ">>,
      Acc5 = <<Acc4/binary, "List when erlang:is_list(List)-> ">>,
      Acc6 = <<Acc5/binary," if (List == []) /= ",ExpectStr/binary,
         " -> lists:foldl(fun(Item,Acc)-> TempCtx = maps:merge(Ctx,Item),

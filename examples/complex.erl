@@ -14,9 +14,8 @@ get_value(<<"link">>,Ctx) ->
   ai_mustache_context:get_value(<<"current">>,Ctx);
 
 get_value(<<"list">>,_Ctx) -> true;
-get_value(<<"empty">>,_Ctx) -> false;
-get_value(Any,_Ctx)->
-  io:format("get value for ~p~n",[Any]).
+get_value(<<"empty">>,_Ctx) -> false.
+
 
 
 %%---------------------------------------------------------------------------
