@@ -37,28 +37,21 @@ replace(T) ->
 compile(Name,T,State)-> 
     State1 = sections(T,State),
     Blocks = lists:reverse(State1#state.blocks),
-    {CBlocks,CSections,CTags} = to_code([{block,0,Blocks}]),
+    {N,Code} = to_stack_code([{block,0,Blocks}]),
+    FinalStep = erlang:integer_to_binary(N),
     CtxModule = erlang:atom_to_binary(Name,latin1),
     Module = ai_string:atom_suffix(Name,"_ai_mustache",false),
     ModuleName = erlang:atom_to_binary(Module,latin1),
     Acc0 = <<"-module(",ModuleName/binary,").\r\n-export([render/1,render/2,render/3,module/0]).\r\n-define(MODULE_KEY, '__mod__').\r\n">>,
     Acc1 = <<Acc0/binary,"module()->",CtxModule/binary,".\r\n
-        render(Ctx) -> block(0,Ctx,<<\"\">>).\r\n
-        render(_Key,Ctx) -> block(0,Ctx,<<\"\">>).\r\n
-        render(_Key,Ctx,Acc)-> block(0,Ctx,Acc).\r\n">>,
-    Acc2 = lists:foldl(fun({_,I},Acc)->
-        <<Acc/binary,I/binary,"\r\n">>
-        end,Acc1,maps:to_list(CBlocks)),
-    Acc3 = <<Acc2/binary,"block(_ID,_Ctx,Acc)-> Acc.\r\n">>,
-    Acc4 = lists:foldl(fun({_,I},Acc)->
-            <<Acc/binary,I/binary,"\r\n">>
-        end,Acc3,maps:to_list(CSections)),
-    Acc5 = <<Acc4/binary,"section(_ID,_Ctx,Acc)-> Acc.\r\n">>,
-    Acc6 = lists:foldl(fun({_,I},Acc)->
-            <<Acc/binary,I/binary,"\r\n">>
-        end,Acc5,maps:to_list(CTags)),
-    Code = <<Acc6/binary,"tag(_ID,_Ctx,Acc)-> Acc.\r\n">>,
-    Code1 = <<Code/binary,"
+        render(Ctx) -> block(0,Ctx,<<\"\">>,[],[]).\r\n
+        render(_Key,Ctx) -> block(0,Ctx,<<\"\">>,[],[]).\r\n
+        render(_Key,Ctx,Acc)-> block(0,Ctx,Acc,[],[]).\r\n">>,
+    Acc2 = lists:foldl(fun(I,CAcc)->
+            <<CAcc/binary,I/binary>>
+        end,Acc1,Code),
+    Code0 = <<Acc2/binary,"block(",FinalStep/binary,",_Ctx,Acc,_L,_CtxStack)-> Acc.\r\n">>,
+    Code1 = <<Code0/binary,"
             get_value(Key, Ctx) ->
                 case maps:get(Key,Ctx,undefined) of
                     undefined -> get_from_module(Key,Ctx);
@@ -192,88 +185,100 @@ block(List,#state{count = Count, blocks = Blocks} =  State) ->
         _-> State#state{blocks = [{block,N,L2}|Blocks],count = N}
     end.
 
-to_code(Blocks)->
-    to_code(Blocks,#{},#{},#{}).
-to_code([],Blocks,Sections,Tags)->
-    {Blocks,Sections,Tags};
-to_code([{tag,_Kind,Key} = I|T],Blocks,Sections,Tags)->
-    Code = generate(I),
-    to_code(T,Blocks,Sections,maps:put(Key,Code,Tags));
-to_code([{section,Name,Inner,_Expect} = I|T],Blocks,Sections,Tags)->
-    Code = generate(I),
-    to_code(Inner ++T,Blocks,maps:put(Name,Code,Sections),Tags);
-to_code([{block,N,Inner} = I|T],Blocks,Sections,Tags)->
-    Code = generate(I),
-    to_code(Inner ++ T,maps:put(N,Code,Blocks),Sections,Tags);
-to_code([_H|T],Blocks,Sections,Tags)->to_code(T,Blocks,Sections,Tags).
 
-generate({tag,Kind,Key})-> 
-    Header = <<"tag(<<\"",Key/binary,"\">>,Ctx,Acc0)->">>,
-    Body0 = <<"case get_value(<<\"",Key/binary, "\">>, Ctx) of ">>,
+to_stack_code(Blocks)->
+    to_stack_code(Blocks,[],0).
+to_stack_code([],Acc,N)-> {N,lists:reverse(Acc)};
+to_stack_code([{tag,_Kind,_Key} = I|T],Acc,N)->
+    Code = generate_code(I,N),
+    to_stack_code(T,[Code|Acc],N+1);
+to_stack_code([{binary,_Bin} = I|T],Acc,N)->
+    Code = generate_code(I,N),
+    to_stack_code(T,[Code|Acc],N+1);
+to_stack_code([{block,_,Inner} |T],Acc,N)->
+    {Next,Code} = to_stack_code(Inner,[],N),
+    to_stack_code(T, Code ++  Acc,Next);
+to_stack_code([{section,_Name,Inner,_Expect} = I|T],Acc,N)->
+    %% 如果是判断成功，需要执行的代码
+    %% step N 判断是否进InnerCode
+    %% step N+1 合并Ctx，并判断退出条件
+    %% step Next 回到Step N + 1
+    %% step Next+1 是Section 之后的代码
+    {Next,InnerCode} = to_stack_code(Inner,[],N+2),
+    AfterSection = Next + 1,
+    StartSection = N + 1,
+    JudgeCode = generate_code(I,N,AfterSection),
+    StartCode = generate_code(begin_section,StartSection,AfterSection),
+    EndCode = generate_code(end_section,Next,StartSection),
+    Append =  [JudgeCode,StartCode| InnerCode] ++ [EndCode],
+    NewAcc = Append ++ Acc,
+    to_stack_code(T,NewAcc,AfterSection).
+
+generate_code({tag,Kind,Key},N)->
+    Step = erlang:integer_to_binary(N),
+    NextStep = erlang:integer_to_binary(N+1),
+    Header = <<"block(",Step/binary,",Ctx,Acc0,L,CtxStack)->">>,
+    Body0 = <<"Acc1 = case get_value(<<\"",Key/binary, "\">>, Ctx) of ">>,
     Body1 = <<"undefined-> Acc0; ">>,
     Body2 = case Kind of 
-            none -> <<"Value-> V = ai_string:html_escape(Value),<<Acc0/binary,V/binary>> end;">>;
-            raw ->  <<"Value-> V = ai_string:to_string(Value),<<Acc0/binary,V/binary>> end;">>;
-            partial-> <<"Value-> Ctx1 = add_to_ancestors(Ctx),Value:render(<<\"",Key/binary, "\">>,Ctx1,Acc0) end;">>;
-            _ -> <<"_-> Acc0">>
-        end,
-    <<Header/binary,Body0/binary,Body1/binary,Body2/binary>>;
-generate({section,Name,Blocks,Expect})->
-    ExpectStr = ai_string:to_string(Expect),
-    Body = generate_blocks(Blocks),
-    Acc1 = <<"section(<<\"",Name/binary,"\">>,Ctx,Acc0) -> ">>,
-    Acc2 = <<Acc1/binary,
-        "Fun = fun(BlockCtx,BlockAcc0) -> true = erlang:is_map(BlockCtx),true = erlang:is_binary(BlockAcc0), ",
-        Body/binary," end, ">>,
-     Acc3 = <<Acc2/binary,"case get_value(<<\"",Name/binary,"\">>,Ctx) of ">>,
-     Acc4 = <<Acc3/binary, "undefined -> if false == ",ExpectStr/binary,"-> Fun(Ctx,Acc0); 
-        true -> Acc0 end; ", ExpectStr/binary,"-> Fun(Ctx,Acc0); ">>,
-     Acc5 = <<Acc4/binary, "List when erlang:is_list(List)-> ">>,
-     Acc6 = <<Acc5/binary," if (List == []) /= ",ExpectStr/binary,
-        " -> lists:foldl(fun(Item,Acc)-> TempCtx = maps:merge(Ctx,Item),
-                    Fun(TempCtx,Acc) end,Acc0,List); 
-        true-> Acc0 end; ">>,
-    Acc7 = <<Acc6/binary,"Function when erlang:is_function(Function)-> 
-            List = Function(Ctx), if (List == []) /= ",ExpectStr/binary,"-> ">>,
-    <<Acc7/binary,
-        "lists:foldl(fun(Item,Acc)-> TempCtx = maps:merge(Ctx,Item), 
-            R  = Fun(TempCtx,Acc) end,Acc0,List);
-            true-> Acc0 end; 
-        _-> Acc0 end;">>;
-generate({block,ID,Blocks})->
-    BID = erlang:integer_to_binary(ID),
-    Header = <<"block(",BID/binary,",BlockCtx,BlockAcc0)->\r\n">>,
-    Body = generate_blocks(Blocks),
-    <<Header/binary,Body/binary,";">>.
+        none -> <<"Value-> V = ai_string:html_escape(Value),<<Acc0/binary,V/binary>> end,">>;
+        raw ->  <<"Value-> V = ai_string:to_string(Value),<<Acc0/binary,V/binary>> end,">>;
+        partial-> <<"Value-> Ctx1 = add_to_ancestors(Ctx),Value:render(<<\"",Key/binary, "\">>,Ctx1,Acc0) end,">>;
+        _ -> <<"_-> Acc0 end,">>
+    end,
+    Body3 = <<"block(",NextStep/binary,",Ctx,Acc1,L,CtxStack); \r\n">>,
+    <<Header/binary,Body0/binary,Body1/binary,Body2/binary,Body3/binary>>;
+generate_code({binary,Bin},N)->
+    Step = erlang:integer_to_binary(N),
+    NextStep = erlang:integer_to_binary(N+1),
+    Header = <<"block(",Step/binary,",Ctx,Acc0,L,CtxStack)->">>,
+    Bin1 = escape(Bin),
+    Body0 = <<"Acc1 = << Acc0/binary,\"",Bin1/binary,"\">>, ">>,
+    Body1 = <<"block(",NextStep/binary,",Ctx,Acc1,L,CtxStack);\r\n">>,
+    <<Header/binary,Body0/binary,Body1/binary>>.
 
-generate_blocks(Blocks)->
-    {N,Body} = 
-        lists:foldl(fun(I,{N,Acc})->
-                N1 = N+1,
-                NBin = erlang:integer_to_binary(N),
-                NBin1 = erlang:integer_to_binary(N1),
-                AccStr = <<"BlockAcc",NBin/binary>>,
-                AccStr1 = <<"BlockAcc",NBin1/binary>>,
-                case I of
-                    {tag,_Kind,Key}->
-                        Data = <<AccStr1/binary," = tag(<<\"",Key/binary,"\">>,BlockCtx,",AccStr/binary,"),\r\n">>,
-                        {N1,<<Acc/binary,Data/binary>>};
-                    {block,BlockID,_Items}->
-                        IDBin = erlang:integer_to_binary(BlockID),
-                        Data = <<AccStr1/binary," = block(",IDBin/binary,",BlockCtx,",AccStr/binary,"),\r\n">>,
-                        {N1,<<Acc/binary,Data/binary>>};
-                    {section,SN,_SB,_SE}->
-                        Data = <<AccStr1/binary," = section(<<\"",SN/binary,"\">>,BlockCtx,",AccStr/binary,"),\r\n">>,
-                        {N1,<<Acc/binary,Data/binary>>};
-                    {binary,Bin}->
-                        Bin1 = escape(Bin),
-                        Data = <<AccStr1/binary,"= <<",AccStr/binary,"/binary,\"",Bin1/binary,"\">>,\r\n">>,
-                        {N1,<<Acc/binary,Data/binary>>}
-                end
-            end,{0,<<"">>},Blocks),
-    NBin = erlang:integer_to_binary(N),
-    Last = <<"BlockAcc",NBin/binary>>,
-    <<Body/binary,Last/binary>>.
+generate_code(begin_section,N,AfterSection)->
+    Step = erlang:integer_to_binary(N),
+    NextStep = erlang:integer_to_binary(N+1),
+    EndStep = erlang:integer_to_binary(AfterSection),
+    Header1 = <<"block(",Step/binary,",Ctx,Acc0,[],[{OldCtx,L}|CtxStack])->">>,
+    Body1 = <<"block(",EndStep/binary,",OldCtx,Acc0,L,CtxStack);\r\n">>,
+    Header2 = <<"block(",Step/binary,",Ctx,Acc0,[H|T],CtxStack)->">>,
+    Body2 = <<"TempCtx = maps:merge(Ctx,H), ">>,
+    Body3 = <<" block(",NextStep/binary,",TempCtx,Acc0,T,CtxStack);\r\n">>,
+    <<Header1/binary,Body1/binary,Header2/binary,Body2/binary,Body3/binary>>;
+generate_code(end_section,N,StartSection)->
+    Step = erlang:integer_to_binary(N),
+    LoopBackStep = erlang:integer_to_binary(StartSection),
+    Header = <<"block(",Step/binary,",Ctx,Acc0,L,CtxStack)->">>,
+    Body = <<"block(",LoopBackStep/binary,",Ctx,Acc0,L,CtxStack);\r\n">>,
+    <<Header/binary,Body/binary>>;
+generate_code({section,Name,_Blocks,Expect},N,Fail)->
+    ExpectStr = ai_string:to_string(Expect),
+    Step = erlang:integer_to_binary(N),
+    NextStep = erlang:integer_to_binary(N+1),
+    FailStep = erlang:integer_to_binary(Fail),
+
+    Acc1 = <<"block(",Step/binary,",Ctx,Acc0,L,CtxStack) -> ">>,
+    Acc2 = <<Acc1/binary,"Acc1 = case get_value(<<\"",Name/binary,"\">>,Ctx) of ">>,
+    Acc3 = <<Acc2/binary, "undefined -> if false == ",
+        ExpectStr/binary,"-> block(",NextStep/binary,",Ctx,Acc0,[Ctx],[{Ctx,L}|CtxStack]); 
+        true -> block(",FailStep/binary,",Ctx,Acc0,L,CtxStack) end; ">>,
+    Acc4 = <<Acc3/binary, ExpectStr/binary,"-> block(",
+        NextStep/binary,",Ctx,Acc0,[Ctx],[{Ctx,L}|CtxStack]); ">>,
+    Acc5 = <<Acc4/binary, "List when erlang:is_list(List)-> ">>,
+    Acc6 = <<Acc5/binary," if (List == []) /= ",ExpectStr/binary,
+        "-> CL = if List == [] -> [Ctx]; true -> List end,
+        block(",NextStep/binary,",Ctx,Acc0,CL,[{Ctx,L}|CtxStack]);"
+        " true -> block(", FailStep/binary,",Ctx,Acc0,L,CtxStack) end; ">>,
+    Acc7 = <<Acc6/binary,"Function when erlang:is_function(Function)-> 
+            List = Function(Ctx), if (List == []) /= ",ExpectStr/binary>>,
+    <<Acc7/binary,
+        "-> CL = if List == [] -> [Ctx]; true -> List end,
+        block(",NextStep/binary,",Ctx,Acc0,CL,[{Ctx,L}|CtxStack]);"
+        " true -> block(", FailStep/binary,",Ctx,Acc0,L,CtxStack) end; 
+        _-> block(", FailStep/binary,",Ctx,Acc0,L,CtxStack) end; \r\n">>.
+
 
 -define(ESCAPE_CHARS,[
     {"\n","\\\\n"},{"\t","\\\\t"},{"\b","\\\\b"},
