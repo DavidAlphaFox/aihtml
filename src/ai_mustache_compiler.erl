@@ -68,7 +68,7 @@ compile(Name,T,State)->
                     end,
                 case Res of 
                     {error,ai_mustache, value_not_set}->
-                        case maps:get(?MODULE_KEY,Ctx) of 
+                        case maps:get(?MODULE_KEY,Ctx,undefined) of 
                             undefined-> undefined;
                             Modules -> get_from_parent(Modules,Key,Ctx)
                         end;
