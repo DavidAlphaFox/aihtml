@@ -42,7 +42,9 @@ compile(Name,T,State)->
     CtxModule = erlang:atom_to_binary(Name,latin1),
     Module = ai_string:atom_suffix(Name,"_ai_mustache",false),
     ModuleName = erlang:atom_to_binary(Module,latin1),
-    Acc0 = <<"-module(",ModuleName/binary,").\r\n-export([render/1,render/2,render/3,module/0]).\r\n-define(MODULE_KEY, '__mod__').\r\n">>,
+    Acc0 = <<"-module(",ModuleName/binary,").\r\n
+        -export([render/1,render/2,render/3,module/0]).\r\n
+        -define(MODULE_KEY, '__mod__').\r\n">>,
     Acc1 = <<Acc0/binary,"module()->",CtxModule/binary,".\r\n
         render(Ctx) -> block(0,Ctx,<<\"\">>,[],[]).\r\n
         render(_Key,Ctx) -> block(0,Ctx,<<\"\">>,[],[]).\r\n
