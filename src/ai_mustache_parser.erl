@@ -60,7 +60,7 @@ parse1(#state{start = StartTag} = State,Bin, Result) ->
 parse2(State, [B1, B2, B3], Result) ->
     case remove_space_from_head(B2) of %% 清除\s和\t，然后匹配tag类型
         <<T, Tag/binary>> when T =:= $&; T =:= ${ ->
-            parse1(State#state{standalone = false}, B3, [{'&', keys(Tag)} | ?ADD(B1, Result)]);
+            parse1(State#state{standalone = false}, B3, [{tag,raw,keys(Tag)} | ?ADD(B1, Result)]);
         <<T, Tag/binary>> when T =:= $#; T =:= $^ ->
             parse_section(State, ?IIF(T =:= $#, '#', '^'), keys(Tag), B3, [B1 | Result]);
         <<"=", Tag0/binary>> ->
@@ -78,7 +78,7 @@ parse2(State, [B1, B2, B3], Result) ->
         <<">", Tag/binary>> ->
             parse_partial(State, keys(Tag), B3, [B1 | Result]);
         Tag ->
-            parse1(State#state{standalone = false}, B3, [{n, keys(Tag)} | ?ADD(B1, Result)])
+            parse1(State#state{standalone = false}, B3, [{tag,none,keys(Tag)} | ?ADD(B1, Result)])
     end;
 parse2(_, _, _) -> error({?PARSE_ERROR, unclosed_tag}).
 
@@ -104,8 +104,8 @@ parse_section(State0, Mark, Keys, Input0, Result0) ->
             {State3, _, Rest1, LoopResult1} = standalone(State2, Rest0, LoopResult0),
             case Mark of
                 '#' -> 
-                       parse1(State3, Rest1, [{'#', Keys, lists:reverse(LoopResult1)} | Result1]);
-                '^' -> parse1(State3, Rest1, [{'^', Keys, lists:reverse(LoopResult1)} | Result1])
+                       parse1(State3, Rest1, [{section, Keys, lists:reverse(LoopResult1),true} | Result1]);
+                '^' -> parse1(State3, Rest1, [{section, Keys, lists:reverse(LoopResult1),false} | Result1])
             end;
         {endtag, {_, OtherKeys, _, _, _}} ->
             error({?PARSE_ERROR, {section_is_incorrect, binary_join(OtherKeys, <<".">>)}});
@@ -115,7 +115,7 @@ parse_section(State0, Mark, Keys, Input0, Result0) ->
 -spec parse_partial(state(), Tag :: binary(), NextBin :: binary(), Result :: [tag()]) -> {state(), [tag()]} | endtag().
 parse_partial(State0, Tag, NextBin0, Result0) ->
     {State1, Indent, NextBin1, Result1} = standalone(State0, NextBin0, Result0),
-    parse1(State1, NextBin1, [{'>', Tag, Indent} | Result1]).
+    parse1(State1, NextBin1, [{tag,partial, Tag},Indent| Result1]).
 %% ParseDelimiterBin :: e.g. `{{=%% %%=}}' -> `%% %%'
 -spec parse_delimiter(state(), ParseDelimiterBin :: binary(), NextBin :: binary(), Result :: [tag()]) -> {state(), [tag()]} | endtag().
 parse_delimiter(State0, ParseDelimiterBin, NextBin, Result) ->
