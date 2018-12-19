@@ -10,25 +10,27 @@
 
 -define(START_TAG, <<"{{">>).
 -define(STOP_TAG,  <<"}}">>).
--type source() :: binary().
+
 -type key()    :: binary().
--type tag()    :: {n,   [key()]}
-                | {'&', [key()]}
-                | {'#', [key()], [tag()], source()}
-                | {'^', [key()], [tag()]}
-                | {'>', key(), Indent :: source()}
+-type tag()    :: {tag,none,[key()]}
+                | {tag,partial,[key()]}
+                | {tag,raw,[key()]}
+                | {section, [key()], [tag()],boolean()}
                 | binary(). % plain text
 -record(state,{
           start    = ?START_TAG :: binary(),
           stop     = ?STOP_TAG  :: binary(),
+          partials = [],
           standalone = true     :: boolean()
         }).
 -type state() :: #state{}.
 -type endtag()    :: {endtag, {state(), [key()], LastTagSize :: non_neg_integer(), Rest :: binary(), Result :: [tag()]}}.
 
 parse(Body)->
-    {IR,_State} = parse(#state{},Body),
-    IR.
+    {IR,State} = parse(#state{},Body),
+    IR1 = merge_continuous_binary(IR),
+    IR2 = remove_empty_section(IR1),
+    {merge_continuous_binary(IR2),State#state.partials}.
 -spec parse(state(),binary()) -> {[tag()],#state{}}.
 parse(State0,Bin) ->
     case parse1(State0,Bin,[]) of
@@ -115,7 +117,8 @@ parse_section(State0, Mark, Keys, Input0, Result0) ->
 -spec parse_partial(state(), Tag :: binary(), NextBin :: binary(), Result :: [tag()]) -> {state(), [tag()]} | endtag().
 parse_partial(State0, Tag, NextBin0, Result0) ->
     {State1, Indent, NextBin1, Result1} = standalone(State0, NextBin0, Result0),
-    parse1(State1, NextBin1, [{tag,partial, Tag},Indent| Result1]).
+    Partials = State1#state.partials,
+    parse1(State1#state{partials = [Tag|Partials]}, NextBin1, [{tag,partial, Tag},Indent| Result1]).
 %% ParseDelimiterBin :: e.g. `{{=%% %%=}}' -> `%% %%'
 -spec parse_delimiter(state(), ParseDelimiterBin :: binary(), NextBin :: binary(), Result :: [tag()]) -> {state(), [tag()]} | endtag().
 parse_delimiter(State0, ParseDelimiterBin, NextBin, Result) ->
@@ -181,10 +184,11 @@ split_tag(#state{start = StartTag, stop = StopTag}, Bin) ->
 -spec keys(binary()) -> [key()].
 keys(Bin0) ->
     Bin1 = << <<X:8>> || <<X:8>> <= Bin0, X =/= $  >>,
-    case Bin1 =:= <<>> orelse Bin1 =:= <<".">> of
-        true  -> [Bin1];
-        false -> [X || X <- binary:split(Bin1, <<".">>, [global]), X =/= <<>>]
-    end.
+    %%case Bin1 =:= <<>> orelse Bin1 =:= <<".">> of
+    %%    true  -> [Bin1];
+    %%    false -> [X || X <- binary:split(Bin1, <<".">>, [global]), X =/= <<>>]
+    %%end.
+    Bin1.
 -spec remove_space_from_head(binary()) -> binary().
 remove_space_from_head(<<X:8, Rest/binary>>) 
     when X =:= $\t; X =:= $  -> 
@@ -243,3 +247,51 @@ binary_join([], _) -> <<>>;
 binary_join(Bins, Sep) ->
     [Hd | Tl] = [ [Sep, B] || B <- Bins ],
     erlang:iolist_to_binary([erlang:tl(Hd) | Tl]).
+
+merge_continuous_binary(IR)->
+    MergeFun = fun(NeedMerge,Acc,I)->
+        case NeedMerge of 
+            [] -> {Acc ++ [I],NeedMerge};
+            _ ->
+                MergeBinary = lists:foldl(fun(Bin,BinAcc)->
+                    <<BinAcc/binary,Bin/binary>>
+                    end,<<>>,NeedMerge),
+                {Acc ++ [{binary,MergeBinary},I],[]}
+            end
+        end,
+    {L1,Rest} = 
+        lists:foldl(fun(I,{Acc,NeedMerge})->
+            case I of 
+                {section,Keys,IR1,Expect}->
+                    IR2 = merge_continuous_binary(IR1),
+                    MergeFun(NeedMerge,Acc,{section,Keys,IR2,Expect});
+                {tag,_Kin,_Keys} ->
+                    MergeFun(NeedMerge,Acc,I);
+                {binary,Bin}->
+                    {Acc,NeedMerge ++ [Bin]};
+                _ ->
+                    {Acc,NeedMerge ++ [I]}
+            end
+        end,{[],[]},IR),
+    case Rest of 
+        [] -> L1;
+        _ ->
+            MergeBinary = 
+                lists:foldl(fun(Bin,BinAcc)->
+                    <<BinAcc/binary,Bin/binary>>
+                end,<<>>,Rest),
+            L1 ++ [{binary,MergeBinary}]
+        end.
+remove_empty_section(IR)->
+        lists:foldl(fun(I,Acc)->
+            case I of 
+                {section,_Keys,IR1,_Expect}->
+                    case IR1 of
+                        [] -> Acc;
+                        [<<>>] -> Acc;
+                        _ -> Acc ++ [I]
+                    end;
+                _->
+                    Acc ++ [I]
+            end
+        end,[],IR).
