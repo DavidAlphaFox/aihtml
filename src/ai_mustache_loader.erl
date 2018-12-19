@@ -17,6 +17,8 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
 	terminate/2, code_change/3, format_status/2]).
 
+-export([prepare/1]).
+
 -define(SERVER, ?MODULE).
 
 -record(state, {}).
@@ -24,6 +26,48 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
+prepare(Template)->
+	TBin = ai_string:to_string(Template),
+	{Path,Name} = split_path(TBin),
+	Key = {Name,Path},
+	Match = ets:lookup(ai_mustache,Key),
+	case Match of 
+		[] -> 
+			load(TBin),
+			prepare(TBin);
+		[{Key,Partials}]->
+			{Same,Other} = partials(Path,Partials),
+			M0 = lists:foldl(fun({I,_V},Acc)->
+					[{I,IR}] = ets:lookup(ai_mustache_ir,I),
+					{PName,_PPath} = I,
+					Acc#{PName => IR}
+				end,#{},maps:to_list(Same)),
+			M1 = lists:foldl(fun({I,V},Acc)->
+					[{I,IR}] = ets:lookup(ai_mustache_ir,I),
+					ai_maps:put(V,IR,Acc)
+				end,M0,maps:to_list(Other)),
+			[{Key,TIR}] = ets:lookup(ai_mustache_ir,Key),
+			{TIR,M1}
+	end.
+partials(Path,Partials)->
+	lists:foldl(fun(P,{Acc,Other})->
+		{Paths,PPath,PName} = split_path(P),
+		case PPath of 
+			[] -> %% 同路径下模板
+				Key = {PName,Path},
+				[{Key,PPartials}] = ets:lookup(ai_mustache,Key),
+				{PP,PPOther} = partials(Path,PPartials),
+				{maps:merge(Acc#{Key => Path ++ [PName]},PP),maps:merge(Other,PPOther)};
+			_-> %% 非同路径下模板
+				Key = {PName,PPath},
+				[{Key,PPartials} ] = ets:lookup(ai_mustache,Key),
+				{PP,PPOther} = partials(PPath,PPartials),
+				{Acc,maps:merge(maps:merge(Other,PP#{Key => Paths}),PPOther)}
+
+		end
+	end,{#{},#{}},Partials).
+
+
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -55,6 +99,8 @@ start_link() ->
 init([]) ->
 	ai_mustache = ets:new(ai_mustache,[set,named_table,protected,
 			{write_concurrency,false},{read_concurrency,true}]),
+	ai_mustache_ir = ets:new(ai_mustache_ir,[set,named_table,protected,
+	{write_concurrency,false},{read_concurrency,true}]),
 	process_flag(trap_exit, true),
 	{ok, #state{}}.
 
@@ -148,5 +194,9 @@ format_status(_Opt, Status) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-
+split_path(File)->
+	Paths = binary:split(File,<<"/">>,[global]),
+	Name = lists:last(Paths),
+	Path = lists:droplast(Paths),
+	{Paths,Path,Name}.
 

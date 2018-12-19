@@ -6,7 +6,7 @@ render(IR,Partials,Ctx)->
     run(IR,<<>>,[],Partials,Ctx).
 
 run([],Acc,[],_Partials,_Ctx)-> Acc;
-run([],Acc,[{H,OldCtx}|Stack],Partials,_Ctx)->
+run([],Acc,[{H,OldCtx,OldPartials}|Stack],Partials,_Ctx)->
     run(H,Acc,Stack,Partials,OldCtx);
 run([{binary,Value}|IR],Acc,Stack,Partials,Ctx)->
     run(IR,<<Acc/binary,Value/binary>>,Stack,Partials,Ctx);
