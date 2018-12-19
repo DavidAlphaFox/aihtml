@@ -1,9 +1,11 @@
 -module(ai_mustache_runner).
--export([render/3]).
+-export([render/2,render/3]).
+
+-spec render({[term()],map()},map())-> binary().
+render({IR,Partials},Ctx)->run(IR,<<>>,[],Partials,Ctx).
 
 -spec render([term()],map(),map())-> binary().
-render(IR,Partials,Ctx)->
-    run(IR,<<>>,[],Partials,Ctx).
+render(IR,Partials,Ctx)-> run(IR,<<>>,[],Partials,Ctx).
 
 run([],Acc,[],_Partials,_Ctx)-> Acc;
 run([],Acc,[{H,OldCtx}|Stack],Partials,_Ctx)->
@@ -11,23 +13,28 @@ run([],Acc,[{H,OldCtx}|Stack],Partials,_Ctx)->
 run([{binary,Value}|IR],Acc,Stack,Partials,Ctx)->
     run(IR,<<Acc/binary,Value/binary>>,Stack,Partials,Ctx);
 run([{tag,none,Name}|IR],Acc,Stack,Partials,Ctx)->
-    Value = ai_string:html_escape(maps:get(Name,Ctx,<<"">>)),
+    Value = ai_string:html_escape(ai_maps:get(Name,Ctx,<<"">>)),
     run(IR,<<Acc/binary,Value/binary>>,Stack,Partials,Ctx);
 run([{tag,raw,Name}|IR],Acc,Stack,Partials,Ctx)->
-    Value = ai_string:to_string(maps:get(Name,Ctx,<<"">>)),
+    Value = ai_string:to_string(ai_maps:get(Name,Ctx,<<"">>)),
     run(IR,<<Acc/binary,Value/binary>>,Stack,Partials,Ctx);
-run([{tag,partial,Name}|IR],Acc,Stack,Partials,Ctx)->
-    case maps:get(Name,Partials,undefined) of 
-        undefined ->
+run([{tag,partial,Name }|IR],Acc,Stack,Partials,Ctx)->
+    Paths = binary:split(Name,<<"/">>,[global]),
+    Key = [<<".">>|Paths],
+    case ai_maps:get(Paths,Partials,undefined) of 
+        undefined -> 
             run(IR,Acc,Stack,Partials,Ctx);
-        {NewIR,undefined}->
-            run(NewIR,Acc,[{IR,Ctx}|Stack],Partials,Ctx);
-        {NewIR,NewCtx}->
-            run(NewIR,Acc,[{IR,Ctx}|Stack],Partials,
-                maps:merge(Ctx,NewCtx))
+        NewIR ->
+            case ai_maps:get(Key,Ctx,undefined) of 
+                undefined -> 
+                    run(NewIR,Acc,[{IR,Ctx}|Stack],Partials,Ctx);
+                NewCtx -> 
+                    NewCtx0 = maps:merge(Ctx,NewCtx),
+                    run(NewIR,Acc,[{IR,Ctx}|Stack],Partials,NewCtx0)
+            end
     end;
 run([{section,Name,SectionIR,false}|IR],Acc,Stack,Partials,Ctx)->
-    case maps:get(Name,Ctx,undefined) of 
+    case ai_maps:get(Name,Ctx,undefined) of 
         undefined ->  run(SectionIR,Acc,[{IR,Ctx}|Stack],Partials,Ctx);
         false -> run(SectionIR,Acc,[{IR,Ctx}|Stack],Partials,Ctx);
         true -> run(IR,Acc,Stack,Partials,Ctx);
@@ -40,10 +47,11 @@ run([{section,Name,SectionIR,false}|IR],Acc,Stack,Partials,Ctx)->
             run(IR,Acc,Stack,Partials,Ctx)
     end;
 run([{section,Name,SectionIR,true}|IR],Acc,Stack,Partials,Ctx)->
-    case maps:get(Name,Ctx,undefined) of 
+    case ai_maps:get(Name,Ctx,undefined) of 
         undefined ->  run(IR,Acc,Stack,Partials,Ctx);
         false -> run(IR,Acc,Stack,Partials,Ctx);
         true ->  run(SectionIR,Acc,[{IR,Ctx}|Stack],Partials,Ctx);
+        M when erlang:is_map(M)-> run(SectionIR,Acc,[{IR,Ctx}|Stack],Partials,Ctx);
         L when erlang:is_list(L)->
             case L of 
                 [] -> run(IR,Acc,Stack,Partials,Ctx); 

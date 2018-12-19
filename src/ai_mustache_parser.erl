@@ -115,7 +115,7 @@ parse_section(State0, Mark, Keys, Input0, Result0) ->
             error({?PARSE_ERROR, {section_end_tag_not_found, <<"/", (binary_join(Keys, <<".">>))/binary>>}})
     end.
 -spec parse_partial(state(), Tag :: binary(), NextBin :: binary(), Result :: [tag()]) -> {state(), [tag()]} | endtag().
-parse_partial(State0, Tag, NextBin0, Result0) ->
+parse_partial(State0, [Tag], NextBin0, Result0) ->
     {State1, Indent, NextBin1, Result1} = standalone(State0, NextBin0, Result0),
     Partials = State1#state.partials,
     parse1(State1#state{partials = [Tag|Partials]}, NextBin1, [{tag,partial, Tag},Indent| Result1]).
@@ -184,11 +184,10 @@ split_tag(#state{start = StartTag, stop = StopTag}, Bin) ->
 -spec keys(binary()) -> [key()].
 keys(Bin0) ->
     Bin1 = << <<X:8>> || <<X:8>> <= Bin0, X =/= $  >>,
-    %%case Bin1 =:= <<>> orelse Bin1 =:= <<".">> of
-    %%    true  -> [Bin1];
-    %%    false -> [X || X <- binary:split(Bin1, <<".">>, [global]), X =/= <<>>]
-    %%end.
-    Bin1.
+    case Bin1 =:= <<>> orelse Bin1 =:= <<".">> of
+        true  -> [Bin1];
+        false -> [X || X <- binary:split(Bin1, <<".">>, [global]), X =/= <<>>]
+    end.
 -spec remove_space_from_head(binary()) -> binary().
 remove_space_from_head(<<X:8, Rest/binary>>) 
     when X =:= $\t; X =:= $  -> 

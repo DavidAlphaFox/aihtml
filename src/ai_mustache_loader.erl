@@ -299,12 +299,10 @@ load([H|T],ViewPath,Path,Suffix)->
 			case ets:lookup(ai_mustache,{PName,Path}) of 
 				[] -> 
 					File = partial_file(ViewPath,Path,PRName),
-					io:format("partial file ~p~n",[File]),
 					case file:read_file(File) of 
 						{ok,Body}->
 							{IR,Partials} = ai_mustache_parser:parse(Body),
 							Key = {PName,Path},
-							io:format("insert partials ~p~n",[Key]),
 							ets:insert(ai_mustache,{Key,Partials}),
 							ets:insert(ai_mustache_ir,{Key,IR}),
 							load(Partials,ViewPath,Path,Suffix),
