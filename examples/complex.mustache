@@ -2,7 +2,7 @@
 {{#list}}
   <ul>
   {{#items}}
-    {{> _item}}   
+    {{> item}}   
   {{/items}}
   </ul>
 {{/list}}
@@ -10,8 +10,9 @@
   <p>The list is empty.</p>
 {{/empty}}
 
+  {{> shared/user}}
+  {{> shared/level}}
 
-  {{data}}  {{> partial}}
 |
 {{#boolean}}
 {{/boolean}}

@@ -1,4 +1,5 @@
 -module(ai_mustache).
+-export([prepare/0,prepare/1,prepare/2]).
 -export([render/2,render/3]).
 
 %% 定义如下规则
@@ -27,3 +28,7 @@ render(Body,Ctx)->
 render(Body,Partils,Ctx)->
     {IR,_Partials} = ai_mustache_parser:parse(Body),
     ai_mustache_runner:render(IR,Partils,Ctx).
+prepare()-> ai_mustache_loader:prepare().
+prepare(ViewPath)-> ai_mustache_loader:prepare(ViewPath).
+prepare(ViewPath,Suffix)-> ai_mustache_loader:prepare(ViewPath,Suffix).
+

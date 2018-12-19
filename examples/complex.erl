@@ -21,10 +21,17 @@ context()->
 start() ->
   code:add_patha("../ebin"),
   code:add_patha("../deps/ailib/ebin"),
+  application:start(ailib),
+  application:start(aihtml),
+  
+  {ok,CWD} = file:get_cwd(),
+  ai_mustache:prepare(CWD),
+
   {ok,Body} = file:read_file("./complex.mustache"),
-  IR = ai_mustache_parser:parse(Body),
+  {IR,Partials} = ai_mustache_parser:parse(Body),
+  io:format("Partials ~p~n",[Partials]),
   {ok,Partial} = file:read_file("./_item.mustache"),
-  PartialIR =  ai_mustache_parser:parse(Partial),
+  {PartialIR,_RestPartials} =  ai_mustache_parser:parse(Partial),
   Output = ai_mustache_runner:render(IR,#{<<"_item">> => {PartialIR,undefined}},context()),
   io:format("~ts~n",[Output]),
   T0 = os:timestamp(),
