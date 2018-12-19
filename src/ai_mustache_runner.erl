@@ -50,7 +50,11 @@ run([{section,Name,SectionIR,true}|IR],Acc,Stack,Partials,Ctx)->
                 _ -> 
                     run(SectionIR,Acc,L,[{IR,Ctx}|Stack],Partials,Ctx)
             end;
-        _ ->
+        F when erlang:is_function(F,2) ->
+            Acc0 = run(SectionIR,<<>>,[],Partials,Ctx),
+            Acc1 = F(Acc0,Ctx),
+            run(IR,<<Acc/binary,Acc1/binary>>,Stack,Partials,Ctx);
+        _->
             run(IR,Acc,Stack,Partials,Ctx)
     end.
 run(_SectionIR,Acc,[],[{IR,OldCtx}|Stack],Partials,_Ctx)->
