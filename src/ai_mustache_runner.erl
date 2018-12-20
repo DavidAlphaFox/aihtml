@@ -20,7 +20,8 @@ run([{tag,raw,Name}|IR],Acc,Stack,Partials,Ctx)->
     run(IR,<<Acc/binary,Value/binary>>,Stack,Partials,Ctx);
 run([{tag,partial,Name }|IR],Acc,Stack,Partials,Ctx)->
     Paths = binary:split(Name,<<"/">>,[global]),
-    Key = [<<".">>|Paths],
+    [H|T] = Paths,
+    Key = [<<".",H/binary>>|T],
     case ai_maps:get(Paths,Partials,undefined) of 
         undefined -> 
             run(IR,Acc,Stack,Partials,Ctx);

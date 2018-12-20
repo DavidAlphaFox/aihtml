@@ -13,14 +13,12 @@ context()->
         <<"list">> => true,
         <<"empty">> => false,
         <<"user">> => #{ <<"name">> => <<"David Gao">>},
-        <<".">> => #{
-          <<"shared">> => #{
+        <<".shared">> => #{
             <<"level">> => #{
                 <<"level">> => true,
                 <<"name">> => <<"VIP User">>
             }
           }
-        }
     }.
 
 
