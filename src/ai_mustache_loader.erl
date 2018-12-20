@@ -284,9 +284,10 @@ load(ViewPath,Template,Suffix)->
 			{IR,Partials} = ai_mustache_parser:parse(Body),
 			{_Paths,Path,Name} = split_path(Template),
 			Key = {Name,Path},
+			ok = load(Partials,ViewPath,Path,Suffix),
 			ets:insert(ai_mustache,{Key,Partials}),
 			ets:insert(ai_mustache_ir,{Key,IR}),
-			load(Partials,ViewPath,Path,Suffix);
+			ok;
 		Error -> Error 
 	end.
 			
