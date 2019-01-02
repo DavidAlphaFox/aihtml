@@ -29,45 +29,44 @@
 %%% API
 %%%===================================================================
 template(Template)->
-	TBin = ai_string:to_string(Template),
-	{_Paths,Path,Name} = split_path(TBin),
-	Key = {Name,Path},
-	Match = ets:lookup(ai_mustache,Key),
-	case Match of 
-		[] -> 
-			ok = load(TBin),
-			template(TBin);
-		[{Key,Partials}]->
-			{Same,Other} = partials(Path,Partials),
-			M0 = lists:foldl(fun({I,_V},Acc)->
-					[{I,IR}] = ets:lookup(ai_mustache_ir,I),
-					{PName,_PPath} = I,
-					Acc#{PName => IR}
-				end,#{},maps:to_list(Same)),
-			M1 = lists:foldl(fun({I,V},Acc)->
-					[{I,IR}] = ets:lookup(ai_mustache_ir,I),
-					ai_maps:put(V,IR,Acc)
-				end,M0,maps:to_list(Other)),
-			[{Key,TIR}] = ets:lookup(ai_mustache_ir,Key),
-			{TIR,M1}
-	end.
+    TBin = ai_string:to_string(Template),
+    {_Paths,Path,Name} = split_path(TBin),
+    Key = {Name,Path},
+    Match = ets:lookup(ai_mustache,Key),
+    case Match of 
+        [] -> 
+            ok = load(TBin),
+            template(TBin);
+        [{Key,Partials}]->
+            {Same,Other} = partials(Path,Partials),
+            M0 = lists:foldl(fun({I,_V},Acc)->
+                                     [{I,IR}] = ets:lookup(ai_mustache_ir,I),
+                                     {PName,_PPath} = I,
+                                     Acc#{PName => IR}
+                             end,#{},maps:to_list(Same)),
+            M1 = lists:foldl(fun({I,V},Acc)->
+                                     [{I,IR}] = ets:lookup(ai_mustache_ir,I),
+                                     ai_maps:put(V,IR,Acc)
+                             end,M0,maps:to_list(Other)),
+            [{Key,TIR}] = ets:lookup(ai_mustache_ir,Key),
+            {TIR,M1}
+    end.
 partials(Path,Partials)->
-	lists:foldl(fun(P,{Acc,Other})->
-		{Paths,PPath,PName} = split_path(P),
-		case PPath of 
-			[] -> %% 同路径下模板
-				Key = {PName,Path},
-				[{Key,PPartials}] = ets:lookup(ai_mustache,Key),
-				{PP,PPOther} = partials(Path,PPartials),
-				{maps:merge(Acc#{Key => Path ++ [PName]},PP),maps:merge(Other,PPOther)};
-			_-> %% 非同路径下模板
-				Key = {PName,PPath},
-				[{Key,PPartials} ] = ets:lookup(ai_mustache,Key),
-				{PP,PPOther} = partials(PPath,PPartials),
-				{Acc,maps:merge(maps:merge(Other,PP#{Key => Paths}),PPOther)}
-
-		end
-	end,{#{},#{}},Partials).
+    lists:foldl(fun(P,{Acc,Other})->
+                        {Paths,PPath,PName} = split_path(P),
+                        case PPath of 
+                            [] -> %% 同路径下模板
+                                Key = {PName,Path},
+                                [{Key,PPartials}] = ets:lookup(ai_mustache,Key),
+                                {PP,PPOther} = partials(Path,PPartials),
+                                {maps:merge(Acc#{Key => Path ++ [PName]},PP),maps:merge(Other,PPOther)};
+                            _-> %% 非同路径下模板
+                                Key = {PName,PPath},
+                                [{Key,PPartials} ] = ets:lookup(ai_mustache,Key),
+                                {PP,PPOther} = partials(PPath,PPartials),
+                                {Acc,maps:merge(maps:merge(Other,PP#{Key => Paths}),PPOther)}
+                        end
+                end,{#{},#{}},Partials).
 
 load(Template)-> gen_server:call(?SERVER,{load,Template}).
 prepare()-> gen_server:call(?SERVER,prepare).
@@ -81,11 +80,11 @@ prepare(ViewPath,Suffix)-> gen_server:call(?SERVER,{prepare,ViewPath,Suffix}).
 %% @end
 %%--------------------------------------------------------------------
 -spec start_link() -> {ok, Pid :: pid()} |
-	{error, Error :: {already_started, pid()}} |
-	{error, Error :: term()} |
-	ignore.
+                      {error, Error :: {already_started, pid()}} |
+                      {error, Error :: term()} |
+                      ignore.
 start_link() ->
-	gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
+    gen_server:start_link({local, ?SERVER}, ?MODULE, [], []).
 
 %%%===================================================================
 %%% gen_server callbacks
@@ -98,20 +97,20 @@ start_link() ->
 %% @end
 %%--------------------------------------------------------------------
 -spec init(Args :: term()) -> {ok, State :: term()} |
-	{ok, State :: term(), Timeout :: timeout()} |
-	{ok, State :: term(), hibernate} |
-	{stop, Reason :: term()} |
-	ignore.
+                              {ok, State :: term(), Timeout :: timeout()} |
+                              {ok, State :: term(), hibernate} |
+                              {stop, Reason :: term()} |
+                              ignore.
 init([]) ->
-	ai_mustache = ets:new(ai_mustache,[set,named_table,protected,
-			{write_concurrency,false},{read_concurrency,true}]),
-	ai_mustache_ir = ets:new(ai_mustache_ir,[set,named_table,protected,
-	{write_concurrency,false},{read_concurrency,true}]),
-	process_flag(trap_exit, true),
-	State = #state{},
-	{ok,CWD} = file:get_cwd(),
-	ViewPath = filename:join(CWD,"views"),
-	{ok,State#state{view_path = ai_string:to_string(ViewPath)}}.
+    ai_mustache = ets:new(ai_mustache,[set,named_table,protected,
+                                       {write_concurrency,false},{read_concurrency,true}]),
+    ai_mustache_ir = ets:new(ai_mustache_ir,[set,named_table,protected,
+                                             {write_concurrency,false},{read_concurrency,true}]),
+    process_flag(trap_exit, true),
+    State = #state{},
+    {ok,CWD} = file:get_cwd(),
+    ViewPath = filename:join(CWD,"views"),
+    {ok,State#state{view_path = ai_string:to_string(ViewPath)}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -120,58 +119,58 @@ init([]) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_call(Request :: term(), From :: {pid(), term()}, State :: term()) ->
-	{reply, Reply :: term(), NewState :: term()} |
-	{reply, Reply :: term(), NewState :: term(), Timeout :: timeout()} |
-	{reply, Reply :: term(), NewState :: term(), hibernate} |
-	{noreply, NewState :: term()} |
-	{noreply, NewState :: term(), Timeout :: timeout()} |
-	{noreply, NewState :: term(), hibernate} |
-	{stop, Reason :: term(), Reply :: term(), NewState :: term()} |
-	{stop, Reason :: term(), NewState :: term()}.
+                         {reply, Reply :: term(), NewState :: term()} |
+                         {reply, Reply :: term(), NewState :: term(), Timeout :: timeout()} |
+                         {reply, Reply :: term(), NewState :: term(), hibernate} |
+                         {noreply, NewState :: term()} |
+                         {noreply, NewState :: term(), Timeout :: timeout()} |
+                         {noreply, NewState :: term(), hibernate} |
+                         {stop, Reason :: term(), Reply :: term(), NewState :: term()} |
+                         {stop, Reason :: term(), NewState :: term()}.
 handle_call({load,Template},_From,#state{view_path = ViewPath,suffix = Suffix} = State)->
-	Reply = 
-		try
-			{_Paths,Path,Name} = split_path(Template),
-			case ets:lookup(ai_mustache,{Name,Path}) of 
-				[] -> load(ViewPath,Template,Suffix);
-				_ -> ok
-			end
-		catch
-			_Error:Reason -> {error,Reason}
-		end,
-	{reply,Reply,State};
+    Reply = 
+        try
+            {_Paths,Path,Name} = split_path(Template),
+            case ets:lookup(ai_mustache,{Name,Path}) of 
+                [] -> load(ViewPath,Template,Suffix);
+                _ -> ok
+            end
+        catch
+            _Error:Reason -> {error,Reason}
+        end,
+    {reply,Reply,State};
 handle_call({prepare,ViewPath0},_From,#state{suffix = Suffix} = State)->
-	ViewPath = ai_string:to_string(ViewPath0),
-	Reply = 
-		%try
-			prepare_loader(ViewPath,Suffix),
-		%catch
-		%	_Error:Reason -> {error,Reason}
-		%end,
-	{reply,Reply,State#state{view_path = ViewPath}};
+    ViewPath = ai_string:to_string(ViewPath0),
+    Reply = 
+        try
+            prepare_loader(ViewPath,Suffix)
+        catch
+            _Error:Reason -> {error,Reason}
+        end,
+    {reply,Reply,State#state{view_path = ViewPath}};
 handle_call({prepare,ViewPath0,Suffix0},_From,State)->
-	ViewPath = ai_string:to_string(ViewPath0),
-	Suffix = ai_string:to_string(Suffix0),
-	Reply = 
-		try
-			prepare_loader(ViewPath,Suffix)
-		catch
-			_Error:Reason -> {error,Reason}
-		end,
-	{reply,Reply,
-		State#state{view_path = ViewPath,suffix = Suffix}
-	};
+    ViewPath = ai_string:to_string(ViewPath0),
+    Suffix = ai_string:to_string(Suffix0),
+    Reply = 
+        try
+            prepare_loader(ViewPath,Suffix)
+        catch
+            _Error:Reason -> {error,Reason}
+        end,
+    {reply,Reply,
+     State#state{view_path = ViewPath,suffix = Suffix}
+    };
 handle_call(prepare,_From,#state{view_path = ViewPath,suffix = Suffix}= State)->
-	Reply = 
-		try
-			prepare_loader(ViewPath,Suffix)
-		catch
-			_Error:Reason -> {error,Reason}
-		end,
-	{reply,Reply,State};
+    Reply = 
+        try
+            prepare_loader(ViewPath,Suffix)
+        catch
+            _Error:Reason -> {error,Reason}
+        end,
+    {reply,Reply,State};
 handle_call(_Request, _From, State) ->
-	Reply = ok,
-	{reply, Reply, State}.
+    Reply = ok,
+    {reply, Reply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -180,12 +179,12 @@ handle_call(_Request, _From, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_cast(Request :: term(), State :: term()) ->
-	{noreply, NewState :: term()} |
-	{noreply, NewState :: term(), Timeout :: timeout()} |
-	{noreply, NewState :: term(), hibernate} |
-	{stop, Reason :: term(), NewState :: term()}.
+                         {noreply, NewState :: term()} |
+                         {noreply, NewState :: term(), Timeout :: timeout()} |
+                         {noreply, NewState :: term(), hibernate} |
+                         {stop, Reason :: term(), NewState :: term()}.
 handle_cast(_Request, State) ->
-	{noreply, State}.
+    {noreply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -194,12 +193,12 @@ handle_cast(_Request, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec handle_info(Info :: timeout() | term(), State :: term()) ->
-	{noreply, NewState :: term()} |
-	{noreply, NewState :: term(), Timeout :: timeout()} |
-	{noreply, NewState :: term(), hibernate} |
-	{stop, Reason :: normal | term(), NewState :: term()}.
+                         {noreply, NewState :: term()} |
+                         {noreply, NewState :: term(), Timeout :: timeout()} |
+                         {noreply, NewState :: term(), hibernate} |
+                         {stop, Reason :: normal | term(), NewState :: term()}.
 handle_info(_Info, State) ->
-	{noreply, State}.
+    {noreply, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -211,9 +210,9 @@ handle_info(_Info, State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec terminate(Reason :: normal | shutdown | {shutdown, term()} | term(),
-	State :: term()) -> any().
+                State :: term()) -> any().
 terminate(_Reason, _State) ->
-	ok.
+    ok.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -222,11 +221,11 @@ terminate(_Reason, _State) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec code_change(OldVsn :: term() | {down, term()},
-	State :: term(),
-	Extra :: term()) -> {ok, NewState :: term()} |
-	{error, Reason :: term()}.
+                  State :: term(),
+                  Extra :: term()) -> {ok, NewState :: term()} |
+                                      {error, Reason :: term()}.
 code_change(_OldVsn, State, _Extra) ->
-	{ok, State}.
+    {ok, State}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -237,99 +236,99 @@ code_change(_OldVsn, State, _Extra) ->
 %% @end
 %%--------------------------------------------------------------------
 -spec format_status(Opt :: normal | terminate,
-	Status :: list()) -> Status :: term().
+                    Status :: list()) -> Status :: term().
 format_status(_Opt, Status) ->
-	Status.
+    Status.
 
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
 split_path(File)->
-	Paths = binary:split(File,<<"/">>,[global]),
-	Name = lists:last(Paths),
-	Path = lists:droplast(Paths),
-	{Paths,Path,Name}.
+    Paths = binary:split(File,<<"/">>,[global]),
+    Name = lists:last(Paths),
+    Path = lists:droplast(Paths),
+    {Paths,Path,Name}.
 remove_suffix(Name,Suffix)->
-	if 
-		erlang:byte_size(Suffix) > 0 -> binary:replace(Name,Suffix,<<"">>);
-		true -> Name 
-	end.
+    if 
+        erlang:byte_size(Suffix) > 0 -> binary:replace(Name,Suffix,<<"">>);
+        true -> Name 
+    end.
 has_suffix(Name,Suffix)->
-	if 
-		erlang:byte_size(Suffix) > 0 -> 
-			case ai_string:find(Name,Suffix,trailing) of 
-				nomatch -> false;
-				_ -> true 
-			end;
-		true -> true 
-	end.
+    if 
+        erlang:byte_size(Suffix) > 0 -> 
+            case ai_string:find(Name,Suffix,trailing) of 
+                nomatch -> false;
+                _ -> true 
+            end;
+        true -> true 
+    end.
 add_suffix(Name,Suffix)-> 
-	if 
-		erlang:byte_size(Suffix) > 0 -> <<Name/binary,Suffix/binary>>;
-		true -> Name 
-	end.
+    if 
+        erlang:byte_size(Suffix) > 0 -> <<Name/binary,Suffix/binary>>;
+        true -> Name 
+    end.
 	
 partial_file(ViewPath,Path,Name)->
-	case Path of 
-		[] -> filename:join(ViewPath,<<"_",Name/binary>>);
-		_ -> 
-			filename:join([ViewPath,
-				filename:join(Path),<<"_",Name/binary>>])
-	end.
+    case Path of 
+        [] -> filename:join(ViewPath,<<"_",Name/binary>>);
+        _ -> 
+            filename:join([ViewPath,
+                           filename:join(Path),<<"_",Name/binary>>])
+    end.
 load(ViewPath,Template,Suffix)->
-	RT = add_suffix(Template,Suffix),
-	File = filename:join(ViewPath,RT),
-	case file:read_file(File) of 
-		{ok,Body}->
-			{IR,Partials} = ai_mustache_parser:parse(Body),
-			{_Paths,Path,Name} = split_path(Template),
-			Key = {Name,Path},
-			ok = load(Partials,ViewPath,Path,Suffix),
-			ets:insert(ai_mustache,{Key,Partials}),
-			ets:insert(ai_mustache_ir,{Key,IR}),
-			ok;
-		Error -> Error 
+    RT = add_suffix(Template,Suffix),
+    File = filename:join(ViewPath,RT),
+    case file:read_file(File) of 
+        {ok,Body}->
+            {IR,Partials} = ai_mustache_parser:parse(Body),
+            {_Paths,Path,Name} = split_path(Template),
+            Key = {Name,Path},
+            ok = load(Partials,ViewPath,Path,Suffix),
+            ets:insert(ai_mustache_ir,{Key,IR}),
+            ets:insert(ai_mustache,{Key,Partials}),
+            ok;
+        Error -> Error 
 	end.
 			
 load([],_ViewPath,_Path,_Suffix)->ok;
 load([H|T],ViewPath,Path,Suffix)->
-	{_PPaths,PPath,PName} = split_path(H),
-	PRName = add_suffix(PName,Suffix),
-	case PPath of 
-		[] ->
-			case ets:lookup(ai_mustache,{PName,Path}) of 
-				[] -> 
-					File = partial_file(ViewPath,Path,PRName),
-					case file:read_file(File) of 
-						{ok,Body}->
-							{IR,Partials} = ai_mustache_parser:parse(Body),
-							Key = {PName,Path},
-							ets:insert(ai_mustache,{Key,Partials}),
-							ets:insert(ai_mustache_ir,{Key,IR}),
-							load(Partials,ViewPath,Path,Suffix),
-							load(T,ViewPath,Path,Suffix);
-						Error -> Error 
-					end;
-				_ -> load(T,ViewPath,Path,Suffix)
-			end;
-		_ ->
-			case ets:lookup(ai_mustache,{PName,PPath}) of 
-				[] -> 
-					File = partial_file(ViewPath,PPath,PRName),
-					case file:read_file(File) of 
-						{ok,Body}->
-							{IR,Partials} = ai_mustache_parser:parse(Body),
-							Key = {PName,PPath},
-							ets:insert(ai_mustache,{Key,Partials}),
-							ets:insert(ai_mustache_ir,{Key,IR}),
-							load(Partials,ViewPath,PPath,Suffix),
-							load(T,ViewPath,Path,Suffix);
-						Error -> Error 
-					end;
-				_ ->
-					load(T,ViewPath,Path,Suffix)
-			end
-	end.
+    {_PPaths,PPath,PName} = split_path(H),
+    PRName = add_suffix(PName,Suffix),
+    case PPath of 
+        [] ->
+            case ets:lookup(ai_mustache,{PName,Path}) of 
+                [] -> 
+                    File = partial_file(ViewPath,Path,PRName),
+                    case file:read_file(File) of 
+                        {ok,Body}->
+                            {IR,Partials} = ai_mustache_parser:parse(Body),
+                            Key = {PName,Path},
+                            load(Partials,ViewPath,Path,Suffix),
+                            load(T,ViewPath,Path,Suffix),
+                            ets:insert(ai_mustache_ir,{Key,IR}),
+                            ets:insert(ai_mustache,{Key,Partials});
+                        Error -> Error 
+                    end;
+                _ -> load(T,ViewPath,Path,Suffix)
+            end;
+        _ ->
+            case ets:lookup(ai_mustache,{PName,PPath}) of 
+                [] -> 
+                    File = partial_file(ViewPath,PPath,PRName),
+                    case file:read_file(File) of 
+                        {ok,Body}->
+                            {IR,Partials} = ai_mustache_parser:parse(Body),
+                            Key = {PName,PPath},
+                            load(Partials,ViewPath,PPath,Suffix),
+                            load(T,ViewPath,Path,Suffix),
+                            ets:insert(ai_mustache_ir,{Key,IR}),
+                            ets:insert(ai_mustache,{Key,Partials});
+                        Error -> Error 
+                    end;
+                _ ->
+                    load(T,ViewPath,Path,Suffix)
+            end
+    end.
 
 
 recursive_dir(Dir) ->
@@ -363,32 +362,33 @@ recursive_dir([Path|Paths], FilesOnly, Acc) ->
 
 
 prepare_loader(ViewPath,Suffix)->
-	MaybeFiles = recursive_dir(ViewPath),
-	case MaybeFiles of 
-		{error,_} -> MaybeFiles;
-		{ok,Files}->
-			Prefix0 = filename:join(ViewPath,<<"./">>),
-			Prefix = <<Prefix0/binary,"/">>,
-			Templates = 
-				lists:foldl(fun(I0,Acc)->
-					I = ai_string:to_string(I0),
-					case has_suffix(I,Suffix) of 
-						false -> Acc;
-						_->
-							case ai_string:find(I,<<"_">>,trailing) of 
-								nomatch ->
-									T0 = ai_string:prefix(I,Prefix),
-									T1 = remove_suffix(T0,Suffix),
-									[T1|Acc];
-								_ -> Acc 
-							end
-					end
-				end,[],Files),
-			lists:foldl(fun(Template,Acc)->
-				case Acc of 
-					ok -> load(ViewPath,Template,Suffix);
-					_ -> Acc 
-				end
-			end,ok,Templates)
-	end.
+    MaybeFiles = recursive_dir(ViewPath),
+    case MaybeFiles of 
+        {error,_} -> MaybeFiles;
+        {ok,Files}->
+            Prefix0 = filename:join(ViewPath,<<"./">>),
+            Prefix = <<Prefix0/binary,"/">>,
+            Templates = 
+                lists:foldl(fun(I0,Acc)->
+                                    I = ai_string:to_string(I0),
+                                    case has_suffix(I,Suffix) of 
+                                        false -> Acc;
+                                        _->
+                                            %% 找非子模板                 
+                                            case ai_string:find(I,<<"_">>,leading) of 
+                                                nomatch ->
+                                                    T0 = ai_string:prefix(I,Prefix),
+                                                    T1 = remove_suffix(T0,Suffix),
+                                                    [T1|Acc];
+                                                _ -> Acc 
+                                            end
+                                    end
+                            end,[],Files),
+            lists:foldl(fun(Template,Acc)->
+                                case Acc of 
+                                    ok -> load(ViewPath,Template,Suffix);
+                                    _ -> Acc 
+                                end
+                        end,ok,Templates)
+    end.
 	
