@@ -71,3 +71,5 @@ run(_SectionIR,Acc,[],[{IR,OldCtx}|Stack],Partials,_Ctx)->
 run(SectionIR,Acc,[H|T],Stack,Partials,Ctx)->
      Acc0 = run(SectionIR,Acc,[],Partials,maps:merge(Ctx,H)),
      run(SectionIR,Acc0,T,Stack,Partials,Ctx).
+
+

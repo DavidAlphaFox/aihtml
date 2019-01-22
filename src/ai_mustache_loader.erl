@@ -256,7 +256,7 @@ remove_suffix(Name,Suffix)->
 has_suffix(Name,Suffix)->
     if 
         erlang:byte_size(Suffix) > 0 -> 
-            case ai_string:find(Name,Suffix,trailing) of 
+            case string:find(Name,Suffix,trailing) of 
                 nomatch -> false;
                 _ -> true 
             end;
@@ -375,9 +375,9 @@ prepare_loader(ViewPath,Suffix)->
                                         false -> Acc;
                                         _->
                                             %% 找非子模板                 
-                                            case ai_string:find(I,<<"_">>,leading) of 
+                                            case string:find(I,<<"_">>,leading) of 
                                                 nomatch ->
-                                                    T0 = ai_string:prefix(I,Prefix),
+                                                    T0 = string:prefix(I,Prefix),
                                                     T1 = remove_suffix(T0,Suffix),
                                                     [T1|Acc];
                                                 _ -> Acc 
