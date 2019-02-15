@@ -2,7 +2,7 @@
 
 -export([new/0,new/1,new/2]).
 -export([insert_child/3,append_child/2,append_children/2,children/1]).
--export([insert_attribute/3,attribute/2,attributes/1]).
+-export([insert_attribute/3,insert_attributes/2, attribute/2,attributes/1]).
 -export([set_value/2,set_id/2,set_tag/2,value/1,id/1,tag/1]).
 
 -record(ai_dom_node,{
@@ -54,6 +54,10 @@ insert_attribute(Name,Value,Node)->
 		Node#ai_dom_node{
 			attributes = maps:put(Name,Value,Node#ai_dom_node.attributes)
 		}.
+insert_attributes(Attributes,Node)->	
+		Node#ai_dom_node{
+			attributes = maps:merge(Attributes,Node#ai_dom_node.attributes)
+     }.
 attribute(Name,Node)->
 		Attributes = Node#ai_dom_node.attributes,
 		maps:get(Name,Attributes,undefined).
