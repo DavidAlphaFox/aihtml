@@ -46,6 +46,9 @@ render(track,Node)->
 render(wbr,Node)->
 		Attributes = attributes(ai_dom_node:attributes(Node)),
 		<<"<wbr",Attributes/binary,"/>">>;
+render(script,Node)->
+		Attributes = attributes(ai_dom_node:attributes(Node)),
+		<<"<script",Attributes/binary,"/>">>;
 render(Tag,Node) ->
 		TagBin = ai_string:to_string(Tag),
 		Value = ai_string:to_string(ai_dom_node:value(Node)),
@@ -66,9 +69,13 @@ render([El|Rest],Stack,Acc) ->
 	end.
 attributes(Attributes)->	
 		lists:foldl(fun({K,V},Acc)->
-												Attr = ai_string:to_string(K),
-												AttrValue = ai_string:to_string(V),
-												<<Acc/binary,Attr/binary,"=\"",AttrValue/binary,"\" ">>
+									Attr = ai_string:to_string(K),
+									case V of
+										ture -> <<Acc/binary,Attr/binary," ">>;
+										_->
+											AttrValue = ai_string:to_string(V),
+											<<Acc/binary,Attr/binary,"=\"",AttrValue/binary,"\" ">>
+									end
 								end,<<" ">>,maps:to_list(Attributes)).
 
 		
