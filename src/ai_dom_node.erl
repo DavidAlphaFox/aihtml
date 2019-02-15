@@ -1,7 +1,7 @@
 -module(ai_dom_node).
 
 -export([new/0,new/1,new/2]).
--export([insert_child/3,append_child/2,children/1]).
+-export([insert_child/3,append_child/2,append_children/2,children/1]).
 -export([insert_attribute/3,attribute/2,attributes/1]).
 -export([set_value/2,set_id/2,set_tag/2,value/1,id/1,tag/1]).
 
@@ -39,11 +39,15 @@ insert_child(Index,Child,Node)->
 										end,{0,[]},Children),
 					Node#ai_dom_node{children = lists:reverse(Children0)}
 	end.
-
+    
 append_child(Child,Node)->
 	Node#ai_dom_node{
 		children = lists:append(Node#ai_dom_node.children,[Child])
 	}.
+append_children(Children,Node)->
+    Node#ai_dom_node{
+      children = lists:append(Node#ai_dom_node.children,Children)
+     }.
 children(Node)-> Node#ai_dom_node.children.
 
 insert_attribute(Name,Value,Node)->	
@@ -55,8 +59,8 @@ attribute(Name,Node)->
 		maps:get(Name,Attributes,undefined).
 
 attributes(Node)->Node#ai_dom_node.attributes.
-		
-												
+
+
 set_value(Value,Node)-> Node#ai_dom_node{value = Value}.
 set_tag(Tag,Node)->Node#ai_dom_node{tag = Tag}.
 set_id(ID,Node)-> Node#ai_dom_node{id = ID}.
@@ -64,7 +68,3 @@ value(Node)-> Node#ai_dom_node.value.
 tag(Node)-> Node#ai_dom_node.tag.
 id(Node)-> Node#ai_dom_node.id.
 
-		
-		
-		
-		
