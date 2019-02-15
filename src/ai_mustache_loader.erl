@@ -31,24 +31,24 @@
 template(Template)->
     TBin = ai_string:to_string(Template),
     {_Paths,Path,Name} = split_path(TBin),
-    Key = {Name,Path},
-    Match = ets:lookup(ai_mustache,Key),
+    TKey = template_key(Name,Path),
+    CKey = code_key(Name,Path),
+    Match = ets:lookup(ai_mustache,TKey),
     case Match of 
         [] -> 
             ok = load(TBin),
             template(TBin);
-        [{Key,Partials}]->
+        [{TKey,Partials}]->
             {Same,Other} = partials(Path,Partials),
-            M0 = lists:foldl(fun({I,_V},Acc)->
-                                     [{I,IR}] = ets:lookup(ai_mustache_ir,I),
-                                     {PName,_PPath} = I,
-                                     Acc#{PName => IR}
+            M0 = lists:foldl(fun({I,V},Acc)->
+                                     [{I,IR}] = ets:lookup(ai_mustache,I),
+                                     Acc#{V => IR}
                              end,#{},maps:to_list(Same)),
             M1 = lists:foldl(fun({I,V},Acc)->
-                                     [{I,IR}] = ets:lookup(ai_mustache_ir,I),
+                                     [{I,IR}] = ets:lookup(ai_mustache,I),
                                      ai_maps:put(V,IR,Acc)
                              end,M0,maps:to_list(Other)),
-            [{Key,TIR}] = ets:lookup(ai_mustache_ir,Key),
+            [{CKey,TIR}] = ets:lookup(ai_mustache,CKey),
             {TIR,M1}
     end.
 partials(Path,Partials)->
@@ -56,15 +56,17 @@ partials(Path,Partials)->
                         {Paths,PPath,PName} = split_path(P),
                         case PPath of 
                             [] -> %% 同路径下模板
-                                Key = {PName,Path},
-                                [{Key,PPartials}] = ets:lookup(ai_mustache,Key),
+                                TKey = template_key(PName,Path),
+                                CKey = code_key(PName,Path),
+                                [{TKey,PPartials}] = ets:lookup(ai_mustache,TKey),
                                 {PP,PPOther} = partials(Path,PPartials),
-                                {maps:merge(Acc#{Key => Path ++ [PName]},PP),maps:merge(Other,PPOther)};
+                                {maps:merge(Acc#{ CKey => PName},PP),maps:merge(Other,PPOther)};
                             _-> %% 非同路径下模板
-                                Key = {PName,PPath},
-                                [{Key,PPartials} ] = ets:lookup(ai_mustache,Key),
+                                TKey = template_key(PName,PPath),
+                                CKey = code_key(PName,PPath),
+                                [{TKey,PPartials} ] = ets:lookup(ai_mustache,TKey),
                                 {PP,PPOther} = partials(PPath,PPartials),
-                                {Acc,maps:merge(maps:merge(Other,PP#{Key => Paths}),PPOther)}
+                                {Acc,maps:merge(maps:merge(Other,PP#{CKey => Paths}),PPOther)}
                         end
                 end,{#{},#{}},Partials).
 
@@ -104,8 +106,6 @@ start_link() ->
 init([]) ->
     ai_mustache = ets:new(ai_mustache,[set,named_table,protected,
                                        {write_concurrency,false},{read_concurrency,true}]),
-    ai_mustache_ir = ets:new(ai_mustache_ir,[set,named_table,protected,
-                                             {write_concurrency,false},{read_concurrency,true}]),
     process_flag(trap_exit, true),
     State = #state{},
     {ok,CWD} = file:get_cwd(),
@@ -243,11 +243,16 @@ format_status(_Opt, Status) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+template_key(Name,Path)->{t,Name,Path}.
+code_key(Name,Path)->{c,Name,Path}.
+    
+%% 返回值中，Paths是包含了名字
 split_path(File)->
     Paths = binary:split(File,<<"/">>,[global]),
     Name = lists:last(Paths),
     Path = lists:droplast(Paths),
     {Paths,Path,Name}.
+
 remove_suffix(Name,Suffix)->
     if 
         erlang:byte_size(Suffix) > 0 -> binary:replace(Name,Suffix,<<"">>);
@@ -282,10 +287,11 @@ load(ViewPath,Template,Suffix)->
         {ok,Body}->
             {IR,Partials} = ai_mustache_parser:parse(Body),
             {_Paths,Path,Name} = split_path(Template),
-            Key = {Name,Path},
+            TKey = template_key(Name,Path),
+            CKey = code_key(Name,Path),
             ok = load(Partials,ViewPath,Path,Suffix),
-            ets:insert(ai_mustache_ir,{Key,IR}),
-            ets:insert(ai_mustache,{Key,Partials}),
+            ets:insert(ai_mustache,{CKey,IR}),
+            ets:insert(ai_mustache,{TKey,Partials}),
             ok;
         Error -> Error 
 	end.
@@ -296,33 +302,35 @@ load([H|T],ViewPath,Path,Suffix)->
     PRName = add_suffix(PName,Suffix),
     case PPath of 
         [] ->
-            case ets:lookup(ai_mustache,{PName,Path}) of 
+            TKey = template_key(PName,Path),
+            case ets:lookup(ai_mustache,TKey) of 
                 [] -> 
                     File = partial_file(ViewPath,Path,PRName),
                     case file:read_file(File) of 
                         {ok,Body}->
                             {IR,Partials} = ai_mustache_parser:parse(Body),
-                            Key = {PName,Path},
                             load(Partials,ViewPath,Path,Suffix),
                             load(T,ViewPath,Path,Suffix),
-                            ets:insert(ai_mustache_ir,{Key,IR}),
-                            ets:insert(ai_mustache,{Key,Partials});
+                            CKey = code_key(PName,Path),
+                            ets:insert(ai_mustache,{CKey,IR}),
+                            ets:insert(ai_mustache,{TKey,Partials});
                         Error -> Error 
                     end;
                 _ -> load(T,ViewPath,Path,Suffix)
             end;
         _ ->
-            case ets:lookup(ai_mustache,{PName,PPath}) of 
+            TKey = template_key(PName,PPath),
+            case ets:lookup(ai_mustache,TKey) of 
                 [] -> 
                     File = partial_file(ViewPath,PPath,PRName),
                     case file:read_file(File) of 
                         {ok,Body}->
                             {IR,Partials} = ai_mustache_parser:parse(Body),
-                            Key = {PName,PPath},
+                            CKey = code_key(PName,PPath),
                             load(Partials,ViewPath,PPath,Suffix),
                             load(T,ViewPath,Path,Suffix),
-                            ets:insert(ai_mustache_ir,{Key,IR}),
-                            ets:insert(ai_mustache,{Key,Partials});
+                            ets:insert(ai_mustache,{CKey,IR}),
+                            ets:insert(ai_mustache,{TKey,Partials});
                         Error -> Error 
                     end;
                 _ ->
