@@ -68,7 +68,7 @@ remove_attribute(Name,Node)->
     }.
 insert_attributes(Attributes,Node)->	
 		Node#ai_dom_node{
-			attributes = maps:merge(Attributes,Node#ai_dom_node.attributes)
+			attributes = maps:merge(Node#ai_dom_node.attributes,Attributes)
      }.
 remove_attributes(Node)->
     Node#ai_dom_node{
