@@ -50,8 +50,8 @@ parse1(#state{start = StartTag} = State,Bin, Result) ->
             Pos = S + L, %%binary的切开点，Pos是未匹配字串的第一个字符
             B2  = binary:part(Bin, Pos, byte_size(Bin) - Pos),
             case binary:at(Bin, S) of
-                $\n -> parse1(State#state{standalone = true},B2,
-                        ?ADD(binary:part(Bin, 0, Pos), Result)); % \n,\n前面是个文本,此处切割出来的字符串包含\n
+                $\n -> parse1(State#state{standalone = true}, B2,
+                              ?ADD(binary:part(Bin, 0, Pos), Result)); % \n,\n前面是个文本,此处切割出来的字符串包含\n
                 _   -> parse2(State, split_tag(State, Bin), Result) %% 找到标签了，整个文本向前找标签
             end
     end.
@@ -119,6 +119,7 @@ parse_partial(State0, [Tag], NextBin0, Result0) ->
     {State1, Indent, NextBin1, Result1} = standalone(State0, NextBin0, Result0),
     Partials = State1#state.partials,
     parse1(State1#state{partials = [Tag|Partials]}, NextBin1, [{tag,partial, Tag},Indent| Result1]).
+
 %% ParseDelimiterBin :: e.g. `{{=%% %%=}}' -> `%% %%'
 -spec parse_delimiter(state(), ParseDelimiterBin :: binary(), NextBin :: binary(), Result :: [tag()]) -> {state(), [tag()]} | endtag().
 parse_delimiter(State0, ParseDelimiterBin, NextBin, Result) ->
