@@ -7,7 +7,6 @@
 %%% Created : 19 Dec 2018 by  <david@laptop-02.local>
 %%%-------------------------------------------------------------------
 -module(ai_mustache_loader).
--compile({inline, [remove_suffix/2,add_suffix/2,has_suffix/2,partial_file/3]}).
 
 -behaviour(gen_server).
 
@@ -19,7 +18,7 @@
 	terminate/2, code_change/3, format_status/2]).
 
 -export([template/1]).
--export([prepare/0,prepare/1,prepare/2]).
+-export([bootstrap/0,bootstrap/1,bootstrap/2]).
 
 -define(SERVER, ?MODULE).
 
@@ -29,51 +28,38 @@
 %%% API
 %%%===================================================================
 template(Template)->
-    TBin = ai_string:to_string(Template),
-    {_Paths,Path,Name} = split_path(TBin),
-    TKey = template_key(Name,Path),
-    CKey = code_key(Name,Path),
+    Name = ai_string:to_string(Template),
+    TKey = template_key(Name),
+    CKey = code_key(Name),
     Match = ets:lookup(ai_mustache,TKey),
     case Match of 
         [] -> 
-            ok = load(TBin),
-            template(TBin);
+            ok = load(Name),
+            template(Name);
         [{TKey,Partials}]->
-            {Same,Other} = partials(Path,Partials),
-            M0 = lists:foldl(fun({I,V},Acc)->
-                                     [{I,IR}] = ets:lookup(ai_mustache,I),
-                                     Acc#{V => IR}
-                             end,#{},maps:to_list(Same)),
+            PK = template_partial(Partials),
             M1 = lists:foldl(fun({I,V},Acc)->
                                      [{I,IR}] = ets:lookup(ai_mustache,I),
-                                     ai_maps:put(V,IR,Acc)
-                             end,M0,maps:to_list(Other)),
+                                     maps:put(V,IR,Acc)
+                             end,#{},maps:to_list(PK)),
             [{CKey,TIR}] = ets:lookup(ai_mustache,CKey),
             {TIR,M1}
     end.
-partials(Path,Partials)->
-    lists:foldl(fun(P,{Acc,Other})->
-                        {Paths,PPath,PName} = split_path(P),
-                        case PPath of 
-                            [] -> %% 同路径下模板
-                                TKey = template_key(PName,Path),
-                                CKey = code_key(PName,Path),
-                                [{TKey,PPartials}] = ets:lookup(ai_mustache,TKey),
-                                {PP,PPOther} = partials(Path,PPartials),
-                                {maps:merge(Acc#{ CKey => PName},PP),maps:merge(Other,PPOther)};
-                            _-> %% 非同路径下模板
-                                TKey = template_key(PName,PPath),
-                                CKey = code_key(PName,PPath),
-                                [{TKey,PPartials} ] = ets:lookup(ai_mustache,TKey),
-                                {PP,PPOther} = partials(PPath,PPartials),
-                                {Acc,maps:merge(maps:merge(Other,PP#{CKey => Paths}),PPOther)}
-                        end
-                end,{#{},#{}},Partials).
+
+template_partial(Partials)->
+    lists:foldl(
+      fun(P,Acc) ->
+              TKey = template_key(P),
+              CKey = code_key(P),
+              [{TKey,PPartials}] = ets:lookup(ai_mustache,TKey),
+              NewPartials = template_partial(PPartials),
+              maps:merge(Acc#{CKey => P},NewPartials)
+      end,#{},Partials).
 
 load(Template)-> gen_server:call(?SERVER,{load,Template}).
-prepare()-> gen_server:call(?SERVER,prepare).
-prepare(ViewPath)-> gen_server:call(?SERVER,{prepare,ViewPath}).
-prepare(ViewPath,Suffix)-> gen_server:call(?SERVER,{prepare,ViewPath,Suffix}).
+bootstrap()-> gen_server:call(?SERVER,bootstrap).
+bootstrap(ViewPath)-> gen_server:call(?SERVER,{bootstrap,ViewPath}).
+bootstrap(ViewPath,Suffix)-> gen_server:call(?SERVER,{bootstrap,ViewPath,Suffix}).
 
 
 %%--------------------------------------------------------------------
@@ -130,40 +116,42 @@ init([]) ->
 handle_call({load,Template},_From,#state{view_path = ViewPath,suffix = Suffix} = State)->
     Reply = 
         try
-            {_Paths,Path,Name} = split_path(Template),
-            case ets:lookup(ai_mustache,{Name,Path}) of 
-                [] -> load(ViewPath,Template,Suffix);
+            TKey = template_key(ai_string:to_string(Template)),
+            case ets:lookup(ai_mustache,TKey) of
+                [] -> load(Template,ViewPath,Suffix);
                 _ -> ok
             end
         catch
             _Error:Reason -> {error,Reason}
         end,
     {reply,Reply,State};
-handle_call({prepare,ViewPath0},_From,#state{suffix = Suffix} = State)->
+
+handle_call({bootstrap,ViewPath0},_From,#state{suffix = Suffix} = State)->
     ViewPath = ai_string:to_string(ViewPath0),
     Reply = 
         try
-            prepare_loader(ViewPath,Suffix)
+            bootstrap_load(ViewPath,Suffix)
         catch
             _Error:Reason -> {error,Reason}
         end,
     {reply,Reply,State#state{view_path = ViewPath}};
-handle_call({prepare,ViewPath0,Suffix0},_From,State)->
+
+handle_call({bootstrap,ViewPath0,Suffix0},_From,State)->
     ViewPath = ai_string:to_string(ViewPath0),
     Suffix = ai_string:to_string(Suffix0),
     Reply = 
         try
-            prepare_loader(ViewPath,Suffix)
+            bootstrap_load(ViewPath,Suffix)
         catch
             _Error:Reason -> {error,Reason}
         end,
     {reply,Reply,
      State#state{view_path = ViewPath,suffix = Suffix}
     };
-handle_call(prepare,_From,#state{view_path = ViewPath,suffix = Suffix}= State)->
+handle_call(bootstrap,_From,#state{view_path = ViewPath,suffix = Suffix}= State)->
     Reply = 
         try
-            prepare_loader(ViewPath,Suffix)
+            bootstrap_load(ViewPath,Suffix)
         catch
             _Error:Reason -> {error,Reason}
         end,
@@ -243,15 +231,8 @@ format_status(_Opt, Status) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-template_key(Name,Path)->{t,Name,Path}.
-code_key(Name,Path)->{c,Name,Path}.
-    
-%% 返回值中，Paths是包含了名字
-split_path(File)->
-    Paths = binary:split(File,<<"/">>,[global]),
-    Name = lists:last(Paths),
-    Path = lists:droplast(Paths),
-    {Paths,Path,Name}.
+template_key(Name)->{t,Name}.
+code_key(Name)->{c,Name}.
 
 remove_suffix(Name,Suffix)->
     if 
@@ -267,78 +248,35 @@ has_suffix(Name,Suffix)->
             end;
         true -> true 
     end.
-add_suffix(Name,Suffix)-> 
-    if 
-        erlang:byte_size(Suffix) > 0 -> <<Name/binary,Suffix/binary>>;
-        true -> Name 
-    end.
-	
-partial_file(ViewPath,Path,Name)->
-    case Path of 
-        [] -> filename:join(ViewPath,<<"_",Name/binary>>);
-        _ -> 
-            filename:join([ViewPath,
-                           filename:join(Path),<<"_",Name/binary>>])
-    end.
-load(ViewPath,Template,Suffix)->
-    RT = add_suffix(Template,Suffix),
-    File = filename:join(ViewPath,RT),
+
+load(Template,ViewPath,Suffix)->
+    File = filename:join(ViewPath,Template),
+    Name = remove_suffix(Template,Suffix),
     case file:read_file(File) of 
         {ok,Body}->
             {IR,Partials} = ai_mustache_parser:parse(Body),
-            {_Paths,Path,Name} = split_path(Template),
-            TKey = template_key(Name,Path),
-            CKey = code_key(Name,Path),
-            ok = load(Partials,ViewPath,Path,Suffix),
+            TKey = template_key(Name),
+            CKey = code_key(Name),
+            ok = load_partial(Partials,ViewPath,Suffix),
             ets:insert(ai_mustache,{CKey,IR}),
             ets:insert(ai_mustache,{TKey,Partials}),
             ok;
-        Error -> Error 
-	end.
-			
-load([],_ViewPath,_Path,_Suffix)->ok;
-load([H|T],ViewPath,Path,Suffix)->
-    {_PPaths,PPath,PName} = split_path(H),
-    PRName = add_suffix(PName,Suffix),
-    case PPath of 
-        [] ->
-            TKey = template_key(PName,Path),
-            case ets:lookup(ai_mustache,TKey) of 
-                [] -> 
-                    File = partial_file(ViewPath,Path,PRName),
-                    case file:read_file(File) of 
-                        {ok,Body}->
-                            {IR,Partials} = ai_mustache_parser:parse(Body),
-                            load(Partials,ViewPath,Path,Suffix),
-                            load(T,ViewPath,Path,Suffix),
-                            CKey = code_key(PName,Path),
-                            ets:insert(ai_mustache,{CKey,IR}),
-                            ets:insert(ai_mustache,{TKey,Partials});
-                        Error -> Error 
-                    end;
-                _ -> load(T,ViewPath,Path,Suffix)
-            end;
-        _ ->
-            TKey = template_key(PName,PPath),
-            case ets:lookup(ai_mustache,TKey) of 
-                [] -> 
-                    File = partial_file(ViewPath,PPath,PRName),
-                    case file:read_file(File) of 
-                        {ok,Body}->
-                            {IR,Partials} = ai_mustache_parser:parse(Body),
-                            CKey = code_key(PName,PPath),
-                            load(Partials,ViewPath,PPath,Suffix),
-                            load(T,ViewPath,Path,Suffix),
-                            ets:insert(ai_mustache,{CKey,IR}),
-                            ets:insert(ai_mustache,{TKey,Partials});
-                        Error -> Error 
-                    end;
-                _ ->
-                    load(T,ViewPath,Path,Suffix)
-            end
+        Error -> Error
     end.
 
 
+load_partial([],_ViewPath,_Suffix)-> ok;
+load_partial([H|T],ViewPath,Suffix)->
+    Name = remove_suffix(H,Suffix),
+    TKey = template_key(Name),
+    case ets:lookup(ai_mustache,TKey) of
+        [] -> load(H,ViewPath,Suffix);
+        _ -> ok
+    end,
+    load_partial(T,ViewPath,Suffix).
+
+
+%% 找出特定目录下所有的文件
 recursive_dir(Dir) ->
     recursive_dir(Dir, true). % default value of FilesOnly is true
 
@@ -357,46 +295,43 @@ recursive_dir(Dir, FilesOnly) ->
 recursive_dir([], _FilesOnly, Acc) -> Acc;
 recursive_dir([Path|Paths], FilesOnly, Acc) ->
    case filelib:is_dir(Path) of
-        false -> recursive_dir(Paths,FilesOnly,[Path | Acc]);
-        true ->
-        	{ok, Listing} = file:list_dir(Path),
-			SubPaths = [filename:join(Path, Name) || Name <- Listing],
-			Acc0 = case FilesOnly of
-					true -> Acc;
-					false -> [Path | Acc]
-			end,
-			recursive_dir(Paths ++ SubPaths, FilesOnly,Acc0)
-	end.
+       false -> recursive_dir(Paths,FilesOnly,[Path | Acc]);
+       true ->
+           {ok, Listing} = file:list_dir(Path),
+           SubPaths = [filename:join(Path, Name) || Name <- Listing],
+           Acc0 = case FilesOnly of
+                      true -> Acc;
+                      false -> [Path | Acc]
+                  end,
+           recursive_dir(Paths ++ SubPaths, FilesOnly,Acc0)
+   end.
 
 
-prepare_loader(ViewPath,Suffix)->
+bootstrap_templates(Files, Prefix,Suffix) ->
+    lists:foldl(
+      fun(I0,Acc)->
+              I = ai_string:to_string(I0),
+              case has_suffix(I,Suffix) of
+                  false -> Acc;
+                  _->
+                      T0 = string:prefix(I,Prefix),
+                      [T0|Acc]
+              end
+      end,[],Files).
+
+bootstrap_load(ViewPath,Suffix)->
     MaybeFiles = recursive_dir(ViewPath),
-    case MaybeFiles of 
+    case MaybeFiles of
         {error,_} -> MaybeFiles;
         {ok,Files}->
             Prefix0 = filename:join(ViewPath,<<"./">>),
             Prefix = <<Prefix0/binary,"/">>,
-            Templates = 
-                lists:foldl(fun(I0,Acc)->
-                                    I = ai_string:to_string(I0),
-                                    case has_suffix(I,Suffix) of 
-                                        false -> Acc;
-                                        _->
-                                            %% 找非子模板                 
-                                            case string:find(I,<<"_">>,leading) of 
-                                                nomatch ->
-                                                    T0 = string:prefix(I,Prefix),
-                                                    T1 = remove_suffix(T0,Suffix),
-                                                    [T1|Acc];
-                                                _ -> Acc 
-                                            end
-                                    end
-                            end,[],Files),
-            lists:foldl(fun(Template,Acc)->
-                                case Acc of 
-                                    ok -> load(ViewPath,Template,Suffix);
-                                    _ -> Acc 
-                                end
-                        end,ok,Templates)
-    end.
-	
+            Templates = bootstrap_templates(Files,Prefix,Suffix),
+            lists:foldl(
+              fun(Template,Acc)->
+                      case Acc of
+                          ok -> load(Template,ViewPath,Suffix);
+                          _ -> Acc
+                      end
+              end,ok,Templates)
+   end.

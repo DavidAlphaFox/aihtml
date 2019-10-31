@@ -10,8 +10,8 @@ render(IR,Partials,Ctx)-> run(<<>>,IR,[],Partials,Ctx).
 
 run(Acc,[],[],_Partials,_Ctx)-> Acc;
 
-run(Acc,[],[{H,OldCtx}|Stack],Partials,_Ctx)->
-    run(Acc,H,Stack,Partials,OldCtx);
+run(Acc,[],[H|Stack],Partials,Ctx)->
+    run(Acc,H,Stack,Partials,Ctx);
 
 run(Acc,[{binary,Value}|IR],Stack,Partials,Ctx)->
     run(<<Acc/binary,Value/binary>>,IR,Stack,Partials,Ctx);
@@ -25,7 +25,7 @@ run(Acc,[{tag,raw,Name}|IR],Stack,Partials,Ctx)->
     run(<<Acc/binary,Value/binary>>,IR,Stack,Partials,Ctx);
 %% 局部模版
 run(Acc,[{tag,partial,Name }|IR],Stack,Partials,Ctx)->
-    case map:get(Name,Partials,undefined) of
+    case maps:get(Name,Partials,undefined) of
         undefined -> run(Acc,IR,Stack,Partials,Ctx);
         NewIR -> run(Acc,NewIR,[IR|Stack],Partials,Ctx)
     end;

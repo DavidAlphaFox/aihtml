@@ -1,5 +1,5 @@
 -module(ai_mustache).
--export([prepare/0,prepare/1,prepare/2]).
+-export([bootstrap/0,bootstrap/1,bootstrap/2]).
 -export([render/2]).
 
 %% 定义如下规则
@@ -25,7 +25,6 @@ render(Template,Ctx)->
         end,
     ai_mustache_runner:render(Run,Ctx).
 
-prepare()-> ai_mustache_loader:prepare().
-prepare(ViewPath)-> ai_mustache_loader:prepare(ViewPath).
-prepare(ViewPath,Suffix)-> ai_mustache_loader:prepare(ViewPath,Suffix).
-
+bootstrap()-> ai_mustache_loader:bootstrap().
+bootstrap(ViewPath)-> ai_mustache_loader:bootstrap(ViewPath).
+bootstrap(ViewPath,Suffix)-> ai_mustache_loader:bootstrap(ViewPath,Suffix).

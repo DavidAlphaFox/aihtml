@@ -5,20 +5,15 @@
 
 context()->
     A = maps:from_list([{<<"name">>, "red"}, {<<"current">>, true}, {<<"url">>, "#Red"}]),
-    B = maps:from_list([{<<"name">>, "green"}, {<<"current">>, false}, {<<"url">>, "#Green"}]),
+    B = maps:from_list([{<<"name">>, "green"}, {<<"current">>, true}, {<<"url">>, "#Green"}]),
     C = maps:from_list([{<<"name">>, "blue"}, {<<"current">>, false}, {<<"url">>, "#Blue"}]),
     #{
-        <<"items">> => [A,B,C],
-        <<"header">> => <<"Colors">>,
-        <<"list">> => true,
-        <<"empty">> => false,
-        <<"user">> => #{ <<"name">> => <<"David Gao">>},
-        <<".shared">> => #{
-            <<"level">> => #{
-                <<"level">> => true,
-                <<"name">> => <<"VIP User">>
-            }
-          }
+      <<"items">> => [A,B,C],
+      <<"header">> => <<"Colors">>,
+      <<"list">> => true,
+      <<"empty">> => false,
+      <<"user">> => #{ <<"name">> => <<"David Gao">>},
+      <<"level">> => #{ <<"name">> => <<"VIP User">> }
     }.
 
 
@@ -32,7 +27,7 @@ start() ->
   application:start(aihtml),
 
   {ok,CWD} = file:get_cwd(),
-  ai_mustache:prepare(CWD),
+  ai_mustache:bootstrap(CWD),
 
   Output = ai_mustache:render("complex",context()),
   io:format("~ts~n",[Output]),
