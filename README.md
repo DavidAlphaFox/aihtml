@@ -7,7 +7,6 @@ file. Indeed, it is not even possible to embed logic in the template. This
 allows templates to be reused across language boundaries and for other
 language independent uses.
 
-
 Working with Mustache means dealing with templates, views, and contexts.
 Templates contain HTML (or some other format) and Mustache tags that specify
 what data to pull in. A template can be either a string or a file (usually
