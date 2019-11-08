@@ -177,6 +177,24 @@ token_to_string(Other,Acc) ->[Other|Acc].
 maybe_append([{binary,Bin}|T],Other)-> [{binary,<<Bin/binary,Other/binary>>}|T];
 maybe_append(T,Other) ->[{binary,Other}|T].
 
+strip_line([],Acc)->{lists:reverse(Acc),[]};
+strip_line([{lf,_}|T],Acc)->{lists:reverse(Acc),T};
+strip_line([H|T],Acc) -> strip_line(T,[H|Acc]).
+
+
+accumulate_until_empty(Line) -> accumulate_until_empty(Line,<<>>,line).
+
+accumulate_until_empty(<<"\n",Line/binary>>,Acc,line)->
+    accumulate_until_empty(Line,<<Acc/binary,"\n">>,empty);
+accumulate_until_empty(<<"\n",Line/binary>>,Acc,empty) ->
+    {<<Acc/binary,"\n">>,Line};
+accumulate_until_empty(<<C/utf8,Line/binary>>,Acc,_) ->
+    accumulate_until_empty(Line,<<Acc/binary,C/utf8>>,line).
+
+
+
+
+    
 
 remove_space(<<"\s",Line/binary>>)-> remove_space(Line);
 remove_space(<<"\t",Line/binary>>) ->remove_space(Line);
@@ -232,6 +250,11 @@ scan_code(<<"```",Line/binary>>,Buffer,Node,content)-> scan_code(remove_space(Li
 scan_code(<<"~~~",Line/binary>>,Buffer,Node,content)-> scan_code(remove_space(Line),Buffer,Node,space);
 scan_code(<<"\n",Line/binary>>,Buffer,Node,space)-> {Node#node{value = Buffer},Line};
 scan_code(<<C/utf8,Line/binary>>,Buffer,Node,content) -> scan_code(Line,<<Buffer/binary,C/utf8>>,Node,content).
+
+scan_backquote(Line)-> scan_backquote(remove_space(Line),[],#node{kind = quto},start).
+scan_backquote(<<">",Line/binary>>,Buffer,Node,start)-> stop;
+scan_backquote(Line,Buffer,Node,start)-> stop;
+
 
 
 
