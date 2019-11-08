@@ -1,5 +1,11 @@
 -module(ai_markdown_parser).
 -export([parse/1]).
+-export([scan_block/1]).
+-record(node,{
+              kind,
+              attrs = [],
+              value = <<>>
+             }).
 
 parse(Markdown) ->
     Tokens = tokenize(Markdown,<<>>,[]),
@@ -170,3 +176,116 @@ token_to_string(Other,Acc) ->[Other|Acc].
 
 maybe_append([{binary,Bin}|T],Other)-> [{binary,<<Bin/binary,Other/binary>>}|T];
 maybe_append(T,Other) ->[{binary,Other}|T].
+
+
+remove_space(<<"\s",Line/binary>>)-> remove_space(Line);
+remove_space(<<"\t",Line/binary>>) ->remove_space(Line);
+remove_space(Rest) -> Rest.
+
+-define(BLOCK_SCANER,[
+                      fun scan_newline/1,
+                      fun scan_indented/1,
+                      fun scan_code/1,
+                      fun scan_atx/1
+                     ]).
+
+scan_block(Line) -> scan_block(?BLOCK_SCANER,Line,[]).
+scan_block(_,eof,Acc)-> lists:reverse(Acc);
+scan_block(_,<<>>,Acc)-> lists:reverse(Acc);
+scan_block([],Line,Acc)-> scan_block(?BLOCK_SCANER,Line,Acc);
+scan_block([H|T],Line,Acc) ->
+    MethodSize = erlang:length(T),
+    case erlang:apply(H,[Line]) of
+        stop ->
+            if
+                MethodSize == 0 -> {error,lists:reverse(Acc),Line};
+                true -> scan_block(T,Line,Acc)
+            end;
+        {Node,Rest} -> scan_block(?BLOCK_SCANER,Rest,[Node|Acc])
+end.
+
+scan_newline(Line)-> scan_newline(remove_space(Line),#node{kind=newline}).
+scan_newline(<<"\n",Line/binary>>,Node)-> {Node,Line};
+scan_newline(_Line,_Node) -> stop.
+
+scan_indented(Line) -> scan_indented(Line,#node{kind=code},start).
+scan_indented(<<"\s\s\s\s",Line/binary>>,Node,start)-> scan_indented(Line,Node,content);
+scan_indented(<<"\t",Line/binary>>,Node,start) -> scan_indented(Line,Node,content);
+scan_indented(<<"\n",Line/binary>>,Node,content) -> {Node,Line};
+scan_indented(<<C/utf8,Line/binary>>,#node{value = Acc} = Node,content) ->
+    scan_indented(Line,Node#node{value= <<Acc/binary, C/utf8>>},content);
+scan_indented(_Line,_Node,_State) -> stop.
+
+scan_code(Line)-> scan_code(remove_space(Line),<<>>,#node{kind = code},start).
+
+scan_code(<<"```",Line/binary>>,Buffer,Node,start)-> scan_code(Line,Buffer,Node,flag);
+scan_code(<<"~~~",Line/binary>>,Buffer,Node,start)-> scan_code(Line,Buffer,Node,flag);
+scan_code(_Line,_Buffer,_Node,start) -> stop;
+scan_code(<<"\n",Line/binary>>,Buffer, #node{attrs = Attrs} = Node,flag) ->
+    case string:trim(Buffer) of
+        <<>> -> scan_code(Line,<<>>,Node,content);
+        Lang -> scan_code(Line,<<>>,Node#node{ attrs = [{lang,Lang} | Attrs] },content)
+    end;
+scan_code(<<C/utf8,Line/binary>>,Buffer,Node,flag) ->
+    scan_code(Line,<<Buffer/binary,C/utf8>>,Node,flag);
+scan_code(<<"```",Line/binary>>,Buffer,Node,content)-> scan_code(remove_space(Line),Buffer,Node,space);
+scan_code(<<"~~~",Line/binary>>,Buffer,Node,content)-> scan_code(remove_space(Line),Buffer,Node,space);
+scan_code(<<"\n",Line/binary>>,Buffer,Node,space)-> {Node#node{value = Buffer},Line};
+scan_code(<<C/utf8,Line/binary>>,Buffer,Node,content) -> scan_code(Line,<<Buffer/binary,C/utf8>>,Node,content).
+
+
+
+scan_atx(Line)-> scan_atx(remove_space(Line),<<>>,#node{kind = heading},start).
+
+%% 扫描 #号
+scan_atx(<<"#",Line/binary>>,Buffer,Node,start)-> scan_atx(Line,<<Buffer/binary,"#">>,Node,hash);
+%% 如果start不是#号，直接停止
+scan_atx(_Line,_Buffer,_Node,start)-> stop;
+scan_atx(<<"#",Line/binary>>,Buffer,Node,hash)->
+    NewBuffer = <<Buffer/binary,"#">>,
+    if
+        erlang:byte_size(NewBuffer) > 6 -> stop;
+        true -> scan_atx(Line,NewBuffer,Node,start)
+    end;
+scan_atx(Line,Buffer,#node{ attrs = Attrs } = Node,hash) ->
+    AtxSize = erlang:byte_size(Buffer),
+    if
+        AtxSize > 6 -> stop;
+        true -> scan_atx(Line,<<>>,
+                         Node#node{
+                           attrs = [{depth,AtxSize}|Attrs]
+                          },{content,start})
+    end;
+%% #后面的空格
+scan_atx(<<"\s",Line/binary>>, Buffer,Node,{content,start} = S)-> scan_atx(Line,Buffer,Node,S);
+scan_atx(<<"\t",Line/binary>>, Buffer,Node,{content,start} = S)-> scan_atx(Line,Buffer,Node,S);
+
+%% 内容中的空格
+scan_atx(<<"\s",Line/binary>>,Buffer,Node,{content,content})-> scan_atx(Line,<<Buffer/binary,"\s">>,Node,{content,space});
+scan_atx(<<"\t",Line/binary>>,Buffer,Node,{content,content})-> scan_atx(Line,<<Buffer/binary,"\t">>,Node,{content,space});
+
+%% 扫描内容中空格
+scan_atx(<<"\s",Line/binary>>, Buffer,Node,{content,space})-> scan_atx(Line,<<Buffer/binary,"\s">>,Node,{content,space});
+scan_atx(<<"\t",Line/binary>>, Buffer,Node,{content,space})-> scan_atx(Line,<<Buffer/binary,"\t">>,Node,{content,space});
+scan_atx(<<"#",Line/binary>>, Buffer,Node,{content,space})-> scan_atx(Line,<<Buffer/binary,"#">>,Node,{content,space});
+
+scan_atx(<<>>,_Buffer,Node,_S)-> {Node,eof};
+scan_atx(<<"\n",Line/binary>>,_Buffer,Node,_S) -> {Node,Line};
+%% 内容
+scan_atx(<<C/utf8,Line/binary>>,Buffer,#node{value = Acc } = Node,{content, T} = S)->
+    case T of
+        space ->
+            scan_atx(Line,<<>>,
+                     Node#node{ value = <<Acc/binary,Buffer/binary,C/utf8>> },
+                     {content, content});
+        hash ->
+            scan_atx(Line,<<>>,
+                     Node#node{ value =  <<Acc/binary,Buffer/binary,C/utf8>>} ,
+                     {content,content});
+        start ->
+            scan_atx(Line,Buffer,
+                     Node#node{ value = <<Acc/binary,C/utf8>>},
+                     {content,content});
+        _ ->
+            scan_atx(Line,Buffer,Node#node{ value = <<Acc/binary,C/utf8>> },S)
+    end.
