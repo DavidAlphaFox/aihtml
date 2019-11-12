@@ -12,6 +12,7 @@
                       fun scan_indented/1,
                       fun scan_code/1,
                       fun scan_blockquote/1,
+                      fun scan_thematic/1,
                       fun scan_atx/1,
                       fun scan_paragraph/1
                      ]).
@@ -49,12 +50,6 @@ combine_backquote([#node{kind = quote} = N1,
             combine_backquote([N1#node{children = Children}|T], Acc)
     end;
 combine_backquote([H|T],Acc) -> combine_backquote(T,[H|Acc]).
-
-
-
-
-
-
 
 remove_space(<<"\s",Line/binary>>)-> remove_space(Line);
 remove_space(<<"\t",Line/binary>>) ->remove_space(Line);
@@ -138,8 +133,33 @@ scan_blockquote(<<"\n",Line/binary>>,Buffer,Node,{content,content})->
     {Node#node{value = <<Buffer/binary,"\n">>},Line};
 scan_blockquote(<<C/utf8,Line/binary>>,Buffer,Node,{content,_}) ->
     scan_blockquote(Line,<<Buffer/binary,C/utf8>>,Node,{content,content}).
+%% <hr />标签
 
+scan_thematic(Line)-> scan_thematic(remove_space(Line),<<>>,#node{kind = hr},start).
+scan_thematic(<<"_",Line/binary>>,Buffer,Node,start)->
+  scan_thematic(Line,<<Buffer/binary,"_">>,Node,{content,underscore});
+scan_thematic(<<"*",Line/binary>>,Buffer,Node,start)->
+  scan_thematic(Line,<<Buffer/binary,"*">>,Node,{content,star});
+scan_thematic(<<"-",Line/binary>>,Buffer,Node,start)->
+  scan_thematic(Line,<<Buffer/binary,"-">>,Node,{content,dash});
+scan_thematic(_Line,_Buffer,_Node,start) -> stop;
 
+scan_thematic(<<"\s",Line/binary>>,Buffer,Node,{content,_} = S) ->
+  scan_thematic(Line,Buffer,Node,S);
+scan_thematic(<<"\t",Line/binary>>,Buffer,Node,{content,_} = S) ->
+  scan_thematic(Line,Buffer,Node,S);
+scan_thematic(<<"\n",Line/binary>>,Buffer,Node,{content,_} )->
+  if 
+    erlang:byte_size(Buffer) >= 3 -> {Node,Line};
+    true -> stop
+  end;
+scan_thematic(<<C/utf8,Line/binary>>,Buffer,Node,{content,T} = S) ->
+  case {C,T} of
+    {$*, star} -> scan_thematic(Line,<<Buffer/binary,"*">>,Node,S);
+    {$-, dash} -> scan_thematic(Line,<<Buffer/binary,"-">>,Node,S);
+    {$_, underscore} -> scan_thematic(Line,<<Buffer/binary,"_">>,Node,S);
+    _ -> stop
+  end.
 scan_atx(Line)-> scan_atx(remove_space(Line),<<>>,#node{kind = heading},start).
 
 %% 扫描 #号
