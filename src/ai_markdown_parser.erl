@@ -14,6 +14,7 @@
                       fun scan_blockquote/1,
                       fun scan_thematic/1,
                       fun scan_atx/1,
+                      fun scan_list/1,
                       fun scan_paragraph/1
                      ]).
 
@@ -215,9 +216,37 @@ scan_atx(<<C/utf8,Line/binary>>,Buffer,#node{value = Acc } = Node,{content, T} =
             scan_atx(Line,Buffer,Node#node{ value = <<Acc/binary,C/utf8>> },S)
     end.
 
+scan_list(Line)-> scan_list(Line,<<>>,[],start).
+scan_list(<<"\s",Line/binary>>,Buffer,Nodes,start)->
+  scan_list(Line,<<Buffer/binary,"\s">>,Nodes,start);
+%% 第一个li标签，空格不应该大于3
+scan_list(<<"-",Line/binary>>,Buffer,[],start) ->
+  Depth = erlang:byte_size(Buffer),
+  if
+    Depth > 3 -> stop;
+    true ->
+      scan_list(Line,<<>>,[#node{kind = ul}],content)
+  end;
+scan_list(<<"-",Line/binary>>,Buffer,Nodes,start) ->
+  scan_list(Line,<<>>,[#node{kind = ul, attrs = [{depth,erlang:byte_size(Buffer)}]} | Nodes],content);
+scan_list(_Line,_Buffer,[],start)-> stop;
+scan_list(Line, Buffer, [Node|_] = Nodes, start) ->
+  Depth = proplists:get_value(depth,Node#node.attrs),
+  BufferSize = erlang:byte_size(Buffer),
+  if 
+    (BufferSize >= Depth) ->
+      scan_list(Line,Buffer,Nodes,{content,block});
+    true ->
+      {Nodes,<<Buffer/binary,Line/binary>>}
+  end;
+scan_list(<<"\n",Line/binary>>,Buffer,[Node|T],content)->
+  scan_list(Line,<<>>,[Node#node{value = <<Buffer/binary,"\n">>} | T],start);
+scan_list(<<C/utf8,Line/binary>>,Buffer,Nodes,content) ->
+  scan_list(Line,<<Buffer/binary,C/utf8>>,Nodes,content).
+      
+
 scan_paragraph(Line)->
     scan_paragraph(remove_space(Line),<<>>,#node{kind = paragraph}).
-
 scan_paragraph(<<>>,Buffer,Node)-> {Node#node{value = Buffer},eof};
 scan_paragraph(<<"\t",Line/binary>>,Buffer,Node)-> {Node#node{value = Buffer},Line};
 scan_paragraph(<<"\s\s\s\s",Line/binary>>,Buffer,Node) -> {Node#node{value = Buffer},Line};
