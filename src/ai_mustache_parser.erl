@@ -29,8 +29,7 @@
 parse(Body)->
     {IR,State} = parse(#state{},Body),
     IR1 = merge_continuous_binary(IR),
-    IR2 = remove_empty_section(IR1),
-    {merge_continuous_binary(IR2),State#state.partials}.
+    {IR1,State#state.partials}.
 -spec parse(state(),binary()) -> {[tag()],#state{}}.
 parse(State0,Bin) ->
     case parse1(State0,Bin,[]) of
@@ -282,16 +281,3 @@ merge_continuous_binary(IR)->
                 end,<<>>,Rest),
             L1 ++ [{binary,MergeBinary}]
         end.
-remove_empty_section(IR)->
-        lists:foldl(fun(I,Acc)->
-            case I of 
-                {section,_Keys,IR1,_Expect}->
-                    case IR1 of
-                        [] -> Acc;
-                        [<<>>] -> Acc;
-                        _ -> Acc ++ [I]
-                    end;
-                _->
-                    Acc ++ [I]
-            end
-        end,[],IR).
