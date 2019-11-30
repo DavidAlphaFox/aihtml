@@ -225,7 +225,7 @@ standalone(#state{standalone = false} = State, Post, [Pre | Result]) ->
         {binary,PreBin}->
             {State, <<>>, Post, ?ADD(PreBin, Result)};
         _ ->
-            {State, <<>>, Post, ?ADD(Pre, Result)}
+            {State, <<>>, Post, [Pre|Result]}
     end;
 standalone(#state{standalone = false} = State, Post, Result) ->
     {State, <<>>, Post, Result};
