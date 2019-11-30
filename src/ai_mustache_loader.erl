@@ -19,6 +19,7 @@
 
 -export([template/1]).
 -export([bootstrap/0,bootstrap/1,bootstrap/2]).
+-export([reload/0]).
 
 -define(SERVER, ?MODULE).
 
@@ -27,6 +28,9 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
+reload() ->
+   gen_server:call(?SERVER, reload).
+
 template(Template)->
     Name = ai_string:to_string(Template),
     TKey = template_key(Name),
@@ -125,7 +129,15 @@ handle_call({load,Template},_From,#state{view_path = ViewPath,suffix = Suffix} =
             _Error:Reason -> {error,Reason}
         end,
     {reply,Reply,State};
-
+handle_call(reload,_From,#state{suffix = Suffix, view_path = ViewPath} = State)->
+   Reply =
+      try
+         ets:delete_all_objects(ai_mustache),
+         bootstrap_load(ViewPath,Suffix)
+      catch
+         _Error:Reason -> { error,Reason }
+      end,
+   {reply,Reply,State};
 handle_call({bootstrap,ViewPath0},_From,#state{suffix = Suffix} = State)->
     ViewPath = ai_string:to_string(ViewPath0),
     Reply = 
