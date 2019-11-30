@@ -1,5 +1,10 @@
 <h1>{{header}}</h1>
-
+<ul>
+  {{# items}}
+    {{> shared/item}}
+  {{/ items}}
+</ul>
+{{> shared/user}}
 |
 {{#boolean}}
 {{/boolean}}
