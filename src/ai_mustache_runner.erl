@@ -29,6 +29,20 @@ run(Acc,[{tag,partial,Name }|IR],Stack,Partials,Ctx)->
         undefined -> run(Acc,IR,Stack,Partials,Ctx);
         NewIR -> run(Acc,NewIR,[IR|Stack],Partials,Ctx)
     end;
+
+%% lamda 扩展，非标准
+run(Acc,[{lamda,Name}| IR],Stack,Partials,Ctx)->
+    case ai_maps:get(Name,Ctx,undefined) of
+        undefined -> run(Acc,IR,Stack,Partials,Ctx);
+        [Fun,Value] when erlang:is_function(Fun,2)->
+            Acc0 = Fun(Value,Ctx),
+            run(<<Acc/binary,Acc0/binary>>,IR,Stack,Partials,Ctx);
+        Fun when erlang:is_function(Fun, 1)->
+            Acc0 = Fun(Ctx),
+            run(<<Acc/binary,Acc0/binary>>,IR,Stack,Partials,Ctx)
+    end;
+
+
 %% section
 run(Acc,[{section,Name,SectionIR,false}|IR],Stack,Partials,Ctx)->
     case ai_maps:get(Name,Ctx,undefined) of

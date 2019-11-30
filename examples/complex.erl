@@ -2,6 +2,9 @@
 -compile(export_all).
 
 -define(COUNT, 500).
+yield(Name,Ctx)->
+  Header = maps:get(<<"header">>,Ctx),
+  <<Name/binary," is ",Header/binary>>.
 
 context()->
     A = maps:from_list([{<<"name">>, "red"}, {<<"current">>, true}, {<<"url">>, "#Red"}]),
@@ -13,7 +16,8 @@ context()->
       <<"list">> => true,
       <<"empty">> => false,
       <<"user">> => #{ <<"name">> => <<"David Gao">>},
-      <<"level">> => #{ <<"name">> => <<"VIP User">> }
+      <<"level">> => #{ <<"name">> => <<"VIP User">> },
+      <<"yield">> => [fun yield/2,<<"Test">>]
     }.
 
 
