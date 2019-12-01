@@ -75,7 +75,7 @@ run(Acc,[{section,Name,SectionIR,true}|IR],Stack,Partials,Ctx)->
             case L of 
                 [] -> run(Acc,IR,Stack,Partials,Ctx); 
                 _ -> 
-                    run_section(Acc,SectionIR,L,[IR|Stack],Partials,Ctx)
+                    run_section(Acc,SectionIR,L,[IR|Stack],Partials,Ctx,Name)
             end;
         F when erlang:is_function(F,2) ->
             Acc0 = run(<<>>,SectionIR,[],Partials,Ctx),
@@ -93,8 +93,9 @@ run(Acc,[{section,Name,SectionIR,true}|IR],Stack,Partials,Ctx)->
             run(Acc,IR,Stack,Partials,Ctx)
     end.
 
-run_section(Acc,_SectionIR,[],[IR|Stack],Partials,Ctx)->
-     run(Acc,IR,Stack,Partials,Ctx);
-run_section(Acc,SectionIR,[H|T],Stack,Partials,Ctx)->
-     Acc0 = run(Acc,SectionIR,[],Partials,maps:merge(Ctx,H)),
-     run_section(Acc0,SectionIR,T,Stack,Partials,Ctx).
+run_section(Acc,_SectionIR,[],[IR|Stack],Partials,Ctx,_Name)->
+    run(Acc,IR,Stack,Partials,Ctx);
+run_section(Acc,SectionIR,[H|T],Stack,Partials,Ctx,Name)->
+    SectionCtx = maps:merge(ai_maps:put(Name,H,#{})),
+    Acc0 = run(Acc,SectionIR,[],Partials,SectionCtx),
+    run_section(Acc0,SectionIR,T,Stack,Partials,Ctx,Name).
