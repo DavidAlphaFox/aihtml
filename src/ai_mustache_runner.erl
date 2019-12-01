@@ -96,6 +96,6 @@ run(Acc,[{section,Name,SectionIR,true}|IR],Stack,Partials,Ctx)->
 run_section(Acc,_SectionIR,[],[IR|Stack],Partials,Ctx,_Name)->
     run(Acc,IR,Stack,Partials,Ctx);
 run_section(Acc,SectionIR,[H|T],Stack,Partials,Ctx,Name)->
-    SectionCtx = maps:merge(ai_maps:put(Name,H,#{})),
+    SectionCtx = maps:merge(Ctx,ai_maps:put(Name,H,#{})),
     Acc0 = run(Acc,SectionIR,[],Partials,SectionCtx),
     run_section(Acc0,SectionIR,T,Stack,Partials,Ctx,Name).
