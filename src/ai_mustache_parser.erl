@@ -6,7 +6,7 @@
 
 -define(IIF(Cond, TValue, FValue),
         case Cond of true -> TValue; false -> FValue end).
--define(ADD(X, Y), ?IIF(X =:= <<>>, Y, [X | Y])).
+-define(ADD(X, Y), ?IIF(X =:= <<>>, Y, [{binary,X} | Y])).
 
 -define(START_TAG, <<"{{">>).
 -define(STOP_TAG,  <<"}}">>).
@@ -28,9 +28,9 @@
 
 parse(Body)->
     {IR,State} = parse(#state{},Body),
-    IR1 = merge_continuous_binary(IR),
-    IR2 = remove_empty_section(IR1),
-    {merge_continuous_binary(IR2),State#state.partials}.
+    IR0 = remove_empty_section(IR),
+    {merge_continuous_binary(IR0),State#state.partials}.
+
 -spec parse(state(),binary()) -> {[tag()],#state{}}.
 parse(State0,Bin) ->
     case parse1(State0,Bin,[]) of
@@ -47,12 +47,14 @@ parse1(#state{start = StartTag} = State,Bin, Result) ->
     case binary:match(Bin, [StartTag, <<"\n">>]) of %% 找StartTag，或者\n
         nomatch -> {State, ?ADD(Bin, Result)}; %% 整个就是个binary
         {S, L}  -> %% 找到StartTag或者\n了
-            Pos = S + L, %%binary的切开点，Pos是未匹配字串的第一个字符
-            B2  = binary:part(Bin, Pos, byte_size(Bin) - Pos),
             case binary:at(Bin, S) of
-                $\n -> parse1(State#state{standalone = true}, B2,
-                              ?ADD(binary:part(Bin, 0, Pos), Result)); % \n,\n前面是个文本,此处切割出来的字符串包含\n
-                _   -> parse2(State, split_tag(State, Bin), Result) %% 找到标签了，整个文本向前找标签
+                $\n -> %% 此处进行优化，只有是换行符号的时候，才需要进行计算
+                    Pos = S + L, %%binary的切开点，Pos是未匹配字串的第一个字符
+                    B2  = binary:part(Bin, Pos, erlang:byte_size(Bin) - Pos),
+                    parse1(State#state{standalone = true}, B2,
+                           ?ADD(binary:part(Bin, 0, Pos), Result)); % \n,\n前面是个文本,此处切割出来的字符串包含\n
+                _ ->
+                    parse2(State, split_tag(State, Bin), Result) %% 找到标签了，整个文本向前找标签
             end
     end.
 %% @doc Part of the `parse/1'
@@ -64,21 +66,25 @@ parse2(State, [B1, B2, B3], Result) ->
         <<T, Tag/binary>> when T =:= $&; T =:= ${ ->
             parse1(State#state{standalone = false}, B3, [{tag,raw,keys(Tag)} | ?ADD(B1, Result)]);
         <<T, Tag/binary>> when T =:= $#; T =:= $^ ->
-            parse_section(State, ?IIF(T =:= $#, '#', '^'), keys(Tag), B3, [B1 | Result]);
+            parse_section(State, T, keys(Tag), B3, ?ADD(B1, Result));
+        <<"*",Tag/binary>> ->
+            parse1(State#state{standalone = false},B3,[{lamda,keys(Tag)}| ?ADD(B1,Result)]);
         <<"=", Tag0/binary>> ->
             Tag1 = remove_space_from_tail(Tag0),
-            Size = byte_size(Tag1) - 1,
+            Size = erlang:byte_size(Tag1) - 1,
             case Size >= 0 andalso Tag1 of
-                <<Tag2:Size/binary, "=">> -> parse_delimiter(State, Tag2, B3, [B1 | Result]);
-                _                         -> error({?PARSE_ERROR, {unsupported_tag, <<"=", Tag0/binary>>}})
+                <<Tag2:Size/binary, "=">> ->
+                    parse_delimiter(State, Tag2, B3, ?ADD(B1,Result));
+                _  ->
+                    error({?PARSE_ERROR, {unsupported_tag, <<"=", Tag0/binary>>}})
             end;
         <<"!", _/binary>> ->
-            parse3(State, B3, [B1 | Result]);
+            parse3(State, B3,?ADD(B1, Result));
         <<"/", Tag/binary>> ->
             EndTagSize = byte_size(B2) + byte_size(State#state.start) + byte_size(State#state.stop),
-            {endtag, {State, keys(Tag), EndTagSize, B3, [B1 | Result]}};
+            {endtag, {State, keys(Tag), EndTagSize, B3, ?ADD(B1,Result)}};
         <<">", Tag/binary>> ->
-            parse_partial(State, keys(Tag), B3, [B1 | Result]);
+            parse_partial(State, keys(Tag), B3, ?ADD(B1,Result));
         Tag ->
             parse1(State#state{standalone = false}, B3, [{tag,none,keys(Tag)} | ?ADD(B1, Result)])
     end;
@@ -105,20 +111,22 @@ parse_section(State0, Mark, Keys, Input0, Result0) ->
         {endtag, {State2, Keys, _LastTagSize, Rest0, LoopResult0}} ->
             {State3, _, Rest1, LoopResult1} = standalone(State2, Rest0, LoopResult0),
             case Mark of
-                '#' -> 
-                       parse1(State3, Rest1, [{section, Keys, lists:reverse(LoopResult1),true} | Result1]);
-                '^' -> parse1(State3, Rest1, [{section, Keys, lists:reverse(LoopResult1),false} | Result1])
+                $# ->
+                    parse1(State3, Rest1, [{section, Keys, lists:reverse(LoopResult1),true} | Result1]);
+                $^ ->
+                    parse1(State3, Rest1, [{section, Keys, lists:reverse(LoopResult1),false} | Result1])
             end;
         {endtag, {_, OtherKeys, _, _, _}} ->
             error({?PARSE_ERROR, {section_is_incorrect, binary_join(OtherKeys, <<".">>)}});
         _ ->
             error({?PARSE_ERROR, {section_end_tag_not_found, <<"/", (binary_join(Keys, <<".">>))/binary>>}})
     end.
+
 -spec parse_partial(state(), Tag :: binary(), NextBin :: binary(), Result :: [tag()]) -> {state(), [tag()]} | endtag().
 parse_partial(State0, [Tag], NextBin0, Result0) ->
     {State1, Indent, NextBin1, Result1} = standalone(State0, NextBin0, Result0),
     Partials = State1#state.partials,
-    parse1(State1#state{partials = [Tag|Partials]}, NextBin1, [{tag,partial, Tag},Indent| Result1]).
+    parse1(State1#state{partials = [Tag|Partials]}, NextBin1, [{tag,partial, Tag}| ?ADD(Indent,Result1)]).
 
 %% ParseDelimiterBin :: e.g. `{{=%% %%=}}' -> `%% %%'
 -spec parse_delimiter(state(), ParseDelimiterBin :: binary(), NextBin :: binary(), Result :: [tag()]) -> {state(), [tag()]} | endtag().
@@ -151,12 +159,13 @@ split_tag(#state{start = StartTag, stop = StopTag}, Bin) ->
         nomatch -> [Bin]; %% 未找到开始标签
         {StartPos, StartTagLen} ->
             PosLimit = byte_size(Bin) - StartTagLen, 
-            ShiftNum = ai_function:while({true, StartPos + 1}, %% 在下一个StartTag之前一直向前推进
-                             fun(Pos) ->  %% {{{ ,startPos 0, StartDelimiterLen = 2 ShitNum = 1
-                                     ?IIF(Pos =< PosLimit
-                                          andalso binary:part(Bin, Pos, StartTagLen) =:= StartTag,
-                                          {true, Pos + 1}, {false, Pos})
-                             end) - StartPos - 1,
+            ShiftNum = ai_function:while(
+                         {true, StartPos + 1}, %% 在下一个StartTag之前一直向前推进
+                         fun(Pos) ->  %% {{{ ,startPos 0, StartDelimiterLen = 2 ShitNum = 1
+                                 ?IIF(Pos =< PosLimit
+                                      andalso binary:part(Bin, Pos, StartTagLen) =:= StartTag,
+                                      {true, Pos + 1}, {false, Pos})
+                         end) - StartPos - 1,
             %% PreTag是StartTag之前的文本，X是包含StarTag的文本
             {PreTag, X} = erlang:split_binary(Bin, StartPos + ShiftNum), 
             Tag0  = part(X, StartTagLen, 0), %%  去掉StartTag
@@ -212,14 +221,21 @@ remove_space_from_tail_impl(_, Size) ->Size.
 %% 如果是partials,Ident需要被保留
 -spec standalone(#state{}, binary(), [tag()]) -> {#state{}, StashPre :: binary(), Post :: binary(), [tag()]}.
 standalone(#state{standalone = false} = State, Post, [Pre | Result]) ->
-    {State, <<>>, Post, ?ADD(Pre, Result)};
+    case Pre of
+        {binary,PreBin}->
+            {State, <<>>, Post, ?ADD(PreBin, Result)};
+        _ ->
+            {State, <<>>, Post, [Pre|Result]}
+    end;
 standalone(#state{standalone = false} = State, Post, Result) ->
     {State, <<>>, Post, Result};
 standalone(State, Post0, Result0) ->
-    {Pre, Result1} = case Result0 =/= [] andalso hd(Result0) of
-                         Pre0 when is_binary(Pre0) -> {Pre0, tl(Result0)};
-                         _                         -> {<<>>, Result0}
-                     end,
+    {Pre, Result1} =
+        case Result0 =/= [] andalso hd(Result0) of
+            {binary,Pre0} -> {Pre0, tl(Result0)};
+            Pre0 when is_binary(Pre0) -> {Pre0, tl(Result0)};
+            _                         -> {<<>>, Result0}
+        end,
     case remove_space_from_head(Pre) =:= <<>> andalso remove_space_from_head(Post0) of
         <<"\r\n", Post1/binary>> ->
             {State, Pre, Post1, Result1};
@@ -249,49 +265,53 @@ binary_join(Bins, Sep) ->
     erlang:iolist_to_binary([erlang:tl(Hd) | Tl]).
 
 merge_continuous_binary(IR)->
-    MergeFun = fun(NeedMerge,Acc,I)->
-        case NeedMerge of 
-            [] -> {Acc ++ [I],NeedMerge};
-            _ ->
-                MergeBinary = lists:foldl(fun(Bin,BinAcc)->
-                    <<BinAcc/binary,Bin/binary>>
-                    end,<<>>,NeedMerge),
-                {Acc ++ [{binary,MergeBinary},I],[]}
-            end
+    MergeFun =
+        fun(NeedMerge,Acc,I)->
+                case NeedMerge of
+                    [] -> {Acc ++ [I],NeedMerge};
+                    _ ->
+                        MergeBinary = lists:foldl(
+                                        fun(Bin,BinAcc)->
+                                                <<BinAcc/binary,Bin/binary>>
+                                        end,<<>>,NeedMerge),
+                        {Acc ++ [{binary,MergeBinary},I],[]}
+                end
         end,
     {L1,Rest} = 
-        lists:foldl(fun(I,{Acc,NeedMerge})->
-            case I of 
-                {section,Keys,IR1,Expect}->
-                    IR2 = merge_continuous_binary(IR1),
-                    MergeFun(NeedMerge,Acc,{section,Keys,IR2,Expect});
-                {tag,_Kin,_Keys} ->
-                    MergeFun(NeedMerge,Acc,I);
-                {binary,Bin}->
-                    {Acc,NeedMerge ++ [Bin]};
-                _ ->
-                    {Acc,NeedMerge ++ [I]}
-            end
-        end,{[],[]},IR),
+        lists:foldl(
+          fun(I,{Acc,NeedMerge})->
+                  case I of
+                      {section,Keys,IR1,Expect}->
+                          IR2 = merge_continuous_binary(IR1),
+                          MergeFun(NeedMerge,Acc,{section,Keys,IR2,Expect});
+                      {binary,Bin}->
+                          {Acc,NeedMerge ++ [Bin]};
+                      _ ->
+                          MergeFun(NeedMerge,Acc,I)
+                  end
+          end,{[],[]},IR),
     case Rest of 
         [] -> L1;
         _ ->
             MergeBinary = 
-                lists:foldl(fun(Bin,BinAcc)->
-                    <<BinAcc/binary,Bin/binary>>
-                end,<<>>,Rest),
+                lists:foldl(
+                  fun(Bin,BinAcc)->
+                          <<BinAcc/binary,Bin/binary>>
+                  end,<<>>,Rest),
             L1 ++ [{binary,MergeBinary}]
         end.
+
 remove_empty_section(IR)->
-        lists:foldl(fun(I,Acc)->
-            case I of 
-                {section,_Keys,IR1,_Expect}->
-                    case IR1 of
-                        [] -> Acc;
-                        [<<>>] -> Acc;
-                        _ -> Acc ++ [I]
-                    end;
-                _->
-                    Acc ++ [I]
-            end
-        end,[],IR).
+    lists:foldl(
+      fun(I,Acc)->
+              case I of
+                  {section,_Keys,IR1,_Expect}->
+                      case IR1 of
+                          [] -> Acc;
+                          [<<>>] -> Acc;
+                          _ -> Acc ++ [I]
+                      end;
+                  _->
+                      Acc ++ [I]
+              end
+      end,[],IR).

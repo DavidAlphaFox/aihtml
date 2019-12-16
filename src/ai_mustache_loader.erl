@@ -18,7 +18,8 @@
 	terminate/2, code_change/3, format_status/2]).
 
 -export([template/1]).
--export([bootstrap/0,bootstrap/1,bootstrap/2]).
+-export([bootstrap/0,bootstrap/2]).
+-export([reload/0]).
 
 -define(SERVER, ?MODULE).
 
@@ -27,6 +28,9 @@
 %%%===================================================================
 %%% API
 %%%===================================================================
+reload() ->
+   gen_server:call(?SERVER, reload).
+
 template(Template)->
     Name = ai_string:to_string(Template),
     TKey = template_key(Name),
@@ -57,8 +61,7 @@ template_partial(Partials)->
       end,#{},Partials).
 
 load(Template)-> gen_server:call(?SERVER,{load,Template}).
-bootstrap()-> gen_server:call(?SERVER,bootstrap).
-bootstrap(ViewPath)-> gen_server:call(?SERVER,{bootstrap,ViewPath}).
+bootstrap()-> gen_server:call(?SERVER,{bootstrap,undefined,undefined}).
 bootstrap(ViewPath,Suffix)-> gen_server:call(?SERVER,{bootstrap,ViewPath,Suffix}).
 
 
@@ -125,37 +128,35 @@ handle_call({load,Template},_From,#state{view_path = ViewPath,suffix = Suffix} =
             _Error:Reason -> {error,Reason}
         end,
     {reply,Reply,State};
+handle_call(reload,_From,#state{suffix = Suffix, view_path = ViewPath} = State)->
+   Reply =
+      try
+         ets:delete_all_objects(ai_mustache),
+         bootstrap_load(ViewPath,Suffix)
+      catch
+         _Error:Reason -> { error,Reason }
+      end,
+   {reply,Reply,State};
 
-handle_call({bootstrap,ViewPath0},_From,#state{suffix = Suffix} = State)->
-    ViewPath = ai_string:to_string(ViewPath0),
+handle_call({bootstrap,ViewPath0,Suffix0},_From,#state{suffix = Suffix, view_path = ViewPath} = State)->
+    ViewPath1 =
+      if ViewPath0 == undefined -> ViewPath;
+         true -> ai_string:to_string(ViewPath0)
+      end,
+    Suffix1 =
+      if Suffix0 == undefined -> Suffix;
+         true -> ai_string:to_string(Suffix0)
+      end,
     Reply = 
         try
-            bootstrap_load(ViewPath,Suffix)
-        catch
-            _Error:Reason -> {error,Reason}
-        end,
-    {reply,Reply,State#state{view_path = ViewPath}};
-
-handle_call({bootstrap,ViewPath0,Suffix0},_From,State)->
-    ViewPath = ai_string:to_string(ViewPath0),
-    Suffix = ai_string:to_string(Suffix0),
-    Reply = 
-        try
-            bootstrap_load(ViewPath,Suffix)
+            bootstrap_load(ViewPath1,Suffix1)
         catch
             _Error:Reason -> {error,Reason}
         end,
     {reply,Reply,
-     State#state{view_path = ViewPath,suffix = Suffix}
+     State#state{view_path = ViewPath1,suffix = Suffix1}
     };
-handle_call(bootstrap,_From,#state{view_path = ViewPath,suffix = Suffix}= State)->
-    Reply = 
-        try
-            bootstrap_load(ViewPath,Suffix)
-        catch
-            _Error:Reason -> {error,Reason}
-        end,
-    {reply,Reply,State};
+
 handle_call(_Request, _From, State) ->
     Reply = ok,
     {reply, Reply, State}.

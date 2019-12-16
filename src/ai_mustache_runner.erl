@@ -29,17 +29,26 @@ run(Acc,[{tag,partial,Name }|IR],Stack,Partials,Ctx)->
         undefined -> run(Acc,IR,Stack,Partials,Ctx);
         NewIR -> run(Acc,NewIR,[IR|Stack],Partials,Ctx)
     end;
+
+%% lamda 扩展，非标准
+run(Acc,[{lamda,Name}| IR],Stack,Partials,Ctx)->
+    case ai_maps:get(Name,Ctx,undefined) of
+        undefined -> run(Acc,IR,Stack,Partials,Ctx);
+        [Fun,Value] when erlang:is_function(Fun,2)->
+            Acc0 = Fun(Value,Ctx),
+            run(<<Acc/binary,Acc0/binary>>,IR,Stack,Partials,Ctx);
+        Fun when erlang:is_function(Fun, 1)->
+            Acc0 = Fun(Ctx),
+            run(<<Acc/binary,Acc0/binary>>,IR,Stack,Partials,Ctx)
+    end;
+
+
 %% section
 run(Acc,[{section,Name,SectionIR,false}|IR],Stack,Partials,Ctx)->
     case ai_maps:get(Name,Ctx,undefined) of
         undefined ->  run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
         false -> run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
-        true -> run(Acc,IR,Stack,Partials,Ctx);
-        L when erlang:is_list(L)->
-            case L of 
-                [] -> run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
-                _ -> run(Acc,IR,Stack,Partials,Ctx)
-            end;
+        [] -> run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
         %% 此处是扩展，当一个函数返回false的时候，里面的section就会执行
         %% 实现简单的if false操作
         F when erlang:is_function(F,1) ->
@@ -53,15 +62,14 @@ run(Acc,[{section,Name,SectionIR,false}|IR],Stack,Partials,Ctx)->
     end;
 run(Acc,[{section,Name,SectionIR,true}|IR],Stack,Partials,Ctx)->
     case ai_maps:get(Name,Ctx,undefined) of 
-        undefined ->  run(Acc,IR,Stack,Partials,Ctx);
-        false -> run(Acc,IR,Stack,Partials,Ctx);
         true ->  run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
+        %% 如果是一个maps，就是表示内部代码块需要执行
         M when erlang:is_map(M)-> run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
         L when erlang:is_list(L)->
             case L of 
                 [] -> run(Acc,IR,Stack,Partials,Ctx); 
                 _ -> 
-                    run_section(Acc,SectionIR,L,[IR|Stack],Partials,Ctx)
+                    run_section(Acc,SectionIR,L,[IR|Stack],Partials,Ctx,Name)
             end;
         F when erlang:is_function(F,2) ->
             Acc0 = run(<<>>,SectionIR,[],Partials,Ctx),
@@ -75,12 +83,16 @@ run(Acc,[{section,Name,SectionIR,true}|IR],Stack,Partials,Ctx)->
                 Run == true -> run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
                 true ->  run(Acc,IR,Stack,Partials,Ctx)
             end;
+        %% 扩展，非标准，如果是一个binary,等同于true
+        B when erlang:is_binary(B)->
+          run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
         _->
-            run(Acc,IR,Stack,Partials,Ctx)
+          run(Acc,IR,Stack,Partials,Ctx)
     end.
 
-run_section(Acc,_SectionIR,[],[IR|Stack],Partials,Ctx)->
-     run(Acc,IR,Stack,Partials,Ctx);
-run_section(Acc,SectionIR,[H|T],Stack,Partials,Ctx)->
-     Acc0 = run(Acc,SectionIR,[],Partials,maps:merge(Ctx,H)),
-     run_section(Acc0,SectionIR,T,Stack,Partials,Ctx).
+run_section(Acc,_SectionIR,[],[IR|Stack],Partials,Ctx,_Name)->
+    run(Acc,IR,Stack,Partials,Ctx);
+run_section(Acc,SectionIR,[H|T],Stack,Partials,Ctx,Name)->
+    SectionCtx = maps:merge(Ctx,ai_maps:put(Name,H,#{})),
+    Acc0 = run(Acc,SectionIR,[],Partials,SectionCtx),
+    run_section(Acc0,SectionIR,T,Stack,Partials,Ctx,Name).
