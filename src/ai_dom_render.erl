@@ -63,8 +63,8 @@ render([],[{Parent,Rest,OldAcc}|Stack],Acc)->
 render([El|Rest],Stack,Acc) ->
 	case ai_dom_node:children(El) of
 		[]->
-				NodeBin = render(ai_dom_node:tag(El),El),
-				render(Rest,Stack,<<Acc/binary,NodeBin/binary>>);
+      NodeBin = render(ai_dom_node:tag(El),El),
+			render(Rest,Stack,<<Acc/binary,NodeBin/binary>>);
 		Children -> render(Children,[{El,Rest,Acc}|Stack],<<>>)
 	end.
 
