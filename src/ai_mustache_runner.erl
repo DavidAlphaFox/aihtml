@@ -72,7 +72,11 @@ run(Acc,[{section,Name,SectionIR,true}|IR],Stack,Partials,Ctx)->
                     run_section(Acc,SectionIR,L,[IR|Stack],Partials,Ctx,Name)
             end;
         F when erlang:is_function(F,2) ->
-            Acc0 = run(<<>>,SectionIR,[],Partials,Ctx),
+            Acc0 =
+                case SectionIR of
+                    [] -> <<>>;
+                    _ -> run(<<>>,SectionIR,[],Partials,Ctx)
+                end,
             Acc1 = F(Acc0,Ctx),
             run(<<Acc/binary,Acc1/binary>>,IR,Stack,Partials,Ctx);
         %% 此处是扩展，当一个函数返回true的时候，里面的section会执行
