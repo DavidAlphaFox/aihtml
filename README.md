@@ -278,11 +278,11 @@ Inverted section in context is `fun/1`
         <<"has_frineds">> => fun has_frineds/1
     }
 
-#### lamda
+#### lambda
 
 This is an extends of aihtml on mustach syntax.
 
-Lamda in context is `fun/1`
+Lambda in context is `fun/1`
     layout.mustache
 
         {{* yield}}
@@ -295,7 +295,7 @@ Lamda in context is `fun/1`
         <<"yield">> => fun yield/1
     }
 
-Lamda in context is `fun/2` and a value
+Lambda in context is `fun/2` and a value
 
     layout.mustache
 
