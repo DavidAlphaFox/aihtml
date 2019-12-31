@@ -280,6 +280,8 @@ Inverted section in context is `fun/1`
 
 #### lamda
 
+This is an extends of aihtml on mustach syntax.
+
 Lamda in context is `fun/1`
     layout.mustache
 
