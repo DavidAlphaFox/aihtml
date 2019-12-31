@@ -1,5 +1,5 @@
 -module(ai_mustache).
--export([bootstrap/0,bootstrap/1,bootstrap/2]).
+-export([bootstrap/0,bootstrap/1]).
 -export([reload/0]).
 -export([render/2]).
 
@@ -27,7 +27,5 @@ render(Template,Ctx)->
     ai_mustache_runner:render(Run,Ctx).
 
 bootstrap()-> ai_mustache_loader:bootstrap().
-bootstrap({suffix,Suffix}) -> ai_mustache_loader:bootstrap(undefined,Suffix);
-bootstrap(ViewPath)-> ai_mustache_loader:bootstrap(ViewPath,undefined).
-bootstrap(ViewPath,Suffix)->ai_mustache_loader:bootstrap(ViewPath,Suffix).
+bootstrap(Settings) -> ai_mustache_loader:bootstrap(Settings).
 reload()-> ai_mustache_loader:reload().

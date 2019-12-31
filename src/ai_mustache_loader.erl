@@ -18,7 +18,7 @@
 	terminate/2, code_change/3, format_status/2]).
 
 -export([template/1]).
--export([bootstrap/0,bootstrap/2]).
+-export([bootstrap/0,bootstrap/1]).
 -export([reload/0]).
 
 -define(SERVER, ?MODULE).
@@ -62,7 +62,10 @@ template_partial(Partials)->
 
 load(Template)-> gen_server:call(?SERVER,{load,Template}).
 bootstrap()-> gen_server:call(?SERVER,{bootstrap,undefined,undefined}).
-bootstrap(ViewPath,Suffix)-> gen_server:call(?SERVER,{bootstrap,ViewPath,Suffix}).
+bootstrap(Settings)-> 
+    ViewPath = maps:get(views,Settings,undefined),
+    Suffix = maps:get(suffix,Settings,undefined),
+    gen_server:call(?SERVER,{bootstrap,ViewPath,Suffix}).
 
 
 %%--------------------------------------------------------------------
