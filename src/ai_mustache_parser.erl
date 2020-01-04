@@ -67,8 +67,10 @@ parse2(State, [B1, B2, B3], Result) ->
             parse1(State#state{standalone = false}, B3, [{tag,raw,keys(Tag)} | ?ADD(B1, Result)]);
         <<T, Tag/binary>> when T =:= $#; T =:= $^ ->
             parse_section(State, T, keys(Tag), B3, ?ADD(B1, Result));
+        <<T,Tag/binary>> when T =:= $+; T =:= $- ->
+            parse_has(State#state{standalone = false},T,keys(Tag),B3,?ADD(B1,Result));
         <<"*",Tag/binary>> ->
-            parse1(State#state{standalone = false},B3,[{lamda,keys(Tag)}| ?ADD(B1,Result)]);
+            parse1(State#state{standalone = false},B3,[{lambda,keys(Tag)}| ?ADD(B1,Result)]);
         <<"=", Tag0/binary>> ->
             Tag1 = remove_space_from_tail(Tag0),
             Size = erlang:byte_size(Tag1) - 1,
@@ -100,6 +102,25 @@ parse3(State0, Post0, [Tag | Result0]) when is_tuple(Tag) ->
 parse3(State0, Post0, Result0) ->
     {State1, _,Post1, Result1} = standalone(State0, Post0, Result0),
     parse1(State1, Post1, Result1).
+
+
+%% {{+ Tag}} or {{- Tag}}
+parse_has(State0,Mark,Keys,Input0,Result0)->
+    {State1,_, Input1, Result1} = standalone(State0, Input0, Result0),
+    case parse1(State1, Input1, []) of
+        {endtag, {State2, Keys, _LastTagSize, Rest0, LoopResult0}} ->
+            {State3, _, Rest1, LoopResult1} = standalone(State2, Rest0, LoopResult0),
+            case Mark of
+                $+ ->
+                    parse1(State3, Rest1, [{has, Keys, lists:reverse(LoopResult1),true} | Result1]);
+                $- ->
+                    parse1(State3, Rest1, [{has, Keys, lists:reverse(LoopResult1),false} | Result1])
+            end;
+        {endtag, {_, OtherKeys, _, _, _}} ->
+            error({?PARSE_ERROR, {has_is_incorrect, binary_join(OtherKeys, <<".">>)}});
+        _ ->
+            error({?PARSE_ERROR, {has_end_tag_not_found, <<"/", (binary_join(Keys, <<".">>))/binary>>}})
+    end.
 
 %% @doc Loop processing part of the `parse/1'
 %%
