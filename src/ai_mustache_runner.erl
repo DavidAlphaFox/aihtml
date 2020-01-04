@@ -56,6 +56,7 @@ run(Acc,[{has,Name,SectionIR,false}| IR],Stack,Partials,Ctx)->
             end;
         _ -> run(Acc,IR,Stack,Partials,Ctx)
     end;
+
 run(Acc,[{has,Name,SectionIR,true}|IR],Stack,Partials,Ctx)->
     case ai_maps:get(Name,Ctx,undefined) of
         true ->  run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
@@ -78,7 +79,6 @@ run(Acc,[{has,Name,SectionIR,true}|IR],Stack,Partials,Ctx)->
 %% section
 run(Acc,[{section,Name,SectionIR,false}|IR],Stack,Partials,Ctx)->
     case ai_maps:get(Name,Ctx,undefined) of
-        undefined ->  run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
         [] -> run(Acc,SectionIR,[IR|Stack],Partials,Ctx);
         _ -> run(Acc,IR,Stack,Partials,Ctx)
     end;

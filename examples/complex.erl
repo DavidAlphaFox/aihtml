@@ -31,7 +31,7 @@ start() ->
   application:start(aihtml),
 
   {ok,CWD} = file:get_cwd(),
-  ai_mustache:bootstrap(CWD),
+  ai_mustache:bootstrap(#{views => CWD}),
 
   Output = ai_mustache:render("complex",context()),
   io:format("~ts~n",[Output]),

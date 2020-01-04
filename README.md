@@ -110,74 +110,6 @@ Section in context is a `list`
         ]
     }
 
-Section in context is `map`
-
-    navbar.mustache
-    {{# user }}
-        <div>
-            <span>{{user.name}}</span>
-            <span>{{user.level}}</span>
-        </div>
-    {{/ user }}
-
-    navbar_context.erl
-    #{
-        <<"user">> => #{
-            <<"name">> => "David Gao",
-            <<"level">> => 1
-        }
-    }
-
-Section in context is `bool` or `binary`
-
-    friends.mustache
-    {{# has_friends }}
-    <ul> 
-     {{# friends }}
-        <li>
-            <img src="{{{ frineds.avatar }}}"/>
-            <span>{{ friends.name }}</span>
-        </li>
-     {{/ friends }}
-    </ul>
-    {{/ has_friends}}
-
-    frineds_context.erl
-    Context = #{
-        <<"friends">> => [
-            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-        ],
-        <<"has_frineds">> => true
-    }
-
-Section in context is `fun/1`
-
-    friends.mustache
-    {{# has_friends }}
-    <ul> 
-     {{# friends }}
-        <li>
-            <img src="{{{ friends.avatar }}}"/>
-            <span>{{ friends.name }}</span>
-        </li>
-     {{/ friends }}
-    </ul>
-    {{/ has_friends}}
-
-    frineds_context.erl
-    has_friends(Context) ->
-        case maps:get(<<"friends>>,Context, undefined) of 
-            undefined -> false;
-            _ -> true
-        end.
-    Context = #{
-        <<"friends">> => [
-            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-        ],
-        <<"has_frineds">> => fun has_frineds/1
-    }
 
 Section in context is `fun/2`
 The first param of function will be the rendered binary inside the section.
@@ -220,10 +152,31 @@ Inverted section in context is a `list` or not exsist
     or 
     Context = #{}
 
-Inverted section in context is `bool`
+
+#### Has Section
+
+Has section in context is `map`
+
+    navbar.mustache
+    {{+ user }}
+        <div>
+            <span>{{user.name}}</span>
+            <span>{{user.level}}</span>
+        </div>
+    {{/ user }}
+
+    navbar_context.erl
+    #{
+        <<"user">> => #{
+            <<"name">> => "David Gao",
+            <<"level">> => 1
+        }
+    }
+
+Has section in context is `bool` or `binary`
 
     friends.mustache
-    {{# has_friends }}
+    {{+ has_friends }}
     <ul> 
      {{# friends }}
         <li>
@@ -233,7 +186,61 @@ Inverted section in context is `bool`
      {{/ friends }}
     </ul>
     {{/ has_friends}}
-    {{^ has_friends }}
+
+    frineds_context.erl
+    Context = #{
+        <<"friends">> => [
+            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
+            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
+        ],
+        <<"has_frineds">> => true
+    }
+
+Has section in context is `fun/1`
+
+    friends.mustache
+    {{+ has_friends }}
+    <ul> 
+     {{# friends }}
+        <li>
+            <img src="{{{ friends.avatar }}}"/>
+            <span>{{ friends.name }}</span>
+        </li>
+     {{/ friends }}
+    </ul>
+    {{/ has_friends}}
+
+    frineds_context.erl
+    has_friends(Context) ->
+        case maps:get(<<"friends>>,Context, undefined) of 
+            undefined -> false;
+            _ -> true
+        end.
+    Context = #{
+        <<"friends">> => [
+            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
+            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
+        ],
+        <<"has_frineds">> => fun has_frineds/1
+    }
+
+
+#### Inverted Has Section
+
+Inverted has section in context is `bool`
+
+    friends.mustache
+    {+ has_friends }}
+    <ul> 
+     {{# friends }}
+        <li>
+            <img src="{{{ frineds.avatar }}}"/>
+            <span>{{ friends.name }}</span>
+        </li>
+     {{/ friends }}
+    </ul>
+    {{/ has_friends}}
+    {{- has_friends }}
         <div> Want to know some new frineds ? </div>
      {{/ has_friends }}
 
@@ -247,10 +254,10 @@ Inverted section in context is `bool`
     }
 
 
-Inverted section in context is `fun/1`
+Inverted has section in context is `fun/1`
 
     friends.mustache
-    {{# has_friends }}
+    {{+ has_friends }}
     <ul> 
      {{# friends }}
         <li>
@@ -260,7 +267,7 @@ Inverted section in context is `fun/1`
      {{/ friends }}
     </ul>
     {{/ has_friends}}
-    {{^ has_friends }}
+    {{- has_friends }}
         <div> Want to know some new frineds ? </div>
     {{/ has_friends }}
 
