@@ -1,6 +1,8 @@
 # aihtml
 
-## Erlang Mustache Template Compiler 
+A simple html render libary more than Mustache Template Complier
+
+## Erlang Mustache Template 
 
 Mustache is a framework-agnostic templating system that enforces separation of view logic from the template
 file. Indeed, it is not even possible to embed logic in the template. This
@@ -14,11 +16,6 @@ ending in .mustache). Views are Erlang modules that can define functions that
 are called and provide the data for the template tags. A context is an Erlang
 dict that contains the current context from which tags can pull data. A few
 examples will clarify how these items interact.
-
-NOTE: This is alpha software. Do not use it in production without extensive
-testing. The API may change at any time. It still lacks some of the features
-of Mustache for Ruby and the performance (even with compiled templates) is not
-yet where I'd like it to be.
 
 
 ## Installation
