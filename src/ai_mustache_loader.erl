@@ -32,11 +32,11 @@ reload() ->
    gen_server:call(?SERVER, reload).
 
 template(Template)->
-    Name = ai_string:to_string(Template),
-    TKey = template_key(Name),
-    CKey = code_key(Name),
-    Match = ets:lookup(ai_mustache,TKey),
-    case Match of 
+   Name = erlang:binary_to_atom(ai_string:to_string(Template), utf8),
+   TKey = template_key(Name),
+   CKey = code_key(Name),
+   Match = ets:lookup(ai_mustache,TKey),
+   case Match of
         [] -> 
             ok = load(Name),
             template(Name);
@@ -254,30 +254,31 @@ has_suffix(Name,Suffix)->
     end.
 
 load(Template,ViewPath,Suffix)->
-    File = filename:join(ViewPath,Template),
-    Name = remove_suffix(Template,Suffix),
-    case file:read_file(File) of 
-        {ok,Body}->
-            {IR,Partials} = ai_mustache_parser:parse(Body),
-            TKey = template_key(Name),
-            CKey = code_key(Name),
-            ok = load_partial(Partials,ViewPath,Suffix),
-            ets:insert(ai_mustache,{CKey,IR}),
-            ets:insert(ai_mustache,{TKey,Partials}),
-            ok;
-        Error -> Error
+   File = filename:join(ViewPath,Template),
+   Name = erlang:binary_to_atom(remove_suffix(Template,Suffix),utf8),
+   case file:read_file(File) of
+      {ok,Body}->
+         {IR,Partials} = ai_mustache_parser:parse(Body),
+         TKey = template_key(Name),
+         CKey = code_key(Name),
+         ok = load_partial(Partials,ViewPath,Suffix),
+         ets:insert(ai_mustache,{CKey,IR}),
+         ets:insert(ai_mustache,{TKey,Partials}),
+         ok;
+      Error -> Error
     end.
 
 
 load_partial([],_ViewPath,_Suffix)-> ok;
 load_partial([H|T],ViewPath,Suffix)->
-    Name = remove_suffix(H,Suffix),
-    TKey = template_key(Name),
-    case ets:lookup(ai_mustache,TKey) of
-        [] -> load(H,ViewPath,Suffix);
-        _ -> ok
-    end,
-    load_partial(T,ViewPath,Suffix).
+   File = ai_string:to_string(H),
+   Name = erlang:binary_to_atom(remove_suffix(File,Suffix),utf8),
+   TKey = template_key(Name),
+   case ets:lookup(ai_mustache,TKey) of
+      [] -> load(File,ViewPath,Suffix);
+      _ -> ok
+   end,
+   load_partial(T,ViewPath,Suffix).
 
 
 %% 找出特定目录下所有的文件

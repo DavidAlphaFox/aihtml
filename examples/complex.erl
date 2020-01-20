@@ -3,21 +3,21 @@
 
 -define(COUNT, 500).
 yield(Name,Ctx)->
-  Header = maps:get(<<"header">>,Ctx),
+  Header = maps:get(header,Ctx),
   <<Name/binary," is ",Header/binary>>.
 
 context()->
-    A = maps:from_list([{<<"name">>, "red"}, {<<"current">>, true}, {<<"url">>, "#Red"}]),
-    B = maps:from_list([{<<"name">>, "green"}, {<<"current">>, true}, {<<"url">>, "#Green"}]),
-    C = maps:from_list([{<<"name">>, "blue"}, {<<"current">>, false}, {<<"url">>, "#Blue"}]),
+    A = maps:from_list([{name, "red"}, {current, true}, {url, "#Red"}]),
+    B = maps:from_list([{name, "green"}, {current, true}, {url, "#Green"}]),
+    C = maps:from_list([{name, "blue"}, {current, false}, {url, "#Blue"}]),
     #{
-      <<"items">> => [A,B,C],
-      <<"header">> => <<"Colors">>,
-      <<"list">> => true,
-      <<"empty">> => false,
-      <<"user">> => #{ <<"name">> => <<"David Gao">>},
-      <<"level">> => #{ <<"name">> => <<"VIP User">> },
-      <<"yield">> => [fun yield/2,<<"Test">>]
+      items => [A,B,C],
+      header => <<"Colors">>,
+      list => true,
+      empty => false,
+      user => #{ name => <<"David Gao">>},
+      level => #{ name => <<"VIP User">> },
+      yield => [fun yield/2,<<"Test">>]
     }.
 
 

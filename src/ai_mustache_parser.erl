@@ -11,7 +11,7 @@
 -define(START_TAG, <<"{{">>).
 -define(STOP_TAG,  <<"}}">>).
 
--type key()    :: binary().
+-type key()    :: atom().
 -type tag()    :: {tag,none,[key()]}
                 | {tag,partial,[key()]}
                 | {tag,raw,[key()]}
@@ -216,8 +216,8 @@ split_tag(#state{start = StartTag, stop = StopTag}, Bin) ->
 keys(Bin0) ->
     Bin1 = << <<X:8>> || <<X:8>> <= Bin0, X =/= $  >>,
     case Bin1 =:= <<>> orelse Bin1 =:= <<".">> of
-        true  -> [Bin1];
-        false -> [X || X <- binary:split(Bin1, <<".">>, [global]), X =/= <<>>]
+        true  -> [erlang:binary_to_atom(Bin1,utf8)];
+        false -> [erlang:binary_to_atom(X,utf8) || X <- binary:split(Bin1, <<".">>, [global]), X =/= <<>>]
     end.
 -spec remove_space_from_head(binary()) -> binary().
 remove_space_from_head(<<X:8, Rest/binary>>) 
