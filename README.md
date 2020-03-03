@@ -50,15 +50,19 @@ aihtml has to bootstrap before rendering mustache files.
 
 It boostraps using function `ai_mustache:bootstrap`, it will using `views` directory as default directory where the mustache files are stored. And will compile all mustache files with the suffix `.mustache` into IR code and store them in ets. 
 
-    bootstrap()-> ai_mustache_loader:bootstrap().
+```erlang
+bootstrap()-> ai_mustache_loader:bootstrap().
+```
 
 And there is a function which can accept one params settings to change default settings.
 
-    bootstrap(Settings) -> ai_mustache_loader:bootstrap(Settings).
-    Settings :: #{ 
-        views :=  binary(),
-        suffix := binary()
-    }.
+```erlang
+bootstrap(Settings) -> ai_mustache_loader:bootstrap(Settings).
+Settings :: #{ 
+    views :=  binary(),
+    suffix := binary()
+}.
+```
 
 ###  Render Templates
 
@@ -66,22 +70,23 @@ And there is a function which can accept one params settings to change default s
 
 aihtml only support `maps` as context params when it render a mustache file. And the key must be a `binary`.
 
-
-
-    #{
-        <<"user">> => #{
-            <<"name">> => "David Gao",
-            <<"level">> => 1
-        },
-        <<"stars">> => 10
-    }
+```erlang
+#{
+    <<"user">> => #{
+        <<"name">> => "David Gao",
+        <<"level">> => 1
+    },
+    <<"stars">> => 10
+}
+```
 
 #### Partials
 
 aihtml supports partials, and it will auto load the partial mustache file from `views` directory which can be modified by bootstrap.
 
-
-    {{> shared/user }}
+```erlang
+{{> shared/user }}
+```
 
 If we use the default settings, aihtml will load `user.mustache` from `views/shared` directory auto.
 
@@ -89,231 +94,265 @@ If we use the default settings, aihtml will load `user.mustache` from `views/sha
 
 Section in context is a `list` 
     
-    friends.mustache
-    <ul> 
-     {{# friends }}
-        <li>
-            <img src="{{{ friends.avatar }}}"/>
-            <span>{{ friends.name }}</span>
-        </li>
-     {{/ frineds }}
-    </ul>
-
-    frineds_context.erl
-    Context = #{
-        <<"friends">> => [
-            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-        ]
-    }
+friends.mustache
+```mustache
+<ul> 
+  {{# friends }}
+    <li>
+        <img src="{{{ friends.avatar }}}"/>
+        <span>{{ friends.name }}</span>
+    </li>
+  {{/ friends }}
+</ul>
+```
+friends_context.erl
+```erlang
+Context = #{
+    <<"friends">> => [
+        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
+        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
+    ]
+}
+```
 
 
 Section in context is `fun/2`
 The first param of function will be the rendered binary inside the section.
 
-    friends.mustache
-    {{# warpped }}
-    <ul> 
-     {{# friends }}
-        <li>
-            <img src="{{{ friends.avatar }}}"/>
-            <span>{{ friends.name }}</span>
-        </li>
-     {{/ friends }}
-    </ul>
-    {{/ warpped}}
+friends.mustache
+```mustache
+{{# warpped }}
+<ul> 
+ {{# friends }}
+    <li>
+        <img src="{{{ friends.avatar }}}"/>
+        <span>{{ friends.name }}</span>
+    </li>
+ {{/ friends }}
+</ul>
+{{/ warpped}}
+```
 
-    frineds_context.erl
-    warpped(Acc,Context) -> <<"<div> ",Acc/binary," </div>" >>.
-    Context = #{
-        <<"friends">> => [
-            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-        ],
-        <<"warpped">> => fun warpped/2
-    }
+friends_context.erl
+```erlang
+warpped(Acc,Context) -> <<"<div> ",Acc/binary," </div>" >>.
+Context = #{
+    <<"friends">> => [
+        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
+        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
+    ],
+    <<"warpped">> => fun warpped/2
+}
+```
 
 #### Inverted Sections
 
 Inverted section in context is a `list` or not exsist
 
-    friends.mustache
-     {{^ friends }}
-        <div> Want to know some new frineds ? </div>
-     {{/ frineds }}
+friends.mustache
+```mustache
+{{^ friends }}
+  <div> Want to know some new friends ? </div>
+{{/ friends }}
+```
 
-    frineds_context.erl
-    Context = #{
-        <<"friends">> => []
-    }
-    or 
-    Context = #{}
-
+friends_context.erl
+```erlang
+Context = #{
+    <<"friends">> => []
+}
+```
+or 
+```erlang
+Context = #{}
+```
 
 #### Has Section
 
 Has section in context is `map`
 
-    navbar.mustache
-    {{+ user }}
-        <div>
-            <span>{{user.name}}</span>
-            <span>{{user.level}}</span>
-        </div>
-    {{/ user }}
+navbar.mustache
+```mustache
+{{+ user }}
+    <div>
+        <span>{{user.name}}</span>
+        <span>{{user.level}}</span>
+    </div>
+{{/ user }}
+```
 
-    navbar_context.erl
-    #{
-        <<"user">> => #{
-            <<"name">> => "David Gao",
-            <<"level">> => 1
-        }
+navbar_context.erl
+```erlang
+#{
+    <<"user">> => #{
+        <<"name">> => "David Gao",
+        <<"level">> => 1
     }
+}
+```
 
 Has section in context is `bool` or `binary`
 
-    friends.mustache
-    {{+ has_friends }}
-    <ul> 
-     {{# friends }}
-        <li>
-            <img src="{{{ frineds.avatar }}}"/>
-            <span>{{ friends.name }}</span>
-        </li>
-     {{/ friends }}
-    </ul>
-    {{/ has_friends}}
+friends.mustache
+```mustache
+{{+ has_friends }}
+<ul> 
+ {{# friends }}
+    <li>
+        <img src="{{{ friends.avatar }}}"/>
+        <span>{{ friends.name }}</span>
+    </li>
+ {{/ friends }}
+</ul>
+{{/ has_friends}}
+```
 
-    frineds_context.erl
-    Context = #{
-        <<"friends">> => [
-            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-        ],
-        <<"has_frineds">> => true
-    }
+friends_context.erl
+```erlang
+Context = #{
+    <<"friends">> => [
+        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
+        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
+    ],
+    <<"has_friends">> => true
+}
+```
 
 Has section in context is `fun/1`
 
-    friends.mustache
-    {{+ has_friends }}
-    <ul> 
-     {{# friends }}
-        <li>
-            <img src="{{{ friends.avatar }}}"/>
-            <span>{{ friends.name }}</span>
-        </li>
-     {{/ friends }}
-    </ul>
-    {{/ has_friends}}
+friends.mustache
+```mustache
+{{+ has_friends }}
+<ul> 
+  {{# friends }}
+    <li>
+      <img src="{{{ friends.avatar }}}"/>
+      <span>{{ friends.name }}</span>
+    </li>
+  {{/ friends }}
+</ul>
+{{/ has_friends}}
+```
 
-    frineds_context.erl
-    has_friends(Context) ->
-        case maps:get(<<"friends>>,Context, undefined) of 
-            undefined -> false;
-            _ -> true
-        end.
-    Context = #{
-        <<"friends">> => [
-            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-        ],
-        <<"has_frineds">> => fun has_frineds/1
-    }
-
+friends_context.erl
+```erlang
+has_friends(Context) ->
+    case maps:get(<<"friends>>,Context, undefined) of 
+        undefined -> false;
+        _ -> true
+    end.
+Context = #{
+    <<"friends">> => [
+        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
+        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
+    ],
+    <<"has_friends">> => fun has_friends/1
+}
+```
 
 #### Inverted Has Section
 
 Inverted has section in context is `bool`
 
-    friends.mustache
-    {+ has_friends }}
-    <ul> 
-     {{# friends }}
-        <li>
-            <img src="{{{ frineds.avatar }}}"/>
-            <span>{{ friends.name }}</span>
-        </li>
-     {{/ friends }}
-    </ul>
-    {{/ has_friends}}
-    {{- has_friends }}
-        <div> Want to know some new frineds ? </div>
-     {{/ has_friends }}
+friends.mustache
+```mustache
+{+ has_friends }}
+<ul> 
+ {{# friends }}
+    <li>
+        <img src="{{{ friends.avatar }}}"/>
+        <span>{{ friends.name }}</span>
+    </li>
+ {{/ friends }}
+</ul>
+{{/ has_friends}}
+{{- has_friends }}
+    <div> Want to know some new friends ? </div>
+ {{/ has_friends }}
+```
 
-    frineds_context.erl
-    Context = #{
-        <<"friends">> => [
-            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-        ],
-        <<"has_frineds">> => true
-    }
-
+friends_context.erl
+```erlang
+Context = #{
+    <<"friends">> => [
+        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
+        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
+    ],
+    <<"has_friends">> => true
+}
+```
 
 Inverted has section in context is `fun/1`
 
-    friends.mustache
-    {{+ has_friends }}
-    <ul> 
-     {{# friends }}
-        <li>
-            <img src="{{{ friends.avatar }}}"/>
-            <span>{{ friends.name }}</span>
-        </li>
-     {{/ friends }}
-    </ul>
-    {{/ has_friends}}
-    {{- has_friends }}
-        <div> Want to know some new frineds ? </div>
-    {{/ has_friends }}
+friends.mustache
+```mustache
+{{+ has_friends }}
+<ul> 
+ {{# friends }}
+    <li>
+        <img src="{{{ friends.avatar }}}"/>
+        <span>{{ friends.name }}</span>
+    </li>
+ {{/ friends }}
+</ul>
+{{/ has_friends}}
+{{- has_friends }}
+    <div> Want to know some new friends ? </div>
+{{/ has_friends }}
+```
 
-    frineds_context.erl
-    has_friends(Context) ->
-        case maps:get(<<"friends>>,Context, undefined) of 
-            undefined -> false;
-            _ -> true
-        end.
-    Context = #{
-        <<"friends">> => [
-            #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-            #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-        ],
-        <<"has_frineds">> => fun has_frineds/1
-    }
+friends_context.erl
+```erlang
+has_friends(Context) ->
+    case maps:get(<<"friends>>,Context, undefined) of 
+        undefined -> false;
+        _ -> true
+    end.
+Context = #{
+    <<"friends">> => [
+        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
+        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
+    ],
+    <<"has_friends">> => fun has_friends/1
+}
+```
 
 #### lambda
 
 This is an extends of aihtml on mustach syntax.
 
 Lambda in context is `fun/1`
-    layout.mustache
-
-        {{* yield}}
+layout.mustache
+```mustache
+{{* yield}}
+```
     
-    layout_context.erl
-    
-    yield(Context) ->  ......
+layout_context.erl
+```erlang
+yield(Context) ->  ......
 
-    Context = #{
-        <<"yield">> => fun yield/1
-    }
+Context = #{
+    <<"yield">> => fun yield/1
+}
+```
 
 Lambda in context is `fun/2` and a value
 
-    layout.mustache
-
-        {{* yield}}
+layout.mustache
+```mustache
+{{* yield}}
+```
     
-    layout_context.erl
-    
-    yield(Template,Context)->
-        ai_mustache:render(Template,Context).
-    render(Template,State) -> 
-        Context = maps:get(context,State,#{}),
-        Layout = maps:get(layout,State,<<"layout/default">>),
-        LayoutContext = Context#{ <<"yield">> => [fun yield/2,Template] },
-        ai_mustache:render(Layout,LayoutContext).
+layout_context.erl
+```erlang
+yield(Template,Context)->
+    ai_mustache:render(Template,Context).
+render(Template,State) -> 
+    Context = maps:get(context,State,#{}),
+    Layout = maps:get(layout,State,<<"layout/default">>),
+    LayoutContext = Context#{ <<"yield">> => [fun yield/2,Template] },
+    ai_mustache:render(Layout,LayoutContext).
+```
 
 ## Projects who use this
 
