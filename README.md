@@ -44,6 +44,11 @@ aihtml:
 
 ## How to use
 
+### Incompatible Changes
+
+In v0.3.5 we start using the atom key to replace the binary key of tags.
+So when using v0.3.5 or above, please use atom keys in `context` to render the templates. 
+
 ### Bootstrap
 
 aihtml has to bootstrap before rendering mustache files.
