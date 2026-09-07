@@ -56,6 +56,13 @@ all() ->
      mutual_partials_compile,
      umbrella_apps_are_independent,
      mustache_template_staleness,
+     %% jinja, and the two engines together
+     jinja_compile,
+     jinja_second_run_skips_everything,
+     jinja_base_change_does_not_rebuild_child,
+     dual_engines_share_an_out_dir,
+     dual_engines_are_order_independent,
+     dual_engine_module_conflict_is_reported,
      migrate_prints_a_diff,
      migrate_write_then_idempotent,
      fixtures_stay_clean].
@@ -280,7 +287,7 @@ contains(Haystack, Needle) ->
 %%%===================================================================
 
 name_mapping(_Config) ->
-    Opts = #{prefix => <<"view_">>},
+    Opts = eopts(ai_mustache_engine, <<"view_">>),
     ?assertEqual(view_index, rebar3_aihtml_name:module_of(<<"index">>, Opts)),
     ?assertEqual(view_shared_item,
                  rebar3_aihtml_name:module_of(<<"shared/item">>, Opts)),
@@ -293,11 +300,24 @@ name_mapping(_Config) ->
                  rebar3_aihtml_name:module_of(<<"shared_item">>, Opts)),
     %% A different prefix moves every module.
     ?assertEqual(tpl_index,
-                 rebar3_aihtml_name:module_of(<<"index">>, #{prefix => <<"tpl_">>})),
+                 rebar3_aihtml_name:module_of(<<"index">>,
+                                              eopts(ai_mustache_engine, <<"tpl_">>))),
     %% The name is derived from the path exactly as a {{> ...}} would spell it.
     ?assertEqual(<<"shared/item">>,
                  rebar3_aihtml_name:name_of("/v/shared/item.mustache", "/v",
-                                            ".mustache")).
+                                            ".mustache")),
+    %% The mapping is the engine's, so a jinja template lands where its own
+    %% {% extends %} would look for it.
+    JOpts = eopts(ai_jinja_engine, <<"j2_">>),
+    ?assertEqual(j2_index, rebar3_aihtml_name:module_of(<<"index">>, JOpts)),
+    ?assertEqual(j2_layout_base,
+                 rebar3_aihtml_name:module_of(<<"layout/base.j2">>, JOpts)),
+    ?assertEqual(<<"layout/base">>,
+                 rebar3_aihtml_name:name_of("/v/layout/base.j2", "/v", ".j2")).
+
+eopts(Engine, Prefix) ->
+    #mopts{engine = Engine, prefix = Prefix,
+           engine_opts = #{prefix => Prefix}}.
 
 illegal_name_detected(_Config) ->
     Opts = #mopts{prefix = <<"view_">>},
@@ -314,13 +334,13 @@ collision_detection(_Config) ->
     A = #tpl{module = view_shared_item, rel_path = "views/shared/item.mustache"},
     B = #tpl{module = view_shared_item, rel_path = "views/shared_item.mustache"},
     C = #tpl{module = view_other, rel_path = "views/other.mustache"},
-    Errors = rebar3_aihtml_check:collisions([A, B, C], #mopts{}),
+    Errors = rebar3_aihtml_check:collisions([A, B, C], mopts()),
     %% Both offending paths are named, not just the second one found.
     ?assertEqual(2, length(Errors)),
     Text = iolist_to_binary([io_lib:format("~p", [E]) || E <- Errors]),
     ?assert(contains(Text, "views/shared/item.mustache")),
     ?assert(contains(Text, "views/shared_item.mustache")),
-    ?assertEqual([], rebar3_aihtml_check:collisions([C], #mopts{})),
+    ?assertEqual([], rebar3_aihtml_check:collisions([C], mopts())),
     %% Cross-app duplicates are reported per module with the apps involved.
     ?assertEqual([{view_index, [app_a, app_b]}],
                  rebar3_aihtml_check:cross_app(
@@ -333,10 +353,20 @@ partials_exist_check(_Config) ->
     Avail = sets:from_list([<<"shared/here">>], [{version, 2}]),
     ?assertEqual([{"views/x.mustache", 3, {partial_not_found, <<"shared/gone">>}}],
                  rebar3_aihtml_check:partials_exist(Nodes, Avail,
-                                                    "views/x.mustache")),
+                                                    "views/x.mustache", mopts())),
     Avail2 = sets:from_list([<<"shared/gone">>], [{version, 2}]),
     ?assertEqual([], rebar3_aihtml_check:partials_exist(Nodes, Avail2,
-                                                        "views/x.mustache")).
+                                                        "views/x.mustache",
+                                                        mopts())),
+    %% The jinja engine checks its own targets against views_abs, so the
+    %% plugin has nothing to add and must not invent a mustache-shaped walk
+    %% over a jinja AST.
+    ?assertEqual([], rebar3_aihtml_check:partials_exist(
+                       Nodes, Avail, "views/x.j2",
+                       (mopts())#mopts{engine = ai_jinja_engine})).
+
+%% A #mopts{} good enough for the pure checks, which look at two fields.
+mopts() -> #mopts{engine = ai_mustache_engine, prefix = <<"view_">>}.
 
 rewrite_strips_one_level(_Config) ->
     Opts = #{module => m, source => <<"t">>},
@@ -449,7 +479,8 @@ generated_file_shape(Config) ->
     %% And the plugin's view of the stamp is the compiler's view of it.
     {ok, #{stamp := Stamp}} =
         rebar3_aihtml_scan:meta(filename:join([Dir, "_gen",
-                                               "view_complex.erl"])),
+                                               "view_complex.erl"]),
+                                ai_mustache_engine),
     Body = read(filename:join([Dir, "views", "complex.mustache"])),
     ?assertEqual(ai_mustache_compiler:source_hash(
                    Body, #{prefix => <<"view_">>, extensions => [],
@@ -657,7 +688,7 @@ umbrella_apps_are_independent(Config) ->
     %% Same prefix in both apps, so both views/index.mustache land on
     %% view_index. That is a real global clash and the plugin says so.
     Out = ok_run(Dir, ["mustache"], Config),
-    ?assert(contains(Out, "generated by apps")),
+    ?assert(contains(Out, "generated by ")),
     ?assert(contains(Out, "prefixes")),
     %% Each app generates into its own out_dir.
     ?assert(filelib:is_regular(filename:join([Dir, "apps", "app_a", "_gen",
@@ -762,3 +793,121 @@ walk(Dir) ->
                        end]
                   || F <- filelib:wildcard(filename:join(Dir, "*")),
                      P <- [F]]).
+
+%%%===================================================================
+%%% Jinja
+%%%===================================================================
+
+jinja_compile(Config) ->
+    Dir = project("plugin_jinja", Config),
+    Out = ok_run(Dir, ["compile"], Config),
+    ?assert(contains(Out, "jinja: compiled 4")),
+    [?assert(filelib:is_regular(filename:join([Dir, "_gen", F])))
+     || F <- ["j2_page.erl", "j2_layout_base.erl", "j2_lib.erl",
+              "j2_widgets_box.erl"]],
+    %% Inheritance, super(), an imported macro and an include, all resolved to
+    %% direct cross-module calls at build time.
+    %% Byte for byte what CPython jinja2 renders from the same four files
+    %% with the same environment -- including `bo ()\', where an explicitly
+    %% passed undefined argument does NOT fall back to the macro default.
+    Rendered = render(Dir, "io:format(\"~ts\", [pj_render:page()])"),
+    ?assertEqual(<<"<html>\n"
+                   "[base title] ada &amp; co|"
+                   "<li>ada (admin)</li>\n"
+                   "<li>bo ()</li>\n"
+                   "<div>WIDGETS</div></html>">>, Rendered),
+    ?assertEqual(<<"<div>UNTITLED</div>">>,
+                 render(Dir, "io:format(\"~ts\", [pj_render:box()])")),
+    %% The banner names the engine, which is what keeps two engines from
+    %% collecting each other's output.
+    Src = read(filename:join([Dir, "_gen", "j2_page.erl"])),
+    ?assert(contains(Src, "(jinja) from views/page.j2")),
+    ?assert(contains(Src, "-jinja_source(")),
+    %% Nothing machine specific: the same repository builds the same bytes.
+    ?assertNot(contains(Src, Dir)),
+    ?assertNot(contains(Src, "/home/")).
+
+jinja_second_run_skips_everything(Config) ->
+    Dir = project("plugin_jinja", Config),
+    _ = ok_run(Dir, ["compile"], Config),
+    Out = ok_run(Dir, ["compile"], Config),
+    ?assert(contains(Out, "jinja: compiled 0, skipped 4")).
+
+%% Architecture invariant 9, observed end to end: a module names only its
+%% direct parent, so editing a base template must not rewrite its children.
+jinja_base_change_does_not_rebuild_child(Config) ->
+    Dir = project("plugin_jinja", Config),
+    _ = ok_run(Dir, ["compile"], Config),
+    Child = filename:join([Dir, "_gen", "j2_page.erl"]),
+    Before = read(Child),
+    ok = file:write_file(filename:join([Dir, "views", "layout", "base.j2"]),
+                         <<"<html>{% block title %}new{% endblock %}"
+                           "|{% block body %}b{% endblock %}</html>\n">>),
+    Out = ok_run(Dir, ["compile"], Config),
+    ?assert(contains(Out, "jinja: compiled 1")),
+    ?assertEqual(Before, read(Child)),
+    %% ... and the child still renders the new base.
+    ?assert(contains(render(Dir, "io:format(\"~ts\", [pj_render:page()])"),
+                     "[new]")).
+
+%%%===================================================================
+%%% Both engines at once
+%%%===================================================================
+
+%% The failure this guards against is subtle: each provider's orphan collector
+%% used to see the other's output as an orphan, so every build deleted half
+%% the generated code and the result depended on which provider ran last.
+dual_engines_share_an_out_dir(Config) ->
+    Dir = project("plugin_dual", Config),
+    Out1 = ok_run(Dir, ["compile"], Config),
+    ?assert(contains(Out1, "mustache: compiled 1")),
+    ?assert(contains(Out1, "jinja: compiled 1")),
+    Files = fun() -> lists:sort(filelib:wildcard(
+                                  filename:join([Dir, "_gen", "*.erl"]))) end,
+    After1 = Files(),
+    ?assertEqual(2, length(After1)),
+    %% Three more runs must not add, remove or rewrite anything.
+    [begin
+         _ = ok_run(Dir, ["compile"], Config),
+         ?assertEqual(After1, Files())
+     end || _ <- lists:seq(1, 3)],
+    %% jinja drops the template's trailing newline by default; mustache does not.
+    ?assertEqual(<<"M:a\nJ:b x">>,
+                 render(Dir, "io:format(\"~ts~ts\", pd_render:both())")).
+
+%% Neither provider may depend on having run first.
+dual_engines_are_order_independent(Config) ->
+    Dir = project("plugin_dual", Config),
+    ok_bootstrap(Dir, Config),
+    _ = ok_run(Dir, ["mustache"], Config),
+    _ = ok_run(Dir, ["jinja"], Config),
+    Forward = generated(Dir),
+    [ok = file:delete(F) || F <- filelib:wildcard(
+                                   filename:join([Dir, "_gen", "*.erl"]))],
+    _ = ok_run(Dir, ["jinja"], Config),
+    _ = ok_run(Dir, ["mustache"], Config),
+    ?assertEqual(Forward, generated(Dir)).
+
+ok_bootstrap(Dir, Config) -> _ = bootstrap(Dir, Config), ok.
+
+generated(Dir) ->
+    lists:sort([{filename:basename(F), read(F)}
+                || F <- filelib:wildcard(filename:join([Dir, "_gen", "*.erl"]))]).
+
+%% Erlang module names are global, so the collision check has to span engines.
+dual_engine_module_conflict_is_reported(Config) ->
+    Dir = project("plugin_dual", Config),
+    %% Give both engines the same prefix, so greet.mustache and greet.j2 both
+    %% want to be `tpl_greet'.
+    ok = file:write_file(
+           filename:join(Dir, "rebar.config"),
+           <<"{plugins, [rebar3_aihtml]}.\n"
+             "{deps, [aihtml]}.\n"
+             "{provider_hooks, [{pre, [{compile, mustache}, {compile, jinja}]}]}.\n"
+             "{mustache_opts, [{views, \"views\"}, {prefix, \"tpl_\"}]}.\n"
+             "{jinja_opts, [{views, \"views\"}, {suffix, \".j2\"}, "
+             "{prefix, \"tpl_\"}]}.\n"
+             "{erl_opts, [debug_info, {src_dirs, [\"src\", \"_gen\"]}]}.\n">>),
+    Out = ok_run(Dir, ["compile"], Config),
+    ?assert(contains(Out, "generated more than once")),
+    ?assert(contains(Out, "tpl_greet")).

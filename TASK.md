@@ -49,3 +49,63 @@ aihtml 全面重构任务清单。任务细节见 [`tasks/`](tasks/)，设计依
 - [x] [T28](tasks/T28.md)
 - [x] [T29](tasks/T29.md)
 - [x] [T30](tasks/T30.md)
+
+---
+
+# TASK · Jinja2 引擎
+
+在既有 mustache 引擎旁并列加入一套 Jinja2 引擎，共享后端、各写前端。
+设计依据见 [`designs/08`](designs/08-jinja-architecture.md) — [`13`](designs/13-jinja-roadmap.md)。
+
+## 阶段 7 · 共享层抽取
+
+抽取期间 mustache 的行为与产物字节必须完全不变。
+
+- [x] [T31](tasks/T31.md) `ai_html_forms`
+- [x] [T32](tasks/T32.md) `ai_html_text` / `ai_html_escape` / `ai_html_path`
+- [x] [T33](tasks/T33.md) `ai_html_engine` behaviour + mustache 适配壳
+
+## 阶段 8 · 测试基线
+
+- [x] [T34](tasks/T34.md) Jinja fixture 生成器与 harness
+
+## 阶段 9 · 词法与表达式
+
+- [x] [T35](tasks/T35.md) `include/ai_jinja.hrl` 数据契约
+- [x] [T36](tasks/T36.md) `ai_jinja_scanner`
+- [x] [T37](tasks/T37.md) `ai_jinja_lexer`
+- [x] [T38](tasks/T38.md) `ai_jinja_expr`
+
+## 阶段 10 · 语句与 AST
+
+- [x] [T39](tasks/T39.md) `ai_jinja_parser`
+- [x] [T40](tasks/T40.md) `ai_jinja_ast`
+
+## 阶段 11 · 运行时与内置库
+
+可与阶段 9/10 并行。
+
+- [x] [T41](tasks/T41.md) `ai_jinja_rt`
+- [x] [T42](tasks/T42.md) autoescape 与 safe 传播
+- [x] [T43](tasks/T43.md) `ai_jinja_filters`
+- [x] [T44](tasks/T44.md) `ai_jinja_tests` / `ai_jinja_ext`
+
+## 阶段 12 · 编译器
+
+- [x] [T45](tasks/T45.md) compiler 骨架与模块契约
+- [x] [T46](tasks/T46.md) 表达式 codegen
+- [x] [T47](tasks/T47.md) if / for / set / with / filter / do
+- [x] [T48](tasks/T48.md) extends / block / super
+- [x] [T49](tasks/T49.md) macro / call / import / from / include
+- [x] [T50](tasks/T50.md) `compile_inline/3`
+
+## 阶段 13 · 工具链
+
+- [x] [T51](tasks/T51.md) plugin engine 参数化
+- [x] [T52](tasks/T52.md) `rebar3 jinja` provider 与双引擎共存
+- [x] [T53](tasks/T53.md) `ai_jinja_transform`
+- [x] [T54](tasks/T54.md) `ai_jinja` 门面与 `ai_jinja_dev`
+
+## 阶段 14 · 收尾
+
+- [x] [T55](tasks/T55.md) 文档、示例与性能基线

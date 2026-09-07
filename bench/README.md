@@ -77,12 +77,65 @@ Roughly in order of magnitude:
 5. **No interpretation.** Dispatch that the old runner did by matching on IR
    tuples at render time is expanded into case clauses at compile time.
 
+---
+
+# The jinja engine
+
+There is no older implementation to compare against here, so this benchmark
+answers the two questions the design left open rather than measuring a
+speed-up.
+
+```
+sh bench/run_jinja.sh [ITERATIONS] [ITEMS]
+```
+
+Same machine, same page shape, 30000 iterations over 20 items:
+
+| | µs/render |
+|---|---|
+| jinja `page render/1` | 12.72 |
+| mustache `render/1` (the same page) | 12.36 |
+| jinja `page render_iolist/1` | 11.00 |
+| mustache `render_iolist/1` | 10.88 |
+
+The two engines cost within 3% of each other on equivalent templates, which is
+what one would expect: they emit the same kind of code and share the escape
+and formatting routines.
+
+## Does inheritance cost anything?
+
+`designs/11-jinja-codegen.md` section 2.1 chose to merge the block table at
+run time rather than flatten it at compile time, so that a base template
+gaining a block does not force a rebuild of every descendant. The price is one
+`maps:merge/2` and one extra cross-module call, once per render.
+
+`inherit.j2` extends a base; `flat.j2` produces byte-identical output without
+extending anything. The harness asserts they match, and then times both:
+
+| | µs/render |
+|---|---|
+| `inherit render/1` | 2.43 |
+| `flat render/1` | 2.33 |
+
+**0.10 µs**, and it does not grow with the template: the merge happens once at
+the entry of the chain, not per block or per node. The design's assumption
+holds, and the increment stays correct.
+
+## Does a static template really fold?
+
+`static.j2` has no dynamic nodes at all. It renders in 0.01 µs -- the cost of
+returning a literal -- and the harness asserts that `render_iolist/1` comes
+back as a one-element list, so the fold is real and not just fast.
+
 ## Files
 
 | | |
 |---|---|
-| `bench_ctx.erl` | the shared context, compiled into both VMs |
-| `bench_new.escript` | current implementation; compiles templates the way the plugin does |
+| `bench_ctx.erl` | the shared context, compiled into every VM |
+| `bench_new.escript` | current mustache implementation; compiles templates the way the plugin does |
 | `bench_old.escript` | v0.3.7; boots its loader gen_server and calls `bootstrap/1` |
-| `new/views/`, `old/views/` | the same page written in the new and old semantics |
-| `run.sh` | builds both, runs both, and verifies the outputs match |
+| `bench_jinja.escript` | the jinja engine: page, inheritance, and the static fold |
+| `new/views/`, `old/views/` | the same page written in the new and old mustache semantics |
+| `jinja/views/` | the same page in jinja, plus the inheritance and static probes |
+| `run.sh` | builds both mustache versions, runs both, and verifies the outputs match |
+| `run_jinja.sh` | builds and runs the jinja benchmark |

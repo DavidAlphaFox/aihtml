@@ -142,12 +142,24 @@
 %% the template text. `opts' is required, not redundant -- without it a change
 %% to mustache_opts would not trigger a rebuild and ai_mustache_dev could not
 %% faithfully reproduce the compilation the plugin originally performed.
+%%
+%% `opts' is a SORTED LIST, not a map, and that is the whole point: a map is
+%% printed in maps:to_list/1 order, which follows the VM's atom table and so
+%% differs between two runs of the same build. The generated file has to be
+%% byte-identical wherever it is produced.
+%% `origin' is present only when the module was compiled from a string rather
+%% than from a file (ai_mustache:render_string/3 and the runtime fallback of
+%% inline/2). Such a module has no file on disk, so ai_mustache_dev must not
+%% report it as a missing template. It is absent for file templates so that
+%% their generated .erl is byte-for-byte what it always was, and it is not part
+%% of normalize_opts/1, so it never reaches a build stamp.
 -type ai_mustache_source() :: #{
-        path  := binary(),
-        stamp := binary(),
-        mtime := integer(),
-        vsn   := pos_integer(),
-        opts  := map()
+        path   := binary(),
+        stamp  := binary(),
+        mtime  := integer(),
+        vsn    := pos_integer(),
+        opts   := [{atom(), term()}],
+        origin => file | string
        }.
 
 -endif.

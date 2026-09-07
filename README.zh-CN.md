@@ -2,13 +2,51 @@
 
 [English](README.md) · [中文](README.zh-CN.md)
 
-一个把模板编译成 Erlang 模块的 Mustache 模板引擎。
+把模板编译成 Erlang 模块的模板引擎。Mustache 与 **Jinja2**，并列提供。
 
 模板在构建期由 rebar3 plugin 编译成 `.erl` 文件，因此运行期的渲染就是一次普通函数调用：没有进程，没有 ETS 表，不查任何表。
 
 - 通过 [mustache spec](https://github.com/mustache/spec) 六个必选模块的全部 136 个用例
 - 零依赖：库和测试套件都只依赖 OTP
 - 静态模板文本进入模块的 literal pool，跨进程按引用共享
+
+## 两套引擎
+
+| | mustache | jinja |
+|---|---|---|
+| 后缀 / 前缀 | `.mustache` / `view_` | `.j2` / `j2_` |
+| provider | `rebar3 mustache` | `rebar3 jinja` |
+| 配置键 | `mustache_opts` | `jinja_opts` |
+| 一致性基线 | 官方 spec 的 136 个用例 | 由 CPython jinja2 3.1 生成的 520 条 fixture |
+| 文档 | 本 README | [docs/jinja.zh-CN.md](docs/jinja.zh-CN.md) |
+
+二者是并列关系，不是二选一。同一个项目可以两个都用，共用一个 `views` 目录和一个 `out_dir`：
+每个生成文件都写明自己出自哪个引擎，每个 provider 也只回收自己的孤儿文件。
+
+**这两门语言是不一样的，差在哪里值得先知道：**
+
+| | mustache | jinja |
+|---|---|---|
+| 变量查找 | 动态回溯 context stack | 词法作用域 |
+| `0` 与 `#{}` | 真 | **假** |
+| 关掉转义 | `{{{x}}}` | `\|safe` |
+| 复用 | `{{> p}}` | include / extends / macro / import |
+| `true` 输出为 | `true` | `True` |
+| 列表输出为 | 它的字符 | `[1, 2]` |
+
+```erlang
+{provider_hooks, [{pre, [{compile, mustache}, {compile, jinja}]}]}.
+{mustache_opts, [{views, "views"}, {prefix, "view_"}]}.
+{jinja_opts,    [{views, "views"}, {suffix, ".j2"}, {prefix, "j2_"}]}.
+```
+
+---
+
+## 0.5.0 新增
+
+Jinja2 引擎、`rebar3 jinja`、`ai_jinja_transform`，以及两个引擎共用的底层。
+mustache 的行为没有变化。完整说明见 [CHANGELOG.md](CHANGELOG.md)，
+引擎本身的文档见 [docs/jinja.zh-CN.md](docs/jinja.zh-CN.md)。
 
 ---
 

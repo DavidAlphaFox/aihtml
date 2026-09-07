@@ -2,7 +2,8 @@
 
 [English](README.md) · [中文](README.zh-CN.md)
 
-A Mustache template engine for Erlang that compiles templates into Erlang modules.
+Template engines for Erlang that compile templates into Erlang modules.
+Mustache and **Jinja2**, side by side.
 
 Templates are turned into `.erl` files at build time by a rebar3 plugin, so at
 run time rendering is a plain function call: no process, no ETS table, no
@@ -12,6 +13,46 @@ lookup of any kind.
 - Zero dependencies: the library and its test suite need nothing but OTP
 - Static template text lives in the module's literal pool and is shared across
   processes by reference
+
+## Two engines
+
+| | mustache | jinja |
+|---|---|---|
+| Suffix / prefix | `.mustache` / `view_` | `.j2` / `j2_` |
+| Provider | `rebar3 mustache` | `rebar3 jinja` |
+| Options | `mustache_opts` | `jinja_opts` |
+| Conformance | the 136 official spec cases | 520 fixtures generated from CPython jinja2 3.1 |
+| Documentation | this README | [docs/jinja.md](docs/jinja.md) |
+
+They are peers, not alternatives. One project can use both, sharing a `views`
+directory and an `out_dir`; each generated file names its engine, and each
+provider only collects its own orphans.
+
+**The two languages disagree, and it is worth knowing where:**
+
+| | mustache | jinja |
+|---|---|---|
+| Variable lookup | dynamic, walks the context stack | lexical scope |
+| `0` and `#{}` | true | **false** |
+| Turning escaping off | `{{{x}}}` | `\|safe` |
+| Reuse | `{{> p}}` | include / extends / macro / import |
+| `true` prints as | `true` | `True` |
+| A list prints as | its characters | `[1, 2]` |
+
+```erlang
+{provider_hooks, [{pre, [{compile, mustache}, {compile, jinja}]}]}.
+{mustache_opts, [{views, "views"}, {prefix, "view_"}]}.
+{jinja_opts,    [{views, "views"}, {suffix, ".j2"}, {prefix, "j2_"}]}.
+```
+
+---
+
+## What is new in 0.5.0
+
+The Jinja2 engine, `rebar3 jinja`, `ai_jinja_transform` and a shared layer
+underneath both engines. Mustache behaviour is unchanged. Full notes in
+[CHANGELOG.md](CHANGELOG.md); the engine itself is documented in
+[docs/jinja.md](docs/jinja.md).
 
 ---
 

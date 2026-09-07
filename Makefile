@@ -9,8 +9,8 @@
 # still build with erlang.mk. It is not exercised by CI and may lag behind.
 
 PROJECT = aihtml
-PROJECT_DESCRIPTION = Mustache template engine that compiles templates to Erlang modules
-PROJECT_VERSION = 0.4.0
+PROJECT_DESCRIPTION = Mustache and Jinja2 template engines that compile templates to Erlang modules
+PROJECT_VERSION = 0.5.0
 
 ERLC_OPTS = -Werror +debug_info +warn_export_vars +warn_shadow_vars +warn_obsolete_guard
 

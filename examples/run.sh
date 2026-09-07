@@ -32,7 +32,7 @@ seed "$ROOT" "$APP/_checkouts/aihtml"
 seed "$ROOT/rebar3_aihtml" "$APP/_checkouts/rebar3_aihtml"
 
 cd "$APP"
-echo "==> compiling (the mustache provider runs first and writes _gen/*.erl)"
+echo "==> compiling (both providers run and write into _gen/)"
 rebar3 compile
 
 echo
@@ -43,3 +43,8 @@ echo
 echo "==> rendering"
 erl -noshell -pa _build/default/lib/*/ebin -pa _build/default/checkouts/*/ebin \
     -eval 'complex:start(), halt().'
+
+echo
+echo "==> rendering (jinja: inheritance, macros, filters)"
+erl -noshell -pa _build/default/lib/*/ebin -pa _build/default/checkouts/*/ebin \
+    -eval 'io:format("~ts~n", [jinja_demo:render()]), halt().'

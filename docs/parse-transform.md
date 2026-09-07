@@ -312,3 +312,40 @@ is the **template's** line inside the literal, not the line the call starts on.
 Extension validation failures come from `ai_mustache_ext` and are reported the
 same way: `not_an_ext_module`, `ext_missing_callback`, `marker_reserved`,
 `marker_conflict`, and so on.
+
+---
+
+## The jinja transform
+
+`ai_jinja_transform` is the same three forms for the other engine, and the two
+can be applied to one module:
+
+```erlang
+-module(my_views).
+-compile({parse_transform, ai_mustache_transform}).
+-compile({parse_transform, ai_jinja_transform}).
+
+-mustache_template({legacy, "views/legacy.mustache"}).
+-jinja_template({page, "views/page.j2"}).
+```
+
+| Form | mustache | jinja |
+|---|---|---|
+| **(a)** extensions | `-mustache_tag(my_i18n).` | `-jinja_ext(my_filters).` |
+| **(b)** inline | `ai_mustache:inline(~"...", Ctx)` | `ai_jinja:inline(~"...", Ctx)` |
+| **(c)** file template | `-mustache_template({index, "..."}).` | `-jinja_template({page, "..."}).` |
+| Option block | `mustache_opts` | `jinja_opts` |
+| Silence the (b) warning | `nowarn_mustache_inline` | `nowarn_jinja_inline` |
+
+Neither transform knows about the other's attributes, and neither assumes it
+runs first or last.
+
+A jinja inline template additionally cannot carry `{% include %}`,
+`{% extends %}`, `{% import %}`, `{% from %}` or `{% block %}` -- there is no
+views directory to resolve them against -- and its macros cannot call each
+other, because an expansion compiles them to anonymous funs and a bound fun
+cannot refer to itself or to one bound after it. Both restrictions are
+enforced identically on the run-time path, through one shared predicate, so a
+template cannot be a build error one way and silently empty the other.
+
+See [The Jinja2 engine](jinja.md) for the language itself.

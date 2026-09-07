@@ -116,3 +116,91 @@ t_facade() ->
     ?assertEqual(view_complex:render(Ctx), ai_mustache:render(view_complex, Ctx)),
     ?assertEqual(view_complex:render_iolist(Ctx),
                  ai_mustache:render_iolist(view_complex, Ctx)).
+
+%%%===================================================================
+%%% The jinja half of the example
+%%%===================================================================
+
+-define(JVIEWS, "examples/views/jinja").
+-define(JNAMES, [<<"index.j2">>, <<"layout/base.j2">>, <<"macros.j2">>,
+                 <<"badge.j2">>]).
+
+jinja_build_all() ->
+    Base = #{views     => list_to_binary(?JVIEWS),
+             views_abs => list_to_binary(?JVIEWS),
+             prefix    => <<"j2_">>,
+             suffix    => <<".j2">>,
+             line_map  => true},
+    Parsed = [jinja_parse(N, Base) || N <- ?JNAMES],
+    Macros = maps:from_list([{M, jinja_macro_names(Nodes)}
+                             || {M, _, Nodes} <- Parsed]),
+    [jinja_load(M, Opts#{macros => Macros}, Nodes) || {M, Opts, Nodes} <- Parsed],
+    ok.
+
+jinja_parse(Name, Base) ->
+    Path = filename:join(?JVIEWS, binary_to_list(Name)),
+    {ok, Body} = file:read_file(Path),
+    Mod = ai_jinja_ast:module_name(Name, Base),
+    Opts = Base#{module => Mod,
+                 source => list_to_binary(Path),
+                 stamp  => ai_jinja_compiler:source_hash(Body, Base),
+                 mtime  => 0},
+    {ok, Nodes} = ai_jinja_parser:parse(Body, Opts),
+    {Mod, Opts, Nodes}.
+
+jinja_macro_names(Nodes) ->
+    lists:foldl(fun({macro, _, N, _, _}, Acc) -> [N | Acc];
+                   (Node, Acc) ->
+                        lists:foldl(fun(B, A) -> jinja_macro_names(B) ++ A end,
+                                    Acc, ai_jinja_ast:bodies(Node))
+                end, [], Nodes).
+
+jinja_load(Mod, Opts, Nodes) ->
+    {ok, Forms, _Deps} = ai_jinja_compiler:forms(Nodes, Opts),
+    {ok, Mod, Bin} = compile:forms(Forms, [return_errors, binary, debug_info]),
+    _ = code:purge(Mod),
+    {module, Mod} = code:load_binary(Mod, atom_to_list(Mod), Bin),
+    Mod.
+
+jinja_context() ->
+    #{title  => <<"Users & guests">>,
+      label  => <<"beta">>,
+      users  => [#{name => <<"ada">>, role => <<"admin">>, visible => true},
+                 #{name => <<"bo">>, visible => true},
+                 #{name => <<"hidden">>, visible => false}]}.
+
+jinja_examples_test_() ->
+    {setup, fun jinja_build_all/0,
+     [{"the jinja example renders exactly", fun t_jinja_golden/0},
+      {"targets are recorded as dependencies", fun t_jinja_deps/0}]}.
+
+%% Points worth noting in this fixture:
+%%   - the title comes from {{ super() }} plus the child's own text
+%%   - `bo' has no role, so the macro's argument is an explicit undefined and
+%%     the default does NOT apply -- hence the |default("guest") in the template
+%%   - `&' in the title is escaped once, by the interpolation, and the macro's
+%%     output is not escaped again on the way out
+%%   - {% set %} at the top of a block is visible to the {% if %} after it
+t_jinja_golden() ->
+    Expected =
+        <<"<!doctype html>\n"
+          "<html>\n"
+          "  <head><title>aihtml — Users &amp; guests</title></head>\n"/utf8,
+          "  <body>\n"
+          "    <h1>Users &amp; guests</h1>\n"
+          "    <ul>\n"
+          "    <li class=\"admin\">ada</li>\n\n"
+          "    <li class=\"guest\">bo</li>\n\n"
+          "    </ul>\n"
+          "    <p>2 of 3 shown:\n"
+          "       ada, bo</p>\n"
+          "<span class=\"badge\">BETA</span>  </body>\n"
+          "</html>">>,
+    ?assertEqual(Expected, j2_index:render(jinja_context())).
+
+t_jinja_deps() ->
+    %% Only the direct parent and the direct targets, never a grandparent:
+    %% that is what keeps `edit the base template' from rebuilding the world.
+    ?assertEqual([j2_badge, j2_layout_base, j2_macros],
+                 lists:sort(j2_index:partials())),
+    ?assertEqual([], j2_layout_base:partials()).

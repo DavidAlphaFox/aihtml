@@ -253,3 +253,36 @@ hi(Name, Locale) ->
 | `inline_not_literal`（警告） | 见形态 (b) |
 
 扩展校验失败由 `ai_mustache_ext` 报出，走同一通道：`not_an_ext_module`、`ext_missing_callback`、`marker_reserved`、`marker_conflict` 等。
+
+---
+
+## jinja 的 transform
+
+`ai_jinja_transform` 是同样的三种形态，只是换了引擎；两个 transform 可以用在同一个模块上：
+
+```erlang
+-module(my_views).
+-compile({parse_transform, ai_mustache_transform}).
+-compile({parse_transform, ai_jinja_transform}).
+
+-mustache_template({legacy, "views/legacy.mustache"}).
+-jinja_template({page, "views/page.j2"}).
+```
+
+| 形态 | mustache | jinja |
+|---|---|---|
+| **(a)** 扩展 | `-mustache_tag(my_i18n).` | `-jinja_ext(my_filters).` |
+| **(b)** 内联 | `ai_mustache:inline(~"...", Ctx)` | `ai_jinja:inline(~"...", Ctx)` |
+| **(c)** 文件模板 | `-mustache_template({index, "..."}).` | `-jinja_template({page, "..."}).` |
+| 配置块 | `mustache_opts` | `jinja_opts` |
+| 关掉 (b) 的 warning | `nowarn_mustache_inline` | `nowarn_jinja_inline` |
+
+两个 transform 互不认识对方的 attribute，也都不假设自己是第一个或最后一个。
+
+jinja 的内联模板还额外不能带 `{% include %}`、`{% extends %}`、`{% import %}`、
+`{% from %}`、`{% block %}`——没有 views 目录可解析——它的宏也不能互相调用，
+因为展开时宏编译成匿名 fun，而绑定的 fun 引用不了自己、也引用不了在它之后绑定的。
+**这两条限制在运行期路径上由同一个谓词同样地执行**，所以一份模板不会「加了 transform 是编译错误、
+不加就静默渲染成空」。
+
+语言本身见 [Jinja2 引擎](jinja.zh-CN.md)。
