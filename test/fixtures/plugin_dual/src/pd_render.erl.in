@@ -1,0 +1,8 @@
+%% Renders one template from each engine. Checked in as .erl.in; see
+%% rebar3_aihtml_SUITE:unhide_sources/1.
+-module(pd_render).
+-export([both/0]).
+
+both() ->
+    [view_greet:render(#{name => <<"a">>}),
+     j2_greet:render(#{name => <<"b">>, extra => <<"x">>})].

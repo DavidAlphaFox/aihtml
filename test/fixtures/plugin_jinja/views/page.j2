@@ -1,0 +1,9 @@
+{% extends "layout/base.j2" %}
+{% import "lib.j2" as lib %}
+{% block title %}[{{ super() }}] {{ who }}{% endblock %}
+{% block body %}
+{% for u in users %}
+{{ lib.row(u.name, u.role) }}
+{% endfor %}
+{% include "widgets/box.j2" %}
+{% endblock %}

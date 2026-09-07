@@ -1,0 +1,12 @@
+%% Renders the fixture's templates. Checked in as .erl.in so that `rebar3
+%% eunit' in the aihtml repository does not try to treat it as a test module.
+-module(pj_render).
+-export([page/0, box/0]).
+
+page() ->
+    j2_page:render(#{who => <<"ada & co">>,
+                     title => <<"widgets">>,
+                     users => [#{name => <<"ada">>, role => <<"admin">>},
+                               #{name => <<"bo">>}]}).
+
+box() -> j2_widgets_box:render(#{}).

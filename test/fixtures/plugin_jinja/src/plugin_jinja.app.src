@@ -1,0 +1,7 @@
+{application, plugin_jinja,
+ [{description, "Fixture project: the rebar3 jinja provider end to end"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [kernel, stdlib, aihtml]},
+  {modules, []}
+ ]}.
