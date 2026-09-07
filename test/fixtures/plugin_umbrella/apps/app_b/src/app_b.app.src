@@ -1,0 +1,4 @@
+{application, app_b,
+ [{description, "umbrella fixture app b"},
+  {vsn, "0.1.0"}, {registered, []},
+  {applications, [kernel, stdlib, aihtml]}, {env, []}, {modules, []}]}.

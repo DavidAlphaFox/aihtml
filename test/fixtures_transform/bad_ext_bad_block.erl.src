@@ -1,0 +1,7 @@
+%%% block_markers/0 lists a character markers/0 does not return.
+-module(bad_ext_bad_block).
+-behaviour(ai_mustache_ext).
+-export([markers/0, block_markers/0, compile_tag/4]).
+markers()       -> [$?].
+block_markers() -> [$~].
+compile_tag(_M, _K, _B, _O) -> {nil, 0}.

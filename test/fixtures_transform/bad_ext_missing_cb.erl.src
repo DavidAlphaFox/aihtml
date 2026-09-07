@@ -1,0 +1,5 @@
+%%% Declares the behaviour but never exports compile_tag/4.
+-module(bad_ext_missing_cb).
+-behaviour(ai_mustache_ext).
+-export([markers/0]).
+markers() -> [$@].

@@ -1,364 +1,547 @@
 # aihtml
 
-A simple html render libary more than Mustache Template Complier
+A Mustache template engine for Erlang that compiles templates into Erlang modules.
 
-## Erlang Mustache Template 
+Templates are turned into `.erl` files at build time by a rebar3 plugin, so at
+run time rendering is a plain function call: no process, no ETS table, no
+lookup of any kind.
 
-Mustache is a framework-agnostic templating system that enforces separation of view logic from the template
-file. Indeed, it is not even possible to embed logic in the template. This
-allows templates to be reused across language boundaries and for other
-language independent uses.
+- Passes all 136 cases of the six required [mustache spec](https://github.com/mustache/spec) modules
+- Zero dependencies: the library and its test suite need nothing but OTP
+- Static template text lives in the module's literal pool and is shared across
+  processes by reference
 
-Working with Mustache means dealing with templates, views, and contexts.
-Templates contain HTML (or some other format) and Mustache tags that specify
-what data to pull in. A template can be either a string or a file (usually
-ending in .mustache). Views are Erlang modules that can define functions that
-are called and provide the data for the template tags. A context is an Erlang
-dict that contains the current context from which tags can pull data. A few
-examples will clarify how these items interact.
+---
 
+## Incompatible Changes in 0.4.0
+
+0.4.0 is a full rewrite. Templates and calling code both need changes.
+
+### Standard context stack semantics
+
+Previously a template used a flat context with full-path lookups. It now uses
+the standard Mustache context stack, which is what every other Mustache
+implementation does.
+
+```diff
+- {{#user}}{{user.name}}{{/user}}
++ {{#user}}{{name}}{{/user}}
+
+- {{#items}}{{+ items.current}}<li>{{items.name}}</li>{{/ items.current}}{{/items}}
++ {{#items}}{{+ current}}<li>{{name}}</li>{{/ current}}{{/items}}
+```
+
+The rule: inside `{{#X}}`, drop the `X.` prefix from references to `X`'s own
+fields. `rebar3 mustache migrate` does the mechanical part and reports what it
+could not decide.
+
+There is deliberately no compatibility switch. Supporting both would fork the
+compiler's scope resolution, which costs more over time than migrating once.
+
+### The API
+
+| Removed | Replacement |
+|---|---|
+| `ai_mustache:bootstrap/0,1` | nothing -- templates are compiled by the build |
+| `ai_mustache:reload/0` | `ai_mustache_dev:reload/1` (dev only) |
+| `ai_mustache:render(Name, Ctx)` where `Name` is a string | `view_name:render(Ctx)`, or `ai_mustache:render(view_name, Ctx)` |
+| `application:start(aihtml)` | nothing -- aihtml is a library application |
+| `ai_dom_node`, `ai_dom_render` | removed; they were unrelated to Mustache |
+
+### HTML escaping now covers five characters, not eight
+
+`&` `<` `>` `"` `'` are escaped. `/`, `=` and `` ` `` are **not**.
+
+The old set corrupted URLs: `href="/a/b"` came out as `href="&#x2F;a&#x2F;b"`.
+The old `&` replacement was also missing its semicolon, producing `&amp`
+instead of `&amp;`; that is fixed.
+
+### Partial indentation applies to every line
+
+When `{{> partial}}` sits alone on an indented line, that indent is applied to
+every line the partial emits, as the spec requires. The old implementation
+indented only the first line.
+
+### ailib is no longer a dependency
+
+Everything aihtml used from it is now implemented in `ai_mustache_rt`, which
+depends only on OTP.
+
+### Other fixed behaviour
+
+- `{{.}}`, the implicit iterator, works. It previously always resolved to nothing.
+- `{{> a.b}}` and other partial paths containing dots no longer crash the parser.
+- `{{#a.b}}` no longer discards `a`'s other keys while iterating.
+
+---
+
+## How it works
+
+```
+views/index.mustache
+   |
+   +- ai_mustache_scanner     lexer: text and tag tokens, standalone lines, delimiters
+   +- ai_mustache_parser      recursive descent -> AST
+   +- ai_mustache_ast         merge text, drop empty bodies, resolve partials
+   |
+   +- ai_mustache_compiler    AST -> Erlang abstract forms      (the only such implementation)
+         |
+         +- rebar3_aihtml     erl_prettypr -> _gen/view_index.erl -> .beam
+         +- parse_transform   forms injected into the calling module
+```
+
+`views/index.mustache` becomes roughly this:
+
+```erlang
+-module(view_index).
+
+-mustache_source(#{path => <<"views/index.mustache">>, stamp => <<...>>,
+                   mtime => 1757203845, vsn => 1, opts => #{...}}).
+
+-export([render/1, render_iolist/1, render_stack/1, render_stack/2, partials/0]).
+
+render(Ctx) -> erlang:iolist_to_binary(render_stack([Ctx], <<>>)).
+partials()  -> [view_shared_item].
+
+render_stack(S, I) ->
+    [I, <<"<h1>">>,
+     ai_mustache_rt:escape(ai_mustache_rt:lookup([header], S)),
+     <<"</h1>\n">>,
+     sec_1(S, I)].
+
+sec_1(S, I) ->
+    case ai_mustache_rt:lookup([items], S) of
+        []                       -> [];
+        L when is_list(L)        -> [sec_1_body([E | S], I) || E <- L];
+        M when is_map(M)         -> sec_1_body([M | S], I);
+        true                     -> sec_1_body(S, I);
+        F when is_function(F, 2) -> F(erlang:iolist_to_binary(sec_1_body(S, I)), hd(S));
+        F when is_function(F, 1) -> ai_mustache_rt:section(F(hd(S)), fun sec_1_body/2, S, I);
+        V                        -> ai_mustache_rt:section(V, fun sec_1_body/2, S, I)
+    end.
+
+sec_1_body(S, I) -> [<<"  ">>, view_shared_item:render_stack(S, I)].
+```
+
+Three consequences worth naming:
+
+**Static text is a literal.** It goes into the module's literal pool and is
+shared between processes by reference. The previous design kept the parsed
+template in ETS, and every `ets:lookup/2` deep-copied the whole tree into the
+calling process.
+
+**A partial is a cross-module call.** Editing a partial therefore does not
+require recompiling the templates that include it, and two templates may
+include each other -- the old tree-walking interpreter would have recursed
+forever.
+
+**Iterating a section pushes onto a list.** `[Item | Stack]` allocates one
+cons cell. The old runner built a fresh context with `maps:merge/2` on every
+iteration, which copied the whole map and, for a dotted section name, silently
+dropped the sibling keys.
+
+---
 
 ## Installation
 
-aihtml uses erlang.mk as its building tool. So currently, it only support erlang.mk. 
-
-
-## Difference between bbmustache
-
-The target of aihtml is to help user to build a simple view engine in the Erlang. And aihtml uses a modified version muatche compiler from [bbmustache](https://github.com/soranoba/bbmustache). But there are some difference between [bbmustache](https://github.com/soranoba/bbmustache).
-
-bbmustahce:
-
-- It supports the standards mustache sytanx.
-- Very light, it won't create any process or ets.
-- It can compile mustache file or render directly.
-- It can render mustache string directly.
-
-aihtml:
-
-- It also supports the standards mustache sytanx.
-- It adds lamda section on mustache sytanx.
-- Very heavy, it will create a process and use an ets to store some information.
-- It must compile mustache file before rendering, and store the compile result in the ets for resusing.
-- It can't render mustache string directly.
-
-## How to use
-
-### Incompatible Changes
-
-In v0.3.5 we start using the atom key to replace the binary key of tags.
-So when using v0.3.5 or above, please use atom keys in `context` to render the templates. 
-
-### Bootstrap
-
-aihtml has to bootstrap before rendering mustache files.
-
-It boostraps using function `ai_mustache:bootstrap`, it will using `views` directory as default directory where the mustache files are stored. And will compile all mustache files with the suffix `.mustache` into IR code and store them in ets. 
-
 ```erlang
-bootstrap()-> ai_mustache_loader:bootstrap().
+%% rebar.config
+{deps, [{aihtml, {git, "https://github.com/DavidAlphaFox/aihtml.git", {tag, "v0.4.0"}}}]}.
+
+{plugins, [
+    {rebar3_aihtml, {git, "https://github.com/DavidAlphaFox/aihtml.git",
+                     {tag, "v0.4.0"}}, {subdir, "rebar3_aihtml"}}
+]}.
+
+{provider_hooks, [{pre, [{compile, mustache}]}]}.
+
+{mustache_opts, [
+    {views,    "views"},        % template root
+    {suffix,   ".mustache"},
+    {out_dir,  "_gen"},         % where the generated .erl files go
+    {prefix,   "view_"},        % module name prefix
+    {line_map, true}            % map generated line numbers back to the template
+]}.
+
+{erl_opts, [{src_dirs, ["src", "_gen"]}]}.
 ```
 
-And there is a function which can accept one params settings to change default settings.
+Add `_gen/` to `.gitignore`.
 
-```erlang
-bootstrap(Settings) -> ai_mustache_loader:bootstrap(Settings).
-Settings :: #{ 
-    views :=  binary(),
-    suffix := binary()
-}.
+`rebar3 compile` now runs the `mustache` provider first. It only recompiles
+templates whose content, options or compiler version actually changed -- the
+check reads the `-mustache_source` attribute out of the previously generated
+`.erl`, so there is no cache file to go stale.
+
+### Why generate `.erl` rather than `.beam` directly
+
+The generated source is readable, greppable and visible to dialyzer, and stack
+traces from a template error point at real line numbers.
+
+### Module names
+
+```
+views/index.mustache          ->  view_index
+views/shared/item.mustache    ->  view_shared_item
+views/layout/default.mustache ->  view_layout_default
 ```
 
-###  Render Templates
+`/`, `-` and `.` all become `_`, so `shared/item.mustache` and
+`shared_item.mustache` would collide. The plugin detects that and fails rather
+than silently overwriting one with the other.
 
-#### Context
+### Migrating 0.3.x templates
 
-aihtml only support `maps` as context params when it render a mustache file. And the key must be a `binary`.
-
-```erlang
-#{
-    <<"user">> => #{
-        <<"name">> => "David Gao",
-        <<"level">> => 1
-    },
-    <<"stars">> => 10
-}
+```sh
+rebar3 mustache migrate           # print a diff
+rebar3 mustache migrate --write   # apply it
 ```
 
-#### Partials
+It rewrites in place, preserving comments, whitespace and custom delimiters.
+Anything it cannot decide -- a reference to a sibling section's variable, say
+-- is left alone and listed in the report for you to handle.
 
-aihtml supports partials, and it will auto load the partial mustache file from `views` directory which can be modified by bootstrap.
+### erlang.mk
 
-```erlang
-{{> shared/user }}
+```makefile
+BUILD_DEPS = rebar3_aihtml
+DEP_PLUGINS = rebar3_aihtml
+dep_rebar3_aihtml = git https://github.com/DavidAlphaFox/aihtml.git v0.4.0
 ```
 
-If we use the default settings, aihtml will load `user.mustache` from `views/shared` directory auto.
+Supported, but not the primary path; CI builds with rebar3.
 
-#### Sections
+---
 
-Section in context is a `list` 
-    
-friends.mustache
+## Rendering
+
+```erlang
+view_index:render(Ctx)         -> binary().
+view_index:render_iolist(Ctx)  -> iolist().
+
+%% When the template is only known at run time -- picking a layout by route:
+ai_mustache:render(view_index, Ctx)         -> binary().
+ai_mustache:render_iolist(view_index, Ctx)  -> iolist().
+
+%% An inline template (see parse_transform below):
+ai_mustache:inline(~"Hello {{name}}!", #{name => Name}) -> binary().
+```
+
+`render_iolist/1` can go straight into a cowboy response body, which skips
+building the flat binary entirely.
+
+The context may be any term, not just a map: the spec has a case whose entire
+data is the integer `85`, reachable as `{{.}}`.
+
+### Development-time reloading
+
+```erlang
+ai_mustache_dev:check()          % one-shot environment self-test
+ai_mustache_dev:stale(view_index)
+ai_mustache_dev:reload(view_index)
+ai_mustache_dev:reload(all)
+```
+
+**`check/0` is not a switch.** This module holds no state at all -- no ETS, no
+persistent_term, no process, no cache file -- so there is nowhere for an
+"enabled" flag to live. Nothing watches your files. You call `reload/1`
+yourself, from a dev-only middleware, an editor hook, or the top of a request
+handler.
+
+Staleness is decided by hashing the file, never by its mtime: POSIX mtime has
+one-second resolution and the edit-then-refresh loop happens well inside one
+second.
+
+---
+
+## Template semantics
+
+Keys are **atoms**, in the context and in the template:
+
+```erlang
+#{user => #{name => <<"David Gao">>, level => 1}, stars => 10}
+```
+
+Template bodies and paths are **UTF-8 binaries**. An entry point will accept
+any `unicode:chardata()` and normalise it once, but a template that is not
+valid UTF-8 is rejected with `{invalid_utf8, ByteOffset}` rather than passed
+through as bytes -- that failure is much easier to diagnose at the door than
+as mangled output from a generated module later. Paths are normalised but
+never rejected, since a non-UTF-8 filesystem can still hand back a path that
+names a real file.
+
+### Name resolution
+
+`{{name}}` walks the context stack from the top outwards and takes the value
+from the first frame that has that key.
+
+`{{a.b}}` resolves `a` by walking the stack, then takes `b` **strictly inside**
+`a`. If `a` has no `b`, the result is empty; it does not keep searching
+outwards.
+
+`{{.}}` is the implicit iterator: the value on top of the stack.
+
+### Falsy values
+
+Exactly five: `undefined`, `false`, `[]`, `<<>>`, `null`.
+
+### 0 is truthy. So is `#{}`.
+
+This trips people up, so it is worth being explicit:
+
+```erlang
+%% {{#count}}You have {{.}} messages{{/count}}
+#{count => 0}   %% the section RUNS and renders "You have 0 messages"
+#{count => []}  %% the section is skipped
+```
+
+If you want "zero means hide", test it in your code and pass a boolean.
+
+### Section dispatch
+
+`{{#x}}` behaves according to the run-time type of `x`:
+
+| `x` | Behaviour | Pushes a scope |
+|---|---|---|
+| `[]` | skipped | -- |
+| non-empty list | body runs once per element | yes, per element |
+| map | body runs once | yes |
+| `true` | body runs once | no |
+| `fun/2` | called as `F(RenderedBody, CurrentFrame)` | no |
+| `fun/1` | called as `F(CurrentFrame)`, result dispatched again | depends on the result |
+| falsy | skipped | -- |
+| anything else | body runs once | yes, so `{{.}}` works |
+
+`{{^x}}` runs the body when `x` is falsy and never pushes a scope.
+
+---
+
+## `{{#}}` versus `{{+}}`
+
+Both look like conditionals. The difference is scope.
+
 ```mustache
-<ul> 
-  {{# friends }}
-    <li>
-        <img src="{{{ friends.avatar }}}"/>
-        <span>{{ friends.name }}</span>
-    </li>
-  {{/ friends }}
-</ul>
-```
-friends_context.erl
-```erlang
-Context = #{
-    <<"friends">> => [
-        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-    ]
-}
+{{#user}}{{name}}{{/user}}        renders the user's name -- {{#}} pushes user onto the stack
+{{+user}}{{user.name}}{{/user}}   renders the same thing -- {{+}} does not push, so the full path is needed
 ```
 
+`{{#}}` means *with* / *for each*: it enters a scope and iterates lists.
+`{{+}}` means *if*: it tests truthiness and runs the body once, in the
+surrounding scope. `{{-}}` is `{{+}}` negated.
 
-Section in context is `fun/2`
-The first param of function will be the rendered binary inside the section.
+Use `{{+}}` when you want a condition without changing what the names inside
+refer to:
 
-friends.mustache
 ```mustache
-{{# warpped }}
-<ul> 
- {{# friends }}
-    <li>
-        <img src="{{{ friends.avatar }}}"/>
-        <span>{{ friends.name }}</span>
-    </li>
- {{/ friends }}
-</ul>
-{{/ warpped}}
+{{#items}}
+  {{+ current}}<li class="on">{{name}}</li>{{/ current}}
+  {{- current}}<li>{{name}}</li>{{/ current}}
+{{/items}}
 ```
 
-friends_context.erl
+`{{name}}` refers to the item in both branches. With `{{#current}}` it would
+refer to whatever is inside `current`.
+
+Both accept a `fun/1`, called with the current frame:
+
 ```erlang
-warpped(Acc,Context) -> <<"<div> ",Acc/binary," </div>" >>.
-Context = #{
-    <<"friends">> => [
-        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-    ],
-    <<"warpped">> => fun warpped/2
-}
+#{has_friends => fun(Frame) -> maps:get(friends, Frame, []) =/= [] end}
 ```
 
-#### Inverted Sections
+---
 
-Inverted section in context is a `list` or not exsist
+## Lambdas
 
-friends.mustache
+`{{*name}}` is an aihtml extension. Its output is **not** escaped -- producing
+markup is the point.
+
+```erlang
+%% fun/1: receives the current frame
+#{yield => fun(Frame) -> render_something(Frame) end}
+
+%% fun/2 plus a value: called as Fun(Value, Frame)
+#{yield => [fun render_layout/2, <<"index">>]}
+```
+
+Since 0.4.0 the fun receives the **top of the stack**, not a flat global
+context. A lambda at the top level of a template still sees the root context,
+but move it inside a section and it will not. Pass what you need through the
+`fun/2` form rather than relying on where the tag sits.
+
+---
+
+## Partials
+
 ```mustache
-{{^ friends }}
-  <div> Want to know some new friends ? </div>
-{{/ friends }}
+{{> shared/user}}
 ```
 
-friends_context.erl
-```erlang
-Context = #{
-    <<"friends">> => []
-}
-```
-or 
-```erlang
-Context = #{}
-```
+resolves to `view_shared_user` and is compiled into a direct call. Partials
+render with the **current stack**, so a partial used inside `{{#items}}` sees
+the item:
 
-#### Has Section
-
-Has section in context is `map`
-
-navbar.mustache
 ```mustache
-{{+ user }}
-    <div>
-        <span>{{user.name}}</span>
-        <span>{{user.level}}</span>
-    </div>
-{{/ user }}
+{{! views/index.mustache }}
+<ul>{{#items}}{{> shared/row}}{{/items}}</ul>
+
+{{! views/shared/row.mustache }}
+<li>{{name}}</li>
 ```
 
-navbar_context.erl
+A partial alone on an indented line has that indent applied to every line it
+emits. Interpolated values are not re-indented, so a value containing newlines
+keeps its own shape.
+
+---
+
+## parse_transform
+
 ```erlang
-#{
-    <<"user">> => #{
-        <<"name">> => "David Gao",
-        <<"level">> => 1
-    }
-}
+-module(my_views).
+-compile({parse_transform, ai_mustache_transform}).
+
+%% (a) declare a custom tag; see below
+-mustache_tag({$@, my_i18n}).
+
+%% (b) inline template, expanded at compile time
+greet(Name) -> ai_mustache:inline(~"Hello {{name}}!", #{name => Name}).
+
+%% (c) compile a template file into index/1 and index_iolist/1
+-mustache_template({index, "views/index.mustache"}).
 ```
 
-Has section in context is `bool` or `binary`
+### There is no `~mustache` sigil
 
-friends.mustache
-```mustache
-{{+ has_friends }}
-<ul> 
- {{# friends }}
-    <li>
-        <img src="{{{ friends.avatar }}}"/>
-        <span>{{ friends.name }}</span>
-    </li>
- {{/ friends }}
-</ul>
-{{/ has_friends}}
-```
+Erlang's sigils are a fixed set; a custom one does not lex. Inline templates
+are therefore recognised as calls to `ai_mustache:inline/2` whose first
+argument is a binary literal. `~"..."` is OTP 27's ordinary string sigil and
+produces exactly that.
 
-friends_context.erl
+If the transform is not applied, or the first argument is not a literal, the
+call still works -- it falls back to compiling at run time. Same output, just
+slower. The one exception is custom tags: those are expanded by compile-time
+callbacks and cannot run in the fallback path.
+
+A non-literal first argument warns, since writing `inline` usually means you
+wanted the zero-cost version; `nowarn_mustache_inline` in `erl_opts` turns that
+off. Inline templates cannot use `{{> partial}}` -- there is no views directory
+to resolve one against -- and that is a compile error.
+
+### Custom tags
+
 ```erlang
-Context = #{
-    <<"friends">> => [
-        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-    ],
-    <<"has_friends">> => true
-}
+-module(my_i18n).
+-behaviour(ai_mustache_ext).
+-export([markers/0, compile_tag/4]).
+
+markers() -> [$@].
+
+compile_tag($@, [Key], _Body, Opts) ->
+    %% Return an abstract expression evaluating to iodata()
+    ...
 ```
 
-Has section in context is `fun/1`
+`# ^ / > ! = & { } + - *` are taken; a custom marker must be something else,
+and two extensions may not claim the same character.
 
-friends.mustache
-```mustache
-{{+ has_friends }}
-<ul> 
-  {{# friends }}
-    <li>
-      <img src="{{{ friends.avatar }}}"/>
-      <span>{{ friends.name }}</span>
-    </li>
-  {{/ friends }}
-</ul>
-{{/ has_friends}}
-```
+`-mustache_tag` **declares and checks**; it does not wire anything up. A
+parse_transform only sees one module, so the module compiling your templates
+cannot learn about the declaration from it. Actual registration goes in
+`rebar.config`:
 
-friends_context.erl
 ```erlang
-has_friends(Context) ->
-    case maps:get(<<"friends>>,Context, undefined) of 
-        undefined -> false;
-        _ -> true
-    end.
-Context = #{
-    <<"friends">> => [
-        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-    ],
-    <<"has_friends">> => fun has_friends/1
-}
+{mustache_opts, [{extensions, [my_i18n]},
+                 {ext_opts,   #{my_i18n => #{default_locale => en}}}]}.
 ```
 
-#### Inverted Has Section
+What the attribute buys you is that a mistake -- a module that does not
+implement the behaviour, or a marker it does not claim -- becomes a compile
+error in the module that declared it instead of a puzzling failure later.
 
-Inverted has section in context is `bool`
+There is one exception to "declares but does not wire up": forms (b) and (c)
+compile inside the very module that carries the attribute, so a `-mustache_tag`
+there **is** used for that module's own inline and `-mustache_template`
+templates. It still says nothing about `.mustache` files the plugin compiles.
+If `extensions` is configured and a declared module is missing from it, the
+transform warns.
 
-friends.mustache
-```mustache
-{+ has_friends }}
-<ul> 
- {{# friends }}
-    <li>
-        <img src="{{{ friends.avatar }}}"/>
-        <span>{{ friends.name }}</span>
-    </li>
- {{/ friends }}
-</ul>
-{{/ has_friends}}
-{{- has_friends }}
-    <div> Want to know some new friends ? </div>
- {{/ has_friends }}
+### Known limitation of form (c)
+
+rebar3 cannot see that `my_views.erl` depends on `views/index.mustache`; a
+parse_transform has no way to register an extra file dependency. The plugin
+compensates by scanning for `-mustache_template` attributes and touching the
+`.erl` when the template changes. Forms (a) and (b) are unaffected.
+
+---
+
+## Differences from the spec
+
+The required modules -- Comments, Delimiters, Interpolation, Inverted,
+Partials, Sections -- all pass. These are deliberate deviations:
+
+| | |
+|---|---|
+| `{{+x}}` / `{{-x}}` | aihtml extensions; the spec has no such tags |
+| `{{*x}}` | aihtml extension |
+| Key type | atoms, where the spec uses strings |
+| Lambdas | return values are not re-parsed as templates |
+| Dynamic Names, Blocks | not implemented (optional spec modules) |
+| `'` escaping | escaped as `&#39;`, which the spec does not require |
+
+---
+
+## Performance
+
+`bench/run.sh` compares against v0.3.7 on a page both versions render
+byte-identically -- the harness refuses to report timings if the outputs ever
+diverge. Median of seven runs on OTP 28, Linux x86-64:
+
+| Page | v0.3.7 | 0.4.0 `render/1` | 0.4.0 `render_iolist/1` |
+|---|---|---|---|
+| 20 items, 1843 bytes | 632.5 us | 11.8 us (**53x**) | 10.0 us |
+| 100 items, 8885 bytes | 3235.0 us | 51.9 us (**62x**) | 46.0 us |
+
+The gap grows with the number of section iterations: the old runner rebuilt
+the context with `maps:merge/2` for every element, which copies a map whose
+size does not shrink, while pushing onto the stack is one cons cell.
+
+See [bench/README.md](bench/README.md) for the methodology and where the rest
+of the difference comes from.
+
+---
+
+## A worked example
+
+`examples/` is a complete project: templates under `examples/views/`, a driver
+in `examples/src/complex.erl`, and the plugin wired up in
+`examples/rebar.config`.
+
+```sh
+sh examples/run.sh
 ```
 
-friends_context.erl
-```erlang
-Context = #{
-    <<"friends">> => [
-        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-    ],
-    <<"has_friends">> => true
-}
-```
+It builds in a temporary copy, because aihtml and rebar3_aihtml have to reach
+the example through `_checkouts` (rebar3 has no `path` resource) and
+symlinking the repository root into a directory inside that repository would
+be circular. The script prints the generated module list and the rendered
+page.
 
-Inverted has section in context is `fun/1`
+The example is deliberately dense: it covers partial indentation, `{{+}}` and
+`{{-}}`, a `true` section that does not push a scope, an inverted section, a
+`0` that is truthy, `{{.}}`, and a `fun/2` lambda. `test/examples_tests.erl`
+pins its output byte for byte.
 
-friends.mustache
-```mustache
-{{+ has_friends }}
-<ul> 
- {{# friends }}
-    <li>
-        <img src="{{{ friends.avatar }}}"/>
-        <span>{{ friends.name }}</span>
-    </li>
- {{/ friends }}
-</ul>
-{{/ has_friends}}
-{{- has_friends }}
-    <div> Want to know some new friends ? </div>
-{{/ has_friends }}
-```
+## Projects using aihtml
 
-friends_context.erl
-```erlang
-has_friends(Context) ->
-    case maps:get(<<"friends>>,Context, undefined) of 
-        undefined -> false;
-        _ -> true
-    end.
-Context = #{
-    <<"friends">> => [
-        #{<<"name">> => "Jane", <<"avatar">> => "/images/avatar/    jane.png" },
-        #{<<"name">> => "David", <<"avatar">> => "/images/avatar/    David.png" },
-    ],
-    <<"has_friends">> => fun has_friends/1
-}
-```
+- [aiwiki](https://github.com/DavidAlphaFox/aiwiki) -- a very simple blog.
+  Its templates predate 0.4.0 and need migrating.
 
-#### lambda
+## Credit
 
-This is an extends of aihtml on mustach syntax.
+The scanner's tag-splitting logic derives from
+[bbmustache](https://github.com/soranoba/bbmustache) by Hinagiku Soranoba,
+used under the MIT licence.
 
-Lambda in context is `fun/1`
-layout.mustache
-```mustache
-{{* yield}}
-```
-    
-layout_context.erl
-```erlang
-yield(Context) ->  ......
+## Licence
 
-Context = #{
-    <<"yield">> => fun yield/1
-}
-```
-
-Lambda in context is `fun/2` and a value
-
-layout.mustache
-```mustache
-{{* yield}}
-```
-    
-layout_context.erl
-```erlang
-yield(Template,Context)->
-    ai_mustache:render(Template,Context).
-render(Template,State) -> 
-    Context = maps:get(context,State,#{}),
-    Layout = maps:get(layout,State,<<"layout/default">>),
-    LayoutContext = Context#{ <<"yield">> => [fun yield/2,Template] },
-    ai_mustache:render(Layout,LayoutContext).
-```
-
-## Projects who use this
-
-- [aiwiki](https://github.com/DavidAlphaFox/aiwiki) a very simple blog.
+MIT. See [LICENSE](LICENSE).

@@ -1,0 +1,6 @@
+%%% Validates an extension that has no beam yet, from its source.
+-module(tf_src_only).
+-compile({parse_transform, ai_mustache_transform}).
+-mustache_tag(src_only_ext).
+-export([ok/0]).
+ok() -> ok.

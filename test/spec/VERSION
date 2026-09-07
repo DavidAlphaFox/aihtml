@@ -1,0 +1,20 @@
+source: https://github.com/mustache/spec
+commit: e8ec001db7f594521e773c34866aca2b5d6b0037
+path:   specs/*.json
+date:   2026-09-07
+
+必选模块（纳入验收，共 136 个 case）:
+  comments.json       12
+  delimiters.json     14
+  interpolation.json  42
+  inverted.json       22
+  partials.json       12
+  sections.json       34
+
+可选模块（仅备查，不纳入验收；上游文件名的 "~" 前缀改为 "optional-"）:
+  optional-dynamic-names.json   21
+  optional-inheritance.json     27
+  optional-lambdas.json         10
+
+只 vendoring .json，不取 .yml —— OTP 自带 JSON 解析，不自带 YAML。
+同步上游时请一并更新本文件的 commit。

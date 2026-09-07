@@ -1,0 +1,8 @@
+{application, examples,
+ [{description, "aihtml worked example"},
+  {vsn, "0.4.0"},
+  {registered, []},
+  {applications, [kernel, stdlib, aihtml]},
+  {env, []},
+  {modules, []}
+ ]}.

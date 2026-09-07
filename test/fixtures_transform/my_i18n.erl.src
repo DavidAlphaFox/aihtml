@@ -1,0 +1,36 @@
+%%%-------------------------------------------------------------------
+%%% @doc Worked example of an ai_mustache_ext: compile-time i18n.
+%%%
+%%% `{{@ hello}}' becomes a case over the `locale' key of the context stack
+%%% with one clause per translation, so the lookup table is baked into the
+%%% generated module and nothing is resolved at render time.
+%%%
+%%% Note what this module does NOT do: it never writes `{var, 0, 'S'}'. The
+%%% stack variable is renamed when a template is expanded inline, so the name
+%%% has to come from Opts -- ai_mustache_ext:lookup_expr/2 does that.
+%%% @end
+%%%-------------------------------------------------------------------
+-module(my_i18n).
+-behaviour(ai_mustache_ext).
+
+-export([markers/0, compile_tag/4, table/0]).
+
+markers() -> [$@].
+
+table() ->
+    #{hello => #{<<"en">> => <<"Hello">>, <<"fr">> => <<"Bonjour">>},
+      bye   => #{<<"en">> => <<"Bye">>,   <<"fr">> => <<"Au revoir">>}}.
+
+compile_tag($@, [Key], [], Opts) ->
+    A = ai_mustache_ext:anno(Opts),
+    Table = ai_mustache_ext:ext_opt(?MODULE, Opts, table()),
+    Locales = maps:get(Key, Table, #{}),
+    Clauses = [{clause, A, [bin(A, L)], [], [bin(A, T)]}
+               || {L, T} <- lists:sort(maps:to_list(Locales))]
+        ++ [{clause, A, [{var, A, '_'}], [],
+             [bin(A, atom_to_binary(Key, utf8))]}],
+    {'case', A, ai_mustache_ext:lookup_expr([locale], Opts), Clauses}.
+
+bin(A, <<>>) -> {bin, A, []};
+bin(A, B)    -> {bin, A, [{bin_element, A, {string, A, binary_to_list(B)},
+                           default, default}]}.

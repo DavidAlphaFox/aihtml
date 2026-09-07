@@ -1,0 +1,10 @@
+{application, rebar3_aihtml,
+ [{description, "rebar3 plugin that compiles mustache templates to Erlang modules"},
+  {vsn, "0.4.0"},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {env, []},
+  {modules, []},
+  {licenses, ["MIT"]},
+  {links, [{"GitHub", "https://github.com/DavidAlphaFox/aihtml"}]}
+ ]}.

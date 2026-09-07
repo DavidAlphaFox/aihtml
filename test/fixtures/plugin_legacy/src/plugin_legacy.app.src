@@ -1,0 +1,8 @@
+{application, plugin_legacy,
+ [{description, "rebar3_aihtml migrate fixture (v0.3.x flat-context templates)"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [kernel, stdlib, aihtml]},
+  {env, []},
+  {modules, []}
+ ]}.
