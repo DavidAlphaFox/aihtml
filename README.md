@@ -1,5 +1,7 @@
 # aihtml
 
+[English](README.md) · [中文](README.zh-CN.md)
+
 A Mustache template engine for Erlang that compiles templates into Erlang modules.
 
 Templates are turned into `.erl` files at build time by a rebar3 plugin, so at
@@ -443,6 +445,56 @@ Both accept a `fun/1`, called with the current frame:
 
 ---
 
+## Rendering a partial conditionally
+
+`{{> x}}` is unconditional on its own; wrap it in a section:
+
+```mustache
+{{#user}}
+  {{> shared/card}}
+{{/user}}
+
+{{+is_admin}}
+  {{> shared/panel}}
+{{/is_admin}}
+
+{{^items}}
+  {{> shared/empty}}
+{{/items}}
+```
+
+Which section you choose decides how names resolve inside the partial:
+`{{#}}` pushes a scope, `{{+}}` does not.
+
+**Give the partial a line of its own.** Squeezed onto one line it is not
+standalone and loses its indentation:
+
+```mustache
+{{#show}}
+  {{> row}}          correct: every line of row gets the 2-space indent
+{{/show}}
+
+{{#show}}{{> row}}{{/show}}   indentation lost, plus a stray blank line
+```
+
+To choose *which* partial at run time (the spec's Dynamic Names are not
+implemented): mutually exclusive sections, or a lambda calling the module
+directly -- partials compile to real modules, so Erlang can call them:
+
+```erlang
+Pick = fun(Frame) ->
+    Mod = case maps:get(kind, Frame) of
+              text  -> view_shared_text;
+              image -> view_shared_image
+          end,
+    Mod:render_iolist(Frame)     %% an iolist, and not escaped
+end.
+```
+
+The template says `{{*body}}`.
+
+---
+
 ## Lambdas
 
 `{{*name}}` is an aihtml extension. Its output is **not** escaped -- producing
@@ -488,6 +540,8 @@ keeps its own shape.
 ---
 
 ## parse_transform
+
+Full guide: **[docs/parse-transform.md](docs/parse-transform.md)**.
 
 ```erlang
 -module(my_views).
@@ -628,6 +682,14 @@ pins its output byte for byte.
 
 - [aiwiki](https://github.com/DavidAlphaFox/aiwiki) -- a very simple blog.
   Its templates predate 0.4.0 and need migrating.
+
+---
+
+## Documentation
+
+- [Using the parse_transform](docs/parse-transform.md) -- extension tags, inline templates, file templates
+- [Benchmark](bench/README.md) -- methodology and results
+- [Design notes](designs/README.md) -- why the engine is built this way
 
 ## Credit
 
