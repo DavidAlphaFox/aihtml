@@ -46,9 +46,9 @@ scan(Data) -> scan(Data, #{}).
 -spec scan(unicode:chardata(), map()) ->
           {ok, [ai_mustache_token()]} | ai_mustache_error().
 scan(Data, Opts0) ->
-    Opts = ai_mustache_text:opts(Opts0),
-    File = ai_mustache_text:source(Opts),
-    case ai_mustache_text:template(Data) of
+    Opts = ai_html_text:opts(Opts0),
+    File = ai_html_text:source(Opts),
+    case ai_html_text:template(Data) of
         {error, Reason} ->
             {error, {File, 1, Reason}};
         {ok, Bin} ->

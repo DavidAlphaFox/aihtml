@@ -47,8 +47,8 @@ parse(Data, Opts) ->
 -spec do_parse([ai_mustache_token()], map()) ->
           {ok, [ai_mustache_node()]} | ai_mustache_error().
 do_parse(Tokens, Opts0) ->
-    Opts = ai_mustache_text:opts(Opts0),
-    St = #st{file = ai_mustache_text:source(Opts), ext = ext_table(Opts)},
+    Opts = ai_html_text:opts(Opts0),
+    St = #st{file = ai_html_text:source(Opts), ext = ext_table(Opts)},
     case nodes(Tokens, toplevel, [], St) of
         {error, _} = E   -> E;
         {ok, Nodes, []}  -> {ok, Nodes};

@@ -55,7 +55,7 @@
 %%% only `-include' is tracked. Editing `views/index.mustache' therefore does
 %%% not on its own rebuild the module carrying `-mustache_template'. The rebar3
 %%% plugin closes this by scanning for the attribute (via
-%%% {@link ai_mustache_path:scan/1}) and touching the `.erl' when the
+%%% {@link ai_html_path:scan/1}) and touching the `.erl' when the
 %%% template's hash changes. Without the plugin, form (c) is
 %%% plugin-recommended rather than plugin-free: `make clean' or a manual touch
 %%% is the fallback.
@@ -258,7 +258,7 @@ check_assembly(St) ->
 
 -spec collect_template(erl_anno:anno(), term(), #st{}) -> #st{}.
 collect_template(A, Term, St) ->
-    case ai_mustache_path:template_spec(Term) of
+    case ai_html_path:template_spec(Term) of
         error ->
             error_at(A, {bad_mustache_template, Term}, St);
         {ok, {Name, Path}} ->
@@ -690,7 +690,7 @@ resolve(Path, St) ->
         ++ views_dirs(St)
         ++ [D || {i, D} <- St#st.opts]
         ++ ["."],
-    case ai_mustache_path:resolve(Path, Dirs) of
+    case ai_html_path:resolve(Path, Dirs) of
         {ok, Abs}                 -> {ok, Abs};
         {error, {not_found, Tried}} -> {error, Tried}
     end.

@@ -123,7 +123,9 @@ prefix_for(Template, Partials, Opts) ->
 -spec compile_all(binary(), map(), binary(), module(), map()) ->
           {ok, module()} | ai_mustache_error().
 compile_all(Template, Partials, Prefix, Main, Opts) ->
-    Base = maps:merge(Opts, #{prefix => Prefix}),
+    %% origin => string keeps ai_mustache_dev from treating these modules,
+    %% which have no file on disk, as templates whose source went missing.
+    Base = maps:merge(Opts, #{prefix => Prefix, origin => string}),
     Units = [{Main, <<"main">>, Template}
              | [{ai_mustache_ast:module_name(N, Base), N, T}
                 || {N, T} <- maps:to_list(Partials)]],

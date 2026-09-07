@@ -107,99 +107,21 @@ truthy(null)      -> false;
 truthy(_)         -> true.
 
 %%%===================================================================
-%%% to_binary/1
+%%% to_binary/1 and escape/1
 %%%===================================================================
 
-%% @doc Render a value as a binary.
+%% Both live in ai_html_escape, shared with the other engines
+%% (designs/08-jinja-architecture.md section 1.1). The error tag is passed in
+%% rather than caught and rethrown here, because these two functions are the
+%% hot path of every render and must stay free of a try/catch.
 %%
-%% Floats use `float_to_binary/2' with `short' (OTP 24+): the default
-%% formatting turns `1.21' into `"1.21000000000000000000e+00"' and fails the
-%% spec's decimal interpolation cases (designs/02-architecture.md 6.2).
-%%
-%% `undefined' and `null' render as the empty binary -- a missing variable
-%% renders as nothing, which is standard mustache -- so both clauses have to
-%% sit above the generic atom clause.
+%% Generated modules call ai_mustache_rt:escape/1 and ai_mustache_rt:to_binary/1
+%% by name, so these exports can never be removed.
 -spec to_binary(term()) -> binary().
-to_binary(B) when is_binary(B)  -> B;          % zero copy, the hot path
-to_binary(I) when is_integer(I) -> integer_to_binary(I);
-to_binary(F) when is_float(F)   -> float_to_binary(F, [short]);
-to_binary(undefined)            -> <<>>;
-to_binary(null)                 -> <<>>;
-to_binary(A) when is_atom(A)    -> atom_to_binary(A, utf8);
-%% Lists are ambiguous by nature: `[104, 105]' is both a two element list of
-%% integers and the string "hi", and nothing in the value itself tells the
-%% two apart. Templates are not supposed to interpolate lists at all -- a
-%% list means "section" everywhere else in this engine -- but a defined
-%% behaviour beats a crash, so a list is read as a unicode character list,
-%% falling back to a plain iolist (byte list) when that fails.
-to_binary(L) when is_list(L) ->
-    case unicode:characters_to_binary(L) of
-        B when is_binary(B) -> B;
-        _Error              -> iolist_to_binary(L)
-    end;
-to_binary(T) -> error({ai_mustache, {not_renderable, T}}).
+to_binary(V) -> ai_html_escape:to_binary(V, ai_mustache).
 
-%%%===================================================================
-%%% escape/1
-%%%===================================================================
-
-%% @doc HTML-escape a value, returning iodata.
-%%
-%% The escape set is exactly five characters:
-%%
-%%   `&' -> `&amp;'   `<' -> `&lt;'   `>' -> `&gt;'
-%%   `"' -> `&quot;'  `'' -> `&#39;'
-%%
-%% Two deliberate differences from the pre-0.4 behaviour:
-%%
-%%   1. `&' becomes `&amp;' WITH the semicolon. The old ailib table emitted
-%%      `&amp' (bug B3).
-%%   2. `/', `=' and the backtick are no longer escaped. Escaping them
-%%      corrupts URLs (`href="/a/b"' became `href="&#x2F;a&#x2F;b"') and
-%%      ordinary prose; standard mustache only asks for the five above.
-%%
-%% One pass over the binary, slicing with binary:part/3 and building an
-%% iolist -- no `re:replace', no byte-wise append. Beyond being far cheaper
-%% than the old eight global regex passes, a single pass is also what makes
-%% the escape order irrelevant: with multiple passes, `&' having to run
-%% first or last is a correctness trap (`&lt;' getting re-escaped into
-%% `&amp;lt;'), and here it simply cannot happen.
-%%
-%% Scanning byte by byte is safe for UTF-8: all five characters are ASCII
-%% and every continuation byte of a multi-byte sequence is >= 0x80, so no
-%% multi-byte character can be hit by accident. No decoding is needed.
 -spec escape(term()) -> iodata().
-escape(B) when is_binary(B) -> escape(B, 0, 0, []);
-escape(V)                   -> escape(to_binary(V)).
-
-%% escape(Bin, SegStart, Pos, RevAcc): `SegStart' is where the current
-%% verbatim run started, `Pos' the byte being looked at, `RevAcc' the output
-%% in reverse order.
--spec escape(binary(), non_neg_integer(), non_neg_integer(), [iodata()]) ->
-          iodata().
-escape(Bin, Start, Pos, Acc) when Pos < byte_size(Bin) ->
-    case binary:at(Bin, Pos) of
-        $&  -> escape_hit(Bin, Start, Pos, Acc, <<"&amp;">>);
-        $<  -> escape_hit(Bin, Start, Pos, Acc, <<"&lt;">>);
-        $>  -> escape_hit(Bin, Start, Pos, Acc, <<"&gt;">>);
-        $\" -> escape_hit(Bin, Start, Pos, Acc, <<"&quot;">>);
-        $'  -> escape_hit(Bin, Start, Pos, Acc, <<"&#39;">>);
-        _   -> escape(Bin, Start, Pos + 1, Acc)
-    end;
-%% Nothing was escaped: hand back the very same binary, no allocation. This
-%% is why escape/1 returns iodata() and not binary().
-escape(Bin, 0, _Pos, []) -> Bin;
-escape(_Bin, Pos, Pos, Acc) -> lists:reverse(Acc);
-escape(Bin, Start, Pos, Acc) ->
-    lists:reverse(Acc, [binary:part(Bin, Start, Pos - Start)]).
-
--spec escape_hit(binary(), non_neg_integer(), non_neg_integer(), [iodata()],
-                 binary()) -> iodata().
-escape_hit(Bin, Pos, Pos, Acc, Rep) ->
-    escape(Bin, Pos + 1, Pos + 1, [Rep | Acc]);
-escape_hit(Bin, Start, Pos, Acc, Rep) ->
-    Seg = binary:part(Bin, Start, Pos - Start),
-    escape(Bin, Pos + 1, Pos + 1, [Rep, Seg | Acc]).
+escape(V) -> ai_html_escape:escape(V, ai_mustache).
 
 %%%===================================================================
 %%% section/4

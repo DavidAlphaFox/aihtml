@@ -35,7 +35,7 @@
 -spec postprocess(nodes(), map()) ->
           {ok, nodes(), [module()]} | ai_mustache_error().
 postprocess(Nodes, Opts0) ->
-    Opts = ai_mustache_text:opts(Opts0),
+    Opts = ai_html_text:opts(Opts0),
     resolve_partials(drop_empty(merge_text(Nodes)), Opts).
 
 %%%===================================================================
@@ -132,7 +132,7 @@ resolve([], _Opts, Deps, Acc) ->
 resolve([{partial, Loc, Name, Indent} | Rest], Opts, Deps, Acc) when is_binary(Name) ->
     case exists(Name, Opts) of
         false ->
-            {error, {ai_mustache_text:source(Opts), element(1, Loc),
+            {error, {ai_html_text:source(Opts), element(1, Loc),
                      {partial_not_found, Name}}};
         true ->
             Mod = module_name(Name, Opts),

@@ -20,6 +20,14 @@
 -export([forms/2, compile_inline/3, source_hash/2, normalize_opts/1]).
 -export([body_exprs/3, new_state/1, aux_forms/1, state_counter/1, set_counter/2]).
 
+%% The form constructors live in ai_html_forms, shared with the other engines
+%% (designs/08-jinja-architecture.md section 1.1). Imported rather than
+%% qualified so that the code generation below reads exactly as it always did.
+-import(ai_html_forms,
+        [a/2, v/2, n/2, cl/4, fn/4, spec/4, t/2, param/3,
+         bin/2, empty_bin/1, concat_bin/3, mklist/2,
+         rem_call/4, loc_call/3, g/3, anno/1, remotes/2]).
+
 -define(SV, 'S').        % context stack variable in generated code
 -define(IV, 'I').        % indent variable in generated code
 
@@ -93,9 +101,9 @@ inline_expr(Exprs, CtxExpr, St) ->
 
 -spec new_state(map()) -> state().
 new_state(Opts0) ->
-    Opts = ai_mustache_text:opts(Opts0),
+    Opts = ai_html_text:opts(Opts0),
     #cs{opts     = Opts,
-        file     = ai_mustache_text:source(Opts),
+        file     = ai_html_text:source(Opts),
         line_map = maps:get(line_map, Opts, true),
         counter  = 0,
         aux      = [],
@@ -157,33 +165,7 @@ module_forms(Exprs, Deps, St) ->
 %% then has to indent its own lines. The two entry points always pass an empty
 %% indent, so for them the fold is exact.
 -spec static_text([erl_parse:abstract_expr()]) -> {yes, binary()} | no.
-static_text(Exprs) ->
-    case lists:all(fun is_literal_or_indent/1, Exprs) of
-        false -> no;
-        true  -> {yes, iolist_to_binary([B || {bin, _, _} = E <- Exprs,
-                                              B <- [literal_of(E)]])}
-    end.
-
--spec is_literal_or_indent(erl_parse:abstract_expr()) -> boolean().
-is_literal_or_indent({bin, _, _} = E) -> literal_of(E) =/= error;
-is_literal_or_indent({var, _, ?IV})   -> true;   % indent, empty on this path
-is_literal_or_indent(_)               -> false.
-
-%% Only ever called on a {bin, _, _}; is_literal_or_indent/1 filters the rest.
--spec literal_of(tuple()) -> binary() | error.
-literal_of({bin, _, []}) ->
-    <<>>;
-literal_of({bin, _, [{bin_element, _, {string, _, Chars}, default, default}]}) ->
-    list_to_binary(Chars);
-literal_of({bin, _, [{bin_element, _, {string, _, Chars}, default, [utf8]}]}) ->
-    unicode:characters_to_binary(Chars, utf8);
-literal_of({bin, _, Elems}) ->
-    case lists:all(fun({bin_element, _, {integer, _, _}, default, default}) -> true;
-                      (_) -> false
-                   end, Elems) of
-        true  -> << <<B>> || {bin_element, _, {integer, _, B}, _, _} <- Elems >>;
-        false -> error
-    end.
+static_text(Exprs) -> ai_html_forms:static_text(Exprs, ?IV).
 
 %% A folded template never looks at its context, so the parameter has to be
 %% underscored or the generated module would not survive warnings_as_errors.
@@ -207,11 +189,17 @@ render_iolist_expr(L, no) ->
 
 -spec source_attr(state()) -> map().
 source_attr(#cs{opts = Opts}) ->
-    #{path  => path_of(Opts),
-      stamp => maps:get(stamp, Opts, <<>>),
-      mtime => maps:get(mtime, Opts, 0),
-      vsn   => ?AI_MUSTACHE_VSN,
-      opts  => maps:from_list(normalize_opts(Opts))}.
+    Attr = #{path  => path_of(Opts),
+             stamp => maps:get(stamp, Opts, <<>>),
+             mtime => maps:get(mtime, Opts, 0),
+             vsn   => ?AI_MUSTACHE_VSN,
+             opts  => normalize_opts(Opts)},
+    %% Only recorded when it is not the default, so a file template's
+    %% generated .erl is unchanged. See ai_mustache_source() in the header.
+    case maps:get(origin, Opts, file) of
+        file   -> Attr;
+        Origin -> Attr#{origin => Origin}
+    end.
 
 %% Generated modules may only call ai_mustache_rt, other generated modules and
 %% erlang BIFs (architecture invariant 3). A violation is a compiler bug, so it
@@ -229,16 +217,6 @@ check_remotes(Forms, Allowed, St) ->
         []  -> ok;
         Bad -> {error, {St#cs.file, 1, {unexpected_remote_calls, lists:usort(Bad)}}}
     end.
-
--spec remotes(term(), [module()]) -> [module()].
-remotes({call, _, {remote, _, {atom, _, M}, _}, Args}, Acc) ->
-    remotes(Args, [M | Acc]);
-remotes(T, Acc) when is_tuple(T) ->
-    remotes(tuple_to_list(T), Acc);
-remotes([H | T], Acc) ->
-    remotes(T, remotes(H, Acc));
-remotes(_, Acc) ->
-    Acc.
 
 %%%===================================================================
 %%% Node compilation
@@ -506,14 +484,15 @@ pre(_L, false) -> [].
 %% ai_mustache_dev each rolled their own the two would drift, and dev would
 %% then consider every module permanently stale while the plugin considered it
 %% permanently fresh. erlang:md5/1 is a BIF, so this needs no crypto app.
--spec source_hash(binary(), map()) -> binary().
+-spec source_hash(binary(), map() | [{atom(), term()}]) -> binary().
 source_hash(Body, Opts) ->
-    erlang:md5(term_to_binary({Body, normalize_opts(Opts), ?AI_MUSTACHE_VSN})).
+    erlang:md5(term_to_binary({Body, normalize_opts(Opts), ?AI_MUSTACHE_VSN},
+                              [deterministic])).
 
 %% Only the options that can change the generated code, as a sorted list so
 %% the result does not depend on map iteration order.
 %%
-%% Values go through ai_mustache_text:opts/1 first, so `views' as a string and
+%% Values go through ai_html_text:opts/1 first, so `views' as a string and
 %% `views' as a binary produce the same stamp. Without that, whether the stamp
 %% matched would depend on how the caller happened to spell a path, and the
 %% plugin and ai_mustache_dev would disagree about staleness the moment one of
@@ -524,9 +503,9 @@ source_hash(Body, Opts) ->
 %% `views_abs' is excluded for a stronger reason -- it holds an absolute path,
 %% which would stamp the developer's home directory into -mustache_source and
 %% make the build non-reproducible across machines.
--spec normalize_opts(map()) -> [{atom(), term()}].
+-spec normalize_opts(map() | [{atom(), term()}]) -> [{atom(), term()}].
 normalize_opts(Opts0) ->
-    Opts = ai_mustache_text:opts(Opts0),
+    Opts = ai_html_text:opts(as_map(Opts0)),
     lists:sort(
       [{K, maps:get(K, Opts)} || K <- [prefix, views, extensions, ext_opts,
                                        line_map],
@@ -536,98 +515,14 @@ normalize_opts(Opts0) ->
 %%% Form constructors
 %%%===================================================================
 
-a(L, A)    -> {atom, L, A}.
-v(L, V)    -> {var, L, V}.
-n(L, N)    -> {integer, L, N}.
-cl(L, P, G, B) -> {clause, L, P, G, B}.
-
-%% Static text as a binary literal.
-%%
-%% Two things have to be right here, and both were got wrong first time round.
-%%
-%% A {string, _, Chars} element must carry the DEFAULT type, not [binary]:
-%% [binary] means <<"hi"/binary>>, i.e. treat the list as a binary, which is a
-%% runtime badarg. With the default type each character becomes an 8-bit
-%% integer, which is what <<"hi">> means.
-%%
-%% And non-ASCII text must go out as characters with the utf8 type, not as raw
-%% bytes. The plugin writes these forms to an .erl file that erlc then reads
-%% back as UTF-8 source; a byte-per-character literal would have its
-%% multi-byte sequences folded into single codepoints on the way in and then
-%% truncated to 8 bits, silently corrupting every non-ASCII template. Emitting
-%% <<"中文"/utf8>> round-trips exactly and stays readable.
--spec bin(erl_anno:anno(), binary()) -> erl_parse:abstract_expr().
-bin(L, <<>>) ->
-    {bin, L, []};
-bin(L, B) ->
-    case unicode:characters_to_list(B, utf8) of
-        Chars when is_list(Chars) ->
-            case lists:all(fun(C) -> C < 128 end, Chars) of
-                true  -> {bin, L, [{bin_element, L, {string, L, Chars},
-                                    default, default}]};
-                false -> {bin, L, [{bin_element, L, {string, L, Chars},
-                                    default, [utf8]}]}
-            end;
-        _NotUtf8 ->
-            %% Not valid UTF-8; fall back to one element per byte so the bytes
-            %% survive verbatim whatever the reader assumes about encoding.
-            {bin, L, [{bin_element, L, {integer, L, Byte}, default, default}
-                      || <<Byte>> <= B]}
-    end.
-
-empty_bin(L) -> {bin, L, []}.
-
-%% <<I/binary, "indent">>
-concat_bin(L, Var, Suffix) ->
-    {bin, L, Elems} = bin(L, Suffix),
-    {bin, L, [{bin_element, L, v(L, Var), default, [binary]} | Elems]}.
-
-mklist(L, [])      -> {nil, L};
-mklist(L, [H | T]) -> {cons, L, H, mklist(L, T)}.
-
-%% A key path is just a list of atoms, so it is cheaper and clearer to build
-%% the literal directly than to route it through erl_parse:abstract/2, which
-%% wants a plain integer line rather than an erl_anno:anno().
-keys(L, Keys) -> mklist(L, [a(L, K) || K <- Keys]).
-
-rt(L, F, Args)  -> {call, L, {remote, L, a(L, ai_mustache_rt), a(L, F)}, Args}.
-rem_call(L, M, F, Args) -> {call, L, {remote, L, a(L, M), a(L, F)}, Args}.
-loc_call(L, F, Args)    -> {call, L, a(L, F), Args}.
-g(L, F, Args)           -> {call, L, a(L, F), Args}.
-hd_stack(L)             -> {call, L, a(L, hd), [v(L, ?SV)]}.
-
-fn(L, Name, Params, Body) ->
-    {function, L, Name, length(Params), [cl(L, Params, [], Body)]}.
-
-spec(L, Name, ArgTypes, Ret) ->
-    {attribute, L, spec,
-     {{Name, length(ArgTypes)},
-      [{type, L, 'fun', [{type, L, product, ArgTypes}, Ret]}]}}.
-
-t(L, list) -> {type, L, list, [{type, L, term, []}]};
-t(L, Name) -> {type, L, Name, []}.
-
-%% Generated parameters that the body never mentions must be underscored or
-%% the generated module would not survive warnings_as_errors.
-param(L, Name, Body) ->
-    case uses_var(Body, Name) of
-        true  -> v(L, Name);
-        false -> v(L, list_to_atom("_" ++ atom_to_list(Name)))
-    end.
-
-uses_var({var, _, Name}, Name)       -> true;
-uses_var(T, Name) when is_tuple(T)   -> uses_var(tuple_to_list(T), Name);
-uses_var([H | T], Name)              -> uses_var(H, Name) orelse uses_var(T, Name);
-uses_var(_, _)                       -> false.
+%% Mustache-specific shorthands over the shared constructors.
+keys(L, Keys)  -> ai_html_forms:atoms(L, Keys).
+rt(L, F, Args) -> rem_call(L, ai_mustache_rt, F, Args).
+hd_stack(L)    -> ai_html_forms:hd_call(L, v(L, ?SV)).
 
 %%%===================================================================
 %%% Helpers
 %%%===================================================================
-
-%% compile:forms/2 takes erl_anno:anno(), which is opaque; passing a bare
-%% integer type-checks by accident but dialyzer rejects it.
--spec anno(non_neg_integer()) -> erl_anno:anno().
-anno(L) -> erl_anno:new(L).
 
 line(_Loc, #cs{line_map = false}) -> anno(0);
 line({L, _C}, _St)                -> anno(L).
@@ -643,4 +538,9 @@ ext_table(Opts) ->
               end
       end, #{}, maps:get(extensions, Opts, [])).
 
-path_of(Opts) -> ai_mustache_text:source(Opts).
+path_of(Opts) -> ai_html_text:source(Opts).
+
+%% The self-description records the options as the sorted list
+%% normalize_opts/1 produces, so reading them back finds a list.
+as_map(L) when is_list(L) -> maps:from_list(L);
+as_map(M) when is_map(M)  -> M.

@@ -40,8 +40,11 @@ check() ->
         {error, R} ->
             {error, {compiler_unavailable, R}};
         {module, _} ->
+            %% A module compiled from a string has no file to go stale
+            %% against; it is skipped rather than reported missing.
             case [{M, P} || M <- template_modules(),
-                            {ok, #{path := P}} <- [source(M)],
+                            {ok, #{path := P} = S} <- [source(M)],
+                            maps:get(origin, S, file) =:= file,
                             not filelib:is_regular(P)] of
                 []      -> ok;
                 Missing -> {error, {missing_templates, Missing}}
@@ -128,7 +131,7 @@ reload(Mod) ->
 %% is why that attribute carries them: without them a reload could not
 %% reproduce the compilation the plugin originally performed, and the
 %% hot-loaded module would quietly differ from the built one.
--spec reload(module(), map()) -> ok | {error, term()}.
+-spec reload(module(), map() | [{atom(), term()}]) -> ok | {error, term()}.
 reload(Mod, Opts0) ->
     case source(Mod) of
         {error, _} = E ->
@@ -153,8 +156,16 @@ reload_list([M | Rest]) ->
 %%% Internal
 %%%===================================================================
 
--spec rebuild(module(), binary() | string(), binary(), map()) -> ok | {error, term()}.
-rebuild(Mod, Path, Body, Opts0) ->
+-spec rebuild(module(), binary() | string(), binary(),
+              map() | [{atom(), term()}]) -> ok | {error, term()}.
+rebuild(Mod, Path, Body, Recorded) ->
+    %% The attribute records the options as a sorted list, so that the
+    %% generated file does not depend on map iteration order; here they go
+    %% back to being a map.
+    Opts0 = case Recorded of
+                L when is_list(L) -> maps:from_list(L);
+                M when is_map(M)  -> M
+            end,
     Opts = Opts0#{module => Mod,
                   source => iolist_to_binary(Path),
                   stamp  => ai_mustache_compiler:source_hash(Body, Opts0),
