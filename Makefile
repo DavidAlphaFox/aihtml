@@ -1,10 +1,22 @@
+# NOTE: rebar3 is the primary build path for aihtml (see designs/05-rebar3-plugin.md).
+#
+#   rebar3 compile
+#   rebar3 ct
+#   rebar3 dialyzer
+#   rebar3 xref
+#
+# This erlang.mk Makefile is kept for compatibility with downstream projects that
+# still build with erlang.mk. It is not exercised by CI and may lag behind.
+
 PROJECT = aihtml
-PROJECT_DESCRIPTION = html tool for productions from ailink.io
-PROJECT_VERSION = 0.3.7
+PROJECT_DESCRIPTION = Mustache template engine that compiles templates to Erlang modules
+PROJECT_VERSION = 0.4.0
 
 ERLC_OPTS = -Werror +debug_info +warn_export_vars +warn_shadow_vars +warn_obsolete_guard
-DEPS = ailib
 
-dep_ailib = git https://github.com/DavidAlphaFox/ailib.git v0.4.5
+# aihtml has no dependencies by design (decision D5, see designs/02-architecture.md).
+DEPS =
 
-include erlang.mk 
+include erlang.mk
+
+COMPILE_FIRST +=
