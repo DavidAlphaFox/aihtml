@@ -1,0 +1,12 @@
+<h1>{{header}}</h1>
+<ul>
+  {{# items}}
+    {{> shared/item}}
+  {{/ items}}
+</ul>
+{{> shared/user}}
+{{> shared/level}}
+{{#list}}list 是 true：执行一次，不压栈，{{header}} 仍可见{{/list}}
+{{^empty}}empty 是 false，所以 inverted section 执行{{/empty}}
+{{#count}}count 是 0，但仍然 truthy，{{.}} 取到栈顶{{/count}}
+{{*yield}}
