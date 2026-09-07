@@ -1,0 +1,433 @@
+{
+ "cases": [
+  {
+   "cpython": "TemplateSyntaxError: Unexpected end of template. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.",
+   "error": "unclosed_block",
+   "group": "error",
+   "name": "unclosed-if",
+   "stage": 10,
+   "template": "{% if true %}x"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Unexpected end of template. Jinja was looking for the following tags: 'endfor' or 'else'. The innermost block that needs to be closed is 'for'.",
+   "error": "unclosed_block",
+   "group": "error",
+   "name": "unclosed-for",
+   "stage": 10,
+   "template": "{% for x in [1] %}x"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.",
+   "error": "unclosed_block",
+   "group": "error",
+   "name": "unclosed-block",
+   "stage": 10,
+   "template": "{% block a %}x"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Unexpected end of template. Jinja was looking for the following tags: 'endmacro'. The innermost block that needs to be closed is 'macro'.",
+   "error": "unclosed_block",
+   "group": "error",
+   "name": "unclosed-macro",
+   "stage": 10,
+   "template": "{% macro m() %}x"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Missing end of raw directive",
+   "error": "unclosed_block",
+   "group": "error",
+   "name": "unclosed-raw",
+   "stage": 9,
+   "template": "{% raw %}x"
+  },
+  {
+   "cpython": "TemplateSyntaxError: unexpected end of template, expected 'end of print statement'.",
+   "error": "unclosed_block",
+   "group": "error",
+   "name": "unclosed-expr",
+   "stage": 9,
+   "template": "{{ x "
+  },
+  {
+   "cpython": "TemplateSyntaxError: unexpected end of template, expected 'end of statement block'.",
+   "error": "unclosed_block",
+   "group": "error",
+   "name": "unclosed-statement",
+   "stage": 9,
+   "template": "{% if true "
+  },
+  {
+   "cpython": "TemplateSyntaxError: Missing end of comment tag",
+   "error": "unclosed_block",
+   "group": "error",
+   "name": "unclosed-comment",
+   "stage": 9,
+   "template": "{# c "
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'endfor'. Jinja was looking for the following tags: 'elif' or 'else' or 'endif'. The innermost block that needs to be closed is 'if'.",
+   "error": "mismatched_end",
+   "group": "error",
+   "name": "mismatched-end",
+   "stage": 10,
+   "template": "{% if true %}{% endfor %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'endif'. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.",
+   "error": "mismatched_end",
+   "group": "error",
+   "name": "mismatched-end-block",
+   "stage": 10,
+   "template": "{% block a %}{% endif %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'else'.",
+   "error": "orphan_clause",
+   "group": "error",
+   "name": "orphan-else",
+   "stage": 10,
+   "template": "{% else %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'elif'.",
+   "error": "orphan_clause",
+   "group": "error",
+   "name": "orphan-elif",
+   "stage": 10,
+   "template": "{% elif true %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'endif'.",
+   "error": "orphan_clause",
+   "group": "error",
+   "name": "orphan-end",
+   "stage": 10,
+   "template": "{% endif %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'else'. Jinja was looking for the following tags: 'endif'. The innermost block that needs to be closed is 'if'.",
+   "error": "orphan_clause",
+   "group": "error",
+   "name": "two-else-in-if",
+   "stage": 10,
+   "template": "{% if true %}a{% else %}b{% else %}c{% endif %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'elif'. Jinja was looking for the following tags: 'endif'. The innermost block that needs to be closed is 'if'.",
+   "error": "orphan_clause",
+   "group": "error",
+   "name": "elif-after-else",
+   "stage": 10,
+   "template": "{% if true %}a{% else %}b{% elif false %}c{% endif %}"
+  },
+  {
+   "cpython": "'x'",
+   "deviation": "J6",
+   "error": "unknown_statement",
+   "group": "error",
+   "name": "unknown-statement",
+   "stage": 10,
+   "template": "{% autoescape true %}x{% endautoescape %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'trans'.",
+   "deviation": "J7",
+   "error": "unknown_statement",
+   "group": "error",
+   "name": "unknown-statement-trans",
+   "stage": 10,
+   "template": "{% trans %}x{% endtrans %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'debug'.",
+   "deviation": "J7",
+   "error": "unknown_statement",
+   "group": "error",
+   "name": "unknown-statement-debug",
+   "stage": 10,
+   "template": "{% debug %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: Encountered unknown tag 'break'. Jinja was looking for the following tags: 'endfor' or 'else'. The innermost block that needs to be closed is 'for'.",
+   "deviation": "J7",
+   "error": "unknown_statement",
+   "group": "error",
+   "name": "unknown-statement-break",
+   "stage": 10,
+   "template": "{% for x in [1] %}{% break %}{% endfor %}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: unexpected 'end of print statement'",
+   "error": "unexpected_token",
+   "group": "error",
+   "name": "unexpected-token-operator",
+   "stage": 9,
+   "template": "{{ + }}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: expected token 'end of print statement', got 'integer'",
+   "error": "unexpected_token",
+   "group": "error",
+   "name": "unexpected-token-juxtaposed",
+   "stage": 9,
+   "template": "{{ 1 2 }}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: unexpected '}', expected ')'",
+   "error": "unexpected_token",
+   "group": "error",
+   "name": "unbalanced-paren",
+   "stage": 9,
+   "template": "{{ (1 }}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: unexpected ')'",
+   "error": "unexpected_token",
+   "group": "error",
+   "name": "extra-close-paren",
+   "stage": 9,
+   "template": "{{ 1) }}"
+  },
+  {
+   "cpython": "TemplateSyntaxError: invalid syntax for function call expression",
+   "error": "unexpected_token",
+   "group": "error",
+   "name": "keyword-then-positional",
+   "stage": 9,
+   "template": "{{ range(stop=3, 1) }}"
+  },
+  {
+   "context": {
+    "xs": [
+     [
+      [
+       1,
+       2
+      ],
+      3
+     ]
+    ]
+   },
+   "cpython": "'x'",
+   "deviation": "J15",
+   "error": "unexpected_token",
+   "group": "error",
+   "name": "nested-destructure",
+   "stage": 10,
+   "template": "{% for (a, b), c in xs %}x{% endfor %}"
+  },
+  {
+   "cpython": "TemplateAssertionError: No filter named 'nosuchfilter'.",
+   "deviation": "J4",
+   "error": "unknown_filter",
+   "group": "error",
+   "name": "unknown-filter",
+   "stage": 12,
+   "template": "{{ 'a'|nosuchfilter }}"
+  },
+  {
+   "cpython": "TemplateAssertionError: No filter named 'nosuch'.",
+   "deviation": "J4",
+   "error": "unknown_filter",
+   "group": "error",
+   "name": "unknown-filter-mid-chain",
+   "stage": 12,
+   "template": "{{ 'a'|upper|nosuch|lower }}"
+  },
+  {
+   "cpython": "TemplateAssertionError: No test named 'nosuchtest'.",
+   "deviation": "J4",
+   "error": "unknown_test",
+   "group": "error",
+   "name": "unknown-test",
+   "stage": 12,
+   "template": "{{ 1 is nosuchtest }}"
+  },
+  {
+   "cpython": "TemplateAssertionError: No filter named 'nosuchfilter'.",
+   "deviation": "J4",
+   "error": "unknown_filter",
+   "group": "error",
+   "name": "unknown-filter-in-block",
+   "stage": 12,
+   "template": "{% filter nosuchfilter %}a{% endfilter %}"
+  },
+  {
+   "cpython": "UndefinedError: 'super' is undefined",
+   "error": "super_outside_block",
+   "group": "error",
+   "name": "super-outside-block",
+   "stage": 12,
+   "template": "{{ super() }}"
+  },
+  {
+   "cpython": "'1'",
+   "deviation": "J16",
+   "error": "namespace_assignment_unsupported",
+   "group": "error",
+   "name": "namespace-assignment",
+   "stage": 12,
+   "template": "{% set ns = namespace(t=0) %}{% set ns.t = 1 %}{{ ns.t }}"
+  },
+  {
+   "cpython": "UndefinedError: the template 'lib.j2' (imported on line 1 in '__main__') does not export the requested name 'nope'",
+   "error": "macro_not_found",
+   "group": "error",
+   "name": "import-missing-macro",
+   "stage": 12,
+   "template": "{% from \"lib.j2\" import nope %}{{ nope() }}",
+   "templates": {
+    "lib.j2": "{% macro m() %}x{% endmacro %}"
+   }
+  },
+  {
+   "cpython": "RecursionError: maximum recursion depth exceeded",
+   "error": "extends_cycle",
+   "group": "error",
+   "name": "extends-self",
+   "stage": 12,
+   "template": "{% include \"self.j2\" %}",
+   "templates": {
+    "self.j2": "{% extends \"self.j2\" %}x"
+   }
+  },
+  {
+   "cpython": "TemplateNotFound: gone.j2",
+   "error": "template_not_found",
+   "group": "error",
+   "name": "include-missing",
+   "stage": 12,
+   "template": "{% include \"gone.j2\" %}"
+  },
+  {
+   "cpython": "TemplateNotFound: gone.j2",
+   "error": "template_not_found",
+   "group": "error",
+   "name": "extends-missing",
+   "stage": 12,
+   "template": "{% extends \"gone.j2\" %}"
+  },
+  {
+   "cpython": "TemplateNotFound: gone.j2",
+   "error": "template_not_found",
+   "group": "error",
+   "name": "import-missing",
+   "stage": 12,
+   "template": "{% import \"gone.j2\" as m %}"
+  },
+  {
+   "cpython": "not renderable by the reference implementation",
+   "error": "invalid_utf8",
+   "group": "error",
+   "name": "invalid-utf8",
+   "raw_template": [
+    123,
+    123,
+    32,
+    255,
+    32,
+    125,
+    125
+   ],
+   "stage": 9
+  },
+  {
+   "cpython": "ZeroDivisionError: division by zero",
+   "error": "division_by_zero",
+   "group": "error",
+   "name": "divide-by-zero",
+   "stage": 11,
+   "template": "{{ 1 / 0 }}"
+  },
+  {
+   "cpython": "UndefinedError: 'nope' is undefined",
+   "error": "undefined_operation",
+   "group": "error",
+   "name": "undefined-arithmetic",
+   "stage": 11,
+   "template": "{{ nope + 1 }}"
+  },
+  {
+   "cpython": "TypeError: can only concatenate str (not \"int\") to str",
+   "error": "unsupported_operands",
+   "group": "error",
+   "name": "unsupported-operands",
+   "stage": 11,
+   "template": "{{ 'a' + 1 }}"
+  },
+  {
+   "context": {
+    "x": 1
+   },
+   "cpython": "TypeError: 'int' object is not callable",
+   "error": "not_callable",
+   "group": "error",
+   "name": "not-callable",
+   "stage": 11,
+   "template": "{{ x() }}"
+  },
+  {
+   "erlang_only": "a pid cannot come from JSON; asserted in Erlang",
+   "error": "not_renderable",
+   "group": "error",
+   "name": "not-renderable",
+   "stage": 11,
+   "template": null
+  },
+  {
+   "erlang_only": "needs a registered extension module",
+   "error": "filter_name_conflict",
+   "group": "error",
+   "name": "filter-name-conflict",
+   "stage": 12,
+   "template": null
+  },
+  {
+   "erlang_only": "only reachable by injecting a bad form",
+   "error": "unexpected_remote_calls",
+   "group": "error",
+   "name": "unexpected-remote-calls",
+   "stage": 12,
+   "template": null
+  },
+  {
+   "erlang_only": "only applies on the inline path",
+   "error": "target_in_inline_template",
+   "group": "error",
+   "name": "target-in-inline-template",
+   "stage": 12,
+   "template": "{% include \"x.j2\" %}"
+  },
+  {
+   "erlang_only": "only applies on the inline path",
+   "error": "mutual_macro_in_inline",
+   "group": "error",
+   "name": "mutual-macro-in-inline",
+   "stage": 12,
+   "template": "{% macro a() %}{{ b() }}{% endmacro %}{% macro b() %}{{ a() }}{% endmacro %}"
+  },
+  {
+   "cpython": "TemplateRuntimeError: Required block 'm' not found",
+   "error": "required_block_not_provided",
+   "group": "error",
+   "name": "required-block-not-provided",
+   "stage": 12,
+   "template": "{% extends \"b.j2\" %}",
+   "templates": {
+    "b.j2": "{% block m required %}{% endblock %}"
+   }
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "error"
+}

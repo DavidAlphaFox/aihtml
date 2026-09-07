@@ -1,0 +1,278 @@
+{
+ "cases": [
+  {
+   "expected": "a\n X b",
+   "group": "whitespace",
+   "name": "trim-block-plain-plain",
+   "stage": 9,
+   "template": "a\n  {% if true %} X {% endif %}\nb"
+  },
+  {
+   "expected": "a\nX b",
+   "group": "whitespace",
+   "name": "trim-block-plain-minus",
+   "stage": 9,
+   "template": "a\n  {% if true -%} X {% endif -%}\nb"
+  },
+  {
+   "expected": "a\n X \nb",
+   "group": "whitespace",
+   "name": "trim-block-plain-plus",
+   "stage": 9,
+   "template": "a\n  {% if true +%} X {% endif +%}\nb"
+  },
+  {
+   "expected": "a Xb",
+   "group": "whitespace",
+   "name": "trim-block-minus-plain",
+   "stage": 9,
+   "template": "a\n  {%- if true %} X {%- endif %}\nb"
+  },
+  {
+   "expected": "aXb",
+   "group": "whitespace",
+   "name": "trim-block-minus-minus",
+   "stage": 9,
+   "template": "a\n  {%- if true -%} X {%- endif -%}\nb"
+  },
+  {
+   "expected": "a X\nb",
+   "group": "whitespace",
+   "name": "trim-block-minus-plus",
+   "stage": 9,
+   "template": "a\n  {%- if true +%} X {%- endif +%}\nb"
+  },
+  {
+   "expected": "a\n   X b",
+   "group": "whitespace",
+   "name": "trim-block-plus-plain",
+   "stage": 9,
+   "template": "a\n  {%+ if true %} X {%+ endif %}\nb"
+  },
+  {
+   "expected": "a\n  X b",
+   "group": "whitespace",
+   "name": "trim-block-plus-minus",
+   "stage": 9,
+   "template": "a\n  {%+ if true -%} X {%+ endif -%}\nb"
+  },
+  {
+   "expected": "a\n   X \nb",
+   "group": "whitespace",
+   "name": "trim-block-plus-plus",
+   "stage": 9,
+   "template": "a\n  {%+ if true +%} X {%+ endif +%}\nb"
+  },
+  {
+   "expected": "a\n   1\nb",
+   "group": "whitespace",
+   "name": "trim-expr-plain-plain",
+   "stage": 9,
+   "template": "a\n   {{ 1 }}\nb"
+  },
+  {
+   "expected": "a\n   1b",
+   "group": "whitespace",
+   "name": "trim-expr-plain-minus",
+   "stage": 9,
+   "template": "a\n   {{ 1 -}}\nb"
+  },
+  {
+   "expected": "a1\nb",
+   "group": "whitespace",
+   "name": "trim-expr-minus-plain",
+   "stage": 9,
+   "template": "a\n   {{- 1 }}\nb"
+  },
+  {
+   "expected": "a1b",
+   "group": "whitespace",
+   "name": "trim-expr-minus-minus",
+   "stage": 9,
+   "template": "a\n   {{- 1 -}}\nb"
+  },
+  {
+   "expected": "a\nb",
+   "group": "whitespace",
+   "name": "trim-comment-plain-plain",
+   "stage": 9,
+   "template": "a\n   {# c #}\nb"
+  },
+  {
+   "expected": "a\nb",
+   "group": "whitespace",
+   "name": "trim-comment-plain-minus",
+   "stage": 9,
+   "template": "a\n   {# c -#}\nb"
+  },
+  {
+   "expected": "ab",
+   "group": "whitespace",
+   "name": "trim-comment-minus-plain",
+   "stage": 9,
+   "template": "a\n   {#- c #}\nb"
+  },
+  {
+   "expected": "ab",
+   "group": "whitespace",
+   "name": "trim-comment-minus-minus",
+   "stage": 9,
+   "template": "a\n   {#- c -#}\nb"
+  },
+  {
+   "expected": "a1",
+   "group": "whitespace",
+   "name": "trim-across-blank-lines",
+   "stage": 9,
+   "template": "a\n\n\n   {{- 1 }}"
+  },
+  {
+   "expected": "1b",
+   "group": "whitespace",
+   "name": "trim-right-across-blank-lines",
+   "stage": 9,
+   "template": "{{ 1 -}}\n\n\n   b"
+  },
+  {
+   "expected": "a1",
+   "group": "whitespace",
+   "name": "trim-left-tabs",
+   "stage": 9,
+   "template": "a\t\t{{- 1 }}"
+  },
+  {
+   "expected": "a\n  x Yb",
+   "group": "whitespace",
+   "name": "lstrip-needs-only-whitespace-before",
+   "stage": 9,
+   "template": "a\n  x {% if true %}Y{% endif %}\nb"
+  },
+  {
+   "expected": "a\nYb",
+   "group": "whitespace",
+   "name": "lstrip-at-line-start",
+   "stage": 9,
+   "template": "a\n{% if true %}Y{% endif %}\nb"
+  },
+  {
+   "expected": "abc",
+   "group": "whitespace",
+   "name": "trailing-newline-dropped",
+   "stage": 9,
+   "template": "abc\n"
+  },
+  {
+   "expected": "abc\n",
+   "group": "whitespace",
+   "name": "trailing-newlines-only-one-dropped",
+   "stage": 9,
+   "template": "abc\n\n"
+  },
+  {
+   "expected": "abc",
+   "group": "whitespace",
+   "name": "no-trailing-newline",
+   "stage": 9,
+   "template": "abc"
+  },
+  {
+   "expected": "",
+   "group": "whitespace",
+   "name": "empty-template",
+   "stage": 9,
+   "template": ""
+  },
+  {
+   "expected": "",
+   "group": "whitespace",
+   "name": "only-a-newline",
+   "stage": 9,
+   "template": "\n"
+  },
+  {
+   "expected": "  {{ x }}\n {% if %} ",
+   "group": "whitespace",
+   "name": "raw-keeps-everything",
+   "stage": 9,
+   "template": "{% raw %}  {{ x }}\n {% if %} {% endraw %}"
+  },
+  {
+   "expected": "ab",
+   "group": "whitespace",
+   "name": "raw-empty",
+   "stage": 9,
+   "template": "a{% raw %}{% endraw %}b"
+  },
+  {
+   "expected": "\na\n",
+   "group": "whitespace",
+   "name": "raw-newlines",
+   "stage": 9,
+   "template": "{% raw %}\na\n{% endraw %}"
+  },
+  {
+   "expected": "axb",
+   "group": "whitespace",
+   "name": "raw-trim",
+   "stage": 9,
+   "template": "a\n  {%- raw -%}  x  {%- endraw -%}\nb"
+  },
+  {
+   "context": {
+    "s": "  padded  "
+   },
+   "expected": "[  padded  ]",
+   "group": "whitespace",
+   "name": "interpolated-whitespace-kept",
+   "stage": 9,
+   "template": "[{{- s -}}]"
+  },
+  {
+   "expected": "    one\n",
+   "group": "whitespace",
+   "name": "nested-block-indent",
+   "stage": 9,
+   "template": "{% for i in [1,2] %}\n  {% if i == 1 %}\n    one\n  {% endif %}\n{% endfor %}"
+  },
+  {
+   "expected": "abc",
+   "group": "whitespace",
+   "name": "text-between-blocks",
+   "stage": 9,
+   "template": "{% if true %}a{% endif %}b{% if true %}c{% endif %}"
+  },
+  {
+   "expected": "1",
+   "group": "whitespace",
+   "name": "newline-inside-tag",
+   "stage": 9,
+   "template": "{{\n  1\n}}"
+  },
+  {
+   "expected": "x",
+   "group": "whitespace",
+   "name": "multiline-statement",
+   "stage": 9,
+   "template": "{% if\n  true\n%}x{% endif %}"
+  },
+  {
+   "expected": "a\n1\nb",
+   "group": "whitespace",
+   "name": "crlf-body",
+   "stage": 9,
+   "template": "a\r\n{{ 1 }}\r\nb"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "whitespace"
+}

@@ -1,0 +1,199 @@
+{
+ "cases": [
+  {
+   "expected": "yes",
+   "group": "if",
+   "name": "true",
+   "stage": 10,
+   "template": "{% if true %}yes{% endif %}"
+  },
+  {
+   "expected": "[]",
+   "group": "if",
+   "name": "false",
+   "stage": 10,
+   "template": "[{% if false %}yes{% endif %}]"
+  },
+  {
+   "expected": "b",
+   "group": "if",
+   "name": "else",
+   "stage": 10,
+   "template": "{% if false %}a{% else %}b{% endif %}"
+  },
+  {
+   "expected": "b",
+   "group": "if",
+   "name": "elif",
+   "stage": 10,
+   "template": "{% if false %}a{% elif true %}b{% else %}c{% endif %}"
+  },
+  {
+   "expected": "4",
+   "group": "if",
+   "name": "elif-chain",
+   "stage": 10,
+   "template": "{% if false %}1{% elif false %}2{% elif false %}3{% elif true %}4{% else %}5{% endif %}"
+  },
+  {
+   "expected": "[]",
+   "group": "if",
+   "name": "elif-none-match",
+   "stage": 10,
+   "template": "[{% if false %}1{% elif false %}2{% endif %}]"
+  },
+  {
+   "expected": "deep",
+   "group": "if",
+   "name": "nested",
+   "stage": 10,
+   "template": "{% if true %}{% if true %}deep{% endif %}{% endif %}"
+  },
+  {
+   "context": {
+    "a": 1,
+    "b": 0,
+    "l": [],
+    "m": {},
+    "n": null,
+    "s": ""
+   },
+   "expected": "y",
+   "group": "if",
+   "name": "truthy-nonzero",
+   "stage": 10,
+   "template": "{% if a %}y{% else %}n{% endif %}"
+  },
+  {
+   "context": {
+    "a": 1,
+    "b": 0,
+    "l": [],
+    "m": {},
+    "n": null,
+    "s": ""
+   },
+   "expected": "n",
+   "group": "if",
+   "name": "falsy-zero",
+   "stage": 10,
+   "template": "{% if b %}y{% else %}n{% endif %}"
+  },
+  {
+   "context": {
+    "a": 1,
+    "b": 0,
+    "l": [],
+    "m": {},
+    "n": null,
+    "s": ""
+   },
+   "expected": "n",
+   "group": "if",
+   "name": "falsy-empty-string",
+   "stage": 10,
+   "template": "{% if s %}y{% else %}n{% endif %}"
+  },
+  {
+   "context": {
+    "a": 1,
+    "b": 0,
+    "l": [],
+    "m": {},
+    "n": null,
+    "s": ""
+   },
+   "expected": "n",
+   "group": "if",
+   "name": "falsy-empty-list",
+   "stage": 10,
+   "template": "{% if l %}y{% else %}n{% endif %}"
+  },
+  {
+   "context": {
+    "a": 1,
+    "b": 0,
+    "l": [],
+    "m": {},
+    "n": null,
+    "s": ""
+   },
+   "expected": "n",
+   "group": "if",
+   "name": "falsy-empty-map",
+   "stage": 10,
+   "template": "{% if m %}y{% else %}n{% endif %}"
+  },
+  {
+   "context": {
+    "a": 1,
+    "b": 0,
+    "l": [],
+    "m": {},
+    "n": null,
+    "s": ""
+   },
+   "expected": "n",
+   "group": "if",
+   "name": "falsy-none",
+   "stage": 10,
+   "template": "{% if n %}y{% else %}n{% endif %}"
+  },
+  {
+   "expected": "n",
+   "group": "if",
+   "name": "falsy-undefined",
+   "stage": 10,
+   "template": "{% if nope %}y{% else %}n{% endif %}"
+  },
+  {
+   "context": {
+    "a": 1,
+    "b": 0,
+    "l": [],
+    "m": {},
+    "n": null,
+    "s": ""
+   },
+   "expected": "empty",
+   "group": "if",
+   "name": "condition-with-filter",
+   "stage": 10,
+   "template": "{% if l|length == 0 %}empty{% endif %}"
+  },
+  {
+   "context": {
+    "a": 1,
+    "b": 0,
+    "l": [],
+    "m": {},
+    "n": null,
+    "s": ""
+   },
+   "expected": "odd",
+   "group": "if",
+   "name": "condition-with-test",
+   "stage": 10,
+   "template": "{% if a is odd %}odd{% endif %}"
+  },
+  {
+   "expected": "1",
+   "group": "if",
+   "name": "set-escapes-an-if",
+   "stage": 12,
+   "template": "{% if true %}{% set x = 1 %}{% endif %}{{ x }}"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "if"
+}

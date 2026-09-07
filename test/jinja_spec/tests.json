@@ -1,0 +1,314 @@
+{
+ "cases": [
+  {
+   "context": {
+    "x": 1
+   },
+   "expected": "True",
+   "group": "tests",
+   "name": "defined",
+   "stage": 11,
+   "template": "{{ x is defined }}"
+  },
+  {
+   "expected": "False",
+   "group": "tests",
+   "name": "defined-missing",
+   "stage": 11,
+   "template": "{{ nope is defined }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "undefined",
+   "stage": 11,
+   "template": "{{ nope is undefined }}"
+  },
+  {
+   "context": {
+    "x": null
+   },
+   "expected": "True",
+   "group": "tests",
+   "name": "none",
+   "stage": 11,
+   "template": "{{ x is none }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "boolean",
+   "stage": 11,
+   "template": "{{ true is boolean }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "false",
+   "stage": 11,
+   "template": "{{ false is false }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "true",
+   "stage": 11,
+   "template": "{{ true is true }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "integer",
+   "stage": 11,
+   "template": "{{ 1 is integer }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "float",
+   "stage": 11,
+   "template": "{{ 1.0 is float }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "number",
+   "stage": 11,
+   "template": "{{ 1 is number }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "string",
+   "stage": 11,
+   "template": "{{ 'a' is string }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "sequence",
+   "stage": 11,
+   "template": "{{ [1] is sequence }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "mapping",
+   "stage": 11,
+   "template": "{{ {'a':1} is mapping }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "iterable",
+   "stage": 11,
+   "template": "{{ [1] is iterable }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "callable",
+   "stage": 11,
+   "template": "{{ range is callable }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "sameas",
+   "stage": 11,
+   "template": "{{ true is sameas true }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "escaped",
+   "stage": 11,
+   "template": "{{ '<b>'|safe is escaped }}"
+  },
+  {
+   "expected": "False",
+   "group": "tests",
+   "name": "not-escaped",
+   "stage": 11,
+   "template": "{{ '<b>' is escaped }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "in",
+   "stage": 11,
+   "template": "{{ 1 is in([1,2]) }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "eq",
+   "stage": 11,
+   "template": "{{ 1 is eq(1) }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "ne",
+   "stage": 11,
+   "template": "{{ 1 is ne(2) }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "lt",
+   "stage": 11,
+   "template": "{{ 1 is lt(2) }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "le",
+   "stage": 11,
+   "template": "{{ 1 is le(1) }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "gt",
+   "stage": 11,
+   "template": "{{ 2 is gt(1) }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "ge",
+   "stage": 11,
+   "template": "{{ 2 is ge(2) }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "odd",
+   "stage": 11,
+   "template": "{{ 3 is odd }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "even",
+   "stage": 11,
+   "template": "{{ 2 is even }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "divisibleby",
+   "stage": 11,
+   "template": "{{ 6 is divisibleby(3) }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "lower",
+   "stage": 11,
+   "template": "{{ 'ab' is lower }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "upper",
+   "stage": 11,
+   "template": "{{ 'AB' is upper }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "filter",
+   "stage": 11,
+   "template": "{{ 'upper' is filter }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "test",
+   "stage": 11,
+   "template": "{{ 'odd' is test }}"
+  },
+  {
+   "expected": "True",
+   "group": "tests",
+   "name": "negated",
+   "stage": 11,
+   "template": "{{ 1 is not string }}"
+  },
+  {
+   "expected": "y",
+   "group": "tests",
+   "name": "in-if",
+   "stage": 11,
+   "template": "{% if 3 is odd %}y{% endif %}"
+  },
+  {
+   "expected": "[3]",
+   "group": "tests",
+   "name": "in-select",
+   "stage": 11,
+   "template": "{{ [1,2,3]|select('divisibleby', 3)|list }}"
+  },
+  {
+   "expected": "False",
+   "group": "tests",
+   "name": "string-on-number",
+   "stage": 11,
+   "template": "{{ 1 is string }}"
+  },
+  {
+   "expected": "False",
+   "group": "tests",
+   "name": "mapping-on-list",
+   "stage": 11,
+   "template": "{{ [1] is mapping }}"
+  },
+  {
+   "expected": "False",
+   "group": "tests",
+   "name": "sequence-on-int",
+   "stage": 11,
+   "template": "{{ 1 is sequence }}"
+  },
+  {
+   "expected": "False",
+   "group": "tests",
+   "name": "callable-on-int",
+   "stage": 11,
+   "template": "{{ 1 is callable }}"
+  },
+  {
+   "expected": "False",
+   "group": "tests",
+   "name": "even-on-odd",
+   "stage": 11,
+   "template": "{{ 3 is even }}"
+  },
+  {
+   "context": {
+    "x": null
+   },
+   "cpython": "'True'",
+   "deviation": "J2",
+   "expected": "False",
+   "group": "tests",
+   "name": "defined-on-explicit-none",
+   "stage": 11,
+   "template": "{{ x is defined }}"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "tests"
+}

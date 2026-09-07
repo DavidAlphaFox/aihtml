@@ -1,0 +1,293 @@
+{
+ "cases": [
+  {
+   "expected": "123",
+   "group": "lexer",
+   "name": "number-int",
+   "stage": 9,
+   "template": "{{ 123 }}"
+  },
+  {
+   "expected": "1000",
+   "group": "lexer",
+   "name": "number-int-underscore",
+   "stage": 9,
+   "template": "{{ 1_000 }}"
+  },
+  {
+   "expected": "31",
+   "group": "lexer",
+   "name": "number-hex",
+   "stage": 9,
+   "template": "{{ 0x1f }}"
+  },
+  {
+   "expected": "15",
+   "group": "lexer",
+   "name": "number-octal",
+   "stage": 9,
+   "template": "{{ 0o17 }}"
+  },
+  {
+   "expected": "10",
+   "group": "lexer",
+   "name": "number-binary",
+   "stage": 9,
+   "template": "{{ 0b1010 }}"
+  },
+  {
+   "expected": "1.5",
+   "group": "lexer",
+   "name": "number-float",
+   "stage": 9,
+   "template": "{{ 1.5 }}"
+  },
+  {
+   "expected": "1000.0",
+   "group": "lexer",
+   "name": "number-float-exp",
+   "stage": 9,
+   "template": "{{ 1e3 }}"
+  },
+  {
+   "expected": "0.0015",
+   "group": "lexer",
+   "name": "number-float-exp-neg",
+   "stage": 9,
+   "template": "{{ 1.5e-3 }}"
+  },
+  {
+   "expected": "1000.5",
+   "group": "lexer",
+   "name": "number-float-underscore",
+   "stage": 9,
+   "template": "{{ 1_000.5 }}"
+  },
+  {
+   "expected": "0",
+   "group": "lexer",
+   "name": "number-zero",
+   "stage": 9,
+   "template": "{{ 0 }}"
+  },
+  {
+   "expected": "-7",
+   "group": "lexer",
+   "name": "number-negative",
+   "stage": 9,
+   "template": "{{ -7 }}"
+  },
+  {
+   "expected": "-1.5",
+   "group": "lexer",
+   "name": "number-float-negative",
+   "stage": 9,
+   "template": "{{ -1.5 }}"
+  },
+  {
+   "expected": "abc",
+   "group": "lexer",
+   "name": "string-double",
+   "stage": 9,
+   "template": "{{ \"abc\" }}"
+  },
+  {
+   "expected": "abc",
+   "group": "lexer",
+   "name": "string-single",
+   "stage": 9,
+   "template": "{{ 'abc' }}"
+  },
+  {
+   "expected": "a\nb",
+   "group": "lexer",
+   "name": "string-escape-n",
+   "stage": 9,
+   "template": "{{ \"a\\nb\" }}"
+  },
+  {
+   "expected": "a\tb",
+   "group": "lexer",
+   "name": "string-escape-t",
+   "stage": 9,
+   "template": "{{ \"a\\tb\" }}"
+  },
+  {
+   "expected": "a\rb",
+   "group": "lexer",
+   "name": "string-escape-r",
+   "stage": 9,
+   "template": "{{ \"a\\rb\" }}"
+  },
+  {
+   "expected": "a\\b",
+   "group": "lexer",
+   "name": "string-escape-backslash",
+   "stage": 9,
+   "template": "{{ \"a\\\\b\" }}"
+  },
+  {
+   "expected": "a&#34;b",
+   "group": "lexer",
+   "name": "string-escape-quote",
+   "stage": 9,
+   "template": "{{ \"a\\\"b\" }}"
+  },
+  {
+   "expected": "a&#39;b",
+   "group": "lexer",
+   "name": "string-escape-apos",
+   "stage": 9,
+   "template": "{{ 'a\\'b' }}"
+  },
+  {
+   "expected": "aAb",
+   "group": "lexer",
+   "name": "string-escape-hex",
+   "stage": 9,
+   "template": "{{ \"a\\x41b\" }}"
+  },
+  {
+   "expected": "a中b",
+   "group": "lexer",
+   "name": "string-escape-unicode",
+   "stage": 9,
+   "template": "{{ \"a\\u4e2db\" }}"
+  },
+  {
+   "expected": "ab",
+   "group": "lexer",
+   "name": "string-adjacent",
+   "stage": 9,
+   "template": "{{ \"a\" \"b\" }}"
+  },
+  {
+   "expected": "",
+   "group": "lexer",
+   "name": "string-empty",
+   "stage": 9,
+   "template": "{{ \"\" }}"
+  },
+  {
+   "expected": "中文",
+   "group": "lexer",
+   "name": "string-utf8",
+   "stage": 9,
+   "template": "{{ \"中文\" }}"
+  },
+  {
+   "expected": "True",
+   "group": "lexer",
+   "name": "bool-true",
+   "stage": 9,
+   "template": "{{ true }}"
+  },
+  {
+   "expected": "True",
+   "group": "lexer",
+   "name": "bool-True",
+   "stage": 9,
+   "template": "{{ True }}"
+  },
+  {
+   "expected": "False",
+   "group": "lexer",
+   "name": "bool-false",
+   "stage": 9,
+   "template": "{{ false }}"
+  },
+  {
+   "expected": "False",
+   "group": "lexer",
+   "name": "bool-False",
+   "stage": 9,
+   "template": "{{ False }}"
+  },
+  {
+   "cpython": "'[None]'",
+   "deviation": "J2",
+   "expected": "[]",
+   "group": "lexer",
+   "name": "none-renders-empty",
+   "stage": 9,
+   "template": "[{{ none }}]"
+  },
+  {
+   "cpython": "'[None]'",
+   "deviation": "J2",
+   "expected": "[]",
+   "group": "lexer",
+   "name": "None-renders-empty",
+   "stage": 9,
+   "template": "[{{ None }}]"
+  },
+  {
+   "expected": "%}",
+   "group": "lexer",
+   "name": "stop-inside-string",
+   "stage": 9,
+   "template": "{{ \"%}\" }}"
+  },
+  {
+   "expected": "}}",
+   "group": "lexer",
+   "name": "stop-inside-string-2",
+   "stage": 9,
+   "template": "{{ \"}}\" }}"
+  },
+  {
+   "expected": "1",
+   "group": "lexer",
+   "name": "brace-depth",
+   "stage": 9,
+   "template": "{{ {\"a\": 1}[\"a\"] }}"
+  },
+  {
+   "expected": "ab",
+   "group": "lexer",
+   "name": "comment-dropped",
+   "stage": 9,
+   "template": "a{# {{ x }} {% if %} #}b"
+  },
+  {
+   "expected": "ab",
+   "group": "lexer",
+   "name": "comment-multiline",
+   "stage": 9,
+   "template": "a{#\nstill\na comment\n#}b"
+  },
+  {
+   "expected": "no tags at all",
+   "group": "lexer",
+   "name": "text-only",
+   "stage": 9,
+   "template": "no tags at all"
+  },
+  {
+   "expected": "{ not a tag }",
+   "group": "lexer",
+   "name": "brace-not-a-tag",
+   "stage": 9,
+   "template": "{ not a tag }"
+  },
+  {
+   "expected": "{ 1",
+   "group": "lexer",
+   "name": "single-brace-then-tag",
+   "stage": 9,
+   "template": "{ {{ 1 }}"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "lexer"
+}

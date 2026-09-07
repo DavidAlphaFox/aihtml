@@ -1,0 +1,192 @@
+{
+ "cases": [
+  {
+   "context": {
+    "v": 1
+   },
+   "expected": "aF(1)b",
+   "group": "include",
+   "name": "basic",
+   "stage": 12,
+   "template": "a{% include \"frag.j2\" %}b",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  },
+  {
+   "context": {
+    "v": 1
+   },
+   "expected": "F(1)F(1)",
+   "group": "include",
+   "name": "twice",
+   "stage": 12,
+   "template": "{% include \"frag.j2\" %}{% include \"frag.j2\" %}",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  },
+  {
+   "expected": "F(1)F(2)",
+   "group": "include",
+   "name": "in-loop",
+   "stage": 12,
+   "template": "{% for v in [1,2] %}{% include \"frag.j2\" %}{% endfor %}",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  },
+  {
+   "context": {
+    "v": 1
+   },
+   "expected": "O[F(1)]",
+   "group": "include",
+   "name": "nested",
+   "stage": 12,
+   "template": "{% include \"outer.j2\" %}",
+   "templates": {
+    "frag.j2": "F({{ v }})",
+    "outer.j2": "O[{% include \"frag.j2\" %}]"
+   }
+  },
+  {
+   "context": {
+    "v": "ctx"
+   },
+   "expected": "F(ctx)",
+   "group": "include",
+   "name": "with-context-default",
+   "stage": 12,
+   "template": "{% include \"frag.j2\" %}",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  },
+  {
+   "context": {
+    "v": "ctx"
+   },
+   "expected": "[F()]",
+   "group": "include",
+   "name": "without-context",
+   "stage": 12,
+   "template": "[{% include \"frag.j2\" without context %}]",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  },
+  {
+   "context": {
+    "v": "ctx"
+   },
+   "expected": "F(ctx)",
+   "group": "include",
+   "name": "with-context-explicit",
+   "stage": 12,
+   "template": "{% include \"frag.j2\" with context %}",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  },
+  {
+   "expected": "[]",
+   "group": "include",
+   "name": "ignore-missing",
+   "stage": 12,
+   "template": "[{% include \"gone.j2\" ignore missing %}]"
+  },
+  {
+   "expected": "F(set)",
+   "group": "include",
+   "name": "sees-set-binding",
+   "stage": 12,
+   "template": "{% set v = \"set\" %}{% include \"frag.j2\" %}",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  },
+  {
+   "context": {
+    "v": "<b>"
+   },
+   "expected": "F(&lt;b&gt;)",
+   "group": "include",
+   "name": "escaping-in-included",
+   "stage": 12,
+   "template": "{% include \"frag.j2\" %}",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  },
+  {
+   "expected": "X",
+   "group": "include",
+   "name": "included-has-its-own-blocks-ignored",
+   "stage": 12,
+   "template": "{% include \"b.j2\" %}",
+   "templates": {
+    "b.j2": "{% block x %}X{% endblock %}"
+   }
+  },
+  {
+   "expected": "12",
+   "group": "include",
+   "name": "include-a-template-that-includes",
+   "stage": 12,
+   "template": "{% include \"l1.j2\" %}",
+   "templates": {
+    "l1.j2": "1{% include \"l2.j2\" %}",
+    "l2.j2": "2"
+   }
+  },
+  {
+   "context": {
+    "v": 1
+   },
+   "expected": "F(1)",
+   "group": "include",
+   "name": "include-inside-if",
+   "stage": 12,
+   "template": "{% if true %}{% include \"frag.j2\" %}{% endif %}",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  },
+  {
+   "cpython": "TemplateNotFound: gone.j2",
+   "error": "template_not_found",
+   "group": "include",
+   "name": "include-missing-is-an-error",
+   "stage": 12,
+   "template": "{% include \"gone.j2\" %}"
+  },
+  {
+   "context": {
+    "name": "frag.j2"
+   },
+   "cpython": "'F()'",
+   "deviation": "J11",
+   "error": "dynamic_target_unsupported",
+   "group": "include",
+   "name": "dynamic-include",
+   "stage": 12,
+   "template": "{% include name %}",
+   "templates": {
+    "frag.j2": "F({{ v }})"
+   }
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "include"
+}

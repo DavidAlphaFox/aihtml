@@ -1,0 +1,218 @@
+{
+ "cases": [
+  {
+   "expected": "X",
+   "group": "macro",
+   "name": "define-and-call",
+   "stage": 12,
+   "template": "{% macro m() %}X{% endmacro %}{{ m() }}"
+  },
+  {
+   "expected": "1-2",
+   "group": "macro",
+   "name": "positional-args",
+   "stage": 12,
+   "template": "{% macro m(a, b) %}{{ a }}-{{ b }}{% endmacro %}{{ m(1, 2) }}"
+  },
+  {
+   "expected": "1-2",
+   "group": "macro",
+   "name": "keyword-args",
+   "stage": 12,
+   "template": "{% macro m(a, b) %}{{ a }}-{{ b }}{% endmacro %}{{ m(b=2, a=1) }}"
+  },
+  {
+   "expected": "1-9",
+   "group": "macro",
+   "name": "default-values",
+   "stage": 12,
+   "template": "{% macro m(a, b=9) %}{{ a }}-{{ b }}{% endmacro %}{{ m(1) }}"
+  },
+  {
+   "expected": "1-2",
+   "group": "macro",
+   "name": "default-overridden",
+   "stage": 12,
+   "template": "{% macro m(a, b=9) %}{{ a }}-{{ b }}{% endmacro %}{{ m(1, 2) }}"
+  },
+  {
+   "expected": "1,2,3",
+   "group": "macro",
+   "name": "varargs",
+   "stage": 12,
+   "template": "{% macro m() %}{{ varargs|join(',') }}{% endmacro %}{{ m(1,2,3) }}"
+  },
+  {
+   "expected": "1",
+   "group": "macro",
+   "name": "kwargs",
+   "stage": 12,
+   "template": "{% macro m() %}{{ kwargs['a'] }}{% endmacro %}{{ m(a=1) }}"
+  },
+  {
+   "expected": "&lt;b&gt;",
+   "group": "macro",
+   "name": "escaping-inside",
+   "stage": 12,
+   "template": "{% macro m(v) %}{{ v }}{% endmacro %}{{ m('<b>') }}"
+  },
+  {
+   "expected": "<b>",
+   "group": "macro",
+   "name": "macro-output-is-safe",
+   "stage": 12,
+   "template": "{% macro m() %}<b>{% endmacro %}{{ m() }}"
+  },
+  {
+   "expected": "[x]",
+   "group": "macro",
+   "name": "cannot-see-caller-locals",
+   "stage": 12,
+   "template": "{% macro m() %}[{{ local }}]{% endmacro %}{% set local = 'x' %}{{ m() }}"
+  },
+  {
+   "expected": "G",
+   "group": "macro",
+   "name": "sees-template-globals",
+   "stage": 12,
+   "template": "{% set g = 'G' %}{% macro m() %}{{ g }}{% endmacro %}{{ m() }}"
+  },
+  {
+   "expected": "12",
+   "group": "macro",
+   "name": "loop-inside-macro",
+   "stage": 12,
+   "template": "{% macro m(l) %}{% for x in l %}{{ x }}{% endfor %}{% endmacro %}{{ m([1,2]) }}"
+  },
+  {
+   "expected": "AB",
+   "group": "macro",
+   "name": "macro-calls-macro",
+   "stage": 12,
+   "template": "{% macro a() %}A{% endmacro %}{% macro b() %}{{ a() }}B{% endmacro %}{{ b() }}"
+  },
+  {
+   "expected": "[inner]",
+   "group": "macro",
+   "name": "call-block",
+   "stage": 12,
+   "template": "{% macro m() %}[{{ caller() }}]{% endmacro %}{% call m() %}inner{% endcall %}"
+  },
+  {
+   "expected": "<x>",
+   "group": "macro",
+   "name": "call-block-with-args",
+   "stage": 12,
+   "template": "{% macro m() %}{{ caller('x') }}{% endmacro %}{% call(v) m() %}<{{ v }}>{% endcall %}"
+  },
+  {
+   "expected": "[[deep]]",
+   "group": "macro",
+   "name": "call-block-nested",
+   "stage": 12,
+   "template": "{% macro m() %}[{{ caller() }}]{% endmacro %}{% call m() %}{% call m() %}deep{% endcall %}{% endcall %}"
+  },
+  {
+   "expected": "HI!",
+   "group": "macro",
+   "name": "import-as",
+   "stage": 12,
+   "template": "{% import \"lib.j2\" as lib %}{{ lib.shout(\"hi\") }}",
+   "templates": {
+    "lib.j2": "{% macro input(name, value='', type='text') %}<input name=\"{{ name }}\" value=\"{{ value }}\" type=\"{{ type }}\">{% endmacro %}{% macro shout(s) %}{{ s|upper }}!{% endmacro %}"
+   }
+  },
+  {
+   "expected": "<input name=\"n\" value=\"v\" type=\"text\">",
+   "group": "macro",
+   "name": "import-as-with-args",
+   "stage": 12,
+   "template": "{% import \"lib.j2\" as lib %}{{ lib.input(\"n\", value=\"v\") }}",
+   "templates": {
+    "lib.j2": "{% macro input(name, value='', type='text') %}<input name=\"{{ name }}\" value=\"{{ value }}\" type=\"{{ type }}\">{% endmacro %}{% macro shout(s) %}{{ s|upper }}!{% endmacro %}"
+   }
+  },
+  {
+   "expected": "HI!",
+   "group": "macro",
+   "name": "from-import",
+   "stage": 12,
+   "template": "{% from \"lib.j2\" import shout %}{{ shout(\"hi\") }}",
+   "templates": {
+    "lib.j2": "{% macro input(name, value='', type='text') %}<input name=\"{{ name }}\" value=\"{{ value }}\" type=\"{{ type }}\">{% endmacro %}{% macro shout(s) %}{{ s|upper }}!{% endmacro %}"
+   }
+  },
+  {
+   "expected": "HI!",
+   "group": "macro",
+   "name": "from-import-as",
+   "stage": 12,
+   "template": "{% from \"lib.j2\" import shout as s %}{{ s(\"hi\") }}",
+   "templates": {
+    "lib.j2": "{% macro input(name, value='', type='text') %}<input name=\"{{ name }}\" value=\"{{ value }}\" type=\"{{ type }}\">{% endmacro %}{% macro shout(s) %}{{ s|upper }}!{% endmacro %}"
+   }
+  },
+  {
+   "expected": "A!<input name=\"n\" value=\"\" type=\"text\">",
+   "group": "macro",
+   "name": "from-import-two",
+   "stage": 12,
+   "template": "{% from \"lib.j2\" import shout, input %}{{ shout(\"a\") }}{{ input(\"n\") }}",
+   "templates": {
+    "lib.j2": "{% macro input(name, value='', type='text') %}<input name=\"{{ name }}\" value=\"{{ value }}\" type=\"{{ type }}\">{% endmacro %}{% macro shout(s) %}{{ s|upper }}!{% endmacro %}"
+   }
+  },
+  {
+   "context": {
+    "name": "ann"
+   },
+   "expected": "ann",
+   "group": "macro",
+   "name": "import-with-context",
+   "stage": 12,
+   "template": "{% import \"who.j2\" as m with context %}{{ m.who() }}",
+   "templates": {
+    "who.j2": "{% macro who() %}{{ name }}{% endmacro %}"
+   }
+  },
+  {
+   "context": {
+    "name": "ann"
+   },
+   "expected": "[]",
+   "group": "macro",
+   "name": "import-without-context",
+   "stage": 12,
+   "template": "{% import \"who.j2\" as m %}[{{ m.who() }}]",
+   "templates": {
+    "who.j2": "{% macro who() %}{{ name }}{% endmacro %}"
+   }
+  },
+  {
+   "expected": "<1><2>",
+   "group": "macro",
+   "name": "macro-in-loop",
+   "stage": 12,
+   "template": "{% macro m(x) %}<{{ x }}>{% endmacro %}{% for i in [1,2] %}{{ m(i) }}{% endfor %}"
+  },
+  {
+   "expected": "321",
+   "group": "macro",
+   "name": "recursive-macro",
+   "stage": 12,
+   "template": "{% macro m(n) %}{% if n > 0 %}{{ n }}{{ m(n - 1) }}{% endif %}{% endmacro %}{{ m(3) }}"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "macro"
+}

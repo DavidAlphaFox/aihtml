@@ -1,0 +1,339 @@
+{
+ "cases": [
+  {
+   "expected": "<html>base title|base body</html>",
+   "group": "inherit",
+   "name": "no-override",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "<html>mine|base body</html>",
+   "group": "inherit",
+   "name": "override-one",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}mine{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "<html>t|b</html>",
+   "group": "inherit",
+   "name": "override-both",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}t{% endblock %}{% block body %}b{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "<html>t|base body</html>",
+   "group": "inherit",
+   "name": "named-endblock",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}t{% endblock title %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "<html>[base title]|base body</html>",
+   "group": "inherit",
+   "name": "super",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}[{{ super() }}]{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "<html>mid|leaf</html>",
+   "group": "inherit",
+   "name": "three-levels",
+   "stage": 12,
+   "template": "{% extends \"mid.j2\" %}{% block body %}leaf{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>",
+    "mid.j2": "{% extends \"base.j2\" %}{% block title %}mid{% endblock %}"
+   }
+  },
+  {
+   "expected": "<html>L(M(base title))|base body</html>",
+   "group": "inherit",
+   "name": "three-levels-super",
+   "stage": 12,
+   "template": "{% extends \"mid2.j2\" %}{% block title %}L({{ super() }}){% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>",
+    "mid2.j2": "{% extends \"base.j2\" %}{% block title %}M({{ super() }}){% endblock %}"
+   }
+  },
+  {
+   "context": {
+    "who": "me"
+   },
+   "expected": "<html>me|base body</html>",
+   "group": "inherit",
+   "name": "block-uses-context",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}{{ who }}{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "ignored<html>base title|base body</html>",
+   "group": "inherit",
+   "name": "top-level-content-dropped",
+   "stage": 12,
+   "template": "ignored{% extends \"base.j2\" %}also ignored",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "<html>V|base body</html>",
+   "group": "inherit",
+   "name": "set-before-extends-visible",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% set v = \"V\" %}{% block title %}{{ v }}{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "<><>",
+   "group": "inherit",
+   "name": "block-inside-for-in-parent",
+   "stage": 12,
+   "template": "{% extends \"loopbase.j2\" %}{% block item %}<{{ i }}>{% endblock %}",
+   "templates": {
+    "loopbase.j2": "{% for i in [1,2] %}{% block item %}{{ i }}{% endblock %}{% endfor %}"
+   }
+  },
+  {
+   "expected": "<1><2>",
+   "group": "inherit",
+   "name": "scoped-block",
+   "stage": 12,
+   "template": "{% extends \"sbase.j2\" %}{% block item scoped %}<{{ i }}>{% endblock %}",
+   "templates": {
+    "sbase.j2": "{% for i in [1,2] %}{% block item scoped %}{{ i }}{% endblock %}{% endfor %}"
+   }
+  },
+  {
+   "expected": "aMb",
+   "group": "inherit",
+   "name": "block-in-the-middle",
+   "stage": 12,
+   "template": "{% extends \"b2.j2\" %}{% block m %}M{% endblock %}",
+   "templates": {
+    "b2.j2": "a{% block m %}x{% endblock %}b"
+   }
+  },
+  {
+   "expected": "<html>|base body</html>",
+   "group": "inherit",
+   "name": "empty-block-override",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "<html>T|B</html>",
+   "group": "inherit",
+   "name": "blocks-render-in-parent-order",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block body %}B{% endblock %}{% block title %}T{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "FM",
+   "group": "inherit",
+   "name": "parent-with-include",
+   "stage": 12,
+   "template": "{% extends \"b3.j2\" %}{% block m %}M{% endblock %}",
+   "templates": {
+    "b3.j2": "{% include \"frag.j2\" %}{% block m %}x{% endblock %}",
+    "frag.j2": "F"
+   }
+  },
+  {
+   "expected": "<html>base title|12</html>",
+   "group": "inherit",
+   "name": "child-block-with-loop",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block body %}{% for i in [1,2] %}{{ i }}{% endfor %}{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "O[I]",
+   "group": "inherit",
+   "name": "super-in-nested-block",
+   "stage": 12,
+   "template": "{% extends \"b4.j2\" %}{% block inner %}[{{ super() }}]{% endblock %}",
+   "templates": {
+    "b4.j2": "{% block outer %}O{% block inner %}I{% endblock %}{% endblock %}"
+   }
+  },
+  {
+   "context": {
+    "v": "<b>"
+   },
+   "expected": "<html>&lt;b&gt;|base body</html>",
+   "group": "inherit",
+   "name": "escaping-inside-block",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}{{ v }}{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "context": {
+    "v": "hi"
+   },
+   "expected": "<html>HI|base body</html>",
+   "group": "inherit",
+   "name": "filter-inside-block",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}{{ v|upper }}{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "<html>D|base body</html>",
+   "group": "inherit",
+   "name": "deep-chain-four",
+   "stage": 12,
+   "template": "{% extends \"l3.j2\" %}{% block title %}D{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>",
+    "l2.j2": "{% extends \"base.j2\" %}",
+    "l3.j2": "{% extends \"l2.j2\" %}"
+   }
+  },
+  {
+   "expected": "<html>base title|B</html>",
+   "group": "inherit",
+   "name": "parent-block-default-used-in-chain",
+   "stage": 12,
+   "template": "{% extends \"l2b.j2\" %}{% block body %}B{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>",
+    "l2b.j2": "{% extends \"base.j2\" %}"
+   }
+  },
+  {
+   "expected": "<html>Mac|base body</html>",
+   "group": "inherit",
+   "name": "block-with-macro-call",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% macro m() %}Mac{% endmacro %}{% block title %}{{ m() }}{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "expected": "A-B",
+   "group": "inherit",
+   "name": "two-blocks-same-parent-body",
+   "stage": 12,
+   "template": "{% extends \"b5.j2\" %}{% block a %}A{% endblock %}{% block b %}B{% endblock %}",
+   "templates": {
+    "b5.j2": "{% block a %}1{% endblock %}-{% block b %}2{% endblock %}"
+   }
+  },
+  {
+   "expected": "a\nMb",
+   "group": "inherit",
+   "name": "whitespace-around-blocks",
+   "stage": 12,
+   "template": "{% extends \"b6.j2\" %}\n{% block m %}M{% endblock %}\n",
+   "templates": {
+    "b6.j2": "a\n  {% block m %}x{% endblock %}\nb"
+   }
+  },
+  {
+   "expected": "<html>F|base body</html>",
+   "group": "inherit",
+   "name": "extends-then-include",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}{% include \"frag.j2\" %}{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>",
+    "frag.j2": "F"
+   }
+  },
+  {
+   "expected": "aMb",
+   "group": "inherit",
+   "name": "required-block-provided",
+   "stage": 12,
+   "template": "{% extends \"b7.j2\" %}{% block m %}M{% endblock %}",
+   "templates": {
+    "b7.j2": "a{% block m required %}{% endblock %}b"
+   }
+  },
+  {
+   "cpython": "TemplateSyntaxError: expected token 'end of statement block', got 'body'",
+   "error": "block_name_mismatch",
+   "group": "inherit",
+   "name": "block-name-mismatch",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}t{% endblock body %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "cpython": "TemplateAssertionError: block 'title' defined twice",
+   "error": "duplicate_block",
+   "group": "inherit",
+   "name": "duplicate-block",
+   "stage": 12,
+   "template": "{% extends \"base.j2\" %}{% block title %}a{% endblock %}{% block title %}b{% endblock %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  },
+  {
+   "context": {
+    "parent": "base.j2"
+   },
+   "cpython": "'<html>base title|base body</html>'",
+   "deviation": "J11",
+   "error": "dynamic_target_unsupported",
+   "group": "inherit",
+   "name": "dynamic-extends",
+   "stage": 12,
+   "template": "{% extends parent %}",
+   "templates": {
+    "base.j2": "<html>{% block title %}base title{% endblock %}|{% block body %}base body{% endblock %}</html>"
+   }
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "inherit"
+}

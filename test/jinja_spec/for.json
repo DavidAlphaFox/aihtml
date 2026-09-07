@@ -1,0 +1,842 @@
+{
+ "cases": [
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "10,20,30,",
+   "group": "for",
+   "name": "basic",
+   "stage": 10,
+   "template": "{% for x in xs %}{{ x }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "[]",
+   "group": "for",
+   "name": "empty-sequence",
+   "stage": 10,
+   "template": "[{% for x in empty %}{{ x }}{% endfor %}]"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "none",
+   "group": "for",
+   "name": "else-runs-when-empty",
+   "stage": 10,
+   "template": "{% for x in empty %}a{% else %}none{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "aaa",
+   "group": "for",
+   "name": "else-skipped-when-not-empty",
+   "stage": 10,
+   "template": "{% for x in xs %}a{% else %}none{% endfor %}"
+  },
+  {
+   "expected": "[]",
+   "group": "for",
+   "name": "undefined-is-empty",
+   "stage": 10,
+   "template": "[{% for x in nope %}a{% endfor %}]"
+  },
+  {
+   "expected": "12",
+   "group": "for",
+   "name": "literal-list",
+   "stage": 10,
+   "template": "{% for x in [1,2] %}{{ x }}{% endfor %}"
+  },
+  {
+   "expected": "012",
+   "group": "for",
+   "name": "range",
+   "stage": 10,
+   "template": "{% for i in range(3) %}{{ i }}{% endfor %}"
+  },
+  {
+   "expected": "11 12 21 22 ",
+   "group": "for",
+   "name": "nested",
+   "stage": 10,
+   "template": "{% for i in [1,2] %}{% for j in [1,2] %}{{ i }}{{ j }} {% endfor %}{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "a=1;b=2;",
+   "group": "for",
+   "name": "destructure-items",
+   "stage": 10,
+   "template": "{% for k, v in m.items() %}{{ k }}={{ v }};{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "ab",
+   "group": "for",
+   "name": "map-iterates-keys",
+   "stage": 10,
+   "template": "{% for k in m %}{{ k }}{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "ab",
+   "group": "for",
+   "name": "map-keys",
+   "stage": 10,
+   "template": "{% for k in m.keys() %}{{ k }}{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "12",
+   "group": "for",
+   "name": "map-values",
+   "stage": 10,
+   "template": "{% for v in m.values() %}{{ v }}{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "20,30,",
+   "group": "for",
+   "name": "inline-filter",
+   "stage": 10,
+   "template": "{% for x in xs if x > 10 %}{{ x }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "1:20,2:30,",
+   "group": "for",
+   "name": "inline-filter-with-loop-index",
+   "stage": 12,
+   "template": "{% for x in xs if x > 10 %}{{ loop.index }}:{{ x }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "[]",
+   "group": "for",
+   "name": "body-scope-does-not-escape",
+   "stage": 12,
+   "template": "{% for x in xs %}{% set y = x %}{% endfor %}[{{ y }}]"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "10!20!30!",
+   "group": "for",
+   "name": "outer-binding-visible",
+   "stage": 12,
+   "template": "{% set p = '!' %}{% for x in xs %}{{ x }}{{ p }}{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "1,2,3,",
+   "group": "for",
+   "name": "loop-index",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.index }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "0,1,2,",
+   "group": "for",
+   "name": "loop-index0",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.index0 }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "3,2,1,",
+   "group": "for",
+   "name": "loop-revindex",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.revindex }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "2,1,0,",
+   "group": "for",
+   "name": "loop-revindex0",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.revindex0 }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "True,False,False,",
+   "group": "for",
+   "name": "loop-first",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.first }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "False,False,True,",
+   "group": "for",
+   "name": "loop-last",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.last }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "3,3,3,",
+   "group": "for",
+   "name": "loop-length",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.length }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "1,1,1,",
+   "group": "for",
+   "name": "loop-depth",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.depth }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "0,0,0,",
+   "group": "for",
+   "name": "loop-depth0",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.depth0 }},{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "[][10][20]",
+   "group": "for",
+   "name": "loop-previtem",
+   "stage": 12,
+   "template": "{% for x in xs %}[{{ loop.previtem }}]{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "[20][30][]",
+   "group": "for",
+   "name": "loop-nextitem",
+   "stage": 12,
+   "template": "{% for x in xs %}[{{ loop.nextitem }}]{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "aba",
+   "group": "for",
+   "name": "loop-cycle",
+   "stage": 12,
+   "template": "{% for x in xs %}{{ loop.cycle('a','b') }}{% endfor %}"
+  },
+  {
+   "expected": "True,False,True,",
+   "group": "for",
+   "name": "loop-changed",
+   "stage": 12,
+   "template": "{% for x in [1,1,2] %}{{ loop.changed(x) }},{% endfor %}"
+  },
+  {
+   "expected": "1212",
+   "group": "for",
+   "name": "loop-in-nested-belongs-to-inner",
+   "stage": 12,
+   "template": "{% for i in [1,2] %}{% for j in [7,8] %}{{ loop.index }}{% endfor %}{% endfor %}"
+  },
+  {
+   "context": {
+    "tree": [
+     {
+      "children": [
+       {
+        "children": [],
+        "name": "b"
+       }
+      ],
+      "name": "a"
+     }
+    ]
+   },
+   "expected": "a(b())",
+   "group": "for",
+   "name": "loop-recursive",
+   "stage": 12,
+   "template": "{% for n in tree recursive %}{{ n.name }}({{ loop(n.children) }}){% endfor %}"
+  },
+  {
+   "context": {
+    "tree": [
+     {
+      "children": [
+       {
+        "children": [],
+        "name": "b"
+       }
+      ],
+      "name": "a"
+     }
+    ]
+   },
+   "expected": "12",
+   "group": "for",
+   "name": "loop-recursive-depth",
+   "stage": 12,
+   "template": "{% for n in tree recursive %}{{ loop.depth }}{{ loop(n.children) }}{% endfor %}"
+  },
+  {
+   "context": {
+    "empty": [],
+    "m": {
+     "a": 1,
+     "b": 2
+    },
+    "people": [
+     {
+      "age": 30,
+      "name": "ann"
+     },
+     {
+      "age": 20,
+      "name": "bo"
+     }
+    ],
+    "xs": [
+     10,
+     20,
+     30
+    ]
+   },
+   "expected": "bo,ann,",
+   "group": "for",
+   "name": "sort-then-iterate",
+   "stage": 11,
+   "template": "{% for p in people|sort(attribute='age') %}{{ p.name }},{% endfor %}"
+  },
+  {
+   "expected": "12",
+   "group": "for",
+   "name": "iterate-tuple",
+   "stage": 10,
+   "template": "{% for x in (1,2) %}{{ x }}{% endfor %}"
+  },
+  {
+   "context": {
+    "s": "ab"
+   },
+   "cpython": "'ab'",
+   "deviation": "J9",
+   "error": "not_iterable",
+   "group": "for",
+   "name": "iterate-string-rejected",
+   "stage": 11,
+   "template": "{% for c in s %}{{ c }}{% endfor %}"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "for"
+}

@@ -1,0 +1,162 @@
+{
+ "cases": [
+  {
+   "expected": "1",
+   "group": "set",
+   "name": "inline",
+   "stage": 12,
+   "template": "{% set x = 1 %}{{ x }}"
+  },
+  {
+   "expected": "3",
+   "group": "set",
+   "name": "expression",
+   "stage": 12,
+   "template": "{% set x = 1 + 2 %}{{ x }}"
+  },
+  {
+   "expected": "12",
+   "group": "set",
+   "name": "rebind",
+   "stage": 12,
+   "template": "{% set x = 1 %}{{ x }}{% set x = 2 %}{{ x }}"
+  },
+  {
+   "context": {
+    "x": 4
+   },
+   "expected": "8",
+   "group": "set",
+   "name": "from-context",
+   "stage": 12,
+   "template": "{% set y = x * 2 %}{{ y }}"
+  },
+  {
+   "context": {
+    "x": 1
+   },
+   "expected": "9",
+   "group": "set",
+   "name": "shadows-context",
+   "stage": 12,
+   "template": "{% set x = 9 %}{{ x }}"
+  },
+  {
+   "expected": "hi",
+   "group": "set",
+   "name": "block-form",
+   "stage": 12,
+   "template": "{% set x %}hi{% endset %}{{ x }}"
+  },
+  {
+   "expected": "a & b",
+   "group": "set",
+   "name": "block-form-not-double-escaped",
+   "stage": 12,
+   "template": "{% set x %}a & b{% endset %}{{ x }}"
+  },
+  {
+   "expected": "12",
+   "group": "set",
+   "name": "block-form-with-tags",
+   "stage": 12,
+   "template": "{% set x %}{% for i in [1,2] %}{{ i }}{% endfor %}{% endset %}{{ x }}"
+  },
+  {
+   "expected": "[][1]",
+   "group": "set",
+   "name": "used-later-only",
+   "stage": 12,
+   "template": "[{{ x }}]{% set x = 1 %}[{{ x }}]"
+  },
+  {
+   "expected": "1[]",
+   "group": "set",
+   "name": "with-block",
+   "stage": 12,
+   "template": "{% with a = 1 %}{{ a }}{% endwith %}[{{ a }}]"
+  },
+  {
+   "expected": "12",
+   "group": "set",
+   "name": "with-two-bindings",
+   "stage": 12,
+   "template": "{% with a = 1, b = 2 %}{{ a }}{{ b }}{% endwith %}"
+  },
+  {
+   "expected": "21",
+   "group": "set",
+   "name": "with-shadowing",
+   "stage": 12,
+   "template": "{% set a = 1 %}{% with a = 2 %}{{ a }}{% endwith %}{{ a }}"
+  },
+  {
+   "expected": "ABC",
+   "group": "set",
+   "name": "filter-block",
+   "stage": 12,
+   "template": "{% filter upper %}abc{% endfilter %}"
+  },
+  {
+   "expected": "A & B",
+   "group": "set",
+   "name": "filter-block-not-double-escaped",
+   "stage": 12,
+   "template": "{% filter upper %}a & b{% endfilter %}"
+  },
+  {
+   "expected": "zbc",
+   "group": "set",
+   "name": "filter-block-with-args",
+   "stage": 12,
+   "template": "{% filter replace('a','z') %}abc{% endfilter %}"
+  },
+  {
+   "expected": "A",
+   "group": "set",
+   "name": "filter-block-nested-tags",
+   "stage": 12,
+   "template": "{% filter upper %}{% for i in ['a'] %}{{ i }}{% endfor %}{% endfilter %}"
+  },
+  {
+   "expected": "[]",
+   "group": "set",
+   "name": "do-produces-nothing",
+   "stage": 12,
+   "template": "[{% do 1 + 1 %}]"
+  },
+  {
+   "expected": "12",
+   "group": "set",
+   "name": "set-in-loop-body-per-iteration",
+   "stage": 12,
+   "template": "{% for i in [1,2] %}{% set j = i %}{{ j }}{% endfor %}"
+  },
+  {
+   "expected": "2",
+   "group": "set",
+   "name": "set-list",
+   "stage": 12,
+   "template": "{% set l = [1,2] %}{{ l|length }}"
+  },
+  {
+   "expected": "1",
+   "group": "set",
+   "name": "set-map",
+   "stage": 12,
+   "template": "{% set d = {'a': 1} %}{{ d['a'] }}"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "set"
+}

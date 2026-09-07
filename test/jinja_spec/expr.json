@@ -1,0 +1,1289 @@
+{
+ "cases": [
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "5",
+   "group": "expr",
+   "name": "binop-add",
+   "stage": 9,
+   "template": "{{ x + y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "-1",
+   "group": "expr",
+   "name": "binop-sub",
+   "stage": 9,
+   "template": "{{ x - y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "6",
+   "group": "expr",
+   "name": "binop-mul",
+   "stage": 9,
+   "template": "{{ x * y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "1.5",
+   "group": "expr",
+   "name": "binop-div",
+   "stage": 9,
+   "template": "{{ y / x }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "1",
+   "group": "expr",
+   "name": "binop-floordiv",
+   "stage": 9,
+   "template": "{{ y // x }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "1",
+   "group": "expr",
+   "name": "binop-mod",
+   "stage": 9,
+   "template": "{{ y % x }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "8",
+   "group": "expr",
+   "name": "binop-pow",
+   "stage": 9,
+   "template": "{{ x ** y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "ab3",
+   "group": "expr",
+   "name": "binop-concat",
+   "stage": 9,
+   "template": "{{ s ~ y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "23",
+   "group": "expr",
+   "name": "binop-concat-num",
+   "stage": 9,
+   "template": "{{ x ~ y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "abc",
+   "group": "expr",
+   "name": "binop-add-strings",
+   "stage": 9,
+   "template": "{{ s + \"c\" }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "[1, 2, 3, 4]",
+   "group": "expr",
+   "name": "binop-add-lists",
+   "stage": 9,
+   "template": "{{ l + [4] }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "2",
+   "group": "expr",
+   "name": "binop-mod-negative",
+   "stage": 9,
+   "template": "{{ -7 % 3 }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "2.0",
+   "group": "expr",
+   "name": "binop-div-exact",
+   "stage": 9,
+   "template": "{{ 4 / 2 }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "-4",
+   "group": "expr",
+   "name": "binop-floordiv-negative",
+   "stage": 9,
+   "template": "{{ -7 // 2 }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "False",
+   "group": "expr",
+   "name": "compare-eq",
+   "stage": 9,
+   "template": "{{ x == y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "True",
+   "group": "expr",
+   "name": "compare-ne",
+   "stage": 9,
+   "template": "{{ x != y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "True",
+   "group": "expr",
+   "name": "compare-lt",
+   "stage": 9,
+   "template": "{{ x < y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "False",
+   "group": "expr",
+   "name": "compare-gt",
+   "stage": 9,
+   "template": "{{ x > y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "True",
+   "group": "expr",
+   "name": "compare-le",
+   "stage": 9,
+   "template": "{{ x <= y }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "False",
+   "group": "expr",
+   "name": "compare-ge",
+   "stage": 9,
+   "template": "{{ x >= y }}"
+  },
+  {
+   "expected": "True",
+   "group": "expr",
+   "name": "compare-int-float",
+   "stage": 9,
+   "template": "{{ 1 == 1.0 }}"
+  },
+  {
+   "expected": "True",
+   "group": "expr",
+   "name": "compare-strings",
+   "stage": 9,
+   "template": "{{ \"a\" < \"b\" }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "True",
+   "group": "expr",
+   "name": "compare-in-list",
+   "stage": 9,
+   "template": "{{ 2 in l }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "True",
+   "group": "expr",
+   "name": "compare-not-in-list",
+   "stage": 9,
+   "template": "{{ 9 not in l }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "True",
+   "group": "expr",
+   "name": "compare-in-string",
+   "stage": 9,
+   "template": "{{ \"a\" in s }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "True",
+   "group": "expr",
+   "name": "compare-in-map",
+   "stage": 9,
+   "template": "{{ \"k\" in d }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "False",
+   "group": "expr",
+   "name": "bool-and",
+   "stage": 9,
+   "template": "{{ t and f }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "True",
+   "group": "expr",
+   "name": "bool-or",
+   "stage": 9,
+   "template": "{{ t or f }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "False",
+   "group": "expr",
+   "name": "bool-not",
+   "stage": 9,
+   "template": "{{ not t }}"
+  },
+  {
+   "expected": "2",
+   "group": "expr",
+   "name": "bool-and-value",
+   "stage": 9,
+   "template": "{{ 1 and 2 }}"
+  },
+  {
+   "expected": "2",
+   "group": "expr",
+   "name": "bool-or-value",
+   "stage": 9,
+   "template": "{{ 0 or 2 }}"
+  },
+  {
+   "expected": "1",
+   "group": "expr",
+   "name": "bool-or-short-circuit",
+   "stage": 9,
+   "template": "{{ 1 or 2 }}"
+  },
+  {
+   "expected": "0",
+   "group": "expr",
+   "name": "bool-and-short-circuit",
+   "stage": 9,
+   "template": "{{ 0 and 2 }}"
+  },
+  {
+   "expected": "True",
+   "group": "expr",
+   "name": "bool-precedence",
+   "stage": 9,
+   "template": "{{ true or false and false }}"
+  },
+  {
+   "expected": "True",
+   "group": "expr",
+   "name": "not-precedence",
+   "stage": 9,
+   "template": "{{ not false and true }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "1",
+   "group": "expr",
+   "name": "cond-true",
+   "stage": 9,
+   "template": "{{ 1 if t else 2 }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "2",
+   "group": "expr",
+   "name": "cond-false",
+   "stage": 9,
+   "template": "{{ 1 if f else 2 }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "[]",
+   "group": "expr",
+   "name": "cond-no-else",
+   "stage": 9,
+   "template": "[{{ 1 if f }}]"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "2",
+   "group": "expr",
+   "name": "cond-nested",
+   "stage": 9,
+   "template": "{{ 1 if f else 2 if t else 3 }}"
+  },
+  {
+   "expected": "64",
+   "group": "expr",
+   "name": "assoc-pow",
+   "stage": 9,
+   "template": "{{ 2 ** 3 ** 2 }}"
+  },
+  {
+   "expected": "5",
+   "group": "expr",
+   "name": "assoc-sub",
+   "stage": 9,
+   "template": "{{ 10 - 3 - 2 }}"
+  },
+  {
+   "expected": "2.0",
+   "group": "expr",
+   "name": "assoc-div",
+   "stage": 9,
+   "template": "{{ 16 / 4 / 2 }}"
+  },
+  {
+   "expected": "14",
+   "group": "expr",
+   "name": "prec-add-mul",
+   "stage": 9,
+   "template": "{{ 2 + 3 * 4 }}"
+  },
+  {
+   "expected": "20",
+   "group": "expr",
+   "name": "prec-paren",
+   "stage": 9,
+   "template": "{{ (2 + 3) * 4 }}"
+  },
+  {
+   "expected": "4",
+   "group": "expr",
+   "name": "prec-unary-pow",
+   "stage": 9,
+   "template": "{{ -2 ** 2 }}"
+  },
+  {
+   "expected": "3",
+   "group": "expr",
+   "name": "prec-filter-vs-add",
+   "stage": 9,
+   "template": "{{ 1 + -2|abs }}"
+  },
+  {
+   "expected": "3",
+   "group": "expr",
+   "name": "prec-filter-vs-unary",
+   "stage": 9,
+   "template": "{{ -3|abs }}"
+  },
+  {
+   "expected": "8",
+   "group": "expr",
+   "name": "prec-filter-vs-pow",
+   "stage": 9,
+   "template": "{{ 2 ** 3|abs }}"
+  },
+  {
+   "expected": "A",
+   "group": "expr",
+   "name": "prec-filter-chain",
+   "stage": 9,
+   "template": "{{ \"  a  \"|trim|upper }}"
+  },
+  {
+   "expected": "64",
+   "group": "expr",
+   "name": "prec-concat-vs-mul",
+   "stage": 9,
+   "template": "{{ 2 * 3 ~ 4 }}"
+  },
+  {
+   "expected": "abc",
+   "group": "expr",
+   "name": "assoc-concat",
+   "stage": 9,
+   "template": "{{ \"a\" ~ \"b\" ~ \"c\" }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "v",
+   "group": "expr",
+   "name": "attr",
+   "stage": 9,
+   "template": "{{ d.k }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "1",
+   "group": "expr",
+   "name": "attr-nested",
+   "stage": 9,
+   "template": "{{ d.n.deep }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "[]",
+   "group": "expr",
+   "name": "attr-missing",
+   "stage": 9,
+   "template": "[{{ d.nope }}]"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "cpython": "UndefinedError: 'dict object' has no attribute 'nope'",
+   "deviation": "J14",
+   "expected": "[]",
+   "group": "expr",
+   "name": "attr-chain-on-missing",
+   "stage": 9,
+   "template": "[{{ d.nope.deeper }}]"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "v",
+   "group": "expr",
+   "name": "subscript-string-key",
+   "stage": 9,
+   "template": "{{ d[\"k\"] }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "1",
+   "group": "expr",
+   "name": "subscript-index",
+   "stage": 9,
+   "template": "{{ l[0] }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "3",
+   "group": "expr",
+   "name": "subscript-negative",
+   "stage": 9,
+   "template": "{{ l[-1] }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "2",
+   "group": "expr",
+   "name": "subscript-expr",
+   "stage": 9,
+   "template": "{{ l[x - 1] }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "[2, 3]",
+   "group": "expr",
+   "name": "slice",
+   "stage": 9,
+   "template": "{{ l[1:] }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "expected": "[1, 2]",
+   "group": "expr",
+   "name": "slice-both",
+   "stage": 9,
+   "template": "{{ l[0:2] }}"
+  },
+  {
+   "expected": "[1, 3, 5]",
+   "group": "expr",
+   "name": "slice-step",
+   "stage": 9,
+   "template": "{{ [1,2,3,4,5][0:5:2] }}"
+  },
+  {
+   "expected": "[1, 2, 3]",
+   "group": "expr",
+   "name": "list-literal",
+   "stage": 9,
+   "template": "{{ [1, 2, 3] }}"
+  },
+  {
+   "expected": "[1, 2]",
+   "group": "expr",
+   "name": "list-trailing-comma",
+   "stage": 9,
+   "template": "{{ [1, 2,] }}"
+  },
+  {
+   "expected": "[]",
+   "group": "expr",
+   "name": "list-empty",
+   "stage": 9,
+   "template": "{{ [] }}"
+  },
+  {
+   "expected": "1",
+   "group": "expr",
+   "name": "map-literal",
+   "stage": 9,
+   "template": "{{ {\"a\": 1}[\"a\"] }}"
+  },
+  {
+   "expected": "(1, 2)",
+   "group": "expr",
+   "name": "tuple-literal",
+   "stage": 9,
+   "template": "{{ (1, 2) }}"
+  },
+  {
+   "expected": "2",
+   "group": "expr",
+   "name": "paren-is-not-a-tuple",
+   "stage": 9,
+   "template": "{{ (1) + 1 }}"
+  },
+  {
+   "expected": "[0, 1, 2]",
+   "group": "expr",
+   "name": "range-call",
+   "stage": 9,
+   "template": "{{ range(3)|list }}"
+  },
+  {
+   "expected": "[1, 2, 3]",
+   "group": "expr",
+   "name": "range-two-args",
+   "stage": 9,
+   "template": "{{ range(1, 4)|list }}"
+  },
+  {
+   "expected": "1",
+   "group": "expr",
+   "name": "dict-call",
+   "stage": 9,
+   "template": "{{ dict(a=1)[\"a\"] }}"
+  },
+  {
+   "context": {
+    "d": {
+     "k": "v",
+     "n": {
+      "deep": 1
+     }
+    },
+    "f": false,
+    "l": [
+     1,
+     2,
+     3
+    ],
+    "s": "ab",
+    "t": true,
+    "x": 2,
+    "y": 3
+   },
+   "cpython": "'True'",
+   "deviation": "J3",
+   "error": "chained_comparison",
+   "group": "expr",
+   "name": "chained-comparison",
+   "stage": 9,
+   "template": "{{ 1 < x < 3 }}"
+  },
+  {
+   "cpython": "''",
+   "deviation": "J10",
+   "error": "unexpected_token",
+   "group": "expr",
+   "name": "identifier-ascii-only",
+   "stage": 9,
+   "template": "{{ 中 }}"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "expr"
+}

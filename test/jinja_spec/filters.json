@@ -1,0 +1,894 @@
+{
+ "cases": [
+  {
+   "expected": "ABC",
+   "group": "filters",
+   "name": "upper-basic",
+   "stage": 11,
+   "template": "{{ 'abc'|upper }}"
+  },
+  {
+   "expected": "",
+   "group": "filters",
+   "name": "upper-empty",
+   "stage": 11,
+   "template": "{{ ''|upper }}"
+  },
+  {
+   "expected": "abc",
+   "group": "filters",
+   "name": "lower-basic",
+   "stage": 11,
+   "template": "{{ 'ABC'|lower }}"
+  },
+  {
+   "expected": "äbc",
+   "group": "filters",
+   "name": "lower-utf8",
+   "stage": 11,
+   "template": "{{ 'ÄBC'|lower }}"
+  },
+  {
+   "expected": "Hello world",
+   "group": "filters",
+   "name": "capitalize-basic",
+   "stage": 11,
+   "template": "{{ 'hello world'|capitalize }}"
+  },
+  {
+   "expected": "",
+   "group": "filters",
+   "name": "capitalize-empty",
+   "stage": 11,
+   "template": "{{ ''|capitalize }}"
+  },
+  {
+   "expected": "Hello World",
+   "group": "filters",
+   "name": "title-basic",
+   "stage": 11,
+   "template": "{{ 'hello world'|title }}"
+  },
+  {
+   "expected": "Hello",
+   "group": "filters",
+   "name": "title-mixed",
+   "stage": 11,
+   "template": "{{ 'hELLO'|title }}"
+  },
+  {
+   "expected": "[a]",
+   "group": "filters",
+   "name": "trim-basic",
+   "stage": 11,
+   "template": "[{{ '  a  '|trim }}]"
+  },
+  {
+   "expected": "[a]",
+   "group": "filters",
+   "name": "trim-chars",
+   "stage": 11,
+   "template": "[{{ 'xxaxx'|trim('x') }}]"
+  },
+  {
+   "expected": "hi",
+   "group": "filters",
+   "name": "striptags-basic",
+   "stage": 11,
+   "template": "{{ '<b>hi</b>'|striptags }}"
+  },
+  {
+   "expected": "x",
+   "group": "filters",
+   "name": "striptags-nested",
+   "stage": 11,
+   "template": "{{ '<a><b>x</b></a>'|striptags }}"
+  },
+  {
+   "context": {
+    "s": "the quick brown fox jumps"
+   },
+   "expected": "the...",
+   "group": "filters",
+   "name": "truncate-basic",
+   "stage": 11,
+   "template": "{{ s|truncate(10) }}"
+  },
+  {
+   "expected": "abc",
+   "group": "filters",
+   "name": "truncate-short",
+   "stage": 11,
+   "template": "{{ 'abc'|truncate(10) }}"
+  },
+  {
+   "context": {
+    "s": "aaa bbb ccc ddd"
+   },
+   "expected": "aaa bbb\nccc ddd",
+   "group": "filters",
+   "name": "wordwrap-basic",
+   "stage": 11,
+   "template": "{{ s|wordwrap(10) }}"
+  },
+  {
+   "expected": "a",
+   "group": "filters",
+   "name": "wordwrap-short",
+   "stage": 11,
+   "template": "{{ 'a'|wordwrap(10) }}"
+  },
+  {
+   "expected": "3",
+   "group": "filters",
+   "name": "wordcount-basic",
+   "stage": 11,
+   "template": "{{ 'a b c'|wordcount }}"
+  },
+  {
+   "expected": "0",
+   "group": "filters",
+   "name": "wordcount-empty",
+   "stage": 11,
+   "template": "{{ ''|wordcount }}"
+  },
+  {
+   "expected": "[  a  ]",
+   "group": "filters",
+   "name": "center-basic",
+   "stage": 11,
+   "template": "[{{ 'a'|center(5) }}]"
+  },
+  {
+   "expected": "[abcdef]",
+   "group": "filters",
+   "name": "center-too-wide",
+   "stage": 11,
+   "template": "[{{ 'abcdef'|center(3) }}]"
+  },
+  {
+   "context": {
+    "s": "a\nb"
+   },
+   "expected": "a\n  b",
+   "group": "filters",
+   "name": "indent-basic",
+   "stage": 11,
+   "template": "{{ s|indent(2) }}"
+  },
+  {
+   "context": {
+    "s": "a\nb"
+   },
+   "expected": "  a\n  b",
+   "group": "filters",
+   "name": "indent-first",
+   "stage": 11,
+   "template": "{{ s|indent(2, true) }}"
+  },
+  {
+   "expected": "bbb",
+   "group": "filters",
+   "name": "replace-basic",
+   "stage": 11,
+   "template": "{{ 'aaa'|replace('a','b') }}"
+  },
+  {
+   "expected": "bba",
+   "group": "filters",
+   "name": "replace-count",
+   "stage": 11,
+   "template": "{{ 'aaa'|replace('a','b',2) }}"
+  },
+  {
+   "expected": "a-b",
+   "group": "filters",
+   "name": "format-basic",
+   "stage": 11,
+   "template": "{{ '%s-%s'|format('a','b') }}"
+  },
+  {
+   "expected": "3",
+   "group": "filters",
+   "name": "format-number",
+   "stage": 11,
+   "template": "{{ '%d'|format(3) }}"
+  },
+  {
+   "expected": "a%20b%26c",
+   "group": "filters",
+   "name": "urlencode-string",
+   "stage": 11,
+   "template": "{{ 'a b&c'|urlencode }}"
+  },
+  {
+   "expected": "a=1",
+   "group": "filters",
+   "name": "urlencode-map",
+   "stage": 11,
+   "template": "{{ {'a': 1}|urlencode }}"
+  },
+  {
+   "expected": "&lt;b&gt;",
+   "group": "filters",
+   "name": "escape-basic",
+   "stage": 11,
+   "template": "{{ '<b>'|escape }}"
+  },
+  {
+   "expected": "<b>",
+   "group": "filters",
+   "name": "escape-already-safe",
+   "stage": 11,
+   "template": "{{ '<b>'|safe|escape }}"
+  },
+  {
+   "expected": "&lt;b&gt;",
+   "group": "filters",
+   "name": "e-alias",
+   "stage": 11,
+   "template": "{{ '<b>'|e }}"
+  },
+  {
+   "expected": "a&amp;b",
+   "group": "filters",
+   "name": "e-amp",
+   "stage": 11,
+   "template": "{{ 'a&b'|e }}"
+  },
+  {
+   "expected": "&lt;b&gt;",
+   "group": "filters",
+   "name": "forceescape-breaks-safe",
+   "stage": 11,
+   "template": "{{ '<b>'|safe|forceescape }}"
+  },
+  {
+   "expected": "&lt;b&gt;",
+   "group": "filters",
+   "name": "forceescape-plain",
+   "stage": 11,
+   "template": "{{ '<b>'|forceescape }}"
+  },
+  {
+   "expected": "<b>",
+   "group": "filters",
+   "name": "safe-basic",
+   "stage": 11,
+   "template": "{{ '<b>'|safe }}"
+  },
+  {
+   "expected": "[]",
+   "group": "filters",
+   "name": "safe-empty",
+   "stage": 11,
+   "template": "[{{ ''|safe }}]"
+  },
+  {
+   "expected": "3",
+   "group": "filters",
+   "name": "string-int",
+   "stage": 11,
+   "template": "{{ 3|string }}"
+  },
+  {
+   "expected": "[1]",
+   "group": "filters",
+   "name": "string-list",
+   "stage": 11,
+   "template": "{{ [1]|string }}"
+  },
+  {
+   "expected": "1",
+   "group": "filters",
+   "name": "first-basic",
+   "stage": 11,
+   "template": "{{ [1,2]|first }}"
+  },
+  {
+   "expected": "[]",
+   "group": "filters",
+   "name": "first-empty",
+   "stage": 11,
+   "template": "[{{ []|first }}]"
+  },
+  {
+   "expected": "2",
+   "group": "filters",
+   "name": "last-basic",
+   "stage": 11,
+   "template": "{{ [1,2]|last }}"
+  },
+  {
+   "expected": "[]",
+   "group": "filters",
+   "name": "last-empty",
+   "stage": 11,
+   "template": "[{{ []|last }}]"
+  },
+  {
+   "expected": "2",
+   "group": "filters",
+   "name": "length-list",
+   "stage": 11,
+   "template": "{{ [1,2]|length }}"
+  },
+  {
+   "expected": "3",
+   "group": "filters",
+   "name": "length-string",
+   "stage": 11,
+   "template": "{{ 'abc'|length }}"
+  },
+  {
+   "expected": "2",
+   "group": "filters",
+   "name": "count-alias",
+   "stage": 11,
+   "template": "{{ [1,2]|count }}"
+  },
+  {
+   "expected": "1",
+   "group": "filters",
+   "name": "count-map",
+   "stage": 11,
+   "template": "{{ {'a':1}|count }}"
+  },
+  {
+   "expected": "[&#39;a&#39;, &#39;b&#39;]",
+   "group": "filters",
+   "name": "list-string",
+   "stage": 11,
+   "template": "{{ 'ab'|list }}"
+  },
+  {
+   "expected": "[0, 1]",
+   "group": "filters",
+   "name": "list-range",
+   "stage": 11,
+   "template": "{{ range(2)|list }}"
+  },
+  {
+   "expected": "1-2",
+   "group": "filters",
+   "name": "join-basic",
+   "stage": 11,
+   "template": "{{ [1,2]|join('-') }}"
+  },
+  {
+   "context": {
+    "ps": [
+     {
+      "n": "a"
+     },
+     {
+      "n": "b"
+     }
+    ]
+   },
+   "expected": "a, b",
+   "group": "filters",
+   "name": "join-attribute",
+   "stage": 11,
+   "template": "{{ ps|join(', ', attribute='n') }}"
+  },
+  {
+   "expected": "[3, 2, 1]",
+   "group": "filters",
+   "name": "reverse-list",
+   "stage": 11,
+   "template": "{{ [1,2,3]|reverse|list }}"
+  },
+  {
+   "expected": "cba",
+   "group": "filters",
+   "name": "reverse-string",
+   "stage": 11,
+   "template": "{{ 'abc'|reverse }}"
+  },
+  {
+   "expected": "[1, 2, 3]",
+   "group": "filters",
+   "name": "sort-basic",
+   "stage": 11,
+   "template": "{{ [3,1,2]|sort|list }}"
+  },
+  {
+   "context": {
+    "ps": [
+     {
+      "n": "b"
+     },
+     {
+      "n": "a"
+     }
+    ]
+   },
+   "expected": "[&#39;a&#39;, &#39;b&#39;]",
+   "group": "filters",
+   "name": "sort-attribute",
+   "stage": 11,
+   "template": "{{ ps|sort(attribute='n')|map(attribute='n')|list }}"
+  },
+  {
+   "expected": "6",
+   "group": "filters",
+   "name": "sum-basic",
+   "stage": 11,
+   "template": "{{ [1,2,3]|sum }}"
+  },
+  {
+   "expected": "0",
+   "group": "filters",
+   "name": "sum-empty",
+   "stage": 11,
+   "template": "{{ []|sum }}"
+  },
+  {
+   "expected": "1",
+   "group": "filters",
+   "name": "min-basic",
+   "stage": 11,
+   "template": "{{ [3,1,2]|min }}"
+  },
+  {
+   "context": {
+    "ps": [
+     {
+      "n": 2
+     },
+     {
+      "n": 1
+     }
+    ]
+   },
+   "expected": "",
+   "group": "filters",
+   "name": "min-attribute",
+   "stage": 11,
+   "template": "{{ ps|min(attribute='n')|attr('n') }}"
+  },
+  {
+   "expected": "3",
+   "group": "filters",
+   "name": "max-basic",
+   "stage": 11,
+   "template": "{{ [3,1,2]|max }}"
+  },
+  {
+   "expected": "c",
+   "group": "filters",
+   "name": "max-strings",
+   "stage": 11,
+   "template": "{{ ['a','c','b']|max }}"
+  },
+  {
+   "expected": "[1, 2]",
+   "group": "filters",
+   "name": "unique-basic",
+   "stage": 11,
+   "template": "{{ [1,1,2]|unique|list }}"
+  },
+  {
+   "expected": "[&#39;a&#39;]",
+   "group": "filters",
+   "name": "unique-strings",
+   "stage": 11,
+   "template": "{{ ['a','A','a']|unique|list }}"
+  },
+  {
+   "expected": "[[1, 2], [3, 4]]",
+   "group": "filters",
+   "name": "slice-basic",
+   "stage": 11,
+   "template": "{{ [1,2,3,4]|slice(2)|list }}"
+  },
+  {
+   "expected": "[[1, 2], [3, &#39;x&#39;]]",
+   "group": "filters",
+   "name": "slice-fill",
+   "stage": 11,
+   "template": "{{ [1,2,3]|slice(2, 'x')|list }}"
+  },
+  {
+   "expected": "[[1, 2], [3]]",
+   "group": "filters",
+   "name": "batch-basic",
+   "stage": 11,
+   "template": "{{ [1,2,3]|batch(2)|list }}"
+  },
+  {
+   "expected": "[[1, 2], [3, 0]]",
+   "group": "filters",
+   "name": "batch-fill",
+   "stage": 11,
+   "template": "{{ [1,2,3]|batch(2, 0)|list }}"
+  },
+  {
+   "context": {
+    "ps": [
+     {
+      "k": "a"
+     },
+     {
+      "k": "a"
+     },
+     {
+      "k": "b"
+     }
+    ]
+   },
+   "expected": "a:2;b:1;",
+   "group": "filters",
+   "name": "groupby-basic",
+   "stage": 11,
+   "template": "{% for g, items in ps|groupby('k') %}{{ g }}:{{ items|length }};{% endfor %}"
+  },
+  {
+   "expected": "[]",
+   "group": "filters",
+   "name": "groupby-empty",
+   "stage": 11,
+   "template": "[{% for g, i in []|groupby('k') %}x{% endfor %}]"
+  },
+  {
+   "context": {
+    "ps": [
+     {
+      "n": 1
+     },
+     {
+      "n": 2
+     }
+    ]
+   },
+   "expected": "[1, 2]",
+   "group": "filters",
+   "name": "map-attribute",
+   "stage": 11,
+   "template": "{{ ps|map(attribute='n')|list }}"
+  },
+  {
+   "expected": "[&#39;A&#39;, &#39;B&#39;]",
+   "group": "filters",
+   "name": "map-filter-name",
+   "stage": 11,
+   "template": "{{ ['a','b']|map('upper')|list }}"
+  },
+  {
+   "expected": "[1, 3]",
+   "group": "filters",
+   "name": "select-test-name",
+   "stage": 11,
+   "template": "{{ [1,2,3]|select('odd')|list }}"
+  },
+  {
+   "expected": "[1, 2]",
+   "group": "filters",
+   "name": "select-no-test",
+   "stage": 11,
+   "template": "{{ [0,1,2]|select|list }}"
+  },
+  {
+   "expected": "[2]",
+   "group": "filters",
+   "name": "reject-test-name",
+   "stage": 11,
+   "template": "{{ [1,2,3]|reject('odd')|list }}"
+  },
+  {
+   "expected": "[0]",
+   "group": "filters",
+   "name": "reject-no-test",
+   "stage": 11,
+   "template": "{{ [0,1,2]|reject|list }}"
+  },
+  {
+   "context": {
+    "ps": [
+     {
+      "n": 1,
+      "ok": true
+     },
+     {
+      "n": 2,
+      "ok": false
+     }
+    ]
+   },
+   "expected": "[1]",
+   "group": "filters",
+   "name": "selectattr-truthy",
+   "stage": 11,
+   "template": "{{ ps|selectattr('ok')|map(attribute='n')|list }}"
+  },
+  {
+   "context": {
+    "ps": [
+     {
+      "n": 1
+     },
+     {
+      "n": 2
+     }
+    ]
+   },
+   "expected": "[1]",
+   "group": "filters",
+   "name": "selectattr-with-test",
+   "stage": 11,
+   "template": "{{ ps|selectattr('n','odd')|map(attribute='n')|list }}"
+  },
+  {
+   "context": {
+    "ps": [
+     {
+      "n": 1,
+      "ok": true
+     },
+     {
+      "n": 2,
+      "ok": false
+     }
+    ]
+   },
+   "expected": "[2]",
+   "group": "filters",
+   "name": "rejectattr-truthy",
+   "stage": 11,
+   "template": "{{ ps|rejectattr('ok')|map(attribute='n')|list }}"
+  },
+  {
+   "context": {
+    "ps": [
+     {
+      "n": 1
+     },
+     {
+      "n": 2
+     }
+    ]
+   },
+   "expected": "[2]",
+   "group": "filters",
+   "name": "rejectattr-with-test",
+   "stage": 11,
+   "template": "{{ ps|rejectattr('n','odd')|map(attribute='n')|list }}"
+  },
+  {
+   "expected": "[(&#39;a&#39;, 2), (&#39;b&#39;, 1)]",
+   "group": "filters",
+   "name": "dictsort-by-key",
+   "stage": 11,
+   "template": "{{ {'b':1,'a':2}|dictsort|list }}"
+  },
+  {
+   "expected": "[(&#39;b&#39;, 1), (&#39;a&#39;, 2)]",
+   "group": "filters",
+   "name": "dictsort-by-value",
+   "stage": 11,
+   "template": "{{ {'b':1,'a':2}|dictsort(by='value')|list }}"
+  },
+  {
+   "expected": "a1",
+   "group": "filters",
+   "name": "items-basic",
+   "stage": 11,
+   "template": "{% for k,v in {'a':1}|items %}{{ k }}{{ v }}{% endfor %}"
+  },
+  {
+   "expected": "[]",
+   "group": "filters",
+   "name": "items-empty",
+   "stage": 11,
+   "template": "[{% for k,v in {}|items %}x{% endfor %}]"
+  },
+  {
+   "context": {
+    "d": {
+     "a": 1
+    }
+   },
+   "expected": "",
+   "group": "filters",
+   "name": "attr-basic",
+   "stage": 11,
+   "template": "{{ d|attr('a') }}"
+  },
+  {
+   "context": {
+    "d": {
+     "a": 1
+    }
+   },
+   "expected": "[]",
+   "group": "filters",
+   "name": "attr-missing",
+   "stage": 11,
+   "template": "[{{ d|attr('z') }}]"
+  },
+  {
+   "expected": "{\"a\": 1}",
+   "group": "filters",
+   "name": "tojson-map",
+   "stage": 11,
+   "template": "{{ {'a': 1}|tojson }}"
+  },
+  {
+   "expected": "{\"a\": \"\\u003c/script\\u003e\"}",
+   "group": "filters",
+   "name": "tojson-script-safe",
+   "stage": 11,
+   "template": "{{ {'a': '</script>'}|tojson }}"
+  },
+  {
+   "expected": "3",
+   "group": "filters",
+   "name": "abs-negative",
+   "stage": 11,
+   "template": "{{ -3|abs }}"
+  },
+  {
+   "expected": "1.5",
+   "group": "filters",
+   "name": "abs-float",
+   "stage": 11,
+   "template": "{{ -1.5|abs }}"
+  },
+  {
+   "expected": "0.0",
+   "group": "filters",
+   "name": "round-half-up",
+   "stage": 11,
+   "template": "{{ 0.5|round }}"
+  },
+  {
+   "expected": "2.35",
+   "group": "filters",
+   "name": "round-precision",
+   "stage": 11,
+   "template": "{{ 2.345|round(2) }}"
+  },
+  {
+   "expected": "42",
+   "group": "filters",
+   "name": "int-string",
+   "stage": 11,
+   "template": "{{ '42'|int }}"
+  },
+  {
+   "expected": "0",
+   "group": "filters",
+   "name": "int-bad",
+   "stage": 11,
+   "template": "{{ 'x'|int }}"
+  },
+  {
+   "expected": "1.5",
+   "group": "filters",
+   "name": "float-string",
+   "stage": 11,
+   "template": "{{ '1.5'|float }}"
+  },
+  {
+   "expected": "0.0",
+   "group": "filters",
+   "name": "float-bad",
+   "stage": 11,
+   "template": "{{ 'x'|float }}"
+  },
+  {
+   "expected": "1.0 kB",
+   "group": "filters",
+   "name": "filesizeformat-decimal",
+   "stage": 11,
+   "template": "{{ 1000|filesizeformat }}"
+  },
+  {
+   "expected": "1.0 KiB",
+   "group": "filters",
+   "name": "filesizeformat-binary",
+   "stage": 11,
+   "template": "{{ 1024|filesizeformat(true) }}"
+  },
+  {
+   "expected": "d",
+   "group": "filters",
+   "name": "default-undefined",
+   "stage": 11,
+   "template": "{{ nope|default('d') }}"
+  },
+  {
+   "expected": "d",
+   "group": "filters",
+   "name": "default-boolean",
+   "stage": 11,
+   "template": "{{ ''|default('d', true) }}"
+  },
+  {
+   "expected": "d",
+   "group": "filters",
+   "name": "d-alias",
+   "stage": 11,
+   "template": "{{ nope|d('d') }}"
+  },
+  {
+   "context": {
+    "x": "v"
+   },
+   "expected": "v",
+   "group": "filters",
+   "name": "d-defined",
+   "stage": 11,
+   "template": "{{ x|d('d') }}"
+  },
+  {
+   "expected": "[1, 2]",
+   "group": "filters",
+   "name": "pprint-list",
+   "stage": 11,
+   "template": "{{ [1,2]|pprint }}"
+  },
+  {
+   "expected": "{&#39;a&#39;: 1}",
+   "group": "filters",
+   "name": "pprint-map",
+   "stage": 11,
+   "template": "{{ {'a':1}|pprint }}"
+  },
+  {
+   "expected": "see <a href=\"http://x.test\" rel=\"noopener\">http://x.test</a> now",
+   "group": "filters",
+   "name": "urlize-basic",
+   "stage": 11,
+   "template": "{{ 'see http://x.test now'|urlize }}"
+  },
+  {
+   "expected": "no links",
+   "group": "filters",
+   "name": "urlize-plain",
+   "stage": 11,
+   "template": "{{ 'no links'|urlize }}"
+  },
+  {
+   "expected": "7",
+   "group": "filters",
+   "name": "random-single-element",
+   "stage": 11,
+   "template": "{{ [7]|random }}"
+  },
+  {
+   "expected": "a",
+   "group": "filters",
+   "name": "random-single-element-again",
+   "stage": 11,
+   "template": "{{ ['a']|random }}"
+  },
+  {
+   "expected": "[]",
+   "group": "filters",
+   "name": "undefined-input-survives-chain",
+   "stage": 11,
+   "template": "[{{ nope|upper|trim|default('d') }}]"
+  },
+  {
+   "expected": "zB",
+   "group": "filters",
+   "name": "chain-order",
+   "stage": 11,
+   "template": "{{ '  ab '|trim|upper|replace('A','z') }}"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "filters"
+}

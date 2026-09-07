@@ -1,0 +1,323 @@
+{
+ "cases": [
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;b&gt;a &amp; b&lt;/b&gt;",
+   "group": "escape",
+   "name": "autoescape-on",
+   "stage": 11,
+   "template": "{{ raw }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "<b>a & b</b>",
+   "group": "escape",
+   "name": "safe-turns-it-off",
+   "stage": 11,
+   "template": "{{ raw|safe }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "<b>a & b</b>",
+   "group": "escape",
+   "name": "escape-is-idempotent-through-safe",
+   "stage": 11,
+   "template": "{{ raw|safe|escape }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;b&gt;a &amp; b&lt;/b&gt;",
+   "group": "escape",
+   "name": "forceescape-breaks-safe",
+   "stage": 11,
+   "template": "{{ raw|safe|forceescape }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "<b>plain</b>",
+   "group": "escape",
+   "name": "literal-in-template-is-not-escaped",
+   "stage": 11,
+   "template": "<b>{{ s }}</b>"
+  },
+  {
+   "expected": "it&#39;s",
+   "group": "escape",
+   "name": "apostrophe",
+   "stage": 11,
+   "template": "{{ \"it's\" }}"
+  },
+  {
+   "expected": "say &#34;hi&#34;",
+   "group": "escape",
+   "name": "quote",
+   "stage": 11,
+   "template": "{{ 'say \"hi\"' }}"
+  },
+  {
+   "expected": "a &amp; b",
+   "group": "escape",
+   "name": "ampersand-once",
+   "stage": 11,
+   "template": "{{ 'a & b' }}"
+  },
+  {
+   "expected": "/a/b",
+   "group": "escape",
+   "name": "slash-not-escaped",
+   "stage": 11,
+   "template": "{{ '/a/b' }}"
+  },
+  {
+   "expected": "A & B",
+   "group": "escape",
+   "name": "filter-block-single-escape",
+   "stage": 12,
+   "template": "{% filter upper %}a & b{% endfilter %}"
+  },
+  {
+   "expected": "a & b",
+   "group": "escape",
+   "name": "set-block-single-escape",
+   "stage": 12,
+   "template": "{% set v %}a & b{% endset %}{{ v }}"
+  },
+  {
+   "expected": "A & B",
+   "group": "escape",
+   "name": "set-block-then-filter",
+   "stage": 12,
+   "template": "{% set v %}a & b{% endset %}{{ v|upper }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;b&gt;a &amp; b&lt;/b&gt;&lt;b&gt;a &amp; b&lt;/b&gt;",
+   "group": "escape",
+   "name": "concat-escapes-both",
+   "stage": 11,
+   "template": "{{ raw ~ raw }}"
+  },
+  {
+   "expected": "&lt;a&gt;,&lt;b&gt;",
+   "group": "escape",
+   "name": "join-escapes-elements",
+   "stage": 11,
+   "template": "{{ ['<a>','<b>']|join(',') }}"
+  },
+  {
+   "expected": "<a>",
+   "group": "escape",
+   "name": "join-keeps-safe",
+   "stage": 11,
+   "template": "{{ ['<a>'|safe]|join(',') }}"
+  },
+  {
+   "expected": "{\"k\": \"\\u003c/script\\u003e\"}",
+   "group": "escape",
+   "name": "tojson-escapes-script",
+   "stage": 11,
+   "template": "{{ {'k': '</script>'}|tojson }}"
+  },
+  {
+   "expected": "\"\\u003c\"",
+   "group": "escape",
+   "name": "tojson-escapes-angle",
+   "stage": 11,
+   "template": "{{ '<'|tojson }}"
+  },
+  {
+   "expected": "&lt;b&gt;",
+   "group": "escape",
+   "name": "default-value-is-escaped",
+   "stage": 11,
+   "template": "{{ nope|default('<b>') }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;B&gt;A &amp; B&lt;/B&gt;",
+   "group": "escape",
+   "name": "transparent-upper-plain",
+   "stage": 11,
+   "template": "{{ raw|upper }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "<B>A & B</B>",
+   "group": "escape",
+   "name": "transparent-upper-safe",
+   "stage": 11,
+   "template": "{{ raw|safe|upper }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;b&gt;a &amp; b&lt;/b&gt;",
+   "group": "escape",
+   "name": "transparent-lower-plain",
+   "stage": 11,
+   "template": "{{ raw|lower }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "<b>a & b</b>",
+   "group": "escape",
+   "name": "transparent-lower-safe",
+   "stage": 11,
+   "template": "{{ raw|safe|lower }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;b&gt;a &amp; b&lt;/b&gt;",
+   "group": "escape",
+   "name": "transparent-trim-plain",
+   "stage": 11,
+   "template": "{{ raw|trim }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "<b>a & b</b>",
+   "group": "escape",
+   "name": "transparent-trim-safe",
+   "stage": 11,
+   "template": "{{ raw|safe|trim }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;b&gt;a &amp; b&lt;/b&gt;",
+   "group": "escape",
+   "name": "transparent-center-plain",
+   "stage": 11,
+   "template": "{{ raw|center(9) }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "<b>a & b</b>",
+   "group": "escape",
+   "name": "transparent-center-safe",
+   "stage": 11,
+   "template": "{{ raw|safe|center(9) }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;b&gt;a &amp; b&lt;/b&gt;",
+   "group": "escape",
+   "name": "transparent-indent-plain",
+   "stage": 11,
+   "template": "{{ raw|indent(0) }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "<b>a & b</b>",
+   "group": "escape",
+   "name": "transparent-indent-safe",
+   "stage": 11,
+   "template": "{{ raw|safe|indent(0) }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;a&gt;&lt;b&gt;",
+   "group": "escape",
+   "name": "escaping-join",
+   "stage": 11,
+   "template": "{{ ['<a>','<b>']|join }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;B&gt;a &amp; B&lt;/b&gt;",
+   "group": "escape",
+   "name": "escaping-title",
+   "stage": 11,
+   "template": "{{ raw|title }}"
+  },
+  {
+   "context": {
+    "raw": "<b>a & b</b>",
+    "s": "plain"
+   },
+   "expected": "&lt;b&gt;a &amp; b&lt;/b&gt;",
+   "group": "escape",
+   "name": "escaping-wordwrap",
+   "stage": 11,
+   "template": "{{ raw|wordwrap(99) }}"
+  },
+  {
+   "expected": "\"\\u003cx\\u003e\"",
+   "group": "escape",
+   "name": "generating-tojson",
+   "stage": 11,
+   "template": "{{ '<x>'|tojson }}"
+  },
+  {
+   "expected": "%3Cx%3E",
+   "group": "escape",
+   "name": "generating-urlencode",
+   "stage": 11,
+   "template": "{{ '<x>'|urlencode }}"
+  }
+ ],
+ "env": {
+  "autoescape": true,
+  "extensions": [
+   "jinja2.ext.do"
+  ],
+  "keep_trailing_newline": false,
+  "lstrip_blocks": true,
+  "trim_blocks": true,
+  "undefined": "Undefined"
+ },
+ "generator": "jinja2 3.1.6",
+ "group": "escape"
+}
