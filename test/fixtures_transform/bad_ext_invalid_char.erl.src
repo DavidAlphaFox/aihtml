@@ -1,0 +1,6 @@
+%%% Claims a character the scanner cannot use as a marker.
+-module(bad_ext_invalid_char).
+-behaviour(ai_mustache_ext).
+-export([markers/0, compile_tag/4]).
+markers() -> [${].
+compile_tag(_M, _K, _B, _O) -> {nil, 0}.

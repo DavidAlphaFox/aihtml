@@ -1,0 +1,13 @@
+%% Renders through the generated modules, so the suite can assert on output
+%% rather than only on the shape of the generated source.
+-module(pb_render).
+
+-export([complex/0, static/0]).
+
+complex() ->
+    view_complex:render(#{title => <<"Hi & <bye>">>,
+                          user  => #{name => <<"ada">>, admin => true},
+                          items => [#{name => <<"one">>}, #{name => <<"two">>}]}).
+
+static() ->
+    view_static:render(#{}).

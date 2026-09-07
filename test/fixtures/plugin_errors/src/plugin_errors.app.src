@@ -1,0 +1,8 @@
+{application, plugin_errors,
+ [{description, "rebar3_aihtml diagnostics fixture"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [kernel, stdlib, aihtml]},
+  {env, []},
+  {modules, []}
+ ]}.

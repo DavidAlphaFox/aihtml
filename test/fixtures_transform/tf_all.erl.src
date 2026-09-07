@@ -1,0 +1,15 @@
+%%% All three source forms in one module: a declared extension, an inline
+%%% template that uses it, and two file templates.
+-module(tf_all).
+-compile({parse_transform, ai_mustache_transform}).
+
+-mustache_tag(my_i18n).
+-mustache_template({index, "views/index.mustache"}).
+-mustache_template("views/greet.mustache").
+-mustache_template({i18n, "views/i18n.mustache"}).
+
+-export([hi/2]).
+
+hi(Name, Locale) ->
+    ai_mustache:inline(~"{{@hello}}, {{name}}!",
+                       #{name => Name, locale => Locale}).

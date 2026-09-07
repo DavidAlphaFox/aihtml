@@ -1,0 +1,110 @@
+%%% One inline call in every expression position the walker has to reach.
+%%% A position the walker misses does not fail here -- it silently falls back
+%%% to the runtime path -- so the test that owns this module also asserts that
+%%% no ai_mustache:inline call survives in the generated forms.
+-module(tf_positions).
+-compile({parse_transform, ai_mustache_transform}).
+
+-export([t_case/1, t_if/1, t_try/0, t_catch_clause/0, t_after/0, t_receive/0,
+         t_lc/1, t_lc_filter/1, t_lc_source/0, t_bc/1, t_fun/0, t_named_fun/0,
+         t_block/0, t_bin/0, t_map/0, t_map_update/1, t_record/0,
+         t_record_update/1, t_arg/0, t_tuple/0, t_cons/0, t_op/0, t_catch/0,
+         t_match/0, t_nested/0]).
+
+-record(r, {a, b}).
+
+t_case(X) ->
+    case X of
+        true  -> ai_mustache:inline(<<"c{{v}}">>, #{v => 1});
+        false -> <<>>
+    end.
+
+t_if(X) ->
+    if X    -> ai_mustache:inline(<<"i{{v}}">>, #{v => 2});
+       true -> <<>>
+    end.
+
+t_try() ->
+    try ai_mustache:inline(<<"t{{v}}">>, #{v => 3}) catch _:_ -> <<>> end.
+
+t_catch_clause() ->
+    try erlang:error(boom)
+    catch _:_ -> ai_mustache:inline(<<"k{{v}}">>, #{v => 4})
+    end.
+
+t_after() ->
+    try ok after put(tf_after, ai_mustache:inline(<<"a{{v}}">>, #{v => 5})) end,
+    get(tf_after).
+
+t_receive() ->
+    self() ! go,
+    receive go -> ai_mustache:inline(<<"r{{v}}">>, #{v => 6}) end.
+
+t_lc(L) ->
+    [ai_mustache:inline(<<"l{{v}}">>, #{v => N}) || N <- L].
+
+t_lc_filter(L) ->
+    [N || N <- L, ai_mustache:inline(<<"{{v}}">>, #{v => N}) =/= <<"2">>].
+
+t_lc_source() ->
+    [C || C <- binary_to_list(ai_mustache:inline(<<"{{v}}">>, #{v => 77}))].
+
+t_bc(L) ->
+    << <<(ai_mustache:inline(<<"b{{v}}">>, #{v => N}))/binary>> || N <- L >>.
+
+t_fun() ->
+    F = fun() -> ai_mustache:inline(<<"f{{v}}">>, #{v => 7}) end,
+    F().
+
+t_named_fun() ->
+    F = fun G(0) -> ai_mustache:inline(<<"n{{v}}">>, #{v => 8});
+            G(N) -> G(N - 1)
+        end,
+    F(2).
+
+t_block() ->
+    begin ai_mustache:inline(<<"g{{v}}">>, #{v => 9}) end.
+
+t_bin() ->
+    <<(ai_mustache:inline(<<"x{{v}}">>, #{v => 10}))/binary, "!">>.
+
+t_map() ->
+    #{k => ai_mustache:inline(<<"m{{v}}">>, #{v => 11})}.
+
+t_map_update(M) ->
+    M#{k := ai_mustache:inline(<<"u{{v}}">>, #{v => 12})}.
+
+t_record() ->
+    (#r{a = ai_mustache:inline(<<"d{{v}}">>, #{v => 13})})#r.a.
+
+t_record_update(R) ->
+    (R#r{b = ai_mustache:inline(<<"e{{v}}">>, #{v => 14})})#r.b.
+
+t_arg() ->
+    id(ai_mustache:inline(<<"p{{v}}">>, #{v => 15})).
+
+t_tuple() ->
+    {ai_mustache:inline(<<"q{{v}}">>, #{v => 16})}.
+
+t_cons() ->
+    [ai_mustache:inline(<<"s{{v}}">>, #{v => 17})].
+
+t_op() ->
+    ai_mustache:inline(<<"o{{v}}">>, #{v => 18}) =:= <<"o18">>.
+
+t_catch() ->
+    catch ai_mustache:inline(<<"h{{v}}">>, #{v => 19}).
+
+t_match() ->
+    X = ai_mustache:inline(<<"w{{v}}">>, #{v => 20}),
+    X.
+
+%% An inline call inside the context expression of another inline call.
+t_nested() ->
+    ai_mustache:inline(<<"[{{v}}]">>,
+                       #{v => ai_mustache:inline(<<"{{n}}">>, #{n => 21})}).
+
+id(X) -> X.
+
+new_r() -> #r{}.
+-compile({nowarn_unused_function, new_r/0}).

@@ -1,0 +1,5 @@
+{{! items.x is a comment and must not be touched }}
+{{#user}}Hello {{ user.name }}!{{/user}}
+{{# items}}{{+ items.current}}<li>{{items.name}}</li>{{/ items.current}}{{/ items}}
+{{=<% %>=}}
+<%#thing%><%thing.value%><%/thing%>

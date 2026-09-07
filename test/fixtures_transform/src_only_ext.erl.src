@@ -1,0 +1,13 @@
+%%% Never loaded by the test suite: it exists so the static-source validation
+%%% path (extension and consumer compiled in the same run, no beam yet) has
+%%% something to read.
+-module(src_only_ext).
+-behaviour(ai_mustache_ext).
+
+-export([markers/0, compile_tag/4]).
+
+markers() -> [$$].
+
+compile_tag($$, _Keys, _Body, Opts) ->
+    A = ai_mustache_ext:anno(Opts),
+    {bin, A, [{bin_element, A, {string, A, "src-only"}, default, default}]}.

@@ -1,0 +1,14 @@
+%% Carries a -mustache_template attribute so the suite can check the staleness
+%% fallback: the plugin has to touch this file when views/shared/user.mustache
+%% changes, because rebar3 cannot see that dependency by itself.
+%%
+%% The parse_transform that turns the attribute into a function is T25's; this
+%% module deliberately does not apply it, so that the fixture keeps compiling
+%% either way. Only the attribute matters here.
+-module(pb_uses_tpl).
+
+-mustache_template({user, "views/shared/user.mustache"}).
+
+-export([marker/0]).
+
+marker() -> pb_uses_tpl.

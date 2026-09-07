@@ -1,0 +1,21 @@
+%%% A block-form extension: {{%b}}text{{/b}} renders as <b>text</b>.
+%%% Its body arrives already compiled, so it is spliced straight in.
+-module(my_wrap).
+-behaviour(ai_mustache_ext).
+
+-export([markers/0, block_markers/0, compile_tag/4]).
+
+markers()       -> [$%].
+block_markers() -> [$%].
+
+compile_tag($%, [Tag], Body, Opts) ->
+    A = ai_mustache_ext:anno(Opts),
+    T = atom_to_binary(Tag, utf8),
+    mklist(A, [bin(A, <<"<", T/binary, ">">>)] ++ Body
+              ++ [bin(A, <<"</", T/binary, ">">>)]).
+
+mklist(A, [])      -> {nil, A};
+mklist(A, [H | T]) -> {cons, A, H, mklist(A, T)}.
+
+bin(A, B) -> {bin, A, [{bin_element, A, {string, A, binary_to_list(B)},
+                        default, default}]}.
