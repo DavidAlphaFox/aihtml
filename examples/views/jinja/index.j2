@@ -1,0 +1,21 @@
+{% extends "layout/base.j2" %}
+{% import "macros.j2" as m %}
+
+{% block title %}{{ super() }} — {{ title }}{% endblock %}
+
+{% block body %}
+    <h1>{{ title }}</h1>
+{% set visible = users|selectattr("visible")|list %}
+{% if visible %}
+    <ul>
+{% for u in visible %}
+{{ m.user_row(u.name, u.role|default("guest")) }}
+{% endfor %}
+    </ul>
+    <p>{{ visible|length }} of {{ users|length }} shown:
+       {{ visible|map(attribute="name")|join(", ") }}</p>
+{% else %}
+    <p>Nobody here.</p>
+{% endif %}
+    {% include "badge.j2" %}
+{% endblock %}
