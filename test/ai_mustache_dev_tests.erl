@@ -132,12 +132,18 @@ t_reload(Dir) ->
 
 %% The whole reason -mustache_source carries opts: without them reload/1 could
 %% not reproduce the original compilation.
+%%
+%% They are recorded as a SORTED LIST, not a map: a map is printed in
+%% maps:to_list/1 order, which follows the VM's atom table, so the generated
+%% file would not be byte-identical between two runs of the same build.
 t_reload_opts(Dir) ->
     Path = write(Dir, <<"{{x}}">>),
     ok = build(Path, <<"{{x}}">>),
     {ok, #{opts := Opts}} = ai_mustache_dev:source(?MOD),
-    ?assert(maps:is_key(prefix, Opts)),
-    ?assert(maps:is_key(line_map, Opts)),
+    ?assert(is_list(Opts)),
+    ?assertEqual(lists:sort(Opts), Opts),
+    ?assert(lists:keymember(prefix, 1, Opts)),
+    ?assert(lists:keymember(line_map, 1, Opts)),
     _ = write(Dir, <<"[{{x}}]">>),
     ok = ai_mustache_dev:reload(?MOD),
     ?assertEqual(<<"[V]">>, ?MOD:render(#{x => <<"V">>})).

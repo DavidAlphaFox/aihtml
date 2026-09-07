@@ -875,7 +875,7 @@ template_cases() ->
               ?assertNot(erlang:function_exported(M, greet, 1)),
               ?assertError(undef, M:greet(#{}))
       end},
-     {"ai_mustache_path:scan/1 sees exactly what the transform collected",
+     {"ai_html_path:scan/1 sees exactly what the transform collected",
       fun() ->
               %% The plugin's staleness fallback reads the .erl statically. If
               %% its idea of {Name, Path} differed from the transform's it would
@@ -884,26 +884,26 @@ template_cases() ->
               ?assertEqual({ok, [{index, "views/index.mustache"},
                                  {greet, "views/greet.mustache"},
                                  {i18n,  "views/i18n.mustache"}]},
-                           ai_mustache_path:scan(File))
+                           ai_html_path:scan(File, mustache_template))
       end},
      {"resolve/2 reports every directory it tried",
       fun() ->
               ?assertEqual({error, {not_found, ["a", "b"]}},
-                           ai_mustache_path:resolve("x.mustache", ["a", "b"])),
+                           ai_html_path:resolve("x.mustache", ["a", "b"])),
               Views = filename:join(fixture_dir(), "views"),
               ?assertEqual({ok, filename:join(Views, "greet.mustache")},
-                           ai_mustache_path:resolve("greet.mustache",
+                           ai_html_path:resolve("greet.mustache",
                                                     ["nope", Views]))
       end},
      {"template_spec/1 derives a name from the basename",
       fun() ->
               ?assertEqual({ok, {index, "a/b/index.mustache"}},
-                           ai_mustache_path:template_spec("a/b/index.mustache")),
+                           ai_html_path:template_spec("a/b/index.mustache")),
               ?assertEqual({ok, {my_page, "x.mustache"}},
-                           ai_mustache_path:template_spec({my_page, "x.mustache"})),
+                           ai_html_path:template_spec({my_page, "x.mustache"})),
               ?assertEqual({ok, {a_b, "a-b.mustache"}},
-                           ai_mustache_path:template_spec("a-b.mustache")),
-              ?assertEqual(error, ai_mustache_path:template_spec(42))
+                           ai_html_path:template_spec("a-b.mustache")),
+              ?assertEqual(error, ai_html_path:template_spec(42))
       end}].
 
 %%%===================================================================
