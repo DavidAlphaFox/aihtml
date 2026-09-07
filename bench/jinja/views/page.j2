@@ -1,0 +1,4 @@
+<h1>{{ header }}</h1>
+<ul>{% for item in items %}{% include "shared/row.j2" %}{% endfor %}</ul>
+<div>{{ raw|safe }}</div>
+{% if not missing %}<p>no items hidden</p>{% endif %}
