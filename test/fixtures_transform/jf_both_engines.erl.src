@@ -1,0 +1,11 @@
+%% Both transforms in one module, each consuming only its own attributes.
+-module(jf_both_engines).
+-compile({parse_transform, ai_mustache_transform}).
+-compile({parse_transform, ai_jinja_transform}).
+-export([m/1, j/1]).
+
+-mustache_template({legacy, "views/index.mustache"}).
+-jinja_template({page, "views/j2_simple.j2"}).
+
+m(Ctx) -> legacy(Ctx).
+j(Ctx) -> page(Ctx).

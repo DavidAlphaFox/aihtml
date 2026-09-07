@@ -1,0 +1,5 @@
+%% An inline template may not include another. Must not compile.
+-module(jf_inline_include).
+-compile({parse_transform, ai_jinja_transform}).
+-export([f/0]).
+f() -> ai_jinja:inline(~"{% include \"x.j2\" %}", #{}).

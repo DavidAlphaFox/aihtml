@@ -1,0 +1,7 @@
+%% Registers `upper', which is a builtin. Used by jf_clash.
+-module(jf_shadow).
+-behaviour(ai_jinja_ext).
+-export([filters/0, tests/0, upper/2]).
+filters() -> #{upper => {?MODULE, upper}}.
+tests()   -> #{}.
+upper(V, _A) -> V.

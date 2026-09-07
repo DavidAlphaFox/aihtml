@@ -1,0 +1,45 @@
+%% All three jinja source forms in one module. Compiled and RUN by
+%% ai_jinja_transform_tests, so everything here has to work.
+-module(jf_all).
+-compile({parse_transform, ai_jinja_transform}).
+-export([greet/1, twice/1, in_case/1, in_lc/1, in_fun/1, in_try/1,
+         in_binary/1, in_map/1, nested/1]).
+
+-jinja_ext(jf_filters).
+-jinja_template({simple, "views/j2_simple.j2"}).
+
+greet(N) -> ai_jinja:inline(~"Hi {{ n }}!", #{n => N}).
+
+%% Two expansions in one function: the generated variables must not collide.
+twice(N) ->
+    A = ai_jinja:inline(~"a{{ n }}", #{n => N}),
+    B = ai_jinja:inline(~"b{{ n }}", #{n => N}),
+    <<A/binary, B/binary>>.
+
+%% Every expression position the walker has to reach. A missed one degrades
+%% silently to the run-time path, so each gets its own case.
+in_case(N) ->
+    case N of
+        _ -> ai_jinja:inline(~"case {{ n }}", #{n => N})
+    end.
+
+in_lc(N) -> [ai_jinja:inline(~"lc {{ n }}", #{n => X}) || X <- [N]].
+
+in_fun(N) -> (fun() -> ai_jinja:inline(~"fun {{ n }}", #{n => N}) end)().
+
+in_try(N) ->
+    try ai_jinja:inline(~"try {{ n }}", #{n => N})
+    catch _:_ -> <<>>
+    end.
+
+in_binary(N) ->
+    B = ai_jinja:inline(~"bin {{ n }}", #{n => N}),
+    <<B/binary, "!">>.
+
+in_map(N) ->
+    maps:get(k, #{k => ai_jinja:inline(~"map {{ n }}", #{n => N})}).
+
+%% An inline call inside another inline call's context expression.
+nested(N) ->
+    ai_jinja:inline(~"[{{ inner }}]",
+                    #{inner => ai_jinja:inline(~"{{ n }}", #{n => N})}).

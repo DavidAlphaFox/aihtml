@@ -1,0 +1,6 @@
+%% Names a template that is not there. Must not compile.
+-module(jf_missing_template).
+-compile({parse_transform, ai_jinja_transform}).
+-export([f/0]).
+-jinja_template({gone, "views/not_here.j2"}).
+f() -> ok.

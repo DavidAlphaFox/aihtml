@@ -1,0 +1,6 @@
+%% The template itself does not parse. The diagnostic must name the .j2.
+-module(jf_broken_template).
+-compile({parse_transform, ai_jinja_transform}).
+-export([f/0]).
+-jinja_template({broken, "views/j2_broken.j2"}).
+f() -> ok.

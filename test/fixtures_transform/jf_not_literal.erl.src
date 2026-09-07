@@ -1,0 +1,5 @@
+%% A non-literal first argument: warns, and falls back to the run-time path.
+-module(jf_not_literal).
+-compile({parse_transform, ai_jinja_transform}).
+-export([f/1]).
+f(T) -> ai_jinja:inline(T, #{n => 1}).

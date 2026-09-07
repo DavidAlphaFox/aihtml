@@ -1,0 +1,6 @@
+%% Declares an extension that shadows a builtin filter. Must not compile.
+-module(jf_clash).
+-compile({parse_transform, ai_jinja_transform}).
+-export([f/0]).
+-jinja_ext(jf_shadow).
+f() -> ok.

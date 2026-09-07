@@ -1,0 +1,12 @@
+%% A jinja extension module, used by jf_all.
+-module(jf_filters).
+-behaviour(ai_jinja_ext).
+-export([filters/0, tests/0, params/0, shout/2]).
+
+filters() -> #{shout => {?MODULE, shout}}.
+tests()   -> #{}.
+params()  -> #{shout => [times]}.
+
+shout(V, Args) ->
+    N = maps:get(times, Args, 1),
+    binary:copy(<<(ai_jinja_rt:to_binary(V))/binary, "!">>, N).
