@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc -mustache_template staleness fallback.
+%%% @doc Template-attribute staleness fallback.
 %%%
 %%% The parse_transform's "compile entry point" form (designs/06 4) creates a
 %%% dependency rebar3 cannot see: my_views.erl reads views/index.mustache at
@@ -8,10 +8,13 @@
 %%% rebuild the module. The plugin closes the gap by touching the .erl.
 %%%
 %%% Both the scanning of the attribute and the resolution of its path go
-%%% through ai_mustache_path, which ai_mustache_transform also uses. That is
-%%% the whole point of that module: if the two search orders diverged, the
+%%% through ai_html_path, which each engine's parse_transform also uses. That
+%%% is the whole point of that module: if the two search orders diverged, the
 %%% plugin would touch one file while the transform read another and this
 %%% fallback would silently do nothing.
+%%%
+%%% Which attribute to look for comes from the engine, so `-jinja_template'
+%%% works exactly as `-mustache_template' does.
 %%%
 %%% NOTE ON MTIME. Everywhere else in this plugin freshness is decided by a
 %%% content stamp and mtime is explicitly ignored. Here it is the only thing
@@ -37,16 +40,16 @@ sources(#mopts{src_dirs = SrcDirs}) ->
     lists:usort(lists:append([filelib:wildcard(filename:join([D, "**", "*.erl"]))
                               || D <- SrcDirs])).
 
-one(Erl, Opts = #mopts{app_dir = AppDir}, IncDirs, {N, Errs}) ->
-    case attributes(Erl) of
+one(Erl, Opts = #mopts{app_dir = AppDir, engine = Engine}, IncDirs, {N, Errs}) ->
+    case attributes(Erl, Engine) of
         [] -> {N, Errs};
         Attrs ->
             Rel = rel(Erl, AppDir),
             lists:foldl(
               fun({_Name, Path}, {N1, E1}) ->
-                      case ai_mustache_path:resolve(Path, dirs(Erl, Opts, IncDirs)) of
+                      case ai_html_path:resolve(Path, dirs(Erl, Opts, IncDirs)) of
                           {error, {not_found, _}} ->
-                              %% Line 0: ai_mustache_path:scan/1 works on the
+                              %% Line 0: ai_html_path:scan/1 works on the
                               %% form list and does not report where each
                               %% attribute sat. The path itself identifies it.
                               {N1, [{Rel, 0, {template_not_found, Path}} | E1]};
@@ -68,7 +71,7 @@ dirs(Erl, #mopts{views_rel = Rel, views_dir = Abs}, IncDirs) ->
 maybe_touch(Tpl, Erl) ->
     case {mtime(Tpl), mtime(Erl)} of
         {T, E} when T > E, T > 0 ->
-            rebar_api:debug("mustache: touching ~ts (template ~ts is newer)",
+            rebar_api:debug("aihtml: touching ~ts (template ~ts is newer)",
                             [Erl, Tpl]),
             %% Only when it is actually stale. Touching unconditionally would
             %% rebuild these modules on every single `rebar3 compile'.
@@ -82,19 +85,25 @@ maybe_touch(Tpl, Erl) ->
 %% when almost none of them mention the attribute, so cheap-check the text
 %% first. A file that cannot be parsed contributes nothing rather than failing
 %% the build: it is the compiler's job to complain about it, not ours.
-attributes(File) ->
+attributes(File, Engine) ->
+    Attr = template_attribute(Engine),
     case file:read_file(File) of
         {error, _} -> [];
         {ok, Bin} ->
-            case binary:match(Bin, <<"mustache_template">>) of
+            case binary:match(Bin, atom_to_binary(Attr, utf8)) of
                 nomatch -> [];
                 _ ->
-                    case ai_mustache_path:scan(File) of
+                    case ai_html_path:scan(File, Attr) of
                         {ok, Templates} -> Templates;
                         {error, _}      -> []
                     end
             end
     end.
+
+%% -mustache_template / -jinja_template. Derived from the engine's banner tag
+%% rather than added as a tenth callback: the two names are the same word.
+template_attribute(Engine) ->
+    list_to_atom(Engine:banner_tag() ++ "_template").
 
 mtime(File) ->
     case file:read_file_info(File, [{time, posix}]) of

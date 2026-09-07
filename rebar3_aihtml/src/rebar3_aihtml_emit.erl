@@ -1,9 +1,9 @@
 %%%-------------------------------------------------------------------
 %%% @doc Template -> generated .erl text, and atomic write-out.
 %%%
-%%% The pipeline is parser -> ai_mustache_compiler:forms/2 -> erl_prettypr.
-%%% forms/2 runs ai_mustache_ast:postprocess/2 itself, so there is no separate
-%%% post-processing step here, and it returns no {eof, _} terminator.
+%%% The pipeline is Engine:parse/2 -> Engine:forms/2 -> erl_prettypr. forms/2
+%%% runs the AST passes itself, so there is no separate post-processing step
+%%% here, and it returns no {eof, _} terminator.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(rebar3_aihtml_emit).
@@ -19,31 +19,38 @@
 %% check does not go through the compiler's `views' option.
 render(#tpl{source = Body, rel_path = Rel, module = Mod, stamp = Stamp,
             mtime = Mtime},
-       #mopts{compiler_opts = CO}, Available) ->
-    Opts = CO#{module => Mod,
-               source => unicode:characters_to_binary(Rel),
+       #mopts{engine = Engine, engine_opts = CO, views_dir = Views,
+              suffix = Suffix} = Opts, Available) ->
+    EOpts = CO#{module => Mod,
+                source => unicode:characters_to_binary(Rel),
+                %% Resolved here, and deliberately absent from the stamp: an
+                %% engine that checks its own targets needs an app-absolute
+                %% path, and an absolute path in the stamp would make the
+                %% build different on every machine.
+                views_abs => unicode:characters_to_binary(Views),
+                suffix    => unicode:characters_to_binary(Suffix),
                %% stamp and mtime reach the -mustache_source attribute through
                %% here; the compiler never stats a file itself. Neither key is
                %% part of normalize_opts/1, so feeding the stamp back in cannot
                %% make the stamp depend on itself.
-               stamp  => Stamp,
-               mtime  => Mtime},
-    case ai_mustache_parser:parse(Body, Opts) of
+                stamp  => Stamp,
+                mtime  => Mtime},
+    case Engine:parse(Body, EOpts) of
         {error, _} = E -> E;
         {ok, Nodes} ->
-            case rebar3_aihtml_check:partials_exist(Nodes, Available, Rel) of
-                []   -> compile(Nodes, Opts, Rel);
+            case rebar3_aihtml_check:partials_exist(Nodes, Available, Rel, Opts) of
+                []   -> compile(Nodes, EOpts, Rel, Engine);
                 Errs -> {errors, Errs}
             end
     end.
 
-compile(Nodes, Opts, Rel) ->
-    case ai_mustache_compiler:forms(Nodes, Opts) of
+compile(Nodes, EOpts, Rel, Engine) ->
+    case Engine:forms(Nodes, EOpts) of
         {error, _} = E     -> E;
-        {ok, Forms, _Deps} -> {ok, text(Forms, Rel)}
+        {ok, Forms, _Deps} -> {ok, text(Forms, Rel, Engine)}
     end.
 
-text(Forms, Rel) ->
+text(Forms, Rel, Engine) ->
     Body = erl_prettypr:format(erl_syntax:form_list(Forms)),
     %% erl_prettypr drops comments, so the banner is prepended as text rather
     %% than smuggled in as a form.
@@ -55,13 +62,21 @@ text(Forms, Rel) ->
     %% wrote byte-per-character literals and needed `%% coding: latin-1' to
     %% survive; that is no longer the case, and declaring latin-1 now would
     %% itself corrupt the output.)
-    Header = [?R3A_BANNER, Rel, ?R3A_DONT_EDIT, "\n",
+    Header = [banner(Engine, Rel), "\n",
               "%%\n",
-              "%% The `stamp' of -mustache_source is the combined digest of the\n"
+              "%% The `stamp' of the source attribute is the combined digest of the\n"
               "%% template body, the normalised compile options and the generated\n"
               "%% code version -- not a digest of the template text. `mtime' is\n"
               "%% recorded for diagnostics only; nothing decides anything from it.\n\n"],
     unicode:characters_to_binary([Header, Body, "\n"]).
+
+%% @doc The first line of a generated file.
+%%
+%% The engine tag is what lets two engines share an out_dir: the orphan
+%% collector only removes files whose banner names its own engine.
+banner(Engine, Rel) ->
+    [?R3A_BANNER_PREFIX, " (", Engine:banner_tag(), ") from ", Rel,
+     ?R3A_DONT_EDIT].
 
 %% @doc Write Bin to Path, atomically, and only if it would change the file.
 %%

@@ -5,9 +5,9 @@
 %%%   views/shared/item.mustache    -> view_shared_item
 %%%   views/layout/default.mustache -> view_layout_default
 %%%
-%%% The mapping itself is NOT implemented here: it is
-%%% ai_mustache_ast:module_name/2, which the compiler also uses to turn
-%%% `{{> shared/item}}' into a module name. Two implementations would drift
+%%% The mapping itself is NOT implemented here: it is Engine:module_name/2,
+%%% which the compiler also uses to turn a template reference into a module
+%%% name. Two implementations would drift
 %%% and the plugin would then write view_shared_item.erl while the parent
 %%% template called some other module. This module only computes the name a
 %%% path reduces to, validates that the result is a bare Erlang atom, and
@@ -42,10 +42,8 @@ rel(AbsPath, Dir) ->
     end.
 
 %% @doc Module for a views-relative template name.
-module_of(Name, #mopts{compiler_opts = CO}) ->
-    ai_mustache_ast:module_name(Name, CO);
-module_of(Name, Opts) when is_map(Opts) ->
-    ai_mustache_ast:module_name(Name, Opts).
+module_of(Name, #mopts{engine = Engine, engine_opts = CO}) ->
+    Engine:module_name(Name, CO).
 
 %% @doc out_dir/<module>.erl. Generated files are flat; no subdirectories.
 out_file(Mod, #mopts{out_dir = Dir}) ->

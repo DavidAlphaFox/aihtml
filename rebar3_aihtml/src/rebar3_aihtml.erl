@@ -14,9 +14,10 @@
 init(State) ->
     ok = ensure_core(),
     lists:foldl(fun(M, {ok, S}) -> M:init(S) end, {ok, State},
-                [rebar3_aihtml_prv, rebar3_aihtml_migrate]).
+                [rebar3_aihtml_prv, rebar3_aihtml_jinja,
+                 rebar3_aihtml_migrate]).
 
-%% @doc Make ai_mustache_compiler and friends reachable from the rebar3 VM.
+%% @doc Make the compile cores reachable from the rebar3 VM.
 %%
 %% The parent app's src/ is built through extra_src_dirs (see rebar.config for
 %% why it cannot be src_dirs), which puts those beams next to the plugin's own

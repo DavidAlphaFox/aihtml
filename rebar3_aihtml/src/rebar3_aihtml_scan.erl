@@ -17,7 +17,7 @@
 
 -include("rebar3_aihtml.hrl").
 
--export([templates/1, meta/1, stamp_of/1, partials_of/1]).
+-export([templates/1, meta/2, stamp_of/2, partials_of/2]).
 
 %% @doc Every template under views_dir, sorted by path.
 %%
@@ -41,7 +41,8 @@ escape_re(S) ->
                   end, S).
 
 describe(Abs, Opts = #mopts{app_dir = AppDir, views_dir = ViewsDir,
-                            suffix = Suffix, compiler_opts = CO}) ->
+                            suffix = Suffix, engine = Engine,
+                            engine_opts = CO}) ->
     Name = rebar3_aihtml_name:name_of(Abs, ViewsDir, Suffix),
     Mod  = rebar3_aihtml_name:module_of(Name, Opts),
     Rel  = relative(Abs, AppDir),
@@ -58,7 +59,7 @@ describe(Abs, Opts = #mopts{app_dir = AppDir, views_dir = ViewsDir,
                  %% The one and only place a stamp comes from. Computing it
                  %% here instead of in the plugin keeps the plugin and
                  %% ai_mustache_dev from ever disagreeing about freshness.
-                 stamp    = ai_mustache_compiler:source_hash(Body, CO),
+                 stamp    = Engine:source_hash(Body, CO),
                  mtime    = mtime(Abs)}
     end.
 
@@ -82,6 +83,9 @@ relative(Abs, Dir) ->
 
 %% @doc What a generated .erl says about itself.
 %%
+%% The engine says which attribute to look for; everything else about the
+%% scan is the same for all of them.
+%%
 %% Returns #{stamp => binary(), source => map(), partials => [module()]} or
 %% `error' if the file is absent, truncated, hand-mangled or simply not one of
 %% ours. `error' always means "recompile it", never "abort the build": a
@@ -91,7 +95,7 @@ relative(Abs, Dir) ->
 %% be from an older build and would answer for the wrong source. Scanning is
 %% incremental and stops as soon as partials/0 has been seen, so the (possibly
 %% very large) render body is never tokenised.
-meta(File) ->
+meta(File, Engine) ->
     case file:read_file(File) of
         {error, _} -> error;
         {ok, Bin}  ->
@@ -99,16 +103,16 @@ meta(File) ->
             %% them as bytes would split a multi-byte character inside a
             %% <<"..."/utf8>> literal and the tokeniser would give up.
             case unicode:characters_to_list(Bin, utf8) of
-                Chars when is_list(Chars) -> forms(Chars, 1, #{});
+                Chars when is_list(Chars) -> forms(Chars, 1, #{}, Engine:attribute());
                 _                         -> error
             end
     end.
 
-forms(Chars, Loc, Acc) ->
+forms(Chars, Loc, Acc, Attr) ->
     case erl_scan:tokens([], Chars, Loc) of
         {done, {ok, Toks, Loc1}, Rest} ->
             case erl_parse:parse_form(Toks) of
-                {ok, Form} -> absorb(Form, Rest, Loc1, Acc);
+                {ok, Form} -> absorb(Form, Rest, Loc1, Acc, Attr);
                 {error, _} -> error
             end;
         _ ->
@@ -116,17 +120,18 @@ forms(Chars, Loc, Acc) ->
             finish(Acc)
     end.
 
-absorb({attribute, _, mustache_source, Map}, Rest, Loc, Acc) when is_map(Map) ->
-    forms(Rest, Loc, Acc#{source => Map});
-absorb({function, _, partials, 0, [{clause, _, [], [], [Expr]}]}, _Rest, _Loc, Acc) ->
+absorb({attribute, _, Attr, Map}, Rest, Loc, Acc, Attr) when is_map(Map) ->
+    forms(Rest, Loc, Acc#{source => Map}, Attr);
+absorb({function, _, partials, 0, [{clause, _, [], [], [Expr]}]}, _Rest, _Loc, Acc,
+       _Attr) ->
     %% partials/0 is the last header form we care about; stop here.
     try erl_parse:normalise(Expr) of
         L when is_list(L) -> finish(Acc#{partials => L});
         _                 -> error
     catch _:_ -> error
     end;
-absorb(_Form, Rest, Loc, Acc) ->
-    forms(Rest, Loc, Acc).
+absorb(_Form, Rest, Loc, Acc, Attr) ->
+    forms(Rest, Loc, Acc, Attr).
 
 finish(Acc) ->
     case Acc of
@@ -137,15 +142,15 @@ finish(Acc) ->
     end.
 
 %% @doc The recorded build stamp, or `error'.
-stamp_of(File) ->
-    case meta(File) of
+stamp_of(File, Engine) ->
+    case meta(File, Engine) of
         {ok, #{stamp := S}} -> {ok, S};
         error               -> error
     end.
 
 %% @doc The modules a generated module calls as partials, or `error'.
-partials_of(File) ->
-    case meta(File) of
+partials_of(File, Engine) ->
+    case meta(File, Engine) of
         {ok, #{partials := P}} -> {ok, P};
         error                  -> error
     end.

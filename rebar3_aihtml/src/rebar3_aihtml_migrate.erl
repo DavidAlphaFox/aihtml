@@ -64,7 +64,7 @@ format_error(Reason) -> rebar3_aihtml_prv:format_error(Reason).
 %%%===================================================================
 
 app(AppInfo, State, Write, Verbose, Acc) ->
-    case rebar3_aihtml_opts:for_app(AppInfo, State) of
+    case rebar3_aihtml_opts:for_app(AppInfo, State, ai_mustache_engine) of
         skip       -> Acc;
         {ok, Opts} ->
             %% Exactly the scan the compile provider does, so migrate can never
@@ -75,7 +75,7 @@ app(AppInfo, State, Write, Verbose, Acc) ->
     end.
 
 one(#tpl{abs_path = Abs, rel_path = Rel, source = Body, module = Mod},
-    #mopts{compiler_opts = CO}, Write, Verbose, {Files, Rewrites, Manual}) ->
+    #mopts{engine_opts = CO}, Write, Verbose, {Files, Rewrites, Manual}) ->
     Opts = CO#{module => Mod, source => unicode:characters_to_binary(Rel)},
     case rebar3_aihtml_rewrite:file(Body, Opts) of
         {error, {File, Line, Reason}} ->

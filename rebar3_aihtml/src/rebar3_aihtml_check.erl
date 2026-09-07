@@ -18,7 +18,7 @@
 -include("rebar3_aihtml.hrl").
 
 -export([collisions/2, handwritten/2, cross_app/1,
-         stale_partials/2, partials_exist/3]).
+         stale_partials/2, partials_exist/4]).
 
 %%%===================================================================
 %%% 1. Module name collisions
@@ -105,11 +105,11 @@ cross_app(PerApp) ->
 %%
 %% A generated file that cannot be read back counts as needing a rebuild, in
 %% line with the stamp check.
-stale_partials(Tpls, _Opts) ->
+stale_partials(Tpls, #mopts{engine = Engine}) ->
     Available = sets:from_list([M || #tpl{module = M} <- Tpls], [{version, 2}]),
     lists:foldl(
       fun(#tpl{module = Mod, out_path = Out}, Acc) ->
-              case rebar3_aihtml_scan:partials_of(Out) of
+              case rebar3_aihtml_scan:partials_of(Out, Engine) of
                   error      -> Acc;   % no file, or unreadable: already rebuilt
                   {ok, Deps} ->
                       case [D || D <- Deps, not sets:is_element(D, Available)] of
@@ -119,7 +119,8 @@ stale_partials(Tpls, _Opts) ->
               end
       end, sets:new([{version, 2}]), Tpls).
 
-%% @doc Check every {{> name}} in a parsed template against the template set.
+%% @doc Check every {{> name}} in a parsed mustache template against the
+%% template set.
 %%
 %% This is the check ai_mustache_ast:resolve_partials/2 would do from the
 %% `views' option, done here instead. resolve_partials/2 probes the file
@@ -128,8 +129,15 @@ stale_partials(Tpls, _Opts) ->
 %% it an absolute views path would stamp the developer's home directory into
 %% every generated module. The template set the plugin already scanned answers
 %% the same question with neither problem.
-partials_exist(Nodes, Available, Rel) ->
-    lists:reverse(walk(Nodes, Available, Rel, [])).
+%%
+%% The jinja engine needs nothing here: its targets carry their suffix, so the
+%% plugin hands it `views_abs' and ai_jinja_ast checks the file system with a
+%% path that is already app-absolute -- and `views_abs' is excluded from the
+%% stamp, so no absolute path reaches a generated module either way.
+partials_exist(Nodes, Available, Rel, #mopts{engine = ai_mustache_engine}) ->
+    lists:reverse(walk(Nodes, Available, Rel, []));
+partials_exist(_Nodes, _Available, _Rel, _Opts) ->
+    [].
 
 walk([], _Avail, _Rel, Acc) ->
     Acc;

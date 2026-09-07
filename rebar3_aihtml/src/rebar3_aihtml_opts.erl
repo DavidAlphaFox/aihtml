@@ -10,7 +10,7 @@
 
 -include("rebar3_aihtml.hrl").
 
--export([for_app/2, raw/2, normalize/3, known_keys/0]).
+-export([for_app/3, raw/3, normalize/4, known_keys/1]).
 
 %% @doc Build the normalised options for one app, or skip it.
 %%
@@ -18,16 +18,17 @@
 %% umbrella have no templates, and making them all configure their way out of
 %% the plugin would be noise. out_dir is not created here either -- nothing to
 %% generate means nothing to create.
-for_app(AppInfo, State) ->
+for_app(AppInfo, State, Engine) ->
     AppDir = rebar_app_info:dir(AppInfo),
-    Raw = raw(AppInfo, State),
-    Opts = normalize(Raw, AppDir, AppInfo),
+    Raw = raw(AppInfo, State, Engine),
+    Opts = normalize(Raw, AppDir, AppInfo, Engine),
     case filelib:is_dir(Opts#mopts.views_dir) of
         true  -> {ok, Opts};
         false -> skip
     end.
 
-%% @doc mustache_opts with app level entries overriding project level ones.
+%% @doc The engine's options block, with app level entries overriding project
+%% level ones.
 %%
 %% Three sources, each overriding the previous key by key: the project's
 %% rebar.config, whatever rebar3 resolved for the app, and the app's own
@@ -39,16 +40,17 @@ for_app(AppInfo, State) ->
 %% and `apps/b/rebar.config' would have no effect at all. It is still consulted
 %% first, because a profile or an `overrides' directive does reach it and that
 %% must not be thrown away.
-raw(AppInfo, State) ->
-    Project = to_proplist(rebar_state:get(State, mustache_opts, [])),
-    Resolved = to_proplist(rebar_app_info:get(AppInfo, mustache_opts, [])),
-    Own = own_config(rebar_app_info:dir(AppInfo)),
+raw(AppInfo, State, Engine) ->
+    Key = Engine:config_key(),
+    Project = to_proplist(rebar_state:get(State, Key, [])),
+    Resolved = to_proplist(rebar_app_info:get(AppInfo, Key, [])),
+    Own = own_config(rebar_app_info:dir(AppInfo), Key),
     lists:foldl(fun({K, V}, Acc) -> lists:keystore(K, 1, Acc, {K, V}) end,
                 Project, Resolved ++ Own).
 
-own_config(AppDir) ->
+own_config(AppDir, Key) ->
     case file:consult(filename:join(AppDir, "rebar.config")) of
-        {ok, Terms} -> to_proplist(proplists:get_value(mustache_opts, Terms, []));
+        {ok, Terms} -> to_proplist(proplists:get_value(Key, Terms, []));
         {error, _}  -> []
     end.
 
@@ -61,20 +63,21 @@ normalise_entry({K, V}) -> {K, V};
 normalise_entry(K) when is_atom(K) -> {K, true};
 normalise_entry(Other) -> {'$invalid', Other}.
 
-known_keys() -> ?R3A_KNOWN_KEYS.
+known_keys(Engine) -> Engine:known_keys().
 
 %% @doc Turn a raw proplist into #mopts{}.
-normalize(Raw, AppDir, AppInfo) ->
+normalize(Raw, AppDir, AppInfo, Engine) ->
     Wae = boolean_opt(warnings_as_errors, Raw, false),
-    ok = check_unknown(Raw, Wae),
+    ok = check_unknown(Raw, Wae, Engine),
     Views  = string_opt(views,   Raw, ?R3A_DEFAULT_VIEWS),
     OutRel = string_opt(out_dir, Raw, ?R3A_DEFAULT_OUT_DIR),
-    Suffix = string_opt(suffix,  Raw, ?R3A_DEFAULT_SUFFIX),
-    Prefix = prefix(Raw),
+    Suffix = string_opt(suffix,  Raw, Engine:default_suffix()),
+    Prefix = prefix(Raw, Engine),
     Exts   = extensions(Raw),
     ExtOpts = ext_opts(Raw),
     LineMap = boolean_opt(line_map, Raw, true),
-    #mopts{app_name   = rebar_app_info:name(AppInfo),
+    #mopts{engine     = Engine,
+           app_name   = rebar_app_info:name(AppInfo),
            app_dir    = AppDir,
            ebin_dir   = rebar_app_info:ebin_dir(AppInfo),
            src_dirs   = src_dirs(AppInfo, AppDir),
@@ -98,24 +101,37 @@ normalize(Raw, AppDir, AppInfo) ->
            %% for an umbrella app. rebar3_aihtml_check does that check instead,
            %% against the template set the plugin already scanned, which is both
            %% correct under umbrellas and independent of the cwd.
-           compiler_opts = #{prefix     => Prefix,
-                             extensions => lists:usort(Exts),
-                             ext_opts   => ExtOpts,
-                             line_map   => LineMap}}.
+           engine_opts = maps:merge(#{prefix     => Prefix,
+                                      extensions => lists:usort(Exts),
+                                      ext_opts   => ExtOpts,
+                                      line_map   => LineMap},
+                                    engine_flags(Raw, Engine))}.
+
+%% The booleans an engine adds of its own. Every one of them changes the
+%% generated code, so every one is in the stamp; a key the engine does not
+%% declare is simply not there, and check_unknown/3 has already rejected it.
+engine_flags(Raw, Engine) ->
+    Known = Engine:known_keys(),
+    Flags = [{escape, true}, {trim_blocks, true}, {lstrip_blocks, true},
+             {keep_trailing_newline, false}, {strict_undefined, false}],
+    maps:from_list([{K, boolean_opt(K, Raw, D)}
+                    || {K, D} <- Flags, lists:member(K, Known)]).
 
 src_dirs(AppInfo, AppDir) ->
     Dirs = try rebar_dir:src_dirs(rebar_app_info:opts(AppInfo), ["src"])
            catch _:_ -> ["src"] end,
     [filename:join(AppDir, D) || D <- Dirs].
 
-check_unknown(Raw, Wae) ->
-    Known = known_keys(),
+check_unknown(Raw, Wae, Engine) ->
+    Known = known_keys(Engine),
     case [K || {K, _} <- Raw, not lists:member(K, Known)] of
         [] -> ok;
         Unknown ->
+            %% Naming the block matters when two are configured: a mustache
+            %% key written into jinja_opts is otherwise a mystery.
             Msg = io_lib:format(
-                    "unknown mustache_opts key(s) ~p; supported keys are ~p",
-                    [Unknown, Known]),
+                    "unknown ~p key(s) ~p; supported keys are ~p",
+                    [Engine:config_key(), Unknown, Known]),
             case Wae of
                 true  -> throw({rebar3_aihtml, {bad_opts, lists:flatten(Msg)}});
                 false -> rebar_api:warn("mustache: ~s", [Msg]), ok
@@ -138,8 +154,9 @@ boolean_opt(Key, Raw, Default) ->
 %% The prefix has to make the module name a bare Erlang atom. An empty prefix
 %% is legal, but then the template name itself has to start with a lowercase
 %% letter -- rebar3_aihtml_name enforces that half.
-prefix(Raw) ->
-    P = string_opt(prefix, Raw, ?R3A_DEFAULT_PREFIX),
+prefix(Raw, Engine) ->
+    P = string_opt(prefix, Raw,
+                   unicode:characters_to_list(Engine:default_prefix())),
     case valid_prefix(P) of
         true  -> unicode:characters_to_binary(P);
         false -> throw({rebar3_aihtml, {bad_prefix, P}})
