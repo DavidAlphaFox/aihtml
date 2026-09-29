@@ -9,10 +9,13 @@ start(_Type, _Args) ->
     ok = aihtml_example_store:init(),
     {ok, Sup} = aihtml_example_sup:start_link(),
     Port = application:get_env(aihtml_example, port, 8080),
-    %% "/" is the action demo: each event is one stateless request.
+    %% "/" is the landing page, /components/:name the component docs, and
+    %% "/demo" the live action demo (each event one stateless request).
     %% aihtml_cowboy adds the action endpoint and the /aihtml/ assets.
-    Actions = [{"/", aihtml_example_actions, #{}},
-               {"/components", aihtml_example_gallery, #{}} | aihtml_cowboy:routes(#{})],
+    Actions = [{"/", aihtml_example_home, #{}},
+               {"/components", aihtml_example_docs, #{}},
+               {"/components/:name", aihtml_example_docs, #{}},
+               {"/demo", aihtml_example_actions, #{}} | aihtml_cowboy:routes(#{})],
     %% "/fetch" is the lower-level variant: HTML fragments from plain URLs.
     Fetch = [{"/fetch", aihtml_example_page, #{}},
              {"/counter", aihtml_example_api, counter},

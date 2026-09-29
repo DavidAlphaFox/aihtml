@@ -31,17 +31,14 @@ page(View) ->
           [<<"min-h-screen">>], []).
 
 top_bar() ->
-    header('div'(['div'([h1(<<"aihtml actions">>, [<<"text-xl font-bold font-heading">>], []),
-                         p([<<"Server time ">>,
-                            span(aihtml_example_clock:now_text(), [<<"font-mono">>],
-                                 [{id, clock}, subscribe(clock)]),
-                            <<" · One stateless request per event · "/utf8>>,
-                            a(<<"fragment demo">>, [<<"underline">>], [{href, <<"/fetch">>}])],
-                           [<<"text-sm text-muted">>], [])]),
-                  theme_switcher([], [])],
-                 [<<"mx-auto max-w-5xl px-4 py-4 flex flex-wrap items-end justify-between gap-4">>],
-                 []),
-           [<<"bg-surface border-b border-line">>], []).
+    [aihtml_example_site:topbar(demo),
+     'div'(['div'([h1(<<"实时演示"/utf8>>, [<<"text-2xl font-bold">>], []),
+                   p([<<"每个事件一次无状态请求 · 服务器时间 "/utf8>>,
+                      span(aihtml_example_clock:now_text(), [<<"font-mono">>],
+                           [{id, clock}, subscribe(clock)])],
+                     [<<"text-sm text-muted mt-1">>], [])]),
+            theme_switcher([], [])],
+           [<<"mx-auto max-w-5xl px-4 pt-8 flex flex-wrap items-end justify-between gap-4">>], [])].
 
 %% The count lives in the data layer, so every visitor shares it.
 counter_card() ->
@@ -148,11 +145,11 @@ action(greet, _, #{value := V}, Ctx) ->
 action(load_processes, _, _Ev, Ctx) ->
     loading(Ctx),
     aihtml_action:html(Ctx, {id, data}, processes_table()),
-    aihtml_action:push_url(Ctx, <<"/?view=processes">>);
+    aihtml_action:push_url(Ctx, <<"/demo?view=processes">>);
 action(load_system, _, _Ev, Ctx) ->
     loading(Ctx),
     aihtml_action:html(Ctx, {id, data}, system_info()),
-    aihtml_action:push_url(Ctx, <<"/?view=system">>);
+    aihtml_action:push_url(Ctx, <<"/demo?view=system">>);
 action(sum, _, #{values := Vs}, Ctx) ->
     Html = try
                binary_to_integer(maps:get(<<"a">>, Vs)) + binary_to_integer(maps:get(<<"b">>, Vs))

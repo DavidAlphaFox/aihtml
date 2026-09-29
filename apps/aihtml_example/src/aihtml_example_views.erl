@@ -22,11 +22,10 @@ index() ->
 %%%===================================================================
 
 top_bar() ->
-    header('div'([h1(<<"aihtml">>, [<<"text-xl font-bold font-heading">>], []),
-                  theme_switcher([], [])],
-                 [<<"mx-auto max-w-5xl px-4 py-4 flex flex-wrap items-end justify-between gap-4">>],
-                 []),
-           [<<"bg-surface border-b border-line">>], []).
+    [aihtml_example_site:topbar(fetch),
+     'div'([h1(<<"片段模式"/utf8>>, [<<"text-2xl font-bold">>], []),
+            theme_switcher([], [])],
+           [<<"mx-auto max-w-5xl px-4 pt-8 flex flex-wrap items-end justify-between gap-4">>], [])].
 
 intro() ->
     section([p([<<"Each part of this page is an Erlang function call that renders "
