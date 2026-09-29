@@ -1,0 +1,11 @@
+/* aihtml additions for formatted_input (aihtml_formatted_input). */
+
+/* formatted_input: the radix menu is rendered in the root and pinned by
+   AH.float; the keyboard-highlighted item */
+.ah-fmt-popup-item-hover {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-fmt-popup-item-active.ah-fmt-popup-item-hover {
+  background: var(--ah-color-primary-lighter);
+}
