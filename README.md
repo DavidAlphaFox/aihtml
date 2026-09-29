@@ -37,7 +37,7 @@ login() ->
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
 | `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
 | `apps/aihtml/assets/js` | 运行时 `core.js` 与各组件行为，由 `scripts/build-js.mjs` 拼成 `aihtml.js` |
-| `apps/aihtml_example` | cowboy 示例：`/` 是 action 模式，`/components` 是组件总览，`/fetch` 是 URL 片段模式 |
+| `apps/aihtml_example` | cowboy 示例站：`/` 首页，`/components/:name` 组件文档（演示、代码、API），`/demo` 实时演示，`/fetch` URL 片段模式。组件示例 `aihtml_example_demo_*` 也在这里，不在库里 |
 | `scripts/` | 构建与测试脚本：样式移植、JS 构建、模板编译器、门面生成、预览 |
 | `designs/` | 设计文档 |
 
@@ -59,7 +59,12 @@ login() ->
 
 **Attrs**：proplist 或 map，可以嵌套列表。`true` 输出布尔属性，`false`、`undefined` 会被省略，`aria_label` 写成 `aria-label`，`{data, #{k => v}}` 展开为 `data-k`。后出现的同名属性覆盖前面的，`class` 则累加。checkbox、radio、switch 的 Attrs 作用在内部的 `<input>` 上。
 
-预制件清单、修饰符、选项和事件都在 `aihtml_catalog:prefabs/0` 中，示例应用的 `/components` 页面逐个展示。
+预制件清单、修饰符、选项、事件和方法都在 `aihtml_catalog:prefabs/0` 中。示例站的 `/components/:name` 为每个组件提供文档页，参照 sigil 的样式，分三个标签：
+- **演示**：实时示例，下方附渲染它的 Erlang 函数源码。
+- **代码**：该组件的全部示例函数。
+- **API**：签名、修饰符、选项、事件、方法、CSS 类名。
+
+示例写在 `apps/aihtml_example/src/aihtml_example_demo_<group>.erl`，写法见 `designs/04-components.md`。
 
 ## 组件
 
@@ -370,9 +375,10 @@ npm install
 npm run build          # 复制 jQuery，编译模板并拼出 aihtml.js，构建 aihtml.css 与 example.css
 npm test               # 模板编译器的 Mustache 规范用例 + 浏览器端测试（无头 Chromium）
 
-rebar3 shell           # 启动示例：http://localhost:8080/、/components、/fetch
+rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、/components、/demo、/fetch
 ```
 
+- **配置文件分两份**：`rebar3 shell` 读取 `config/shell.config`（普通 Erlang 配置）；release 读取 `config/sys.config.src`，其中的 `${VAR}` 只有 release 启动脚本会替换，rebar3 shell 读不了它。
 - **新增或修改组件后**，重新生成门面和头文件：`rebar3 compile && escript scripts/gen-facade.escript`。
 - **模板一致性**由 EUnit 的 `aihtml_tpl_tests` 检查，需要能调用 `node`。
 - **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行。
