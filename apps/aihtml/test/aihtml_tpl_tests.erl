@@ -38,15 +38,21 @@ project_root(Dir) ->
 fixtures_file(Name) ->
     filename:join(aihtml_tpl:dir(), <<Name/binary, ".fixtures.json">>).
 
-%% tpl_<name>/1 exported by one of the component modules
+%% tpl_<name>/1 exported by one of aihtml's modules (a component module,
+%% or a shared aihtml_lib_* module when several components use the template)
 erlang_fun(Name) ->
     F = binary_to_atom(<<"tpl_", Name/binary>>),
-    case [M || M <- aihtml_catalog:groups(),
+    case [M || M <- aihtml_modules(),
                code:ensure_loaded(M) =:= {module, M},
                erlang:function_exported(M, F, 1)] of
         [M | _] -> fun M:F/1;
         [] -> none
     end.
+
+%% Every aihtml_* module on the code path, the first copy of each name.
+aihtml_modules() ->
+    lists:usort([list_to_atom(filename:basename(B, ".beam"))
+                 || D <- code:get_path(), B <- filelib:wildcard("aihtml_*.beam", D)]).
 
 %% JSON objects -> maps with atom keys (beamai_render looks keys up as
 %% atoms); strings stay binaries, null stays null (falsy on both sides).
