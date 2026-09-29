@@ -80,6 +80,28 @@
 @import "./sigil/components/ranking_list.css";
 @import "./sigil/components/tag_cloud.css";
 
+/* second batch */
+@import "./sigil/components/calendar.css";
+@import "./sigil/components/datetime_input.css";
+@import "./sigil/components/cascader.css";
+@import "./sigil/components/listbox.css";
+@import "./sigil/components/transfer.css";
+@import "./sigil/components/masked_input.css";
+@import "./sigil/components/formatted_input.css";
+@import "./sigil/components/range_selector.css";
+@import "./sigil/components/upload.css";
+@import "./sigil/components/tree.css";
+@import "./sigil/components/diff.css";
+@import "./sigil/components/heatmap_calendar.css";
+@import "./sigil/components/scrollview.css";
+@import "./sigil/components/scrollbar.css";
+@import "./sigil/components/responsive_panel.css";
+@import "./sigil/components/activity_bar.css";
+@import "./sigil/components/navigationbar.css";
+@import "./sigil/components/command.css";
+@import "./sigil/components/sortable.css";
+@import "./sigil/components/dragdrop.css";
+
 /* aihtml additions per component group */
 @import "./extra/form_buttons.css";
 @import "./extra/form_choice.css";
@@ -91,4 +113,12 @@
 @import "./extra/layout_nav.css";
 @import "./extra/overlay.css";
 @import "./extra/display.css";
+@import "./extra/form_calendar.css";
+@import "./extra/form_lists.css";
+@import "./extra/form_entry.css";
+@import "./extra/form_upload.css";
+@import "./extra/data_tree.css";
+@import "./extra/layout_scroll.css";
+@import "./extra/layout_bars.css";
+@import "./extra/layout_dnd.css";
 @import "./aihtml-base.css";
