@@ -1,0 +1,83 @@
+/* aihtml additions for field (aihtml_field); sigil styles live in
+   ../sigil/components. The rows of form_layout share this
+   markup. */
+
+.ah-form-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-form-row-top > .ah-form-body,
+.ah-form-row-bottom > .ah-form-body {
+  width: 100%;
+}
+
+/* Left/right labels line up with the first line of a 36px control even
+   when help or error text follows it. */
+.ah-form-row:not(.ah-form-row-top):not(.ah-form-row-bottom):not(.ah-form-columns),
+.ah-form-col:not(.ah-form-row-top):not(.ah-form-row-bottom) {
+  align-items: flex-start;
+}
+
+.ah-form-row:not(.ah-form-row-top):not(.ah-form-row-bottom) > .ah-form-label,
+.ah-form-col:not(.ah-form-row-top):not(.ah-form-row-bottom) > .ah-form-label {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+}
+
+.ah-form-field {
+  min-height: 36px;
+}
+
+.ah-form-help {
+  margin-top: 4px;
+  padding: 0 2px;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-form-row-invalid .ah-form-help {
+  display: none;
+}
+
+.ah-form-row-invalid .ah-input,
+.ah-form-row-invalid textarea {
+  border-color: var(--ah-color-danger);
+}
+
+/* label on the right: keep label and control together on the left */
+.ah-form-row-right {
+  justify-content: flex-end;
+}
+
+.ah-form-row-right > .ah-form-body {
+  flex: 0 1 auto;
+}
+
+/* validator bubble placed by AH.float: the arrow faces the control from
+   whichever side was used (sigil's .ah-validator-arrow-* geometry) */
+.ah-validator-hint[data-ah-placement="right"] .ah-validator-arrow {
+  left: -12px; top: 50%; transform: translateY(-50%);
+  border-right-color: var(--ah-color-danger, #e53935);
+}
+.ah-validator-hint[data-ah-placement="left"] .ah-validator-arrow {
+  right: -12px; top: 50%; transform: translateY(-50%);
+  border-left-color: var(--ah-color-danger, #e53935);
+}
+.ah-validator-hint[data-ah-placement="top"] .ah-validator-arrow {
+  bottom: -12px; left: 50%; transform: translateX(-50%);
+  border-top-color: var(--ah-color-danger, #e53935);
+}
+.ah-validator-hint[data-ah-placement="bottom"] .ah-validator-arrow {
+  top: -12px; left: 50%; transform: translateX(-50%);
+  border-bottom-color: var(--ah-color-danger, #e53935);
+}
+
+/* controls fill the field, as sigil's form sets width 100% on them */
+.ah-form-field > div:first-child > .ah-input-group {
+  display: flex;
+  width: 100%;
+}
