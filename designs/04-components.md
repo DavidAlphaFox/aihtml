@@ -8,13 +8,13 @@
 - 通用、常用。
 - 不依赖大型 npm 包，适合"服务端渲染 + jQuery 增强"。
 
-共 110 个，分三批移植。**每个组件一个 Erlang 模块** `aihtml_<name>`（`<name>` 就是组件名，也就是构建函数名），此外 `aihtml_theme` 提供主题切换器。按类别：
+共 111 个，分四批移植。**每个组件一个 Erlang 模块** `aihtml_<name>`（`<name>` 就是组件名，也就是构建函数名），此外 `aihtml_theme` 提供主题切换器。按类别：
 
 | 类别 | 组件 |
 |---|---|
 | 按钮 | button, link_button, toggle_button, button_group, segmented_control, dropdown_button, split_button, repeat_button |
 | 选择 | checkbox, radiobutton, switch_button, checkbox_group, radiobutton_group, radio_cards, rating_group |
-| 文本与录入 | input, textarea, password_input, number_input, input_otp, tag_input, masked_input, formatted_input |
+| 文本与录入 | input, textarea, password_input, number_input, input_otp, tag_input, masked_input, formatted_input, markdown_editor |
 | 选择与表单 | dropdownlist, select（原生）, slider, range_selector, field, form_layout（sigil 的 form，校验用 `validate/1`） |
 | 选择器与日期 | datepicker, combobox, timepicker, colorpicker, calendar（事件日历）, datetime_input |
 | 列表与上传 | cascader, listbox, transfer, upload |
@@ -34,7 +34,7 @@
 
 **暂不移植**：
 - drawn：2.5 万行的手绘风白板引擎（含流程图、思维导图、插件体系），以后单独评估。
-- 编辑器：rich_editor、prose_editor、markdown_editor。
+- 编辑器：rich_editor、prose_editor（markdown_editor 已移植，复用了 prose_editor 的核心）。
 - AG-UI 与 chat 组件。
 
 ## 文件与所有权
@@ -106,7 +106,7 @@ apps/aihtml_example/src/aihtml_example_demo_button.erl  演示
 
 非原生的取值控件包括 slider、rating、dropdownlist、segmented、tag_input 等，与 action 和表单的衔接方式如下：
 
-1. **当前值**写在根元素的 `data-ah-value` 上。多值用逗号分隔，例如 `a,b,c`。
+1. **当前值**写在根元素的 `data-ah-value` 上。多值用逗号分隔，例如 `a,b,c`；值里的逗号和反斜杠用反斜杠转义（`\,`、`\\`），不含它们的值写法不变。两端用同一套函数：Erlang 的 `aihtml_value:join/1`、`split/1`，JS 的 `AH.lib.values.join/split`。单值控件（单选的 listbox、combobox、按钮组 radio 模式等）的值原样写出，不转义。
 2. **参与表单提交**时，渲染一个 `<input type="hidden" name=Name value=...>`，`name` 从 Attrs 取。
 3. **值改变**时，行为同步更新 `data-ah-value` 和隐藏 input，并在根元素上触发 jQuery 事件 `change`；拖动等连续变化中触发 `input`。这样 `on(change, {M, A, Args})` 写在根元素的 Attrs 上就能收到事件，`Event.value` 取的就是 `data-ah-value`。
 4. **原生控件**（checkbox、radio、input）直接把 Attrs 写到原生 `<input>` 上，保持原生事件。

@@ -28,7 +28,7 @@ login() ->
 
 - 渲染依赖 [beamai_render](https://github.com/TTalkPro/beamai_render)：转义使用 `beamai_html_escape`，`{safe, iodata()}` 与 beamai_jinja 的安全标记一致，渲染结果可直接放进 Jinja 模板。
 - 前端基础：jQuery 4 与 Tailwind CSS v4（Tailwind CLI 构建）。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
-- 组件与主题移植自 [sigil](../sigil)（MIT）：110 个组件，以及四轴主题（外观、配色、排版、外形）。
+- 组件与主题移植自 [sigil](../sigil)（MIT）：111 个组件，以及四轴主题（外观、配色、排版、外形）。
 
 ## 仓库结构
 
@@ -48,7 +48,7 @@ login() ->
 
 ## 调用约定
 
-普通标签函数返回元素树，组件函数返回元素 record（见下文「record 写法」），两者可以任意嵌套，最后由 `aihtml:render/1` 输出 iodata。
+所有构建函数都返回元素 record：普通标签返回公共的 `#ah_el{tag, body}`，组件返回各自的 record（见下文「record 写法」）。两者可以任意嵌套，最后由 `aihtml:render/1` 输出 iodata。元素在渲染前是普通数据，可以模式匹配和修改；属性名等错误在渲染时报出。
 
 | 形式 | 例子 |
 |---|---|
@@ -57,6 +57,7 @@ login() ->
 | 取值组件 | `button(Content, Value, Css, Attrs)`、`dropdownlist(Items, Value, Css, Attrs)`、`datepicker(Value, Css, Attrs)` |
 | 容器与展示 | `card(Children, Css, Attrs)`、`chip(Content, Css, Attrs)`、`loader(Css, Attrs)` |
 | 任意标签 | `aihtml:el(Tag, Children, Css, Attrs)`、`aihtml:void(Tag, Css, Attrs)` |
+| record 写法 | `#ah_el{tag = section, body = Children, css = Css, attrs = Attrs, id = x}`，空元素的 `body` 可以不写 |
 
 **Children**：binary、数字、原子和可打印字符串都作为文本转义输出；其它列表是子节点序列；`safe(IoData)` 原样输出。
 
@@ -135,13 +136,13 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 ## 组件
 
-从 sigil 移植了 110 个组件，每个组件一个模块 `aihtml_<组件名>`，文件组织和约定见 `designs/04-components.md`。按用途分类如下：
+从 sigil 移植了 111 个组件，每个组件一个模块 `aihtml_<组件名>`，文件组织和约定见 `designs/04-components.md`。按用途分类如下：
 
 | 类别 | 组件 |
 |---|---|
 | 按钮 | button, button_group, link_button, toggle_button, dropdown_button, split_button, segmented_control |
 | 选择 | checkbox, checkbox_group, radiobutton, radiobutton_group, radio_cards, switch_button, rating_group |
-| 文本输入 | input, textarea, password_input, number_input, input_otp, tag_input |
+| 文本输入 | input, textarea, password_input, number_input, input_otp, tag_input, markdown_editor（所见即所得，基于 ProseMirror） |
 | 选择与表单 | dropdownlist, select, slider, field, form_layout；校验用 `validate/1` |
 | 选择器 | datepicker, combobox（支持服务端搜索）, timepicker, colorpicker |
 | 基础布局 | card, panel, expander, tabs, tab_bar, breadcrumbs, pagination, steps, skeleton, loader, empty |
@@ -166,6 +167,7 @@ render(#myapp_card{title = T, body = B} = R) ->
 | 功能区与分栏 | ribbon, tile_layout（可拖分隔条、标签组的分栏布局） |
 
 - **取值组件**：自定义控件把当前值写在根元素的 `data-ah-value`，用隐藏 input 参与表单，值改变时在根元素上触发 `change`。所以 `on(change, {M, A, Args})` 写在组件的 Attrs 里就能收到事件，`Event.value` 就是这个值。
+- **多个值**（多选的 combobox、listbox、transfer、checkbox_group，datagrid 的选中行，sortable 的顺序等）用逗号连接；值本身的逗号和反斜杠写成 `\,`、`\\`。服务端用 `aihtml_value:split(Event.value)` 拆开、`aihtml_value:join(List)` 拼接，浏览器端对应 `AH.lib.values.split/join`；不含逗号的值写法与原来相同。
 - **服务端驱动**：action 里用 `aihtml_action:call(Ctx, Target, Method, Args)` 调用组件方法，例如打开抽屉、设置进度；也可以用 `aihtml_toast:toast(Ctx, Msg, Opts)`、`aihtml_lib_overlay:open(Ctx, Target)` 等封装。
 - **辅助函数**：组件之外的函数也由 `aihtml` 门面导出，include `aihtml.hrl` 后可直接调用。前几个在 action 里用：需要服务端补数据的组件，由 action 调用它们回应，它们在服务端渲染 HTML，再形变替换进组件，浏览器不拼 HTML。后几个生成属性，拼进元素的 Attrs：
 
@@ -413,15 +415,16 @@ h.stop();
 
 ## 第三方库
 
-图表和表格导出用到三个较大的库，只在需要时加载：
+图表、表格导出和 Markdown 编辑器用到几个较大的库，只在需要时加载：
 
 | 库 | 用途 | 许可证 |
 |---|---|---|
 | echarts | chart、各类图表、relation_graph | Apache-2.0 |
 | xlsx（SheetJS） | datagrid、pivotgrid 导出 Excel | Apache-2.0 |
 | jspdf、jspdf-autotable | datagrid 导出 PDF | MIT |
+| ProseMirror、markdown-it | markdown_editor（用 esbuild 打包成 `prosemirror.min.js`，全局名 `AHProseMirror`） | MIT |
 
-- **位置**：`npm run vendor` 把它们连同许可证文件复制到 `priv/static/vendor`，版本见 `package.json`。纯 Erlang 的使用方不需要运行 npm。
+- **位置**：`npm run vendor` 把它们连同许可证文件复制到 `priv/static/vendor`（ProseMirror 由 esbuild 从 `assets/vendor/prosemirror.entry.js` 打包，各包许可证汇总在 `prosemirror.LICENSE.txt`），版本见 `package.json`。纯 Erlang 的使用方不需要运行 npm。
 - **按需加载**：运行时的 `AH.vendor(name)` 在第一次需要时插入 script 标签，返回 Promise，每个页面只加载一次。图表在挂载时加载 echarts，导出在点击时加载 xlsx 或 jspdf；没用到这些组件的页面不会下载它们。
   ```js
   AH.vendor("echarts").then(function (echarts) { ... });
