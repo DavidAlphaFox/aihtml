@@ -1,6 +1,9 @@
 -module(aihtml_layout_basic_tests).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("aihtml/include/aihtml_layout_basic.hrl").
+
+-export([action/4]).
 
 -define(M, aihtml_layout_basic).
 
@@ -285,3 +288,138 @@ samples() ->
      ?M:skeleton([done], []),
      [?M:loader([P, hidden, inline, center, disabled], []) || P <- [top, bottom, left, right]],
      ?M:empty(<<"a">>, [compact], [{icon, <<"i">>}, {title, <<"t">>}, {description, <<"d">>}])].
+
+%%% element records (designs/05-records.md)
+
+-spec action(atom(), term(), map(), term()) -> ok.
+action(_, _, _, _) -> ok.
+
+-define(TABS, [{a, <<"A">>, <<"pa">>}, {b, <<"B">>, <<"pb">>, #{disabled => true}}]).
+
+record_equals_builder_test() ->
+    ?assertEqual(r(?M:card(<<"b">>, [hover, <<"w-64">>],
+                           [{title, <<"T">>}, {footer, <<"F">>}, {id, c1}, {data_x, 1}])),
+                 r(#ah_card{body = <<"b">>, hover = true, css = [<<"w-64">>], title = <<"T">>,
+                            footer = <<"F">>, id = c1, attrs = [{data_x, 1}]})),
+    ?assertEqual(r(?M:expander(<<"b">>, [bottom, disabled],
+                               [{id, e}, {header, <<"H">>}, {expanded, false},
+                                {toggle_mode, dblclick}, {name, open}])),
+                 r(#ah_expander{body = <<"b">>, position = bottom, disabled = true, id = e,
+                                header = <<"H">>, expanded = false, toggle_mode = dblclick,
+                                name = open})),
+    ?assertEqual(r(?M:tabs(?TABS, b, [left], [{id, t}, {scrollable, true}])),
+                 r(#ah_tabs{items = ?TABS, value = b, position = left, id = t,
+                            scrollable = true})),
+    ?assertEqual(r(?M:pagination(500, 12, [simple], [{page_size, 20}, {show_total, true},
+                                                     {labels, #{prev => <<"<">>}}])),
+                 r(#ah_pagination{total = 500, value = 12, simple = true, page_size = 20,
+                                  show_total = true, labels = #{prev => <<"<">>}})),
+    ?assertEqual(r(?M:steps([<<"A">>, <<"B">>], 1, [vertical], [{clickable, false}])),
+                 r(#ah_steps{items = [<<"A">>, <<"B">>], value = 1, orientation = vertical,
+                             clickable = false})),
+    ?assertEqual(r(?M:skeleton([circle, static], [{width, 32}])),
+                 r(#ah_skeleton{variant = circle, static = true, width = 32})),
+    ?assertEqual(r(?M:loader([hidden, top], [{text, <<"Wait">>}, {modal, true}])),
+                 r(#ah_loader{hidden = true, text_position = top, text = <<"Wait">>,
+                              modal = true})).
+
+builder_fills_fields_test() ->
+    P = ?M:panel(<<"c">>, [bordered, <<"p-2">>],
+                 [{id, p}, {title, <<"T">>}, {collapsible, true}, {height, 100},
+                  {data_x, 1}]),
+    ?assertMatch(#ah_panel{body = <<"c">>, bordered = true, css = [<<"p-2">>], id = p,
+                           title = <<"T">>, collapsible = true, collapsed = false,
+                           height = 100, attrs = [{data_x, 1}]}, P),
+    ?assertMatch(#ah_breadcrumbs{items = [<<"A">>], separator = none, max_items = 3,
+                                 label = <<"breadcrumb">>},
+                 ?M:breadcrumbs([<<"A">>], [], [{separator, none}, {max_items, 3}])),
+    ?assertMatch(#ah_tab_bar{items = [], value = x, closable = false},
+                 ?M:tab_bar([], x, [], [{closable, false}])),
+    ?assertError({aihtml, {record_only_field, ah_card, postback}},
+                 ?M:card(<<"x">>, [], [{postback, save}])).
+
+generated_ids_test() ->
+    %% no id: one is generated and the inner ids derive from it
+    E = r(#ah_expander{body = <<"b">>}),
+    {match, [Id]} = re:run(E, <<"^<div class=\"ah-expander ah-expander-top\" id=\"(ah-expander-[0-9]+)\"">>,
+                           [{capture, all_but_first, binary}]),
+    ?assert(has(E, <<"id=\"", Id/binary, "-header\"">>)),
+    ?assert(has(E, <<"aria-controls=\"", Id/binary, "-content\"">>)),
+    ?assertEqual(1, count(E, <<"id=\"", Id/binary, "\"">>)),
+    ?assertMatch({match, _}, re:run(r(#ah_panel{}), <<"id=\"ah-panel-[0-9]+-body\"">>)),
+    %% an id among the attrs is used too
+    T = r(#ah_tabs{items = ?TABS, attrs = [{<<"id">>, <<"t">>}]}),
+    ?assert(has(T, <<"class=\"ah-tabs ah-tabs-top\" id=\"t\" data-ah=\"tabs\"">>)),
+    ?assert(has(T, <<"id=\"t-panel-0\"">>)).
+
+postback_test() ->
+    Token = fun(Html) ->
+                    {match, [T]} = re:run(r(Html), <<"data-ah-on=\"([a-z]+:[^\"]+)\"">>,
+                                          [{capture, all_but_first, binary}]),
+                    [Ev, Tok] = binary:split(T, <<":">>),
+                    {ok, Ref} = aihtml_action:unsign(Tok),
+                    {Ev, Ref}
+            end,
+    ?assertEqual({<<"change">>, {?MODULE, toggled, #{}}},
+                 Token(#ah_expander{id = e, postback = toggled})),
+    ?assertEqual({<<"change">>, {?MODULE, tab, #{id => 1}}},
+                 Token(#ah_tabs{items = ?TABS, id = t, postback = {tab, #{id => 1}}})),
+    ?assertEqual({<<"change">>, {?MODULE, focus, #{}}},
+                 Token(#ah_tab_bar{items = [{a, <<"a">>}], postback = focus})),
+    ?assertEqual({<<"change">>, {other_mod, page, 1}},
+                 Token(#ah_pagination{total = 50, postback = {page, 1}, delegate = other_mod})),
+    ?assertEqual({<<"change">>, {?MODULE, step, #{}}},
+                 Token(#ah_steps{items = [<<"A">>], postback = step})),
+    [?assertError({aihtml, {no_postback_event, Tag}}, r(setelement(6, R, x)))
+     || R <- [#ah_card{}, #ah_panel{id = p}, #ah_breadcrumbs{}, #ah_skeleton{}, #ah_loader{},
+              #ah_empty{}],
+        Tag <- [element(1, R)]].
+
+field_validation_test() ->
+    ?assertError({aihtml, {bad_modifier, tabs, position, middle, _}},
+                 r(#ah_tabs{id = t, position = middle})),
+    ?assertError({aihtml, {bad_modifier, loader, text_position, center, _}},
+                 r(#ah_loader{text_position = center})),
+    ?assertError({aihtml, {bad_flag, card, hover, yes}}, r(#ah_card{hover = yes})),
+    ?assertError({aihtml, {modifier_in_css, empty, compact}}, r(#ah_empty{css = [compact]})),
+    ?assertError({aihtml, {bad_option, toggle_mode, hold}},
+                 r(#ah_expander{id = e, toggle_mode = hold})),
+    ?assertError({aihtml, {bad_option, expanded, "no"}},
+                 r(#ah_expander{id = e, expanded = "no"})),
+    ?assertError({aihtml, {bad_option, selection_mode, drag}},
+                 r(#ah_tabs{id = t, selection_mode = drag})),
+    ?assertError({aihtml, {bad_option, show_jumper, 1}},
+                 r(#ah_pagination{show_jumper = 1})),
+    %% values are checked when rendering, not when building
+    Bad = ?M:expander(<<"b">>, [], [{id, e}, {arrow_position, up}]),
+    ?assertError({aihtml, {bad_option, arrow_position, up}}, r(Bad)),
+    %% a group without a default may stay undefined
+    ?assert(has(r(#ah_skeleton{}), <<"class=\"ah-skeleton\" data-variant=\"text\"">>)).
+
+records_match_catalog_test() ->
+    Base = [module, id, css, attrs, postback, delegate],
+    [begin
+         Tag = list_to_atom("ah_" ++ atom_to_list(N)),
+         Fields = ?M:fields(Tag),
+         ?assertEqual(Base, lists:sublist(Fields, 6)),
+         Defaults = maps:from_list(lists:zip(Fields, tl(tuple_to_list(default(Tag))))),
+         [?assertEqual({N, G, case D of none -> undefined; _ -> D end},
+                       {N, G, maps:get(G, Defaults)})
+          || {G, {_, D}} <- maps:to_list(maps:get(groups, E, #{}))],
+         [?assertEqual({N, F, false}, {N, F, maps:get(F, Defaults)})
+          || F <- maps:get(flags, E, [])],
+         [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
+         ?assertEqual(?M, maps:get(module, Defaults))
+     end || #{name := N} = E <- ?M:catalog()].
+
+default(ah_card) -> #ah_card{};
+default(ah_panel) -> #ah_panel{};
+default(ah_expander) -> #ah_expander{};
+default(ah_tabs) -> #ah_tabs{};
+default(ah_tab_bar) -> #ah_tab_bar{};
+default(ah_breadcrumbs) -> #ah_breadcrumbs{};
+default(ah_pagination) -> #ah_pagination{};
+default(ah_steps) -> #ah_steps{};
+default(ah_skeleton) -> #ah_skeleton{};
+default(ah_loader) -> #ah_loader{};
+default(ah_empty) -> #ah_empty{}.

@@ -12,12 +12,20 @@
 %%% keep their value in `data-ah-value' on the root and fire `change' there
 %%% when the user changes it, so `on(change, Action)' on the root receives
 %%% the new value as `Event.value'.
+%%%
+%%% Each function builds an element record (#ah_card{} ..., defined in
+%%% include/aihtml_layout_basic.hrl) and render/1 turns it into HTML, so
+%%% pages may also write the records directly (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_layout_basic).
+-behaviour(aihtml_element).
+
+-include("aihtml_layout_basic.hrl").
 
 -export([card/3, panel/3, expander/3, tabs/4, tab_bar/4, breadcrumbs/3,
          pagination/4, steps/4, skeleton/2, loader/2, empty/3]).
+-export([render/1, fields/1]).
 -export([visible_pages/3, pagination_view/5]).
 -export([catalog/0]).
 
@@ -26,54 +34,169 @@
 -mustache_template({tpl_pagination_items, "../templates/pagination_items.mustache"}).
 -mustache_template({tpl_steps_indicator, "../templates/steps_indicator.mustache"}).
 
+-define(E, aihtml_element).
+
 -type html() :: aihtml_html:html().
 -type css() :: aihtml_html:css().
 -type attrs() :: aihtml_html:attrs().
--type element() :: aihtml_html:element().
--type key() :: binary() | atom() | integer() | string().
+-type key() :: ah_lb_key().
+-type element() :: #ah_card{} | #ah_panel{} | #ah_expander{} | #ah_tabs{} | #ah_tab_bar{}
+                 | #ah_breadcrumbs{} | #ah_pagination{} | #ah_steps{} | #ah_skeleton{}
+                 | #ah_loader{} | #ah_empty{}.
 
--export_type([key/0]).
+-export_type([key/0, element/0]).
 
 %%%===================================================================
-%%% Card
+%%% Builders
 %%%===================================================================
 
 %% @doc A container with an optional media strip, header (title, subtitle,
 %% extra), body (`Children') and footer.
 %% Options: title, subtitle, extra, header, media, footer.
--spec card(html(), css(), attrs()) -> element().
+-spec card(html(), css(), attrs()) -> #ah_card{}.
 card(Children, Css, Attrs) ->
-    {E, O, Rest} = split(card, Attrs),
-    Header = case {opt(header, O), opt(title, O), opt(subtitle, O), opt(extra, O)} of
-                 {undefined, undefined, undefined, undefined} -> [];
-                 {undefined, T, S, X} ->
-                     el('div', [maybe_el(h3, T, <<"ah-card-title">>),
-                                maybe_el(p, S, <<"ah-card-subtitle">>),
-                                maybe_el('div', X, <<"ah-card-extra">>)],
-                        [<<"ah-card-header">>], []);
-                 {H, _, _, _} -> el('div', H, [<<"ah-card-header">>], [])
-             end,
-    el('div', [maybe_el('div', opt(media, O), <<"ah-card-media">>),
-               Header,
-               el('div', Children, [<<"ah-card-body">>], []),
-               maybe_el('div', opt(footer, O), <<"ah-card-footer">>)],
-       root(E, Css), Rest).
-
-%%%===================================================================
-%%% Panel
-%%%===================================================================
+    build(#ah_card{body = Children}, Css, Attrs).
 
 %% @doc A scrollable content container (sigil's panel), optionally with a
 %% header bar holding a title, actions and a collapse toggle.
 %% Options: title, actions, collapsible, collapsed, height, max_height.
--spec panel(html(), css(), attrs()) -> element().
+-spec panel(html(), css(), attrs()) -> #ah_panel{}.
 panel(Children, Css, Attrs) ->
-    {E, O, Rest} = split(panel, Attrs),
-    Id = take_id(Rest, <<"ah-panel">>),
-    Collapsible = opt(collapsible, O, false) =:= true,
-    Collapsed = Collapsible andalso opt(collapsed, O, false) =:= true,
-    Title = opt(title, O),
-    Actions = opt(actions, O),
+    build(#ah_panel{body = Children}, Css, Attrs).
+
+%% @doc A collapsible section. `Children' is the content.
+%% Options: header (html or #{title, subheader, extra}), actions,
+%% expanded (default true), toggle_mode (click | dblclick | none),
+%% animation (slide | fade | none), duration (ms), show_arrow,
+%% arrow_position (right | left), expand_icon, collapse_icon,
+%% accordion (a name: opening one closes the others with that name), name.
+%% Value: "true" | "false".
+-spec expander(html(), css(), attrs()) -> #ah_expander{}.
+expander(Children, Css, Attrs) ->
+    build(#ah_expander{body = Children}, Css, Attrs).
+
+%% @doc Tabbed panels. `Tabs' is `[{Key, Label, Panel}]' or
+%% `[{Key, Label, Panel, #{disabled => true}}]'; every panel is rendered,
+%% the client switches between them. `Active' is a key (undefined: the
+%% first enabled tab).
+%% Options: animation (fade | none), selection_mode (click | hover),
+%% scrollable, name. Value: the active key.
+-spec tabs([{key(), html(), html()} | {key(), html(), html(), map()}],
+           key() | undefined, css(), attrs()) -> #ah_tabs{}.
+tabs(Tabs, Active, Css, Attrs) ->
+    build(#ah_tabs{items = Tabs, value = Active}, Css, Attrs).
+
+%% @doc An editor-style strip of closable tabs (no panels). `Items' is
+%% `[{Id, Title}]' or `[{Id, Title, #{dirty => true, icon => Html}}]'.
+%% Options: closable (default true), close_label, name.
+%% Value: the active id. Closing a tab removes it (and fires `change' when
+%% the active tab moves); the root also gets `ah:close' with the id.
+-spec tab_bar([{key(), html()} | {key(), html(), map()}], key() | undefined,
+              css(), attrs()) -> #ah_tab_bar{}.
+tab_bar(Items, Active, Css, Attrs) ->
+    build(#ah_tab_bar{items = Items, value = Active}, Css, Attrs).
+
+%% @doc An ancestor path. `Items' are `Label', `{Label, Href}' or
+%% `#{label, href, icon, attrs}'; the last item is the current page.
+%% Options: separator (default "/"; none for dots), active_last, max_items.
+-spec breadcrumbs([html() | {html(), binary() | undefined} | map()], css(), attrs()) ->
+          #ah_breadcrumbs{}.
+breadcrumbs(Items, Css, Attrs) ->
+    build(#ah_breadcrumbs{items = Items}, Css, Attrs).
+
+%% @doc Page navigation for `Total' items, `Page' being current (from 1).
+%% Options: page_size (10), page_sizes ([10,20,50,100]),
+%% show_size_selector (true), show_jumper, show_first_last, show_total,
+%% max_visible (7 slots) or siblings (pages on each side of the current
+%% one), href (a template with {page} and {size}: pages become links and
+%% no script is needed), labels (#{prev, next, first, last, per_page,
+%% total, goto, goto_suffix, goto_confirm, page_info, aria_label,
+%% per_page_aria}), name. Value: the current page.
+-spec pagination(non_neg_integer(), pos_integer(), css(), attrs()) -> #ah_pagination{}.
+pagination(Total, Page, Css, Attrs) ->
+    build(#ah_pagination{total = Total, value = Page}, Css, Attrs).
+
+%% @doc A step indicator (wizard). `Steps' are `Title', `{Title, Description}'
+%% or `#{title, description, content, status, disabled}' (status is one of
+%% completed | active | error | disabled | pending; by default it follows
+%% `Current', a 0-based index). When any step has content, the panels and
+%% prev/next buttons are rendered too.
+%% Options: clickable (default true), show_nav, prev_label, next_label, name.
+%% Value: the current index.
+-spec steps([html() | {html(), html()} | map()], non_neg_integer(), css(), attrs()) ->
+          #ah_steps{}.
+steps(Steps, Current, Css, Attrs) ->
+    build(#ah_steps{items = Steps, value = Current}, Css, Attrs).
+
+%% @doc A shimmering placeholder. Css: text (default) | circle | rect,
+%% static (no shimmer), done (hidden).
+%% Options: lines (text, default 3), width, height, radius, label.
+-spec skeleton(css(), attrs()) -> #ah_skeleton{}.
+skeleton(Css, Attrs) ->
+    build(#ah_skeleton{}, Css, Attrs).
+
+%% @doc A spinner. By default an overlay covering its positioned parent
+%% (sigil's loader); `inline' puts it in the flow, `center' in a box fixed
+%% at the middle of the viewport, `hidden' renders it hidden. Css also
+%% picks the text position: bottom (default) | top | left | right.
+%% Options: text (default "Loading..."; <<>> for none), modal (a page
+%% scrim while shown; Esc hides it).
+%% Methods: show([Left, Top]), hide, toggle, text(Text).
+-spec loader(css(), attrs()) -> #ah_loader{}.
+loader(Css, Attrs) ->
+    build(#ah_loader{}, Css, Attrs).
+
+%% @doc An empty-state placeholder: icon, title, description and
+%% `Children' as the action area.
+%% Options: icon (html, e.g. {safe, Svg}), title, description.
+-spec empty(html(), css(), attrs()) -> #ah_empty{}.
+empty(Children, Css, Attrs) ->
+    build(#ah_empty{body = Children}, Css, Attrs).
+
+build(R, Css, Attrs) ->
+    Tag = element(1, R),
+    ?E:build(R, fields(Tag), cat_entry(?E:component_name(Tag)), Css, Attrs).
+
+%% @doc The field names of one of this group's records.
+-spec fields(atom()) -> [atom()].
+fields(ah_card) -> record_info(fields, ah_card);
+fields(ah_panel) -> record_info(fields, ah_panel);
+fields(ah_expander) -> record_info(fields, ah_expander);
+fields(ah_tabs) -> record_info(fields, ah_tabs);
+fields(ah_tab_bar) -> record_info(fields, ah_tab_bar);
+fields(ah_breadcrumbs) -> record_info(fields, ah_breadcrumbs);
+fields(ah_pagination) -> record_info(fields, ah_pagination);
+fields(ah_steps) -> record_info(fields, ah_steps);
+fields(ah_skeleton) -> record_info(fields, ah_skeleton);
+fields(ah_loader) -> record_info(fields, ah_loader);
+fields(ah_empty) -> record_info(fields, ah_empty).
+
+%%%===================================================================
+%%% Rendering
+%%%===================================================================
+
+-spec render(element()) -> html().
+render(#ah_card{body = Children, header = H, title = T, subtitle = S, extra = X} = R) ->
+    Header = case {H, T, S, X} of
+                 {undefined, undefined, undefined, undefined} -> [];
+                 {undefined, _, _, _} ->
+                     el('div', [maybe_el(h3, T, <<"ah-card-title">>),
+                                maybe_el(p, S, <<"ah-card-subtitle">>),
+                                maybe_el('div', X, <<"ah-card-extra">>)],
+                        [<<"ah-card-header">>], []);
+                 _ -> el('div', H, [<<"ah-card-header">>], [])
+             end,
+    el('div', [maybe_el('div', R#ah_card.media, <<"ah-card-media">>),
+               Header,
+               el('div', Children, [<<"ah-card-body">>], []),
+               maybe_el('div', R#ah_card.footer, <<"ah-card-footer">>)],
+       classes(R), ?E:root_attrs(R, none));
+
+render(#ah_panel{body = Children, title = Title, actions = Actions} = R0) ->
+    Classes = classes(R0),
+    {Id, R} = with_id(R0, <<"ah-panel">>),
+    Collapsible = bool(collapsible, R#ah_panel.collapsible),
+    Collapsed = bool(collapsed, R#ah_panel.collapsed) andalso Collapsible,
     BodyId = <<Id/binary, "-body">>,
     TitleId = <<Id/binary, "-title">>,
     Header = case Title =:= undefined andalso Actions =:= undefined
@@ -89,51 +212,39 @@ panel(Children, Css, Attrs) ->
                                  el(button, {safe, chevron()}, [<<"ah-panel-toggle">>],
                                     [{type, button}, {aria_expanded, tf(not Collapsed)},
                                      {aria_controls, BodyId},
-                                     {aria_label, opt(toggle_label, O, <<"Toggle">>)}])
+                                     {aria_label, R#ah_panel.toggle_label}])
                          end],
                         [<<"ah-panel-header">>], [])
              end,
-    Style = style([{<<"height">>, len(opt(height, O))},
-                   {<<"max-height">>, len(opt(max_height, O))},
+    Style = style([{<<"height">>, len(R#ah_panel.height)},
+                   {<<"max-height">>, len(R#ah_panel.max_height)},
                    {<<"display">>, Collapsed andalso <<"none">>}]),
     Wrapper = el('div', el('div', Children, [<<"ah-panel-content">>], []),
                  [<<"ah-panel-wrapper">>], [{id, BodyId}, {style, Style}]),
     el('div', [Header, Wrapper],
-       [root(E, Css), [<<"ah-panel-has-header">> || Header =/= []],
+       [Classes, [<<"ah-panel-has-header">> || Header =/= []],
         [<<"ah-panel-collapsed">> || Collapsed]],
        [[{id, Id}, {data_ah, <<"panel">>},
          {aria_labelledby, Title =/= undefined andalso TitleId},
-         {role, Title =/= undefined andalso region}], Rest]).
+         {role, Title =/= undefined andalso region}], ?E:root_attrs(R, none)]);
 
-%%%===================================================================
-%%% Expander
-%%%===================================================================
-
-%% @doc A collapsible section. `Children' is the content.
-%% Options: header (html or #{title, subheader, extra}), actions,
-%% expanded (default true), toggle_mode (click | dblclick | none),
-%% animation (slide | fade | none), duration (ms), show_arrow,
-%% arrow_position (right | left), expand_icon, collapse_icon,
-%% accordion (a name: opening one closes the others with that name), name.
-%% Value: "true" | "false".
--spec expander(html(), css(), attrs()) -> element().
-expander(Children, Css, Attrs) ->
-    {E, O, Rest} = split(expander, Attrs),
-    Id = take_id(Rest, <<"ah-expander">>),
+render(#ah_expander{body = Children, disabled = Disabled, toggle_mode = Mode,
+                    expand_icon = ExpIcon, collapse_icon = ColIcon} = R0) ->
+    Classes = classes(R0),
+    {Id, R} = with_id(R0, <<"ah-expander">>),
     HId = <<Id/binary, "-header">>,
     CId = <<Id/binary, "-content">>,
-    Expanded = opt(expanded, O, true) =:= true,
-    Disabled = has_flag(disabled, E, Css),
-    Mode = opt(toggle_mode, O, click),
-    ExpIcon = opt(expand_icon, O),
-    ColIcon = opt(collapse_icon, O),
+    Expanded = bool(expanded, R#ah_expander.expanded),
+    one_of(toggle_mode, Mode, [click, dblclick, none]),
+    one_of(animation, R#ah_expander.animation, [undefined, slide, fade, none]),
+    ArrowPos = one_of(arrow_position, R#ah_expander.arrow_position, [right, left]),
     Dual = ExpIcon =/= undefined andalso ColIcon =/= undefined,
     ArrowCls = [<<"ah-expander-arrow">>,
-                [<<"ah-expander-arrow-left">> || opt(arrow_position, O, right) =:= left],
+                [<<"ah-expander-arrow-left">> || ArrowPos =:= left],
                 [<<"ah-expander-arrow-expanded">> || Expanded],
                 [<<"ah-expander-arrow-dual">> || Dual]],
     Primary = case ExpIcon of undefined -> <<"\x{25BE}"/utf8>>; I -> I end,
-    Arrow = case {opt(show_arrow, O, true), Dual} of
+    Arrow = case {bool(show_arrow, R#ah_expander.show_arrow), Dual} of
                 {false, _} -> [];
                 {_, true} ->
                     el(span, [el(span, Primary, [<<"ah-expander-icon ah-expander-icon-expand">>], []),
@@ -142,7 +253,7 @@ expander(Children, Css, Attrs) ->
                 {_, false} ->
                     el(span, Primary, ArrowCls, [{aria_hidden, <<"true">>}])
             end,
-    Text = case opt(header, O, <<>>) of
+    Text = case R#ah_expander.header of
                #{} = M ->
                    el(span, [el(span, maps:get(title, M, <<>>), [<<"ah-expander-header-title">>], []),
                              maybe_el(span, maps:get(subheader, M, undefined),
@@ -161,36 +272,26 @@ expander(Children, Css, Attrs) ->
                  {aria_expanded, tf(Expanded)}, {aria_controls, CId},
                  {aria_disabled, Disabled andalso <<"true">>}]),
     Body = el('div', [el('div', Children, [<<"ah-expander-content">>], []),
-                      maybe_el('div', opt(actions, O), <<"ah-expander-actions">>)],
+                      maybe_el('div', R#ah_expander.actions, <<"ah-expander-actions">>)],
               [<<"ah-expander-body">>],
               [{id, CId}, {role, region}, {aria_labelledby, HId},
                {style, (not Expanded) andalso <<"display:none">>}]),
     Value = tf(Expanded),
-    el('div', [Header, Body, hidden(opt(name, O), Value)], root(E, Css),
+    el('div', [Header, Body, hidden(R#ah_expander.name, Value)], Classes,
        [[{id, Id}, {data_ah, <<"expander">>}, {data_ah_value, Value},
          {data_toggle_mode, Mode =/= click andalso Mode},
-         {data_animation, opt(animation, O)},
-         {data_duration, opt(duration, O)},
-         {data_accordion, opt(accordion, O)}], Rest]).
+         {data_animation, R#ah_expander.animation},
+         {data_duration, R#ah_expander.duration},
+         {data_accordion, R#ah_expander.accordion}], ?E:root_attrs(R, change)]);
 
-%%%===================================================================
-%%% Tabs
-%%%===================================================================
-
-%% @doc Tabbed panels. `Tabs' is `[{Key, Label, Panel}]' or
-%% `[{Key, Label, Panel, #{disabled => true}}]'; every panel is rendered,
-%% the client switches between them. `Active' is a key (undefined: the
-%% first enabled tab).
-%% Options: animation (fade | none), selection_mode (click | hover),
-%% scrollable, name. Value: the active key.
--spec tabs([{key(), html(), html()} | {key(), html(), html(), map()}],
-           key() | undefined, css(), attrs()) -> element().
-tabs(Tabs, Active, Css, Attrs) ->
-    {E, O, Rest} = split(tabs, Attrs),
-    Id = take_id(Rest, <<"ah-tabs">>),
+render(#ah_tabs{items = Tabs, value = Active, position = Position} = R0) ->
+    Classes = classes(R0),
+    {Id, R} = with_id(R0, <<"ah-tabs">>),
+    one_of(animation, R#ah_tabs.animation, [undefined, fade, none]),
+    one_of(selection_mode, R#ah_tabs.selection_mode, [undefined, click, hover]),
     Norm = [norm_tab(T) || T <- Tabs],
     ActiveKey = active_key(Active, [{K, D} || {K, _, _, D} <- Norm]),
-    Vertical = lists:member(pick(Css, [top, bottom, left, right], top), [left, right]),
+    Vertical = lists:member(Position, [left, right]),
     Indexed = lists:zip(lists:seq(0, length(Norm) - 1), Norm),
     TabId = fun(I) -> <<Id/binary, "-tab-", (integer_to_binary(I))/binary>> end,
     PanelId = fun(I) -> <<Id/binary, "-panel-", (integer_to_binary(I))/binary>> end,
@@ -202,7 +303,7 @@ tabs(Tabs, Active, Css, Attrs) ->
                  {aria_selected, tf(K =:= ActiveKey)}, {aria_controls, PanelId(I)},
                  {aria_disabled, Dis andalso <<"true">>}])
              || {I, {K, Label, _, Dis}} <- Indexed],
-    Scrollable = opt(scrollable, O, false) =:= true,
+    Scrollable = bool(scrollable, R#ah_tabs.scrollable),
     Scroll = fun(Side, Glyph) ->
                      [el(li, Glyph, [<<"ah-tabs-scroll-btn ah-tabs-scroll-", Side/binary>>],
                          [{role, presentation}, {aria_hidden, <<"true">>}]) || Scrollable]
@@ -219,42 +320,20 @@ tabs(Tabs, Active, Css, Attrs) ->
                   {style, K =/= ActiveKey andalso <<"display:none">>}])
               || {I, {K, _, Panel, _}} <- Indexed],
     el('div', [Header, el('div', Panels, [<<"ah-tabs-content">>], []),
-               hidden(opt(name, O), ActiveKey)],
-       [root(E, Css), [<<"ah-tabs-scrollable">> || Scrollable]],
+               hidden(R#ah_tabs.name, ActiveKey)],
+       [Classes, [<<"ah-tabs-scrollable">> || Scrollable]],
        [[{id, Id}, {data_ah, <<"tabs">>}, {data_ah_value, ActiveKey},
-         {data_animation, opt(animation, O)},
-         {data_selection_mode, opt(selection_mode, O)}], Rest]).
+         {data_animation, R#ah_tabs.animation},
+         {data_selection_mode, R#ah_tabs.selection_mode}], ?E:root_attrs(R, change)]);
 
-norm_tab({K, L, P}) -> {bin(K), L, P, false};
-norm_tab({K, L, P, M}) when is_map(M) -> {bin(K), L, P, maps:get(disabled, M, false) =:= true}.
-
-active_key(undefined, KDs) ->
-    case [K || {K, false} <- KDs] of
-        [K | _] -> K;
-        [] -> <<>>
-    end;
-active_key(Active, _) -> bin(Active).
-
-%%%===================================================================
-%%% Tab bar
-%%%===================================================================
-
-%% @doc An editor-style strip of closable tabs (no panels). `Items' is
-%% `[{Id, Title}]' or `[{Id, Title, #{dirty => true, icon => Html}}]'.
-%% Options: closable (default true), close_label, name.
-%% Value: the active id. Closing a tab removes it (and fires `change' when
-%% the active tab moves); the root also gets `ah:close' with the id.
--spec tab_bar([{key(), html()} | {key(), html(), map()}], key() | undefined,
-              css(), attrs()) -> element().
-tab_bar(Items, Active, Css, Attrs) ->
-    {E, O, Rest} = split(tab_bar, Attrs),
+render(#ah_tab_bar{items = Items, value = Active} = R) ->
     Norm = [case I of
                 {K, T} -> {bin(K), T, #{}};
                 {K, T, M} when is_map(M) -> {bin(K), T, M}
             end || I <- Items],
     ActiveKey = active_key(Active, [{K, false} || {K, _, _} <- Norm]),
-    Closable = opt(closable, O, true) =:= true,
-    CloseLabel = opt(close_label, O, <<"close">>),
+    Closable = bool(closable, R#ah_tab_bar.closable),
+    CloseLabel = R#ah_tab_bar.close_label,
     Tabs = [begin
                 Act = K =:= ActiveKey,
                 Dirty = maps:get(dirty, M, false) =:= true,
@@ -271,31 +350,157 @@ tab_bar(Items, Active, Css, Attrs) ->
                     {tabindex, case Act of true -> 0; false -> -1 end},
                     {title, text_of(T)}])
             end || {K, T, M} <- Norm],
-    el('div', [Tabs, hidden(opt(name, O), ActiveKey)], root(E, Css),
-       [[{role, tablist}, {data_ah, <<"tab-bar">>}, {data_ah_value, ActiveKey}], Rest]).
+    el('div', [Tabs, hidden(R#ah_tab_bar.name, ActiveKey)], classes(R),
+       [[{role, tablist}, {data_ah, <<"tab-bar">>}, {data_ah_value, ActiveKey}],
+        ?E:root_attrs(R, change)]);
 
-%%%===================================================================
-%%% Breadcrumbs
-%%%===================================================================
-
-%% @doc An ancestor path. `Items' are `Label', `{Label, Href}' or
-%% `#{label, href, icon, attrs}'; the last item is the current page.
-%% Options: separator (default "/"; none for dots), active_last, max_items.
--spec breadcrumbs([html() | {html(), binary() | undefined} | map()], css(), attrs()) -> element().
-breadcrumbs(Items, Css, Attrs) ->
-    {E, O, Rest} = split(breadcrumbs, Attrs),
-    Sep = opt(separator, O, <<"/">>),
+render(#ah_breadcrumbs{items = Items, separator = Sep} = R) ->
     HasSep = not lists:member(Sep, [none, undefined, <<>>, ""]),
-    ActiveLast = opt(active_last, O, false) =:= true,
-    Shown = collapse([norm_crumb(I) || I <- Items], opt(max_items, O)),
+    ActiveLast = bool(active_last, R#ah_breadcrumbs.active_last),
+    Shown = collapse([norm_crumb(I) || I <- Items], R#ah_breadcrumbs.max_items),
     N = length(Shown),
     Lis = lists:append(
             [[crumb(It, I, I =:= N - 1, ActiveLast),
               [el(li, [Sep || HasSep], [<<"ah-breadcrumbs__separator">>],
                   [{role, presentation}, {aria_hidden, <<"true">>}]) || I < N - 1]]
              || {I, It} <- lists:zip(lists:seq(0, N - 1), Shown)]),
-    el(nav, el(ol, Lis, [<<"ah-breadcrumbs__list">>], []), root(E, Css),
-       [[{aria_label, opt(label, O, <<"breadcrumb">>)}, {data_has_separator, tf(HasSep)}], Rest]).
+    el(nav, el(ol, Lis, [<<"ah-breadcrumbs__list">>], []), classes(R),
+       [[{aria_label, R#ah_breadcrumbs.label}, {data_has_separator, tf(HasSep)}],
+        ?E:root_attrs(R, none)]);
+
+render(#ah_pagination{total = Total, value = Page, href = Href} = R) ->
+    Classes = classes(R),
+    Size = max(1, R#ah_pagination.page_size),
+    Pages = max(1, (Total + Size - 1) div Size),
+    Cur = min(max(1, Page), Pages),
+    Max = case R#ah_pagination.siblings of
+              undefined -> R#ah_pagination.max_visible;
+              S -> 2 * S + 5
+          end,
+    L = maps:merge(labels(), R#ah_pagination.labels),
+    %% What the page list depends on besides the state; layout_basic.js
+    %% reads it to re-render the list with the same template.
+    Cfg = #{labels => maps:map(fun(_, V) -> bin(V) end,
+                              maps:with([prev, next, first, last, page_info], L)),
+            first_last => bool(show_first_last, R#ah_pagination.show_first_last),
+            simple => R#ah_pagination.simple,
+            href => case Href of undefined -> null; _ -> bin(Href) end},
+    List = el(ul, aihtml_tpl:safe(tpl_pagination_items(pagination_view(Cur, Pages, Max, Size, Cfg))),
+              [<<"ah-pagination-pages">>],
+              [{data_view, iolist_to_binary(json:encode(Cfg))}]),
+    Total_ = [el(span, fmt(maps:get(total, L), [Total]), [<<"ah-pagination-total">>], [])
+              || bool(show_total, R#ah_pagination.show_total)],
+    SizeSel = [el('div',
+                  el(select, [el(option, fmt(maps:get(per_page, L), [Sz]), [],
+                                 [{value, Sz}, {selected, Sz =:= Size}])
+                              || Sz <- R#ah_pagination.page_sizes],
+                     [<<"ah-pagination-size-select">>],
+                     [{aria_label, maps:get(per_page_aria, L)}]),
+                  [<<"ah-pagination-size-selector">>], [])
+               || bool(show_size_selector, R#ah_pagination.show_size_selector)],
+    Jumper = [el('div', [el(span, maps:get(goto, L), [], []),
+                         aihtml_html:void(input, [<<"ah-pagination-jumper-input">>],
+                                          [{type, text}, {inputmode, numeric},
+                                           {aria_label, maps:get(goto, L)}]),
+                         el(span, fmt(maps:get(goto_suffix, L), [Pages]), [],
+                            [{data_template, maps:get(goto_suffix, L)}]),
+                         el(button, maps:get(goto_confirm, L), [<<"ah-pagination-jumper-btn">>],
+                            [{type, button}])],
+                 [<<"ah-pagination-jumper">>], [])
+              || bool(show_jumper, R#ah_pagination.show_jumper)],
+    el('div', [Total_, List, SizeSel, Jumper, hidden(R#ah_pagination.name, Cur)],
+       [Classes, [<<"ah-pagination-links">> || Href =/= undefined]],
+       [[{role, navigation}, {aria_label, maps:get(aria_label, L)},
+         {data_ah, <<"pagination">>}, {data_ah_value, Cur},
+         {data_total, Total}, {data_page_size, Size}, {data_max_visible, Max},
+         {data_href, Href}], ?E:root_attrs(R, change)]);
+
+render(#ah_steps{items = Steps, value = Current} = R) ->
+    Classes = classes(R),
+    Norm = [norm_step(S) || S <- Steps],
+    N = length(Norm),
+    Cur = min(max(0, Current), max(0, N - 1)),
+    Clickable = bool(clickable, R#ah_steps.clickable),
+    HasContent = lists:any(fun(M) -> maps:get(content, M, undefined) =/= undefined end, Norm),
+    ShowNav = case R#ah_steps.show_nav of
+                  undefined -> HasContent;
+                  B -> bool(show_nav, B)
+              end,
+    Indexed = lists:zip(lists:seq(0, N - 1), Norm),
+    Items = [step_item(I, M, Cur, Clickable) || {I, M} <- Indexed],
+    Panels = [el('div', [el('div', maps:get(content, M, []),
+                            [<<"ah-steps-panel">>, [<<"ah-steps-panel-active">> || I =:= Cur]],
+                            [{data_index, I}]) || {I, M} <- Indexed],
+                 [<<"ah-steps-panels">>], []) || HasContent],
+    Nav = [el('div', [step_btn(prev, R#ah_steps.prev_label, Clickable andalso Cur > 0),
+                      step_btn(next, R#ah_steps.next_label, Clickable andalso Cur < N - 1)],
+              [<<"ah-steps-nav">>], []) || ShowNav],
+    el('div', [el('div', Items, [<<"ah-steps-header">>], []), Panels, Nav,
+               hidden(R#ah_steps.name, Cur)],
+       Classes,
+       [[{data_ah, <<"steps">>}, {data_ah_value, Cur},
+         {data_clickable, (not Clickable) andalso <<"false">>}], ?E:root_attrs(R, change)]);
+
+render(#ah_skeleton{width = W, height = H} = R) ->
+    Classes = classes(R),
+    Variant = case R#ah_skeleton.variant of undefined -> text; V -> V end,
+    Body = case Variant of
+               text ->
+                   N = max(1, R#ah_skeleton.lines),
+                   [el(span, [], [<<"ah-skeleton__line">>],
+                       [{style, style([{<<"width">>, case I of N -> <<"62%">>; _ -> <<"100%">> end},
+                                       {<<"height">>, len(H)}])}])
+                    || I <- lists:seq(1, N)];
+               circle ->
+                   D = case W of undefined -> 40; _ -> W end,
+                   el(span, [], [<<"ah-skeleton__shape ah-skeleton__shape-circle">>],
+                      [{style, style([{<<"width">>, len(D)},
+                                      {<<"height">>, len(case H of undefined -> D; _ -> H end)}])}]);
+               rect ->
+                   el(span, [], [<<"ah-skeleton__shape">>],
+                      [{style, style([{<<"width">>, len(case W of undefined -> <<"100%">>; _ -> W end)},
+                                      {<<"height">>, len(case H of undefined -> 120; _ -> H end)},
+                                      {<<"border-radius">>, len(R#ah_skeleton.radius)}])}])
+           end,
+    el('div', Body, Classes,
+       [[{data_variant, Variant}, {data_animated, tf(not R#ah_skeleton.static)},
+         {role, status}, {aria_busy, <<"true">>}, {aria_live, polite},
+         {aria_label, R#ah_skeleton.label}], ?E:root_attrs(R, none)]);
+
+render(#ah_loader{text = Text} = R) ->
+    Classes = classes(R),
+    el('div', [el('div', [], [<<"ah-loader-icon">>], [{aria_hidden, <<"true">>}]),
+               [el('div', Text, [<<"ah-loader-text">>], []) || Text =/= <<>>]],
+       Classes,
+       [[{role, status}, {aria_live, polite}, {aria_busy, tf(not R#ah_loader.hidden)},
+         {aria_label, text_of(Text)}, {data_ah, <<"loader">>},
+         {data_modal, bool(modal, R#ah_loader.modal) andalso <<"true">>}],
+        ?E:root_attrs(R, none)]);
+
+render(#ah_empty{body = Children} = R) ->
+    el('div', [maybe_el('div', R#ah_empty.icon, <<"ah-empty__icon">>, [{aria_hidden, <<"true">>}]),
+               maybe_el('div', R#ah_empty.title, <<"ah-empty__title">>),
+               maybe_el('div', R#ah_empty.description, <<"ah-empty__description">>),
+               case Children of
+                   [] -> [];
+                   undefined -> [];
+                   _ -> el('div', Children, [<<"ah-empty__content">>], [])
+               end],
+       classes(R), ?E:root_attrs(R, none)).
+
+%%%===================================================================
+%%% Component helpers
+%%%===================================================================
+
+norm_tab({K, L, P}) -> {bin(K), L, P, false};
+norm_tab({K, L, P, M}) when is_map(M) -> {bin(K), L, P, maps:get(disabled, M, false) =:= true}.
+
+active_key(undefined, KDs) ->
+    case [K || {K, false} <- KDs] of
+        [K | _] -> K;
+        [] -> <<>>
+    end;
+active_key(Active, _) -> bin(Active).
 
 norm_crumb(#{} = M) -> M;
 norm_crumb({L, H}) -> #{label => L, href => H};
@@ -324,63 +529,6 @@ crumb(M, I, Last, ActiveLast) ->
 %%%===================================================================
 %%% Pagination
 %%%===================================================================
-
-%% @doc Page navigation for `Total' items, `Page' being current (from 1).
-%% Options: page_size (10), page_sizes ([10,20,50,100]),
-%% show_size_selector (true), show_jumper, show_first_last, show_total,
-%% max_visible (7 slots) or siblings (pages on each side of the current
-%% one), href (a template with {page} and {size}: pages become links and
-%% no script is needed), labels (#{prev, next, first, last, per_page,
-%% total, goto, goto_suffix, goto_confirm, page_info, aria_label,
-%% per_page_aria}), name. Value: the current page.
--spec pagination(non_neg_integer(), pos_integer(), css(), attrs()) -> element().
-pagination(Total, Page, Css, Attrs) ->
-    {E, O, Rest} = split(pagination, Attrs),
-    Size = max(1, opt(page_size, O, 10)),
-    Pages = max(1, (Total + Size - 1) div Size),
-    Cur = min(max(1, Page), Pages),
-    Max = case opt(siblings, O) of
-              undefined -> opt(max_visible, O, 7);
-              S -> 2 * S + 5
-          end,
-    L = maps:merge(labels(), opt(labels, O, #{})),
-    Href = opt(href, O),
-    %% What the page list depends on besides the state; layout_basic.js
-    %% reads it to re-render the list with the same template.
-    Cfg = #{labels => maps:map(fun(_, V) -> bin(V) end,
-                              maps:with([prev, next, first, last, page_info], L)),
-            first_last => opt(show_first_last, O, false) =:= true,
-            simple => has_flag(simple, E, Css),
-            href => case Href of undefined -> null; _ -> bin(Href) end},
-    List = el(ul, aihtml_tpl:safe(tpl_pagination_items(pagination_view(Cur, Pages, Max, Size, Cfg))),
-              [<<"ah-pagination-pages">>],
-              [{data_view, iolist_to_binary(json:encode(Cfg))}]),
-    Total_ = [el(span, fmt(maps:get(total, L), [Total]), [<<"ah-pagination-total">>], [])
-              || opt(show_total, O, false) =:= true],
-    SizeSel = [el('div',
-                  el(select, [el(option, fmt(maps:get(per_page, L), [Sz]), [],
-                                 [{value, Sz}, {selected, Sz =:= Size}])
-                              || Sz <- opt(page_sizes, O, [10, 20, 50, 100])],
-                     [<<"ah-pagination-size-select">>],
-                     [{aria_label, maps:get(per_page_aria, L)}]),
-                  [<<"ah-pagination-size-selector">>], [])
-               || opt(show_size_selector, O, true) =:= true],
-    Jumper = [el('div', [el(span, maps:get(goto, L), [], []),
-                         aihtml_html:void(input, [<<"ah-pagination-jumper-input">>],
-                                          [{type, text}, {inputmode, numeric},
-                                           {aria_label, maps:get(goto, L)}]),
-                         el(span, fmt(maps:get(goto_suffix, L), [Pages]), [],
-                            [{data_template, maps:get(goto_suffix, L)}]),
-                         el(button, maps:get(goto_confirm, L), [<<"ah-pagination-jumper-btn">>],
-                            [{type, button}])],
-                 [<<"ah-pagination-jumper">>], [])
-              || opt(show_jumper, O, false) =:= true],
-    el('div', [Total_, List, SizeSel, Jumper, hidden(opt(name, O), Cur)],
-       [root(E, Css), [<<"ah-pagination-links">> || Href =/= undefined]],
-       [[{role, navigation}, {aria_label, maps:get(aria_label, L)},
-         {data_ah, <<"pagination">>}, {data_ah_value, Cur},
-         {data_total, Total}, {data_page_size, Size}, {data_max_visible, Max},
-         {data_href, Href}], Rest]).
 
 %% @doc The page numbers to show, `gap' standing for an ellipsis. At most
 %% `Max' slots (at least 5): the first and last pages always, the current
@@ -473,39 +621,6 @@ fmt(T, Args) ->
 %%% Steps
 %%%===================================================================
 
-%% @doc A step indicator (wizard). `Steps' are `Title', `{Title, Description}'
-%% or `#{title, description, content, status, disabled}' (status is one of
-%% completed | active | error | disabled | pending; by default it follows
-%% `Current', a 0-based index). When any step has content, the panels and
-%% prev/next buttons are rendered too.
-%% Options: clickable (default true), show_nav, prev_label, next_label, name.
-%% Value: the current index.
--spec steps([html() | {html(), html()} | map()], non_neg_integer(), css(), attrs()) -> element().
-steps(Steps, Current, Css, Attrs) ->
-    {E, O, Rest} = split(steps, Attrs),
-    Norm = [norm_step(S) || S <- Steps],
-    N = length(Norm),
-    Cur = min(max(0, Current), max(0, N - 1)),
-    Clickable = opt(clickable, O, true) =:= true,
-    HasContent = lists:any(fun(M) -> maps:get(content, M, undefined) =/= undefined end, Norm),
-    ShowNav = opt(show_nav, O, HasContent) =:= true,
-    Indexed = lists:zip(lists:seq(0, N - 1), Norm),
-    Items = [step_item(I, M, Cur, Clickable) || {I, M} <- Indexed],
-    Panels = [el('div', [el('div', maps:get(content, M, []),
-                            [<<"ah-steps-panel">>, [<<"ah-steps-panel-active">> || I =:= Cur]],
-                            [{data_index, I}]) || {I, M} <- Indexed],
-                 [<<"ah-steps-panels">>], []) || HasContent],
-    Nav = [el('div', [step_btn(prev, opt(prev_label, O, <<"\x{2190} Previous"/utf8>>),
-                               Clickable andalso Cur > 0),
-                      step_btn(next, opt(next_label, O, <<"Next \x{2192}"/utf8>>),
-                               Clickable andalso Cur < N - 1)],
-              [<<"ah-steps-nav">>], []) || ShowNav],
-    el('div', [el('div', Items, [<<"ah-steps-header">>], []), Panels, Nav,
-               hidden(opt(name, O), Cur)],
-       root(E, Css),
-       [[{data_ah, <<"steps">>}, {data_ah_value, Cur},
-         {data_clickable, (not Clickable) andalso <<"false">>}], Rest]).
-
 norm_step(#{} = M) -> M;
 norm_step({T, D}) -> #{title => T, description => D};
 norm_step(T) -> #{title => T}.
@@ -544,76 +659,6 @@ step_btn(Action, Label, Enabled) ->
     el(button, Label, [<<"ah-steps-btn">>, [<<"ah-steps-btn-disabled">> || not Enabled]],
        [{type, button}, {data_action, Action}, {disabled, not Enabled}]).
 
-%%%===================================================================
-%%% Skeleton, loader, empty
-%%%===================================================================
-
-%% @doc A shimmering placeholder. Css: text (default) | circle | rect,
-%% static (no shimmer), done (hidden).
-%% Options: lines (text, default 3), width, height, radius, label.
--spec skeleton(css(), attrs()) -> element().
-skeleton(Css, Attrs) ->
-    {E, O, Rest} = split(skeleton, Attrs),
-    Variant = pick(Css, [text, circle, rect], text),
-    W = opt(width, O),
-    H = opt(height, O),
-    Body = case Variant of
-               text ->
-                   N = max(1, opt(lines, O, 3)),
-                   [el(span, [], [<<"ah-skeleton__line">>],
-                       [{style, style([{<<"width">>, case I of N -> <<"62%">>; _ -> <<"100%">> end},
-                                       {<<"height">>, len(H)}])}])
-                    || I <- lists:seq(1, N)];
-               circle ->
-                   D = case W of undefined -> 40; _ -> W end,
-                   el(span, [], [<<"ah-skeleton__shape ah-skeleton__shape-circle">>],
-                      [{style, style([{<<"width">>, len(D)},
-                                      {<<"height">>, len(case H of undefined -> D; _ -> H end)}])}]);
-               rect ->
-                   el(span, [], [<<"ah-skeleton__shape">>],
-                      [{style, style([{<<"width">>, len(case W of undefined -> <<"100%">>; _ -> W end)},
-                                      {<<"height">>, len(case H of undefined -> 120; _ -> H end)},
-                                      {<<"border-radius">>, len(opt(radius, O))}])}])
-           end,
-    el('div', Body, root(E, Css),
-       [[{data_variant, Variant}, {data_animated, tf(not has_flag(static, E, Css))},
-         {role, status}, {aria_busy, <<"true">>}, {aria_live, polite},
-         {aria_label, opt(label, O, <<"Loading">>)}], Rest]).
-
-%% @doc A spinner. By default an overlay covering its positioned parent
-%% (sigil's loader); `inline' puts it in the flow, `center' in a box fixed
-%% at the middle of the viewport, `hidden' renders it hidden. Css also
-%% picks the text position: bottom (default) | top | left | right.
-%% Options: text (default "Loading..."; <<>> for none), modal (a page
-%% scrim while shown; Esc hides it).
-%% Methods: show([Left, Top]), hide, toggle, text(Text).
--spec loader(css(), attrs()) -> element().
-loader(Css, Attrs) ->
-    {E, O, Rest} = split(loader, Attrs),
-    Text = opt(text, O, <<"Loading...">>),
-    Hidden = has_flag(hidden, E, Css),
-    el('div', [el('div', [], [<<"ah-loader-icon">>], [{aria_hidden, <<"true">>}]),
-               [el('div', Text, [<<"ah-loader-text">>], []) || Text =/= <<>>]],
-       root(E, Css),
-       [[{role, status}, {aria_live, polite}, {aria_busy, tf(not Hidden)},
-         {aria_label, text_of(Text)}, {data_ah, <<"loader">>},
-         {data_modal, opt(modal, O, false) =:= true andalso <<"true">>}], Rest]).
-
-%% @doc An empty-state placeholder: icon, title, description and
-%% `Children' as the action area.
-%% Options: icon (html, e.g. {safe, Svg}), title, description.
--spec empty(html(), css(), attrs()) -> element().
-empty(Children, Css, Attrs) ->
-    {E, O, Rest} = split(empty, Attrs),
-    el('div', [maybe_el('div', opt(icon, O), <<"ah-empty__icon">>, [{aria_hidden, <<"true">>}]),
-               maybe_el('div', opt(title, O), <<"ah-empty__title">>),
-               maybe_el('div', opt(description, O), <<"ah-empty__description">>),
-               case Children of
-                   [] -> [];
-                   undefined -> [];
-                   _ -> el('div', Children, [<<"ah-empty__content">>], [])
-               end],
-       root(E, Css), Rest).
 
 %%%===================================================================
 %%% Catalog
@@ -839,37 +884,31 @@ maybe_el(Tag, X, Class) -> maybe_el(Tag, X, Class, []).
 maybe_el(_Tag, undefined, _Class, _Attrs) -> [];
 maybe_el(Tag, X, Class, Attrs) -> el(Tag, X, [Class], Attrs).
 
-split(Name, Attrs) ->
-    E = aihtml_catalog:entry(?MODULE, Name),
-    {O, Rest} = aihtml_catalog:split_options(E, Attrs),
-    {E, O, Rest}.
+cat_entry(Name) -> aihtml_catalog:entry(?MODULE, Name).
 
-root(E, Css) -> aihtml_catalog:classes(E, Css).
+classes(R) ->
+    Tag = element(1, R),
+    ?E:classes(R, fields(Tag), cat_entry(?E:component_name(Tag))).
 
-has_flag(Flag, E, Css) -> lists:member(Flag, aihtml_catalog:flags(E, Css)).
+%% The root id as a binary and the record carrying it: the `id' field, an
+%% id among the attrs, or a generated Prefix-N.
+with_id(R, Prefix) ->
+    Id = case element(3, R) of
+             undefined ->
+                 case lists:keyfind(<<"id">>, 1, aihtml_html:attrs(element(5, R))) of
+                     {_, V} when is_binary(V) -> V;
+                     _ -> <<Prefix/binary, "-",
+                            (integer_to_binary(erlang:unique_integer([positive])))/binary>>
+                 end;
+             V -> bin(V)
+         end,
+    {Id, setelement(3, R, Id)}.
 
-opt(K, O) -> maps:get(K, O, undefined).
-opt(K, O, D) -> maps:get(K, O, D).
+bool(Field, V) -> one_of(Field, V, [true, false]).
 
-%% The chosen member of a modifier group (classes/2 has validated it).
-pick(Css, Values, Default) ->
-    case [A || A <- flat(Css), is_atom(A), lists:member(A, Values)] of
-        [A | _] -> A;
-        [] -> Default
-    end.
-
-flat(L) when is_list(L) ->
-    case L =/= [] andalso io_lib:printable_unicode_list(L) of
-        true -> [L];
-        false -> lists:flatmap(fun flat/1, L)
-    end;
-flat(X) -> [X].
-
-take_id(Rest, Prefix) ->
-    case [V || {K, V} <- Rest, K =:= id orelse K =:= <<"id">>] of
-        [V | _] -> bin(V);
-        [] -> <<Prefix/binary, "-", (integer_to_binary(erlang:unique_integer([positive])))/binary>>
-    end.
+one_of(Field, V, Allowed) ->
+    lists:member(V, Allowed) orelse error({aihtml, {bad_option, Field, V}}),
+    V.
 
 hidden(undefined, _) -> [];
 hidden(Name, Value) ->
@@ -895,7 +934,6 @@ text_of(I) when is_integer(I) -> integer_to_binary(I);
 text_of(_) -> <<>>.
 
 len(undefined) -> false;
-len(false) -> false;
 len(N) when is_integer(N) -> <<(integer_to_binary(N))/binary, "px">>;
 len(V) -> bin(V).
 
