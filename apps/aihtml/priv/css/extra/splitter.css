@@ -1,0 +1,19 @@
+/* aihtml additions for the splitter component (aihtml_splitter).
+   Sigil styles live in ../sigil/components. */
+
+/* ==========================================================================
+   splitter: keyboard focus, dragging, collapsed first pane
+   ========================================================================== */
+.ah-splitter-splitbar:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-primary);
+  outline-offset: 0;
+  background: var(--ah-color-grey-300);
+}
+.ah-splitter-dragging { user-select: none; }
+.ah-splitter-dragging > .ah-splitter-splitbar { background: var(--ah-color-grey-300); }
+.ah-splitter-collapsed > .ah-splitter-splitbar .ah-splitter-collapse-btn::after {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+.ah-splitter-splitbar { touch-action: none; }
+.ah-splitter-horizontal > .ah-splitter-splitbar .ah-splitter-collapse-btn { height: 100%; }
