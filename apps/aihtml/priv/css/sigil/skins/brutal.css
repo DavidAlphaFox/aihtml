@@ -292,8 +292,13 @@
 }
 
 /* ── 3. Card / Panel / Window ─────────────────────────────────────────── */
+/* aihtml: border-style added. `.ah-kpi-card` (border: none) and `.ah-panel`
+   have no border in the library, so width and colour alone drew nothing and
+   these two stayed frameless under brutal. phoqus sets its style (dashed) for
+   the same reason. Card and window are solid already; unchanged for them. */
 [data-skin="brutal"] :is(.ah-card, .ah-panel, .ah-window, .ah-kpi-card) {
   border-width: var(--ah-skin-border-width);
+  border-style: solid;
   border-color: var(--ah-skin-ink);
   box-shadow: var(--ah-skin-shadow);
 }
