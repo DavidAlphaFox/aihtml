@@ -18,7 +18,7 @@ action(steps, _, _Ev, Ctx) ->
 action(nested, _, _Ev, Ctx) ->
     %% HTML rendered inside an action may carry actions of its own
     aihtml_action:html(Ctx, {id, list},
-                       li(button(<<"x">>, x, [], [on(click, {?MODULE, inc, #{n => 1}})])),
+                       li(span(<<"x">>, [], [on(click, {?MODULE, inc, #{n => 1}})])),
                        append);
 action(publish_then_html, #{topic := T}, _Ev, Ctx) ->
     %% publishing renders its own operations without touching this reply

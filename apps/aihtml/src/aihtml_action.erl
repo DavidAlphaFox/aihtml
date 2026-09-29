@@ -51,7 +51,7 @@
 -export([sign/1, unsign/1, render_ops/1, stream_id/1, plain/1, check_secret/0]).
 %% Operations inside an action.
 -export([html/3, html/4, remove/2, attr/4, add_class/3, remove_class/3,
-         set_value/3, focus/2, title/2, redirect/2, js/2, flush/1, meta/1]).
+         set_value/3, focus/2, title/2, redirect/2, js/2, call/4, flush/1, meta/1]).
 
 -export_type([ref/0, event/0, ctx/0, target/0, run_opts/0]).
 
@@ -171,10 +171,16 @@ execute({Mod, Name, Args}, EventJson, #{emit := Emit} = Opts) ->
 html(Ctx, Target, Html) -> html(Ctx, Target, Html, inner).
 
 %% @doc Put `Html' at `Target': `inner' replaces the content, `outer' the
-%% element itself; `append' and `prepend' add to the content.
--spec html(ctx(), target(), aihtml:html(), inner | outer | append | prepend) -> ok.
+%% element itself; `append' and `prepend' add to the content. `morph'
+%% (the element itself, Html must have one root) and `morph_inner' (its
+%% content) patch the existing DOM instead, keeping focus, caret, scroll
+%% and component state of everything that survives. Every mode puts the
+%% focus back on the element with the same id.
+-spec html(ctx(), target(), aihtml:html(),
+           inner | outer | append | prepend | morph | morph_inner) -> ok.
 html(Ctx, Target, Html, Swap) when Swap =:= inner; Swap =:= outer;
-                                   Swap =:= append; Swap =:= prepend ->
+                                   Swap =:= append; Swap =:= prepend;
+                                   Swap =:= morph; Swap =:= morph_inner ->
     push(Ctx, target(Target, #{op => html, swap => Swap,
                                html => iolist_to_binary(aihtml_html:render(Html))})).
 
@@ -218,6 +224,17 @@ redirect(Ctx, Url) -> push(Ctx, #{op => redirect, value => text(Url)}).
 %% build the code from user input.
 -spec js(ctx(), iodata()) -> ok.
 js(Ctx, Code) -> push(Ctx, #{op => js, code => text(Code)}).
+
+%% @doc Call a component method in the browser, without writing any
+%% JavaScript: `call(Ctx, {id, <<"cart">>}, open, [])' runs the `open'
+%% method of the behaviour the element carries (its data-ah), and
+%% `call(Ctx, global, toast, [#{message => <<"Saved">>}])' runs a function
+%% registered with AH.fn. Args are sent as JSON values.
+-spec call(ctx(), target() | global, atom() | binary(), [term()]) -> ok.
+call(Ctx, global, Method, Args) when is_list(Args) ->
+    push(Ctx, #{op => call, method => text(Method), args => Args});
+call(Ctx, Target, Method, Args) when is_list(Args) ->
+    push(Ctx, target(Target, #{op => call, method => text(Method), args => Args})).
 
 %% @doc Send the operations buffered so far, before the action returns.
 -spec flush(ctx()) -> ok.

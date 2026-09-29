@@ -54,13 +54,19 @@ args_must_be_data_test() ->
                  aihtml_action:token({?M, inc, #{pid => self()}})),
     ?assertError({aihtml, {action_must_be_mfa, _}}, on(click, fun() -> ok end)).
 
+component_event_names_test() ->
+    Html = aihtml:render_binary(span([], [], [on('ah:close', {?M, inc, #{n => 1}})])),
+    ?assertMatch({match, _}, re:run(Html, <<"data-ah-on=\"ah:close:[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\"">>)),
+    ?assertError({aihtml, {bad_event_name, _}}, on(<<"ah:Close">>, {?M, inc, #{}})),
+    ?assertError({aihtml, {bad_event_name, _}}, on(<<"x y">>, {?M, inc, #{}})).
+
 %%%===================================================================
 %%% Rendering
 %%%===================================================================
 
 static_render_carries_signed_actions_test() ->
     Html = aihtml:render_binary(
-             button(<<"+">>, x, [], [on(click, {?M, inc, #{n => 1}}),
+             span(<<"+">>, [], [on(click, {?M, inc, #{n => 1}}),
                                      on(input, {?M, echo, #{}}, #{debounce => 150,
                                                                    include => [{id, a}, <<".b">>],
                                                                    confirm => <<"Sure?">>})])),
@@ -78,7 +84,7 @@ page_points_at_the_action_endpoint_test() ->
 %%%===================================================================
 
 run_streams_agui_events_test() ->
-    Tok = token_of(button(<<"+">>, x, [], [on(click, {?M, inc, #{n => 41}})])),
+    Tok = token_of(span(<<"+">>, [], [on(click, {?M, inc, #{n => 41}})])),
     {ok, Events} = run(Tok, #{<<"type">> => <<"click">>}),
     ?assertEqual([#{<<"type">> => <<"RUN_STARTED">>, <<"threadId">> => <<"t1">>, <<"runId">> => <<"r1">>},
                   #{<<"type">> => <<"CUSTOM">>, <<"name">> => <<"aihtml.ui">>,
