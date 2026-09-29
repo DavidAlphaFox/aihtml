@@ -90,11 +90,11 @@ login() ->
 
 参照 AG-UI：每个事件发一次 POST，响应是 SSE 事件流。服务端在请求之间不保存任何东西，状态全部在数据层。请求可以落到任意节点，负载均衡不需要粘性，服务器重启后已打开的页面照常可用。
 
-- **绑定**：`on(Event, {Module, Action, Args})`，可加选项 `#{debounce => Ms, include => [选择器], confirm => 提问}`。
+- **绑定**：`on(Event, {Module, Action, Args})`，可加选项 `#{debounce => Ms, include => [选择器], confirm => 提问}`，以及下面"请求协调与加载指示"一节的 `sync`、`sync_scope`、`indicator`、`disable`。
 - **签名**：`{Module, Action, Args}` 用应用密钥做 HMAC 签名后写进 HTML。浏览器无法伪造 action，也改不了参数。Args 只签名不加密，页面能看到内容，所以只放 id 这类数据。
 - **执行**：`Module:action(Action, Args, Event, Ctx)` 在请求进程中运行。只有声明了 `-behaviour(aihtml_action)` 的模块才能被调用。
 - **Event**：包含元素 `id`、`value`、`checked`、`key`、所在表单的全部字段 `form`、`include` 指定的其它控件值 `values`、`data-*` 属性 `data`。
-- **页面操作**：`aihtml_action:html/3,4`、`remove/2`、`attr/4`、`add_class/3`、`remove_class/3`、`set_value/3`、`focus/2`、`title/2`、`redirect/2`、`js/2`。操作先缓冲，action 返回时一起发送。`flush/1` 可以提前发送，用来先显示加载状态、再显示数据。
+- **页面操作**：`aihtml_action:html/3,4`、`remove/2`、`attr/4`、`add_class/3`、`remove_class/3`、`set_value/3`、`focus/2`、`title/2`、`redirect/2`、`js/2`、`call/4`、`trigger/4`、`push_url/2`、`replace_url/2`。操作先缓冲，action 返回时一起发送。`flush/1` 可以提前发送，用来先显示加载状态、再显示数据。
 - **事件流**：依次是 `RUN_STARTED`、若干 `CUSTOM "aihtml.ui"`（值为 DOM 操作列表）、`RUN_FINISHED`。action 崩溃时以 `RUN_ERROR` 结束，只记日志，不向浏览器泄露细节。
 - **并发**：同一元素的 click、submit 在请求进行中会忽略重复触发。input、change 等事件以最新一次为准，旧请求会被取消。
 - **授权**：认证与授权在 action 里做，请求可以从 `aihtml_action:meta(Ctx)` 取得，cowboy 下是 `#{req => Req}`。
@@ -192,6 +192,66 @@ action(search, _, #{value := Q}, Ctx) ->
 ```
 
 浏览器端也可以直接调用：`AH.swap($("#box"), Html, "morph")`。
+
+### 元素保留
+
+带 `preserve()`（即 `data-ah-preserve`）且有 id 的元素，在任何替换方式下都不会被替换。新内容里出现同 id 的元素时，页面上已有的那个节点会被原样移到新位置，新的那份丢弃。
+
+适用于：正在播放的视频、有未保存内容的编辑器、已经挂载且内部有状态的组件。浏览器支持 `moveBefore` 时用它移动，iframe 和媒体不会重新加载。
+
+```erlang
+'div'([video_player(Url), comments(Items)], [], [{id, player_box}])
+%% 播放器本身：
+'div'(Player, [], [{id, player}, preserve()])
+```
+
+### 过渡动画（settle）
+
+普通替换（`inner`、`outer`、`append`、`prepend`）完成后有一个 20 毫秒的过渡期：
+- **新加入的顶层元素**带 `ah-added` 类，替换目标带 `ah-settling` 类，过渡期结束后移除。
+- **与旧元素 id 相同的元素**先沿用旧元素的 `class`、`style`、`width`、`height`，过渡期结束后才换成新值。所以两次渲染之间的样式变化会成为 CSS 过渡。
+- 形变替换本来就在原节点上改属性，过渡自然生效。形变新增的节点同样带 `ah-added`。
+- 组件根元素（`data-ah`）不参与，它们的行为在初始化时要读真实属性。
+
+```css
+.ah-added { opacity: 0; }
+#status { transition: color 300ms, background-color 300ms; }
+```
+
+### 请求协调与加载指示
+
+`on/3` 的这几个选项写成元素属性，作用于这个元素上绑定的所有 action：
+
+| 选项 | 作用 |
+|---|---|
+| `sync => drop` | 同一元素的请求还在进行时忽略新的请求。click、submit 默认如此。 |
+| `sync => replace` | 中止进行中的请求，发送新的。input、change、键盘事件默认如此。 |
+| `sync => queue` | 等进行中的请求结束再发送。排队的只保留最新一个。 |
+| `sync_scope => Selector` | 以最近的匹配祖先为单位协调，例如 `<<"form">>` 让整个表单共用一个队列。 |
+| `indicator => Selector` | 请求期间给匹配元素加 `ah-request` 类。带 `ah-indicator` 类的元素只在此时显示。 |
+| `disable => Selector` | 请求期间禁用匹配元素；原本就禁用的保持禁用。 |
+
+选择器可以写 `this` 或 `<<"closest 选择器">>`。多个请求同时占用一个指示器时，要等全部结束它才消失。`fetch/4` 也支持 `indicator` 和 `disable`。
+
+```erlang
+button(<<"Save">>, save, [],
+       [on(click, {?MODULE, save, #{}},
+           #{indicator => <<"#saving">>, disable => <<"closest form">>})]),
+span(<<"Saving…"/utf8>>, [<<"ah-indicator">>], [{id, saving}])
+```
+
+### 触发事件与浏览器历史
+
+- **触发事件**：`aihtml_action:trigger(Ctx, Target | document, Event, Detail)` 在浏览器里触发一个会冒泡的 DOM 事件，`Detail` 以 JSON 传过去。页面脚本可以监听它，元素也可以用 `on('ah:saved', ...)` 把它接到别的 action 上。
+- **浏览器历史**：`aihtml_action:push_url(Ctx, Url)` 和 `replace_url(Ctx, Url)` 写入浏览器历史，但不发起请求，这样地址栏和书签能对上刚显示的内容。用户前进或后退到这些条目时，页面会重新加载那个 URL，由服务端直接渲染。页面仍然是无状态的，前提是这些 URL 能渲染出对应的内容。
+
+```erlang
+action(page, #{n := N}, _Ev, Ctx) ->
+    aihtml_action:html(Ctx, {id, list}, list_page(N), morph),
+    aihtml_action:push_url(Ctx, [<<"/items?page=">>, integer_to_binary(N)]).
+```
+
+示例首页的"Load data"卡片演示了指示器、禁用、同一队列，以及 `?view=processes` 的历史记录。
 
 ### 浮动弹层
 
