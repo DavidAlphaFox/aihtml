@@ -8,40 +8,205 @@
 %%% rather than classes; for those the catalog maps the modifier to no
 %%% class (`classes => #{M => []}') and the function writes the attribute.
 %%%
+%%% Each function builds an element record (#ah_avatar{} ..., defined in
+%%% include/aihtml_display.hrl) and render/1 turns it into HTML, so pages
+%%% may also write the records directly (designs/05-records.md).
+%%%
 %%% Timestamps given to `time_ago/3' are Unix seconds (as returned by
 %%% `erlang:system_time(second)'), a UTC `calendar:datetime()' or an
 %%% RFC 3339 binary.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_display).
+-behaviour(aihtml_element).
+
+-include("aihtml_display.hrl").
 
 -export([avatar/3, badge/3, chip/3, aspect_ratio/3, kbd/3, time_ago/3,
          expandable_text/3, progressbar/3, progress_circle/3, meter/3,
          statistic/3, kpi_card/3, timeline/3, ranking_list/3, tag_cloud/3,
-         alert/3, catalog/0]).
+         alert/3, render/1, fields/1, catalog/0]).
+
+-export_type([element/0]).
 
 -define(H, aihtml_html).
+-define(E, aihtml_element).
 -define(COLORS, [primary, secondary, success, warning, error, info]).
 %% 2 * pi * 45, the progress circle's circumference (r = 45 in a 100 box)
 -define(CIRC, 282.74333882308139).
 
+%% Records may hold any value, whatever their field types say, so these
+%% keep rejecting values outside the types at render time.
+-dialyzer({no_match, [trend_class/1, flag/2, sort_tags/2, alter_case/2, clamp/3]}).
+
 -type html() :: aihtml_html:html().
 -type css() :: aihtml_html:css().
 -type attrs() :: aihtml_html:attrs().
--type element() :: aihtml_html:element().
+-type element() :: #ah_avatar{} | #ah_badge{} | #ah_chip{} | #ah_aspect_ratio{}
+                 | #ah_kbd{} | #ah_time_ago{} | #ah_expandable_text{} | #ah_alert{}
+                 | #ah_progressbar{} | #ah_progress_circle{} | #ah_meter{}
+                 | #ah_statistic{} | #ah_kpi_card{} | #ah_timeline{}
+                 | #ah_ranking_list{} | #ah_tag_cloud{}.
 
 %%%===================================================================
-%%% Media
+%%% Builders
 %%%===================================================================
 
 %% @doc Avatar: an image with an initials (or icon) fallback that shows
 %% when there is no `src' or the image fails to load. `Content' is the
 %% fallback, `"?"' when empty.
--spec avatar(html(), css(), attrs()) -> element().
+-spec avatar(html(), css(), attrs()) -> #ah_avatar{}.
 avatar(Content, Css, Attrs) ->
-    {Cls, P, _F, O, Rest} = setup(avatar, Css, Attrs),
-    Src = opt(src, O, undefined),
-    Alt = opt(alt, O, <<>>),
+    build(#ah_avatar{body = Content}, Css, Attrs).
+
+%% @doc Badge: a count, dot or status dot over the corner of `Content'
+%% (the anchor). With no anchor (`undefined') the indicator stands alone
+%% inline. Options: `count', `max' (99).
+-spec badge(html(), css(), attrs()) -> #ah_badge{}.
+badge(Content, Css, Attrs) ->
+    build(#ah_badge{body = Content}, Css, Attrs).
+
+%% @doc Chip: a compact label with optional avatar, icon and remove
+%% button. `removable' chips fire `ah:remove' and then `change' before
+%% they remove themselves; `clickable' chips are keyboard focusable.
+%% Options: `avatar' (initials), `icon' (html), `value' (data-ah-value,
+%% defaults to a binary `Content').
+-spec chip(html(), css(), attrs()) -> #ah_chip{}.
+chip(Content, Css, Attrs) ->
+    build(#ah_chip{body = Content}, Css, Attrs).
+
+%% @doc Fixed aspect ratio box. Option `ratio': `<<"16/9">>' (default),
+%% `<<"4:3">>', a number or `{W, H}'. A `style' attribute is kept.
+-spec aspect_ratio(html(), css(), attrs()) -> #ah_aspect_ratio{}.
+aspect_ratio(Children, Css, Attrs) ->
+    build(#ah_aspect_ratio{body = Children}, Css, Attrs).
+
+%% @doc Keyboard key. `Keys' is one key (`<<"Esc">>') or a list of keys
+%% (`[<<"Ctrl">>, <<"K">>]'), rendered as nested `<kbd>'s joined by
+%% the `separator' option (default "+").
+-spec kbd(html() | [html()], css(), attrs()) -> #ah_kbd{}.
+kbd(Keys, Css, Attrs) ->
+    build(#ah_kbd{keys = Keys}, Css, Attrs).
+
+%% @doc Relative time ("3m ago") in sigil's format, rendered on the server
+%% and kept current by the browser every 60 s. `Timestamp' is Unix
+%% seconds, a UTC `calendar:datetime()' or an RFC 3339 binary.
+%% Options: `now' (Unix seconds, for rendering), `labels' (map with
+%% just_now, minutes, hours, days, months; "{n}" is the number),
+%% `live' (true), `title' (true: absolute time on hover).
+-spec time_ago(integer() | calendar:datetime() | binary(), css(), attrs()) -> #ah_time_ago{}.
+time_ago(Timestamp, Css, Attrs) ->
+    build(#ah_time_ago{timestamp = Timestamp}, Css, Attrs).
+
+%% @doc Long text cut at `threshold' characters (100) with a toggle.
+%% Options: `threshold', `expanded' (false), `expand_label' ("展开"),
+%% `collapse_label' ("收起"). Fires `ah:toggle' with the new state.
+-spec expandable_text(unicode:chardata(), css(), attrs()) -> #ah_expandable_text{}.
+expandable_text(Text, Css, Attrs) ->
+    build(#ah_expandable_text{text = Text}, Css, Attrs).
+
+%% @doc Alert (aihtml's own): an inline message box. Options: `title',
+%% `icon' (true, false or html). `dismissible' adds a close button; the
+%% browser fires `ah:dismiss' (cancellable) and removes the alert.
+-spec alert(html(), css(), attrs()) -> #ah_alert{}.
+alert(Children, Css, Attrs) ->
+    build(#ah_alert{body = Children}, Css, Attrs).
+
+%% @doc Linear progress. `Value' is clamped to [min, max]; with the
+%% `indeterminate' flag it may be `undefined'. Options: `min' (0),
+%% `max' (100), `text' (label instead of the percentage), `color_ranges'
+%% (`[{Stop, Color}]', Color a colour atom or a CSS colour).
+-spec progressbar(number() | undefined, css(), attrs()) -> #ah_progressbar{}.
+progressbar(Value, Css, Attrs) ->
+    build(#ah_progressbar{value = Value}, Css, Attrs).
+
+%% @doc Circular progress (SVG), `Value' 0..100. Options: `label' (text
+%% under the ring, also the aria-label), `show_value' (true).
+-spec progress_circle(number() | undefined, css(), attrs()) -> #ah_progress_circle{}.
+progress_circle(Value, Css, Attrs) ->
+    build(#ah_progress_circle{value = Value}, Css, Attrs).
+
+%% @doc Meter: a measurement in a known range, coloured low / optimum /
+%% high like the native `<meter>'. Options: `min' (0), `max' (100), `low',
+%% `high', `optimum', `label', `helper_text', `show_value' (false).
+-spec meter(number(), css(), attrs()) -> #ah_meter{}.
+meter(Value, Css, Attrs) ->
+    build(#ah_meter{value = Value}, Css, Attrs).
+
+%% @doc Statistic: title, prefix, number, suffix and a delta arrow.
+%% Options: `title', `prefix', `suffix', `precision', `group_separator'
+%% (true), `delta'.
+-spec statistic(number() | html(), css(), attrs()) -> #ah_statistic{}.
+statistic(Value, Css, Attrs) ->
+    build(#ah_statistic{value = Value}, Css, Attrs).
+
+%% @doc KPI card: title, big value and a trend badge. Options: `title',
+%% `trend' (percent, > 0 up), `trend_label', `icon' (users, download,
+%% install, star, trending_up, trending_down, or html).
+-spec kpi_card(html(), css(), attrs()) -> #ah_kpi_card{}.
+kpi_card(Value, Css, Attrs) ->
+    build(#ah_kpi_card{value = Value}, Css, Attrs).
+
+%% @doc Timeline. `Items' are maps with `date', `title', `subtitle',
+%% `icon' (html), `description', `dot' (primary | success | warning |
+%% danger) and `expanded'. Items with a description expand on click
+%% unless the `collapsible' option is false.
+-spec timeline([map()], css(), attrs()) -> #ah_timeline{}.
+timeline(Items, Css, Attrs) ->
+    build(#ah_timeline{items = Items}, Css, Attrs).
+
+%% @doc Ranking list. `Items' are maps with `name', `value', and
+%% optionally `rank', `secondary', `sub_value', `code' (country code,
+%% shown as a flag), `tag', `attrs' (on the row). Options: `title',
+%% `max_items', `show_rank' (true), `flag_style' (emoji | flag_icons |
+%% none), `tag_colors' (#{Tag => success | warning | error | info}).
+%% `clickable' rows fire `ah:item-click' with the row index.
+-spec ranking_list([map()], css(), attrs()) -> #ah_ranking_list{}.
+ranking_list(Items, Css, Attrs) ->
+    build(#ah_ranking_list{items = Items}, Css, Attrs).
+
+%% @doc Tag cloud, font size weighted by value. `Tags' are maps with
+%% `label', `value', `url' (or `{Label, Value}' tuples). Options:
+%% `min_font_size' (10), `max_font_size' (24), `font_size_unit' (px),
+%% `url_base', `display_value', `sort_by' (none | label | value),
+%% `sort_order' (ascending | descending), `text_case' (none | all_lower |
+%% all_upper | first_upper | title_case), `text_color', `min_color' and
+%% `max_color' (#RRGGBB gradient), `min_value', `max_value',
+%% `display_limit', `take_top_weighted'. Fires `ah:tag-click'.
+-spec tag_cloud([map() | {html(), number()}], css(), attrs()) -> #ah_tag_cloud{}.
+tag_cloud(Tags, Css, Attrs) ->
+    build(#ah_tag_cloud{items = Tags}, Css, Attrs).
+
+build(R, Css, Attrs) ->
+    Tag = element(1, R),
+    ?E:build(R, fields(Tag), entry(?E:component_name(Tag)), Css, Attrs).
+
+%% @doc The field names of one of this group's records.
+-spec fields(atom()) -> [atom()].
+fields(ah_avatar) -> record_info(fields, ah_avatar);
+fields(ah_badge) -> record_info(fields, ah_badge);
+fields(ah_chip) -> record_info(fields, ah_chip);
+fields(ah_aspect_ratio) -> record_info(fields, ah_aspect_ratio);
+fields(ah_kbd) -> record_info(fields, ah_kbd);
+fields(ah_time_ago) -> record_info(fields, ah_time_ago);
+fields(ah_expandable_text) -> record_info(fields, ah_expandable_text);
+fields(ah_alert) -> record_info(fields, ah_alert);
+fields(ah_progressbar) -> record_info(fields, ah_progressbar);
+fields(ah_progress_circle) -> record_info(fields, ah_progress_circle);
+fields(ah_meter) -> record_info(fields, ah_meter);
+fields(ah_statistic) -> record_info(fields, ah_statistic);
+fields(ah_kpi_card) -> record_info(fields, ah_kpi_card);
+fields(ah_timeline) -> record_info(fields, ah_timeline);
+fields(ah_ranking_list) -> record_info(fields, ah_ranking_list);
+fields(ah_tag_cloud) -> record_info(fields, ah_tag_cloud).
+
+%%%===================================================================
+%%% Rendering: media
+%%%===================================================================
+
+-spec render(element()) -> html().
+render(#ah_avatar{body = Content, src = Src, alt = Alt} = R) ->
+    Cls = classes(R),
     Img = case blank(Src) of
               true -> [];
               false -> ?H:void(img, [<<"ah-avatar__image">>], [{src, Src}, {alt, Alt}])
@@ -52,57 +217,40 @@ avatar(Content, Css, Attrs) ->
     ?H:el(span,
           [Img, ?H:el(span, Fallback, [<<"ah-avatar__fallback">>], [{aria_hidden, <<"true">>}])],
           Cls,
-          [[{data_size, maps:get(size, P)}, {data_shape, maps:get(shape, P)},
-            {data_color, maps:get(color, P)}, {data_ah, <<"avatar">>},
+          [[{data_size, R#ah_avatar.size}, {data_shape, R#ah_avatar.shape},
+            {data_color, R#ah_avatar.color}, {data_ah, <<"avatar">>},
             {role, Named andalso <<"img">>}, {aria_label, Named andalso Alt}],
-           Rest]).
+           ?E:root_attrs(R, none)]);
 
-%% @doc Badge: a count, dot or status dot over the corner of `Content'
-%% (the anchor). With no anchor (`undefined') the indicator stands alone
-%% inline. Options: `count', `max' (99).
--spec badge(html(), css(), attrs()) -> element().
-badge(Content, Css, Attrs) ->
-    {Cls, P, F, O, Rest} = setup(badge, Css, Attrs),
-    Variant = maps:get(variant, P),
-    Count = opt(count, O, undefined),
-    Max = opt(max, O, 99),
+render(#ah_badge{body = Content, variant = Variant, count = Count, max = Max,
+                 show_zero = ShowZero} = R) ->
+    Cls = classes(R),
     Dot = Variant =/= standard,
     Invisible = Variant =:= invisible
         orelse (not Dot andalso is_number(Count) andalso Count == 0
-                andalso not lists:member(show_zero, F)),
+                andalso not ShowZero),
     Standalone = blank(Content),
     Indicator = ?H:el(span, case Dot of true -> []; false -> badge_label(Count, Max) end,
                       [<<"ah-badge-indicator">>],
-                      [{data_variant, Variant}, {data_color, maps:get(color, P)},
+                      [{data_variant, Variant}, {data_color, R#ah_badge.color},
                        {data_dot, tf(Dot)}, {data_invisible, tf(Invisible)},
                        {aria_hidden, not Standalone andalso <<"true">>}]),
     ?H:el(span, [if Standalone -> []; true -> Content end, Indicator],
           [Cls, [<<"ah-badge-root--standalone">> || Standalone]],
-          [[{data_overlap, maps:get(overlap, P)},
-            {data_anchor_vertical, maps:get(vertical, P)},
-            {data_anchor_horizontal, maps:get(horizontal, P)},
+          [[{data_overlap, R#ah_badge.overlap},
+            {data_anchor_vertical, R#ah_badge.vertical},
+            {data_anchor_horizontal, R#ah_badge.horizontal},
             {data_ah, <<"badge">>}, {data_ah_max, Max},
-            {data_ah_show_zero, lists:member(show_zero, F) andalso <<"true">>}],
-           Rest]).
+            {data_ah_show_zero, ShowZero andalso <<"true">>}],
+           ?E:root_attrs(R, none)]);
 
-badge_label(undefined, _Max) -> <<>>;
-badge_label(N, Max) when is_number(N), is_number(Max), N > Max -> [num(Max), <<"+">>];
-badge_label(N, _Max) -> N.
-
-%% @doc Chip: a compact label with optional avatar, icon and remove
-%% button. `removable' chips fire `ah:remove' and then `change' before
-%% they remove themselves; `clickable' chips are keyboard focusable.
-%% Options: `avatar' (initials), `icon' (html), `value' (data-ah-value,
-%% defaults to a binary `Content').
--spec chip(html(), css(), attrs()) -> element().
-chip(Content, Css, Attrs) ->
-    {Cls, P, F, O, Rest} = setup(chip, Css, Attrs),
-    Removable = lists:member(removable, F),
-    Clickable = lists:member(clickable, F),
-    Disabled = lists:member(disabled, F),
-    Avatar = opt(avatar, O, undefined),
-    Icon = opt(icon, O, undefined),
-    Value = opt(value, O, if is_binary(Content) -> Content; true -> undefined end),
+render(#ah_chip{body = Content, removable = Removable, clickable = Clickable,
+                disabled = Disabled, avatar = Avatar, icon = Icon} = R) ->
+    Cls = classes(R),
+    Value = case R#ah_chip.value of
+                undefined when is_binary(Content) -> Content;
+                V -> V
+            end,
     Children = [[?H:el(span, Avatar, [<<"ah-chip__avatar">>], []) || not blank(Avatar)],
                 [?H:el(span, Icon, [<<"ah-chip__icon">>], []) || not blank(Icon)],
                 ?H:el(span, Content, [<<"ah-chip__label">>], []),
@@ -110,27 +258,338 @@ chip(Content, Css, Attrs) ->
                        [{type, button}, {aria_label, <<"Remove">>}, {tabindex, -1}])
                  || Removable]],
     Focusable = (Clickable orelse Removable) andalso not Disabled,
+    Event = case Removable andalso not Clickable of
+                true -> change;
+                false -> click
+            end,
     ?H:el(span, Children, Cls,
-          [[{data_variant, maps:get(variant, P)}, {data_color, maps:get(color, P)},
-            {data_size, maps:get(size, P)}, {data_disabled, tf(Disabled)},
+          [[{data_variant, R#ah_chip.variant}, {data_color, R#ah_chip.color},
+            {data_size, R#ah_chip.size}, {data_disabled, tf(Disabled)},
             {data_clickable, tf(Clickable)}, {data_ah, <<"chip">>},
             {data_ah_value, Value},
             {role, Clickable andalso <<"button">>},
             {tabindex, Focusable andalso 0},
             {aria_disabled, Disabled andalso <<"true">>}],
-           Rest]).
+           ?E:root_attrs(R, Event)]);
 
-%% @doc Fixed aspect ratio box. Option `ratio': `<<"16/9">>' (default),
-%% `<<"4:3">>', a number or `{W, H}'. A `style' attribute is kept.
--spec aspect_ratio(html(), css(), attrs()) -> element().
-aspect_ratio(Children, Css, Attrs) ->
-    {Cls, _P, _F, O, Rest0} = setup(aspect_ratio, Css, Attrs),
-    {Styles, Rest} = lists:partition(fun({K, _}) -> K =:= style orelse K =:= <<"style">>;
+render(#ah_aspect_ratio{body = Children, ratio = Ratio, style = Style0} = R) ->
+    Cls = classes(R),
+    %% a style attribute is kept after the ratio, also when given with a
+    %% binary key (which stays in attrs)
+    {Styles, Rest} = lists:partition(fun({K, _}) -> K =:= <<"style">>;
                                         (_) -> false
-                                     end, Rest0),
-    Style = [<<"aspect-ratio: ">>, ratio_css(opt(ratio, O, undefined)), <<";">>
-             | [[<<" ">>, V] || {_, V} <- Styles]],
-    ?H:el('div', Children, Cls, [[{style, iolist_to_binary(Style)}], Rest]).
+                                     end, flat_attrs(R#ah_aspect_ratio.attrs)),
+    Style = [<<"aspect-ratio: ">>, ratio_css(Ratio), <<";">>
+             | [[<<" ">>, S] || S <- [Style0 || Style0 =/= undefined] ++ [V || {_, V} <- Styles]]],
+    ?H:el('div', Children, Cls,
+          [[{style, iolist_to_binary(Style)}],
+           ?E:root_attrs(R#ah_aspect_ratio{attrs = Rest}, none)]);
+
+%%%===================================================================
+%%% Rendering: text
+%%%===================================================================
+
+render(#ah_kbd{keys = Keys, size = Size, separator = Separator} = R) ->
+    Cls = classes(R),
+    [Root | Literal] = Cls,
+    case is_list(Keys) andalso Keys =/= [] andalso not io_lib:printable_unicode_list(Keys) of
+        false ->
+            ?H:el(kbd, Keys, [Root | Literal], [[{data_size, Size}], ?E:root_attrs(R, none)]);
+        true ->
+            Sep = ?H:el(span, Separator, [<<"ah-kbd-combo__sep">>],
+                        [{aria_hidden, <<"true">>}]),
+            Ks = [?H:el(kbd, K, [Root], [{data_size, Size}]) || K <- Keys],
+            ?H:el(kbd, lists:join(Sep, Ks), [<<"ah-kbd-combo">> | Literal],
+                  [[{data_size, Size}], ?E:root_attrs(R, none)])
+    end;
+
+render(#ah_time_ago{timestamp = Timestamp, labels = Custom} = R) ->
+    Cls = classes(R),
+    Secs = to_unix(Timestamp),
+    Now = case R#ah_time_ago.now of
+              undefined -> erlang:system_time(second);
+              N -> N
+          end,
+    Labels = maps:merge(default_labels(), Custom),
+    Iso = list_to_binary(calendar:system_time_to_rfc3339(Secs, [{offset, "Z"}])),
+    Title = case R#ah_time_ago.title of
+                false -> undefined;
+                _ -> binary:replace(binary:replace(Iso, <<"T">>, <<" ">>), <<"Z">>, <<" UTC">>)
+            end,
+    LabelAttrs = [{<<"data-ah-label-", (dash(K))/binary>>, V}
+                  || {K, V} <- lists:sort(maps:to_list(Custom))],
+    ?H:el(time, format_ago(Now - Secs, Labels), Cls,
+          [[{datetime, Iso}, {title, Title}, {data_ah, <<"time-ago">>},
+            {data_ah_title, Title =/= undefined andalso <<"true">>},
+            {data_ah_live, R#ah_time_ago.live =:= false andalso <<"false">>},
+            LabelAttrs],
+           ?E:root_attrs(R, none)]);
+
+render(#ah_expandable_text{text = Text0, threshold = Th, expand_label = ExpandL,
+                           collapse_label = CollapseL} = R) ->
+    Cls = classes(R),
+    Text = case Text0 of undefined -> <<>>; _ -> unicode:characters_to_binary(Text0) end,
+    Exp = R#ah_expandable_text.expanded =:= true,
+    Long = string:length(Text) > Th,
+    Body = case Long of
+               false -> Text;
+               true ->
+                   [?H:el(span, [string:slice(Text, 0, Th), <<"…"/utf8>>], [],
+                          [{data_ah_part, short}, {hidden, Exp}]),
+                    ?H:el(span, Text, [], [{data_ah_part, full}, {hidden, not Exp}])]
+           end,
+    Toggle = [?H:el(button, if Exp -> CollapseL; true -> ExpandL end,
+                    [<<"ah-expandable-text__toggle">>],
+                    [{type, button}, {aria_expanded, tf(Exp)},
+                     {data_ah_expand_label, ExpandL}, {data_ah_collapse_label, CollapseL}])
+              || Long],
+    ?H:el('div', [?H:el(span, Body, [<<"ah-expandable-text__body">>], []), Toggle], Cls,
+          [[{data_expanded, tf(Exp)}, {data_truncated, tf(Long)}, {data_ah, <<"expandable-text">>}],
+           ?E:root_attrs(R, 'ah:toggle')]);
+
+render(#ah_alert{body = Children, variant = Variant, title = Title} = R) ->
+    Cls = classes(R),
+    Icon = case R#ah_alert.icon of
+               true -> alert_icon(Variant);
+               false -> [];
+               Html -> Html
+           end,
+    ?H:el('div',
+          [[?H:el(span, Icon, [<<"ah-alert-icon">>], [{aria_hidden, <<"true">>}]) || Icon =/= []],
+           ?H:el('div', [[?H:el('div', Title, [<<"ah-alert-title">>], []) || not blank(Title)],
+                         ?H:el('div', Children, [<<"ah-alert-body">>], [])],
+                 [<<"ah-alert-content">>], []),
+           [?H:el(button, <<"×"/utf8>>, [<<"ah-alert-close">>],
+                  [{type, button}, {aria_label, <<"Close">>}])
+            || R#ah_alert.dismissible]],
+          Cls, [[{role, <<"alert">>}, {data_ah, <<"alert">>}], ?E:root_attrs(R, 'ah:dismiss')]);
+
+%%%===================================================================
+%%% Rendering: data
+%%%===================================================================
+
+render(#ah_progressbar{value = Value, min = Min, max = Max, indeterminate = Indet,
+                       orientation = Orientation, text = Text} = R) ->
+    Cls = classes(R),
+    V = clamp(if is_number(Value) -> Value; true -> Min end, Min, Max),
+    Pct = pct(V, Min, Max),
+    Vert = Orientation =:= vertical,
+    Dim = if Vert -> <<"height">>; true -> <<"width">> end,
+    Size = fun(X) -> iolist_to_binary([Dim, <<": ">>, num(X), <<"%;">>]) end,
+    Ranges = R#ah_progressbar.color_ranges,
+    N = length(Ranges),
+    RangeEls = [?H:el('div', [], [<<"ah-progressbar-range">>],
+                      [{data_range_index, I - 1}, {data_ah_stop, Stop},
+                       {style, iolist_to_binary(
+                                 [<<"background-color: ">>, color_css(C),
+                                  <<"; z-index: ">>, integer_to_binary(N - I + 1), <<"; ">>,
+                                  Size(pct(lists:min([Stop, Max, V]), Min, Max))])}])
+                || {I, {Stop, C}} <- lists:enumerate(Ranges)],
+    Label = case Text of undefined -> [integer_to_binary(round(Pct)), <<"%">>]; _ -> Text end,
+    ShowText = R#ah_progressbar.show_text andalso not Indet,
+    ?H:el('div',
+          [?H:el('div', [], [if Vert -> <<"ah-progressbar-value-vertical">>;
+                                true -> <<"ah-progressbar-value">> end],
+                 [{style, not Indet andalso Size(Pct)}]),
+           RangeEls,
+           ?H:el('div', ?H:el(span, Label, [<<"ah-progressbar-text">>],
+                              [{style, not ShowText andalso <<"display: none;">>}]),
+                 [<<"ah-progressbar-text-host">>], [])],
+          Cls,
+          [[{role, <<"progressbar">>}, {aria_valuemin, Min}, {aria_valuemax, Max},
+            {aria_valuenow, not Indet andalso V},
+            {aria_valuetext, not Indet andalso iolist_to_binary(Label)},
+            {aria_orientation, Orientation},
+            {aria_busy, Indet andalso <<"true">>},
+            {aria_disabled, R#ah_progressbar.disabled andalso <<"true">>},
+            {data_ah, <<"progressbar">>}, {data_ah_value, not Indet andalso V},
+            {data_ah_min, Min}, {data_ah_max, Max},
+            {data_ah_text, Text =/= undefined andalso <<"custom">>}],
+           ?E:root_attrs(R, change)]);
+
+render(#ah_progress_circle{value = Value, indeterminate = Indet, label = Label} = R) ->
+    Cls = classes(R),
+    V = trunc(clamp(if is_number(Value) -> Value; true -> 0 end, 0, 100)),
+    Circle = fun(C, Extra) ->
+                     ?H:el(circle, [], [C], [{cx, 50}, {cy, 50}, {r, 45} | Extra])
+             end,
+    Svg = ?H:el(svg,
+                [Circle(<<"ah-progress-circle-track">>, []),
+                 Circle(<<"ah-progress-circle-fill">>,
+                        [{transform, <<"rotate(-90 50 50)">>},
+                         {stroke_dasharray, num(?CIRC)},
+                         {stroke_dashoffset, num(offset(V))}])],
+                [], [{<<"viewBox">>, <<"0 0 100 100">>},
+                     {xmlns, <<"http://www.w3.org/2000/svg">>},
+                     {aria_hidden, <<"true">>}]),
+    ShowValue = R#ah_progress_circle.show_value =/= false andalso not Indet,
+    ?H:el('div',
+          [?H:el('div', [Svg, [?H:el(span, [integer_to_binary(V), <<"%">>],
+                                     [<<"ah-progress-circle-value">>], []) || ShowValue]],
+                 [<<"ah-progress-circle-ring">>], []),
+           [?H:el(span, Label, [<<"ah-progress-circle-label">>], []) || not blank(Label)]],
+          Cls,
+          [[{role, <<"progressbar">>}, {aria_valuemin, 0}, {aria_valuemax, 100},
+            {aria_valuenow, not Indet andalso V},
+            {aria_valuetext, not Indet andalso <<(integer_to_binary(V))/binary, "%">>},
+            {aria_busy, Indet andalso <<"true">>},
+            {aria_label, not blank(Label) andalso Label},
+            {aria_disabled, R#ah_progress_circle.disabled andalso <<"true">>},
+            {data_ah, <<"progress-circle">>}, {data_ah_value, not Indet andalso V}],
+           ?E:root_attrs(R, change)]);
+
+render(#ah_meter{value = Value, min = Min, max = Max, label = Label,
+                 helper_text = Helper} = R) ->
+    Cls = classes(R),
+    ShowValue = R#ah_meter.show_value =:= true,
+    State = meter_state(Value, Min, Max, R#ah_meter.low, R#ah_meter.high,
+                        R#ah_meter.optimum),
+    ?H:el('div',
+          [[?H:el('div', [[?H:el(span, Label, [<<"ah-meter__label">>], []) || not blank(Label)],
+                          [?H:el(span, Value, [<<"ah-meter__value">>], []) || ShowValue]],
+                  [<<"ah-meter__head">>], []) || ShowValue orelse not blank(Label)],
+           ?H:el('div', ?H:el('div', [], [<<"ah-meter__fill">>],
+                              [{data_state, State},
+                               {style, iolist_to_binary([<<"width: ">>,
+                                                         num(pct(clamp(Value, Min, Max), Min, Max)),
+                                                         <<"%;">>])}]),
+                 [<<"ah-meter__track">>],
+                 [{role, <<"meter">>}, {aria_valuenow, Value}, {aria_valuemin, Min},
+                  {aria_valuemax, Max}, {aria_label, not blank(Label) andalso Label}]),
+           [?H:el('div', Helper, [<<"ah-meter__helper">>], []) || not blank(Helper)]],
+          Cls, [[{data_size, R#ah_meter.size}], ?E:root_attrs(R, none)]);
+
+render(#ah_statistic{value = Value, title = Title, prefix = Prefix, suffix = Suffix,
+                     precision = Prec, delta = Delta, loading = Loading} = R) ->
+    Cls = classes(R),
+    Group = R#ah_statistic.group_separator =/= false,
+    Dir = if not is_number(Delta) -> undefined;
+             Delta > 0 -> up; Delta < 0 -> down; true -> flat end,
+    Arrow = case Dir of up -> <<"▲"/utf8>>; down -> <<"▼"/utf8>>; _ -> <<"—"/utf8>> end,
+    ?H:el('div',
+          [[?H:el('div', Title, [<<"ah-statistic__title">>], []) || not blank(Title)],
+           ?H:el('div', [[?H:el(span, Prefix, [<<"ah-statistic__prefix">>], []) || not blank(Prefix)],
+                         ?H:el(span, format_number(Value, Prec, Group),
+                               [<<"ah-statistic__number">>], []),
+                         [?H:el(span, Suffix, [<<"ah-statistic__suffix">>], []) || not blank(Suffix)]],
+                 [<<"ah-statistic__value">>], []),
+           [?H:el('div', [?H:el(span, Arrow, [<<"ah-statistic__delta-arrow">>],
+                                [{aria_hidden, <<"true">>}]),
+                          ?H:el(span, format_number(abs(Delta), Prec, Group), [], [])],
+                  [<<"ah-statistic__delta">>], [{data_direction, Dir}])
+            || Dir =/= undefined]],
+          Cls,
+          [[{data_color, R#ah_statistic.color},
+            {data_loading, tf(Loading)},
+            {aria_busy, Loading andalso <<"true">>}],
+           ?E:root_attrs(R, none)]);
+
+render(#ah_kpi_card{value = Value, title = Title, trend = Trend, trend_label = TrendL} = R) ->
+    Cls = classes(R),
+    Icon = case R#ah_kpi_card.icon of
+               undefined -> [];
+               A when is_atom(A) -> kpi_icon(A);
+               Html -> Html
+           end,
+    TrendCls = trend_class(Trend),
+    TrendEl = [?H:el(span,
+                     [?H:el(span, [?H:el(span, kpi_icon(if Trend > 0 -> trending_up;
+                                                           true -> trending_down end),
+                                         [<<"ah-kpi-card-trend-icon">>],
+                                         [{aria_hidden, <<"true">>}]),
+                                   ?H:el(span, format_trend(Trend),
+                                         [<<"ah-kpi-card-trend-value">>], [])],
+                           [TrendCls], []),
+                      [?H:el(span, TrendL, [<<"ah-kpi-card-trend-label">>], []) || not blank(TrendL)]],
+                     [<<"ah-kpi-card-trend">>], [])
+               || Trend =/= undefined],
+    ?H:el('div',
+          ?H:el('div',
+                [[?H:el('div', ?H:el(span, Icon, [<<"ah-kpi-card-icon">>], []),
+                        [<<"ah-kpi-card-icon-wrapper">>], []) || Icon =/= []],
+                 TrendEl,
+                 ?H:el('div', ?H:el('div', [[?H:el('div', Title, [<<"ah-kpi-card-title">>], [])
+                                             || not blank(Title)],
+                                            ?H:el('div', Value, [<<"ah-kpi-card-value">>], [])],
+                                    [<<"ah-kpi-card-value-section">>], []),
+                       [<<"ah-kpi-card-body">>], [])],
+                [<<"ah-kpi-card-content">>], []),
+          [Cls, TrendCls], [[{data_ah, <<"kpi-card">>}], ?E:root_attrs(R, none)]);
+
+render(#ah_timeline{items = Items, position = Position} = R) ->
+    Cls = classes(R),
+    Collapsible = R#ah_timeline.collapsible =/= false,
+    Rows = [timeline_row(I, Item, Position, Collapsible)
+            || {I, Item} <- lists:enumerate(0, Items)],
+    ?H:el('div', ?H:el('div', Rows, [<<"ah-timeline-container">>], []),
+          [Cls, [<<"ah-collapsible">> || Collapsible]],
+          [[{data_ah, <<"timeline">>}], ?E:root_attrs(R, 'ah:toggle')]);
+
+render(#ah_ranking_list{items = Items, title = Title} = R) ->
+    Cls = classes(R),
+    Shown = case R#ah_ranking_list.max_items of
+                N when is_integer(N), N >= 0 -> lists:sublist(Items, N);
+                _ -> Items
+            end,
+    Ctx = #{rank => R#ah_ranking_list.show_rank =/= false,
+            flags => R#ah_ranking_list.flag_style,
+            tags => R#ah_ranking_list.tag_colors,
+            click => R#ah_ranking_list.clickable},
+    ?H:el('div',
+          [[?H:el('div', ?H:el(span, Title, [<<"ah-ranking-list__title">>], []),
+                  [<<"ah-ranking-list__header">>], []) || not blank(Title)],
+           ?H:el('div', [ranking_item(I, It, Ctx) || {I, It} <- lists:enumerate(0, Shown)],
+                 [<<"ah-ranking-list__list">>], [])],
+          Cls, [[{data_ah, <<"ranking-list">>}], ?E:root_attrs(R, 'ah:item-click')]);
+
+render(#ah_tag_cloud{items = Tags0} = R) ->
+    Cls = classes(R),
+    Tags = sort_tags(filter_tags([tag_map(T) || T <- Tags0], R), R),
+    Values = [V || #{value := V} <- Tags],
+    {Lo, Hi} = case Values of [] -> {0, 0}; _ -> {lists:min(Values), lists:max(Values)} end,
+    Range = Hi - Lo,
+    MinF = R#ah_tag_cloud.min_font_size,
+    MaxF = R#ah_tag_cloud.max_font_size,
+    Unit = unit(R#ah_tag_cloud.font_size_unit),
+    Grad = {R#ah_tag_cloud.min_color, R#ah_tag_cloud.max_color},
+    Fixed = R#ah_tag_cloud.text_color,
+    Base = R#ah_tag_cloud.url_base,
+    Case = R#ah_tag_cloud.text_case,
+    ShowValue = R#ah_tag_cloud.display_value =:= true,
+    Items = [begin
+                 Ratio = if Range == 0 -> 0.5; true -> (V - Lo) / Range end,
+                 Font = MinF + (MaxF - MinF) * Ratio,
+                 Color = case Grad of
+                             {C1, C2} when C1 =/= undefined, C2 =/= undefined -> lerp_color(C1, C2, Ratio);
+                             _ when Fixed =/= undefined -> color_css(Fixed);
+                             _ -> undefined
+                         end,
+                 Text = alter_case(if ShowValue -> [to_bin(L), <<" (">>, num(V), <<")">>];
+                                      true -> to_bin(L) end, Case),
+                 Style = iolist_to_binary([<<"font-size: ">>, num(Font), Unit, <<";">>,
+                                           [[<<" color: ">>, Color, <<";">>] || Color =/= undefined]]),
+                 ?H:el(li, ?H:el(a, Text, [<<"ah-tagcloud-link">>],
+                                 [{style, Style},
+                                  {href, Url =/= undefined andalso iolist_to_binary([Base, Url])},
+                                  {tabindex, Url =:= undefined andalso 0},
+                                  {role, Url =:= undefined andalso <<"button">>},
+                                  {data_ah_label, L}, {data_ah_weight, V}]),
+                       [<<"ah-tagcloud-item">>], [{data_index, I}])
+             end || {I, #{label := L, value := V, url := Url}} <- lists:enumerate(0, Tags)],
+    ?H:el('div', ?H:el(ul, Items, [<<"ah-tagcloud">>], []), Cls,
+          [[{data_ah, <<"tag-cloud">>}], ?E:root_attrs(R, 'ah:tag-click')]).
+
+classes(R) ->
+    Tag = element(1, R),
+    ?E:classes(R, fields(Tag), entry(?E:component_name(Tag))).
+
+%%%===================================================================
+%%% Helpers
+%%%===================================================================
+
+badge_label(undefined, _Max) -> <<>>;
+badge_label(N, Max) when is_number(N), is_number(Max), N > Max -> [num(Max), <<"+">>];
+badge_label(N, _Max) -> N.
 
 ratio_css(undefined) -> <<"16 / 9">>;
 ratio_css(N) when is_number(N), N > 0 -> num(N);
@@ -145,55 +604,6 @@ ratio_css(S) when is_binary(S); is_list(S) ->
         _ -> error({aihtml, {bad_ratio, S}})
     end;
 ratio_css(Other) -> error({aihtml, {bad_ratio, Other}}).
-
-%%%===================================================================
-%%% Text
-%%%===================================================================
-
-%% @doc Keyboard key. `Keys' is one key (`<<"Esc">>') or a list of keys
-%% (`[<<"Ctrl">>, <<"K">>]'), rendered as nested `<kbd>'s joined by
-%% the `separator' option (default "+").
--spec kbd(html() | [html()], css(), attrs()) -> element().
-kbd(Keys, Css, Attrs) ->
-    {[Root | Literal], P, _F, O, Rest} = setup(kbd, Css, Attrs),
-    Size = maps:get(size, P),
-    case is_list(Keys) andalso Keys =/= [] andalso not io_lib:printable_unicode_list(Keys) of
-        false ->
-            ?H:el(kbd, Keys, [Root | Literal], [[{data_size, Size}], Rest]);
-        true ->
-            Sep = ?H:el(span, opt(separator, O, <<"+">>), [<<"ah-kbd-combo__sep">>],
-                        [{aria_hidden, <<"true">>}]),
-            Ks = [?H:el(kbd, K, [Root], [{data_size, Size}]) || K <- Keys],
-            ?H:el(kbd, lists:join(Sep, Ks), [<<"ah-kbd-combo">> | Literal],
-                  [[{data_size, Size}], Rest])
-    end.
-
-%% @doc Relative time ("3m ago") in sigil's format, rendered on the server
-%% and kept current by the browser every 60 s. `Timestamp' is Unix
-%% seconds, a UTC `calendar:datetime()' or an RFC 3339 binary.
-%% Options: `now' (Unix seconds, for rendering), `labels' (map with
-%% just_now, minutes, hours, days, months; "{n}" is the number),
-%% `live' (true), `title' (true: absolute time on hover).
--spec time_ago(integer() | calendar:datetime() | binary(), css(), attrs()) -> element().
-time_ago(Timestamp, Css, Attrs) ->
-    {Cls, _P, _F, O, Rest} = setup(time_ago, Css, Attrs),
-    Secs = to_unix(Timestamp),
-    Now = opt(now, O, erlang:system_time(second)),
-    Custom = opt(labels, O, #{}),
-    Labels = maps:merge(default_labels(), Custom),
-    Iso = list_to_binary(calendar:system_time_to_rfc3339(Secs, [{offset, "Z"}])),
-    Title = case opt(title, O, true) of
-                false -> undefined;
-                _ -> binary:replace(binary:replace(Iso, <<"T">>, <<" ">>), <<"Z">>, <<" UTC">>)
-            end,
-    LabelAttrs = [{<<"data-ah-label-", (dash(K))/binary>>, V}
-                  || {K, V} <- lists:sort(maps:to_list(Custom))],
-    ?H:el(time, format_ago(Now - Secs, Labels), Cls,
-          [[{datetime, Iso}, {title, Title}, {data_ah, <<"time-ago">>},
-            {data_ah_title, Title =/= undefined andalso <<"true">>},
-            {data_ah_live, opt(live, O, true) =:= false andalso <<"false">>},
-            LabelAttrs],
-           Rest]).
 
 default_labels() ->
     #{just_now => <<"just now">>, minutes => <<"{n}m ago">>, hours => <<"{n}h ago">>,
@@ -219,57 +629,6 @@ to_unix(B) when is_binary(B) ->
     end;
 to_unix(Other) -> error({aihtml, {bad_timestamp, Other}}).
 
-%% @doc Long text cut at `threshold' characters (100) with a toggle.
-%% Options: `threshold', `expanded' (false), `expand_label' ("展开"),
-%% `collapse_label' ("收起"). Fires `ah:toggle' with the new state.
--spec expandable_text(unicode:chardata(), css(), attrs()) -> element().
-expandable_text(Text0, Css, Attrs) ->
-    {Cls, _P, _F, O, Rest} = setup(expandable_text, Css, Attrs),
-    Text = case Text0 of undefined -> <<>>; _ -> unicode:characters_to_binary(Text0) end,
-    Th = opt(threshold, O, 100),
-    Exp = opt(expanded, O, false) =:= true,
-    Long = string:length(Text) > Th,
-    ExpandL = opt(expand_label, O, <<"展开"/utf8>>),
-    CollapseL = opt(collapse_label, O, <<"收起"/utf8>>),
-    Body = case Long of
-               false -> Text;
-               true ->
-                   [?H:el(span, [string:slice(Text, 0, Th), <<"…"/utf8>>], [],
-                          [{data_ah_part, short}, {hidden, Exp}]),
-                    ?H:el(span, Text, [], [{data_ah_part, full}, {hidden, not Exp}])]
-           end,
-    Toggle = [?H:el(button, if Exp -> CollapseL; true -> ExpandL end,
-                    [<<"ah-expandable-text__toggle">>],
-                    [{type, button}, {aria_expanded, tf(Exp)},
-                     {data_ah_expand_label, ExpandL}, {data_ah_collapse_label, CollapseL}])
-              || Long],
-    ?H:el('div', [?H:el(span, Body, [<<"ah-expandable-text__body">>], []), Toggle], Cls,
-          [[{data_expanded, tf(Exp)}, {data_truncated, tf(Long)}, {data_ah, <<"expandable-text">>}],
-           Rest]).
-
-%% @doc Alert (aihtml's own): an inline message box. Options: `title',
-%% `icon' (true, false or html). `dismissible' adds a close button; the
-%% browser fires `ah:dismiss' (cancellable) and removes the alert.
--spec alert(html(), css(), attrs()) -> element().
-alert(Children, Css, Attrs) ->
-    {Cls, P, F, O, Rest} = setup(alert, Css, Attrs),
-    Variant = maps:get(variant, P),
-    Icon = case opt(icon, O, true) of
-               true -> alert_icon(Variant);
-               false -> [];
-               Html -> Html
-           end,
-    Title = opt(title, O, undefined),
-    ?H:el('div',
-          [[?H:el(span, Icon, [<<"ah-alert-icon">>], [{aria_hidden, <<"true">>}]) || Icon =/= []],
-           ?H:el('div', [[?H:el('div', Title, [<<"ah-alert-title">>], []) || not blank(Title)],
-                         ?H:el('div', Children, [<<"ah-alert-body">>], [])],
-                 [<<"ah-alert-content">>], []),
-           [?H:el(button, <<"×"/utf8>>, [<<"ah-alert-close">>],
-                  [{type, button}, {aria_label, <<"Close">>}])
-            || lists:member(dismissible, F)]],
-          Cls, [[{role, <<"alert">>}, {data_ah, <<"alert">>}], Rest]).
-
 alert_icon(Variant) ->
     Shapes = case Variant of
                  info -> [circle(12, 12, 10), line(12, 16, 12, 12), line(12, 8, 12.01, 8)];
@@ -281,122 +640,7 @@ alert_icon(Variant) ->
              end,
     svg(Shapes).
 
-%%%===================================================================
-%%% Data
-%%%===================================================================
-
-%% @doc Linear progress. `Value' is clamped to [min, max]; with the
-%% `indeterminate' flag it may be `undefined'. Options: `min' (0),
-%% `max' (100), `text' (label instead of the percentage), `color_ranges'
-%% (`[{Stop, Color}]', Color a colour atom or a CSS colour).
--spec progressbar(number() | undefined, css(), attrs()) -> element().
-progressbar(Value, Css, Attrs) ->
-    {Cls, P, F, O, Rest} = setup(progressbar, Css, Attrs),
-    Min = opt(min, O, 0),
-    Max = opt(max, O, 100),
-    Indet = lists:member(indeterminate, F),
-    V = clamp(if is_number(Value) -> Value; true -> Min end, Min, Max),
-    Pct = pct(V, Min, Max),
-    Vert = maps:get(orientation, P) =:= vertical,
-    Dim = if Vert -> <<"height">>; true -> <<"width">> end,
-    Size = fun(X) -> iolist_to_binary([Dim, <<": ">>, num(X), <<"%;">>]) end,
-    Ranges = opt(color_ranges, O, []),
-    N = length(Ranges),
-    RangeEls = [?H:el('div', [], [<<"ah-progressbar-range">>],
-                      [{data_range_index, I - 1}, {data_ah_stop, Stop},
-                       {style, iolist_to_binary(
-                                 [<<"background-color: ">>, color_css(C),
-                                  <<"; z-index: ">>, integer_to_binary(N - I + 1), <<"; ">>,
-                                  Size(pct(lists:min([Stop, Max, V]), Min, Max))])}])
-                || {I, {Stop, C}} <- lists:enumerate(Ranges)],
-    Text = opt(text, O, undefined),
-    Label = case Text of undefined -> [integer_to_binary(round(Pct)), <<"%">>]; _ -> Text end,
-    ShowText = lists:member(show_text, F) andalso not Indet,
-    ?H:el('div',
-          [?H:el('div', [], [if Vert -> <<"ah-progressbar-value-vertical">>;
-                                true -> <<"ah-progressbar-value">> end],
-                 [{style, not Indet andalso Size(Pct)}]),
-           RangeEls,
-           ?H:el('div', ?H:el(span, Label, [<<"ah-progressbar-text">>],
-                              [{style, not ShowText andalso <<"display: none;">>}]),
-                 [<<"ah-progressbar-text-host">>], [])],
-          Cls,
-          [[{role, <<"progressbar">>}, {aria_valuemin, Min}, {aria_valuemax, Max},
-            {aria_valuenow, not Indet andalso V},
-            {aria_valuetext, not Indet andalso iolist_to_binary(Label)},
-            {aria_orientation, maps:get(orientation, P)},
-            {aria_busy, Indet andalso <<"true">>},
-            {aria_disabled, lists:member(disabled, F) andalso <<"true">>},
-            {data_ah, <<"progressbar">>}, {data_ah_value, not Indet andalso V},
-            {data_ah_min, Min}, {data_ah_max, Max},
-            {data_ah_text, Text =/= undefined andalso <<"custom">>}],
-           Rest]).
-
-%% @doc Circular progress (SVG), `Value' 0..100. Options: `label' (text
-%% under the ring, also the aria-label), `show_value' (true).
--spec progress_circle(number() | undefined, css(), attrs()) -> element().
-progress_circle(Value, Css, Attrs) ->
-    {Cls, _P, F, O, Rest} = setup(progress_circle, Css, Attrs),
-    Indet = lists:member(indeterminate, F),
-    V = trunc(clamp(if is_number(Value) -> Value; true -> 0 end, 0, 100)),
-    Label = opt(label, O, undefined),
-    Circle = fun(C, Extra) ->
-                     ?H:el(circle, [], [C], [{cx, 50}, {cy, 50}, {r, 45} | Extra])
-             end,
-    Svg = ?H:el(svg,
-                [Circle(<<"ah-progress-circle-track">>, []),
-                 Circle(<<"ah-progress-circle-fill">>,
-                        [{transform, <<"rotate(-90 50 50)">>},
-                         {stroke_dasharray, num(?CIRC)},
-                         {stroke_dashoffset, num(offset(V))}])],
-                [], [{<<"viewBox">>, <<"0 0 100 100">>},
-                     {xmlns, <<"http://www.w3.org/2000/svg">>},
-                     {aria_hidden, <<"true">>}]),
-    ShowValue = opt(show_value, O, true) =/= false andalso not Indet,
-    ?H:el('div',
-          [?H:el('div', [Svg, [?H:el(span, [integer_to_binary(V), <<"%">>],
-                                     [<<"ah-progress-circle-value">>], []) || ShowValue]],
-                 [<<"ah-progress-circle-ring">>], []),
-           [?H:el(span, Label, [<<"ah-progress-circle-label">>], []) || not blank(Label)]],
-          Cls,
-          [[{role, <<"progressbar">>}, {aria_valuemin, 0}, {aria_valuemax, 100},
-            {aria_valuenow, not Indet andalso V},
-            {aria_valuetext, not Indet andalso <<(integer_to_binary(V))/binary, "%">>},
-            {aria_busy, Indet andalso <<"true">>},
-            {aria_label, not blank(Label) andalso Label},
-            {aria_disabled, lists:member(disabled, F) andalso <<"true">>},
-            {data_ah, <<"progress-circle">>}, {data_ah_value, not Indet andalso V}],
-           Rest]).
-
 offset(V) -> ?CIRC * (1 - V / 100).
-
-%% @doc Meter: a measurement in a known range, coloured low / optimum /
-%% high like the native `<meter>'. Options: `min' (0), `max' (100), `low',
-%% `high', `optimum', `label', `helper_text', `show_value' (false).
--spec meter(number(), css(), attrs()) -> element().
-meter(Value, Css, Attrs) ->
-    {Cls, P, _F, O, Rest} = setup(meter, Css, Attrs),
-    Min = opt(min, O, 0),
-    Max = opt(max, O, 100),
-    Label = opt(label, O, undefined),
-    ShowValue = opt(show_value, O, false) =:= true,
-    Helper = opt(helper_text, O, undefined),
-    State = meter_state(Value, Min, Max, opt(low, O, undefined), opt(high, O, undefined),
-                        opt(optimum, O, undefined)),
-    ?H:el('div',
-          [[?H:el('div', [[?H:el(span, Label, [<<"ah-meter__label">>], []) || not blank(Label)],
-                          [?H:el(span, Value, [<<"ah-meter__value">>], []) || ShowValue]],
-                  [<<"ah-meter__head">>], []) || ShowValue orelse not blank(Label)],
-           ?H:el('div', ?H:el('div', [], [<<"ah-meter__fill">>],
-                              [{data_state, State},
-                               {style, iolist_to_binary([<<"width: ">>,
-                                                         num(pct(clamp(Value, Min, Max), Min, Max)),
-                                                         <<"%;">>])}]),
-                 [<<"ah-meter__track">>],
-                 [{role, <<"meter">>}, {aria_valuenow, Value}, {aria_valuemin, Min},
-                  {aria_valuemax, Max}, {aria_label, not blank(Label) andalso Label}]),
-           [?H:el('div', Helper, [<<"ah-meter__helper">>], []) || not blank(Helper)]],
-          Cls, [[{data_size, maps:get(size, P)}], Rest]).
 
 %% sigil's reading of the <meter> thresholds, kept as is.
 meter_state(V, Min, Max, Low, High, Opt) ->
@@ -409,82 +653,10 @@ meter_state(V, Min, Max, Low, High, Opt) ->
        true -> if V < Lo -> low; V > Hi -> high; true -> optimum end
     end.
 
-%% @doc Statistic: title, prefix, number, suffix and a delta arrow.
-%% Options: `title', `prefix', `suffix', `precision', `group_separator'
-%% (true), `delta'.
--spec statistic(number() | html(), css(), attrs()) -> element().
-statistic(Value, Css, Attrs) ->
-    {Cls, P, F, O, Rest} = setup(statistic, Css, Attrs),
-    Title = opt(title, O, undefined),
-    Prefix = opt(prefix, O, undefined),
-    Suffix = opt(suffix, O, undefined),
-    Prec = opt(precision, O, undefined),
-    Group = opt(group_separator, O, true) =/= false,
-    Delta = opt(delta, O, undefined),
-    Dir = if not is_number(Delta) -> undefined;
-             Delta > 0 -> up; Delta < 0 -> down; true -> flat end,
-    Arrow = case Dir of up -> <<"▲"/utf8>>; down -> <<"▼"/utf8>>; _ -> <<"—"/utf8>> end,
-    ?H:el('div',
-          [[?H:el('div', Title, [<<"ah-statistic__title">>], []) || not blank(Title)],
-           ?H:el('div', [[?H:el(span, Prefix, [<<"ah-statistic__prefix">>], []) || not blank(Prefix)],
-                         ?H:el(span, format_number(Value, Prec, Group),
-                               [<<"ah-statistic__number">>], []),
-                         [?H:el(span, Suffix, [<<"ah-statistic__suffix">>], []) || not blank(Suffix)]],
-                 [<<"ah-statistic__value">>], []),
-           [?H:el('div', [?H:el(span, Arrow, [<<"ah-statistic__delta-arrow">>],
-                                [{aria_hidden, <<"true">>}]),
-                          ?H:el(span, format_number(abs(Delta), Prec, Group), [], [])],
-                  [<<"ah-statistic__delta">>], [{data_direction, Dir}])
-            || Dir =/= undefined]],
-          Cls,
-          [[{data_color, maps:get(color, P)},
-            {data_loading, tf(lists:member(loading, F))},
-            {aria_busy, lists:member(loading, F) andalso <<"true">>}],
-           Rest]).
-
-%% @doc KPI card: title, big value and a trend badge. Options: `title',
-%% `trend' (percent, > 0 up), `trend_label', `icon' (users, download,
-%% install, star, trending_up, trending_down, or html).
--spec kpi_card(html(), css(), attrs()) -> element().
-kpi_card(Value, Css, Attrs) ->
-    {Cls, _P, _F, O, Rest} = setup(kpi_card, Css, Attrs),
-    Title = opt(title, O, undefined),
-    Trend = opt(trend, O, undefined),
-    TrendL = opt(trend_label, O, undefined),
-    Icon = case opt(icon, O, undefined) of
-               undefined -> [];
-               A when is_atom(A) -> kpi_icon(A);
-               Html -> Html
-           end,
-    TrendCls = case Trend of
-                   undefined -> [];
-                   T when is_number(T), T > 0 -> <<"ah-kpi-card-trend-up">>;
-                   T when is_number(T) -> <<"ah-kpi-card-trend-down">>;
-                   T -> error({aihtml, {bad_trend, T}})
-               end,
-    TrendEl = [?H:el(span,
-                     [?H:el(span, [?H:el(span, kpi_icon(if Trend > 0 -> trending_up;
-                                                           true -> trending_down end),
-                                         [<<"ah-kpi-card-trend-icon">>],
-                                         [{aria_hidden, <<"true">>}]),
-                                   ?H:el(span, format_trend(Trend),
-                                         [<<"ah-kpi-card-trend-value">>], [])],
-                           [TrendCls], []),
-                      [?H:el(span, TrendL, [<<"ah-kpi-card-trend-label">>], []) || not blank(TrendL)]],
-                     [<<"ah-kpi-card-trend">>], [])
-               || Trend =/= undefined],
-    ?H:el('div',
-          ?H:el('div',
-                [[?H:el('div', ?H:el(span, Icon, [<<"ah-kpi-card-icon">>], []),
-                        [<<"ah-kpi-card-icon-wrapper">>], []) || Icon =/= []],
-                 TrendEl,
-                 ?H:el('div', ?H:el('div', [[?H:el('div', Title, [<<"ah-kpi-card-title">>], [])
-                                             || not blank(Title)],
-                                            ?H:el('div', Value, [<<"ah-kpi-card-value">>], [])],
-                                    [<<"ah-kpi-card-value-section">>], []),
-                       [<<"ah-kpi-card-body">>], [])],
-                [<<"ah-kpi-card-content">>], []),
-          [Cls, TrendCls], [[{data_ah, <<"kpi-card">>}], Rest]).
+trend_class(undefined) -> [];
+trend_class(T) when is_number(T), T > 0 -> <<"ah-kpi-card-trend-up">>;
+trend_class(T) when is_number(T) -> <<"ah-kpi-card-trend-down">>;
+trend_class(T) -> error({aihtml, {bad_trend, T}}).
 
 format_trend(T) ->
     [if T > 0 -> <<"+">>; true -> <<>> end,
@@ -507,21 +679,6 @@ kpi_icon(star) ->
     svg([?H:el(polygon, [], [], [{points, <<"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 "
                                             "12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">>}])]);
 kpi_icon(Other) -> error({aihtml, {unknown_icon, Other}}).
-
-%% @doc Timeline. `Items' are maps with `date', `title', `subtitle',
-%% `icon' (html), `description', `dot' (primary | success | warning |
-%% danger) and `expanded'. Items with a description expand on click
-%% unless the `collapsible' option is false.
--spec timeline([map()], css(), attrs()) -> element().
-timeline(Items, Css, Attrs) ->
-    {Cls, P, _F, O, Rest} = setup(timeline, Css, Attrs),
-    Position = maps:get(position, P),
-    Collapsible = opt(collapsible, O, true) =/= false,
-    Rows = [timeline_row(I, Item, Position, Collapsible)
-            || {I, Item} <- lists:enumerate(0, Items)],
-    ?H:el('div', ?H:el('div', Rows, [<<"ah-timeline-container">>], []),
-          [Cls, [<<"ah-collapsible">> || Collapsible]],
-          [[{data_ah, <<"timeline">>}], Rest]).
 
 timeline_row(Idx, Item, Position, Collapsible) ->
     Side = case Position of
@@ -563,31 +720,6 @@ timeline_row(Idx, Item, Position, Collapsible) ->
      ?H:el('div', ?H:el('div', [], [<<"ah-timeline-dot">>, Dot], []),
            [<<"ah-timeline-track-cell">>], []),
      ?H:el('div', if Side =:= far -> Card; true -> Date end, [<<"ah-timeline-far-cell">>], [])].
-
-%% @doc Ranking list. `Items' are maps with `name', `value', and
-%% optionally `rank', `secondary', `sub_value', `code' (country code,
-%% shown as a flag), `tag', `attrs' (on the row). Options: `title',
-%% `max_items', `show_rank' (true), `flag_style' (emoji | flag_icons |
-%% none), `tag_colors' (#{Tag => success | warning | error | info}).
-%% `clickable' rows fire `ah:item-click' with the row index.
--spec ranking_list([map()], css(), attrs()) -> element().
-ranking_list(Items, Css, Attrs) ->
-    {Cls, _P, F, O, Rest} = setup(ranking_list, Css, Attrs),
-    Title = opt(title, O, undefined),
-    Shown = case opt(max_items, O, undefined) of
-                N when is_integer(N), N >= 0 -> lists:sublist(Items, N);
-                _ -> Items
-            end,
-    Ctx = #{rank => opt(show_rank, O, true) =/= false,
-            flags => opt(flag_style, O, emoji),
-            tags => opt(tag_colors, O, #{}),
-            click => lists:member(clickable, F)},
-    ?H:el('div',
-          [[?H:el('div', ?H:el(span, Title, [<<"ah-ranking-list__title">>], []),
-                  [<<"ah-ranking-list__header">>], []) || not blank(Title)],
-           ?H:el('div', [ranking_item(I, It, Ctx) || {I, It} <- lists:enumerate(0, Shown)],
-                 [<<"ah-ranking-list__list">>], [])],
-          Cls, [[{data_ah, <<"ranking-list">>}], Rest]).
 
 ranking_item(Idx, It, #{rank := ShowRank, flags := FlagStyle, tags := TagColors,
                         click := Click}) ->
@@ -642,52 +774,6 @@ tag_class(Tag, Colors) ->
         orelse error({aihtml, {bad_tag_color, C}}),
     <<"ah-ranking-list__tag--", (atom_to_binary(C))/binary>>.
 
-%% @doc Tag cloud, font size weighted by value. `Tags' are maps with
-%% `label', `value', `url' (or `{Label, Value}' tuples). Options:
-%% `min_font_size' (10), `max_font_size' (24), `font_size_unit' (px),
-%% `url_base', `display_value', `sort_by' (none | label | value),
-%% `sort_order' (ascending | descending), `text_case' (none | all_lower |
-%% all_upper | first_upper | title_case), `text_color', `min_color' and
-%% `max_color' (#RRGGBB gradient), `min_value', `max_value',
-%% `display_limit', `take_top_weighted'. Fires `ah:tag-click'.
--spec tag_cloud([map() | {html(), number()}], css(), attrs()) -> element().
-tag_cloud(Tags0, Css, Attrs) ->
-    {Cls, _P, _F, O, Rest} = setup(tag_cloud, Css, Attrs),
-    Tags = sort_tags(filter_tags([tag_map(T) || T <- Tags0], O), O),
-    Values = [V || #{value := V} <- Tags],
-    {Lo, Hi} = case Values of [] -> {0, 0}; _ -> {lists:min(Values), lists:max(Values)} end,
-    Range = Hi - Lo,
-    MinF = opt(min_font_size, O, 10),
-    MaxF = opt(max_font_size, O, 24),
-    Unit = unit(opt(font_size_unit, O, px)),
-    Grad = {opt(min_color, O, undefined), opt(max_color, O, undefined)},
-    Fixed = opt(text_color, O, undefined),
-    Base = opt(url_base, O, <<>>),
-    Case = opt(text_case, O, none),
-    ShowValue = opt(display_value, O, false) =:= true,
-    Items = [begin
-                 Ratio = if Range == 0 -> 0.5; true -> (V - Lo) / Range end,
-                 Font = MinF + (MaxF - MinF) * Ratio,
-                 Color = case Grad of
-                             {C1, C2} when C1 =/= undefined, C2 =/= undefined -> lerp_color(C1, C2, Ratio);
-                             _ when Fixed =/= undefined -> color_css(Fixed);
-                             _ -> undefined
-                         end,
-                 Text = alter_case(if ShowValue -> [to_bin(L), <<" (">>, num(V), <<")">>];
-                                      true -> to_bin(L) end, Case),
-                 Style = iolist_to_binary([<<"font-size: ">>, num(Font), Unit, <<";">>,
-                                           [[<<" color: ">>, Color, <<";">>] || Color =/= undefined]]),
-                 ?H:el(li, ?H:el(a, Text, [<<"ah-tagcloud-link">>],
-                                 [{style, Style},
-                                  {href, Url =/= undefined andalso iolist_to_binary([Base, Url])},
-                                  {tabindex, Url =:= undefined andalso 0},
-                                  {role, Url =:= undefined andalso <<"button">>},
-                                  {data_ah_label, L}, {data_ah_weight, V}]),
-                       [<<"ah-tagcloud-item">>], [{data_index, I}])
-             end || {I, #{label := L, value := V, url := Url}} <- lists:enumerate(0, Tags)],
-    ?H:el('div', ?H:el(ul, Items, [<<"ah-tagcloud">>], []), Cls,
-          [[{data_ah, <<"tag-cloud">>}], Rest]).
-
 tag_map({L, V}) -> tag_map(#{label => L, value => V});
 tag_map({L, V, U}) -> tag_map(#{label => L, value => V, url => U});
 tag_map(#{label := L} = M) ->
@@ -696,14 +782,14 @@ tag_map(#{label := L} = M) ->
     #{label => L, value => V, url => maps:get(url, M, undefined)};
 tag_map(Other) -> error({aihtml, {bad_tag, Other}}).
 
-filter_tags(Tags, O) ->
-    Min = opt(min_value, O, 0),
-    Max = opt(max_value, O, 0),
+filter_tags(Tags, R) ->
+    Min = R#ah_tag_cloud.min_value,
+    Max = R#ah_tag_cloud.max_value,
     T1 = [T || #{value := V} = T <- Tags, not (Min > 0) orelse V >= Min],
     T2 = [T || #{value := V} = T <- T1, not (Max > 0) orelse V =< Max],
-    case opt(display_limit, O, undefined) of
+    case R#ah_tag_cloud.display_limit of
         N when is_integer(N), N > 0, length(T2) > N ->
-            case opt(take_top_weighted, O, false) of
+            case R#ah_tag_cloud.take_top_weighted of
                 true ->
                     Top = lists:sublist(lists:sort(fun({_, #{value := A}}, {_, #{value := B}}) ->
                                                            A >= B end,
@@ -714,8 +800,8 @@ filter_tags(Tags, O) ->
         _ -> T2
     end.
 
-sort_tags(Tags, O) ->
-    Key = case opt(sort_by, O, none) of
+sort_tags(Tags, R) ->
+    Key = case R#ah_tag_cloud.sort_by of
               none -> none;
               label -> fun(#{label := L}) -> string:lowercase(to_bin(L)) end;
               value -> fun(#{value := V}) -> V end;
@@ -725,7 +811,7 @@ sort_tags(Tags, O) ->
         none -> Tags;
         _ ->
             Sorted = [T || {_, T} <- lists:keysort(1, [{Key(T), T} || T <- Tags])],
-            case opt(sort_order, O, ascending) of
+            case R#ah_tag_cloud.sort_order of
                 descending -> lists:reverse(Sorted);
                 _ -> Sorted
             end
@@ -1055,22 +1141,7 @@ api(tag_cloud) ->
 %%% Internal
 %%%===================================================================
 
-%% {Classes, #{Group => Modifier}, Flags, Options, OtherAttrs}
-setup(Name, Css, Attrs) ->
-    E = aihtml_catalog:entry(?MODULE, Name),
-    Classes = aihtml_catalog:classes(E, Css),
-    #{groups := Groups} = E,
-    Mods = [M || M <- lists:flatten([Css]), is_atom(M)],
-    Picks = maps:map(fun(_G, {Ms, Default}) ->
-                             case [M || M <- Mods, lists:member(M, Ms)] of
-                                 [] -> Default;
-                                 L -> lists:last(L)
-                             end
-                     end, Groups),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
-    {Classes, Picks, aihtml_catalog:flags(E, Css), Opts, Rest}.
-
-opt(K, Opts, Default) -> maps:get(K, Opts, Default).
+entry(Name) -> aihtml_catalog:entry(?MODULE, Name).
 
 tf(true) -> <<"true">>;
 tf(false) -> <<"false">>.
@@ -1115,6 +1186,12 @@ to_bin(F) when is_float(F) -> num(F);
 to_bin(L) when is_list(L) -> unicode:characters_to_binary(L).
 
 dash(A) -> binary:replace(to_bin(A), <<"_">>, <<"-">>, [global]).
+
+flat_attrs(M) when is_map(M) -> lists:sort(maps:to_list(M));
+flat_attrs(L) when is_list(L) ->
+    lists:flatmap(fun(X) when is_list(X); is_map(X) -> flat_attrs(X);
+                     (X) -> [X]
+                  end, L).
 
 %% sigil's statistic number: precision (toFixed) and thousands separators.
 format_number(V, Prec, Group) when is_number(V) ->

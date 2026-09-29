@@ -1,6 +1,7 @@
 -module(aihtml_display_tests).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("aihtml/include/aihtml_display.hrl").
 
 -define(D, aihtml_display).
 
@@ -96,7 +97,7 @@ aspect_ratio_test() ->
     ?assert(has(<<"aspect-ratio: 1.5;">>, ?D:aspect_ratio([], [], [{ratio, 1.5}]))),
     ?assert(has(<<"aspect-ratio: 21 / 9;">>, ?D:aspect_ratio([], [], [{ratio, {21, 9}}]))),
     ?assertError({aihtml, {bad_ratio, _}},
-                 ?D:aspect_ratio([], [], [{ratio, <<"1;background:red">>}])).
+                 r(?D:aspect_ratio([], [], [{ratio, <<"1;background:red">>}]))).
 
 %%%===================================================================
 %%% Text
@@ -133,7 +134,7 @@ time_ago_markup_test() ->
                                     {labels, #{minutes => <<"<{n}> min">>}}]),
     ?assert(has(<<"data-ah-live=\"false\" data-ah-label-minutes=\"&lt;{n}&gt; min\">&lt;2&gt; min</time>">>, L)),
     ?assertNot(has(<<"title=">>, L)),
-    ?assertError({aihtml, {bad_timestamp, _}}, ?D:time_ago(<<"yesterday">>, [], [])).
+    ?assertError({aihtml, {bad_timestamp, _}}, r(?D:time_ago(<<"yesterday">>, [], []))).
 
 expandable_text_test() ->
     Long = binary:copy(<<"é"/utf8>>, 12),
@@ -201,7 +202,7 @@ progressbar_ranges_and_text_test() ->
     ?assert(has(<<"&lt;half&gt;</span>">>, H)),
     ?assert(has(<<"data-ah-text=\"custom\"">>, H)),
     ?assertError({aihtml, {bad_color, _}},
-                 ?D:progressbar(1, [], [{color_ranges, [{5, <<"red;}x{">>}]}])).
+                 r(?D:progressbar(1, [], [{color_ranges, [{5, <<"red;}x{">>}]}]))).
 
 progress_circle_geometry_test() ->
     C = 2 * math:pi() * 45,
@@ -289,7 +290,7 @@ kpi_card_test() ->
     ?assert(has(<<"class=\"ah-kpi-card ah-kpi-card-disabled ah-kpi-card-trend-down\"">>, D)),
     ?assert(has(<<">-3.3%<">>, D) orelse has(<<">-3.2%<">>, D)),
     ?assertNot(has(<<"ah-kpi-card-trend">>, ?D:kpi_card(<<"1">>, [], []))),
-    ?assertError({aihtml, {unknown_icon, rocket}}, ?D:kpi_card(<<"1">>, [], [{icon, rocket}])).
+    ?assertError({aihtml, {unknown_icon, rocket}}, r(?D:kpi_card(<<"1">>, [], [{icon, rocket}]))).
 
 timeline_test() ->
     Items = [#{date => <<"d0">>, title => <<"<t0>">>, description => <<"x">>},
@@ -311,7 +312,7 @@ timeline_test() ->
     N = ?D:timeline(Items, [near, horizontal], [{collapsible, false}]),
     ?assert(has(<<"class=\"ah-timeline ah-timeline-position-near ah-timeline-horizontal\"">>, N)),
     ?assertNot(has(<<"ah-collapsible">>, N)),
-    ?assertError({aihtml, {bad_dot, pink}}, ?D:timeline([#{dot => pink}], [], [])).
+    ?assertError({aihtml, {bad_dot, pink}}, r(?D:timeline([#{dot => pink}], [], []))).
 
 ranking_list_test() ->
     Items = [#{name => <<"<DE>">>, code => de, value => 10, tag => <<"Free">>, sub_value => <<"s">>},
@@ -362,11 +363,135 @@ tag_cloud_options_test() ->
     F = ?D:tag_cloud(Tags, [], [{min_value, 15}, {max_value, 25}]),
     ?assertNot(has(<<">c<">>, F)),
     ?assertError({aihtml, {bad_color, _}},
-                 ?D:tag_cloud(Tags, [], [{min_color, <<"red">>}, {max_color, <<"#fff000">>}])),
-    ?assertError({aihtml, {bad_unit, _}}, ?D:tag_cloud(Tags, [], [{font_size_unit, <<"px;x">>}])).
+                 r(?D:tag_cloud(Tags, [], [{min_color, <<"red">>}, {max_color, <<"#fff000">>}]))),
+    ?assertError({aihtml, {bad_unit, _}}, r(?D:tag_cloud(Tags, [], [{font_size_unit, <<"px;x">>}]))).
 
 tag_cloud_escaping_test() ->
     H = ?D:tag_cloud([{<<"<script>">>, 1}], [disabled], []),
     ?assert(has(<<"&lt;script&gt;">>, H)),
     ?assertNot(has(<<"<script>">>, H)),
     ?assert(has(<<"class=\"ah-tagcloud ah-tagcloud-disabled\"">>, H)).
+
+%%%===================================================================
+%%% element records (designs/05-records.md)
+%%%===================================================================
+
+record_equals_builder_test() ->
+    ?assertEqual(r(?D:chip(<<"Erlang">>, [removable, outlined, info], [{value, erlang}, {id, c1}])),
+                 r(#ah_chip{body = <<"Erlang">>, variant = outlined, color = info,
+                            removable = true, value = erlang, id = c1})),
+    ?assertEqual(r(?D:kpi_card(<<"845">>, [warning, <<"p-2">>],
+                               [{title, <<"Installs">>}, {trend, -3.5}, {icon, install},
+                                {data_x, 1}])),
+                 r(#ah_kpi_card{value = <<"845">>, color = warning, css = [<<"p-2">>],
+                                title = <<"Installs">>, trend = -3.5, icon = install,
+                                attrs = [{data_x, 1}]})),
+    ?assertEqual(r(?D:progressbar(9, [show_text, striped], [{max, 10}, {text, <<"9 of 10">>}])),
+                 r(#ah_progressbar{value = 9, show_text = true, striped = true, max = 10,
+                                   text = <<"9 of 10">>})),
+    ?assertEqual(r(?D:aspect_ratio([], [], [{ratio, <<"4:3">>}, {style, <<"max-width: 10px">>}])),
+                 r(#ah_aspect_ratio{ratio = <<"4:3">>, style = <<"max-width: 10px">>})),
+    ?assertEqual(r(?D:tag_cloud([{<<"a">>, 1}, {<<"b">>, 2}], [], [{sort_by, value},
+                                                                  {sort_order, descending}])),
+                 r(#ah_tag_cloud{items = [{<<"a">>, 1}, {<<"b">>, 2}], sort_by = value,
+                                 sort_order = descending})).
+
+builder_fills_fields_test() ->
+    A = ?D:alert(<<"m">>, [error, dismissible, <<"mt-2">>],
+                 [{title, <<"T">>}, {icon, false}, {id, a1}, {aria_live, polite}]),
+    ?assertMatch(#ah_alert{body = <<"m">>, variant = error, dismissible = true,
+                           title = <<"T">>, icon = false, id = a1, css = [<<"mt-2">>],
+                           attrs = [{aria_live, polite}]}, A),
+    ?assertMatch(#ah_statistic{value = 5, color = default, precision = 1, loading = true},
+                 ?D:statistic(5, [loading], [{precision, 1}])),
+    %% a binary style key stays an attribute but is still merged
+    ?assert(has(<<"style=\"aspect-ratio: 16 / 9; a: b\"">>,
+                ?D:aspect_ratio([], [], [{<<"style">>, <<"a: b">>}]))),
+    ?assertError({aihtml, {record_only_field, ah_chip, postback}},
+                 ?D:chip(<<"x">>, [], [{postback, go}])).
+
+postback_test() ->
+    Token = fun(Html) ->
+                    {match, [Ev, Tok]} = re:run(r(Html), <<"data-ah-on=\"((?:ah:)?[a-z-]+):([^\":]+)\"">>,
+                                                [{capture, all_but_first, binary}]),
+                    {ok, Ref} = aihtml_action:unsign(Tok),
+                    {Ev, Ref}
+            end,
+    %% chip: click, or change for a removable chip that is not clickable
+    ?assertEqual({<<"click">>, {?MODULE, pick, #{id => 1}}},
+                 Token(#ah_chip{body = <<"a">>, clickable = true, removable = true,
+                                postback = {pick, #{id => 1}}})),
+    ?assertMatch({<<"change">>, {?MODULE, drop, #{}}},
+                 Token(#ah_chip{body = <<"a">>, removable = true, postback = drop})),
+    ?assertMatch({<<"ah:toggle">>, _},
+                 Token(#ah_expandable_text{text = <<"t">>, postback = t})),
+    ?assertMatch({<<"ah:dismiss">>, {other_mod, gone, 1}},
+                 Token(#ah_alert{body = <<"x">>, postback = {gone, 1}, delegate = other_mod})),
+    ?assertMatch({<<"change">>, _}, Token(#ah_progressbar{value = 5, postback = p})),
+    ?assertMatch({<<"change">>, _}, Token(#ah_progress_circle{value = 5, postback = p})),
+    ?assertMatch({<<"ah:toggle">>, _}, Token(#ah_timeline{postback = p})),
+    ?assertMatch({<<"ah:item-click">>, _}, Token(#ah_ranking_list{clickable = true, postback = p})),
+    ?assertMatch({<<"ah:tag-click">>, _}, Token(#ah_tag_cloud{postback = p})),
+    [?assertError({aihtml, {no_postback_event, Tag}}, r(setelement(6, default(Tag), p)))
+     || Tag <- [ah_avatar, ah_badge, ah_aspect_ratio, ah_kbd, ah_meter, ah_statistic,
+                ah_kpi_card]],
+    ?assertError({aihtml, {no_postback_event, ah_time_ago}},
+                 r(#ah_time_ago{timestamp = 0, postback = p})).
+
+field_validation_test() ->
+    ?assertError({aihtml, {bad_modifier, avatar, size, huge, _}}, r(#ah_avatar{size = huge})),
+    ?assertError({aihtml, {bad_modifier, badge, variant, square, _}},
+                 r(#ah_badge{variant = square, count = 1})),
+    ?assertError({aihtml, {bad_modifier, progressbar, layout, sideways, _}},
+                 r(#ah_progressbar{value = 1, layout = sideways})),
+    ?assertError({aihtml, {bad_flag, chip, removable, yes}}, r(#ah_chip{removable = yes})),
+    ?assertError({aihtml, {modifier_in_css, alert, error}}, r(#ah_alert{css = [error]})),
+    ?assertError({aihtml, {unknown_icon, rocket}}, r(#ah_kpi_card{icon = rocket})),
+    ?assertError({aihtml, {bad_ratio, _}}, r(#ah_aspect_ratio{ratio = -1})),
+    ?assertError({aihtml, {bad_flag_style, round}},
+                 r(#ah_ranking_list{items = [#{name => <<"a">>, code => de}],
+                                    flag_style = round})),
+    %% kpi_card's colour group has no default and may stay undefined
+    ?assert(has(<<"class=\"ah-kpi-card\"">>, #ah_kpi_card{value = <<"1">>})),
+    %% every record renders with its defaults
+    [?assert(is_binary(r(default(T)))) || T <- [T || T <- tags(), T =/= ah_time_ago]].
+
+records_match_catalog_test() ->
+    Base = [module, id, css, attrs, postback, delegate],
+    [begin
+         Tag = list_to_atom("ah_" ++ atom_to_list(N)),
+         Fields = ?D:fields(Tag),
+         ?assertEqual(Base, lists:sublist(Fields, 6)),
+         Defaults = maps:from_list(lists:zip(Fields, tl(tuple_to_list(default(Tag))))),
+         [?assertEqual({N, G, case D of none -> undefined; _ -> D end},
+                       {N, G, maps:get(G, Defaults)})
+          || {G, {_, D}} <- maps:to_list(maps:get(groups, E, #{}))],
+         [?assertEqual({N, F, false}, {N, F, maps:get(F, Defaults)})
+          || F <- maps:get(flags, E, [])],
+         [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
+         ?assertEqual(?D, maps:get(module, Defaults))
+     end || #{name := N} = E <- ?D:catalog()],
+    ?assertEqual(lists:sort(tags()),
+                 lists:sort([list_to_atom("ah_" ++ atom_to_list(N)) || #{name := N} <- ?D:catalog()])).
+
+tags() ->
+    [ah_avatar, ah_badge, ah_chip, ah_aspect_ratio, ah_kbd, ah_time_ago, ah_expandable_text,
+     ah_alert, ah_progressbar, ah_progress_circle, ah_meter, ah_statistic, ah_kpi_card,
+     ah_timeline, ah_ranking_list, ah_tag_cloud].
+
+default(ah_avatar) -> #ah_avatar{};
+default(ah_badge) -> #ah_badge{};
+default(ah_chip) -> #ah_chip{};
+default(ah_aspect_ratio) -> #ah_aspect_ratio{};
+default(ah_kbd) -> #ah_kbd{};
+default(ah_time_ago) -> #ah_time_ago{};
+default(ah_expandable_text) -> #ah_expandable_text{};
+default(ah_alert) -> #ah_alert{};
+default(ah_progressbar) -> #ah_progressbar{};
+default(ah_progress_circle) -> #ah_progress_circle{};
+default(ah_meter) -> #ah_meter{};
+default(ah_statistic) -> #ah_statistic{};
+default(ah_kpi_card) -> #ah_kpi_card{};
+default(ah_timeline) -> #ah_timeline{};
+default(ah_ranking_list) -> #ah_ranking_list{};
+default(ah_tag_cloud) -> #ah_tag_cloud{}.
