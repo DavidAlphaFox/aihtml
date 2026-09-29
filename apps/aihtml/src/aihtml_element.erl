@@ -14,7 +14,8 @@
 %%%-------------------------------------------------------------------
 -module(aihtml_element).
 
--export([is_element/1, render/1, base/1, build/5, classes/3, root_attrs/2]).
+-export([is_element/1, render/1, base/1, build/5, classes/3, root_attrs/2,
+         component_name/1]).
 
 -export_type([element/0, postback/0]).
 
@@ -96,6 +97,14 @@ classes(R, Fields, Entry) ->
 root_attrs(R, Event) ->
     #{id := Id, attrs := Attrs, postback := Postback, delegate := Delegate} = base(R),
     [{id, Id}, postback(Postback, Event, Delegate, element(1, R)), attrs_list(Attrs)].
+
+%% @doc The catalog name of a component record: ah_button -> button.
+-spec component_name(atom()) -> atom().
+component_name(Tag) ->
+    case atom_to_binary(Tag, utf8) of
+        <<"ah_", Name/binary>> -> binary_to_existing_atom(Name, utf8);
+        _ -> error({aihtml, {not_a_component_record, Tag}})
+    end.
 
 %%%===================================================================
 %%% Internal

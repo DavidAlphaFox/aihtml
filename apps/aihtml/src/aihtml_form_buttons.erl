@@ -107,7 +107,7 @@ split_button(Content, Items, Css, Attrs) ->
 
 build(R, Css, Attrs) ->
     Tag = element(1, R),
-    ?E:build(R, fields(Tag), entry(name(Tag)), Css, Attrs).
+    ?E:build(R, fields(Tag), entry(?E:component_name(Tag)), Css, Attrs).
 
 %% @doc The field names of one of this group's records.
 -spec fields(atom()) -> [atom()].
@@ -310,7 +310,7 @@ render(#ah_split_button{body = Content, items = Items0, value = Value, name = Na
 
 classes(R) ->
     Tag = element(1, R),
-    ?E:classes(R, fields(Tag), entry(name(Tag))).
+    ?E:classes(R, fields(Tag), entry(?E:component_name(Tag))).
 
 with_icon(Content, Icon0, Img, Pos) ->
     lists:member(Pos, [left, right, top, bottom])
@@ -439,11 +439,6 @@ catalog() ->
 %%%===================================================================
 
 entry(Name) -> aihtml_catalog:entry(?MODULE, Name).
-
-%% ah_button -> button
-name(Tag) ->
-    <<"ah_", Name/binary>> = atom_to_binary(Tag, utf8),
-    binary_to_existing_atom(Name, utf8).
 
 item({V, Label, IA}) -> {bin(V), Label, IA};
 item({V, Label}) -> {bin(V), Label, []};
