@@ -1,0 +1,17 @@
+/* aihtml additions for split_button (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- split button ---- */
+/* Visible at once on open so the first item can take focus. */
+.ah-split-button[data-open="true"] .ah-split-button__menu {
+  transition: opacity .12s ease, transform .12s ease, visibility 0s;
+}
+.ah-split-button__item:focus-visible {
+  outline: none;
+  background: var(--ah-color-bg-subtle);
+}
+.ah-split-button__main:focus-visible,
+.ah-split-button__arrow:focus-visible {
+  position: relative;
+  z-index: 1;
+}
