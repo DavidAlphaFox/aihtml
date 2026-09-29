@@ -5,7 +5,10 @@
 按钮的点击直接由 Erlang 函数响应，每个事件一次无状态请求，响应按 [AG-UI](https://docs.ag-ui.com) 事件流返回：
 
 ```erlang
-button(<<"删除">>, Id, [ghost], [on(click, {?MODULE, delete, #{id => Id}})])
+button(<<"删除">>, Id, [borderless], [on(click, {?MODULE, delete, #{id => Id}})])
+
+%% 同一个按钮的 record 写法，postback 默认回到当前模块
+#ah_button{body = <<"删除">>, variant = borderless, postback = {delete, #{id => Id}}}
 
 action(delete, #{id := Id}, _Event, Ctx) ->
     ok = todo_db:delete(Id),
@@ -25,15 +28,16 @@ login() ->
 
 - 渲染依赖 [beamai_render](https://github.com/TTalkPro/beamai_render)：转义使用 `beamai_html_escape`，`{safe, iodata()}` 与 beamai_jinja 的安全标记一致，渲染结果可直接放进 Jinja 模板。
 - 前端基础：jQuery 4 与 Tailwind CSS v4（Tailwind CLI 构建）。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
-- 组件与主题移植自 [sigil](../sigil)（MIT）：92 个组件，以及四轴主题（外观、配色、排版、外形）。
+- 组件与主题移植自 [sigil](../sigil)（MIT）：110 个组件，以及四轴主题（外观、配色、排版、外形）。
 
 ## 仓库结构
 
 | 路径 | 内容 |
 |---|---|
 | `apps/aihtml` | 类库本体，其它项目只依赖它 |
+| `apps/aihtml/include` | `aihtml.hrl`（导入全部构建函数和 record）、每组组件的 record 头文件、自定义组件用的 `aihtml_element.hrl` |
 | `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
-| `apps/aihtml/priv/static` | 预构建产物：`aihtml.css`、`aihtml.js`、`vendor/jquery.min.js` |
+| `apps/aihtml/priv/static` | 预构建产物：`aihtml.css`、`aihtml.js`，以及 `vendor/` 下的 jQuery 和按需加载的 echarts、xlsx、jspdf（见「第三方库」） |
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
 | `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
 | `apps/aihtml/assets/js` | 运行时 `core.js` 与各组件行为，由 `scripts/build-js.mjs` 拼成 `aihtml.js` |
@@ -57,7 +61,7 @@ login() ->
 
 **Css**：原子是预制件的语义修饰符，由 `aihtml_catalog` 校验，未知或冲突的修饰符会直接报错；binary 是字面 class，通常是 Tailwind 工具类，排在语义 class 之后。
 
-**Attrs**：proplist 或 map，可以嵌套列表。`true` 输出布尔属性，`false`、`undefined` 会被省略，`aria_label` 写成 `aria-label`，`{data, #{k => v}}` 展开为 `data-k`。后出现的同名属性覆盖前面的，`class` 则累加。checkbox、radio、switch 的 Attrs 作用在内部的 `<input>` 上。
+**Attrs**：proplist 或 map，可以嵌套列表。`true` 输出布尔属性，`false`、`undefined` 会被省略，`aria_label` 写成 `aria-label`，`{data, #{k => v}}` 展开为 `data-k`。后出现的同名属性覆盖前面的，`class` 则累加。包着原生控件的组件（checkbox、radio、switch、input、textarea、select 等），id、Attrs 和 postback 作用在内部的原生控件上，而不是外层容器；具体见各组件 API 页 record 上方的说明。
 
 预制件清单、修饰符、选项、事件和方法都在 `aihtml_catalog:prefabs/0` 中。示例站的 `/components/:name` 为每个组件提供文档页，参照 sigil 的样式，分三个标签：
 - **演示**：实时示例，下方附渲染它的 Erlang 函数源码。
@@ -130,7 +134,7 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 ## 组件
 
-从 sigil 移植了 92 个组件，分为 18 组，约定见 `designs/04-components.md`：
+从 sigil 移植了 110 个组件，分为 26 组，约定见 `designs/04-components.md`：
 
 | 组 | 组件 |
 |---|---|
@@ -151,11 +155,60 @@ render(#myapp_card{title = T, body = B} = R) ->
 | 滚动与响应式 | scrollview（翻页轮播）, scrollbar, responsive_panel |
 | 工具栏与命令 | activity_bar, navigationbar, command（命令面板，支持服务端搜索） |
 | 拖放 | sortable, dragdrop |
+| 数据网格 | datagrid（排序、筛选、分页、分组、编辑、列固定、导出） |
+| 透视表 | pivotgrid（Erlang 汇总，可拖动字段重新透视，导出 Excel） |
+| 表格 | treegrid（子节点可懒加载）, datatable（行详情、高级筛选、编辑） |
+| 日程 | gantt, scheduler（日、周、月、时间轴、日程视图，按资源分列）, swimlane（跨职能流程图） |
+| 图表 | chart（任意 echarts 配置）, area_chart, bar_chart, donut_chart, radar_chart, relation_graph |
+| 节点图 | node_graph（节点编辑器：连线、分组、撤销重做，Erlang 自动布局） |
+| 停靠布局 | docking, dock_layout（IDE 式分栏、标签组、浮动、自动隐藏） |
+| 功能区与分栏 | ribbon, tile_layout（可拖分隔条、标签组的分栏布局） |
 
 - **取值组件**：自定义控件把当前值写在根元素的 `data-ah-value`，用隐藏 input 参与表单，值改变时在根元素上触发 `change`。所以 `on(change, {M, A, Args})` 写在组件的 Attrs 里就能收到事件，`Event.value` 就是这个值。
 - **服务端驱动**：action 里用 `aihtml_action:call(Ctx, Target, Method, Args)` 调用组件方法，例如打开抽屉、设置进度；也可以用 `aihtml_overlay:toast(Ctx, Msg, Opts)` 等封装。
+- **辅助函数**：组件之外的函数也由 `aihtml` 门面导出，include `aihtml.hrl` 后可直接调用。前几个在 action 里用：需要服务端补数据的组件，由 action 调用它们回应，它们在服务端渲染 HTML，再形变替换进组件，浏览器不拼 HTML。后几个生成属性，拼进元素的 Attrs：
+
+  | 函数 | 用途 |
+  |---|---|
+  | `set_items/3,4` | combobox 的 `search` 选项：回填搜索结果 |
+  | `listbox_items/3,4` | listbox 的 `search` 选项：回填搜索结果 |
+  | `cascader_children/3,4` | cascader 的 `load` 选项：回填懒加载的下一级 |
+  | `set_children/3` | tree 的 `load` 选项：回填懒加载的子节点 |
+  | `set_command_items/3` | command 的 `search` 选项：回填命令列表 |
+  | `set_events/3`、`add_event/3` | calendar：按当前可见范围回填或追加事件 |
+  | `uploaded_files/1` | upload 的 `change` 事件：解码已上传文件列表 |
+  | `validate/1` | 浏览器端表单校验属性，拼进控件的 Attrs，例如 `validate([required, email])`；校验不过时表单不会提交 |
+  | `tooltip_attrs/2`、`opens/1`、`closes/0,1,2`、`toggles/1`、`shows_toast/2` | 浮层的触发属性，拼进任意元素的 Attrs |
+  | `draggable_attrs/2`、`drop_zone_attrs/2` | dragdrop 的可拖元素和放置区属性 |
+  | `datagrid_query/1`、`datagrid_rows/4`、`datagrid_row/3`、`datagrid_select/2` | datagrid 远程模式：读取查询、回填一页、重绘一行、在内存数据上执行查询 |
+  | `datatable_query/1`、`datatable_rows/3`、`datatable_row/4`、`treegrid_children/3` | datatable 远程模式和编辑回应；treegrid 懒加载 |
+  | `pivotgrid_view/1`、`pivotgrid_rows/3`、`pivotgrid_cell/1` | pivotgrid 远程模式和单元格点击 |
+  | `scheduler_range/1`、`scheduler_update/3`、`gantt_update/3`、`swimlane_update/3` | scheduler 切换日期范围；三者编辑后重绘 |
+  | `chart_update/3`、`chart_option/1` | 更新已有图表的数据或配置，不重新渲染 |
+  | `set_node_graph/3`、`node_graph_layout/1` | 替换节点图；在服务端自动布局 |
+  | `docking_add_window/4`、`dock_layout_open/3,4` | 往停靠布局里加窗口、打开面板 |
+
+  ```erlang
+  %% 树的某个节点展开时加载子节点：tree(Items, undefined, [], [{load, {?MODULE, children, #{}}}])
+  %% 展开的节点的值在 Event 的 data 里（节点的 data-value 属性）
+  action(children, _Args, #{data := #{<<"value">> := Parent}} = Event, Ctx) ->
+      set_children(Ctx, Event, [{C, C} || C <- db:children(Parent)]).
+  ```
+- **大数据量组件**（datagrid、datatable、pivotgrid、scheduler 等）支持两种模式，服务端都不保存视图状态：
+  - **本地模式**：服务端一次渲染出全部数据，排序、筛选、分页、分组由浏览器完成。
+  - **远程模式**：给出 `source` 选项（一个 action），每次视图变化（排序、筛选、翻页、换日期范围）都发这个 action，查询条件在 `Event` 里；action 用上表的辅助函数回应，由服务端渲染新的一页再形变替换进页面。
+  - 布局类组件（dock_layout、tile_layout、node_graph）把用户调整后的布局以 JSON 写在 `data-ah-value` 并触发 `change`，服务端保存后，下次用这个 JSON 渲染出同样的布局。
+
+  ```erlang
+  datagrid(Columns, FirstPage, [pageable], [{source, {?MODULE, orders, #{}}}, {total, Total}])
+
+  action(orders, _Args, Event, Ctx) ->
+      #{offset := Off, limit := Lim, sort := Sort, filters := F} = datagrid_query(Event),
+      {Rows, Total} = orders_db:page(Off, Lim, Sort, F),
+      datagrid_rows(Ctx, Event, Rows, Total).
+  ```
 - **样式**：sigil 的样式由 `scripts/port-sigil.mjs` 导入到 `priv/css/sigil`，前缀由 `sigil-` 改为 `ah-`，并保留 MIT 声明。
-- **门面**：`aihtml` 的组件函数和 `aihtml.hrl` 的导入由 `scripts/gen-facade.escript` 从各组模块生成。新增组件后，运行 `rebar3 compile && escript scripts/gen-facade.escript`。
+- **门面**：`aihtml` 的组件函数和 `aihtml.hrl` 的导入由 `scripts/gen-facade.escript` 从各组模块生成，包括组件函数和各组 `facade_extras/0` 列出的辅助函数。新增组件后，运行 `rebar3 compile && escript scripts/gen-facade.escript`。
 
 ## 交互模型
 
@@ -226,6 +279,23 @@ end, #{except => Ctx})     %% 跳过发起者，它已经通过 action 响应更
 button(<<"更多">>, more, [outlined],
        [fetch(get, <<"/items?page=2">>, <<"#items">>, #{swap => append})])
 ```
+
+### 文件上传
+
+文件内容不走 action：action 请求是 JSON，不适合传二进制。upload 组件有两种用法：
+- **给出 `url`**：浏览器用 XHR 把每个文件 POST 到这个地址（multipart，字段名默认 `file`），显示进度。服务端返回的 JSON 构成组件的值；上传完成后根元素触发 `change`，所以 postback 能在普通 action 里拿到文件列表：
+
+  ```erlang
+  upload([], [], [{url, <<"/upload">>}, {name, files},
+                  on(change, {?MODULE, uploaded, #{}})])
+
+  action(uploaded, _Args, Event, Ctx) ->
+      Files = uploaded_files(Event),        %% [#{<<"name">> => ..., <<"size">> => ...}]
+      ...
+  ```
+
+  接收地址由应用自己路由和实现，参考演示站的 `aihtml_example_upload`（cowboy 的 `read_part` 读取 multipart）。
+- **不给 `url`**：组件就是样式化的 `<input type="file">`，文件随所在表单按原生 multipart 提交。
 
 ### 预制件行为
 
@@ -308,6 +378,8 @@ action(search, _, #{value := Q}, Ctx) ->
 
 选择器可以写 `this` 或 `<<"closest 选择器">>`。多个请求同时占用一个指示器时，要等全部结束它才消失。`fetch/4` 也支持 `indicator` 和 `disable`。
 
+组件事件（`ah:` 开头，例如 datagrid 的 `ah:edit`、scheduler 的 `ah:event-change`）默认是 `drop`：上一次请求还没结束时，新的事件会被丢掉。用户可能很快连续编辑时，绑定这类事件要写 `sync => queue`，例如 `on('ah:edit', {?MODULE, save_cell, #{}}, #{sync => queue})`。
+
 ```erlang
 button(<<"Save">>, save, [],
        [on(click, {?MODULE, save, #{}},
@@ -337,6 +409,25 @@ var h = AH.float(popup, button, { placement: "bottom", align: "start", matchWidt
 // 关闭时
 h.stop();
 ```
+
+## 第三方库
+
+图表和表格导出用到三个较大的库，只在需要时加载：
+
+| 库 | 用途 | 许可证 |
+|---|---|---|
+| echarts | chart、各类图表、relation_graph | Apache-2.0 |
+| xlsx（SheetJS） | datagrid、pivotgrid 导出 Excel | Apache-2.0 |
+| jspdf、jspdf-autotable | datagrid 导出 PDF | MIT |
+
+- **位置**：`npm run vendor` 把它们连同许可证文件复制到 `priv/static/vendor`，版本见 `package.json`。纯 Erlang 的使用方不需要运行 npm。
+- **按需加载**：运行时的 `AH.vendor(name)` 在第一次需要时插入 script 标签，返回 Promise，每个页面只加载一次。图表在挂载时加载 echarts，导出在点击时加载 xlsx 或 jspdf；没用到这些组件的页面不会下载它们。
+  ```js
+  AH.vendor("echarts").then(function (echarts) { ... });
+  AH.vendor(["jspdf", "jspdf-autotable"]).then(function (libs) { ... });
+  ```
+- **路径**：默认是 `aihtml.js` 所在目录下的 `vendor/`，所以按 `/aihtml/[...]` 挂载静态资源时不需要配置。放在别处时，在 `<body>` 上写 `data-ah-vendor`，例如 `aihtml:page(Body, #{body_attrs => [{data_ah_vendor, <<"/assets/vendor/">>}]})`。页面上已经有同名全局变量（自己引入了 echarts 等）时不会重复加载。
+- **PDF 中的中文**：jsPDF 的默认字体不含中文，导出的 PDF 里中文显示不出来，和 sigil 相同。
 
 ## 共享模板
 
@@ -522,6 +613,7 @@ action(search, _Args, #{value := Query} = Event, Ctx) ->
   - 每个示例都能渲染，源码能提取和高亮。
   - 每个文档页都能渲染。
   - 首页链接到所有组件。
+  - 每个组件的 API 页都展示了它的 record（theme_switcher 和 toast 没有 record）。
 - **数据层测试**：`aihtml_example_store_tests` 覆盖数据层。
 - **样式**：演示站的样式入口是 `apps/aihtml_example/assets/example.css`。它引入库的样式，扫描库和示例应用的 Erlang 源码生成 Tailwind 工具类，并包含首页主视觉、代码块高亮和 API 表格的少量样式。`npm run build` 会一起构建它。
 
@@ -585,7 +677,7 @@ rebar3 eunit --app aihtml
 rebar3 dialyzer && rebar3 xref
 
 npm install
-npm run build          # 复制 jQuery，编译模板并拼出 aihtml.js，构建 aihtml.css 与 example.css
+npm run build          # 复制 jQuery 和按需加载的库，编译模板并拼出 aihtml.js，构建 aihtml.css 与 example.css
 npm test               # 模板编译器的 Mustache 规范用例 + 浏览器端测试（无头 Chromium）
 
 rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、/components、/demo、/fetch
@@ -593,6 +685,9 @@ rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、
 
 - **配置文件分两份**：`rebar3 shell` 读取 `config/shell.config`（普通 Erlang 配置）；release 读取 `config/sys.config.src`，其中的 `${VAR}` 只有 release 启动脚本会替换，rebar3 shell 读不了它。
 - **新增或修改组件后**，重新生成门面和头文件：`rebar3 compile && escript scripts/gen-facade.escript`。
+  - `--out Dir` 选项把门面和 `aihtml.hrl` 生成到 `Dir`，不改动源码。适合在组还没接入时单独验证它的示例。
+- **导入 sigil 样式**：在 `scripts/port-sigil.mjs` 的清单里加上组件名，运行 `node scripts/port-sigil.mjs`。它只写入新文件，已有文件（可能改过）要加 `--force` 才会覆盖。
+- **全部测试**：`rebar3 eunit` 跑类库和演示站；`--app aihtml` 只跑类库。
 - **模板一致性**由 EUnit 的 `aihtml_tpl_tests` 检查，需要能调用 `node`。
 - **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行。
 

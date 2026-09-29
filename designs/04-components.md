@@ -8,7 +8,7 @@
 - 通用、常用。
 - 不依赖大型 npm 包，适合"服务端渲染 + jQuery 增强"。
 
-共 92 个，分为 18 组，分两批移植。每组一个 Erlang 模块、一个 JS 文件、一个补充 CSS 文件和一个测试模块：
+共 110 个，分为 26 组，分三批移植。每组一个 Erlang 模块、一个 JS 文件、一个补充 CSS 文件和一个测试模块：
 
 | 组 | 模块 | 组件（函数名） |
 |---|---|---|
@@ -31,10 +31,21 @@
 | layout_bars | `aihtml_layout_bars` | activity_bar, navigationbar, command |
 | layout_dnd | `aihtml_layout_dnd` | sortable, dragdrop |
 
-第二批（后 8 组）从一开始就按 [05-records.md](05-records.md) 的 record 方式实现。
+| data_grid | `aihtml_data_grid` | datagrid |
+| data_pivot | `aihtml_data_pivot` | pivotgrid |
+| data_tables | `aihtml_data_tables` | treegrid, datatable |
+| data_schedule | `aihtml_data_schedule` | gantt, scheduler, swimlane |
+| data_charts | `aihtml_data_charts` | chart, area_chart, bar_chart, donut_chart, radar_chart, relation_graph |
+| data_graph | `aihtml_data_graph` | node_graph |
+| layout_dock | `aihtml_layout_dock` | docking, dock_layout |
+| layout_tiles | `aihtml_layout_tiles` | ribbon, tile_layout |
+
+第二批和第三批从一开始就按 [05-records.md](05-records.md) 的 record 方式实现。第三批的重型组件另有两条约定：
+- **数据留在服务端**：大数据量组件支持本地和远程两种模式，远程模式下每次视图变化发一个 action，由服务端渲染新的一页（见 README「组件」一节）。
+- **第三方库按需加载**：echarts、xlsx、jspdf 放在 `priv/static/vendor`，组件用 `AH.vendor(name)` 在需要时加载，不打包进 `aihtml.js`。
 
 **暂不移植**：
-- 重型组件：datagrid、pivotgrid、treegrid、datatable、gantt、scheduler、swimlane、各类 chart、node_graph、relation_graph、drawn、docking、dock_layout、ribbon、tile_layout。
+- drawn：2.5 万行的手绘风白板引擎（含流程图、思维导图、插件体系），以后单独评估。
 - 编辑器：rich_editor、prose_editor、markdown_editor。
 - AG-UI 与 chat 组件。
 
