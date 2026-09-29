@@ -22,7 +22,9 @@ start(_Type, _Args) ->
              {"/greet", aihtml_example_api, greet},
              {"/todos", aihtml_example_api, todos},
              {"/todos/:id/toggle", aihtml_example_api, toggle},
-             {"/todos/:id", aihtml_example_api, todo}],
+             {"/todos/:id", aihtml_example_api, todo},
+             %% the upload demos post their files here (bytes are discarded)
+             {"/upload", aihtml_example_upload, #{}}],
     %% the example's own Tailwind build
     Static = [{"/static/[...]", cowboy_static, {priv_dir, aihtml_example, "static"}}],
     Routes = [{'_', Actions ++ Fetch ++ Static}],
