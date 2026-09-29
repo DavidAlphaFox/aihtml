@@ -1,0 +1,9 @@
+{application, aihtml,
+ [{description, "Erlang prefabs that render HTML for jQuery + TailwindCSS"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [kernel, stdlib, crypto, beamai_render]},
+  {env, []},
+  {modules, []},
+  {licenses, ["Apache-2.0"]},
+  {links, [{"GitHub", "https://github.com/DavidAlphaFox/aihtml"}]}]}.

@@ -1,0 +1,6 @@
+/* Builds priv/static/aihtml.css, the ready-made stylesheet for consumers
+   that do not run their own Tailwind build. It contains the prefabs plus
+   only the utilities the library itself uses. */
+@import "tailwindcss" source(none);
+@import "../priv/css/aihtml.css";
+@source "../src";
