@@ -25,7 +25,7 @@ login() ->
 
 - 渲染依赖 [beamai_render](https://github.com/TTalkPro/beamai_render)：转义使用 `beamai_html_escape`，`{safe, iodata()}` 与 beamai_jinja 的安全标记一致，渲染结果可直接放进 Jinja 模板。
 - 前端基础：jQuery 4 与 Tailwind CSS v4（Tailwind CLI 构建）。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
-- 主题借鉴 [sigil](../sigil) 的四轴设计：外观、配色、排版、外形。
+- 组件与主题移植自 [sigil](../sigil)（MIT）：67 个核心组件，以及四轴主题（外观、配色、排版、外形）。
 
 ## 仓库结构
 
@@ -35,7 +35,10 @@ login() ->
 | `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
 | `apps/aihtml/priv/static` | 预构建产物：`aihtml.css`、`aihtml.js`、`vendor/jquery.min.js` |
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
-| `apps/aihtml_example` | cowboy 示例，`/` 是 action 模式，`/fetch` 是 URL 片段模式 |
+| `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
+| `apps/aihtml/assets/js` | 运行时 `core.js` 与各组件行为，由 `scripts/build-js.mjs` 拼成 `aihtml.js` |
+| `apps/aihtml_example` | cowboy 示例：`/` 是 action 模式，`/components` 是组件总览，`/fetch` 是 URL 片段模式 |
+| `scripts/` | 构建与测试脚本：样式移植、JS 构建、模板编译器、门面生成、预览 |
 | `designs/` | 设计文档 |
 
 ## 调用约定
@@ -46,8 +49,8 @@ login() ->
 |---|---|
 | 通用标签 | `p(Children)`、`p(Children, Css, Attrs)`；`div` 是 Erlang 保留字，写作 `'div'` |
 | 空元素 | `img(Css, Attrs)`、`hr(Css, Attrs)`、`br()` |
-| 表单预制件 | `button(Content, Value, Css, Attrs)`、`checkbox/4`、`radio/4`、`switch/4`、`select(Options, Value, Css, Attrs)` |
-| 其它预制件 | `input/3`、`textarea/3`、`field/4`、`card/3`、`alert/3`、`badge/3`、`tabs/4`、`theme_switcher/2` |
+| 取值组件 | `button(Content, Value, Css, Attrs)`、`dropdownlist(Items, Value, Css, Attrs)`、`datepicker(Value, Css, Attrs)` |
+| 容器与展示 | `card(Children, Css, Attrs)`、`chip(Content, Css, Attrs)`、`loader(Css, Attrs)` |
 | 任意标签 | `aihtml:el(Tag, Children, Css, Attrs)`、`aihtml:void(Tag, Css, Attrs)` |
 
 **Children**：binary、数字、原子和可打印字符串都作为文本转义输出；其它列表是子节点序列；`safe(IoData)` 原样输出。
@@ -56,7 +59,28 @@ login() ->
 
 **Attrs**：proplist 或 map，可以嵌套列表。`true` 输出布尔属性，`false`、`undefined` 会被省略，`aria_label` 写成 `aria-label`，`{data, #{k => v}}` 展开为 `data-k`。后出现的同名属性覆盖前面的，`class` 则累加。checkbox、radio、switch 的 Attrs 作用在内部的 `<input>` 上。
 
-预制件清单、修饰符、选项和事件都在 `aihtml_catalog:prefabs/0` 中。
+预制件清单、修饰符、选项和事件都在 `aihtml_catalog:prefabs/0` 中，示例应用的 `/components` 页面逐个展示。
+
+## 组件
+
+从 sigil 移植了 67 个核心组件，分为 10 组，约定见 `designs/04-components.md`：
+
+| 组 | 组件 |
+|---|---|
+| 按钮 | button, button_group, link_button, toggle_button, dropdown_button, split_button, segmented_control |
+| 选择 | checkbox, checkbox_group, radiobutton, radiobutton_group, radio_cards, switch_button, rating_group |
+| 文本输入 | input, textarea, password_input, number_input, input_otp, tag_input |
+| 选择与表单 | dropdownlist, select, slider, field, form_layout；校验用 `validate/1` |
+| 选择器 | datepicker, combobox（支持服务端搜索）, timepicker, colorpicker |
+| 基础布局 | card, panel, expander, tabs, tab_bar, breadcrumbs, pagination, steps, skeleton, loader, empty |
+| 导航 | menu, navbar, sidenav, toolbar, splitter, listmenu, status_bar |
+| 浮层 | tooltip, popover, drawer, sheet, window, notification；`toast/3`、`opens/1` 等触发器 |
+| 展示 | avatar, badge, chip, aspect_ratio, kbd, time_ago, expandable_text, progressbar, progress_circle, meter, statistic, kpi_card, timeline, ranking_list, tag_cloud, alert |
+
+- **取值组件**：自定义控件把当前值写在根元素的 `data-ah-value`，用隐藏 input 参与表单，值改变时在根元素上触发 `change`。所以 `on(change, {M, A, Args})` 写在组件的 Attrs 里就能收到事件，`Event.value` 就是这个值。
+- **服务端驱动**：action 里用 `aihtml_action:call(Ctx, Target, Method, Args)` 调用组件方法，例如打开抽屉、设置进度；也可以用 `aihtml_overlay:toast(Ctx, Msg, Opts)` 等封装。
+- **样式**：sigil 的样式由 `scripts/port-sigil.mjs` 导入到 `priv/css/sigil`，前缀由 `sigil-` 改为 `ah-`，并保留 MIT 声明。
+- **门面**：`aihtml` 的组件函数和 `aihtml.hrl` 的导入由 `scripts/gen-facade.escript` 从各组模块生成。新增组件后，运行 `rebar3 compile && escript scripts/gen-facade.escript`。
 
 ## 交互模型
 
@@ -124,7 +148,7 @@ end, #{except => Ctx})     %% 跳过发起者，它已经通过 action 响应更
 `fetch/3,4` 生成的属性让元素请求开发者自己路由的 URL，返回的 HTML 片段替换到目标位置。适合已有 REST 路由的场景：
 
 ```erlang
-button(<<"更多">>, more, [outline],
+button(<<"更多">>, more, [outlined],
        [fetch(get, <<"/items?page=2">>, <<"#items">>, #{swap => append})])
 ```
 
@@ -132,14 +156,107 @@ button(<<"更多">>, more, [outline],
 
 带 `data-ah` 的根元素在加载时挂载 jQuery 行为，例如 tabs 切换、alert 关闭。
 
+### 替换方式与形变替换
+
+action 的 `aihtml_action:html(Ctx, Target, Html, Swap)`、服务端推送、`fetch/4` 的 `swap` 选项，都用同一组替换方式：
+
+| Swap | 效果 |
+|---|---|
+| `inner`（默认） | 替换目标的内容 |
+| `outer` | 替换目标元素本身 |
+| `append` / `prepend` | 在内容末尾或开头追加 |
+| `morph` | 把目标元素本身形变为新 HTML，新 HTML 必须只有一个根元素 |
+| `morph_inner` | 把目标的内容形变为新 HTML |
+| `none` | 不改动页面 |
+
+**形变替换**不拆掉旧节点，而是把现有 DOM 朝新 HTML 修补：
+- **节点匹配**：子节点先按 id 匹配，没有 id 时按位置和标签匹配；属性逐个同步。
+- **状态保留**：留下来的节点保持原样，焦点、光标、滚动位置、打开的弹层和组件状态都不受影响。
+- **表单控件**：没有焦点的控件取服务端的新值；有焦点的控件保留用户正在输入的内容。
+- **组件**：内部有变化的组件只在最外层重新初始化一次；新增节点会挂载行为，被删节点会先清理。
+
+**焦点保留**对所有替换方式都生效：替换前记下焦点元素的 id 和选区，替换后按 id 找回并恢复。所以需要保持焦点的元素应当带稳定的 id。
+
+典型用法是让服务端重新渲染整块区域，再形变替换回去。比如一个带搜索框的列表，用户边打字边刷新，输入框的焦点和光标都不会丢：
+
+```erlang
+%% 页面：搜索框和结果放在同一块里，都有稳定的 id
+results(Query, Rows) ->
+    'div'([input(Query, [], [{id, q}, {name, q},
+                             on(input, {?MODULE, search, #{}}, #{debounce => 200})]),
+           ul([li(R) || R <- Rows], [], [{id, rows}])],
+          [], [{id, search_box}]).
+
+action(search, _, #{value := Q}, Ctx) ->
+    aihtml_action:html(Ctx, {id, search_box}, results(Q, db:search(Q)), morph).
+```
+
+浏览器端也可以直接调用：`AH.swap($("#box"), Html, "morph")`。
+
+### 浮动弹层
+
+组件的下拉、弹出、浮动面板都用 `AH.float(popup, anchor, opts)` 定位。它用 `position: fixed` 贴住锚点，所以卡片、面板等带 `overflow: hidden` 的容器不会把弹层裁掉；空间不足时自动翻转，滚动和缩放时跟随锚点。自己写弹层时也用它：
+
+```js
+var h = AH.float(popup, button, { placement: "bottom", align: "start", matchWidth: true });
+// 关闭时
+h.stop();
+```
+
+## 共享模板
+
+少数 HTML 必须在浏览器里生成，例如日期网格、客户端 toast、用户刚输入的标签。这类片段写成一份 Mustache 模板，构建时同时编译到两端，两边输出完全一致：
+
+- **Erlang 端**：用 beamai_render 的编译期转换编译成模块函数，数据的键是原子。
+- **浏览器端**：`scripts/mustache.mjs` 把模板编译成 `AH.tpl.<name>(data)`，没有运行时依赖，数据的键是字符串。
+
+**1. 写模板**：`apps/aihtml/templates/my_badge.mustache`，名字以组件名开头。
+
+```mustache
+<span class="ah-chip" data-color="{{color}}">{{label}}{{#count}} <b>{{count}}</b>{{/count}}</span>
+```
+
+**2. 准备 fixture**：`apps/aihtml/templates/my_badge.fixtures.json`，列出几组有代表性的数据，测试会在两端分别渲染并比较。
+
+```json
+[{"color": "primary", "label": "Inbox", "count": 3},
+ {"color": "error", "label": "<b>", "count": 0}]
+```
+
+**3. Erlang 端使用**：在组件模块里声明，并用 `aihtml_tpl:safe/1` 放进元素树。
+
+```erlang
+-compile({parse_transform, beamai_mustache_transform}).
+-mustache_template({tpl_my_badge, "../templates/my_badge.mustache"}).
+
+my_badge(Label, Count, Css, Attrs) ->
+    aihtml_tpl:safe(tpl_my_badge(#{color => primary, label => Label, count => Count})).
+```
+
+**4. 浏览器端使用**：构建后直接调用。
+
+```js
+$list.append(AH.tpl.my_badge({ color: "primary", label: name, count: n }));
+```
+
+**规则**：
+- **没有逻辑**：模板里没有逻辑，类名开关、日期计算等在两端构建视图数据时算好。
+- **转义**：`{{x}}` 转义，`{{{x}}}` 原样输出。
+- **真假值**：两端一致，`undefined`、`null`、`false`、空字符串和空列表为假，0 为真。
+- **不支持**：partial、自定义分隔符、lambda，编译时报错。
+- **末尾换行**：文件末尾的一个换行不计入输出。
+- **改完模板要重新编译 Erlang 模块**：rebar3 看不到模块对模板文件的依赖，需要 `touch` 对应的 `.erl` 或 `rebar3 clean`。模块没有重新编译时，一致性测试会失败。
+
+**先考虑服务端渲染**：能由服务端生成的片段，优先由服务端渲染再形变替换回页面，不需要模板。完整约定见 `designs/04-components.md`。
+
 ## 四轴主题
 
 | 轴 | `<html>` 属性 | 取值 | 只负责 |
 |---|---|---|---|
-| appearance | `data-theme` | light, dark | 中性色 |
-| palette | `data-palette` | indigo, emerald, rose, amber | 强调色 |
-| typography | `data-typography` | sans, serif, mono | 字体 |
-| skin | `data-skin` | soft, sharp, pill, brutal | 圆角、边框、阴影 |
+| appearance | `data-theme` | light、dark、paper | 中性色 |
+| palette | `data-palette` | default、green、luxury、retro、arctic、nature、editorial、ember、dracula、midnight、brutal、brutal-blue、island、phoqus | 强调色 |
+| typography | `data-typography` | default、serif、grotesk | 字体 |
+| skin | `data-skin` | default、brutal、island、phoqus | 圆角、边框、阴影 |
 
 服务端通过 `aihtml:page(Body, #{theme => #{...}})` 设置初始值。浏览器端用 `AH.theme.set(Axis, Value)` 切换，选择保存在 localStorage，首屏绘制前恢复。Tailwind 的 `bg-primary`、`text-muted`、`rounded-control` 等工具类同样跟随四轴变化。
 
@@ -190,10 +307,15 @@ rebar3 eunit --app aihtml
 rebar3 dialyzer && rebar3 xref
 
 npm install
-npm run build          # 复制 jQuery，构建 aihtml.css 与 example.css
+npm run build          # 复制 jQuery，编译模板并拼出 aihtml.js，构建 aihtml.css 与 example.css
+npm test               # 模板编译器的 Mustache 规范用例 + 浏览器端测试（无头 Chromium）
 
-rebar3 shell           # 启动示例：http://localhost:8080/ 与 /fetch
+rebar3 shell           # 启动示例：http://localhost:8080/、/components、/fetch
 ```
+
+- **新增或修改组件后**，重新生成门面和头文件：`rebar3 compile && escript scripts/gen-facade.escript`。
+- **模板一致性**由 EUnit 的 `aihtml_tpl_tests` 检查，需要能调用 `node`。
+- **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行。
 
 ### 示例的数据层
 
