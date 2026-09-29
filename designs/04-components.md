@@ -6,7 +6,7 @@
 
 核心组件的判定标准有两条：
 - 通用、常用。
-- 不依赖大型 npm 包，适合"服务端渲染 + jQuery 增强"。
+- 不依赖大型 npm 包，适合"服务端渲染 + 浏览器端增强"。
 
 共 111 个，分四批移植。**每个组件一个 Erlang 模块** `aihtml_<name>`（`<name>` 就是组件名，也就是构建函数名），此外 `aihtml_theme` 提供主题切换器。按类别：
 
@@ -108,30 +108,35 @@ apps/aihtml_example/src/aihtml_example_demo_button.erl  演示
 
 1. **当前值**写在根元素的 `data-ah-value` 上。多值用逗号分隔，例如 `a,b,c`；值里的逗号和反斜杠用反斜杠转义（`\,`、`\\`），不含它们的值写法不变。两端用同一套函数：Erlang 的 `aihtml_value:join/1`、`split/1`，JS 的 `AH.lib.values.join/split`。单值控件（单选的 listbox、combobox、按钮组 radio 模式等）的值原样写出，不转义。
 2. **参与表单提交**时，渲染一个 `<input type="hidden" name=Name value=...>`，`name` 从 Attrs 取。
-3. **值改变**时，行为同步更新 `data-ah-value` 和隐藏 input，并在根元素上触发 jQuery 事件 `change`；拖动等连续变化中触发 `input`。这样 `on(change, {M, A, Args})` 写在根元素的 Attrs 上就能收到事件，`Event.value` 取的就是 `data-ah-value`。
+3. **值改变**时，行为同步更新 `data-ah-value` 和隐藏 input，并在根元素上触发 `change` 事件；拖动等连续变化中触发 `input`。这样 `on(change, {M, A, Args})` 写在根元素的 Attrs 上就能收到事件，`Event.value` 取的就是 `data-ah-value`。
 4. **原生控件**（checkbox、radio、input）直接把 Attrs 写到原生 `<input>` 上，保持原生事件。
 
 ## JS 约定
 
 文件结构：
 
+每个组件一个 ES 模块 `components/<name>.js`，由 Vite 打包成一个按需加载的代码块（见 [06-bundling.md](06-bundling.md)）。迁移期的写法（jQuery + 适配层）：
+
 ```js
-(function ($, AH) {
-  "use strict";
-  AH.define("slider", {
-    init: function (el, $el) { /* 绑定事件，用 AH.NS 命名空间 */ },
-    destroy: function (el, $el) { /* 解绑文档级事件等 */ },
-    methods: { setValue: function (el, $el, v) { ... } }
-  });
-  AH.fn("toast", function (opts) { ... });   // 页面级函数
-})(window.jQuery, window.AH);
+import $ from "jquery";
+import AH from "../core.js";
+import "./_lib_values.js";                // 用到的共享代码
+import "virtual:ah-tpl/slider_marks";     // 用到的共享模板（注册到 AH.tpl）
+
+AH.define("slider", {
+  init: function (el, $el) { /* 绑定事件，用 AH.NS 命名空间 */ },
+  destroy: function (el, $el) { /* 解绑文档级事件等 */ },
+  methods: { setValue: function (el, $el, v) { ... } }
+});
+AH.fn("toast", function (opts) { ... });   // 页面级函数
 ```
 
-- **挂载**：根元素写 `data-ah="<behavior>"`，页面加载和 HTML 替换后由 `AH.mount` 调用 `init`。
+- **挂载**：根元素写 `data-ah="<behavior>"`，它就是 Stimulus 控制器。页面上出现这个组件时加载代码块并连接控制器，连接时调用 `init`，离开页面时调用 `destroy`。
+- **按需加载的条件**：构建时扫描组件文件得到。`AH.define("名字")`、`AH.fn("名字")` 自动识别；通过辅助函数注册、名字是算出来的行为，在文件里写 `// ah-define: 名字`；不靠 `data-ah` 根元素、而是作用于某个属性的文件（tooltip、浮层开关、表单校验），写 `// ah-load: 选择器`。`aihtml_tests` 会检查目录里的每个行为名都能在 JS 源码里找到。
 - **事件命名空间**：元素上的事件用 `"click" + AH.NS` 这种形式，`AH.destroy` 会统一解绑。绑在 document 或 window 上的事件，要在 `destroy` 里自己解绑。
 - **服务端驱动**：`methods` 里的方法可由服务端 `aihtml_action:call(Ctx, Target, Method, Args)` 调用，客户端用 `AH.invoke(el, method, ...)`。页面级函数用 `AH.fn`，服务端写 `call(Ctx, global, Name, Args)`。
 - **还原 sigil 的交互**：键盘操作、ARIA、焦点管理、点击外部关闭等，对照 sigil 的 cljs 实现。
-- **不引入新的依赖**，只用 jQuery 3.5+ 或 4 的 API。
+- **不引入新的依赖**。jQuery 正在逐个组件去掉：新写的代码用原生 DOM API，组件之间的事件用原生 `dispatchEvent`（jQuery 的 `.trigger` 不产生原生事件，Stimulus 的动作收不到）。
 
 ## 验证
 

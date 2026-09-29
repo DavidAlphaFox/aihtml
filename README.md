@@ -1,6 +1,6 @@
 # aihtml
 
-用 Erlang 函数直接编写 HTML 页面。页面由"预制件"拼装而成，预制件直接映射到 jQuery 行为和 TailwindCSS 样式上。
+用 Erlang 函数直接编写 HTML 页面。页面由"预制件"拼装而成，服务端输出完整的静态 HTML，浏览器端由 Stimulus 控制器增强，样式用 TailwindCSS。
 
 按钮的点击直接由 Erlang 函数响应，每个事件一次无状态请求，响应按 [AG-UI](https://docs.ag-ui.com) 事件流返回：
 
@@ -27,7 +27,7 @@ login() ->
 ```
 
 - 渲染依赖 [beamai_render](https://github.com/TTalkPro/beamai_render)：转义使用 `beamai_html_escape`，`{safe, iodata()}` 与 beamai_jinja 的安全标记一致，渲染结果可直接放进 Jinja 模板。
-- 前端基础：jQuery 4 与 Tailwind CSS v4（Tailwind CLI 构建）。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
+- 前端基础：Stimulus 3 与 Tailwind CSS v4，浏览器端代码用 Vite 打包（见 `designs/06-bundling.md`）。组件行为正在从 jQuery 迁移到原生 DOM，迁移完成后库不再依赖 jQuery。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
 - 组件与主题移植自 [sigil](../sigil)（MIT）：111 个组件，以及四轴主题（外观、配色、排版、外形）。
 
 ## 仓库结构
@@ -38,10 +38,10 @@ login() ->
 | `apps/aihtml/src` | 核心模块（`aihtml`、`aihtml_html`、`aihtml_action`……），每个组件一个模块 `aihtml_<组件名>`，以及组件共用的 `aihtml_lib_*` |
 | `apps/aihtml/include` | `aihtml.hrl`（导入全部构建函数和 record）、每个组件一个 record 头文件 `aihtml_<组件名>.hrl`、自定义组件用的 `aihtml_element.hrl` |
 | `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
-| `apps/aihtml/priv/static` | 预构建产物：`aihtml.css`、`aihtml.js`，以及 `vendor/` 下的 jQuery 和按需加载的 echarts、xlsx、jspdf（见「第三方库」） |
+| `apps/aihtml/priv/static` | 预构建产物（只派发这些）：`aihtml.css`、`js/`（Vite 打包的运行时：入口 + 每个组件一个代码块 + `manifest.json`），以及 `vendor/` 下按需加载的 echarts、xlsx、jspdf（见「第三方库」） |
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
 | `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
-| `apps/aihtml/assets/js` | 运行时 `core.js` 与各组件行为（`components/<组件名>.js`，共用部分在 `_lib_*.js`），由 `scripts/build-js.mjs` 拼成 `aihtml.js` |
+| `apps/aihtml/assets/js` | 浏览器端源码（不派发）：入口 `main.js`、运行时 `core.js`、各组件行为 `components/<组件名>.js`（ES 模块，共用部分在 `_lib_*.js`），由 Vite（`vite.config.mjs`）打包到 `priv/static/js` |
 | `apps/aihtml_example` | cowboy 示例站：`/` 首页，`/components/:name` 组件文档（演示、代码、API），`/demo` 实时演示，`/fetch` URL 片段模式。组件示例 `aihtml_example_demo_*` 也在这里，不在库里 |
 | `scripts/` | 构建与测试脚本：样式移植、JS 构建、模板编译器、门面生成、预览 |
 | `designs/` | 设计文档 |
@@ -302,7 +302,11 @@ button(<<"更多">>, more, [outlined],
 
 ### 预制件行为
 
-带 `data-ah` 的根元素在加载时挂载 jQuery 行为，例如 tabs 切换、alert 关闭。
+带 `data-ah="<名字>"` 的根元素由同名的 Stimulus 控制器增强，例如 tabs 切换、alert 关闭。
+
+- **按需加载**：页面只加载运行时入口（gzip 后约 49 KB，其中一半是迁移期仍保留的 jQuery）。页面上第一次出现某个组件时，才加载它的代码块；服务端之后插入的组件也一样，Stimulus 会自动连接，不需要手动挂载。
+- **页面引入**：`aihtml_page` 读取打包产物的 `manifest.json`，写出 `<script type="module" src="/aihtml/js/main-<哈希>.js">`。静态资源不挂在 `/aihtml/` 时用 `assets` 选项指定路径；`js` 选项里的页面脚本会加上 `defer`，在运行时之后按顺序执行。
+- **全局变量**：运行时在 `window.AH` 上；迁移期还提供 `window.jQuery`，方便页面脚本使用。页面自己的脚本需要 jQuery 时，最好用 `jquery` 选项单独引入，因为库最终会去掉它。
 
 ### 替换方式与形变替换
 
@@ -430,7 +434,7 @@ h.stop();
   AH.vendor("echarts").then(function (echarts) { ... });
   AH.vendor(["jspdf", "jspdf-autotable"]).then(function (libs) { ... });
   ```
-- **路径**：默认是 `aihtml.js` 所在目录下的 `vendor/`，所以按 `/aihtml/[...]` 挂载静态资源时不需要配置。放在别处时，在 `<body>` 上写 `data-ah-vendor`，例如 `aihtml:page(Body, #{body_attrs => [{data_ah_vendor, <<"/assets/vendor/">>}]})`。页面上已经有同名全局变量（自己引入了 echarts 等）时不会重复加载。
+- **路径**：默认是运行时 `js/` 目录旁边的 `vendor/`，所以按 `/aihtml/[...]` 挂载静态资源时不需要配置。放在别处时，在 `<body>` 上写 `data-ah-vendor`，例如 `aihtml:page(Body, #{body_attrs => [{data_ah_vendor, <<"/assets/vendor/">>}]})`。页面上已经有同名全局变量（自己引入了 echarts 等）时不会重复加载。
 - **PDF 中的中文**：jsPDF 的默认字体不含中文，导出的 PDF 里中文显示不出来，和 sigil 相同。
 
 ## 共享模板
@@ -682,7 +686,8 @@ rebar3 eunit --app aihtml
 rebar3 dialyzer && rebar3 xref
 
 npm install
-npm run build          # 复制 jQuery 和按需加载的库，编译模板并拼出 aihtml.js，构建 aihtml.css 与 example.css
+npm run build          # 复制并打包第三方库，Vite 打包运行时到 priv/static/js，构建 aihtml.css 与 example.css
+npm run js:dev         # 开发时：未压缩、带 source map，文件变化时重新打包
 npm test               # 模板编译器的 Mustache 规范用例 + 浏览器端测试（无头 Chromium）
 
 rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、/components、/demo、/fetch
@@ -694,7 +699,8 @@ rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、
 - **导入 sigil 样式**：在 `scripts/port-sigil.mjs` 的清单里加上组件名，运行 `node scripts/port-sigil.mjs`。它只写入新文件，已有文件（可能改过）要加 `--force` 才会覆盖。
 - **全部测试**：`rebar3 eunit` 跑类库和演示站；`--app aihtml` 只跑类库。
 - **模板一致性**由 EUnit 的 `aihtml_tpl_tests` 检查，需要能调用 `node`。
-- **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行。
+- **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行：它先打包一份运行时，用本地 HTTP 服务提供测试页（ES 模块不能从 `file://` 加载），加载全部组件后再运行测试。
+- **打包产物要提交**：改了 `assets/js` 或模板后运行 `npm run js`，把 `priv/static/js` 一起提交，使用方不需要运行 npm。组件文件的按需加载条件由构建时扫描得到，写法见 `designs/04-components.md` 的「JS 约定」。
 
 ## 许可证
 
