@@ -122,6 +122,10 @@
 @import "./sigil/components/ribbon.css";
 @import "./sigil/components/tile_layout.css";
 
+/* editors */
+@import "./sigil/components/prose_editor.css";
+@import "./sigil/components/markdown_editor.css";
+
 /* aihtml additions per component (generated list) */
 @import "./extra/index.css";
 @import "./aihtml-base.css";

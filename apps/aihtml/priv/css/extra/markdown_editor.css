@@ -1,0 +1,110 @@
+/* aihtml additions for the markdown editor (aihtml_markdown_editor).
+   Sigil styles live in ../sigil/components (prose_editor.css,
+   markdown_editor.css). */
+
+/* ProseMirror's required base styles (prosemirror-view/style/prosemirror.css,
+   MIT, (c) Marijn Haverbeke and others), scoped to the editor. */
+.ah-md-editor .ProseMirror {
+  position: relative;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  white-space: break-spaces;
+  -webkit-font-variant-ligatures: none;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0;
+}
+
+.ah-md-editor .ProseMirror pre { white-space: pre-wrap; }
+.ah-md-editor .ProseMirror li { position: relative; }
+.ah-md-editor .ProseMirror-hideselection *::selection { background: transparent; }
+.ah-md-editor .ProseMirror-hideselection { caret-color: transparent; }
+.ah-md-editor .ProseMirror [draggable][contenteditable=false] { user-select: text; }
+.ah-md-editor .ProseMirror-selectednode {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 1px;
+}
+.ah-md-editor li.ProseMirror-selectednode { outline: none; }
+.ah-md-editor img.ProseMirror-separator {
+  display: inline !important;
+  border: none !important;
+  margin: 0 !important;
+}
+
+/* The source textarea: what the page shows until ProseMirror has loaded
+   (and without JavaScript); hidden, but still the form field, after. */
+.ah-md-editor-source {
+  display: block;
+  width: 100%;
+  min-height: 200px;
+  padding: 16px 20px 16px 58px;
+  border: 0;
+  outline: none;
+  resize: vertical;
+  background: transparent;
+  color: var(--ah-color-text);
+  font-family: var(--ah-font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.ah-md-editor-ready .ah-md-editor-source,
+.ah-md-editor-source[hidden] {
+  display: none;
+}
+
+/* A fixed height (the `height' option) scrolls the content area. */
+.ah-md-editor[style*="height"] .ah-pm-content .ProseMirror,
+.ah-md-editor[style*="height"] .ah-md-editor-source {
+  min-height: 100%;
+}
+
+/* The zero-width mark at the caret the slash menu floats at. */
+.ah-md-editor-caret {
+  position: absolute;
+  width: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Code blocks without sigil's code block node view (no line numbers,
+   language menu or highlighting): a plain block. */
+.ah-md-editor .ah-pm-content .ProseMirror pre.ah-md-code {
+  display: block;
+  margin: 0.6em 0;
+  padding: 12px 16px;
+  border-radius: var(--ah-radius-md);
+}
+
+.ah-md-editor .ah-pm-content .ProseMirror pre.ah-md-code > code {
+  display: block;
+  padding: 0;
+  background: none;
+  font-family: var(--ah-font-mono, ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+/* The placeholder sits where the text starts. */
+.ah-md-editor .ah-pm-placeholder {
+  white-space: nowrap;
+}
+
+/* Limit exceeded (max_chars): the frame turns red as well. */
+.ah-md-editor.ah-md-editor-over {
+  border-color: var(--ah-color-error);
+}
+
+.ah-md-editor-readonly .ah-pm-content .ProseMirror {
+  cursor: default;
+}
+
+.ah-md-editor-disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ah-md-editor-disabled .ProseMirror,
+.ah-md-editor-disabled .ah-md-editor-source {
+  pointer-events: none;
+}
