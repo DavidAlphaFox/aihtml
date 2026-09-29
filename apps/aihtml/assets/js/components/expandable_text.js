@@ -1,30 +1,27 @@
 /* expandable-text behaviour (designs/04-components.md): the toggle swaps
-   the cut and the full text. */
-import $ from "jquery";
+   the cut and the full text; "ah:toggle" with detail true (expanded) or
+   false. */
 import AH from "../core.js";
 
-var NS = AH.NS;
+AH.register("expandable-text", class extends AH.Controller {
+  setup() {
+    this.delegate("click", ".ah-expandable-text__toggle", () => { this.toggle(); });
+  }
 
-function setExpanded(el, $el, on) {
-  var $btn = $el.children(".ah-expandable-text__toggle");
-  if (!$btn.length || ($el.attr("data-expanded") === "true") === on) { return; }
-  $el.attr("data-expanded", on ? "true" : "false");
-  $el.find("[data-ah-part=short]").prop("hidden", on);
-  $el.find("[data-ah-part=full]").prop("hidden", !on);
-  $btn.attr("aria-expanded", on ? "true" : "false")
-    .text($btn.attr(on ? "data-ah-collapse-label" : "data-ah-expand-label"));
-  $el.trigger("ah:toggle", [on]);
-}
+  // methods (aihtml_action:call/4, AH.invoke)
+  toggle() { this.setExpanded(this.element.getAttribute("data-expanded") !== "true"); }
+  expand() { this.setExpanded(true); }
+  collapse() { this.setExpanded(false); }
 
-AH.define("expandable-text", {
-  init: function (el, $el) {
-    $el.on("click" + NS, ".ah-expandable-text__toggle", function () {
-      setExpanded(el, $el, $el.attr("data-expanded") !== "true");
-    });
-  },
-  methods: {
-    toggle: function (el, $el) { setExpanded(el, $el, $el.attr("data-expanded") !== "true"); },
-    expand: function (el, $el) { setExpanded(el, $el, true); },
-    collapse: function (el, $el) { setExpanded(el, $el, false); }
+  setExpanded(on) {
+    const el = this.element;
+    const btn = el.querySelector(":scope > .ah-expandable-text__toggle");
+    if (!btn || (el.getAttribute("data-expanded") === "true") === on) { return; }
+    el.setAttribute("data-expanded", on ? "true" : "false");
+    el.querySelectorAll("[data-ah-part=short]").forEach((n) => { n.hidden = on; });
+    el.querySelectorAll("[data-ah-part=full]").forEach((n) => { n.hidden = !on; });
+    btn.setAttribute("aria-expanded", on ? "true" : "false");
+    btn.textContent = btn.getAttribute(on ? "data-ah-collapse-label" : "data-ah-expand-label");
+    this.fire("ah:toggle", on);
   }
 });

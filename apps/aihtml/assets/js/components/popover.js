@@ -1,118 +1,113 @@
 /* The popover behaviour (designs/04-components.md), ported from sigil's
  * overlay/popover: a bubble anchored to the element that opened it or to
- * its data-ah-anchor selector. Shared machinery: _lib_overlay.js. */
-import $ from "jquery";
+ * its data-ah-anchor selector. Shared machinery: _lib_overlay.js.
+ * Events: ah:opening (cancelable), ah:open, ah:close (detail {result}). */
 import AH from "../core.js";
 import "./_lib_overlay.js";
 
 var L = AH.lib.overlay;
-var GNS = L.GNS,
-    uid = L.uid,
-    flag = L.flag,
+var flag = L.flag,
     nextZ = L.nextZ,
     pushStack = L.pushStack,
     pullStack = L.pullStack,
     floatWithArrow = L.floatWithArrow;
 
-// ------------------------------------------------------------------
-// Popover
-// ------------------------------------------------------------------
-
 var POP_POSITIONS = "ah-popover-top ah-popover-bottom ah-popover-left ah-popover-right";
 
-function popOpen(el) { return el.getAttribute("data-state") === "open"; }
-
-function popUnfloat(el) {
-  var f = $.data(el, "ahFloat");
-  if (f) {
-    f.stop();
-    $.removeData(el, "ahFloat");
-  }
-}
-
-function popoverOpen(el, opts) {
-  if (popOpen(el)) { return; }
-  var anchor = (opts && opts.invoker) || $(el.getAttribute("data-ah-anchor") || null)[0];
-  if (!anchor) {
-    console.error("aihtml: popover has no anchor", el);
-    return;
-  }
-  var ev = $.Event("ah:opening");
-  $(el).trigger(ev);
-  if (ev.isDefaultPrevented()) { return; }
-  $.data(el, "ahAnchor", anchor);
-  var zi = nextZ();
-  var $el = $(el).stop(true, true);
-  popUnfloat(el);
-  $el.css({ zIndex: zi, display: "block", visibility: "hidden", opacity: 0 });
-  $.data(el, "ahFloat", floatWithArrow(el, anchor, el.getAttribute("data-ah-position") || "bottom",
-                                       8, "ah-popover-", POP_POSITIONS));
-  if (flag(el, "modal", false)) {
-    var $bd = $('<div class="ah-popover-modal-backdrop"></div>').css("z-index", zi - 1);
-    $bd.insertBefore(el);
-    $.data(el, "ahBackdrop", $bd[0]);
-  }
-  $el.css({ visibility: "visible" }).animate({ opacity: 1 }, "fast");
-  el.setAttribute("data-state", "open");
-  anchor.setAttribute("aria-expanded", "true");
-  pushStack({ el: el, trap: null, esc: function () { popoverClose(el); return true; } });
-  $el.trigger("ah:open");
-}
-
-function popoverClose(el, result) {
-  if (!popOpen(el)) { return; }
-  var anchor = $.data(el, "ahAnchor");
-  el.setAttribute("data-state", "closed");
-  if (anchor) { anchor.setAttribute("aria-expanded", "false"); }
-  var bd = $.data(el, "ahBackdrop");
-  if (bd) {
-    $(bd).remove();
-    $.removeData(el, "ahBackdrop");
-  }
-  var focusInside = $.contains(el, document.activeElement);
-  pullStack(el, false);
-  if (focusInside && anchor) { anchor.focus(); }
-  $(el).stop(true).fadeOut("fast", function () { popUnfloat(el); });
-  $(el).trigger("ah:close", [{ result: result || null }]);
-}
-
-AH.define("popover", {
-  init: function (el) {
-    var id = uid("pop");
-    $.data(el, "ahNs", id);
+AH.register("popover", class extends AH.Controller {
+  setup() {
+    var el = this.element;
+    this.anchor = null;
+    this.float = null;
+    this.backdrop = null;
     var anchorSel = el.getAttribute("data-ah-anchor");
     if (anchorSel) {
       // sigil's `selector' prop: the anchor toggles the popover
-      $(document).on("click" + GNS + id, anchorSel, function (e) {
-        if ($(this).is("[data-ah-open],[data-ah-toggle]")) { return; }
-        e.preventDefault();
-        AH.invoke(el, "toggle", { invoker: this });
+      this.listen(document, "click", (e) => {
+        var hits;
+        try { hits = L.matching(e.target, anchorSel); } catch (err) { return; }
+        hits.forEach((a) => {
+          if (a.matches("[data-ah-open],[data-ah-toggle]")) { return; }
+          e.preventDefault();
+          AH.invoke(el, "toggle", { invoker: a });
+        });
       });
     }
-    $(document).on("click" + GNS + id, function (e) {
-      if (!popOpen(el) || !flag(el, "auto-close", true) || flag(el, "modal", false)) { return; }
-      var anchor = $.data(el, "ahAnchor");
+    this.listen(document, "click", (e) => {
+      if (!this.isOpen() || !flag(el, "auto-close", true) || flag(el, "modal", false)) { return; }
+      var anchor = this.anchor;
       var t = e.target;
-      if (t === el || $.contains(el, t) || (anchor && (t === anchor || $.contains(anchor, t)))) {
-        return;
-      }
-      popoverClose(el);
+      if (el.contains(t) || (anchor && anchor.contains(t))) { return; }
+      this.close();
     });
-  },
-  destroy: function (el) {
-    var id = $.data(el, "ahNs");
-    $(document).off(GNS + id);
-    popUnfloat(el);
-    var bd = $.data(el, "ahBackdrop");
-    if (bd) { $(bd).remove(); }
+  }
+
+  teardown() {
+    this.unfloat();
+    if (this.backdrop) { this.backdrop.remove(); }
+    pullStack(this.element, false);
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  open(opts) {
+    var el = this.element;
+    if (this.isOpen()) { return; }
+    var sel = el.getAttribute("data-ah-anchor");
+    var anchor = (opts && opts.invoker) || (sel ? document.querySelector(sel) : null);
+    if (!anchor) {
+      console.error("aihtml: popover has no anchor", el);
+      return;
+    }
+    if (!this.fire("ah:opening")) { return; }
+    this.anchor = anchor;
+    var zi = nextZ();
+    L.stopFade(el, true);
+    this.unfloat();
+    Object.assign(el.style, { zIndex: zi, display: "block", visibility: "hidden", opacity: "0" });
+    this.float = floatWithArrow(el, anchor, el.getAttribute("data-ah-position") || "bottom",
+                                8, "ah-popover-", POP_POSITIONS);
+    if (flag(el, "modal", false)) {
+      var bd = document.createElement("div");
+      bd.className = "ah-popover-modal-backdrop";
+      bd.style.zIndex = zi - 1;
+      el.parentNode.insertBefore(bd, el);
+      this.backdrop = bd;
+    }
+    el.style.visibility = "visible";
+    L.fade(el, 1, 200);
+    el.setAttribute("data-state", "open");
+    anchor.setAttribute("aria-expanded", "true");
+    pushStack({ el: el, trap: null, esc: () => { this.close(); return true; } });
+    this.fire("ah:open");
+  }
+
+  close(result) {
+    var el = this.element;
+    if (!this.isOpen()) { return; }
+    var anchor = this.anchor;
+    el.setAttribute("data-state", "closed");
+    if (anchor) { anchor.setAttribute("aria-expanded", "false"); }
+    if (this.backdrop) {
+      this.backdrop.remove();
+      this.backdrop = null;
+    }
+    var focusInside = el !== document.activeElement && el.contains(document.activeElement);
     pullStack(el, false);
-  },
-  methods: {
-    open: function (el, $el, opts) { popoverOpen(el, opts); },
-    close: function (el, $el, result) { popoverClose(el, result); },
-    toggle: function (el, $el, opts) {
-      if (popOpen(el)) { popoverClose(el); } else { popoverOpen(el, opts); }
-    },
-    isOpen: function (el) { return popOpen(el); }
+    if (focusInside && anchor) { anchor.focus(); }
+    L.fadeOut(el, 200, () => { this.unfloat(); });
+    this.fire("ah:close", { result: result || null });
+  }
+
+  toggle(opts) {
+    if (this.isOpen()) { this.close(); } else { this.open(opts); }
+  }
+
+  isOpen() { return this.element.getAttribute("data-state") === "open"; }
+
+  unfloat() {
+    if (this.float) {
+      this.float.stop();
+      this.float = null;
+    }
   }
 });

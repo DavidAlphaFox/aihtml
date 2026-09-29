@@ -1,15 +1,12 @@
 /*
  * Bundle entry (designs/06-bundling.md): the runtime and the registry of
  * component chunks. Components (with the shared Mustache templates they
- * use) are loaded on demand, when the page first has one.
+ * use) are loaded on demand, when the page first has one. No jQuery: page
+ * scripts that want it load it themselves (aihtml_page's `jquery' option).
  */
-import $ from "jquery";
 import AH from "./core.js";
 import registry from "virtual:ah-registry";
 
-// Page scripts written against the globals keep working while jQuery is
-// still part of the bundle (it goes away component by component).
-window.jQuery = window.$ = $;
 window.AH = AH;
 
 AH.tpl = AH.tpl || {};

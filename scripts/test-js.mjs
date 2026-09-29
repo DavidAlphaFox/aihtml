@@ -7,7 +7,7 @@
 //
 //   node scripts/test-js.mjs [filter]
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readdirSync, writeFileSync, copyFileSync, existsSync, symlinkSync } from "node:fs";
+import { mkdtempSync, readdirSync, writeFileSync, copyFileSync, existsSync } from "node:fs";
 import { tmpdir, homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,8 +30,6 @@ if (existsSync(join(root, "scripts", "mustache.test.mjs"))) {
 // 2. browser tests
 const dir = mkdtempSync(join(tmpdir(), "aihtml-js-"));
 const entry = await buildRuntime(root, join(dir, "js"));
-// AH.vendor loads from vendor/ beside js/, as under priv/static
-symlinkSync(join(root, "apps/aihtml/priv/static/vendor"), join(dir, "vendor"));
 const srv = await serve(dir);
 
 const HARNESS = `
@@ -43,6 +41,26 @@ window.AHTest = (function () {
   }
   return {
     test: function (name, fn) { tests.push({ name: name, fn: fn }); },
+    // Native events (components listen with addEventListener, which
+    // jQuery's .trigger does not reach). fire(el, type, init) builds the
+    // right event class for the type; key(el, "Enter", {shiftKey: true})
+    // is a keydown; ready(root) waits until the components in root are
+    // loaded and connected (await it after inserting a fixture).
+    fire: function (el, type, init) {
+      var o = Object.assign({ bubbles: true, cancelable: true }, init || {});
+      var C = /^key/.test(type) ? KeyboardEvent
+        : /^pointer/.test(type) ? PointerEvent
+        : /^(click|dblclick|mouse|contextmenu)/.test(type) ? MouseEvent
+        : /^(focus|blur)/.test(type) ? FocusEvent
+        : /^(input|beforeinput)$/.test(type) ? InputEvent
+        : /^(change|submit|scroll|reset|select)$/.test(type) ? Event
+        : CustomEvent;
+      return el.dispatchEvent(new C(type, o));
+    },
+    key: function (el, key, init) {
+      return this.fire(el, "keydown", Object.assign({ key: key }, init || {}));
+    },
+    ready: function (root) { return window.AH.ready(root); },
     ok: function (v, msg) { if (!v) { throw new Error(msg || "expected truthy"); } },
     eq: function (a, b, msg) {
       var nodes = (a instanceof Node) || (b instanceof Node);

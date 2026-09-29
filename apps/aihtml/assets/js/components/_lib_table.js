@@ -1,18 +1,25 @@
-/* Shared by the treegrid and datatable behaviours (treegrid.js,
+/* Shared by the treegrid and datatable controllers (treegrid.js,
  * datatable.js): selection by row keys, sorting order, roving focus, the
  * header / body scroll and gutter sync and column resizing. Ported from
- * sigil (data/treegrid, data/datatable). Loaded before the component
- * files (build-js concatenates in name order).
+ * sigil (data/treegrid, data/datatable). Native DOM: every helper takes
+ * elements (arrays of rows), never jQuery objects; the helpers that bind
+ * listeners take the AH.Controller, so teardown removes them.
  */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_values.js";
 
-var NS = AH.NS;
 var seq = 0;
 
-// A fresh id per table instance (namespaces its document handlers).
+// A fresh id per table instance.
 function nextId() { return ++seq; }
+
+// The element children of el matching selector.
+function kids(el, selector) {
+  if (!el) { return []; }
+  return Array.prototype.filter.call(el.children, function (c) { return c.matches(selector); });
+}
+
+function kid(el, selector) { return kids(el, selector)[0] || null; }
 
 // Keys are joined by AH.lib.values (a comma in a key is escaped).
 function keysOf(el) {
@@ -27,7 +34,7 @@ function toKeys(v) {
 function writeValue(el, keys) {
   var v = AH.lib.values.join(keys);
   el.setAttribute("data-ah-value", v);
-  $(el).children("input[type=hidden][data-ah-input]").val(v);
+  kids(el, "input[type=hidden][data-ah-input]").forEach(function (i) { i.value = v; });
 }
 
 function sameKeys(a, b) {
@@ -39,7 +46,7 @@ function sameKeys(a, b) {
 function raw(td) {
   if (!td) { return ""; }
   var v = td.getAttribute("data-value");
-  return v !== null ? v : $(td).text();
+  return v !== null ? v : td.textContent;
 }
 
 function isNum(s) { return /^\s*-?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?\s*$/.test(s); }
@@ -82,26 +89,28 @@ function keySelect(mode, keys, key) {
   return null;
 }
 
-function markRows($rows, pre, keys, mode) {
-  $rows.each(function () {
-    var on = keys.indexOf(this.getAttribute("data-key")) >= 0;
-    $(this).toggleClass(pre + "-row-selected", on);
-    if (mode !== "none") { this.setAttribute("aria-selected", String(on)); }
-    $(this).children("td").children("." + pre + "-row-checkbox").prop("checked", on);
+function markRows(rows, pre, keys, mode) {
+  rows.forEach(function (tr) {
+    var on = keys.indexOf(tr.getAttribute("data-key")) >= 0;
+    tr.classList.toggle(pre + "-row-selected", on);
+    if (mode !== "none") { tr.setAttribute("aria-selected", String(on)); }
+    kids(tr, "td").forEach(function (td) {
+      kids(td, "." + pre + "-row-checkbox").forEach(function (cb) { cb.checked = on; });
+    });
   });
 }
 
-function headerCheck($box, keys, visibleKeys) {
-  if (!$box.length) { return; }
+function headerCheck(box, keys, visibleKeys) {
+  if (!box) { return; }
   var n = visibleKeys.filter(function (k) { return keys.indexOf(k) >= 0; }).length;
-  $box.prop("checked", n > 0 && n === visibleKeys.length)
-    .prop("indeterminate", n > 0 && n < visibleKeys.length);
+  box.checked = n > 0 && n === visibleKeys.length;
+  box.indeterminate = n > 0 && n < visibleKeys.length;
 }
 
 // Roving tabindex: one row of the table is in the tab order.
-function focusRow($rows, tr, move) {
+function focusRow(rows, tr, move) {
   if (!tr) { return; }
-  $rows.attr("tabindex", "-1");
+  rows.forEach(function (r) { r.setAttribute("tabindex", "-1"); });
   tr.setAttribute("tabindex", "0");
   if (move) {
     tr.focus();
@@ -109,24 +118,31 @@ function focusRow($rows, tr, move) {
   }
 }
 
+// The header / body part of the table (null when missing).
 function part(el, pre, name) {
-  return $(el).children("." + pre + "-content").children("." + pre + "-" + name);
+  return kid(kid(el, "." + pre + "-content"), "." + pre + "-" + name);
 }
 
-// Body scroll moves the header along; bound on the body (scroll does
-// not bubble), so destroy unbinds it there.
-function bindScroll(el, pre) {
-  var header = part(el, pre, "header")[0];
-  part(el, pre, "body").on("scroll" + NS, function () {
-    if (header) { header.scrollLeft = this.scrollLeft; }
-  });
+// The table of a part (header or body).
+function partTable(el, pre, name) { return kid(part(el, pre, name), "table"); }
+
+// Body scroll moves the header along. Scroll does not bubble: the
+// listener captures on the root, so a body the server morphed in keeps
+// working.
+function bindScroll(ctl, el, pre) {
+  ctl.listen(el, "scroll", function (e) {
+    var body = part(el, pre, "body");
+    if (e.target !== body) { return; }
+    var header = part(el, pre, "header");
+    if (header) { header.scrollLeft = body.scrollLeft; }
+  }, { capture: true });
 }
 
 // The header leaves room for the body's vertical scrollbar, so the
 // columns of both tables line up (sigil reserves it with
 // scrollbar-gutter, which leaves an empty strip when nothing scrolls).
 function syncGutter(el, pre) {
-  var body = part(el, pre, "body")[0], header = part(el, pre, "header")[0];
+  var body = part(el, pre, "body"), header = part(el, pre, "header");
   if (!body || !header) { return; }
   var w = body.offsetWidth - body.clientWidth;
   header.style.paddingRight = w > 0 ? w + "px" : "";
@@ -134,38 +150,43 @@ function syncGutter(el, pre) {
 
 function watchGutter(el, pre, st) {
   syncGutter(el, pre);
-  var body = part(el, pre, "body")[0];
+  var body = part(el, pre, "body");
   if (body && window.ResizeObserver) {
     st.ro = new ResizeObserver(function () { syncGutter(el, pre); });
     st.ro.observe(body);
-    var table = $(body).children("table")[0];
+    var table = kid(body, "table");
     if (table) { st.ro.observe(table); }
   }
 }
 
-// Dragging a header edge resizes the column in both tables.
-function bindResize(el, $el, pre, st) {
-  $el.on("mousedown" + NS, "." + pre + "-resize-handle", function (e) {
+// Dragging a header edge resizes the column in both tables; fires
+// ah:column-resize (detail {field, width}) on the root.
+function bindResize(ctl, el, pre, st) {
+  ctl.delegate("mousedown", "." + pre + "-resize-handle", function (e, handle) {
     if (e.button !== 0) { return; }
     e.preventDefault();
     e.stopPropagation();
-    var th = this.parentNode;
+    var th = handle.parentNode;
     var idx = Array.prototype.indexOf.call(th.parentNode.children, th);
-    var cols = part(el, pre, "header").add(part(el, pre, "body"))
-      .find("> table > colgroup").map(function () { return this.children[idx]; }).get();
+    var cols = [partTable(el, pre, "header"), partTable(el, pre, "body")]
+      .map(function (t) { return kid(t, "colgroup"); })
+      .filter(Boolean)
+      .map(function (g) { return g.children[idx]; })
+      .filter(Boolean);
     var x0 = e.pageX, w0 = th.getBoundingClientRect().width, w = w0;
-    var dns = ".ahdtbrs" + st.id;
+    var stop = new AbortController();
     function move(ev) {
       w = Math.max(40, Math.round(w0 + ev.pageX - x0));
       cols.forEach(function (c) { c.style.width = w + "px"; c.style.minWidth = w + "px"; });
     }
     function up() {
-      $(document).off(dns);
+      stop.abort();
       st.stopResize = null;
-      $(el).trigger("ah:column-resize", [{ field: th.getAttribute("data-field"), width: w }]);
+      ctl.fire("ah:column-resize", { field: th.getAttribute("data-field"), width: w });
     }
-    $(document).on("mousemove" + dns, move).on("mouseup" + dns, up);
-    st.stopResize = function () { $(document).off(dns); };
+    document.addEventListener("mousemove", move, { signal: stop.signal });
+    document.addEventListener("mouseup", up, { signal: stop.signal });
+    st.stopResize = function () { stop.abort(); };
   });
 }
 
@@ -184,12 +205,15 @@ function writeSort(el, pre, field, dir) {
     el.removeAttribute("data-sort-field");
     el.removeAttribute("data-sort-dir");
   }
-  part(el, pre, "header").find("> table > thead > tr > th[data-field]").each(function () {
-    var on = !!dir && this.getAttribute("data-field") === field;
-    $(this).toggleClass(pre + "-sort-asc", on && dir === "asc")
-      .toggleClass(pre + "-sort-desc", on && dir === "desc");
-    if (on) { this.setAttribute("aria-sort", dir === "asc" ? "ascending" : "descending"); }
-    else { this.removeAttribute("aria-sort"); }
+  var thead = kid(partTable(el, pre, "header"), "thead");
+  kids(thead, "tr").forEach(function (tr) {
+    kids(tr, "th[data-field]").forEach(function (th) {
+      var on = !!dir && th.getAttribute("data-field") === field;
+      th.classList.toggle(pre + "-sort-asc", on && dir === "asc");
+      th.classList.toggle(pre + "-sort-desc", on && dir === "desc");
+      if (on) { th.setAttribute("aria-sort", dir === "asc" ? "ascending" : "descending"); }
+      else { th.removeAttribute("aria-sort"); }
+    });
   });
 }
 
@@ -201,6 +225,8 @@ var OWN = "a, button, input, select, textarea, label";
 AH.lib = AH.lib || {};
 AH.lib.table = {
   nextId: nextId,
+  kids: kids,
+  kid: kid,
   keysOf: keysOf,
   toKeys: toKeys,
   writeValue: writeValue,
@@ -216,6 +242,7 @@ AH.lib.table = {
   headerCheck: headerCheck,
   focusRow: focusRow,
   part: part,
+  partTable: partTable,
   bindScroll: bindScroll,
   syncGutter: syncGutter,
   watchGutter: watchGutter,

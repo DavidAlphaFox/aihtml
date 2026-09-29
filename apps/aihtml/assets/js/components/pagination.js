@@ -1,11 +1,19 @@
-/* Behaviour of pagination (value: the current page; fires change). */
-import $ from "jquery";
+/* Behaviour of pagination (value: the current page; fires change).
+ *
+ * Link mode (data-href, the `href' option): pages are real <a href> links,
+ * so the page for every state has a URL the server renders (crawlers,
+ * new tabs, bookmarks, no script). Without a server binding for change
+ * (data-ah-on) the links simply navigate. With one, a plain click is
+ * handled in place: the value changes, change fires (its action renders
+ * the new content) and the link's URL is pushed to the history, so back /
+ * forward and reloads load that URL from the server. Clicks with a
+ * modifier key (new tab, new window) are left to the browser.
+ */
 import AH from "../core.js";
 import "./_lib_layout.js";
 import "virtual:ah-tpl/pagination_items";
 
-var NS = AH.NS;
-var L = AH.lib.layout;
+const L = AH.lib.layout;
 
 // Same as aihtml_pagination:visible_pages/3; 0 stands for an ellipsis.
 function visiblePages(cur, total, max) {
@@ -44,6 +52,23 @@ function pgHref(el, page, size) {
   return el.getAttribute("data-href").replace(/\{page\}/g, page).replace(/\{size\}/g, size);
 }
 
+// A change of the page runs an action (on(change, ...) on the root): the
+// page updates in place instead of loading the link.
+function pgBound(el) {
+  return /(^|\s)change:/.test(el.getAttribute("data-ah-on") || "");
+}
+
+// A plain left click; with a modifier the browser opens the link itself.
+function plainClick(e) {
+  return e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+}
+
+// Add the URL to the history like aihtml_action:push_url/2 (going back to
+// it reloads it, so the server renders that state).
+function pushUrl(url) {
+  AH.apply([{ op: "url", mode: "push", value: url }]);
+}
+
 function pgFmt(t, args) {
   return args.reduce(function (acc, a, i) { return acc.split("{" + i + "}").join(String(a)); }, t);
 }
@@ -51,7 +76,7 @@ function pgFmt(t, args) {
 var NAV_ICONS = { prev: "\u2039", next: "\u203A", first: "\u00AB", last: "\u00BB" };
 
 function pgEntry(m) {
-  return $.extend({ gap: false, info: false, item: false, nav: false, link: false,
+  return Object.assign({ gap: false, info: false, item: false, nav: false, link: false,
                     active: false, disabled: false, first_last: false, href: "",
                     number: 0, tabindex: 0, type: "", label: "", icon: "", text: "" }, m);
 }
@@ -87,109 +112,134 @@ function pgView(cur, pages, max, size, cfg) {
   return { entries: entries };
 }
 
-function pgRender(el, $el) {
-  var s = pgState(el);
-  var $ul = $el.children(".ah-pagination-pages");
-  var cfg = JSON.parse($ul.attr("data-view"));
-  $ul.html(AH.tpl.pagination_items(pgView(s.page, s.pages, s.max, s.size, cfg)));
-  var $suffix = $el.find(".ah-pagination-jumper > span").last();
-  if ($suffix.length && $suffix.attr("data-template")) {
-    $suffix.text(pgFmt($suffix.attr("data-template"), [s.pages]));
+function pgRender(el) {
+  const s = pgState(el);
+  const ul = el.querySelector(":scope > .ah-pagination-pages");
+  const cfg = JSON.parse(ul.getAttribute("data-view"));
+  ul.innerHTML = AH.tpl.pagination_items(pgView(s.page, s.pages, s.max, s.size, cfg));
+  const spans = el.querySelectorAll(".ah-pagination-jumper > span");
+  const suffix = spans[spans.length - 1];
+  if (suffix && suffix.getAttribute("data-template")) {
+    suffix.textContent = pgFmt(suffix.getAttribute("data-template"), [s.pages]);
   }
 }
 
-function pgGo(el, $el, page, user) {
-  var s = pgState(el);
-  var p = Math.min(Math.max(1, page | 0), s.pages);
+function fire(el, type) {
+  el.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true }));
+}
+
+function pgGo(el, page, user) {
+  const s = pgState(el);
+  const p = Math.min(Math.max(1, page | 0), s.pages);
   if (isNaN(page) || p === s.page) {
     return false;
   }
-  if (el.getAttribute("data-href")) {
+  const linked = !!el.getAttribute("data-href");
+  if (linked && !pgBound(el)) {
     window.location.href = pgHref(el, p, s.size);
     return true;
   }
-  L.setValue(el, $el, String(p));
-  pgRender(el, $el);
+  L.setValue(el, String(p));
+  pgRender(el);
   if (user) {
-    $el.trigger("change");
+    fire(el, "change");
+    if (linked) { pushUrl(pgHref(el, p, s.size)); }
     // keep keyboard focus inside the control after the rebuild
-    $el.find(".ah-pagination-item-active").trigger("focus");
+    const active = el.querySelector(".ah-pagination-item-active");
+    if (active) { active.focus(); }
   }
   return true;
 }
 
-function pgSize(el, $el, size, user) {
-  var s = pgState(el);
+function pgSize(el, size, user) {
+  const s = pgState(el);
   if (!size || size === s.size) {
     return;
   }
-  if (el.getAttribute("data-href")) {
+  const linked = !!el.getAttribute("data-href");
+  if (linked && !pgBound(el)) {
     window.location.href = pgHref(el, 1, size);
     return;
   }
   el.setAttribute("data-page-size", String(size));
-  var pages = Math.max(1, Math.ceil(s.total / size));
-  L.setValue(el, $el, String(Math.min(s.page, pages)));
-  pgRender(el, $el);
-  $el.children(".ah-pagination-size-selector").children("select").val(String(size));
+  const pages = Math.max(1, Math.ceil(s.total / size));
+  L.setValue(el, String(Math.min(s.page, pages)));
+  pgRender(el);
+  const select = el.querySelector(":scope > .ah-pagination-size-selector > select");
+  if (select) { select.value = String(size); }
   if (user) {
-    $el.trigger("change");
+    fire(el, "change");
+    if (linked) { pushUrl(pgHref(el, 1, size)); }
   }
 }
 
-AH.define("pagination", {
-  init: function (el, $el) {
-    var blocked = function () { return $el.hasClass("ah-pagination-disabled"); };
-    $el.on("click" + NS, "li.ah-pagination-item", function () {
-      if (!blocked()) { pgGo(el, $el, parseInt(this.getAttribute("data-page"), 10), true); }
+AH.register("pagination", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    const blocked = function () { return el.classList.contains("ah-pagination-disabled"); };
+    this.delegate("click", "li.ah-pagination-item", function (e, li) {
+      if (!blocked()) { pgGo(el, parseInt(li.getAttribute("data-page"), 10), true); }
     });
-    $el.on("click" + NS, "li.ah-pagination-nav", function () {
-      if (blocked() || $(this).hasClass("ah-pagination-nav-disabled")) { return; }
-      var s = pgState(el);
-      var t = { prev: s.page - 1, next: s.page + 1, first: 1, last: s.pages }[this.getAttribute("data-type")];
-      pgGo(el, $el, t, true);
+    this.delegate("click", "li.ah-pagination-nav", function (e, li) {
+      if (blocked() || li.classList.contains("ah-pagination-nav-disabled")) { return; }
+      const s = pgState(el);
+      const t = { prev: s.page - 1, next: s.page + 1, first: 1, last: s.pages }[li.getAttribute("data-type")];
+      pgGo(el, t, true);
     });
-    $el.on("keydown" + NS, "li.ah-pagination-item, li.ah-pagination-nav", function (e) {
+    // links (href option): followed by the browser unless an action
+    // renders the new page in place
+    this.delegate("click", "a.ah-pagination-item, a.ah-pagination-nav", function (e, a) {
+      if (blocked()) { e.preventDefault(); return; }
+      if (!pgBound(el) || !plainClick(e)) { return; }
+      e.preventDefault();
+      const s = pgState(el);
+      const t = a.hasAttribute("data-page") ? parseInt(a.getAttribute("data-page"), 10)
+        : { prev: s.page - 1, next: s.page + 1, first: 1, last: s.pages }[a.getAttribute("data-type")];
+      pgGo(el, t, true);
+    });
+    this.delegate("keydown", "li.ah-pagination-item, li.ah-pagination-nav", function (e, li) {
       if (L.key(e) === "Enter" || L.key(e) === " ") {
         e.preventDefault();
-        $(this).trigger("click");
+        li.click();
       }
     });
     // Native change events of the inner select/input must not reach the
     // root's action as if the page had changed.
-    $el.on("change" + NS, ".ah-pagination-size-select", function (e) {
+    this.delegate("change", ".ah-pagination-size-select", function (e, sel) {
       e.stopPropagation();
-      pgSize(el, $el, parseInt($(this).val(), 10), true);
+      pgSize(el, parseInt(sel.value, 10), true);
     });
-    $el.on("change" + NS + " input" + NS, ".ah-pagination-jumper-input", function (e) {
-      e.stopPropagation();
-    });
-    var jump = function () {
-      var $in = $el.find(".ah-pagination-jumper-input");
-      pgGo(el, $el, parseInt($in.val(), 10), true);
-      $in.val("");
+    const stop = function (e) { e.stopPropagation(); };
+    this.delegate("change", ".ah-pagination-jumper-input", stop);
+    this.delegate("input", ".ah-pagination-jumper-input", stop);
+    const jump = function () {
+      const input = el.querySelector(".ah-pagination-jumper-input");
+      if (!input) { return; }
+      pgGo(el, parseInt(input.value, 10), true);
+      input.value = "";
     };
-    $el.on("click" + NS, ".ah-pagination-jumper-btn", jump);
-    $el.on("keydown" + NS, ".ah-pagination-jumper-input", function (e) {
+    this.delegate("click", ".ah-pagination-jumper-btn", jump);
+    this.delegate("keydown", ".ah-pagination-jumper-input", function (e) {
       if (L.key(e) === "Enter") {
         e.preventDefault();
         jump();
       }
     });
-  },
-  methods: {
-    setPage: function (el, $el, p) { pgGo(el, $el, parseInt(p, 10), false); },
-    next: function (el, $el) { pgGo(el, $el, pgState(el).page + 1, false); },
-    prev: function (el, $el) { pgGo(el, $el, pgState(el).page - 1, false); },
-    first: function (el, $el) { pgGo(el, $el, 1, false); },
-    last: function (el, $el) { pgGo(el, $el, pgState(el).pages, false); },
-    setPageSize: function (el, $el, n) { pgSize(el, $el, parseInt(n, 10), false); },
-    setTotal: function (el, $el, n) {
-      el.setAttribute("data-total", String(Math.max(0, parseInt(n, 10) || 0)));
-      var s = pgState(el);
-      L.setValue(el, $el, String(Math.min(s.page, s.pages)));
-      pgRender(el, $el);
-    },
-    value: function (el) { return pgState(el).page; }
   }
+
+  // methods (aihtml_action:call/4, AH.invoke); they fire no change
+  setPage(p) { pgGo(this.element, parseInt(p, 10), false); }
+  next() { pgGo(this.element, pgState(this.element).page + 1, false); }
+  prev() { pgGo(this.element, pgState(this.element).page - 1, false); }
+  first() { pgGo(this.element, 1, false); }
+  last() { pgGo(this.element, pgState(this.element).pages, false); }
+  setPageSize(n) { pgSize(this.element, parseInt(n, 10), false); }
+  setTotal(n) {
+    const el = this.element;
+    el.setAttribute("data-total", String(Math.max(0, parseInt(n, 10) || 0)));
+    const s = pgState(el);
+    L.setValue(el, String(Math.min(s.page, s.pages)));
+    pgRender(el);
+  }
+  value() { return pgState(this.element).page; }
 });

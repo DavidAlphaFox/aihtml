@@ -5,7 +5,7 @@
  *   empty     (<<>>, [], [{id, m2}, {placeholder, <<"Write here">>}, {max_chars, 10}])
  *   readonly  (<<"- [x] done\n- [ ] todo\n">>, [readonly], [{id, m3}])
  * regenerate them from Erlang if the markup changes. */
-(function (T, $, AH) {
+(function (T, AH) {
   "use strict";
 
   var SERVER = {
@@ -16,14 +16,14 @@
 
   // aihtml.css is not on the test page; ProseMirror needs its white-space
   // rule (extra/markdown_editor.css) to read typed spaces as spaces.
-  $("<style>.ProseMirror { white-space: pre-wrap; }</style>").appendTo(document.head);
+  document.head.insertAdjacentHTML("beforeend", "<style>.ProseMirror { white-space: pre-wrap; }</style>");
 
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
 
   async function mount(fx, name) {
     fx.innerHTML = SERVER[name];
     var el = fx.firstChild;
-    AH.mount(fx);
+    await T.ready(fx);
     var view = await AH.invoke(el, "ready");
     return { el: el, view: view };
   }
@@ -41,14 +41,15 @@
   }
 
   function key(view, k, opts) {
-    var e = new KeyboardEvent("keydown", $.extend({ key: k, bubbles: true, cancelable: true }, opts));
-    view.dom.dispatchEvent(e);
+    T.key(view.dom, k, opts);
   }
 
   function events(el) {
     var log = [];
-    $(el).on("input change", function (e) {
-      if (e.target === el) { log.push(e.type + ":" + el.getAttribute("data-ah-value")); }
+    ["input", "change"].forEach(function (type) {
+      el.addEventListener(type, function (e) {
+        if (e.target === el) { log.push(e.type + ":" + el.getAttribute("data-ah-value")); }
+      });
     });
     return log;
   }
@@ -239,22 +240,37 @@
     AHTest.ok(r.view.dom.querySelector(".task-list-item-checkbox").disabled);
   });
 
-  T.test("markdown_editor: the textarea works before the editor, destroy restores it", async function (fx) {
-    fx.innerHTML = SERVER.basic;
-    var el = fx.firstChild, ta = el.querySelector("textarea"), log = events(el);
-    AH.mount(fx);
+  T.test("markdown_editor: the textarea works before the editor, removal restores it", async function (fx) {
+    // hold the vendor bundle back, as on a first page load
+    var realVendor = AH.vendor, release;
+    AH.vendor = function (name) {
+      return new Promise(function (ok) { release = function () { ok(realVendor(name)); }; });
+    };
+    var el, ta, log;
+    try {
+      fx.innerHTML = SERVER.basic;
+      el = fx.firstChild; ta = el.querySelector("textarea"); log = events(el);
+      await T.ready(fx);
+    } finally {
+      AH.vendor = realVendor;
+    }
+    AHTest.ok(!el.classList.contains("ah-md-editor-ready"), "not loaded yet");
     ta.value = "typed early";
-    ta.dispatchEvent(new Event("input", { bubbles: true }));
+    T.fire(ta, "input");
     AHTest.eq(el.getAttribute("data-ah-value"), "typed early");
-    ta.dispatchEvent(new Event("change", { bubbles: true }));
+    T.fire(ta, "change");
     AHTest.eq(log, ["input:typed early", "change:typed early"]);
+    release();
     var view = await AH.invoke(el, "ready");
     AHTest.eq(view.state.doc.textContent, "typed early");
-    AH.destroy(fx);
+    el.remove();
+    await sleep(0);                          // teardown ran
     AHTest.ok(!el.querySelector(".ProseMirror"), "ProseMirror removed");
     AHTest.ok(!ta.hidden && !el.classList.contains("ah-md-editor-ready"));
-    AH.mount(fx);
+    fx.appendChild(el);
+    await T.ready(fx);
     await AH.invoke(el, "ready");
     AHTest.eq(el.querySelectorAll(".ProseMirror").length, 1, "mounts again");
+    AHTest.eq(AH.invoke(el, "getValue"), "typed early");
   });
-})(window.AHTest, window.jQuery, window.AH);
+})(window.AHTest, window.AH);

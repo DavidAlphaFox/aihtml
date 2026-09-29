@@ -1,40 +1,49 @@
 /* Behaviour of the contribution heatmap (designs/04-components.md).
  *
  * Ported from sigil (data/heatmap_calendar). The grid is server-rendered;
- * this adds the hover tooltip (AH.float) and ah:select on click.
+ * this adds the hover tooltip (AH.float) and "ah:select" on click
+ * (detail {date, value}).
  */
-import $ from "jquery";
 import AH from "../core.js";
 
-var NS = AH.NS;
+const CELL = ".ah-heatmap-calendar__cell";
 
-AH.define("heatmap-calendar", {
-  init: function (el, $el) {
-    var tip = $el.children(".ah-heatmap-calendar__tooltip")[0];
-    var fmt = el.getAttribute("data-tip") || "{value} · {date}";
-    var st = { float: null };
-    $.data(el, "ah-heatmap", st);
-    function hide() {
-      if (st.float) { st.float.stop(); st.float = null; }
-      if (tip) { tip.setAttribute("data-visible", "false"); }
-    }
-    $el.on("mouseenter" + NS, ".ah-heatmap-calendar__cell", function () {
-      if (!tip) { return; }
-      hide();
-      tip.textContent = fmt.split("{date}").join(this.getAttribute("data-date"))
-                           .split("{value}").join(this.getAttribute("data-value"));
-      tip.setAttribute("data-visible", "true");
-      st.float = AH.float(tip, this, { placement: "top", align: "center", offset: 6 });
+AH.register("heatmap-calendar", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    this.tip = el.querySelector(":scope > .ah-heatmap-calendar__tooltip");
+    this.fmt = el.getAttribute("data-tip") || "{value} · {date}";
+    this.float = null;
+    // mouseenter / mouseleave of a cell, from the delegated over / out
+    this.delegate("mouseover", CELL, (e, cell) => {
+      if (e.relatedTarget && cell.contains(e.relatedTarget)) { return; }
+      this.show(cell);
     });
-    $el.on("mouseleave" + NS, ".ah-heatmap-calendar__cell", hide);
-    $el.on("click" + NS, ".ah-heatmap-calendar__cell", function () {
-      var date = this.getAttribute("data-date");
+    this.delegate("mouseout", CELL, (e, cell) => {
+      if (e.relatedTarget && cell.contains(e.relatedTarget)) { return; }
+      this.hide();
+    });
+    this.delegate("click", CELL, (e, cell) => {
+      const date = cell.getAttribute("data-date");
       el.setAttribute("data-ah-value", date);
-      $el.trigger("ah:select", [{ date: date, value: parseFloat(this.getAttribute("data-value")) }]);
+      this.fire("ah:select", { date: date, value: parseFloat(cell.getAttribute("data-value")) });
     });
-  },
-  destroy: function (el) {
-    var st = $.data(el, "ah-heatmap");
-    if (st && st.float) { st.float.stop(); }
+  }
+
+  teardown() { this.hide(); }
+
+  show(cell) {
+    const tip = this.tip;
+    if (!tip) { return; }
+    this.hide();
+    tip.textContent = this.fmt.split("{date}").join(cell.getAttribute("data-date"))
+                              .split("{value}").join(cell.getAttribute("data-value"));
+    tip.setAttribute("data-visible", "true");
+    this.float = AH.float(tip, cell, { placement: "top", align: "center", offset: 6 });
+  }
+
+  hide() {
+    if (this.float) { this.float.stop(); this.float = null; }
+    if (this.tip) { this.tip.setAttribute("data-visible", "false"); }
   }
 });

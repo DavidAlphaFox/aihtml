@@ -5,13 +5,10 @@
  * it; methods called by the server update the value without firing
  * "change". Drags use pointer capture, so nothing is bound on document.
  */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_scroll.js";
 
-var NS = AH.NS;
-var setValue = AH.lib.scroll.setValue, num = AH.lib.scroll.num, capture = AH.lib.scroll.capture;
-var seq = 0;
+const setValue = AH.lib.scroll.setValue, num = AH.lib.scroll.num, capture = AH.lib.scroll.capture;
 
 // ------------------------------------------------------------------
 // Scrollbar (sigil layout/scrollbar, and the bars of sigil's panel)
@@ -25,17 +22,17 @@ var SB = "ah-scrollbar";
 var SB_BTN = 14;
 
 function sbParts(bar) {
-  var $b = $(bar);
+  const part = function (name) { return bar.querySelector(":scope > ." + SB + "-" + name); };
   return {
-    up: $b.children("." + SB + "-btn-up")[0],
-    tu: $b.children("." + SB + "-track-up")[0],
-    thumb: $b.children("." + SB + "-thumb")[0],
-    td: $b.children("." + SB + "-track-down")[0],
-    down: $b.children("." + SB + "-btn-down")[0]
+    up: part("btn-up"),
+    tu: part("track-up"),
+    thumb: part("thumb"),
+    td: part("track-down"),
+    down: part("btn-down")
   };
 }
 
-function sbVertical(bar) { return $(bar).hasClass(SB + "-vertical"); }
+function sbVertical(bar) { return bar.classList.contains(SB + "-vertical"); }
 
 // Geometry of a bar for a value: track length, thumb size and position.
 function sbGeom(bar, o) {
@@ -70,62 +67,75 @@ function sbRepeat(node, e, fn) {
   var iv = null;
   var t = setTimeout(function () { iv = setInterval(fn, 50); }, 300);
   capture(node, e);
-  $(node).on("pointerup.ahrep pointercancel.ahrep lostpointercapture.ahrep", function () {
+  const off = new AbortController();
+  const end = function () {
     clearTimeout(t);
     clearInterval(iv);
-    $(node).off(".ahrep");
+    off.abort();
+  };
+  ["pointerup", "pointercancel", "lostpointercapture"].forEach(function (type) {
+    node.addEventListener(type, end, { signal: off.signal });
   });
 }
 
 // Wire one bar. api: {opts(), set(value, phase), start()} where phase is
 // "input" while dragging, "change" otherwise and "end" when a drag ends.
-function sbBind(bar, api) {
-  var p = sbParts(bar);
-  $(p.up).add(p.down).on("pointerdown" + NS, function (e) {
-    if (e.button !== undefined && e.button !== 0) { return; }
-    e.preventDefault();
-    var dir = this === p.up ? -1 : 1;
-    sbRepeat(this, e, function () { var o = api.opts(); api.set(o.value + dir * o.step, "change"); });
+// ctrl is the controller (its listen removes the listeners on teardown).
+function sbBind(ctrl, bar, api) {
+  const p = sbParts(bar);
+  [p.up, p.down].forEach(function (btn) {
+    ctrl.listen(btn, "pointerdown", function (e) {
+      if (e.button !== undefined && e.button !== 0) { return; }
+      e.preventDefault();
+      const dir = btn === p.up ? -1 : 1;
+      sbRepeat(btn, e, function () { const o = api.opts(); api.set(o.value + dir * o.step, "change"); });
+    });
   });
-  $(p.tu).add(p.td).on("pointerdown" + NS, function (e) {
-    if (e.button !== undefined && e.button !== 0) { return; }
-    e.preventDefault();
-    var o = api.opts();
-    api.set(o.value + (this === p.tu ? -1 : 1) * o.large, "change");
+  [p.tu, p.td].forEach(function (track) {
+    ctrl.listen(track, "pointerdown", function (e) {
+      if (e.button !== undefined && e.button !== 0) { return; }
+      e.preventDefault();
+      const o = api.opts();
+      api.set(o.value + (track === p.tu ? -1 : 1) * o.large, "change");
+    });
   });
-  var drag = null;
-  $(p.thumb).on("pointerdown" + NS, function (e) {
+  let drag = null;
+  ctrl.listen(p.thumb, "pointerdown", function (e) {
     if (e.button !== undefined && e.button !== 0) { return; }
     e.preventDefault();
-    var o = api.opts(), g = sbGeom(bar, o);
+    const o = api.opts(), g = sbGeom(bar, o);
     drag = { start: g.vert ? e.clientY : e.clientX, pos: g.tp, vert: g.vert, value: o.value };
-    capture(this, e);
-    $(this).addClass(SB + "-thumb-pressed");
+    capture(p.thumb, e);
+    p.thumb.classList.add(SB + "-thumb-pressed");
     if (api.start) { api.start(); }
   });
-  $(p.thumb).on("pointermove" + NS, function (e) {
+  ctrl.listen(p.thumb, "pointermove", function (e) {
     if (!drag) { return; }
-    var cur = drag.vert ? e.clientY : e.clientX;
+    const cur = drag.vert ? e.clientY : e.clientX;
     api.set(sbPosToValue(bar, api.opts(), drag.pos + cur - drag.start), "input");
   });
-  $(p.thumb).on("pointerup" + NS + " pointercancel" + NS, function () {
+  const end = function () {
     if (!drag) { return; }
-    var before = drag.value;
+    const before = drag.value;
     drag = null;
-    $(this).removeClass(SB + "-thumb-pressed");
+    p.thumb.classList.remove(SB + "-thumb-pressed");
     api.set(api.opts().value, "end", before);
-  });
+  };
+  ctrl.listen(p.thumb, "pointerup", end);
+  ctrl.listen(p.thumb, "pointercancel", end);
 }
 
-function sbObserve(el, targets, fn) {
-  var st = $.data(el, "ahScrollbar");
+function sbObserve(ctrl, targets, fn) {
   if (window.ResizeObserver) {
-    st.ro = new ResizeObserver(function () { fn(); });
-    targets.forEach(function (t) { if (t) { st.ro.observe(t); } });
+    ctrl.ro = new ResizeObserver(function () { fn(); });
+    targets.forEach(function (t) { if (t) { ctrl.ro.observe(t); } });
   } else {
-    st.ns = ".ahsb" + (++seq);
-    $(window).on("resize" + st.ns, fn);
+    ctrl.listen(window, "resize", fn);
   }
+}
+
+function fire(el, type) {
+  el.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true }));
 }
 
 // --- standalone bar ---------------------------------------------------
@@ -144,41 +154,43 @@ function sbIntegral(o) {
   return o.min % 1 === 0 && o.max % 1 === 0 && o.step % 1 === 0 && o.large % 1 === 0;
 }
 
-function sbBar($el) { return $el.children("." + SB)[0]; }
+function sbBar(el) { return el.querySelector(":scope > ." + SB); }
 
-function sbSet(el, $el, v, event) {
-  var o = sbOpts(el);
+function sbSet(el, v, event) {
+  const o = sbOpts(el);
   v = Math.max(o.min, Math.min(o.max, +v || 0));
   if (sbIntegral(o)) { v = Math.round(v); }
-  var changed = v !== o.value;
+  const changed = v !== o.value;
   if (changed) {
-    setValue(el, $el, String(v));
+    setValue(el, String(v));
     el.setAttribute("aria-valuenow", String(v));
   }
   o.value = v;
-  sbLayout(sbBar($el), o);
-  if (changed && event) { $el.trigger(event); }
+  sbLayout(sbBar(el), o);
+  if (changed && event) { fire(el, event); }
   return changed;
 }
 
-function sbStandalone(el, $el) {
-  var bar = sbBar($el);
-  var disabled = function () { return $el.hasClass(SB + "-disabled"); };
-  sbBind(bar, {
+function sbStandalone(ctrl) {
+  const el = ctrl.element;
+  const bar = sbBar(el);
+  const disabled = function () { return el.classList.contains(SB + "-disabled"); };
+  sbBind(ctrl, bar, {
     opts: function () { return sbOpts(el); },
     set: function (v, phase, before) {
       if (disabled()) { return; }
       if (phase === "end") {
-        if (String(before) !== el.getAttribute("data-ah-value")) { $el.trigger("change"); }
+        if (String(before) !== el.getAttribute("data-ah-value")) { fire(el, "change"); }
         return;
       }
-      sbSet(el, $el, v, phase);
+      sbSet(el, v, phase);
     },
     start: function () { el.focus({ preventScroll: true }); }
   });
-  $el.on("keydown" + NS, function (e) {
+  ctrl.listen(el, "keydown", function (e) {
     if (e.target !== el || disabled()) { return; }
-    var o = sbOpts(el), vert = sbVertical(bar), to;
+    const o = sbOpts(el), vert = sbVertical(bar);
+    let to;
     switch (e.key) {
       case "ArrowLeft": if (vert) { return; } to = o.value - o.step; break;
       case "ArrowRight": if (vert) { return; } to = o.value + o.step; break;
@@ -191,26 +203,26 @@ function sbStandalone(el, $el) {
       default: return;
     }
     e.preventDefault();
-    sbSet(el, $el, to, "change");
+    sbSet(el, to, "change");
   });
-  var relayout = function () { sbLayout(bar, sbOpts(el)); };
-  sbObserve(el, [el], relayout);
+  const relayout = function () { sbLayout(bar, sbOpts(el)); };
+  sbObserve(ctrl, [el], relayout);
   relayout();
 }
 
 // --- scroll area --------------------------------------------------------
 
-function saParts($el) {
+function saParts(el) {
   return {
-    vp: $el.children("." + SB + "-viewport")[0],
-    v: $el.children("." + SB + "-vertical")[0],
-    h: $el.children("." + SB + "-horizontal")[0]
+    vp: el.querySelector(":scope > ." + SB + "-viewport"),
+    v: el.querySelector(":scope > ." + SB + "-vertical"),
+    h: el.querySelector(":scope > ." + SB + "-horizontal")
   };
 }
 
 function saOpts(el, vp, vert) {
-  var max = vert ? vp.scrollHeight - vp.clientHeight : vp.scrollWidth - vp.clientWidth;
-  var page = vert ? vp.clientHeight : vp.clientWidth;
+  const max = vert ? vp.scrollHeight - vp.clientHeight : vp.scrollWidth - vp.clientWidth;
+  const page = vert ? vp.clientHeight : vp.clientWidth;
   return {
     min: 0, max: Math.max(0, max),
     value: vert ? vp.scrollTop : vp.scrollLeft,
@@ -222,75 +234,78 @@ function saOpts(el, vp, vert) {
 
 // Which bars the content needs: showing one narrows the viewport, which
 // may make the other one necessary, so settle it in two passes.
-function saLayout(el, $el) {
-  var p = saParts($el), vp = p.vp;
-  var needV = false, needH = false;
-  for (var i = 0; i < 2; i++) {
-    $el.toggleClass(SB + "-area-v", needV).toggleClass(SB + "-area-h", needH);
+function saLayout(el) {
+  const p = saParts(el), vp = p.vp;
+  let needV = false, needH = false;
+  for (let i = 0; i < 2; i++) {
+    el.classList.toggle(SB + "-area-v", needV);
+    el.classList.toggle(SB + "-area-h", needH);
     needV = vp.scrollHeight > vp.clientHeight + 1;
     needH = vp.scrollWidth > vp.clientWidth + 1;
   }
-  $el.toggleClass(SB + "-area-v", needV).toggleClass(SB + "-area-h", needH);
+  el.classList.toggle(SB + "-area-v", needV);
+  el.classList.toggle(SB + "-area-h", needH);
   if (needV) { sbLayout(p.v, saOpts(el, vp, true)); }
   if (needH) { sbLayout(p.h, saOpts(el, vp, false)); }
 }
 
-function saSync(el, $el) {
-  var p = saParts($el);
-  if ($el.hasClass(SB + "-area-v")) { sbLayout(p.v, saOpts(el, p.vp, true)); }
-  if ($el.hasClass(SB + "-area-h")) { sbLayout(p.h, saOpts(el, p.vp, false)); }
+function saSync(el) {
+  const p = saParts(el);
+  if (el.classList.contains(SB + "-area-v")) { sbLayout(p.v, saOpts(el, p.vp, true)); }
+  if (el.classList.contains(SB + "-area-h")) { sbLayout(p.h, saOpts(el, p.vp, false)); }
 }
 
-function saArea(el, $el) {
-  var p = saParts($el);
+function saArea(ctrl) {
+  const el = ctrl.element;
+  const p = saParts(el);
   [[p.v, true], [p.h, false]].forEach(function (b) {
-    var vert = b[1];
-    sbBind(b[0], {
+    const vert = b[1];
+    sbBind(ctrl, b[0], {
       opts: function () { return saOpts(el, p.vp, vert); },
       set: function (v, phase) {
-        if (phase === "end" || $el.hasClass(SB + "-disabled")) { return; }
+        if (phase === "end" || el.classList.contains(SB + "-disabled")) { return; }
         if (vert) { p.vp.scrollTop = v; } else { p.vp.scrollLeft = v; }
-        saSync(el, $el);
+        saSync(el);
       }
     });
   });
-  $(p.vp).on("scroll" + NS, function () { saSync(el, $el); });
-  var content = $(p.vp).children("." + SB + "-content")[0];
-  sbObserve(el, [p.vp, content], function () { saLayout(el, $el); });
-  saLayout(el, $el);
+  ctrl.listen(p.vp, "scroll", function () { saSync(el); });
+  const content = p.vp.querySelector(":scope > ." + SB + "-content");
+  sbObserve(ctrl, [p.vp, content], function () { saLayout(el); });
+  saLayout(el);
 }
 
-AH.define("scrollbar", {
-  init: function (el, $el) {
-    $.data(el, "ahScrollbar", {});
-    if (el.hasAttribute("data-area")) { saArea(el, $el); } else { sbStandalone(el, $el); }
-  },
-  destroy: function (el) {
-    var st = $.data(el, "ahScrollbar") || {};
-    if (st.ro) { st.ro.disconnect(); }
-    if (st.ns) { $(window).off(st.ns); }
-    $.removeData(el, "ahScrollbar");
-  },
-  methods: {
-    setValue: function (el, $el, v) {
-      if (!el.hasAttribute("data-area")) { sbSet(el, $el, v, null); }
-    },
-    getValue: function (el) { return num(el, "data-ah-value", 0); },
-    setMax: function (el, $el, max) {
-      el.setAttribute("data-max", String(max));
-      el.setAttribute("aria-valuemax", String(max));
-      sbSet(el, $el, num(el, "data-ah-value", 0), null);
-      sbLayout(sbBar($el), sbOpts(el));
-    },
-    scrollTo: function (el, $el, x, y) {
-      var vp = saParts($el).vp;
-      if (vp) {
-        vp.scrollLeft = x || 0;
-        vp.scrollTop = y || 0;
-      }
-    },
-    refresh: function (el, $el) {
-      if (el.hasAttribute("data-area")) { saLayout(el, $el); } else { sbLayout(sbBar($el), sbOpts(el)); }
+AH.register("scrollbar", class extends AH.Controller {
+  setup() {
+    this.ro = null;
+    if (this.element.hasAttribute("data-area")) { saArea(this); } else { sbStandalone(this); }
+  }
+
+  teardown() {
+    if (this.ro) { this.ro.disconnect(); this.ro = null; }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke); they fire no change
+  setValue(v) {
+    if (!this.element.hasAttribute("data-area")) { sbSet(this.element, v, null); }
+  }
+  getValue() { return num(this.element, "data-ah-value", 0); }
+  setMax(max) {
+    const el = this.element;
+    el.setAttribute("data-max", String(max));
+    el.setAttribute("aria-valuemax", String(max));
+    sbSet(el, num(el, "data-ah-value", 0), null);
+    sbLayout(sbBar(el), sbOpts(el));
+  }
+  scrollTo(x, y) {
+    const vp = saParts(this.element).vp;
+    if (vp) {
+      vp.scrollLeft = x || 0;
+      vp.scrollTop = y || 0;
     }
+  }
+  refresh() {
+    const el = this.element;
+    if (el.hasAttribute("data-area")) { saLayout(el); } else { sbLayout(sbBar(el), sbOpts(el)); }
   }
 });

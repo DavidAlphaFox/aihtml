@@ -8,12 +8,15 @@
  * data-ah-credentials. The value is a JSON array in data-ah-value (and the
  * hidden input): the server's answers for the uploaded files, or in
  * native mode {name, size, type} of the selected files. List rows come
- * from the shared template AH.tpl.upload_item. */
-import $ from "jquery";
+ * from the shared template AH.tpl.upload_item.
+ *
+ * Native events on the root: "change" (value contract), "ah:select"
+ * {files: [File]}, "ah:upload-progress" {id, percent, loaded, total},
+ * "ah:upload-success" {id, response}, "ah:upload-error" {id, name,
+ * reason} (rejected pick) or {id, name, message, status[, response]}. */
 import AH from "../core.js";
 import "virtual:ah-tpl/upload_item";
 
-var NS = AH.NS;
 var seq = 0;
 
 function json(el, attr, dflt) {
@@ -64,7 +67,14 @@ function describe(v) {
   return { name: v == null ? "" : String(v), size: null, type: "" };
 }
 
-function st(el) { return $.data(el, "ahUpload"); }
+// The controller of the upload element (its state: cfg, files, input,
+// disabled, drag).
+var states = new WeakMap();
+function st(el) { return states.get(el); }
+
+function fire(el, type, detail) {
+  el.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true, detail: detail }));
+}
 
 function cfg(el) { return st(el).cfg; }
 
@@ -80,26 +90,31 @@ function view(el, f) {
   };
 }
 
-function $list(el) { return $(el).children(".ah-upload-list"); }
+function listOf(el) {
+  return Array.prototype.filter.call(el.children, function (c) { return c.matches(".ah-upload-list"); })[0] || null;
+}
 
 function rowOf(el, id) {
-  return $list(el).children().filter(function () {
-    return this.getAttribute("data-file-id") === id;
-  });
+  var l = listOf(el);
+  if (!l) { return null; }
+  return Array.prototype.filter.call(l.children, function (r) {
+    return r.getAttribute("data-file-id") === id;
+  })[0] || null;
 }
 
 function renderRow(el, f) {
-  var $l = $list(el);
-  if (!$l.length) { return; }
+  var l = listOf(el);
+  if (!l) { return; }
   var html = AH.tpl.upload_item(view(el, f));
-  var $row = rowOf(el, f.id);
-  if ($row.length) { $row.replaceWith(html); } else { $l.append(html); }
+  var row = rowOf(el, f.id);
+  if (row) { row.insertAdjacentHTML("afterend", html); row.remove(); }
+  else { l.insertAdjacentHTML("beforeend", html); }
 }
 
 function renderAll(el) {
-  var s = st(el), $l = $list(el);
-  if (!$l.length) { return; }
-  $l.html(s.files.map(function (f) { return AH.tpl.upload_item(view(el, f)); }).join(""));
+  var s = st(el), l = listOf(el);
+  if (!l) { return; }
+  l.innerHTML = s.files.map(function (f) { return AH.tpl.upload_item(view(el, f)); }).join("");
 }
 
 function find(el, id) {
@@ -141,10 +156,9 @@ function commit(el, silent) {
   syncInput(el);
   if (v === el.getAttribute("data-ah-value")) { return; }
   el.setAttribute("data-ah-value", v);
-  $(el).children("input[type=hidden]").val(v);
-  if (!silent) { $(el).trigger("change"); }
+  el.querySelectorAll(":scope > input[type=hidden]").forEach(function (h) { h.value = v; });
+  if (!silent) { fire(el, "change"); }
 }
-
 // ------------------------------------------------------------------
 // Adding files (sigil add-files! and upload.core/validate-files)
 // ------------------------------------------------------------------
@@ -171,14 +185,14 @@ function addFiles(el, list) {
     s.files.push(f);
     added.push(f);
     if (reason) {
-      $(el).trigger("ah:upload-error", [{ id: f.id, name: f.name, reason: reason }]);
+      fire(el, "ah:upload-error", { id: f.id, name: f.name, reason: reason });
     } else {
       valid.push(f);
     }
   });
   added.forEach(function (f) { renderRow(el, f); });
   if (valid.length) {
-    $(el).trigger("ah:select", [{ files: valid.map(function (f) { return f.file; }) }]);
+    fire(el, "ah:select", { files: valid.map(function (f) { return f.file; }) });
   }
   commit(el);
   if (!c.native && !c.manual) { valid.forEach(function (f) { start(el, f); }); }
@@ -194,7 +208,7 @@ function start(el, f) {
   var xhr = new XMLHttpRequest();
   var data = new FormData();
   data.append(c.field, f.file, f.name);
-  $.each(c.extra, function (k, v) { data.append(k, v); });
+  Object.keys(c.extra || {}).forEach(function (k) { data.append(k, c.extra[k]); });
   f.xhr = xhr;
   f.status = "uploading";
   f.percent = 0;
@@ -202,11 +216,17 @@ function start(el, f) {
   xhr.upload.onprogress = function (e) {
     if (!e.lengthComputable || f.xhr !== xhr) { return; }
     f.percent = e.total ? (e.loaded / e.total) * 100 : 0;
-    rowOf(el, f.id).find(".ah-upload-item-progress")
-      .attr("aria-valuenow", Math.round(f.percent))
-      .children(".ah-upload-item-progress-bar").css("width", f.percent + "%");
-    $(el).trigger("ah:upload-progress", [{ id: f.id, percent: f.percent,
-                                           loaded: e.loaded, total: e.total }]);
+    var row = rowOf(el, f.id);
+    if (row) {
+      row.querySelectorAll(".ah-upload-item-progress").forEach(function (p) {
+        p.setAttribute("aria-valuenow", String(Math.round(f.percent)));
+        p.querySelectorAll(":scope > .ah-upload-item-progress-bar").forEach(function (b) {
+          b.style.width = f.percent + "%";
+        });
+      });
+    }
+    fire(el, "ah:upload-progress", { id: f.id, percent: f.percent,
+                                     loaded: e.loaded, total: e.total });
   };
   xhr.onload = function () {
     if (f.xhr !== xhr) { return; }
@@ -219,7 +239,7 @@ function start(el, f) {
       f.value = body !== null && typeof body === "object"
         ? body : { name: f.name, size: f.size, type: f.type };
       renderRow(el, f);
-      $(el).trigger("ah:upload-success", [{ id: f.id, response: f.value }]);
+      fire(el, "ah:upload-success", { id: f.id, response: f.value });
       commit(el);
     } else {
       var msg = body && typeof body === "object" && (body.error || body.message);
@@ -234,7 +254,7 @@ function start(el, f) {
   };
   xhr.open("POST", c.url, true);
   if (c.credentials) { xhr.withCredentials = true; }
-  $.each(c.headers, function (k, v) { xhr.setRequestHeader(k, v); });
+  Object.keys(c.headers || {}).forEach(function (k) { xhr.setRequestHeader(k, c.headers[k]); });
   xhr.send(data);
 }
 
@@ -242,8 +262,7 @@ function fail(el, f, message, detail) {
   f.status = "error";
   f.error = message || "Upload failed";
   renderRow(el, f);
-  $(el).trigger("ah:upload-error", [$.extend({ id: f.id, name: f.name, message: f.error },
-                                             detail)]);
+  fire(el, "ah:upload-error", Object.assign({ id: f.id, name: f.name, message: f.error }, detail));
 }
 
 // Take a row out of the state (aborting its upload), without committing.
@@ -251,7 +270,8 @@ function drop(el, f) {
   var s = st(el);
   if (f.xhr) { var x = f.xhr; f.xhr = null; x.abort(); }
   s.files = s.files.filter(function (g) { return g !== f; });
-  rowOf(el, f.id).remove();
+  var row = rowOf(el, f.id);
+  if (row) { row.remove(); }
 }
 
 function remove(el, id) {
@@ -274,21 +294,26 @@ function open(el) {
   s.input.click();
 }
 
-function setDisabled(el, $el, off) {
+function setDisabled(el, off) {
   var s = st(el);
   s.disabled = !!off;
-  $el.toggleClass("ah-upload-disabled", s.disabled);
-  if (s.disabled) { $el.attr("aria-disabled", "true"); } else { $el.removeAttr("aria-disabled"); }
-  $el.children(".ah-upload-dragger").attr("tabindex", s.disabled ? "-1" : "0")
-    .attr("aria-disabled", s.disabled ? "true" : null);
+  el.classList.toggle("ah-upload-disabled", s.disabled);
+  if (s.disabled) { el.setAttribute("aria-disabled", "true"); } else { el.removeAttribute("aria-disabled"); }
+  Array.prototype.forEach.call(el.children, function (d) {
+    if (!d.matches(".ah-upload-dragger")) { return; }
+    d.setAttribute("tabindex", s.disabled ? "-1" : "0");
+    if (s.disabled) { d.setAttribute("aria-disabled", "true"); } else { d.removeAttribute("aria-disabled"); }
+  });
   s.input.disabled = s.disabled;
-  $list(el).find(".ah-upload-item-remove").prop("disabled", s.disabled);
+  var l = listOf(el);
+  if (l) { l.querySelectorAll(".ah-upload-item-remove").forEach(function (b) { b.disabled = s.disabled; }); }
 }
 
 function initialFiles(el, values) {
-  var ids = $list(el).children().map(function () {
-    return this.getAttribute("data-file-id");
-  }).get();
+  var l = listOf(el);
+  var ids = l ? Array.prototype.map.call(l.children, function (r) {
+    return r.getAttribute("data-file-id");
+  }) : [];
   return values.map(function (v, i) {
     var d = describe(v);
     return { id: ids[i] || "s" + i, file: null, name: d.name, size: d.size, type: d.type,
@@ -296,123 +321,136 @@ function initialFiles(el, values) {
   });
 }
 
-AH.define("upload", {
-  init: function (el, $el) {
-    var url = el.getAttribute("data-ah-url");
-    var input = $el.children("input.ah-upload-input")[0];
-    var s = {
-      input: input,
-      disabled: $el.hasClass("ah-upload-disabled"),
-      drag: 0,
-      cfg: {
-        url: url, native: !url,
-        field: el.getAttribute("data-ah-field") || "file",
-        accept: input.getAttribute("accept") || "",
-        multiple: input.multiple,
-        maxSize: intAttr(el, "data-ah-max-size"),
-        maxCount: intAttr(el, "data-ah-max-count"),
-        manual: el.hasAttribute("data-ah-manual"),
-        credentials: el.hasAttribute("data-ah-credentials"),
-        headers: json(el, "data-ah-headers", {}),
-        extra: json(el, "data-ah-extra", {}),
-        labels: json(el, "data-ah-labels", {})
-      },
-      files: []
-    };
-    $.data(el, "ahUpload", s);
-    s.files = initialFiles(el, json(el, "data-ah-value", []));
+function abortAll(el) {
+  st(el).files.forEach(function (f) { if (f.xhr) { var x = f.xhr; f.xhr = null; x.abort(); } });
+}
 
-    var $dragger = $el.children(".ah-upload-dragger");
-    $dragger.on("click" + NS, function (e) {
-      e.preventDefault();
-      open(el);
-    }).on("keydown" + NS, function (e) {
-      if (e.key === "Enter" || e.key === " ") {
+AH.register("upload", class extends AH.Controller {
+  setup() {
+    var el = this.element, s = this;
+    var url = el.getAttribute("data-ah-url");
+    var input = el.querySelector(":scope > input.ah-upload-input");
+    this.input = input;
+    this.disabled = el.classList.contains("ah-upload-disabled");
+    this.drag = 0;
+    this.cfg = {
+      url: url, native: !url,
+      field: el.getAttribute("data-ah-field") || "file",
+      accept: input.getAttribute("accept") || "",
+      multiple: input.multiple,
+      maxSize: intAttr(el, "data-ah-max-size"),
+      maxCount: intAttr(el, "data-ah-max-count"),
+      manual: el.hasAttribute("data-ah-manual"),
+      credentials: el.hasAttribute("data-ah-credentials"),
+      headers: json(el, "data-ah-headers", {}),
+      extra: json(el, "data-ah-extra", {}),
+      labels: json(el, "data-ah-labels", {})
+    };
+    this.files = [];
+    states.set(el, this);
+    this.files = initialFiles(el, json(el, "data-ah-value", []));
+
+    var dragger = el.querySelector(":scope > .ah-upload-dragger");
+    var dragOn = function (on) { if (dragger) { dragger.classList.toggle("ah-upload-dragger-active", on); } };
+    if (dragger) {
+      this.listen(dragger, "click", function (e) {
         e.preventDefault();
         open(el);
-      }
-    });
+      });
+      this.listen(dragger, "keydown", function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          open(el);
+        }
+      });
+    }
     // The input's own change is not the component's.
-    $(input).on("change" + NS, function (e) {
+    this.listen(input, "change", function (e) {
       e.stopPropagation();
       var picked = Array.prototype.slice.call(input.files || []);
       addFiles(el, picked);
       if (!s.cfg.native) { input.value = ""; }
-    }).on("click" + NS, function (e) { e.stopPropagation(); });
+    });
+    this.listen(input, "click", function (e) { e.stopPropagation(); });
 
     // sigil drop-zone: a counter for nested dragenter/dragleave.
-    $el.on("dragenter" + NS, function (e) {
+    this.listen(el, "dragenter", function (e) {
       e.preventDefault();
       if (s.disabled) { return; }
-      if (++s.drag === 1) { $dragger.addClass("ah-upload-dragger-active"); }
-    }).on("dragover" + NS, function (e) {
+      if (++s.drag === 1) { dragOn(true); }
+    });
+    this.listen(el, "dragover", function (e) {
       e.preventDefault();
-      var dt = e.originalEvent && e.originalEvent.dataTransfer;
-      if (dt) { dt.dropEffect = s.disabled ? "none" : "copy"; }
-    }).on("dragleave" + NS, function (e) {
+      if (e.dataTransfer) { e.dataTransfer.dropEffect = s.disabled ? "none" : "copy"; }
+    });
+    this.listen(el, "dragleave", function (e) {
       e.preventDefault();
       if (--s.drag <= 0) {
         s.drag = 0;
-        $dragger.removeClass("ah-upload-dragger-active");
+        dragOn(false);
       }
-    }).on("drop" + NS, function (e) {
+    });
+    this.listen(el, "drop", function (e) {
       e.preventDefault();
       s.drag = 0;
-      $dragger.removeClass("ah-upload-dragger-active");
-      var dt = e.originalEvent && e.originalEvent.dataTransfer;
+      dragOn(false);
+      var dt = e.dataTransfer;
       if (dt && dt.files && dt.files.length) { addFiles(el, dt.files); }
     });
 
-    $el.on("click" + NS, ".ah-upload-item-remove", function (e) {
+    this.delegate("click", ".ah-upload-item-remove", function (e, btn) {
       e.preventDefault();
       e.stopPropagation();
       if (s.disabled) { return; }
-      var $row = $(this).closest(".ah-upload-item");
-      var $next = $row.next().find(".ah-upload-item-remove");
-      if (!$next.length) { $next = $row.prev().find(".ah-upload-item-remove"); }
-      remove(el, $row.attr("data-file-id"));
-      ($next.length ? $next : $dragger).trigger("focus");
+      var row = btn.closest(".ah-upload-item");
+      var sib = row.nextElementSibling;
+      var next = sib ? sib.querySelector(".ah-upload-item-remove") : null;
+      if (!next) {
+        sib = row.previousElementSibling;
+        next = sib ? sib.querySelector(".ah-upload-item-remove") : null;
+      }
+      remove(el, row.getAttribute("data-file-id"));
+      var target = next || dragger;
+      if (target) { target.focus(); }
     });
-  },
-  destroy: function (el) {
-    var s = st(el);
-    if (!s) { return; }
-    s.files.forEach(function (f) { if (f.xhr) { var x = f.xhr; f.xhr = null; x.abort(); } });
-    $.removeData(el, "ahUpload");
-  },
-  methods: {
-    getValue: function (el) { return valueOf(el); },
-    setValue: function (el, $el, files) {
-      var s = st(el);
-      s.files.slice().forEach(function (f) { if (f.status === "success") { drop(el, f); } });
-      s.files = (files || []).map(function (v) {
-        var d = describe(v);
-        return { id: "f" + (++seq), file: null, name: d.name, size: d.size, type: d.type,
-                 status: "success", percent: 100, error: "", value: v, xhr: null };
-      }).concat(s.files);
-      renderAll(el);
-      commit(el, true);
-    },
-    getFiles: function (el) {
-      return st(el).files.map(function (f) {
-        return { id: f.id, name: f.name, size: f.size, type: f.type, status: f.status,
-                 percent: f.percent, value: f.value, error: f.error || null, file: f.file };
-      });
-    },
-    uploadAll: function (el) {
-      st(el).files.slice().forEach(function (f) { start(el, f); });
-    },
-    upload: function (el, $el, id) {
-      var f = find(el, id);
-      if (f) { start(el, f); }
-    },
-    remove: function (el, $el, id) { remove(el, id); },
-    clear: function (el) {
-      st(el).files.slice().forEach(function (f) { drop(el, f); });
-      commit(el);
-    },
-    open: function (el) { open(el); },
-    enable: function (el, $el) { setDisabled(el, $el, false); },
-    disable: function (el, $el) { setDisabled(el, $el, true); }
   }
+
+  teardown() { abortAll(this.element); }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  getValue() { return valueOf(this.element); }
+  setValue(files) {
+    var el = this.element;
+    this.files.slice().forEach(function (f) { if (f.status === "success") { drop(el, f); } });
+    this.files = (files || []).map(function (v) {
+      var d = describe(v);
+      return { id: "f" + (++seq), file: null, name: d.name, size: d.size, type: d.type,
+               status: "success", percent: 100, error: "", value: v, xhr: null };
+    }).concat(this.files);
+    renderAll(el);
+    commit(el, true);
+  }
+  getFiles() {
+    return this.files.map(function (f) {
+      return { id: f.id, name: f.name, size: f.size, type: f.type, status: f.status,
+               percent: f.percent, value: f.value, error: f.error || null, file: f.file };
+    });
+  }
+  uploadAll() {
+    var el = this.element;
+    this.files.slice().forEach(function (f) { start(el, f); });
+  }
+  upload(id) {
+    var f = find(this.element, id);
+    if (f) { start(this.element, f); }
+  }
+  remove(id) { remove(this.element, id); }
+  clear() {
+    var el = this.element;
+    this.files.slice().forEach(function (f) { drop(el, f); });
+    commit(el);
+  }
+  open() { open(this.element); }
+  enable() { setDisabled(this.element, false); }
+  disable() { setDisabled(this.element, true); }
 });

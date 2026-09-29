@@ -1,11 +1,12 @@
 /* Behaviour of the datepicker (designs/04-components.md). Ported from
  * sigil: form/datepicker (+ calendar, popup, util). Date math is plain JS
- * on local dates. */
-import $ from "jquery";
+ * on local dates.
+ *
+ * Value-bearing: data-ah-value and the hidden input, then `change` on the
+ * root; `ah:open` / `ah:close` when the popup shows / hides. */
 import AH from "../core.js";
 import "virtual:ah-tpl/datepicker_month";
 
-var NS = AH.NS;
 var seq = 0;
 
 function ensureId(el, prefix) {
@@ -16,15 +17,17 @@ function ensureId(el, prefix) {
 // A mousedown outside the component. A target that is gone was inside
 // a list re-rendered by this very mousedown (picking in multiple mode).
 function outside(el, e) {
-  return e.target.isConnected !== false && !$.contains(el, e.target) && e.target !== el;
+  return e.target.isConnected !== false && !el.contains(e.target);
 }
 
 // Value-bearing contract: data-ah-value + hidden input, then `change`.
-function publish(el, $el, value, fire) {
+function publish(c, value, fire) {
+  var el = c.element;
   var old = el.getAttribute("data-ah-value") || "";
   el.setAttribute("data-ah-value", value);
-  $el.children("input[type=hidden]").val(value);
-  if (fire && old !== value) { $el.trigger("change"); }
+  var hidden = el.querySelector(":scope > input[type=hidden]");
+  if (hidden) { hidden.value = value; }
+  if (fire && old !== value) { c.fire("change"); }
 }
 
 // ==================================================================
@@ -86,8 +89,6 @@ var DEFAULT_LABELS = {
   prev_year: "Previous year", next_year: "Next year"
 };
 
-function dpState(el) { return $.data(el, "ah-dp"); }
-
 function dpDisabled(st, d) {
   return (st.min && d < st.min) || (st.max && d > st.max) || !!st.off[iso(d)];
 }
@@ -107,8 +108,7 @@ function dpIsoValue(st) {
 // The view of templates/datepicker_month.mustache: every class, label
 // and id computed here (the Erlang month_view/1 builds the same view for
 // the server's `inline' render).
-function dpView(el) {
-  var st = dpState(el);
+function dpView(el, st) {
   var L = st.L;
   var y = st.viewY, m = st.viewM;
   var first = st.firstDay;
@@ -166,182 +166,192 @@ function dpView(el) {
   };
 }
 
-function dpRender(el) {
-  var st = dpState(el);
-  st.$popup.html(AH.tpl.datepicker_month(dpView(el)));
-  st.$input.attr("aria-activedescendant", st.focus ? el.id + "-d" + iso(st.focus) : null);
+function dpRender(c) {
+  var st = c.st, el = c.element;
+  st.popup.innerHTML = AH.tpl.datepicker_month(dpView(el, st));
+  if (st.focus) {
+    st.input.setAttribute("aria-activedescendant", el.id + "-d" + iso(st.focus));
+  } else {
+    st.input.removeAttribute("aria-activedescendant");
+  }
 }
 
 // popup.cljs position!: at least 280px wide (the viewport minus a
 // margin on small screens); AH.float keeps it fixed under the field (or
 // above, when there is no room), inside the viewport and following
 // scrolls, so clipping ancestors do not cut it.
-function dpPosition(el) {
-  var st = dpState(el);
-  var w = Math.min(Math.max(el.getBoundingClientRect().width, 280), window.innerWidth - 16);
-  st.$popup.css({ width: w + "px" });
-  if (st.float) { st.float.update(); } else { st.float = AH.float(st.$popup[0], el); }
+function dpPosition(c) {
+  var st = c.st;
+  var w = Math.min(Math.max(c.element.getBoundingClientRect().width, 280), window.innerWidth - 16);
+  st.popup.style.width = w + "px";
+  if (st.float) { st.float.update(); } else { st.float = AH.float(st.popup, c.element); }
 }
 
-function dpBlocked(el, $el) {
-  return $el.hasClass("ah-datepicker-disabled") || $el.hasClass("ah-datepicker-readonly");
+function dpBlocked(el) {
+  return el.classList.contains("ah-datepicker-disabled") || el.classList.contains("ah-datepicker-readonly");
 }
 
-function dpOpen(el, $el) {
-  var st = dpState(el);
-  if (st.open || (dpBlocked(el, $el) && !st.inline)) { return; }
+function dpOpen(c) {
+  var st = c.st, el = c.element;
+  if (st.open || (dpBlocked(el) && !st.inline)) { return; }
   st.pending = null;
   st.focus = (st.range ? st.from : st.value) || today();
   st.viewY = st.focus.getFullYear();
   st.viewM = st.focus.getMonth();
   st.open = true;
-  dpRender(el);
+  dpRender(c);
   if (st.inline) { return; }        // always shown, in the flow
-  st.$popup.show();
-  dpPosition(el);
-  $el.addClass("ah-datepicker-open");
-  st.$input.attr("aria-expanded", "true");
-  $(document).on("mousedown" + st.ns, function (e) {
-    if (outside(el, e)) { dpClose(el, $el); }
-  });
-  $el.trigger("ah:open");
+  st.popup.style.display = "block";
+  dpPosition(c);
+  el.classList.add("ah-datepicker-open");
+  st.input.setAttribute("aria-expanded", "true");
+  st.outside = new AbortController();
+  document.addEventListener("mousedown", function (e) {
+    if (outside(el, e)) { dpClose(c); }
+  }, { signal: st.outside.signal });
+  c.fire("ah:open");
 }
 
-function dpClose(el, $el) {
-  var st = dpState(el);
+function dpStop(st) {
+  if (st.float) { st.float.stop(); st.float = null; }
+  if (st.outside) { st.outside.abort(); st.outside = null; }
+}
+
+function dpClose(c) {
+  var st = c.st, el = c.element;
   if (!st.open || st.inline) { return; }
   st.open = false;
   st.pending = null;
-  st.$popup.hide();
-  $el.removeClass("ah-datepicker-open");
-  st.$input.attr("aria-expanded", "false").removeAttr("aria-activedescendant");
-  if (st.float) { st.float.stop(); st.float = null; }
-  $(document).off(st.ns);
-  $el.trigger("ah:close");
+  st.popup.style.display = "none";
+  el.classList.remove("ah-datepicker-open");
+  st.input.setAttribute("aria-expanded", "false");
+  st.input.removeAttribute("aria-activedescendant");
+  dpStop(st);
+  c.fire("ah:close");
 }
 
-function dpCommit(el, $el, fire) {
-  var st = dpState(el);
-  st.$input.val(dpDisplay(st));
-  publish(el, $el, dpIsoValue(st), fire);
+function dpCommit(c, fire) {
+  var st = c.st;
+  st.input.value = dpDisplay(st);
+  publish(c, dpIsoValue(st), fire);
 }
 
-function dpSetFocus(el, d) {
-  var st = dpState(el);
+function dpSetFocus(c, d) {
+  var st = c.st;
   st.focus = d;
   st.viewY = d.getFullYear();
   st.viewM = d.getMonth();
-  dpRender(el);
-  if (st.open && !st.inline) { dpPosition(el); }
+  dpRender(c);
+  if (st.open && !st.inline) { dpPosition(c); }
 }
 
-function dpNavMonths(el, n) {
-  var st = dpState(el);
+function dpNavMonths(c, n) {
+  var st = c.st;
   var f = st.focus && st.focus.getMonth() === st.viewM ? st.focus : mk(st.viewY, st.viewM, 1);
-  dpSetFocus(el, addMonths(f, n));
+  dpSetFocus(c, addMonths(f, n));
 }
 
 // calendar.cljs handle-day-click: single selects and closes; range takes
 // a start, then an end (sorted), then closes.
-function dpPick(el, $el, d) {
-  var st = dpState(el);
-  if (!d || dpDisabled(st, d) || dpBlocked(el, $el)) { return; }
+function dpPick(c, d) {
+  var st = c.st;
+  if (!d || dpDisabled(st, d) || dpBlocked(c.element)) { return; }
   if (!st.range) {
     st.value = d;
     st.focus = d;
-    dpCommit(el, $el, true);
-    dpClose(el, $el);
-    if (st.inline) { dpRender(el); }
+    dpCommit(c, true);
+    dpClose(c);
+    if (st.inline) { dpRender(c); }
   } else if (!st.pending) {
     st.pending = d;
     st.focus = d;
-    dpRender(el);
+    dpRender(c);
   } else {
     var a = st.pending;
     st.from = d < a ? d : a;
     st.to = d < a ? a : d;
     st.pending = null;
-    dpCommit(el, $el, true);
-    dpClose(el, $el);
-    if (st.inline) { dpRender(el); }
+    dpCommit(c, true);
+    dpClose(c);
+    if (st.inline) { dpRender(c); }
   }
 }
 
-function dpHover(el, d) {
-  var st = dpState(el);
+function dpHover(c, d) {
+  var st = c.st;
   if (!st.range || !st.pending) { return; }
   var a = st.pending < d ? st.pending : d;
   var b = st.pending < d ? d : st.pending;
-  st.$popup.find(".ah-datepicker-day[data-date]").each(function () {
-    var c = parse(this.getAttribute("data-date"));
-    $(this).toggleClass("ah-datepicker-day-hover-range", c >= a && c <= b);
+  st.popup.querySelectorAll(".ah-datepicker-day[data-date]").forEach(function (cell) {
+    var x = parse(cell.getAttribute("data-date"));
+    cell.classList.toggle("ah-datepicker-day-hover-range", x >= a && x <= b);
   });
 }
 
 // popup.cljs handle-keydown. Up/Down move a week (sigil moves a day),
 // Shift+PageUp/PageDown a year.
-function dpKey(el, $el, e) {
-  var st = dpState(el);
-  if (dpBlocked(el, $el)) { return; }
+function dpKey(c, e) {
+  var st = c.st, el = c.element;
+  if (dpBlocked(el)) { return; }
   var open = st.open;
   var f = st.focus || today();
   switch (e.key) {
     case "ArrowDown":
       e.preventDefault();
-      if (e.altKey || !open) { dpOpen(el, $el); } else { dpSetFocus(el, addDays(f, 7)); }
+      if (e.altKey || !open) { dpOpen(c); } else { dpSetFocus(c, addDays(f, 7)); }
       break;
     case "ArrowUp":
       if (!open) { return; }
       e.preventDefault();
-      if (e.altKey) { dpClose(el, $el); } else { dpSetFocus(el, addDays(f, -7)); }
+      if (e.altKey) { dpClose(c); } else { dpSetFocus(c, addDays(f, -7)); }
       break;
     case "ArrowLeft":
-      if (open) { e.preventDefault(); dpSetFocus(el, addDays(f, -1)); }
+      if (open) { e.preventDefault(); dpSetFocus(c, addDays(f, -1)); }
       break;
     case "ArrowRight":
-      if (open) { e.preventDefault(); dpSetFocus(el, addDays(f, 1)); }
+      if (open) { e.preventDefault(); dpSetFocus(c, addDays(f, 1)); }
       break;
     case "Enter":
     case " ":
       e.preventDefault();
-      if (open) { dpPick(el, $el, f); } else { dpOpen(el, $el); }
+      if (open) { dpPick(c, f); } else { dpOpen(c); }
       break;
     case "Escape":
-      if (open) { e.preventDefault(); dpClose(el, $el); }
+      if (open) { e.preventDefault(); dpClose(c); }
       break;
     case "Tab":
-      dpClose(el, $el);
+      dpClose(c);
       break;
     case "PageUp":
-      if (open) { e.preventDefault(); dpNavMonths(el, e.shiftKey ? -12 : -1); }
+      if (open) { e.preventDefault(); dpNavMonths(c, e.shiftKey ? -12 : -1); }
       break;
     case "PageDown":
-      if (open) { e.preventDefault(); dpNavMonths(el, e.shiftKey ? 12 : 1); }
+      if (open) { e.preventDefault(); dpNavMonths(c, e.shiftKey ? 12 : 1); }
       break;
     case "Home":
-      if (open) { e.preventDefault(); dpSetFocus(el, mk(st.viewY, st.viewM, 1)); }
+      if (open) { e.preventDefault(); dpSetFocus(c, mk(st.viewY, st.viewM, 1)); }
       break;
     case "End":
-      if (open) { e.preventDefault(); dpSetFocus(el, mk(st.viewY, st.viewM + 1, 0)); }
+      if (open) { e.preventDefault(); dpSetFocus(c, mk(st.viewY, st.viewM + 1, 0)); }
       break;
     case "Backspace":
     case "Delete":
-      if ($el.hasClass("ah-datepicker-clearable")) { e.preventDefault(); dpClear(el, $el, true); }
+      if (el.classList.contains("ah-datepicker-clearable")) { e.preventDefault(); dpClear(c, true); }
       break;
     default:
       break;
   }
 }
 
-function dpClear(el, $el, fire) {
-  var st = dpState(el);
+function dpClear(c, fire) {
+  var st = c.st;
   st.value = st.from = st.to = st.pending = null;
-  dpCommit(el, $el, fire);
-  if (st.open) { dpRender(el); }
+  dpCommit(c, fire);
+  if (st.open) { dpRender(c); }
 }
 
-function dpSet(el, $el, v) {
-  var st = dpState(el);
+function dpSet(c, v) {
+  var st = c.st;
   if (Array.isArray(v)) { v = v.join(","); }
   v = v || "";
   if (st.range) {
@@ -353,12 +363,13 @@ function dpSet(el, $el, v) {
     st.value = parse(v);
   }
   st.pending = null;
-  dpCommit(el, $el, false);
-  if (st.open) { dpRender(el); }
+  dpCommit(c, false);
+  if (st.open) { dpRender(c); }
 }
 
-AH.define("datepicker", {
-  init: function (el, $el) {
+AH.register("datepicker", class extends AH.Controller {
+  setup() {
+    var c = this, el = this.element;
     ensureId(el, "ah-dp");
     var labels = {};
     try { labels = JSON.parse(el.getAttribute("data-ah-labels") || "{}"); } catch (err) { labels = {}; }
@@ -366,10 +377,9 @@ AH.define("datepicker", {
     (el.getAttribute("data-ah-disabled-dates") || "").split(",").forEach(function (d) {
       if (d) { off[d] = true; }
     });
-    var st = {
-      ns: ".ahdp" + (++seq),
-      $input: $el.find("input.ah-datepicker-input"),
-      $popup: $el.children(".ah-datepicker-popup"),
+    var st = this.st = {
+      input: el.querySelector("input.ah-datepicker-input"),
+      popup: el.querySelector(":scope > .ah-datepicker-popup"),
       range: el.hasAttribute("data-ah-range"),
       fmt: el.getAttribute("data-ah-format") || "yyyy-MM-dd",
       min: parse(el.getAttribute("data-ah-min")),
@@ -379,13 +389,13 @@ AH.define("datepicker", {
       weekNumbers: el.hasAttribute("data-ah-week-numbers"),
       weekends: el.hasAttribute("data-ah-weekends"),
       otherMonth: el.getAttribute("data-ah-other-month-days") !== "false",
-      L: $.extend({}, DEFAULT_LABELS, labels),
-      inline: $el.hasClass("ah-datepicker-inline"),
-      open: false, value: null, from: null, to: null, pending: null, focus: null
+      L: Object.assign({}, DEFAULT_LABELS, labels),
+      inline: el.classList.contains("ah-datepicker-inline"),
+      open: false, value: null, from: null, to: null, pending: null, focus: null,
+      float: null, outside: null
     };
-    $.data(el, "ah-dp", st);
-    st.$popup.attr("id", el.id + "-popup");
-    st.$input.attr("aria-controls", el.id + "-popup");
+    st.popup.id = el.id + "-popup";
+    st.input.setAttribute("aria-controls", el.id + "-popup");
     var v = el.getAttribute("data-ah-value") || "";
     if (st.range) {
       var p = v.split(",");
@@ -395,61 +405,60 @@ AH.define("datepicker", {
       st.value = parse(v);
     }
 
-    st.$input
-      .on("focus" + NS, function () { $el.addClass("ah-datepicker-focused"); })
-      .on("blur" + NS, function () { $el.removeClass("ah-datepicker-focused"); })
-      .on("click" + NS, function (e) {
-        e.preventDefault();
-        if (st.open) { dpClose(el, $el); } else { dpOpen(el, $el); }
-      })
-      .on("keydown" + NS, function (e) { dpKey(el, $el, e); })
-      // the text field is internal: only the root reports changes
-      .on("change" + NS + " input" + NS, function (e) { e.stopPropagation(); });
-    $el.on("click" + NS, ".ah-datepicker-trigger", function (e) {
+    var input = st.input, popup = st.popup;
+    this.listen(input, "focus", function () { el.classList.add("ah-datepicker-focused"); });
+    this.listen(input, "blur", function () { el.classList.remove("ah-datepicker-focused"); });
+    this.listen(input, "click", function (e) {
       e.preventDefault();
-      e.stopPropagation();
-      st.$input.trigger("focus");
-      if (st.open) { dpClose(el, $el); } else { dpOpen(el, $el); }
+      if (st.open) { dpClose(c); } else { dpOpen(c); }
     });
-    $el.on("mousedown" + NS, ".ah-datepicker-clear", function (e) { e.preventDefault(); });
-    $el.on("click" + NS, ".ah-datepicker-clear", function (e) {
+    this.listen(input, "keydown", function (e) { dpKey(c, e); });
+    // the text field is internal: only the root reports changes
+    var stop = function (e) { e.stopPropagation(); };
+    this.listen(input, "change", stop);
+    this.listen(input, "input", stop);
+    this.delegate("click", ".ah-datepicker-trigger", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      dpClear(el, $el, true);
+      input.focus();
+      if (st.open) { dpClose(c); } else { dpOpen(c); }
+    });
+    this.delegate("mousedown", ".ah-datepicker-clear", function (e) { e.preventDefault(); });
+    this.delegate("click", ".ah-datepicker-clear", function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      dpClear(c, true);
     });
     // Keep the focus in the text field while using the calendar.
-    st.$popup.on("mousedown" + NS, function (e) {
+    this.listen(popup, "mousedown", function (e) {
       e.preventDefault();
-      if (st.inline && !dpBlocked(el, $el)) { st.$input[0].focus(); }
-    })
-      .on("click" + NS, function (e) { e.stopPropagation(); })
-      .on("click" + NS, ".ah-datepicker-day[data-date]", function () {
-        dpPick(el, $el, parse(this.getAttribute("data-date")));
-      })
-      .on("mouseenter" + NS, ".ah-datepicker-day[data-date]", function () {
-        dpHover(el, parse(this.getAttribute("data-date")));
-      })
-      .on("click" + NS, "[data-nav]", function () {
-        dpNavMonths(el, parseInt(this.getAttribute("data-nav"), 10));
-      })
-      .on("click" + NS, ".ah-datepicker-today-btn", function () { dpSetFocus(el, today()); });
-    if (st.inline) { dpOpen(el, $el); }
-  },
-  destroy: function (el) {
-    var st = dpState(el);
-    if (st) {
-      if (st.float) { st.float.stop(); st.float = null; }
-      $(document).off(st.ns);
-      st.$popup.off(NS);
-    }
-  },
-  methods: {
-    // setValue("2026-09-29"), setValue("from,to") or setValue([from, to]);
-    // no change event (the server set it).
-    setValue: function (el, $el, v) { dpSet(el, $el, v); },
-    getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
-    clear: function (el, $el) { dpClear(el, $el, true); },
-    open: function (el, $el) { dpOpen(el, $el); },
-    close: function (el, $el) { dpClose(el, $el); }
+      if (st.inline && !dpBlocked(el)) { input.focus(); }
+    });
+    // The popup's own delegated clicks run first, then it stops the click.
+    this.delegate("click", ".ah-datepicker-day[data-date]", function (e, day) {
+      dpPick(c, parse(day.getAttribute("data-date")));
+    }, popup);
+    this.delegate("click", "[data-nav]", function (e, b) {
+      dpNavMonths(c, parseInt(b.getAttribute("data-nav"), 10));
+    }, popup);
+    this.delegate("click", ".ah-datepicker-today-btn", function () { dpSetFocus(c, today()); }, popup);
+    this.listen(popup, "click", function (e) { e.stopPropagation(); });
+    // mouseenter on a day: mouseover from outside that day
+    this.delegate("mouseover", ".ah-datepicker-day[data-date]", function (e, day) {
+      if (e.relatedTarget && day.contains(e.relatedTarget)) { return; }
+      dpHover(c, parse(day.getAttribute("data-date")));
+    }, popup);
+    if (st.inline) { dpOpen(this); }
   }
+
+  teardown() { if (this.st) { dpStop(this.st); } }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  // setValue("2026-09-29"), setValue("from,to") or setValue([from, to]);
+  // no change event (the server set it).
+  setValue(v) { dpSet(this, v); }
+  getValue() { return this.element.getAttribute("data-ah-value") || ""; }
+  clear() { dpClear(this, true); }
+  open() { dpOpen(this); }
+  close() { dpClose(this); }
 });

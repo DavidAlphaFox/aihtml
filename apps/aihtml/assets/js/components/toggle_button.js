@@ -1,28 +1,30 @@
 /* toggle-button: a click toggles aria-pressed / data-ah-value and fires
- * change on the root (designs/04-components.md). */
-import $ from "jquery";
+ * change on the root (detail: "true" | "false") (designs/04-components.md). */
 import AH from "../core.js";
 import "./_lib_button.js";
 
-var NS = AH.NS;
 var L = AH.lib.button;
 
-function setPressed(el, $el, on, fire) {
-  var v = on ? "true" : "false";
-  $el.toggleClass("ah-btn-toggled", on).attr("aria-pressed", v).val(v);
-  L.setValue($el, v, fire);
-}
-
-AH.define("toggle-button", {
-  init: function (el, $el) {
-    $el.on("click" + NS, function () {
-      if (el.disabled) { return; }
-      setPressed(el, $el, $el.attr("aria-pressed") !== "true", true);
+AH.register("toggle-button", class extends AH.Controller {
+  setup() {
+    this.listen(this.element, "click", () => {
+      if (this.element.disabled) { return; }
+      this.press(!this.pressed(), true);
     });
-  },
-  methods: {
-    toggle: function (el, $el) { setPressed(el, $el, $el.attr("aria-pressed") !== "true", false); },
-    setValue: function (el, $el, v) { setPressed(el, $el, v === true || v === "true", false); },
-    getValue: function (el, $el) { return $el.attr("aria-pressed") === "true"; }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  toggle() { this.press(!this.pressed(), false); }
+  setValue(v) { this.press(v === true || v === "true", false); }
+  getValue() { return this.pressed(); }
+
+  pressed() { return this.element.getAttribute("aria-pressed") === "true"; }
+
+  press(on, fire) {
+    var el = this.element, v = on ? "true" : "false";
+    el.classList.toggle("ah-btn-toggled", on);
+    el.setAttribute("aria-pressed", v);
+    if ("value" in el) { el.value = v; }
+    L.setValue(el, v, fire);
   }
 });

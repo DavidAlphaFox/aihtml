@@ -1,7 +1,7 @@
 /* command: the command behaviour on the markup the server renders.
  * SERVER holds renders of aihtml_command:command/3, generated from Erlang;
  * regenerate them if the markup changes. */
-(function (T, $, AH) {
+(function (T, AH) {
   "use strict";
 
   var SERVER =
@@ -11,89 +11,133 @@
   }
 ;
 
-  function mount(fx, name) {
+  async function mount(fx, name) {
     fx.innerHTML = SERVER[name];
-    AH.mount(fx);
+    await T.ready(fx);
     return fx.querySelector("[data-ah]");
   }
 
-  function key(target, k, extra) {
-    $(target).trigger($.Event("keydown", $.extend({ key: k }, extra || {})));
-  }
-
+  // the value (or the event's detail) each time type fires on el itself
   function events(el, type) {
     var got = [];
-    $(el).on(type, function (e, d) { if (e.target === el) { got.push(d === undefined ? el.getAttribute("data-ah-value") : d); } });
+    el.addEventListener(type, function (e) {
+      if (e.target === el) { got.push(e.detail == null ? el.getAttribute("data-ah-value") : e.detail); }
+    });
     return got;
+  }
+
+  function q(el, sel) { return el.querySelector(sel); }
+  function qa(el, sel) { return Array.prototype.slice.call(el.querySelectorAll(sel)); }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms || 0); }); }
+
+  // take el out of the page (its controller tears down) and put it back
+  async function reinsert(fx, el) {
+    fx.removeChild(el);
+    await wait(0);
+    fx.appendChild(el);
+    await T.ready(fx);
   }
 
   // ------------------------------------------------------------------ command
 
   function visible(el) {
-    return $(el).find(".ah-command__item").not("[hidden]").map(function () {
-      return this.getAttribute("data-value");
-    }).get();
+    return qa(el, ".ah-command__item:not([hidden])").map(function (n) {
+      return n.getAttribute("data-value");
+    });
   }
-  function active(el) { return $(el).find(".ah-command__item[data-active=true]").attr("data-value"); }
-  function type(el, q) { $(el).find(".ah-command__input").val(q).trigger("input"); }
+  function active(el) {
+    var a = q(el, ".ah-command__item[data-active=true]");
+    return a ? a.getAttribute("data-value") : undefined;
+  }
+  function type(el, text) {
+    var input = q(el, ".ah-command__input");
+    input.value = text;
+    T.fire(input, "input");
+  }
 
-  T.test("command: filters by value, label and description", function (fx) {
-    var el = mount(fx, "c");
+  T.test("command: filters by value, label and description", async function (fx) {
+    var el = await mount(fx, "c");
     var queries = events(el, "ah:query");
     T.eq(visible(el), ["new", "open", "theme", "side"]);
     type(el, "DARK");
     T.eq(visible(el), ["theme"]);
-    T.ok($(el).find(".ah-command__group").eq(0).prop("hidden"), "empty group hidden");
-    T.ok($(el).find(".ah-command__empty").prop("hidden"));
+    T.ok(qa(el, ".ah-command__group")[0].hidden, "empty group hidden");
+    T.ok(q(el, ".ah-command__empty").hidden);
     T.eq(active(el), "theme");
     type(el, "zzz");
     T.eq(visible(el), []);
-    T.ok(!$(el).find(".ah-command__empty").prop("hidden"), "empty text shown");
-    T.eq($(el).find(".ah-command__input").attr("aria-activedescendant"), undefined);
+    T.ok(!q(el, ".ah-command__empty").hidden, "empty text shown");
+    T.eq(q(el, ".ah-command__input").getAttribute("aria-activedescendant"), null);
     T.eq(queries, ["DARK", "zzz"]);
   });
 
-  T.test("command: arrows, Enter selects, disabled is skipped by Enter", function (fx) {
-    var el = mount(fx, "c");
-    var inp = $(el).find(".ah-command__input")[0];
+  T.test("command: arrows, Enter selects, disabled is skipped by Enter", async function (fx) {
+    var el = await mount(fx, "c");
+    var inp = q(el, ".ah-command__input");
     var selects = events(el, "ah:select");
     T.eq(active(el), "new");
-    key(inp, "ArrowDown");
+    T.key(inp, "ArrowDown");
     T.eq(active(el), "open");
     T.eq(inp.getAttribute("aria-activedescendant"), "cmd-item-1");
-    key(inp, "Enter");
+    T.key(inp, "Enter");
     T.eq(selects.length, 0, "disabled");
-    key(inp, "ArrowUp");
-    key(inp, "ArrowUp");
+    T.key(inp, "ArrowUp");
+    T.key(inp, "ArrowUp");
     T.eq(active(el), "side", "wraps");
-    key(inp, "Enter");
+    T.key(inp, "Enter");
     T.eq(selects, ["side"]);
     T.eq(el.getAttribute("data-ah-value"), "side");
-    $(el).find("[data-value=theme]").trigger("click");
+    q(el, "[data-value=theme]").click();
     T.eq(selects, ["side", "theme"]);
   });
 
-  T.test("command: palette opens, focuses, closes on Escape / select / backdrop", function (fx) {
-    var el = mount(fx, "p");
+  T.test("command: the pointer over an item makes it active; setQuery filters", async function (fx) {
+    var el = await mount(fx, "c");
+    var queries = events(el, "ah:query");
+    T.fire(q(el, "[data-value=side] .ah-command__item-label"), "mouseover",
+           { relatedTarget: q(el, ".ah-command__input") });
+    T.eq(active(el), "side");
+    AH.invoke(el, "setQuery", "the");
+    T.eq(visible(el), ["theme"]);
+    T.eq(queries, ["the"]);
+  });
+
+  T.test("command: palette opens, focuses, closes on Escape / select / backdrop", async function (fx) {
+    var el = await mount(fx, "p");
     var ov = el.parentNode;
     T.ok(ov.hidden);
     AH.invoke(el, "open");
     T.ok(!ov.hidden);
-    T.eq(document.activeElement, $(el).find(".ah-command__input")[0]);
+    T.eq(document.activeElement, q(el, ".ah-command__input"));
     type(el, "be");
     T.eq(visible(el), ["Beta"]);
-    key(document.activeElement, "Escape");
+    T.key(document.activeElement, "Escape");
     T.ok(ov.hidden);
     AH.invoke(el, "open");
     T.eq(visible(el), ["Alpha", "Beta"], "query reset on open");
-    key($(el).find(".ah-command__input")[0], "Enter");
+    T.key(q(el, ".ah-command__input"), "Enter");
     T.ok(ov.hidden, "closed after select");
-    $(document).trigger($.Event("keydown", { key: "k", ctrlKey: true }));
+    T.key(document, "k", { ctrlKey: true });
     T.ok(!ov.hidden, "hotkey opens");
-    $(ov).trigger($.Event("mousedown", { target: ov }));
+    T.fire(ov, "mousedown");
     T.ok(ov.hidden, "backdrop closes");
     AH.destroy(fx);
-    $(document).trigger($.Event("keydown", { key: "k", ctrlKey: true }));
+    T.key(document, "k", { ctrlKey: true });
     T.ok(ov.hidden, "hotkey unbound on destroy");
   });
-})(window.AHTest, window.jQuery, window.AH);
+
+  T.test("command: removed and inserted again, the hotkey works once", async function (fx) {
+    var el = await mount(fx, "p");
+    var ov = el.parentNode, opens = 0;
+    el.addEventListener("ah:open", function () { opens++; });
+    await reinsert(fx, ov);
+    T.key(document, "k", { ctrlKey: true });
+    T.ok(!ov.hidden, "hotkey opens");
+    T.eq(opens, 1, "one hotkey listener");
+    AH.invoke(el, "close");
+    fx.innerHTML = "";
+    await wait(0);
+    T.key(document, "k", { ctrlKey: true });
+    T.eq(opens, 1, "hotkey unbound once removed");
+  });
+})(window.AHTest, window.AH);

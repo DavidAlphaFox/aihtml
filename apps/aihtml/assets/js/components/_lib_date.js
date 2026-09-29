@@ -4,7 +4,6 @@
  * Dates are day numbers (days since 1970-01-01) and times minutes since
  * day 0, computed with UTC arithmetic: event times are local wall times
  * without a zone, so there is no DST or zone shifting. */
-import $ from "jquery";
 import AH from "../core.js";
 
 var DAY = 1440;

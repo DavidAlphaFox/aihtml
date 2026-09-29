@@ -1,16 +1,15 @@
 /* Behaviour of the activity bar (designs/04-components.md), ported from
  * sigil's layout/activity_bar. The value (the active item) is kept in
  * data-ah-value on the root, mirrored into a hidden input, and "change"
- * fires when the user changes it. Methods called by the server
- * (AH.invoke / aihtml_action:call) do not fire "change". */
-import $ from "jquery";
+ * fires when the user changes it; ah:select fires on every user choice,
+ * detail = the item's id. Methods called by the server (AH.invoke /
+ * aihtml_action:call) do not fire "change". */
 import AH from "../core.js";
-
-var NS = AH.NS;
 
 function setValue(el, v) {
   el.setAttribute("data-ah-value", v);
-  $(el).children("input[type=hidden]").val(v);
+  const hidden = el.querySelector(":scope > input[type=hidden]");
+  if (hidden) { hidden.value = v; }
 }
 
 // ------------------------------------------------------------------
@@ -18,60 +17,68 @@ function setValue(el, v) {
 // ------------------------------------------------------------------
 
 function barItems(el) {
-  return $(el).children(".ah-activity-bar__item");
+  return Array.from(el.querySelectorAll(":scope > .ah-activity-bar__item"));
+}
+
+function enabled(el) {
+  return barItems(el).filter(function (it) { return it.getAttribute("data-disabled") !== "true"; });
 }
 
 function barActivate(el, id) {
-  barItems(el).each(function () {
-    var on = this.getAttribute("data-id") === String(id);
-    this.setAttribute("data-active", String(on));
-    this.setAttribute("aria-selected", String(on));
-    this.setAttribute("tabindex", on ? "0" : "-1");
+  const items = barItems(el);
+  items.forEach(function (it) {
+    const on = it.getAttribute("data-id") === String(id);
+    it.setAttribute("data-active", String(on));
+    it.setAttribute("aria-selected", String(on));
+    it.setAttribute("tabindex", on ? "0" : "-1");
   });
   // keep one item reachable with Tab when nothing is active
-  var $items = barItems(el);
-  if (!$items.filter("[tabindex=0]").length) {
-    $items.not("[data-disabled=true]").first().attr("tabindex", "0");
+  if (!items.some(function (it) { return it.getAttribute("tabindex") === "0"; })) {
+    const first = enabled(el)[0];
+    if (first) { first.setAttribute("tabindex", "0"); }
   }
   setValue(el, id == null ? "" : String(id));
 }
 
-function barChoose(el, $el, item) {
-  if (item.getAttribute("data-disabled") === "true") { return; }
-  var id = item.getAttribute("data-id");
-  var changed = el.getAttribute("data-ah-value") !== id;
-  barActivate(el, id);
-  $el.trigger("ah:select", [id]);
-  if (changed) { $el.trigger("change"); }
-}
-
-AH.define("activity-bar", {
-  init: function (el, $el) {
-    $el.on("click" + NS, ".ah-activity-bar__item", function () {
-      barChoose(el, $el, this);
+AH.register("activity-bar", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    const self = this;
+    this.delegate("click", ".ah-activity-bar__item", function (e, item) {
+      self.choose(item);
     });
     // WAI-ARIA tabs: arrows move and activate, Home / End jump
-    $el.on("keydown" + NS, ".ah-activity-bar__item", function (e) {
-      var $en = barItems(el).not("[data-disabled=true]");
-      var i = $en.index(this);
-      var next;
+    this.delegate("keydown", ".ah-activity-bar__item", function (e, item) {
+      const en = enabled(el);
+      const i = en.indexOf(item);
+      let next;
       switch (e.key) {
-        case "ArrowDown": case "ArrowRight": next = (i + 1) % $en.length; break;
-        case "ArrowUp": case "ArrowLeft": next = (i - 1 + $en.length) % $en.length; break;
+        case "ArrowDown": case "ArrowRight": next = (i + 1) % en.length; break;
+        case "ArrowUp": case "ArrowLeft": next = (i - 1 + en.length) % en.length; break;
         case "Home": next = 0; break;
-        case "End": next = $en.length - 1; break;
+        case "End": next = en.length - 1; break;
         default: return;
       }
       e.preventDefault();
-      var t = $en[next];
+      const t = en[next];
       if (t) {
         t.focus();
-        barChoose(el, $el, t);
+        self.choose(t);
       }
     });
-  },
-  methods: {
-    setValue: function (el, $el, v) { barActivate(el, v); },
-    getValue: function (el) { return el.getAttribute("data-ah-value"); }
   }
+
+  choose(item) {
+    const el = this.element;
+    if (item.getAttribute("data-disabled") === "true") { return; }
+    const id = item.getAttribute("data-id");
+    const changed = el.getAttribute("data-ah-value") !== id;
+    barActivate(el, id);
+    this.fire("ah:select", id);
+    if (changed) { this.fire("change"); }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke); they fire no change
+  setValue(v) { barActivate(this.element, v); }
+  getValue() { return this.element.getAttribute("data-ah-value"); }
 });

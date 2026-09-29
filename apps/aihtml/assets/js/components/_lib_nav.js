@@ -1,46 +1,76 @@
 /* Shared by the navigation behaviours (menu, navbar, sidenav, toolbar,
-   splitter, listmenu): AH.lib.nav. Ported from sigil's
-   components/layout/*.cljs. */
-import $ from "jquery";
+   splitter, listmenu, tabs): AH.lib.nav. Ported from sigil's
+   components/layout/*.cljs.
+
+   API (elements, never jQuery objects):
+     visible(el)                         laid out (jQuery's :visible)
+     setValue(el, v[, eventName])        data-ah-value, the hidden input, then
+                                         a native bubbling event on el
+     byKey(scope, sel, attr, key)        the elements under scope (an element
+                                         or an array of them) matching sel
+                                         whose attr equals key (an array)
+     hover(ctrl, sel, enter, leave[, root])
+                                         delegated mouseenter / mouseleave on
+                                         root (default ctrl.element; ctrl is
+                                         the AH.Controller), as
+                                         jQuery's .on("mouseenter", sel, fn):
+                                         enter(match, e) / leave(match, e) */
 import AH from "../core.js";
-
-var NS = AH.NS;
-var uid = 0;
-
-// A per-instance namespace for document/window handlers, which
-// AH.destroy does not remove by itself.
-function instanceNs(el) {
-  var ns = $.data(el, "ah-ns");
-  if (!ns) {
-    ns = NS + "-nav" + (++uid);
-    $.data(el, "ah-ns", ns);
-  }
-  return ns;
-}
 
 function visible(el) {
   return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
 }
 
-// Value contract: data-ah-value on the root, the hidden input, then a
-// jQuery event (change or input) on the root.
-function setValue($el, v, eventName) {
+function setValue(el, v, eventName) {
   v = v === null || v === undefined ? "" : String(v);
-  $el.attr("data-ah-value", v);
-  $el.children("input[type=hidden]").val(v);
-  if (eventName) { $el.trigger(eventName); }
+  el.setAttribute("data-ah-value", v);
+  const hidden = el.querySelector(":scope > input[type=hidden]");
+  if (hidden) { hidden.value = v; }
+  if (eventName) {
+    el.dispatchEvent(new CustomEvent(eventName, { bubbles: true, cancelable: true }));
+  }
 }
 
-function byKey($scope, sel, attr, key) {
-  return $scope.find(sel).filter(function () {
-    return this.getAttribute(attr) === String(key);
+function byKey(scope, sel, attr, key) {
+  const roots = Array.isArray(scope) ? scope : [scope];
+  const out = [];
+  roots.forEach(function (root) {
+    root.querySelectorAll(sel).forEach(function (n) {
+      if (n.getAttribute(attr) === String(key)) { out.push(n); }
+    });
   });
+  return out;
+}
+
+// mouseover / mouseout that cross the boundary of a match are its
+// mouseenter / mouseleave; nested matches each get theirs, innermost
+// first (as jQuery's delegation does).
+function hover(ctrl, sel, enter, leave, scope) {
+  const root = scope || ctrl.element;
+  const edges = function (e) {
+    const out = [];
+    const rel = e.relatedTarget;
+    for (let n = e.target; n && n !== root && n.nodeType === 1; n = n.parentNode) {
+      if (n.matches(sel) && !(rel && (rel === n || n.contains(rel)))) { out.push(n); }
+    }
+    return root.contains(e.target) ? out : [];
+  };
+  if (enter) {
+    ctrl.listen(root, "mouseover", function (e) {
+      edges(e).forEach(function (hit) { enter(hit, e); });
+    });
+  }
+  if (leave) {
+    ctrl.listen(root, "mouseout", function (e) {
+      edges(e).forEach(function (hit) { leave(hit, e); });
+    });
+  }
 }
 
 AH.lib = AH.lib || {};
 AH.lib.nav = {
-  instanceNs: instanceNs,
   visible: visible,
   setValue: setValue,
-  byKey: byKey
+  byKey: byKey,
+  hover: hover
 };

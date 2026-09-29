@@ -6,7 +6,7 @@
 %%% it (see aihtml_lib_overlay for the ways to drive an overlay: opens/1,
 %%% toggles/1, closes/0,1,2 in Attrs, aihtml_lib_overlay:open/2 and
 %%% close/2 in an action, AH.invoke in the browser). Opening and closing
-%%% fire the jQuery events `ah:open' and `ah:close' on the component root;
+%%% fire the DOM events `ah:open' and `ah:close' on the component root;
 %%% `ah:close' carries `{result}' (the `closes/2' result, or null).
 %%%
 %%% Literal (binary) classes in `Css' go on the panel. A record's

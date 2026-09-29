@@ -1,24 +1,30 @@
 /* progress-circle behaviour (designs/04-components.md): setValue /
-   getValue. */
-import $ from "jquery";
+   getValue. "change" and, at 100, "ah:complete" with detail
+   {previous, value}. */
 import AH from "../core.js";
 import "./_lib_display.js";
 import "./_lib_progress.js";
 
-var num = AH.lib.display.num, clamp = AH.lib.display.clamp;
-var CIRC = 2 * Math.PI * 45;
+const { num, clamp } = AH.lib.display;
+const CIRC = 2 * Math.PI * 45;
 
-AH.define("progress-circle", {
-  methods: {
-    setValue: function (el, $el, value) {
-      var old = num($el.attr("data-ah-value"), 0);
-      var v = Math.trunc(clamp(num(value, 0), 0, 100));
-      $el.removeClass("ah-progress-circle--indeterminate").removeAttr("aria-busy");
-      $el.find(".ah-progress-circle-fill").attr("stroke-dashoffset", CIRC * (1 - v / 100));
-      $el.find(".ah-progress-circle-value").text(v + "%");
-      $el.attr({ "data-ah-value": v, "aria-valuenow": v, "aria-valuetext": v + "%" });
-      AH.lib.progress.fire($el, old, v, 100);
-    },
-    getValue: function (el, $el) { return num($el.attr("data-ah-value"), 0); }
+AH.register("progress-circle", class extends AH.Controller {
+  // methods (aihtml_action:call/4, AH.invoke)
+  setValue(value) {
+    const el = this.element;
+    const old = num(el.getAttribute("data-ah-value"), 0);
+    const v = Math.trunc(clamp(num(value, 0), 0, 100));
+    el.classList.remove("ah-progress-circle--indeterminate");
+    el.removeAttribute("aria-busy");
+    el.querySelectorAll(".ah-progress-circle-fill").forEach((n) => {
+      n.setAttribute("stroke-dashoffset", String(CIRC * (1 - v / 100)));
+    });
+    el.querySelectorAll(".ah-progress-circle-value").forEach((n) => { n.textContent = v + "%"; });
+    el.setAttribute("data-ah-value", String(v));
+    el.setAttribute("aria-valuenow", String(v));
+    el.setAttribute("aria-valuetext", v + "%");
+    AH.lib.progress.fire(el, old, v, 100);
   }
+
+  getValue() { return num(this.element.getAttribute("data-ah-value"), 0); }
 });

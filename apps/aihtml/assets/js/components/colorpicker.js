@@ -2,21 +2,16 @@
  * sigil: form/colorpicker (+ colorpicker/color, events, render).
  *
  * Value-bearing: data-ah-value and the hidden input follow the value, the
- * root fires `change` on commit and `input` while dragging. Native
- * input/change events of the inner text fields are stopped at the root so
- * they are not taken for the component's own events. */
-import $ from "jquery";
+ * root fires `change` on commit and `input` while dragging (detail of
+ * both: {value}). Native input/change events of the inner text fields are
+ * stopped at the root so they are not taken for the component's own
+ * events. */
 import AH from "../core.js";
 import "./_lib_picker.js";
 
-var NS = AH.NS;
 var P = AH.lib.picker;
 var uid = P.uid, clamp = P.clamp, round2 = P.round2, disabled = P.disabled,
-  fenceNativeEvents = P.fenceNativeEvents, openPopup = P.openPopup,
-  closePopup = P.closePopup, stopFloat = P.stopFloat, pointerXY = P.pointerXY, drag = P.drag;
-
-function popupOf($el) { return P.popupOf($el, CP); }
-function isOpen($el) { return P.isOpen($el, CP); }
+  pointerXY = P.pointerXY;
 
 // ------------------------------------------------------------------
 // colorpicker (sigil colorpicker, colorpicker/color, events, render)
@@ -58,8 +53,6 @@ function parseHex(s, alpha) {
            b: parseInt(h.slice(4, 6), 16), a: h.length === 8 ? parseInt(h.slice(6, 8), 16) : 255 };
 }
 
-function cpState(el) { return $.data(el, "ah-cp"); }
-
 // The exact RGB a colour was loaded with (hex, RGB inputs, swatch) is
 // kept until the HSV controls change it, so rounding through HSV does
 // not alter a typed colour.
@@ -92,117 +85,131 @@ function cpLoad(st, c) {
 
 // sigil 同步全部UI!: area colour, pointers, preview, inputs; plus the
 // alpha bar, swatches, ARIA and the popup trigger.
-function cpSync(el, skip) {
-  var st = cpState(el);
-  var $el = $(el);
-  var c = cpRgb(st);
-  var bright = 0.299 * c.r + 0.587 * c.g + 0.114 * c.b > 150;
-  var hex6 = "#" + hex2(c.r) + hex2(c.g) + hex2(c.b);
-  var $map = $el.find("." + CP + "-map");
-  $map.css("background-color", "hsl(" + st.h + ", 100%, 50%)")
-    .attr({ "aria-valuenow": st.s,
-            "aria-valuetext": "Saturation " + st.s + "%, brightness " + st.v + "%" });
-  $map.find("." + CP + "-map-pointer").css({ left: st.s + "%", top: (100 - st.v) + "%" })
-    .toggleClass(CP + "-map-pointer-dark", bright)
-    .toggleClass(CP + "-map-pointer-light", !bright);
-  var $hue = $el.find("." + CP + "-bar").not("." + CP + "-alpha");
-  $hue.attr("aria-valuenow", st.h).find("." + CP + "-bar-pointer").css("top", (st.h / 360 * 100) + "%");
+function cpSync(c, skip) {
+  var st = c.st, el = c.element;
+  var rgb = cpRgb(st);
+  var bright = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b > 150;
+  var hex6 = "#" + hex2(rgb.r) + hex2(rgb.g) + hex2(rgb.b);
+  var all = function (sel, f) { el.querySelectorAll(sel).forEach(f); };
+  all("." + CP + "-map", function (map) {
+    map.style.backgroundColor = "hsl(" + st.h + ", 100%, 50%)";
+    map.setAttribute("aria-valuenow", st.s);
+    map.setAttribute("aria-valuetext", "Saturation " + st.s + "%, brightness " + st.v + "%");
+    map.querySelectorAll("." + CP + "-map-pointer").forEach(function (p) {
+      p.style.left = st.s + "%";
+      p.style.top = (100 - st.v) + "%";
+      p.classList.toggle(CP + "-map-pointer-dark", bright);
+      p.classList.toggle(CP + "-map-pointer-light", !bright);
+    });
+  });
+  all("." + CP + "-bar:not(." + CP + "-alpha)", function (hue) {
+    hue.setAttribute("aria-valuenow", st.h);
+    hue.querySelectorAll("." + CP + "-bar-pointer").forEach(function (p) { p.style.top = (st.h / 360 * 100) + "%"; });
+  });
   var pct = Math.round(st.a / 255 * 100);
-  var $alpha = $el.find("." + CP + "-alpha");
-  $alpha.css("--ah-cp-rgb", hex6).attr({ "aria-valuenow": pct, "aria-valuetext": pct + "%" })
-    .find("." + CP + "-bar-pointer").css("top", (100 - pct) + "%");
-  $el.find("." + CP + "-preview").css("background-color", cpRgba(st));
+  all("." + CP + "-alpha", function (a) {
+    a.style.setProperty("--ah-cp-rgb", hex6);
+    a.setAttribute("aria-valuenow", pct);
+    a.setAttribute("aria-valuetext", pct + "%");
+    a.querySelectorAll("." + CP + "-bar-pointer").forEach(function (p) { p.style.top = (100 - pct) + "%"; });
+  });
+  all("." + CP + "-preview", function (p) { p.style.backgroundColor = cpRgba(st); });
   if (skip !== "hex") {
-    $el.find("." + CP + "-hex-input").val(cpHex(st).slice(1));
+    all("." + CP + "-hex-input", function (i) { i.value = cpHex(st).slice(1); });
   }
   if (skip !== "rgb") {
-    $el.find("." + CP + "-r-input").val(c.r);
-    $el.find("." + CP + "-g-input").val(c.g);
-    $el.find("." + CP + "-b-input").val(c.b);
-    $el.find("." + CP + "-a-input").val(pct);
+    all("." + CP + "-r-input", function (i) { i.value = rgb.r; });
+    all("." + CP + "-g-input", function (i) { i.value = rgb.g; });
+    all("." + CP + "-b-input", function (i) { i.value = rgb.b; });
+    all("." + CP + "-a-input", function (i) { i.value = pct; });
   }
 }
 
 // The value-bearing side: data-ah-value, hidden input, trigger, swatches.
-function cpSetValue(el, value) {
-  var $el = $(el);
-  var st = cpState(el);
+function cpSetValue(c, value) {
+  var st = c.st, el = c.element;
   el.setAttribute("data-ah-value", value);
-  $el.children("input[type=hidden]").val(value);
-  var $trigger = $el.children("." + CP + "-trigger");
-  $trigger.find("." + CP + "-trigger-swatch")
-    .toggleClass(CP + "-trigger-empty", value === "")
-    .css("--ah-cp-swatch", value === "" ? "" : cpRgba(st));
-  $trigger.find("." + CP + "-trigger-text")
-    .text(value === "" ? ($trigger.attr("data-placeholder") || "") : value);
-  $el.find("." + CP + "-swatch").each(function () {
-    this.setAttribute("aria-pressed", String(this.getAttribute("data-color") === value));
+  var hidden = el.querySelector(":scope > input[type=hidden]");
+  if (hidden) { hidden.value = value; }
+  var trigger = el.querySelector(":scope > ." + CP + "-trigger");
+  if (trigger) {
+    trigger.querySelectorAll("." + CP + "-trigger-swatch").forEach(function (s) {
+      s.classList.toggle(CP + "-trigger-empty", value === "");
+      if (value === "") { s.style.removeProperty("--ah-cp-swatch"); } else { s.style.setProperty("--ah-cp-swatch", cpRgba(st)); }
+    });
+    trigger.querySelectorAll("." + CP + "-trigger-text").forEach(function (t) {
+      t.textContent = value === "" ? (trigger.getAttribute("data-placeholder") || "") : value;
+    });
+  }
+  el.querySelectorAll("." + CP + "-swatch").forEach(function (s) {
+    s.setAttribute("aria-pressed", String(s.getAttribute("data-color") === value));
   });
 }
 
 // type: "input" (live) or "change" (commit). change fires only when the
 // value differs from the last committed one.
-function cpEmit(el, type, skip) {
-  var st = cpState(el);
-  cpSync(el, skip);
+function cpEmit(c, type, skip) {
+  var st = c.st;
+  cpSync(c, skip);
   var value = cpHex(st);
-  var before = el.getAttribute("data-ah-value");
-  cpSetValue(el, value);
+  var before = c.element.getAttribute("data-ah-value");
+  cpSetValue(c, value);
   if (type === "input") {
-    if (value !== before) { $(el).trigger("input", [{ value: value }]); }
+    if (value !== before) { c.fire("input", { value: value }); }
   } else {
-    cpCommit(el, value);
+    cpCommit(c, value);
   }
 }
 
-function cpCommit(el, value) {
-  var st = cpState(el);
+function cpCommit(c, value) {
+  var st = c.st;
   if (value !== st.committed) {
     st.committed = value;
-    $(el).trigger("change", [{ value: value }]);
+    c.fire("change", { value: value });
   }
 }
 
-function cpClear(el) {
-  cpSetValue(el, "");
-  cpCommit(el, "");
+function cpClear(c) {
+  cpSetValue(c, "");
+  cpCommit(c, "");
 }
 
-AH.define("colorpicker", {
-  init: function (el, $el) {
-    el.setAttribute("data-ah-uid", P.nextId());
+AH.register("colorpicker", class extends AH.Controller {
+  setup() {
+    var c = this, el = this.element;
+    var q = function (sel) { return el.querySelector(sel); };
     var value = el.getAttribute("data-ah-value") || "";
     var alpha = el.getAttribute("data-alpha") === "true";
-    var st = { h: 0, s: 100, v: 100, a: 255, alpha: alpha, committed: value };
-    $.data(el, "ah-cp", st);
+    var st = this.st = { h: 0, s: 100, v: 100, a: 255, alpha: alpha, committed: value };
     var start = parseHex(value, alpha);
     if (start) { cpLoad(st, start); }
-    var $trigger = $el.children("." + CP + "-trigger");
-    var $popup = popupOf($el);
-    var popup = $popup.length > 0;
-    if (popup) {
-      $popup.attr("id", $popup.attr("id") || uid("ah-cp-popup-"));
-      $trigger.attr("aria-controls", $popup.attr("id"));
+    var trigger = q(":scope > ." + CP + "-trigger");
+    var popupEl = P.popupOf(el, CP);
+    if (popupEl) {
+      popupEl.id = popupEl.id || uid("ah-cp-popup-");
+      if (trigger) { trigger.setAttribute("aria-controls", popupEl.id); }
     }
-    fenceNativeEvents($el);
+    P.fenceNativeEvents(this);
+    var isOpen = function () { return P.isOpen(el, CP); };
+    var map = q("." + CP + "-map");
 
-    function open() {
-      openPopup(el, $el, CP, $trigger, function () { cpSync(el); });
-      $el.find("." + CP + "-map").trigger("focus");
+    var open = this._open = function () {
+      P.openPopup(c, CP, trigger, function () { cpSync(c); });
+      if (map) { map.focus(); }
+    };
+    var close = this._close = function (refocus) { P.closePopup(c, CP, trigger, refocus); };
+
+    if (trigger) {
+      this.listen(trigger, "click", function (e) {
+        e.preventDefault();
+        if (isOpen()) { close(true); } else { open(); }
+      });
+      this.listen(trigger, "keydown", function (e) {
+        if (e.key === "ArrowDown") { e.preventDefault(); open(); }
+      });
     }
-    function close(refocus) { closePopup(el, $el, CP, $trigger, refocus); }
-    $.data(el, "ah-cp-open", open);
-    $.data(el, "ah-cp-close", close);
-
-    $trigger.on("click" + NS, function (e) {
-      e.preventDefault();
-      if (isOpen($el)) { close(true); } else { open(); }
-    });
-    $trigger.on("keydown" + NS, function (e) {
-      if (e.key === "ArrowDown") { e.preventDefault(); open(); }
-    });
-    $el.on("keydown" + NS, function (e) {
-      if (e.key === "Escape" && isOpen($el)) {
+    this.listen(el, "keydown", function (e) {
+      if (e.key === "Escape" && isOpen()) {
         e.preventDefault();
         e.stopPropagation();
         close(true);
@@ -210,46 +217,46 @@ AH.define("colorpicker", {
     });
 
     // Saturation/value area (sigil 处理面板拖拽).
-    var $map = $el.find("." + CP + "-map");
     function fromMap(e) {
-      var r = $map[0].getBoundingClientRect();
+      var r = map.getBoundingClientRect();
       var p = pointerXY(e);
       st.s = Math.round(clamp((p.x - r.left) / r.width, 0, 1) * 100);
       st.v = Math.round((1 - clamp((p.y - r.top) / r.height, 0, 1)) * 100);
-      cpEmit(el, "input");
+      cpEmit(c, "input");
     }
-    function endDrag() { cpEmit(el, "change"); }
-    drag($map, el, fromMap, fromMap, endDrag);
+    function endDrag() { cpEmit(c, "change"); }
+    P.drag(this, map, fromMap, fromMap, endDrag);
 
     // Hue bar (sigil 处理色相拖拽) and alpha bar.
-    var $hue = $el.find("." + CP + "-bar").not("." + CP + "-alpha");
+    var hue = q("." + CP + "-bar:not(." + CP + "-alpha)");
     function fromHue(e) {
-      var r = $hue[0].getBoundingClientRect();
+      var r = hue.getBoundingClientRect();
       st.h = Math.round(clamp((pointerXY(e).y - r.top) / r.height, 0, 1) * 360) % 360;
-      cpEmit(el, "input");
+      cpEmit(c, "input");
     }
-    drag($hue, el, fromHue, fromHue, endDrag);
-    var $alpha = $el.find("." + CP + "-alpha");
+    P.drag(this, hue, fromHue, fromHue, endDrag);
+    var alphaBar = q("." + CP + "-alpha");
     function fromAlpha(e) {
-      var r = $alpha[0].getBoundingClientRect();
+      var r = alphaBar.getBoundingClientRect();
       st.a = Math.round((1 - clamp((pointerXY(e).y - r.top) / r.height, 0, 1)) * 255);
-      cpEmit(el, "input");
+      cpEmit(c, "input");
     }
-    if ($alpha.length) { drag($alpha, el, fromAlpha, fromAlpha, endDrag); }
+    P.drag(this, alphaBar, fromAlpha, fromAlpha, endDrag);
 
     // Keyboard: arrows move by 1, Shift by 10; Home / End.
-    function keys($t, apply) {
-      $t.on("keydown" + NS, function (e) {
+    function keys(t, apply) {
+      if (!t) { return; }
+      c.listen(t, "keydown", function (e) {
         if (disabled(el)) { return; }
         var n = e.shiftKey ? 10 : 1;
         if (apply(e.key, n) !== false) {
           e.preventDefault();
-          cpEmit(el, "input");
-          cpEmit(el, "change");
+          cpEmit(c, "input");
+          cpEmit(c, "change");
         }
       });
     }
-    keys($map, function (key, n) {
+    keys(map, function (key, n) {
       switch (key) {
         case "ArrowLeft": st.s = clamp(st.s - n, 0, 100); break;
         case "ArrowRight": st.s = clamp(st.s + n, 0, 100); break;
@@ -261,7 +268,7 @@ AH.define("colorpicker", {
       }
     });
     // The hue grows downwards on the bar, so Down increases it.
-    keys($hue, function (key, n) {
+    keys(hue, function (key, n) {
       switch (key) {
         case "ArrowDown": case "ArrowRight": st.h = (st.h + n) % 360; break;
         case "ArrowUp": case "ArrowLeft": st.h = (st.h - n + 360) % 360; break;
@@ -270,7 +277,7 @@ AH.define("colorpicker", {
         default: return false;
       }
     });
-    keys($alpha, function (key, n) {
+    keys(alphaBar, function (key, n) {
       var step = Math.round(n * 2.55);
       switch (key) {
         case "ArrowUp": case "ArrowRight": st.a = clamp(st.a + step, 0, 255); break;
@@ -282,29 +289,31 @@ AH.define("colorpicker", {
     });
 
     // Hex input (sigil 处理hex输入): live while valid, commit on change.
-    var $hexIn = $el.find("." + CP + "-hex-input");
-    $hexIn.on("input" + NS, function () {
-      var c = parseHex($hexIn.val(), alpha);
-      var len = String($hexIn.val()).trim().replace(/^#/, "").length;
-      if (c && len >= 6) {
-        cpLoad(st, c);
-        cpEmit(el, "input", "hex");
-      }
-    });
-    $hexIn.on("change" + NS, function () {
-      var c = parseHex($hexIn.val(), alpha);
-      if (c) { cpLoad(st, c); }
-      cpEmit(el, "change");
-    });
-    $hexIn.on("keydown" + NS, function (e) {
-      if (e.key === "Enter") { e.preventDefault(); $hexIn.trigger("change"); }
-    });
+    var hexIn = q("." + CP + "-hex-input");
+    if (hexIn) {
+      this.listen(hexIn, "input", function () {
+        var col = parseHex(hexIn.value, alpha);
+        var len = String(hexIn.value).trim().replace(/^#/, "").length;
+        if (col && len >= 6) {
+          cpLoad(st, col);
+          cpEmit(c, "input", "hex");
+        }
+      });
+      this.listen(hexIn, "change", function () {
+        var col = parseHex(hexIn.value, alpha);
+        if (col) { cpLoad(st, col); }
+        cpEmit(c, "change");
+      });
+      this.listen(hexIn, "keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); hexIn.dispatchEvent(new Event("change", { bubbles: true })); }
+      });
+    }
 
     // RGB(A) inputs (sigil 处理rgb输入).
-    var $rgbIn = $el.find("." + CP + "-r-input, ." + CP + "-g-input, ." + CP + "-b-input, ." + CP + "-a-input");
     function fromRgb() {
       var n = function (cls, max) {
-        var v = parseInt($el.find("." + CP + "-" + cls + "-input").val(), 10);
+        var i = q("." + CP + "-" + cls + "-input");
+        var v = parseInt(i ? i.value : "", 10);
         return isNaN(v) ? null : clamp(v, 0, max);
       };
       var r = n("r", 255), g = n("g", 255), b = n("b", 255);
@@ -313,50 +322,54 @@ AH.define("colorpicker", {
       cpLoad(st, { r: r, g: g, b: b, a: a === null ? st.a : Math.round(a * 2.55) });
       return true;
     }
-    $rgbIn.on("input" + NS, function () {
-      if (fromRgb()) { cpEmit(el, "input", "rgb"); }
-    });
-    $rgbIn.on("change" + NS, function () {
-      fromRgb();
-      cpEmit(el, "change");
-    });
+    el.querySelectorAll("." + CP + "-r-input, ." + CP + "-g-input, ." + CP + "-b-input, ." + CP + "-a-input")
+      .forEach(function (i) {
+        c.listen(i, "input", function () {
+          if (fromRgb()) { cpEmit(c, "input", "rgb"); }
+        });
+        c.listen(i, "change", function () {
+          fromRgb();
+          cpEmit(c, "change");
+        });
+      });
 
     // Swatches and the clear link (sigil's transparent link).
-    $el.on("click" + NS, "." + CP + "-swatch", function (e) {
+    this.delegate("click", "." + CP + "-swatch", function (e, sw) {
       e.preventDefault();
-      var c = parseHex(this.getAttribute("data-color"), alpha);
-      if (!c || disabled(el)) { return; }
-      cpLoad(st, c);
-      cpEmit(el, "input");
-      cpEmit(el, "change");
+      var col = parseHex(sw.getAttribute("data-color"), alpha);
+      if (!col || disabled(el)) { return; }
+      cpLoad(st, col);
+      cpEmit(c, "input");
+      cpEmit(c, "change");
     });
-    $el.on("click" + NS, "." + CP + "-transparent a", function (e) {
+    this.delegate("click", "." + CP + "-transparent a", function (e) {
       e.preventDefault();
       if (disabled(el)) { return; }
-      cpClear(el);
+      cpClear(c);
       close(true);
     });
-    cpSync(el);
-  },
-  destroy: function (el) { stopFloat(el); },
-  methods: {
-    getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
-    // Set the value without firing events (server driven); "" clears.
-    setValue: function (el, $el, v) {
-      var st = cpState(el);
-      var c = parseHex(v == null ? "" : String(v), st.alpha);
-      if (!c) {
-        st.committed = "";
-        cpSetValue(el, "");
-        return;
-      }
-      cpLoad(st, c);
-      cpSync(el);
-      st.committed = cpHex(st);
-      cpSetValue(el, st.committed);
-    },
-    clear: function (el) { cpClear(el); },
-    open: function (el) { $.data(el, "ah-cp-open")(); },
-    close: function (el) { $.data(el, "ah-cp-close")(false); }
+    cpSync(this);
   }
+
+  teardown() { P.stopFloat(this); }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  getValue() { return this.element.getAttribute("data-ah-value") || ""; }
+  // Set the value without firing events (server driven); "" clears.
+  setValue(v) {
+    var st = this.st;
+    var col = parseHex(v == null ? "" : String(v), st.alpha);
+    if (!col) {
+      st.committed = "";
+      cpSetValue(this, "");
+      return;
+    }
+    cpLoad(st, col);
+    cpSync(this);
+    st.committed = cpHex(st);
+    cpSetValue(this, st.committed);
+  }
+  clear() { cpClear(this); }
+  open() { this._open(); }
+  close() { this._close(false); }
 });

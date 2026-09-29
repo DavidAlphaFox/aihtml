@@ -1,91 +1,116 @@
 /* Behaviour of tabs (value: the active key; fires change). */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_layout.js";
+import "./_lib_nav.js";
 
-var NS = AH.NS;
-var L = AH.lib.layout;
+const L = AH.lib.layout;
 
-function tabItems($el) {
-  return $el.children(".ah-tabs-header").children(".ah-tabs-item");
+function tabItems(el) {
+  return Array.from(el.querySelectorAll(":scope > .ah-tabs-header > .ah-tabs-item"));
 }
 
-function tabPanels($el) {
-  return $el.children(".ah-tabs-content").children(".ah-tabs-panel");
+function tabPanels(el) {
+  return Array.from(el.querySelectorAll(":scope > .ah-tabs-content > .ah-tabs-panel"));
 }
 
-function tabIndexOf($el, k) {
-  var idx = -1;
-  tabItems($el).each(function (i) {
-    if (this.getAttribute("data-key") === String(k)) { idx = i; }
-  });
-  return idx;
+function tabIndexOf(el, k) {
+  return tabItems(el).findIndex(function (it) { return it.getAttribute("data-key") === String(k); });
 }
 
-function tabSelect(el, $el, idx, user) {
-  var $items = tabItems($el);
-  var $panels = tabPanels($el);
-  var cur = $items.index($items.filter(".ah-tabs-item-selected"));
-  if (idx < 0 || idx >= $items.length || idx === cur ||
-      $items.eq(idx).hasClass("ah-tabs-item-disabled")) {
+function tabSelect(el, idx, user) {
+  const items = tabItems(el);
+  const panels = tabPanels(el);
+  const cur = items.findIndex(function (it) { return it.classList.contains("ah-tabs-item-selected"); });
+  if (idx < 0 || idx >= items.length || idx === cur ||
+      items[idx].classList.contains("ah-tabs-item-disabled")) {
     return false;
   }
-  $items.removeClass("ah-tabs-item-selected").attr({ "aria-selected": "false", tabindex: "-1" });
-  $items.eq(idx).addClass("ah-tabs-item-selected").attr({ "aria-selected": "true", tabindex: "0" });
-  $panels.attr("aria-hidden", "true");
-  var $new = $panels.eq(idx).attr("aria-hidden", "false");
-  var $old = cur >= 0 ? $panels.eq(cur) : $panels.not($new);
-  $panels.stop(true, true);
-  if ((el.getAttribute("data-animation") || "fade") === "fade" && $old.length) {
-    $old.fadeOut(100, function () {
-      $old.removeClass("ah-tabs-panel-active");
-      $new.hide().fadeIn(100, function () { $new.addClass("ah-tabs-panel-active"); });
+  items.forEach(function (it) {
+    it.classList.remove("ah-tabs-item-selected");
+    it.setAttribute("aria-selected", "false");
+    it.setAttribute("tabindex", "-1");
+  });
+  items[idx].classList.add("ah-tabs-item-selected");
+  items[idx].setAttribute("aria-selected", "true");
+  items[idx].setAttribute("tabindex", "0");
+  panels.forEach(function (p) { p.setAttribute("aria-hidden", "true"); });
+  const next = panels[idx];
+  if (next) { next.setAttribute("aria-hidden", "false"); }
+  const old = cur >= 0 ? (panels[cur] ? [panels[cur]] : [])
+    : panels.filter(function (p) { return p !== next; });
+  panels.forEach(L.stop);
+  if ((el.getAttribute("data-animation") || "fade") === "fade" && old.length && next) {
+    let left = old.length;
+    old.forEach(function (o) {
+      L.fade(o, false, 100, function () {
+        o.classList.remove("ah-tabs-panel-active");
+        if (--left > 0) { return; }
+        L.hide(next);
+        L.fade(next, true, 100, function () { next.classList.add("ah-tabs-panel-active"); });
+      });
     });
   } else {
-    $old.hide().removeClass("ah-tabs-panel-active");
-    $new.css("display", "").addClass("ah-tabs-panel-active");
+    old.forEach(function (o) {
+      L.hide(o);
+      o.classList.remove("ah-tabs-panel-active");
+    });
+    if (next) {
+      next.style.display = "";
+      next.classList.add("ah-tabs-panel-active");
+    }
   }
-  L.setValue(el, $el, $items.eq(idx).attr("data-key"));
+  L.setValue(el, items[idx].getAttribute("data-key"));
   if (user) {
-    $el.trigger("change");
+    el.dispatchEvent(new CustomEvent("change", { bubbles: true, cancelable: true }));
   }
   return true;
 }
 
-AH.define("tabs", {
-  init: function (el, $el) {
-    var $header = $el.children(".ah-tabs-header");
-    var ev = el.getAttribute("data-selection-mode") === "hover" ? "mouseenter" : "click";
-    $header.on(ev + NS, ".ah-tabs-item", function () {
-      if (!$el.hasClass("ah-tabs-disabled")) {
-        tabSelect(el, $el, tabItems($el).index(this), true);
+AH.register("tabs", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    const header = el.querySelector(":scope > .ah-tabs-header");
+    if (!header) { return; }
+    const choose = function (item) {
+      if (!el.classList.contains("ah-tabs-disabled")) {
+        tabSelect(el, tabItems(el).indexOf(item), true);
       }
-    });
-    $header.on("keydown" + NS, ".ah-tabs-item", function (e) {
-      var $items = tabItems($el);
-      var vertical = $el.hasClass("ah-tabs-left") || $el.hasClass("ah-tabs-right");
-      var t = L.listKeys(e, $items, $items.index(this), vertical, "ah-tabs-item-disabled");
+    };
+    if (el.getAttribute("data-selection-mode") === "hover") {
+      AH.lib.nav.hover(this, ".ah-tabs-item", choose, null, header);
+    } else {
+      this.delegate("click", ".ah-tabs-item", function (e, item) { choose(item); }, header);
+    }
+    this.delegate("keydown", ".ah-tabs-item", function (e, item) {
+      const items = tabItems(el);
+      const vertical = el.classList.contains("ah-tabs-left") || el.classList.contains("ah-tabs-right");
+      const t = L.listKeys(e, items, items.indexOf(item), vertical, "ah-tabs-item-disabled");
       if (t === null) { return; }
       e.preventDefault();
-      tabSelect(el, $el, t, true);
-      $items.eq(t).trigger("focus");
-    });
-    $header.on("click" + NS, ".ah-tabs-scroll-btn", function () {
-      var step = $(this).hasClass("ah-tabs-scroll-left") ? -80 : 80;
-      $header.scrollLeft($header.scrollLeft() + step);
-    });
-  },
-  destroy: function (el, $el) {
-    $el.children(".ah-tabs-header").off(NS);
-  },
-  methods: {
-    select: function (el, $el, k) { tabSelect(el, $el, tabIndexOf($el, k), false); },
-    disable: function (el, $el, k) {
-      tabItems($el).eq(tabIndexOf($el, k)).addClass("ah-tabs-item-disabled").attr("aria-disabled", "true");
-    },
-    enable: function (el, $el, k) {
-      tabItems($el).eq(tabIndexOf($el, k)).removeClass("ah-tabs-item-disabled").removeAttr("aria-disabled");
-    },
-    value: function (el) { return el.getAttribute("data-ah-value"); }
+      tabSelect(el, t, true);
+      items[t].focus();
+    }, header);
+    this.delegate("click", ".ah-tabs-scroll-btn", function (e, btn) {
+      const step = btn.classList.contains("ah-tabs-scroll-left") ? -80 : 80;
+      header.scrollLeft = header.scrollLeft + step;
+    }, header);
   }
+
+  // methods (aihtml_action:call/4, AH.invoke); they fire no change
+  select(k) { tabSelect(this.element, tabIndexOf(this.element, k), false); }
+  disable(k) {
+    const it = tabItems(this.element)[tabIndexOf(this.element, k)];
+    if (it) {
+      it.classList.add("ah-tabs-item-disabled");
+      it.setAttribute("aria-disabled", "true");
+    }
+  }
+  enable(k) {
+    const it = tabItems(this.element)[tabIndexOf(this.element, k)];
+    if (it) {
+      it.classList.remove("ah-tabs-item-disabled");
+      it.removeAttribute("aria-disabled");
+    }
+  }
+  value() { return this.element.getAttribute("data-ah-value"); }
 });

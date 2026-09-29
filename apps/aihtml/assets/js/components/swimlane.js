@@ -6,11 +6,14 @@
  * (highlighting their flows), syncs the scroll areas and, with `editable',
  * drags nodes to another cell: it restacks the cells and recomputes the
  * flow paths of the existing SVG elements (twins of flow_points/2 and
- * points_path/2 in the Erlang module), then fires ah:node-change. */
-import $ from "jquery";
+ * points_path/2 in the Erlang module), then fires ah:node-change.
+ *
+ * Events (detail, also written to the root as data-*): ah:select
+ * ({node}, node null when cleared), ah:node-click ({node}),
+ * ah:lane-click ({lane}), ah:node-change ({node, lane, phase, oldLane,
+ * oldPhase}). */
 import AH from "../core.js";
 
-var NS = AH.NS;
 var GAP = 10;
 
 function conf(el) {
@@ -23,12 +26,15 @@ function conf(el) {
   };
 }
 
-function ids($els, attr) { return $els.map(function () { return this.getAttribute(attr); }).get(); }
-function lanes(el) { return ids($(el).find(".ah-swimlane-lanes__row"), "data-lane-id"); }
-function phases(el) { return ids($(el).find(".ah-swimlane-grid__phase"), "data-phase-id"); }
-function nodes(el) { return $(el).find(".ah-swimlane-node"); }
+function ids(els, attr) { return Array.prototype.map.call(els, function (n) { return n.getAttribute(attr); }); }
+function lanes(el) { return ids(el.querySelectorAll(".ah-swimlane-lanes__row"), "data-lane-id"); }
+function phases(el) { return ids(el.querySelectorAll(".ah-swimlane-grid__phase"), "data-phase-id"); }
+function nodes(el) { return Array.from(el.querySelectorAll(".ah-swimlane-node")); }
 function nodeById(el, id) {
-  return nodes(el).filter(function () { return this.getAttribute("data-id") === String(id); })[0];
+  return nodes(el).find(function (n) { return n.getAttribute("data-id") === String(id); });
+}
+function kids(node, sel) {
+  return Array.prototype.filter.call(node.children, function (k) { return k.matches(sel); });
 }
 function box(n) {
   return { x: parseFloat(n.style.left), y: parseFloat(n.style.top),
@@ -42,19 +48,19 @@ function layout(el) {
   lanes(el).forEach(function (id, i) { li[id] = i; });
   phases(el).forEach(function (id, i) { pi[id] = i; });
   var cell = function (n) { return n.getAttribute("data-lane") + "\u0000" + n.getAttribute("data-phase"); };
-  nodes(el).each(function () { count[cell(this)] = (count[cell(this)] || 0) + 1; });
-  nodes(el).each(function () {
-    var l = li[this.getAttribute("data-lane")];
+  nodes(el).forEach(function (node) { count[cell(node)] = (count[cell(node)] || 0) + 1; });
+  nodes(el).forEach(function (node) {
+    var l = li[node.getAttribute("data-lane")];
     if (l === undefined) { return; }
     if (c.continuous) {
-      this.style.top = fmt(l * c.lh + (c.lh - c.nh) / 2) + "px";
+      node.style.top = fmt(l * c.lh + (c.lh - c.nh) / 2) + "px";
       return;
     }
-    var p = pi[this.getAttribute("data-phase")], k = cell(this), i = seen[k] || 0, n = count[k];
+    var p = pi[node.getAttribute("data-phase")], k = cell(node), i = seen[k] || 0, n = count[k];
     seen[k] = i + 1;
     if (p === undefined) { return; }
-    this.style.left = fmt(p * c.pw + (c.pw - c.nw) / 2) + "px";
-    this.style.top = fmt(l * c.lh + (c.lh - (n * c.nh + (n - 1) * GAP)) / 2 + i * (c.nh + GAP)) + "px";
+    node.style.left = fmt(p * c.pw + (c.pw - c.nw) / 2) + "px";
+    node.style.top = fmt(l * c.lh + (c.lh - (n * c.nh + (n - 1) * GAP)) / 2 + i * (c.nh + GAP)) + "px";
   });
   drawFlows(el);
 }
@@ -96,17 +102,23 @@ function pointsPath(pts, radius) {
 }
 
 function drawFlows(el) {
-  $(el).find(".ah-swimlane-flows g").each(function () {
-    var a = nodeById(el, this.getAttribute("data-from")), b = nodeById(el, this.getAttribute("data-to"));
+  el.querySelectorAll(".ah-swimlane-flows g").forEach(function (g) {
+    var a = nodeById(el, g.getAttribute("data-from")), b = nodeById(el, g.getAttribute("data-to"));
     if (!a || !b) { return; }
     var pts = flowPoints(box(a), box(b)), n = pts.length, i = Math.floor((n - 1) / 2);
     var m = [(pts[i][0] + pts[Math.min(i + 1, n - 1)][0]) / 2, (pts[i][1] + pts[Math.min(i + 1, n - 1)][1]) / 2];
-    $(this).children(".ah-swimlane-flows__line").attr("d", pointsPath(pts, 10));
-    var $bg = $(this).children(".ah-swimlane-flows__label-bg");
-    if ($bg.length) {
-      var w = parseFloat($bg.attr("width"));
-      $bg.attr({ x: fmt(m[0] - w / 2), y: fmt(m[1] - 9) });
-      $(this).children(".ah-swimlane-flows__label").attr({ x: fmt(m[0]), y: fmt(m[1]) });
+    kids(g, ".ah-swimlane-flows__line").forEach(function (l) { l.setAttribute("d", pointsPath(pts, 10)); });
+    var bg = kids(g, ".ah-swimlane-flows__label-bg");
+    if (bg.length) {
+      var w = parseFloat(bg[0].getAttribute("width"));
+      bg.forEach(function (x) {
+        x.setAttribute("x", fmt(m[0] - w / 2));
+        x.setAttribute("y", fmt(m[1] - 9));
+      });
+      kids(g, ".ah-swimlane-flows__label").forEach(function (x) {
+        x.setAttribute("x", fmt(m[0]));
+        x.setAttribute("y", fmt(m[1]));
+      });
     }
   });
 }
@@ -114,30 +126,31 @@ function drawFlows(el) {
 function select(el, id) {
   var sid = id === null || id === undefined ? null : String(id);
   if (sid) { el.setAttribute("data-selected", sid); } else { el.removeAttribute("data-selected"); }
-  nodes(el).each(function () {
-    var on = this.getAttribute("data-id") === sid;
-    if (on) { this.setAttribute("data-state", "selected"); } else if (this.getAttribute("data-state") === "selected") { this.removeAttribute("data-state"); }
-    this.setAttribute("aria-pressed", on ? "true" : "false");
+  nodes(el).forEach(function (node) {
+    var on = node.getAttribute("data-id") === sid;
+    if (on) { node.setAttribute("data-state", "selected"); } else if (node.getAttribute("data-state") === "selected") { node.removeAttribute("data-state"); }
+    node.setAttribute("aria-pressed", on ? "true" : "false");
   });
-  $(el).find(".ah-swimlane-flows g").each(function () {
-    var active = !!sid && (this.getAttribute("data-from") === sid || this.getAttribute("data-to") === sid);
-    if (active) { this.setAttribute("data-active", "true"); } else { this.removeAttribute("data-active"); }
-    if (sid && !active) { this.setAttribute("data-dim", "true"); } else { this.removeAttribute("data-dim"); }
-    var path = $(this).children(".ah-swimlane-flows__line")[0], m = path && path.getAttribute("marker-end");
+  el.querySelectorAll(".ah-swimlane-flows g").forEach(function (g) {
+    var active = !!sid && (g.getAttribute("data-from") === sid || g.getAttribute("data-to") === sid);
+    if (active) { g.setAttribute("data-active", "true"); } else { g.removeAttribute("data-active"); }
+    if (sid && !active) { g.setAttribute("data-dim", "true"); } else { g.removeAttribute("data-dim"); }
+    var path = kids(g, ".ah-swimlane-flows__line")[0], m = path && path.getAttribute("marker-end");
     if (m) { path.setAttribute("marker-end", m.replace(/-arrow(-active)?\)$/, active ? "-arrow-active)" : "-arrow)")); }
   });
 }
 
-function pick(el, node) {
-  var id = node.getAttribute("data-id");
+function pick(ctl, node) {
+  var el = ctl.element, id = node.getAttribute("data-id");
   select(el, id);
   el.setAttribute("data-node", id);
-  $(el).trigger("ah:select", [{ node: id }]);
-  $(el).trigger("ah:node-click", [{ node: id }]);
+  ctl.fire("ah:select", { node: id });
+  ctl.fire("ah:node-click", { node: id });
 }
 
 // Move a node to another cell; fires ah:node-change when asked to.
-function move(el, node, lane, phase, notify) {
+function move(ctl, node, lane, phase, notify) {
+  var el = ctl.element;
   var old = { lane: node.getAttribute("data-lane"), phase: node.getAttribute("data-phase") };
   node.setAttribute("data-lane", lane);
   if (phase !== undefined && phase !== null) { node.setAttribute("data-phase", phase); }
@@ -150,30 +163,34 @@ function move(el, node, lane, phase, notify) {
     el.setAttribute("data-phase", d.phase);
     el.setAttribute("data-old-lane", d.oldLane);
     el.setAttribute("data-old-phase", d.oldPhase);
-    $(el).trigger("ah:node-change", [d]);
+    ctl.fire("ah:node-change", d);
   }
 }
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
-function dragStart(el, node, e) {
-  var c = conf(el), st = $.data(el, "ah-swimlane");
+function dragStart(ctl, node, e) {
+  var el = ctl.element, c = conf(el), st = ctl.st;
   if (!c.editable || e.button !== 0) { return; }
   e.preventDefault();
   var d = { node: node, x: e.clientX, y: e.clientY, x0: parseFloat(node.style.left),
             y0: parseFloat(node.style.top), moved: false };
   st.drag = d;
-  $(document).on("pointermove" + st.ns, function (me) {
+  if (st.dragAc) { st.dragAc.abort(); }
+  var ac = st.dragAc = new AbortController(), o = { signal: ac.signal };
+  document.addEventListener("pointermove", function (me) {
     var dx = me.clientX - d.x, dy = me.clientY - d.y;
     if (!d.moved && Math.abs(dx) + Math.abs(dy) < 4) { return; }
     d.moved = true;
     node.setAttribute("data-state", "dragging");
     node.style.left = (d.x0 + dx) + "px";
     node.style.top = (d.y0 + dy) + "px";
-  }).on("pointerup" + st.ns + " pointercancel" + st.ns, function (ue) {
-    $(document).off(st.ns);
+  }, o);
+  var up = function (ue) {
+    ac.abort();
+    st.dragAc = null;
     st.drag = null;
-    if (!d.moved) { pick(el, node); node.focus(); return; }
+    if (!d.moved) { pick(ctl, node); node.focus(); return; }
     node.removeAttribute("data-state");
     if (node.getAttribute("aria-pressed") === "true") { node.setAttribute("data-state", "selected"); }
     var ls = lanes(el), ps = phases(el);
@@ -183,14 +200,16 @@ function dragStart(el, node, e) {
       phase = ps[clamp(ps.indexOf(node.getAttribute("data-phase")) + Math.round((ue.clientX - d.x) / c.pw),
                        0, ps.length - 1)];
     }
-    move(el, node, ls[li], phase, true);
-  });
+    move(ctl, node, ls[li], phase, true);
+  };
+  document.addEventListener("pointerup", up, o);
+  document.addEventListener("pointercancel", up, o);
 }
 
-function nodeKey(el, node, e) {
-  var c = conf(el), k = e.key;
-  if (k === "Enter" || k === " ") { e.preventDefault(); pick(el, node); return; }
-  if (k === "Escape") { select(el, null); el.removeAttribute("data-node"); $(el).trigger("ah:select", [{ node: null }]); return; }
+function nodeKey(ctl, node, e) {
+  var el = ctl.element, c = conf(el), k = e.key;
+  if (k === "Enter" || k === " ") { e.preventDefault(); pick(ctl, node); return; }
+  if (k === "Escape") { select(el, null); el.removeAttribute("data-node"); ctl.fire("ah:select", { node: null }); return; }
   var dir = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[k];
   if (!dir) { return; }
   e.preventDefault();
@@ -199,56 +218,56 @@ function nodeKey(el, node, e) {
     var li = clamp(ls.indexOf(node.getAttribute("data-lane")) + dir[1], 0, ls.length - 1);
     var phase = c.continuous ? null
       : ps[clamp(ps.indexOf(node.getAttribute("data-phase")) + dir[0], 0, ps.length - 1)];
-    move(el, node, ls[li], phase, true);
+    move(ctl, node, ls[li], phase, true);
     node.focus();
     return;
   }
   // focus the nearest node in that direction
   var b = box(node), best = null, bestD = Infinity;
-  nodes(el).each(function () {
-    if (this === node) { return; }
-    var o = box(this), dx = (o.x + o.w / 2) - (b.x + b.w / 2), dy = (o.y + o.h / 2) - (b.y + b.h / 2);
+  nodes(el).forEach(function (other) {
+    if (other === node) { return; }
+    var o = box(other), dx = (o.x + o.w / 2) - (b.x + b.w / 2), dy = (o.y + o.h / 2) - (b.y + b.h / 2);
     var along = dir[0] ? dx * dir[0] : dy * dir[1], across = dir[0] ? Math.abs(dy) : Math.abs(dx);
     if (along <= 0) { return; }
     var dist = along + across * 2;
-    if (dist < bestD) { bestD = dist; best = this; }
+    if (dist < bestD) { bestD = dist; best = other; }
   });
   if (best) { best.focus(); }
 }
 
-AH.define("swimlane", {
-  init: function (el, $el) {
-    var st = { ns: NS + "-swim" + Math.random().toString(36).slice(2) };
-    $.data(el, "ah-swimlane", st);
-    var body = $el.find(".ah-swimlane-grid__body")[0];
+AH.register("swimlane", class extends AH.Controller {
+  setup() {
+    var ctl = this, el = this.element;
+    this.st = { drag: null, dragAc: null };
+    var body = el.querySelector(".ah-swimlane-grid__body");
     if (body) {
-      $(body).on("scroll" + NS, function () {
-        $el.find(".ah-swimlane-grid__header")[0].scrollLeft = this.scrollLeft;
-        $el.find(".ah-swimlane-lanes__body")[0].scrollTop = this.scrollTop;
+      this.listen(body, "scroll", function () {
+        var head = el.querySelector(".ah-swimlane-grid__header"), lanesBody = el.querySelector(".ah-swimlane-lanes__body");
+        if (head) { head.scrollLeft = body.scrollLeft; }
+        if (lanesBody) { lanesBody.scrollTop = body.scrollTop; }
       });
     }
-    $el.on("pointerdown" + NS, ".ah-swimlane-node", function (e) { dragStart(el, this, e); });
-    $el.on("click" + NS, ".ah-swimlane-node", function (e) {
-      // pointer clicks are handled on pointerup when editable
-      if (!conf(el).editable || !e.originalEvent || e.detail === 0) { pick(el, this); }
+    this.delegate("pointerdown", ".ah-swimlane-node", function (e, node) { dragStart(ctl, node, e); });
+    this.delegate("click", ".ah-swimlane-node", function (e, node) {
+      // pointer clicks are handled on pointerup when editable; keyboard
+      // and script clicks (detail 0) select here
+      if (!conf(el).editable || e.detail === 0) { pick(ctl, node); }
     });
-    $el.on("keydown" + NS, ".ah-swimlane-node", function (e) { nodeKey(el, this, e); });
-    $el.on("click" + NS, ".ah-swimlane-lanes__row", function () {
-      el.setAttribute("data-lane", this.getAttribute("data-lane-id"));
-      $(el).trigger("ah:lane-click", [{ lane: this.getAttribute("data-lane-id") }]);
+    this.delegate("keydown", ".ah-swimlane-node", function (e, node) { nodeKey(ctl, node, e); });
+    this.delegate("click", ".ah-swimlane-lanes__row", function (e, row) {
+      el.setAttribute("data-lane", row.getAttribute("data-lane-id"));
+      ctl.fire("ah:lane-click", { lane: row.getAttribute("data-lane-id") });
     });
-  },
-  destroy: function (el, $el) {
-    var st = $.data(el, "ah-swimlane");
-    if (st) { $(document).off(st.ns); }
-    $el.find(".ah-swimlane-grid__body").off(NS);
-    $.removeData(el, "ah-swimlane");
-  },
-  methods: {
-    select: function (el, $el, id) { select(el, id); },
-    moveNode: function (el, $el, id, lane, phase) {
-      var n = nodeById(el, id);
-      if (n) { move(el, n, String(lane), phase === undefined || phase === null ? null : String(phase), false); }
-    }
+  }
+
+  teardown() {
+    if (this.st.dragAc) { this.st.dragAc.abort(); this.st.dragAc = null; }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  select(id) { select(this.element, id); }
+  moveNode(id, lane, phase) {
+    var n = nodeById(this.element, id);
+    if (n) { move(this, n, String(lane), phase === undefined || phase === null ? null : String(phase), false); }
   }
 });

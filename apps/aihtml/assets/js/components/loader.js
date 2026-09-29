@@ -1,62 +1,82 @@
 /* Behaviour of loader: show / hide, optionally with a modal scrim. */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_layout.js";
 
-var NS = AH.NS;
-var L = AH.lib.layout;
+const L = AH.lib.layout;
 
-var MODAL_ID = "ah-loader-modal";
+const MODAL_ID = "ah-loader-modal";
 
-function loaderShow(el, $el, left, top) {
-  var modal = el.getAttribute("data-modal") === "true";
+// One Escape handler on document for the modal loader shown last.
+let escHandler = null;
+
+function setEsc(fn) {
+  if (escHandler) { document.removeEventListener("keyup", escHandler); }
+  escHandler = fn;
+  if (fn) { document.addEventListener("keyup", fn); }
+}
+
+function loaderShow(el, left, top) {
+  const modal = el.getAttribute("data-modal") === "true";
   if (modal) {
-    var $m = $("#" + MODAL_ID);
-    if (!$m.length) {
-      $m = $("<div>", { id: MODAL_ID, "class": "ah-loader-modal" }).appendTo(document.body);
+    let m = document.getElementById(MODAL_ID);
+    if (!m) {
+      m = document.createElement("div");
+      m.id = MODAL_ID;
+      m.className = "ah-loader-modal";
+      document.body.appendChild(m);
     }
-    $m.removeClass("ah-loader-hidden");
-    $(document).off("keyup" + NS + "loader").on("keyup" + NS + "loader", function (e) {
-      if (L.key(e) === "Escape") { loaderHide(el, $el); }
+    m.classList.remove("ah-loader-hidden");
+    setEsc(function (e) {
+      if (L.key(e) === "Escape") { loaderHide(el); }
     });
   }
-  $el.removeClass("ah-loader-hidden").attr("aria-busy", "true");
+  el.classList.remove("ah-loader-hidden");
+  el.setAttribute("aria-busy", "true");
   if (left !== undefined && left !== null && top !== undefined && top !== null) {
-    $el.removeClass("ah-loader-center").css({ left: left + "px", top: top + "px" });
+    el.classList.remove("ah-loader-center");
+    el.style.left = left + "px";
+    el.style.top = top + "px";
   } else if (modal) {
-    $el.addClass("ah-loader-center");
+    el.classList.add("ah-loader-center");
   }
 }
 
-function loaderHide(el, $el) {
-  $el.addClass("ah-loader-hidden").attr("aria-busy", "false");
+function loaderHide(el) {
+  el.classList.add("ah-loader-hidden");
+  el.setAttribute("aria-busy", "false");
   if (el.getAttribute("data-modal") === "true") {
-    $("#" + MODAL_ID).addClass("ah-loader-hidden");
-    $(document).off("keyup" + NS + "loader");
+    const m = document.getElementById(MODAL_ID);
+    if (m) { m.classList.add("ah-loader-hidden"); }
+    setEsc(null);
   }
 }
 
-AH.define("loader", {
-  init: function (el, $el) {
-    if (el.getAttribute("data-modal") === "true" && !$el.hasClass("ah-loader-hidden")) {
-      loaderShow(el, $el);
+AH.register("loader", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    if (el.getAttribute("data-modal") === "true" && !el.classList.contains("ah-loader-hidden")) {
+      loaderShow(el);
     }
-  },
-  destroy: function (el, $el) {
-    if (el.getAttribute("data-modal") === "true") {
-      loaderHide(el, $el);
-    }
-  },
-  methods: {
-    show: function (el, $el, left, top) { loaderShow(el, $el, left, top); },
-    hide: function (el, $el) { loaderHide(el, $el); },
-    toggle: function (el, $el) {
-      if ($el.hasClass("ah-loader-hidden")) { loaderShow(el, $el); } else { loaderHide(el, $el); }
-    },
-    text: function (el, $el, t) {
-      $el.children(".ah-loader-text").text(t);
-      $el.attr("aria-label", t);
-    },
-    isOpen: function (el, $el) { return !$el.hasClass("ah-loader-hidden"); }
   }
+
+  teardown() {
+    if (this.element.getAttribute("data-modal") === "true") {
+      loaderHide(this.element);
+    }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  show(left, top) { loaderShow(this.element, left, top); }
+  hide() { loaderHide(this.element); }
+  toggle() {
+    if (this.element.classList.contains("ah-loader-hidden")) { loaderShow(this.element); }
+    else { loaderHide(this.element); }
+  }
+  text(t) {
+    this.element.querySelectorAll(":scope > .ah-loader-text").forEach(function (n) {
+      n.textContent = t;
+    });
+    this.element.setAttribute("aria-label", t);
+  }
+  isOpen() { return !this.element.classList.contains("ah-loader-hidden"); }
 });

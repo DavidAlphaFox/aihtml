@@ -1,84 +1,95 @@
 /* Behaviour of the sidenav component (designs/04-components.md), ported
-   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js. */
-import $ from "jquery";
+   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js.
+   Value contract: data-ah-value (the active link's data-route), the
+   hidden input and "change" on the root. ah:collapse fires on the root
+   when it collapses or expands, detail {collapsed: boolean}. */
 import AH from "../core.js";
 import "./_lib_nav.js";
 
-var NS = AH.NS;
-var L = AH.lib.nav;
-var visible = L.visible;
-var setValue = L.setValue;
-var byKey = L.byKey;
+const N = AH.lib.nav;
+const visible = N.visible;
+const setValue = N.setValue;
+const byKey = N.byKey;
 
 // ------------------------------------------------------------------
 // sidenav (sigil sidenav.cljs + nav-tree)
 // ------------------------------------------------------------------
 
-function sidenavMark($el, key) {
-  $el.find(".ah-nav-tree__item.ah-is-active").removeClass("ah-is-active").removeAttr("aria-current");
-  var $a = byKey($el, "a.ah-nav-tree__item", "data-route", key);
-  $a.addClass("ah-is-active").attr("aria-current", "page");
-  $a.parents("details.ah-nav-tree__node").each(function () {
-    this.open = true;
-    $(this).children("summary").addClass("ah-is-open");
+function summaries(details) {
+  return details.querySelectorAll(":scope > summary");
+}
+
+function sidenavMark(el, key) {
+  el.querySelectorAll(".ah-nav-tree__item.ah-is-active").forEach(function (n) {
+    n.classList.remove("ah-is-active");
+    n.removeAttribute("aria-current");
+  });
+  byKey(el, "a.ah-nav-tree__item", "data-route", key).forEach(function (a) {
+    a.classList.add("ah-is-active");
+    a.setAttribute("aria-current", "page");
+    for (let d = a.parentNode; d && d !== el; d = d.parentNode) {
+      if (d.matches("details.ah-nav-tree__node")) {
+        d.open = true;
+        summaries(d).forEach(function (s) { s.classList.add("ah-is-open"); });
+      }
+    }
   });
 }
 
-function sidenavCollapse($el, collapsed) {
-  $el.toggleClass("ah-sidenav-collapsed", collapsed);
-  $el.find(".ah-sidenav__toggle").attr("aria-expanded", String(!collapsed));
-  $el.trigger("ah:collapse", [{ collapsed: collapsed }]);
+function sidenavCollapse(el, collapsed) {
+  el.classList.toggle("ah-sidenav-collapsed", collapsed);
+  el.querySelectorAll(".ah-sidenav__toggle").forEach(function (t) {
+    t.setAttribute("aria-expanded", String(!collapsed));
+  });
+  el.dispatchEvent(new CustomEvent("ah:collapse",
+                                   { bubbles: true, cancelable: true, detail: { collapsed: collapsed } }));
 }
 
-AH.define("sidenav", {
-  init: function (el, $el) {
-    $el.on("click" + NS, "a.ah-nav-tree__item", function (e) {
-      if (this.getAttribute("aria-disabled") === "true") { e.preventDefault(); return; }
-      var key = this.getAttribute("data-route");
-      sidenavMark($el, key);
-      if (this.getAttribute("href") === "#") {
+AH.register("sidenav", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    this.delegate("click", "a.ah-nav-tree__item", function (e, a) {
+      if (a.getAttribute("aria-disabled") === "true") { e.preventDefault(); return; }
+      const key = a.getAttribute("data-route");
+      sidenavMark(el, key);
+      if (a.getAttribute("href") === "#") {
         e.preventDefault();
-        if ($el.attr("data-ah-value") !== key) { setValue($el, key, "change"); }
+        if (el.getAttribute("data-ah-value") !== key) { setValue(el, key, "change"); }
       }
     });
     // a collapsed sidebar expands when a group is opened
-    $el.on("click" + NS, "summary.ah-nav-tree__item", function (e) {
-      if ($el.hasClass("ah-sidenav-collapsed")) {
+    this.delegate("click", "summary.ah-nav-tree__item", function (e, s) {
+      if (el.classList.contains("ah-sidenav-collapsed")) {
         e.preventDefault();
-        sidenavCollapse($el, false);
-        this.parentNode.open = true;
-        $(this).addClass("ah-is-open");
+        sidenavCollapse(el, false);
+        s.parentNode.open = true;
+        s.classList.add("ah-is-open");
       }
     });
-    var onToggle = function (e) {
+    // toggle does not bubble: listen in the capture phase
+    this.listen(el, "toggle", function (e) {
       if (e.target.tagName === "DETAILS") {
-        $(e.target).children("summary").toggleClass("ah-is-open", e.target.open);
+        summaries(e.target).forEach(function (s) { s.classList.toggle("ah-is-open", e.target.open); });
       }
-    };
-    el.addEventListener("toggle", onToggle, true);
-    $.data(el, "ah-sidenav-toggle", onToggle);
-    $el.on("click" + NS, ".ah-sidenav__toggle", function () {
-      sidenavCollapse($el, !$el.hasClass("ah-sidenav-collapsed"));
+    }, { capture: true });
+    this.delegate("click", ".ah-sidenav__toggle", function () {
+      sidenavCollapse(el, !el.classList.contains("ah-sidenav-collapsed"));
     });
     // arrow keys move between the visible entries
-    $el.on("keydown" + NS, ".ah-nav-tree__item", function (e) {
+    this.delegate("keydown", ".ah-nav-tree__item", function (e, cur) {
       if (!/^(ArrowDown|ArrowUp|Home|End)$/.test(e.key)) { return; }
-      var items = $el.find(".ah-nav-tree__item").filter(function () { return visible(this); }).get();
-      var i = items.indexOf(this);
-      var to = e.key === "Home" ? 0 : e.key === "End" ? items.length - 1
+      const items = Array.from(el.querySelectorAll(".ah-nav-tree__item")).filter(visible);
+      const i = items.indexOf(cur);
+      const to = e.key === "Home" ? 0 : e.key === "End" ? items.length - 1
         : Math.max(0, Math.min(items.length - 1, i + (e.key === "ArrowDown" ? 1 : -1)));
       e.preventDefault();
       if (items[to]) { items[to].focus(); }
     });
-  },
-  destroy: function (el) {
-    var f = $.data(el, "ah-sidenav-toggle");
-    if (f) { el.removeEventListener("toggle", f, true); }
-  },
-  methods: {
-    setValue: function (el, $el, key) { sidenavMark($el, key); setValue($el, key); },
-    collapse: function (el, $el) { sidenavCollapse($el, true); },
-    expand: function (el, $el) { sidenavCollapse($el, false); },
-    toggle: function (el, $el) { sidenavCollapse($el, !$el.hasClass("ah-sidenav-collapsed")); }
   }
+
+  // methods (aihtml_action:call/4, AH.invoke); they fire no change
+  setValue(key) { sidenavMark(this.element, key); setValue(this.element, key); }
+  collapse() { sidenavCollapse(this.element, true); }
+  expand() { sidenavCollapse(this.element, false); }
+  toggle() { sidenavCollapse(this.element, !this.element.classList.contains("ah-sidenav-collapsed")); }
 });

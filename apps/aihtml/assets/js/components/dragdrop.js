@@ -3,12 +3,15 @@
  * fire ah:drop on the zone; the root carries data-drag, data-drop and
  * data-from for the action payload. The drag machinery is shared with
  * sortable.js (_lib_dnd.js).
+ *
+ * Events (native, bubbling): on the item ah:drag-start (detail {key}),
+ * ah:dragging (detail {pageX, pageY}), ah:drag-end, ah:drag-cancel; on
+ * the zone ah:drop-target-enter, ah:drop-target-leave and ah:drop
+ * (detail {drag, drop, from}).
  */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_dnd.js";
 
-var NS = AH.NS;
 var L = AH.lib.dnd;
 var DISTANCE = L.DISTANCE;
 var pageRect = L.pageRect,
@@ -22,6 +25,7 @@ var pageRect = L.pageRect,
     editable = L.editable,
     announce = L.announce,
     label = L.label,
+    fire = L.fire,
     track = L.track,
     cancelFor = L.cancelFor;
 
@@ -30,20 +34,21 @@ var pageRect = L.pageRect,
 // ==================================================================
 
 function ddScope(el, node) {
-  return $(node).closest("[data-ah=dragdrop]")[0] === el;
+  return node.closest("[data-ah=dragdrop]") === el;
 }
 
 function ddUsable(el, item) {
-  return !$(el).hasClass("ah-dragdrop-disabled") && !$(item).hasClass("ah-draggable-disabled");
+  return !el.classList.contains("ah-dragdrop-disabled") &&
+    !item.classList.contains("ah-draggable-disabled");
 }
 
 // The zones of this scope that take `item' (its data-ah-drag-type must
 // be in a zone's data-ah-drop-accept, when the zone has one).
 function ddZones(el, item) {
   var type = item.getAttribute("data-ah-drag-type") || "";
-  return $(el).find("[data-ah-drop]").get().filter(function (z) {
+  return Array.from(el.querySelectorAll("[data-ah-drop]")).filter(function (z) {
     if (!ddScope(el, z) || z.getAttribute("data-ah-drop-disabled") === "true" ||
-        $.contains(item, z) || z === item) {
+        item.contains(z)) {
       return false;
     }
     var accept = z.getAttribute("data-ah-drop-accept");
@@ -70,43 +75,46 @@ function ddHit(d, x, y) {
 function ddTarget(d, zone) {
   if (zone === d.target) { return; }
   if (d.target) {
-    $(d.target).removeClass("ah-drop-target-active").trigger("ah:drop-target-leave");
+    d.target.classList.remove("ah-drop-target-active");
+    fire(d.target, "ah:drop-target-leave");
   }
   d.target = zone;
   if (zone) {
-    $(zone).addClass("ah-drop-target-active").trigger("ah:drop-target-enter");
+    zone.classList.add("ah-drop-target-active");
+    fire(zone, "ah:drop-target-enter");
   }
 }
 
 function ddBegin(d) {
   var item = d.item;
   d.zones = ddZones(d.el, item);
-  var from = $(item).parent().closest("[data-ah-drop]")[0];
+  var from = item.parentElement && item.parentElement.closest("[data-ah-drop]");
   d.from = from && ddScope(d.el, from) ? from.getAttribute("data-ah-drop") : "";
   d.target = null;
-  $(item).addClass("ah-dragging");
-  $(d.zones).addClass("ah-drop-zone-accepting");
-  $(d.el).addClass("ah-dragdrop-active");
-  $(item).trigger("ah:drag-start", [{ key: item.getAttribute("data-ah-drag") }]);
+  item.classList.add("ah-dragging");
+  d.zones.forEach(function (z) { z.classList.add("ah-drop-zone-accepting"); });
+  d.el.classList.add("ah-dragdrop-active");
+  fire(item, "ah:drag-start", { key: item.getAttribute("data-ah-drag") });
 }
 
 function ddFinish(d, dropped) {
   var item = d.item;
-  $(item).removeClass("ah-dragging");
-  $(d.zones).removeClass("ah-drop-zone-accepting ah-drop-target-active");
-  $(d.el).removeClass("ah-dragdrop-active");
-  $("body").removeClass("ah-disableselect");
+  item.classList.remove("ah-dragging");
+  d.zones.forEach(function (z) { z.classList.remove("ah-drop-zone-accepting", "ah-drop-target-active"); });
+  d.el.classList.remove("ah-dragdrop-active");
+  document.body.classList.remove("ah-disableselect");
   var copy = d.copy;
   if (copy) {
     if (!dropped && d.el.hasAttribute("data-ah-revert") && d.orig) {
-      $(copy).css("transition", "left .2s ease, top .2s ease")
-        .css({ left: d.orig.left + "px", top: d.orig.top + "px" });
-      setTimeout(function () { $(copy).remove(); }, 220);
+      copy.style.transition = "left .2s ease, top .2s ease";
+      copy.style.left = d.orig.left + "px";
+      copy.style.top = d.orig.top + "px";
+      setTimeout(function () { copy.remove(); }, 220);
     } else {
-      $(copy).remove();
+      copy.remove();
     }
   }
-  $(item).trigger("ah:drag-end");
+  fire(item, "ah:drag-end");
 }
 
 function ddDrop(d) {
@@ -114,7 +122,7 @@ function ddDrop(d) {
   var key = item.getAttribute("data-ah-drag");
   var dest = zone.getAttribute("data-ah-drop");
   var focused = document.activeElement === item;
-  $(zone).removeClass("ah-drop-target-active");
+  zone.classList.remove("ah-drop-target-active");
   if (el.hasAttribute("data-ah-move") && item.parentNode !== zone) {
     zone.appendChild(item);
     if (focused) { item.focus(); }
@@ -123,23 +131,26 @@ function ddDrop(d) {
   el.setAttribute("data-drag", key);
   el.setAttribute("data-drop", dest);
   el.setAttribute("data-from", d.from);
-  $(zone).trigger("ah:drop", [{ drag: key, drop: dest, from: d.from }]);
+  fire(zone, "ah:drop", { drag: key, drop: dest, from: d.from });
   announce(ddLive(el), label(item) + " dropped on " + label(zone) + ".");
 }
 
 function ddCancel(d) {
   ddTarget(d, null);
   ddFinish(d, false);
-  $(d.item).trigger("ah:drag-cancel");
+  fire(d.item, "ah:drag-cancel");
 }
 
 function ddLive(el) {
-  var $live = $(el).children(".ah-dnd-live");
-  if (!$live.length) {
-    $live = $('<span class="ah-sortable-live ah-dnd-live" aria-live="assertive" aria-atomic="true"></span>')
-      .appendTo(el);
+  var live = el.querySelector(":scope > .ah-dnd-live");
+  if (!live) {
+    live = document.createElement("span");
+    live.className = "ah-sortable-live ah-dnd-live";
+    live.setAttribute("aria-live", "assertive");
+    live.setAttribute("aria-atomic", "true");
+    el.appendChild(live);
   }
-  return $live;
+  return live;
 }
 
 // Keyboard: Space/Enter picks up, arrows walk the zones, Space/Enter
@@ -183,15 +194,14 @@ function ddKeydown(el, item, e) {
   }
 }
 
-AH.define("dragdrop", {
-  init: function (el, $el) {
-    $el.on("pointerdown" + NS, "[data-ah-drag]", function (e) {
-      var item = this;
+AH.register("dragdrop", class extends AH.Controller {
+  setup() {
+    var el = this.element;
+    this.delegate("pointerdown", "[data-ah-drag]", function (e, item) {
       if (L.drag || !ddScope(el, item) || !ddUsable(el, item) ||
           (e.pointerType === "mouse" && e.button !== 0) || editable(e.target)) {
         return;
       }
-      if ($(e.target).closest("[data-ah-drag]")[0] !== item) { return; }
       e.preventDefault();
       try { item.focus({ preventScroll: true }); } catch (err) { /* ignore */ }
       var d = { kind: "dragdrop", el: el, item: item, pointerId: e.pointerId,
@@ -206,7 +216,7 @@ AH.define("dragdrop", {
           d.offY = d.y0 - r.top;
           d.box = scrollParent(el);
           d.copy = floatingCopy(item, "ah-drag-feedback", 0.6);
-          $("body").addClass("ah-disableselect");
+          document.body.classList.add("ah-disableselect");
           ddBegin(d);
         }
         d.px = px(me); d.py = py(me); d.cx = me.clientX; d.cy = me.clientY;
@@ -214,27 +224,28 @@ AH.define("dragdrop", {
         d.raf = requestAnimationFrame(function () {
           d.raf = 0;
           if (L.drag !== d) { return; }
-          $(d.copy).css({ left: (d.px - d.offX) + "px", top: (d.py - d.offY) + "px" });
+          d.copy.style.left = (d.px - d.offX) + "px";
+          d.copy.style.top = (d.py - d.offY) + "px";
           autoScroll(d.box, d.cx, d.cy);
           ddTarget(d, ddHit(d, d.px, d.py));
-          $(item).trigger("ah:dragging", [{ pageX: d.px, pageY: d.py }]);
+          fire(item, "ah:dragging", { pageX: d.px, pageY: d.py });
         });
       }, function (ue) {
         if (!d.started) { return; }
         swallowClick();
         // the last frame may not have run: test where the pointer let go
-        $(d.copy).css({ left: (px(ue) - d.offX) + "px", top: (py(ue) - d.offY) + "px" });
+        d.copy.style.left = (px(ue) - d.offX) + "px";
+        d.copy.style.top = (py(ue) - d.offY) + "px";
         ddTarget(d, ddHit(d, px(ue), py(ue)));
         if (d.target) { ddDrop(d); } else { ddFinish(d, false); }
       }, function () {
         if (d.started) { ddCancel(d); }
       });
     });
-    $el.on("keydown" + NS, "[data-ah-drag]", function (e) {
-      if (e.target === this && ddScope(el, this)) { ddKeydown(el, this, e); }
+    this.delegate("keydown", "[data-ah-drag]", function (e, item) {
+      if (e.target === item && ddScope(el, item)) { ddKeydown(el, item, e); }
     });
-    $el.on("focusout" + NS, "[data-ah-drag]", function () {
-      var item = this;
+    this.delegate("focusout", "[data-ah-drag]", function (e, item) {
       setTimeout(function () {
         if (L.drag && L.drag.kind === "dragdrop-key" && L.drag.item === item &&
             document.activeElement !== item) {
@@ -242,19 +253,25 @@ AH.define("dragdrop", {
         }
       }, 0);
     });
-  },
-  destroy: function (el, $el) {
-    cancelFor(el);
-    $el.children(".ah-dnd-live").remove();
-  },
-  methods: {
-    enable: function (el, $el) {
-      $el.removeClass("ah-dragdrop-disabled").removeAttr("aria-disabled");
-    },
-    disable: function (el, $el) {
-      cancelFor(el);
-      $el.addClass("ah-dragdrop-disabled").attr("aria-disabled", "true");
-    },
-    cancel: function (el) { cancelFor(el); }
   }
+
+  teardown() {
+    cancelFor(this.element);
+    var live = this.element.querySelector(":scope > .ah-dnd-live");
+    if (live) { live.remove(); }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  enable() {
+    this.element.classList.remove("ah-dragdrop-disabled");
+    this.element.removeAttribute("aria-disabled");
+  }
+
+  disable() {
+    cancelFor(this.element);
+    this.element.classList.add("ah-dragdrop-disabled");
+    this.element.setAttribute("aria-disabled", "true");
+  }
+
+  cancel() { cancelFor(this.element); }
 });

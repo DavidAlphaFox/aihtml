@@ -1,21 +1,19 @@
 /* Behaviour of cascader (designs/04-components.md), ported from sigil's
  * form/cascader. The columns and the search list are rendered on the
- * server (aihtml_cascader); the behaviour shows, hides and marks them.
+ * server (aihtml_cascader); the controller shows, hides and marks them.
+ * Value contract: data-ah-value (the path, a value list), the hidden
+ * input and a native "change" on the root. Events on the root: "ah:open",
+ * "ah:close" (no detail). A lazy branch fires "ah:load" (no detail) on
+ * the .ah-cascader-loader child, whose data-ah-value is the path; an
+ * "ah:error" on the loader drops the loading message.
  * Shared helpers: _lib_list.js. */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_list.js";
 
-var NS = AH.NS;
 var LIST = AH.lib.list;
 var ensureId = LIST.ensureId, publish = LIST.publish, split = LIST.split, join = LIST.join,
-  shown = LIST.shown, enabled = LIST.enabled, scrollInto = LIST.scrollInto;
-var seq = 0;
-
-// A mousedown outside the component.
-function outside(el, e) {
-  return e.target.isConnected !== false && !$.contains(el, e.target) && e.target !== el;
-}
+  shown = LIST.shown, enabled = LIST.enabled, scrollInto = LIST.scrollInto,
+  kids = LIST.kids, childText = LIST.childText;
 
 // The first case-insensitive occurrence of the query in <b>, as DOM
 // nodes (combobox's highlight).
@@ -29,389 +27,393 @@ function highlight(node, text, q) {
   node.appendChild(document.createTextNode(text.slice(i + q.length)));
 }
 
-// ==================================================================
-// cascader
-// ==================================================================
-
-function csState(el) { return $.data(el, "ah-cs"); }
-
-function csColumns(st) { return st.$menus.children(".ah-cascader-menu-column"); }
-
-// The column holding the children of `path` (an array); the last one
-// wins when a lazy level was loaded twice.
-function csColumn(st, path) {
-  var key = join(path);
-  return csColumns(st).filter(function () {
-    return this.getAttribute("data-parent") === key;
-  }).last();
-}
-
-function csItem($col, v) {
-  return $col.find("li[data-value]").filter(function () {
-    return this.getAttribute("data-value") === v;
+function item(col, v) {
+  if (!col) { return null; }
+  return Array.prototype.filter.call(col.querySelectorAll("li[data-value]"), function (li) {
+    return li.getAttribute("data-value") === v;
   })[0] || null;
 }
 
-function csLabel(li) {
-  return $(li).children(".ah-cascader-menu-item-label").text();
+function label(li) { return childText(li, ".ah-cascader-menu-item-label"); }
+
+function pathOf(li) {
+  var col = li.closest(".ah-cascader-menu-column");
+  return split(col.getAttribute("data-parent")).concat([li.getAttribute("data-value")]);
 }
 
-// The labels along a path; values without a row show as themselves.
-function csLabels(st, path) {
-  var out = [];
-  for (var i = 0; i < path.length; i++) {
-    var li = csItem(csColumn(st, path.slice(0, i)), path[i]);
-    out.push(li ? csLabel(li) : path[i]);
-  }
-  return out;
+function isBranch(li) { return li.classList.contains("has-children"); }
+
+function rowsOf(col) {
+  return col ? Array.prototype.filter.call(col.querySelectorAll("li[data-value]"), enabled) : [];
 }
 
-function csPathOf(li) {
-  var $col = $(li).closest(".ah-cascader-menu-column");
-  return split($col.attr("data-parent")).concat([li.getAttribute("data-value")]);
+function leaf(li) {
+  li.classList.remove("has-children");
+  li.removeAttribute("data-lazy");
+  li.removeAttribute("aria-haspopup");
+  kids(li, ".ah-cascader-menu-item-arrow").forEach(function (a) { a.remove(); });
 }
 
-function csBranch(li) { return $(li).hasClass("has-children"); }
+function removeAll(nodes) { nodes.forEach(function (n) { n.remove(); }); }
 
-// Show the columns of the open path and mark its rows active.
-function csShow(el) {
-  var st = csState(el);
-  csColumns(st).attr("hidden", "hidden");
-  st.$menus.find("li.active").removeClass("active").attr("aria-selected", "false");
-  var $col = csColumn(st, []);
-  for (var i = 0; $col.length; i++) {
-    $col.removeAttr("hidden");
-    var li = i < st.open.length ? csItem($col, st.open[i]) : null;
-    if (!li) { break; }
-    $(li).addClass("active").attr("aria-selected", "true");
-    if (!csBranch(li)) { break; }
-    $col = csColumn(st, st.open.slice(0, i + 1));
-  }
-  csPosition(el);
-}
+function level(col) { return col ? parseInt(col.getAttribute("data-level"), 10) || 0 : 0; }
 
-function csCursor(el, li) {
-  var st = csState(el);
-  st.$menus.find(".ah-cascader-menu-item-focused").removeClass("ah-cascader-menu-item-focused");
-  st.cursor = li || null;
-  if (!li) { st.$input.removeAttr("aria-activedescendant"); return; }
-  ensureId(li, el.id + "-o");
-  $(li).addClass("ah-cascader-menu-item-focused");
-  st.$input.attr("aria-activedescendant", li.id);
-  scrollInto($(li).closest(".ah-cascader-menu")[0], li);
-}
-
-function csPosition(el) {
-  var st = csState(el);
-  if (!st.isOpen) { return; }
-  if (st.float) { st.float.update(); } else { st.float = AH.float(st.$popup[0], el); }
-}
-
-function csBlocked($el) { return $el.hasClass("ah-cascader-disabled"); }
-
-function csOpen(el, $el) {
-  var st = csState(el);
-  if (st.isOpen || csBlocked($el)) { return; }
-  st.isOpen = true;
-  st.open = st.value.slice();
-  st.$popup.addClass("ah-cascader-popup-open");
-  csShow(el);
-  var last = st.value.length ? csItem(csColumn(st, st.value.slice(0, -1)), st.value[st.value.length - 1]) : null;
-  csCursor(el, last || csRows(csColumn(st, []))[0]);
-  $el.addClass("ah-cascader-open");
-  st.$input.attr("aria-expanded", "true");
-  $(document).on("mousedown" + st.ns, function (e) {
-    if (outside(el, e)) { csClose(el, $el); }
-  });
-  $el.trigger("ah:open");
-}
-
-function csClose(el, $el) {
-  var st = csState(el);
-  if (!st.isOpen) { return; }
-  st.isOpen = false;
-  st.$popup.removeClass("ah-cascader-popup-open");
-  if (st.float) { st.float.stop(); st.float = null; }
-  $el.removeClass("ah-cascader-open");
-  st.$input.attr("aria-expanded", "false");
-  csCursor(el, null);
-  st.$menus.children(".ah-cascader-loading").remove();
-  if (st.query) { csQuery(el, ""); }
-  st.$input.val(st.display);
-  $(document).off(st.ns);
-  $el.trigger("ah:close");
-}
-
-function csSet(el, $el, path, fire) {
-  var st = csState(el);
-  st.value = path.slice();
-  st.display = csLabels(st, path).join(st.sep);
-  if (!st.query) { st.$input.val(st.display); }
-  st.$clear.prop("hidden", !path.length);
-  publish(el, $el, join(path), fire);
-}
-
-function csRows($col) {
-  return $col.find("li[data-value]").filter(function () { return enabled(this); }).get();
-}
-
-// Open a branch: its column (loaded or not), or a leaf: pick it.
-function csChoose(el, $el, li, kbd) {
-  var st = csState(el);
-  if (!li || !enabled(li)) { return; }
-  var path = csPathOf(li);
-  if (!csBranch(li)) {
-    csSet(el, $el, path, true);
-    csClose(el, $el);
-    return;
-  }
-  st.open = path;
-  if (st.cos) { csSet(el, $el, path, true); }
-  var $col = csColumn(st, path);
-  st.$menus.children(".ah-cascader-loading").remove();
-  if ($col.length) {
-    csShow(el);
-    csCursor(el, kbd ? csRows($col)[0] : li);
-  } else if (li.hasAttribute("data-lazy") && st.$loader.length) {
-    csShow(el);
-    csCursor(el, li);
-    st.pending = { path: join(path), kbd: kbd };
-    st.$menus.append($('<div class="ah-cascader-loading"></div>').text("Loading…"));
-    csPosition(el);
-    st.$loader.attr("data-ah-value", join(path)).trigger("ah:load");
-  } else {
-    csLeaf(li);
-    csChoose(el, $el, li, kbd);
-  }
-}
-
-function csLeaf(li) {
-  $(li).removeClass("has-children").removeAttr("data-lazy aria-haspopup")
-    .children(".ah-cascader-menu-item-arrow").remove();
-}
-
-function csMove(el, dir, edge) {
-  var st = csState(el);
-  var $col = st.cursor ? $(st.cursor).closest(".ah-cascader-menu-column") : csColumn(st, []);
-  var rows = csRows($col);
-  if (!rows.length) { return; }
-  var i = rows.indexOf(st.cursor);
-  if (edge) { i = dir > 0 ? rows.length - 1 : 0; } else if (i < 0) { i = 0; } else {
-    i = (i + dir + rows.length) % rows.length;
-  }
-  // moving within a column closes the columns to its right
-  var level = parseInt($col.attr("data-level"), 10) || 0;
-  if (st.open.length > level) { st.open = st.open.slice(0, level); csShow(el); }
-  csCursor(el, rows[i]);
-}
-
-// Search (filterable): the server-rendered path list, filtered here.
-function csQuery(el, q) {
-  var st = csState(el);
-  st.query = q;
-  st.$popup.children(".ah-cascader-empty").remove();
-  if (!q) {
-    st.$search.attr("hidden", "hidden");
-    st.$menus.removeAttr("hidden");
-    st.searchActive = -1;
-    csPosition(el);
-    return;
-  }
-  st.$menus.attr("hidden", "hidden");
-  st.$search.removeAttr("hidden");
-  var lower = q.toLowerCase(), any = false;
-  st.$search.children("li").each(function () {
-    var label = this.getAttribute("data-label");
-    var hit = label.toLowerCase().indexOf(lower) >= 0;
-    this.style.display = hit ? "" : "none";
-    if (hit) { any = true; highlight(this.firstChild, label, q); }
-  });
-  if (!any) {
-    st.$search.attr("hidden", "hidden");
-    st.$popup.append($('<div class="ah-cascader-empty"></div>').text(st.empty));
-  }
-  csSearchActive(el, -1);
-  csPosition(el);
-}
-
-function csSearchRows(st) {
-  return st.$search.children("li").filter(function () { return shown(this) && enabled(this); }).get();
-}
-
-function csSearchActive(el, i) {
-  var st = csState(el);
-  var rows = csSearchRows(st);
-  st.$search.children(".active").removeClass("active").attr("aria-selected", "false");
-  st.searchActive = rows[i] ? i : -1;
-  if (!rows[i]) { st.$input.removeAttr("aria-activedescendant"); return; }
-  ensureId(rows[i], el.id + "-s");
-  $(rows[i]).addClass("active").attr("aria-selected", "true");
-  st.$input.attr("aria-activedescendant", rows[i].id);
-  scrollInto(st.$search[0], rows[i]);
-}
-
-function csSearchPick(el, $el, li) {
-  if (!li || !enabled(li)) { return; }
-  csState(el).query = "";
-  csSet(el, $el, split(li.getAttribute("data-path")), true);
-  csClose(el, $el);
-}
-
-function csKey(el, $el, e) {
-  var st = csState(el);
-  if (csBlocked($el)) { return; }
-  var k = e.key;
-  if (!st.isOpen) {
-    if (k === "ArrowDown" || k === "ArrowUp" || k === "Enter" || (k === " " && !st.filterable)) {
-      e.preventDefault();
-      csOpen(el, $el);
-    }
-    return;
-  }
-  if (st.query) {
-    var rows = csSearchRows(st);
-    switch (k) {
-      case "ArrowDown": e.preventDefault(); csSearchActive(el, (st.searchActive + 1) % Math.max(rows.length, 1)); return;
-      case "ArrowUp": e.preventDefault(); csSearchActive(el, st.searchActive <= 0 ? rows.length - 1 : st.searchActive - 1); return;
-      case "Enter": e.preventDefault(); csSearchPick(el, $el, rows[st.searchActive] || (rows.length === 1 ? rows[0] : null)); return;
-      case "Escape": e.preventDefault(); st.$input.val(""); csQuery(el, ""); return;
-      case "Tab": csClose(el, $el); return;
-      default: return;
-    }
-  }
-  switch (k) {
-    case "ArrowDown": e.preventDefault(); csMove(el, 1); break;
-    case "ArrowUp": e.preventDefault(); csMove(el, -1); break;
-    case "Home": if (!st.filterable) { e.preventDefault(); csMove(el, -1, true); } break;
-    case "End": if (!st.filterable) { e.preventDefault(); csMove(el, 1, true); } break;
-    case "ArrowRight":
-      if (st.cursor && csBranch(st.cursor)) { e.preventDefault(); csChoose(el, $el, st.cursor, true); }
-      break;
-    case "ArrowLeft":
-      var $col = st.cursor ? $(st.cursor).closest(".ah-cascader-menu-column") : $();
-      var level = parseInt($col.attr("data-level"), 10) || 0;
-      if (level > 0) {
-        e.preventDefault();
-        var parent = split($col.attr("data-parent"));
-        st.open = parent.slice(0, -1);
-        csShow(el);
-        csCursor(el, csItem(csColumn(st, parent.slice(0, -1)), parent[parent.length - 1]));
-      }
-      break;
-    case " ":
-      if (st.filterable) { break; }
-      e.preventDefault(); csChoose(el, $el, st.cursor, true); break;
-    case "Enter": e.preventDefault(); csChoose(el, $el, st.cursor, true); break;
-    case "Escape": e.preventDefault(); csClose(el, $el); break;
-    case "Tab": csClose(el, $el); break;
-    default: break;
-  }
-}
-
-AH.define("cascader", {
-  init: function (el, $el) {
+AH.register("cascader", class extends AH.Controller {
+  setup() {
+    var el = this.element, self = this;
     ensureId(el, "ah-cs");
-    var $popup = $el.children(".ah-cascader-popup");
-    var st = {
-      ns: ".ahcs" + (++seq),
-      $input: $el.find("input.ah-cascader-input"),
-      $clear: $el.find(".ah-cascader-clear"),
-      $popup: $popup,
-      $menus: $popup.children(".ah-cascader-menus"),
-      $search: $popup.children(".ah-cascader-search-panel"),
-      $loader: $el.children(".ah-cascader-loader"),
-      sep: el.getAttribute("data-ah-separator") || " / ",
-      empty: el.getAttribute("data-ah-empty") || "No results found",
-      cos: el.hasAttribute("data-ah-change-on-select"),
-      filterable: $el.hasClass("ah-cascader-filterable"),
-      value: split(el.getAttribute("data-ah-value")),
-      open: [], isOpen: false, cursor: null, query: "", searchActive: -1, pending: null
+    this.input = el.querySelector("input.ah-cascader-input");
+    this.clearBtn = el.querySelector(".ah-cascader-clear");
+    this.popup = kids(el, ".ah-cascader-popup")[0];
+    this.menus = kids(this.popup, ".ah-cascader-menus")[0];
+    this.search = kids(this.popup, ".ah-cascader-search-panel")[0] || null;
+    this.loader = kids(el, ".ah-cascader-loader")[0] || null;
+    this.sep = el.getAttribute("data-ah-separator") || " / ";
+    this.emptyText = el.getAttribute("data-ah-empty") || "No results found";
+    this.cos = el.hasAttribute("data-ah-change-on-select");
+    this.filterable = el.classList.contains("ah-cascader-filterable");
+    this.value = split(el.getAttribute("data-ah-value"));
+    this.openPath = []; this.isOpen = false; this.cursor = null;
+    this.query = ""; this.searchActive = -1; this.pending = null;
+    this.display = String(this.input.value);
+    this.onDocDown = function (e) {
+      if (e.target.isConnected !== false && !el.contains(e.target)) { self.close(); }
     };
-    $.data(el, "ah-cs", st);
-    st.display = String(st.$input.val());
-    st.$input
-      .on("focus" + NS, function () { $el.addClass("ah-cascader-focused"); })
-      .on("blur" + NS, function () {
-        $el.removeClass("ah-cascader-focused");
-        setTimeout(function () {
-          if (document.activeElement !== st.$input[0]) { csClose(el, $el); }
-        }, 150);
-      })
-      .on("click" + NS, function (e) {
-        e.preventDefault();
-        if (st.isOpen && !st.filterable) { csClose(el, $el); } else { csOpen(el, $el); }
-      })
-      .on("input" + NS, function () {
-        if (!st.filterable) { return; }
-        csOpen(el, $el);
-        csQuery(el, String(st.$input.val()));
-      })
-      .on("keydown" + NS, function (e) { csKey(el, $el, e); })
-      // the text field is internal: only the root reports changes
-      .on("change" + NS, function (e) { e.stopPropagation(); });
-    $el.on("mousedown" + NS, ".ah-cascader-arrow, .ah-cascader-clear", function (e) {
+    var input = this.input;
+    this.listen(input, "focus", function () { el.classList.add("ah-cascader-focused"); });
+    this.listen(input, "blur", function () {
+      el.classList.remove("ah-cascader-focused");
+      setTimeout(function () {
+        if (document.activeElement !== input) { self.close(); }
+      }, 150);
+    });
+    this.listen(input, "click", function (e) {
+      e.preventDefault();
+      if (self.isOpen && !self.filterable) { self.close(); } else { self.open(); }
+    });
+    this.listen(input, "input", function () {
+      if (!self.filterable) { return; }
+      self.open();
+      self.runQuery(String(input.value));
+    });
+    this.listen(input, "keydown", function (e) { self.key(e); });
+    // the text field is internal: only the root reports changes
+    this.listen(input, "change", function (e) { e.stopPropagation(); });
+    this.delegate("mousedown", ".ah-cascader-arrow, .ah-cascader-clear", function (e) {
       e.preventDefault();
     });
-    $el.on("click" + NS, ".ah-cascader-arrow", function (e) {
+    this.delegate("click", ".ah-cascader-arrow", function (e) {
       e.preventDefault();
-      st.$input.trigger("focus");
-      if (st.isOpen) { csClose(el, $el); } else { csOpen(el, $el); }
+      input.focus();
+      if (self.isOpen) { self.close(); } else { self.open(); }
     });
-    $el.on("click" + NS, ".ah-cascader-clear", function (e) {
+    this.delegate("click", ".ah-cascader-clear", function (e) {
       e.preventDefault();
       e.stopPropagation();
-      if (csBlocked($el)) { return; }
-      csSet(el, $el, [], true);
-      csClose(el, $el);
+      if (self.blocked()) { return; }
+      self.set([], true);
+      self.close();
     });
     // the loader's request failed: drop the loading message
-    st.$loader.on("ah:error" + NS, function () {
-      st.pending = null;
-      st.$menus.children(".ah-cascader-loading").remove();
-    });
-    $popup.on("mousedown" + NS, function (e) { e.preventDefault(); })
-      .on("click" + NS, ".ah-cascader-menu li[data-value]", function (e) {
-        e.preventDefault();
-        csChoose(el, $el, this, false);
-      })
-      .on("click" + NS, ".ah-cascader-search-item", function () { csSearchPick(el, $el, this); });
-  },
-  destroy: function (el) {
-    var st = csState(el);
-    if (st) {
-      if (st.float) { st.float.stop(); st.float = null; }
-      $(document).off(st.ns);
+    if (this.loader) {
+      this.listen(this.loader, "ah:error", function () {
+        self.pending = null;
+        self.dropLoading();
+      });
     }
-  },
-  methods: {
-    // Called by aihtml_cascader:cascader_children/3 after it appended
-    // the column(s) of `path`; no column means the node is a leaf.
-    childrenLoaded: function (el, $el, path) {
-      var st = csState(el);
-      var p = split(path);
-      var key = join(p);
-      var pending = st.pending && st.pending.path === key ? st.pending : null;
-      if (pending) { st.pending = null; st.$menus.children(".ah-cascader-loading").remove(); }
-      var $cols = csColumns(st).filter(function () { return this.getAttribute("data-parent") === key; });
-      $cols.slice(0, -1).remove();
-      var li = csItem(csColumn(st, p.slice(0, -1)), p[p.length - 1]);
-      if (li) { li.removeAttribute("data-lazy"); }
-      if (!$cols.length) {
-        if (li) { csLeaf(li); }
-        if (pending && st.isOpen && li) { csChoose(el, $el, li, pending.kbd); }
-        return;
+    this.listen(this.popup, "mousedown", function (e) { e.preventDefault(); });
+    this.delegate("click", ".ah-cascader-menu li[data-value]", function (e, li) {
+      e.preventDefault();
+      self.choose(li, false);
+    }, this.popup);
+    this.delegate("click", ".ah-cascader-search-item", function (e, li) { self.searchPick(li); }, this.popup);
+  }
+
+  teardown() {
+    if (this.float) { this.float.stop(); this.float = null; }
+    document.removeEventListener("mousedown", this.onDocDown);
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  // Called by aihtml_cascader:cascader_children/3 after it appended
+  // the column(s) of `path`; no column means the node is a leaf.
+  childrenLoaded(path) {
+    var p = split(path);
+    var key = join(p);
+    var pending = this.pending && this.pending.path === key ? this.pending : null;
+    if (pending) { this.pending = null; this.dropLoading(); }
+    var cols = this.columns().filter(function (c) { return c.getAttribute("data-parent") === key; });
+    removeAll(cols.slice(0, -1));
+    var li = item(this.column(p.slice(0, -1)), p[p.length - 1]);
+    if (li) { li.removeAttribute("data-lazy"); }
+    if (!cols.length) {
+      if (li) { leaf(li); }
+      if (pending && this.isOpen && li) { this.choose(li, pending.kbd); }
+      return;
+    }
+    if (this.isOpen && join(this.openPath) === key) {
+      this.show();
+      if (pending && pending.kbd) { this.moveCursor(rowsOf(cols[cols.length - 1])[0]); }
+    }
+  }
+  // A path "a,b,c" or ["a", "b", "c"]; no change event.
+  setValue(v) { this.set(split(v), false); }
+  getValue() { return this.element.getAttribute("data-ah-value") || ""; }
+  getLabels() { return this.labels(this.value); }
+  clear() { this.set([], true); }
+
+  open() {
+    if (this.isOpen || this.blocked()) { return; }
+    this.isOpen = true;
+    this.openPath = this.value.slice();
+    this.popup.classList.add("ah-cascader-popup-open");
+    this.show();
+    var v = this.value;
+    var last = v.length ? item(this.column(v.slice(0, -1)), v[v.length - 1]) : null;
+    this.moveCursor(last || rowsOf(this.column([]))[0]);
+    this.element.classList.add("ah-cascader-open");
+    this.input.setAttribute("aria-expanded", "true");
+    document.addEventListener("mousedown", this.onDocDown);
+    this.fire("ah:open");
+  }
+
+  close() {
+    if (!this.isOpen) { return; }
+    this.isOpen = false;
+    this.popup.classList.remove("ah-cascader-popup-open");
+    if (this.float) { this.float.stop(); this.float = null; }
+    this.element.classList.remove("ah-cascader-open");
+    this.input.setAttribute("aria-expanded", "false");
+    this.moveCursor(null);
+    this.dropLoading();
+    if (this.query) { this.runQuery(""); }
+    this.input.value = this.display;
+    document.removeEventListener("mousedown", this.onDocDown);
+    this.fire("ah:close");
+  }
+
+  blocked() { return this.element.classList.contains("ah-cascader-disabled"); }
+
+  columns() { return kids(this.menus, ".ah-cascader-menu-column"); }
+
+  // The column holding the children of `path` (an array); the last one
+  // wins when a lazy level was loaded twice.
+  column(path) {
+    var key = join(path);
+    var cols = this.columns().filter(function (c) { return c.getAttribute("data-parent") === key; });
+    return cols[cols.length - 1] || null;
+  }
+
+  // The labels along a path; values without a row show as themselves.
+  labels(path) {
+    var out = [];
+    for (var i = 0; i < path.length; i++) {
+      var li = item(this.column(path.slice(0, i)), path[i]);
+      out.push(li ? label(li) : path[i]);
+    }
+    return out;
+  }
+
+  dropLoading() { removeAll(kids(this.menus, ".ah-cascader-loading")); }
+
+  // Show the columns of the open path and mark its rows active.
+  show() {
+    this.columns().forEach(function (c) { c.setAttribute("hidden", "hidden"); });
+    this.menus.querySelectorAll("li.active").forEach(function (li) {
+      li.classList.remove("active");
+      li.setAttribute("aria-selected", "false");
+    });
+    var col = this.column([]);
+    for (var i = 0; col; i++) {
+      col.removeAttribute("hidden");
+      var li = i < this.openPath.length ? item(col, this.openPath[i]) : null;
+      if (!li) { break; }
+      li.classList.add("active");
+      li.setAttribute("aria-selected", "true");
+      if (!isBranch(li)) { break; }
+      col = this.column(this.openPath.slice(0, i + 1));
+    }
+    this.position();
+  }
+
+  moveCursor(li) {
+    this.menus.querySelectorAll(".ah-cascader-menu-item-focused").forEach(function (x) {
+      x.classList.remove("ah-cascader-menu-item-focused");
+    });
+    this.cursor = li || null;
+    if (!li) { this.input.removeAttribute("aria-activedescendant"); return; }
+    ensureId(li, this.element.id + "-o");
+    li.classList.add("ah-cascader-menu-item-focused");
+    this.input.setAttribute("aria-activedescendant", li.id);
+    scrollInto(li.closest(".ah-cascader-menu"), li);
+  }
+
+  position() {
+    if (!this.isOpen) { return; }
+    if (this.float) { this.float.update(); } else { this.float = AH.float(this.popup, this.element); }
+  }
+
+  set(path, fire) {
+    this.value = path.slice();
+    this.display = this.labels(path).join(this.sep);
+    if (!this.query) { this.input.value = this.display; }
+    if (this.clearBtn) { this.clearBtn.hidden = !path.length; }
+    publish(this.element, join(path), fire);
+  }
+
+  // Open a branch: its column (loaded or not), or a leaf: pick it.
+  choose(li, kbd) {
+    if (!li || !enabled(li)) { return; }
+    var path = pathOf(li);
+    if (!isBranch(li)) {
+      this.set(path, true);
+      this.close();
+      return;
+    }
+    this.openPath = path;
+    if (this.cos) { this.set(path, true); }
+    var col = this.column(path);
+    this.dropLoading();
+    if (col) {
+      this.show();
+      this.moveCursor(kbd ? rowsOf(col)[0] : li);
+    } else if (li.hasAttribute("data-lazy") && this.loader) {
+      this.show();
+      this.moveCursor(li);
+      this.pending = { path: join(path), kbd: kbd };
+      var loading = document.createElement("div");
+      loading.className = "ah-cascader-loading";
+      loading.textContent = "Loading…";
+      this.menus.appendChild(loading);
+      this.position();
+      this.loader.setAttribute("data-ah-value", join(path));
+      this.fire("ah:load", undefined, this.loader);
+    } else {
+      leaf(li);
+      this.choose(li, kbd);
+    }
+  }
+
+  moveBy(dir, edge) {
+    var col = this.cursor ? this.cursor.closest(".ah-cascader-menu-column") : this.column([]);
+    var rows = rowsOf(col);
+    if (!rows.length) { return; }
+    var i = rows.indexOf(this.cursor);
+    if (edge) { i = dir > 0 ? rows.length - 1 : 0; } else if (i < 0) { i = 0; } else {
+      i = (i + dir + rows.length) % rows.length;
+    }
+    // moving within a column closes the columns to its right
+    var lv = level(col);
+    if (this.openPath.length > lv) { this.openPath = this.openPath.slice(0, lv); this.show(); }
+    this.moveCursor(rows[i]);
+  }
+
+  // Search (filterable): the server-rendered path list, filtered here.
+  runQuery(q) {
+    this.query = q;
+    removeAll(kids(this.popup, ".ah-cascader-empty"));
+    if (!q) {
+      if (this.search) { this.search.setAttribute("hidden", "hidden"); }
+      this.menus.removeAttribute("hidden");
+      this.searchActive = -1;
+      this.position();
+      return;
+    }
+    this.menus.setAttribute("hidden", "hidden");
+    var any = false;
+    if (this.search) {
+      this.search.removeAttribute("hidden");
+      var lower = q.toLowerCase();
+      kids(this.search, "li").forEach(function (li) {
+        var text = li.getAttribute("data-label");
+        var hit = text.toLowerCase().indexOf(lower) >= 0;
+        li.style.display = hit ? "" : "none";
+        if (hit) { any = true; highlight(li.firstChild, text, q); }
+      });
+    }
+    if (!any) {
+      if (this.search) { this.search.setAttribute("hidden", "hidden"); }
+      var empty = document.createElement("div");
+      empty.className = "ah-cascader-empty";
+      empty.textContent = this.emptyText;
+      this.popup.appendChild(empty);
+    }
+    this.setSearchActive(-1);
+    this.position();
+  }
+
+  searchRows() {
+    return kids(this.search, "li").filter(function (li) { return shown(li) && enabled(li); });
+  }
+
+  setSearchActive(i) {
+    var rows = this.searchRows();
+    kids(this.search, ".active").forEach(function (li) {
+      li.classList.remove("active");
+      li.setAttribute("aria-selected", "false");
+    });
+    this.searchActive = rows[i] ? i : -1;
+    if (!rows[i]) { this.input.removeAttribute("aria-activedescendant"); return; }
+    ensureId(rows[i], this.element.id + "-s");
+    rows[i].classList.add("active");
+    rows[i].setAttribute("aria-selected", "true");
+    this.input.setAttribute("aria-activedescendant", rows[i].id);
+    scrollInto(this.search, rows[i]);
+  }
+
+  searchPick(li) {
+    if (!li || !enabled(li)) { return; }
+    this.query = "";
+    this.set(split(li.getAttribute("data-path")), true);
+    this.close();
+  }
+
+  key(e) {
+    if (this.blocked()) { return; }
+    var k = e.key;
+    if (!this.isOpen) {
+      if (k === "ArrowDown" || k === "ArrowUp" || k === "Enter" || (k === " " && !this.filterable)) {
+        e.preventDefault();
+        this.open();
       }
-      if (st.isOpen && join(st.open) === key) {
-        csShow(el);
-        if (pending && pending.kbd) { csCursor(el, csRows($cols.last())[0]); }
+      return;
+    }
+    if (this.query) {
+      var rows = this.searchRows();
+      switch (k) {
+        case "ArrowDown": e.preventDefault(); this.setSearchActive((this.searchActive + 1) % Math.max(rows.length, 1)); return;
+        case "ArrowUp": e.preventDefault(); this.setSearchActive(this.searchActive <= 0 ? rows.length - 1 : this.searchActive - 1); return;
+        case "Enter": e.preventDefault(); this.searchPick(rows[this.searchActive] || (rows.length === 1 ? rows[0] : null)); return;
+        case "Escape": e.preventDefault(); this.input.value = ""; this.runQuery(""); return;
+        case "Tab": this.close(); return;
+        default: return;
       }
-    },
-    // A path "a,b,c" or ["a", "b", "c"]; no change event.
-    setValue: function (el, $el, v) { csSet(el, $el, split(v), false); },
-    getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
-    getLabels: function (el) { var st = csState(el); return csLabels(st, st.value); },
-    clear: function (el, $el) { csSet(el, $el, [], true); },
-    open: function (el, $el) { csOpen(el, $el); },
-    close: function (el, $el) { csClose(el, $el); }
+    }
+    switch (k) {
+      case "ArrowDown": e.preventDefault(); this.moveBy(1); break;
+      case "ArrowUp": e.preventDefault(); this.moveBy(-1); break;
+      case "Home": if (!this.filterable) { e.preventDefault(); this.moveBy(-1, true); } break;
+      case "End": if (!this.filterable) { e.preventDefault(); this.moveBy(1, true); } break;
+      case "ArrowRight":
+        if (this.cursor && isBranch(this.cursor)) { e.preventDefault(); this.choose(this.cursor, true); }
+        break;
+      case "ArrowLeft":
+        var col = this.cursor ? this.cursor.closest(".ah-cascader-menu-column") : null;
+        if (level(col) > 0) {
+          e.preventDefault();
+          var parent = split(col.getAttribute("data-parent"));
+          this.openPath = parent.slice(0, -1);
+          this.show();
+          this.moveCursor(item(this.column(parent.slice(0, -1)), parent[parent.length - 1]));
+        }
+        break;
+      case " ":
+        if (this.filterable) { break; }
+        e.preventDefault(); this.choose(this.cursor, true); break;
+      case "Enter": e.preventDefault(); this.choose(this.cursor, true); break;
+      case "Escape": e.preventDefault(); this.close(); break;
+      case "Tab": this.close(); break;
+      default: break;
+    }
   }
 });

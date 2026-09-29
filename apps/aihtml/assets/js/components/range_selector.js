@@ -5,28 +5,19 @@
  *                    are ARIA sliders; input while dragging, change after
  *
  * The root keeps data-ah-value and its hidden input in step and fires
- * "input" / "change".
+ * "input" / "change" (native events, detail: the value "lo,hi").
  *
- * The server renders the whole first state, so init only binds events.
+ * The server renders the whole first state, so setup only binds events.
  */
-import $ from "jquery";
 import AH from "../core.js";
 
-var NS = AH.NS;
-var seq = 0;
-
-function docNS(el) {
-  var ns = $.data(el, "ah-docns");
-  if (!ns) {
-    ns = NS + "er" + (++seq);
-    $.data(el, "ah-docns", ns);
-  }
-  return ns;
+function writeValue(el, v) {
+  el.setAttribute("data-ah-value", v);
+  el.querySelectorAll(":scope > input[type=hidden]").forEach(function (h) { h.value = v; });
 }
 
-function setValue($el, v) {
-  $el.attr("data-ah-value", v);
-  $el.children("input[type=hidden]").val(v);
+function child(el, cls) {
+  return el ? Array.from(el.children).find(function (c) { return c.classList.contains(cls); }) || null : null;
 }
 
 // ------------------------------------------------------------------
@@ -65,8 +56,6 @@ function rsFormat(v, f) {
 
 function tidy(v) { return parseFloat(v.toFixed(9)); }
 
-function rsState(el) { return $.data(el, "ah-rs"); }
-
 function rsSnap(st, v) {
   v = st.min + Math.round((v - st.min) / st.step) * st.step;
   return tidy(Math.max(st.min, Math.min(st.max, v)));
@@ -74,111 +63,60 @@ function rsSnap(st, v) {
 
 function pct(st, v) { return tidy((v - st.min) / (st.max - st.min) * 100); }
 
-function rsLayout(el, $el) {
-  var st = rsState(el), a = pct(st, st.lo), b = pct(st, st.hi);
-  st.$slider.css({ left: a + "%", width: tidy(b - a) + "%" });
-  st.$shutL.css({ width: a + "%" });
-  st.$shutR.css({ left: b + "%", width: tidy(100 - b) + "%" });
-  [[st.$mL, st.lo, a], [st.$mR, st.hi, b]].forEach(function (m) {
-    var t = rsFormat(m[1], st.format);
-    m[0].css("left", m[2] + "%").attr({ "aria-valuenow": String(m[1]), "aria-valuetext": t });
-    m[0].children(".ah-range-selector-marker-value").text(t);
-  });
-  setValue($el, st.lo + "," + st.hi);
-}
-
-// Set lo / hi (already bounded); input when it changed, change if asked.
-function rsSet(el, $el, lo, hi, change) {
-  var st = rsState(el), old = $el.attr("data-ah-value");
-  st.lo = lo; st.hi = hi;
-  rsLayout(el, $el);
-  var v = $el.attr("data-ah-value");
-  if (v !== old) { $el.trigger("input", [v]); }
-  if (change && v !== st.committed) {
-    st.committed = v;
-    $el.trigger("change", [v]);
-  }
-}
-
-// Move one end to v, kept min_span away from the other.
-function rsMoveEnd(el, $el, left, v, change) {
-  var st = rsState(el);
-  v = rsSnap(st, v);
-  if (left) {
-    rsSet(el, $el, Math.max(st.min, Math.min(v, tidy(st.hi - st.minSpan))), st.hi, change);
-  } else {
-    rsSet(el, $el, st.lo, Math.min(st.max, Math.max(v, tidy(st.lo + st.minSpan))), change);
-  }
-}
-
 function pointX(e) {
-  var o = e.originalEvent, t = o && (o.touches && o.touches[0] || o.changedTouches && o.changedTouches[0]);
+  var t = e.touches && e.touches[0] || e.changedTouches && e.changedTouches[0];
   return (t || e).clientX;
 }
 
-function rsValueAt(st, x) {
-  var r = st.$track[0].getBoundingClientRect();
-  var p = r.width > 0 ? Math.max(0, Math.min(1, (x - r.left) / r.width)) : 0;
-  return st.min + p * (st.max - st.min);
+function css(node, props) {
+  if (node) { Object.assign(node.style, props); }
 }
 
-function rsDisabled($el) { return $el.hasClass("ah-range-selector-disabled"); }
-
-function rsDrag(el, $el, e, move) {
-  var st = rsState(el);
-  if (e.type === "mousedown") {
-    if (e.button !== 0) { return; }
-    e.preventDefault();
-  }
-  $(document).off(st.ns);
-  $(document).on("mousemove" + st.ns + " touchmove" + st.ns, function (me) {
-    if (me.type === "mousemove") { me.preventDefault(); }
-    move(pointX(me));
-  }).on("mouseup" + st.ns + " touchend" + st.ns + " touchcancel" + st.ns, function () {
-    $(document).off(st.ns);
-    $el.removeClass("ah-range-selector-dragging");
-    rsSet(el, $el, st.lo, st.hi, true);
-  });
-  $el.addClass("ah-range-selector-dragging");
-}
-
-AH.define("range-selector", {
-  init: function (el, $el) {
+AH.register("range-selector", class extends AH.Controller {
+  setup() {
+    var el = this.element;
     var num = function (a) { return parseFloat(el.getAttribute(a)); };
     var v = (el.getAttribute("data-ah-value") || "").split(",");
-    var st = {
-      ns: docNS(el),
+    var track = child(el, "ah-range-selector-track");
+    var st = this.st = {
       min: num("data-ah-min"), max: num("data-ah-max"), step: num("data-ah-step") || 1,
       page: num("data-ah-page") || 10, minSpan: num("data-ah-min-span") || 0,
       format: JSON.parse(el.getAttribute("data-ah-format") || "{}"),
       lo: parseFloat(v[0]), hi: parseFloat(v[1]),
       committed: el.getAttribute("data-ah-value"),
-      $track: $el.children(".ah-range-selector-track")
+      track: track,
+      slider: child(track, "ah-range-selector-slider"),
+      shutL: child(track, "ah-range-selector-shutter-left"),
+      shutR: child(track, "ah-range-selector-shutter-right"),
+      mL: child(track, "ah-range-selector-marker-left"),
+      mR: child(track, "ah-range-selector-marker-right"),
+      drag: null
     };
-    st.$slider = st.$track.children(".ah-range-selector-slider");
-    st.$shutL = st.$track.children(".ah-range-selector-shutter-left");
-    st.$shutR = st.$track.children(".ah-range-selector-shutter-right");
-    st.$mL = st.$track.children(".ah-range-selector-marker-left");
-    st.$mR = st.$track.children(".ah-range-selector-marker-right");
-    $.data(el, "ah-rs", st);
+    if (!track) { return; }
 
-    st.$track.on("mousedown" + NS + " touchstart" + NS, ".ah-range-selector-marker", function (e) {
-      if (rsDisabled($el)) { return; }
-      var left = $(this).hasClass("ah-range-selector-marker-left");
-      this.focus();
-      rsDrag(el, $el, e, function (x) { rsMoveEnd(el, $el, left, rsValueAt(st, x), false); });
-    });
-    st.$slider.on("mousedown" + NS + " touchstart" + NS, function (e) {
-      if (rsDisabled($el)) { return; }
-      var span = tidy(st.hi - st.lo), grab = rsValueAt(st, pointX(e)) - st.lo;
-      rsDrag(el, $el, e, function (x) {
-        var lo = rsSnap(st, Math.max(st.min, Math.min(st.max - span, rsValueAt(st, x) - grab)));
-        rsSet(el, $el, lo, Math.min(st.max, tidy(lo + span)), false);
-      });
-    });
-    st.$track.on("keydown" + NS, ".ah-range-selector-marker", function (e) {
-      if (rsDisabled($el)) { return; }
-      var left = $(this).hasClass("ah-range-selector-marker-left"), cur = left ? st.lo : st.hi, to;
+    var onMarker = (e, marker) => {
+      if (this.disabled()) { return; }
+      var left = marker.classList.contains("ah-range-selector-marker-left");
+      marker.focus();
+      this.drag(e, (x) => { this.moveEnd(left, this.valueAt(x), false); });
+    };
+    this.delegate("mousedown", ".ah-range-selector-marker", onMarker, track);
+    this.delegate("touchstart", ".ah-range-selector-marker", onMarker, track);
+    if (st.slider) {
+      var onBar = (e) => {
+        if (this.disabled()) { return; }
+        var span = tidy(st.hi - st.lo), grab = this.valueAt(pointX(e)) - st.lo;
+        this.drag(e, (x) => {
+          var lo = rsSnap(st, Math.max(st.min, Math.min(st.max - span, this.valueAt(x) - grab)));
+          this.set(lo, Math.min(st.max, tidy(lo + span)), false);
+        });
+      };
+      this.listen(st.slider, "mousedown", onBar);
+      this.listen(st.slider, "touchstart", onBar);
+    }
+    this.delegate("keydown", ".ah-range-selector-marker", (e, marker) => {
+      if (this.disabled()) { return; }
+      var left = marker.classList.contains("ah-range-selector-marker-left"), cur = left ? st.lo : st.hi, to;
       switch (e.key) {
         case "ArrowRight": case "ArrowUp": to = cur + st.step; break;
         case "ArrowLeft": case "ArrowDown": to = cur - st.step; break;
@@ -189,23 +127,98 @@ AH.define("range-selector", {
         default: return;
       }
       e.preventDefault();
-      rsMoveEnd(el, $el, left, to, true);
+      this.moveEnd(left, to, true);
+    }, track);
+  }
+
+  teardown() { this.endDrag(); }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  setValue(v) {
+    var st = this.st;
+    if (typeof v === "string") { v = v.split(","); }
+    var lo = rsSnap(st, parseFloat(v[0])), hi = rsSnap(st, parseFloat(v[1]));
+    if (lo > hi) { var t = lo; lo = hi; hi = t; }
+    st.lo = lo; st.hi = hi;
+    this.layout();
+    st.committed = this.element.getAttribute("data-ah-value");
+  }
+  getValue() { return [this.st.lo, this.st.hi]; }
+
+  disabled() { return this.element.classList.contains("ah-range-selector-disabled"); }
+
+  layout() {
+    var st = this.st, a = pct(st, st.lo), b = pct(st, st.hi);
+    css(st.slider, { left: a + "%", width: tidy(b - a) + "%" });
+    css(st.shutL, { width: a + "%" });
+    css(st.shutR, { left: b + "%", width: tidy(100 - b) + "%" });
+    [[st.mL, st.lo, a], [st.mR, st.hi, b]].forEach(function (m) {
+      if (!m[0]) { return; }
+      var t = rsFormat(m[1], st.format);
+      m[0].style.left = m[2] + "%";
+      m[0].setAttribute("aria-valuenow", String(m[1]));
+      m[0].setAttribute("aria-valuetext", t);
+      var label = child(m[0], "ah-range-selector-marker-value");
+      if (label) { label.textContent = t; }
     });
-  },
-  destroy: function (el) {
-    var st = rsState(el);
-    if (st) { $(document).off(st.ns); }
-  },
-  methods: {
-    setValue: function (el, $el, v) {
-      var st = rsState(el);
-      if (typeof v === "string") { v = v.split(","); }
-      var lo = rsSnap(st, parseFloat(v[0])), hi = rsSnap(st, parseFloat(v[1]));
-      if (lo > hi) { var t = lo; lo = hi; hi = t; }
-      st.lo = lo; st.hi = hi;
-      rsLayout(el, $el);
-      st.committed = $el.attr("data-ah-value");
-    },
-    getValue: function (el) { var st = rsState(el); return [st.lo, st.hi]; }
+    writeValue(this.element, st.lo + "," + st.hi);
+  }
+
+  // Set lo / hi (already bounded); input when it changed, change if asked.
+  set(lo, hi, change) {
+    var st = this.st, el = this.element, old = el.getAttribute("data-ah-value");
+    st.lo = lo; st.hi = hi;
+    this.layout();
+    var v = el.getAttribute("data-ah-value");
+    if (v !== old) { this.fire("input", v); }
+    if (change && v !== st.committed) {
+      st.committed = v;
+      this.fire("change", v);
+    }
+  }
+
+  // Move one end to v, kept min_span away from the other.
+  moveEnd(left, v, change) {
+    var st = this.st;
+    v = rsSnap(st, v);
+    if (left) {
+      this.set(Math.max(st.min, Math.min(v, tidy(st.hi - st.minSpan))), st.hi, change);
+    } else {
+      this.set(st.lo, Math.min(st.max, Math.max(v, tidy(st.lo + st.minSpan))), change);
+    }
+  }
+
+  valueAt(x) {
+    var st = this.st, r = st.track.getBoundingClientRect();
+    var p = r.width > 0 ? Math.max(0, Math.min(1, (x - r.left) / r.width)) : 0;
+    return st.min + p * (st.max - st.min);
+  }
+
+  endDrag() {
+    if (this.st && this.st.drag) { this.st.drag.abort(); this.st.drag = null; }
+  }
+
+  // Follow the pointer on the document until release.
+  drag(e, move) {
+    var st = this.st, el = this.element;
+    if (e.type === "mousedown") {
+      if (e.button !== 0) { return; }
+      e.preventDefault();
+    }
+    this.endDrag();
+    var ac = st.drag = new AbortController(), o = { signal: ac.signal };
+    var onMove = function (me) {
+      if (me.type === "mousemove") { me.preventDefault(); }
+      move(pointX(me));
+    };
+    var onUp = () => {
+      this.endDrag();
+      el.classList.remove("ah-range-selector-dragging");
+      this.set(st.lo, st.hi, true);
+    };
+    document.addEventListener("mousemove", onMove, o);
+    document.addEventListener("touchmove", onMove, o);
+    ["mouseup", "touchend", "touchcancel"].forEach(function (t) { document.addEventListener(t, onUp, o); });
+    el.classList.add("ah-range-selector-dragging");
   }
 });

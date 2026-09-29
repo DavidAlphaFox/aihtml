@@ -10,30 +10,32 @@
  * The arrangement is kept in data-ah-value as JSON (the same shape and
  * key order the server writes, see aihtml_tile_layout) and mirrored
  * into the hidden input; every resize, move, close and tab switch fires
- * "change" on the root.
+ * "change" on the root. "ah:tab-select" and "ah:tab-close" carry the
+ * tab id as their detail.
  */
-import $ from "jquery";
 import AH from "../core.js";
 import "virtual:ah-tpl/tile_layout_tab";
 
-var NS = AH.NS;
-var seq = 0;
-var MIN = 20;
+let seq = 0;
+const MIN = 20;
+// per layout root: {closed, drag, resize}
+const states = new WeakMap();
 
 function state(el) {
-  var s = $.data(el, "ah-tl");
+  let s = states.get(el);
   if (!s) {
-    var closed = [];
+    let closed = [];
     try { closed = JSON.parse(el.getAttribute("data-ah-value") || "{}").closed || []; }
     catch (e) { closed = []; }
-    s = { ns: ".ahtl" + (++seq), closed: closed, drag: null, resize: null };
-    $.data(el, "ah-tl", s);
+    s = { closed: closed, drag: null, resize: null };
+    states.set(el, s);
   }
   return s;
 }
 
-function own(el, $set) {
-  return $set.filter(function () { return $(this).closest(".ah-tl")[0] === el; });
+function mine(el, node) { return node.closest(".ah-tl") === el; }
+function own(el, selector) {
+  return Array.from(el.querySelectorAll(selector)).filter((n) => mine(el, n));
 }
 
 function disabled(el) {
@@ -45,8 +47,19 @@ function newId() {
 }
 
 function barSize(el) {
-  var n = parseInt(el.getAttribute("data-splitbar-size"), 10);
+  const n = parseInt(el.getAttribute("data-splitbar-size"), 10);
   return isNaN(n) ? 4 : n;
+}
+
+function div(cls, attrs) {
+  const d = document.createElement("div");
+  d.className = cls;
+  Object.keys(attrs || {}).forEach((k) => { d.setAttribute(k, attrs[k]); });
+  return d;
+}
+
+function emit(el, type, detail) {
+  el.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true, detail: detail }));
 }
 
 // ------------------------------------------------------------------
@@ -57,7 +70,7 @@ function isGroup(n) { return n && n.getAttribute && n.getAttribute("data-type") 
 function isTabGroup(n) { return n && n.getAttribute && n.getAttribute("data-type") === "tab-group"; }
 
 function kids(group) {
-  return $(group).children().not(".ah-tl-splitbar");
+  return Array.from(group.children).filter((n) => !n.classList.contains("ah-tl-splitbar"));
 }
 
 function vert(group) {
@@ -65,14 +78,14 @@ function vert(group) {
 }
 
 function applyTemplate(el, group) {
-  var sizes = kids(group).map(function () { return this.getAttribute("data-size") || "1fr"; }).get();
-  var tpl = sizes.join(" " + barSize(el) + "px ");
+  const sizes = kids(group).map((n) => n.getAttribute("data-size") || "1fr");
+  const tpl = sizes.join(" " + barSize(el) + "px ");
   group.style.gridTemplateColumns = vert(group) ? tpl : "";
   group.style.gridTemplateRows = vert(group) ? "" : tpl;
 }
 
 function measure(node, v) {
-  var r = node.getBoundingClientRect();
+  const r = node.getBoundingClientRect();
   return v ? r.width : r.height;
 }
 
@@ -82,33 +95,31 @@ function fr(px, total) {
 
 // Write sizes (px, one per child) as proportional fr tracks.
 function setSizes(el, group, px) {
-  var total = px.reduce(function (a, b) { return a + b; }, 0);
-  kids(group).each(function (i) { this.setAttribute("data-size", fr(px[i], total)); });
+  const total = px.reduce((a, b) => a + b, 0);
+  kids(group).forEach((n, i) => { n.setAttribute("data-size", fr(px[i], total)); });
   applyTemplate(el, group);
 }
 
 function sizesOf(group) {
-  var v = vert(group);
-  return kids(group).map(function () { return measure(this, v); }).get();
+  const v = vert(group);
+  return kids(group).map((n) => measure(n, v));
 }
 
 function splitbar(v) {
-  return $("<div>").addClass("ah-tl-splitbar " + (v ? "ah-tl-splitbar-v" : "ah-tl-splitbar-h"))
-    .attr({ role: "separator", "aria-orientation": v ? "vertical" : "horizontal",
-            "aria-label": "Resize", tabindex: "0" })[0];
+  return div("ah-tl-splitbar " + (v ? "ah-tl-splitbar-v" : "ah-tl-splitbar-h"),
+             { role: "separator", "aria-orientation": v ? "vertical" : "horizontal",
+               "aria-label": "Resize", tabindex: "0" });
 }
 
 function newGroup(v) {
-  return $("<div>").addClass("ah-tl-group " + (v ? "ah-tl-vertical" : "ah-tl-horizontal"))
-    .attr({ "data-id": newId(), "data-type": "layout-group",
-            "data-orientation": v ? "vertical" : "horizontal" })[0];
+  return div("ah-tl-group " + (v ? "ah-tl-vertical" : "ah-tl-horizontal"),
+             { "data-id": newId(), "data-type": "layout-group",
+               "data-orientation": v ? "vertical" : "horizontal" });
 }
 
 function newTabGroup() {
-  var tg = $("<div>").addClass("ah-tl-tab-group")
-    .attr({ "data-id": newId(), "data-type": "tab-group" })[0];
-  $("<div>").addClass("ah-tl-tab-strip")
-    .attr({ role: "tablist", "aria-orientation": "horizontal" }).appendTo(tg);
+  const tg = div("ah-tl-tab-group", { "data-id": newId(), "data-type": "tab-group" });
+  tg.appendChild(div("ah-tl-tab-strip", { role: "tablist", "aria-orientation": "horizontal" }));
   return tg;
 }
 
@@ -116,38 +127,41 @@ function newTabGroup() {
 // Tabs
 // ------------------------------------------------------------------
 
-function strip(tg) { return $(tg).children(".ah-tl-tab-strip")[0]; }
-function tabsOf(tg) { return $(strip(tg)).children(".ah-tl-tab"); }
+function strip(tg) { return tg.querySelector(":scope > .ah-tl-tab-strip"); }
+function tabsOf(tg) {
+  const s = strip(tg);
+  return s ? Array.from(s.children).filter((n) => n.classList.contains("ah-tl-tab")) : [];
+}
 function tabId(tab) { return tab.getAttribute("data-tab-id"); }
+function tabGroupOf(tab) { return tab.closest(".ah-tl-tab-group"); }
+function contents(tg) {
+  return Array.from(tg.children).filter((n) => n.classList.contains("ah-tl-tab-content"));
+}
 
 function panelOf(tg, id) {
-  return $(tg).children(".ah-tl-tab-content").filter(function () {
-    return this.getAttribute("data-id") === id;
-  })[0];
+  return contents(tg).find((n) => n.getAttribute("data-id") === id);
 }
 
 function allows(node, what) {
-  var m = node.getAttribute("data-modifiers");
+  const m = node.getAttribute("data-modifiers");
   return m === null || m.split(",").indexOf(what) >= 0;
 }
 
 function selectTab(tg, tab) {
-  tabsOf(tg).each(function () {
-    var on = this === tab;
-    this.classList.toggle("ah-tl-tab-selected", on);
-    this.setAttribute("aria-selected", String(on));
-    this.setAttribute("tabindex", on ? "0" : "-1");
+  tabsOf(tg).forEach((t) => {
+    const on = t === tab;
+    t.classList.toggle("ah-tl-tab-selected", on);
+    t.setAttribute("aria-selected", String(on));
+    t.setAttribute("tabindex", on ? "0" : "-1");
   });
-  var id = tab && tabId(tab);
-  $(tg).children(".ah-tl-tab-content").each(function () {
-    this.classList.toggle("ah-tl-tab-content-active", this.getAttribute("data-id") === id);
+  const id = tab && tabId(tab);
+  contents(tg).forEach((c) => {
+    c.classList.toggle("ah-tl-tab-content-active", c.getAttribute("data-id") === id);
   });
 }
 
 function findTab(el, id) {
-  return own(el, $(el).find(".ah-tl-tab")).filter(function () {
-    return tabId(this) === String(id);
-  })[0];
+  return own(el, ".ah-tl-tab").find((t) => tabId(t) === String(id));
 }
 
 // ------------------------------------------------------------------
@@ -155,20 +169,20 @@ function findTab(el, id) {
 // ------------------------------------------------------------------
 
 function nodeValue(n) {
-  var t = n.getAttribute("data-type");
-  var size = n.getAttribute("data-size");
-  var o = {};
+  const t = n.getAttribute("data-type");
+  const size = n.getAttribute("data-size");
+  const o = {};
   if (t === "layout-group") {
     o.id = n.getAttribute("data-id");
-    o.items = kids(n).map(function () { return nodeValue(this); }).get();
+    o.items = kids(n).map(nodeValue);
     if (size) { o.size = size; }
     o.type = vert(n) ? "columns" : "rows";
   } else if (t === "tab-group") {
-    var sel = tabsOf(n).filter(".ah-tl-tab-selected")[0];
+    const sel = tabsOf(n).find((x) => x.classList.contains("ah-tl-tab-selected"));
     o.active = sel ? tabId(sel) : "";
     o.id = n.getAttribute("data-id");
     if (size) { o.size = size; }
-    o.tabs = tabsOf(n).map(function () { return tabId(this); }).get();
+    o.tabs = tabsOf(n).map(tabId);
     o.type = "tabs";
   } else {
     o.id = n.getAttribute("data-id");
@@ -179,20 +193,20 @@ function nodeValue(n) {
 }
 
 function value(el) {
-  var root = $(el).children("[data-type]")[0];
-  var closed = state(el).closed.slice().sort();
+  const root = el.querySelector(":scope > [data-type]");
+  const closed = state(el).closed.slice().sort();
   return { closed: closed, root: root ? nodeValue(root) : null };
 }
 
 function sync(el) {
-  var v = JSON.stringify(value(el));
+  const v = JSON.stringify(value(el));
   el.setAttribute("data-ah-value", v);
-  $(el).children("input[type=hidden]").val(v);
+  el.querySelectorAll(":scope > input[type=hidden]").forEach((i) => { i.value = v; });
 }
 
 function commit(el) {
   sync(el);
-  $(el).trigger("change");
+  emit(el, "change");
 }
 
 // ------------------------------------------------------------------
@@ -200,41 +214,42 @@ function commit(el) {
 // ------------------------------------------------------------------
 
 function removeNode(el, n) {
-  var parent = n.parentNode;
+  const parent = n.parentNode;
   if (isGroup(parent)) {
     setSizes(el, parent, sizesOf(parent));
-    var prev = n.previousElementSibling, next = n.nextElementSibling;
+    const prev = n.previousElementSibling, next = n.nextElementSibling;
     if (prev && prev.classList.contains("ah-tl-splitbar")) {
-      $(prev).remove();
+      prev.remove();
     } else if (next && next.classList.contains("ah-tl-splitbar")) {
-      $(next).remove();
+      next.remove();
     }
-    $(n).remove();
+    n.remove();
     applyTemplate(el, parent);
   } else {
-    $(n).remove();
+    n.remove();
   }
 }
 
 // Empty tab groups and groups go; a group with one child gives way to it.
 function cleanup(el) {
-  var again = true;
+  let again = true;
   while (again) {
     again = false;
-    own(el, $(el).find(".ah-tl-tab-group")).each(function () {
-      if (!tabsOf(this).length) { removeNode(el, this); again = true; }
+    own(el, ".ah-tl-tab-group").forEach((tg) => {
+      if (!tabsOf(tg).length) { removeNode(el, tg); again = true; }
     });
-    own(el, $(el).find(".ah-tl-group")).each(function () {
-      var $k = kids(this);
-      if ($k.length === 0) {
-        removeNode(el, this);
+    own(el, ".ah-tl-group").forEach((g) => {
+      if (!g.isConnected) { return; }
+      const k = kids(g);
+      if (k.length === 0) {
+        removeNode(el, g);
         again = true;
-      } else if ($k.length === 1) {
-        var child = $k[0];
-        var size = this.getAttribute("data-size");
+      } else if (k.length === 1) {
+        const child = k[0];
+        const size = g.getAttribute("data-size");
         if (size) { child.setAttribute("data-size", size); } else { child.removeAttribute("data-size"); }
-        var parent = this.parentNode;
-        $(this).replaceWith(child);
+        const parent = g.parentNode;
+        g.replaceWith(child);
         if (isGroup(parent)) { applyTemplate(el, parent); }
         again = true;
       }
@@ -243,25 +258,27 @@ function cleanup(el) {
 }
 
 function close(el, tab) {
-  var tg = $(tab).closest(".ah-tl-tab-group")[0];
-  var id = tabId(tab);
-  var wasSel = tab.classList.contains("ah-tl-tab-selected");
-  var i = tabsOf(tg).index(tab);
-  $(panelOf(tg, id)).remove();
-  $(tab).remove();
-  var s = state(el);
+  const tg = tabGroupOf(tab);
+  const id = tabId(tab);
+  const wasSel = tab.classList.contains("ah-tl-tab-selected");
+  const i = tabsOf(tg).indexOf(tab);
+  const panel = panelOf(tg, id);
+  if (panel) { panel.remove(); }
+  tab.remove();
+  const s = state(el);
   if (s.closed.indexOf(id) < 0) { s.closed.push(id); }
-  var $rest = tabsOf(tg);
-  if (wasSel && $rest.length) {
-    var next = $rest[Math.min(i, $rest.length - 1)];
+  const rest = tabsOf(tg);
+  if (wasSel && rest.length) {
+    const next = rest[Math.min(i, rest.length - 1)];
     selectTab(tg, next);
-    if ($.contains(tg, document.activeElement) || document.activeElement === document.body) {
+    const a = document.activeElement;
+    if ((a !== tg && tg.contains(a)) || a === document.body) {
       next.focus();
     }
   }
   cleanup(el);
   commit(el);
-  $(el).trigger("ah:tab-close", [id]);
+  emit(el, "ah:tab-close", id);
 }
 
 // ------------------------------------------------------------------
@@ -270,7 +287,7 @@ function close(el, tab) {
 
 // sigil's five zones: the outer quarter of each side, else the centre.
 function zoneAt(x, y, r) {
-  var rx = x - r.left, ry = y - r.top;
+  const rx = x - r.left, ry = y - r.top;
   if (ry < r.height * 0.25) { return "top"; }
   if (ry > r.height * 0.75) { return "bottom"; }
   if (rx < r.width * 0.25) { return "left"; }
@@ -279,98 +296,98 @@ function zoneAt(x, y, r) {
 }
 
 function targetAt(el, x, y) {
-  var found = null;
-  own(el, $(el).find(".ah-tl-item, .ah-tl-tab-group")).each(function () {
-    var r = this.getBoundingClientRect();
-    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) { found = this; }
+  let found = null;
+  own(el, ".ah-tl-item, .ah-tl-tab-group").forEach((n) => {
+    const r = n.getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) { found = n; }
   });
   return found;
 }
 
 function showIndicator(el, zone, target) {
   hideIndicator(el);
-  var r = target.getBoundingClientRect(), o = el.getBoundingClientRect();
-  var left = r.left - o.left, top = r.top - o.top, w = r.width, h = r.height;
+  const r = target.getBoundingClientRect(), o = el.getBoundingClientRect();
+  let left = r.left - o.left, top = r.top - o.top, w = r.width, h = r.height;
   if (zone === "top") { h = h / 2; }
   if (zone === "bottom") { top += h / 2; h = h / 2; }
   if (zone === "left") { w = w / 2; }
   if (zone === "right") { left += w / 2; w = w / 2; }
-  $("<div>").addClass("ah-tl-drop-area")
-    .css({ left: left + "px", top: top + "px", width: w + "px", height: h + "px" })
-    .appendTo(el);
+  const area = div("ah-tl-drop-area");
+  Object.assign(area.style, { left: left + "px", top: top + "px", width: w + "px", height: h + "px" });
+  el.appendChild(area);
 }
 
 function hideIndicator(el) {
-  $(el).children(".ah-tl-drop-area").remove();
+  el.querySelectorAll(":scope > .ah-tl-drop-area").forEach((n) => { n.remove(); });
 }
 
 // A plain tile becomes a tab group holding it as its first tab.
 function wrapItem(el, item) {
-  var tg = newTabGroup();
-  var id = item.getAttribute("data-id");
-  ["data-size", "data-min", "data-resize"].forEach(function (a) {
+  const tg = newTabGroup();
+  const id = item.getAttribute("data-id");
+  ["data-size", "data-min", "data-resize"].forEach((a) => {
     if (item.hasAttribute(a)) { tg.setAttribute(a, item.getAttribute(a)); }
   });
-  $(strip(tg)).append(AH.tpl.tile_layout_tab({
+  strip(tg).insertAdjacentHTML("beforeend", AH.tpl.tile_layout_tab({
     selected: false, dom_id: el.id + "-tab-" + id, id: id, modifiers: "drag,close",
     panel_id: el.id + "-panel-" + id, aria_selected: "false", tabindex: "-1",
     label: item.getAttribute("data-label") || id, close: true
   }));
-  var panel = $("<div>").addClass("ah-tl-tab-content")
-    .attr({ id: el.id + "-panel-" + id, "data-id": id, role: "tabpanel",
-            "aria-labelledby": el.id + "-tab-" + id })[0];
+  const panel = div("ah-tl-tab-content",
+                    { id: el.id + "-panel-" + id, "data-id": id, role: "tabpanel",
+                      "aria-labelledby": el.id + "-tab-" + id });
   while (item.firstChild) { panel.appendChild(item.firstChild); }
   tg.appendChild(panel);
-  $(item).replaceWith(tg);
+  item.replaceWith(tg);
   return tg;
 }
 
 function drop(el, tab, zone, target) {
-  var src = $(tab).closest(".ah-tl-tab-group")[0];
+  const src = tabGroupOf(tab);
   if (target === src && (zone === "center" || tabsOf(src).length === 1)) { return false; }
-  var id = tabId(tab);
-  var panel = panelOf(src, id);
-  var wasSel = tab.classList.contains("ah-tl-tab-selected");
-  $(tab).detach();
-  $(panel).detach();
+  const id = tabId(tab);
+  const panel = panelOf(src, id);
+  const wasSel = tab.classList.contains("ah-tl-tab-selected");
+  tab.remove();
+  if (panel) { panel.remove(); }
   if (wasSel && tabsOf(src).length) { selectTab(src, tabsOf(src)[0]); }
-  var into;
+  let into;
   if (zone === "center") {
     into = isTabGroup(target) ? target : wrapItem(el, target);
   } else {
     into = newTabGroup();
-    var needVert = zone === "left" || zone === "right";
-    var before = zone === "left" || zone === "top";
-    var parent = target.parentNode;
+    const needVert = zone === "left" || zone === "right";
+    const before = zone === "left" || zone === "top";
+    const parent = target.parentNode;
     if (isGroup(parent) && vert(parent) === needVert) {
       // same axis: the new group takes half of the target's room
-      var px = sizesOf(parent);
-      var at = kids(parent).index(target);
-      var half = px[at] / 2;
+      const px = sizesOf(parent);
+      const at = kids(parent).indexOf(target);
+      const half = px[at] / 2;
       px.splice(at, 1, half, half);
       if (before) {
-        $(target).before(into, splitbar(needVert));
+        target.before(into, splitbar(needVert));
       } else {
-        $(target).after(splitbar(needVert), into);
+        target.after(splitbar(needVert), into);
         px.splice(at, 2, half, half);
       }
       setSizes(el, parent, px);
     } else {
       // across: target and new group share a new group in its place
-      var g = newGroup(needVert);
+      const g = newGroup(needVert);
       if (target.hasAttribute("data-size")) {
         g.setAttribute("data-size", target.getAttribute("data-size"));
         target.removeAttribute("data-size");
       }
-      $(target).replaceWith(g);
-      if (before) { $(g).append(into, splitbar(needVert), target); }
-      else { $(g).append(target, splitbar(needVert), into); }
+      target.replaceWith(g);
+      if (before) { g.append(into, splitbar(needVert), target); }
+      else { g.append(target, splitbar(needVert), into); }
       applyTemplate(el, g);
       if (isGroup(parent)) { applyTemplate(el, parent); }
     }
   }
-  $(strip(into)).append(tab);
-  $(into).append(panel);
+  strip(into).appendChild(tab);
+  if (panel) { into.appendChild(panel); }
   selectTab(into, tab);
   cleanup(el);
   commit(el);
@@ -382,24 +399,28 @@ function drop(el, tab, zone, target) {
 // ------------------------------------------------------------------
 
 function tabDown(el, tab, e) {
-  if (disabled(el) || e.button !== 0 || $(e.target).closest(".ah-tl-tab-close").length) { return; }
-  var tg = $(tab).closest(".ah-tl-tab-group")[0];
+  if (disabled(el) || e.button !== 0 || e.target.closest(".ah-tl-tab-close")) { return; }
+  const tg = tabGroupOf(tab);
   if (!allows(tab, "drag") || !allows(tg, "drag")) { return; }
   state(el).drag = { tab: tab, x: e.clientX, y: e.clientY, started: false };
 }
 
 function dragMove(el, e) {
-  var d = state(el).drag;
+  const d = state(el).drag;
   if (!d) { return; }
   if (!d.started) {
     if (Math.sqrt(Math.pow(e.clientX - d.x, 2) + Math.pow(e.clientY - d.y, 2)) <= 5) { return; }
     d.started = true;
-    d.feedback = $("<div>").addClass("ah-tl-feedback")
-      .text($(d.tab).find(".ah-tl-tab-label").text()).appendTo(document.body)[0];
-    d.overlay = $("<div>").addClass("ah-tl-overlay").appendTo(document.body)[0];
+    d.feedback = div("ah-tl-feedback");
+    const lbl = d.tab.querySelector(".ah-tl-tab-label");
+    d.feedback.textContent = lbl ? lbl.textContent : "";
+    document.body.appendChild(d.feedback);
+    d.overlay = div("ah-tl-overlay");
+    document.body.appendChild(d.overlay);
   }
-  $(d.feedback).css({ left: (e.clientX + 10) + "px", top: (e.clientY + 10) + "px" });
-  var t = targetAt(el, e.clientX, e.clientY);
+  d.feedback.style.left = (e.clientX + 10) + "px";
+  d.feedback.style.top = (e.clientY + 10) + "px";
+  const t = targetAt(el, e.clientX, e.clientY);
   if (t) {
     d.target = t;
     d.zone = zoneAt(e.clientX, e.clientY, t.getBoundingClientRect());
@@ -411,11 +432,11 @@ function dragMove(el, e) {
 }
 
 function dragEnd(el, cancel) {
-  var s = state(el), d = s.drag;
+  const s = state(el), d = s.drag;
   s.drag = null;
   if (!d) { return; }
-  $(d.feedback).remove();
-  $(d.overlay).remove();
+  if (d.feedback) { d.feedback.remove(); }
+  if (d.overlay) { d.overlay.remove(); }
   hideIndicator(el);
   if (!cancel && d.started && d.target) { drop(el, d.tab, d.zone, d.target); }
 }
@@ -423,26 +444,26 @@ function dragEnd(el, cancel) {
 // Resizing: the two panes around a splitbar trade room, within their
 // minimum sizes; the group's tracks become proportional fr values.
 function resizeStart(el, bar, coord) {
-  var group = bar.parentNode;
-  var prev = bar.previousElementSibling, next = bar.nextElementSibling;
+  const group = bar.parentNode;
+  const prev = bar.previousElementSibling, next = bar.nextElementSibling;
   if (disabled(el) || !isGroup(group) || !prev || !next ||
       prev.getAttribute("data-resize") === "false" || next.getAttribute("data-resize") === "false") {
     return null;
   }
-  var $k = kids(group);
+  const k = kids(group);
   return {
     bar: bar, group: group, start: coord, px: sizesOf(group),
-    i: $k.index(prev), moved: false,
-    saved: $k.map(function () { return this.getAttribute("data-size"); }).get(),
+    i: k.indexOf(prev), moved: false,
+    saved: k.map((n) => n.getAttribute("data-size")),
     minPrev: parseInt(prev.getAttribute("data-min"), 10) || MIN,
     minNext: parseInt(next.getAttribute("data-min"), 10) || MIN
   };
 }
 
 function resizeTo(el, r, delta) {
-  var a = r.px[r.i], b = r.px[r.i + 1];
+  const a = r.px[r.i], b = r.px[r.i + 1];
   delta = Math.max(-(a - r.minPrev), Math.min(delta, b - r.minNext));
-  var px = r.px.slice();
+  const px = r.px.slice();
   px[r.i] = a + delta;
   px[r.i + 1] = b - delta;
   setSizes(el, r.group, px);
@@ -450,9 +471,9 @@ function resizeTo(el, r, delta) {
 }
 
 function resizeCancel(el, r) {
-  kids(r.group).each(function (i) {
-    if (r.saved[i] === null) { this.removeAttribute("data-size"); }
-    else { this.setAttribute("data-size", r.saved[i]); }
+  kids(r.group).forEach((n, i) => {
+    if (r.saved[i] === null) { n.removeAttribute("data-size"); }
+    else { n.setAttribute("data-size", r.saved[i]); }
   });
   applyTemplate(el, r.group);
   r.bar.classList.remove("ah-tl-splitbar-active");
@@ -462,92 +483,94 @@ function resizeCancel(el, r) {
 // Behaviour
 // ------------------------------------------------------------------
 
-AH.define("tile-layout", {
-  init: function (el, $el) {
-    var s = state(el);
-    $el.on("click" + NS, ".ah-tl-tab-close", function (e) {
+AH.register("tile-layout", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    state(el);
+    this.delegate("click", ".ah-tl-tab-close", (e, btn) => {
       e.stopPropagation();
       if (disabled(el)) { return; }
-      var tab = $(this).closest(".ah-tl-tab")[0];
-      if ($(tab).closest(".ah-tl")[0] === el && allows(tab, "close")) { close(el, tab); }
+      const tab = btn.closest(".ah-tl-tab");
+      if (tab && mine(el, tab) && allows(tab, "close")) { close(el, tab); }
     });
-    $el.on("click" + NS, ".ah-tl-tab", function () {
-      if ($(this).closest(".ah-tl")[0] !== el || disabled(el)) { return; }
-      var tg = $(this).closest(".ah-tl-tab-group")[0];
-      var changed = !this.classList.contains("ah-tl-tab-selected");
-      selectTab(tg, this);
+    this.delegate("click", ".ah-tl-tab", (e, tab) => {
+      if (!mine(el, tab) || disabled(el)) { return; }
+      const tg = tabGroupOf(tab);
+      const changed = !tab.classList.contains("ah-tl-tab-selected");
+      selectTab(tg, tab);
       if (changed) {
         commit(el);
-        $el.trigger("ah:tab-select", [tabId(this)]);
+        this.fire("ah:tab-select", tabId(tab));
       }
     });
-    $el.on("keydown" + NS, ".ah-tl-tab", function (e) {
-      if ($(this).closest(".ah-tl")[0] !== el || disabled(el)) { return; }
-      var tg = $(this).closest(".ah-tl-tab-group")[0];
-      var side = /\bah-tl-tab-group-(left|right)\b/.test(tg.className);
-      var $t = tabsOf(tg), i = $t.index(this), next = null;
+    this.delegate("keydown", ".ah-tl-tab", (e, tab) => {
+      if (!mine(el, tab) || disabled(el)) { return; }
+      const tg = tabGroupOf(tab);
+      const side = /\bah-tl-tab-group-(left|right)\b/.test(tg.className);
+      const ts = tabsOf(tg), i = ts.indexOf(tab);
+      let next = null;
       switch (e.key) {
-        case side ? "ArrowUp" : "ArrowLeft": next = (i - 1 + $t.length) % $t.length; break;
-        case side ? "ArrowDown" : "ArrowRight": next = (i + 1) % $t.length; break;
+        case side ? "ArrowUp" : "ArrowLeft": next = (i - 1 + ts.length) % ts.length; break;
+        case side ? "ArrowDown" : "ArrowRight": next = (i + 1) % ts.length; break;
         case "Home": next = 0; break;
-        case "End": next = $t.length - 1; break;
+        case "End": next = ts.length - 1; break;
         case "Delete":
-          if (allows(this, "close")) { e.preventDefault(); close(el, this); }
+          if (allows(tab, "close")) { e.preventDefault(); close(el, tab); }
           return;
         case "Enter": case " ": next = i; break;
         default: return;
       }
       e.preventDefault();
-      var t = $t[next];
+      const t = ts[next];
       t.focus();
       if (!t.classList.contains("ah-tl-tab-selected")) {
         selectTab(tg, t);
         commit(el);
-        $el.trigger("ah:tab-select", [tabId(t)]);
+        this.fire("ah:tab-select", tabId(t));
       }
     });
     // the pane last pressed is outlined (sigil's selection)
-    $el.on("pointerdown" + NS, function (e) {
-      var pane = $(e.target).closest(".ah-tl-item, .ah-tl-tab-group")[0];
-      if (!pane || $(pane).closest(".ah-tl")[0] !== el) { return; }
-      own(el, $(el).find("[data-tl-selected]")).removeAttr("data-tl-selected");
+    this.listen(el, "pointerdown", (e) => {
+      const pane = e.target.closest(".ah-tl-item, .ah-tl-tab-group");
+      if (!pane || !mine(el, pane)) { return; }
+      own(el, "[data-tl-selected]").forEach((n) => { n.removeAttribute("data-tl-selected"); });
       pane.setAttribute("data-tl-selected", "true");
     });
-    $el.on("pointerdown" + NS, ".ah-tl-tab", function (e) {
-      if ($(this).closest(".ah-tl")[0] === el) { tabDown(el, this, e); }
+    this.delegate("pointerdown", ".ah-tl-tab", (e, tab) => {
+      if (mine(el, tab)) { tabDown(el, tab, e); }
     });
-    $el.on("pointerdown" + NS, ".ah-tl-splitbar", function (e) {
-      if ($(this).closest(".ah-tl")[0] !== el || e.button !== 0) { return; }
-      var group = this.parentNode;
-      var r = resizeStart(el, this, vert(group) ? e.clientX : e.clientY);
+    this.delegate("pointerdown", ".ah-tl-splitbar", (e, bar) => {
+      if (!mine(el, bar) || e.button !== 0) { return; }
+      const group = bar.parentNode;
+      const r = resizeStart(el, bar, vert(group) ? e.clientX : e.clientY);
       if (!r) { return; }
       e.preventDefault();
-      this.classList.add("ah-tl-splitbar-active");
+      bar.classList.add("ah-tl-splitbar-active");
       state(el).resize = r;
     });
-    $el.on("keydown" + NS, ".ah-tl-splitbar", function (e) {
-      if ($(this).closest(".ah-tl")[0] !== el) { return; }
-      var v = vert(this.parentNode);
-      var step = e.shiftKey ? 50 : 10;
-      var d = { ArrowLeft: v ? -step : 0, ArrowRight: v ? step : 0,
-                ArrowUp: v ? 0 : -step, ArrowDown: v ? 0 : step }[e.key];
+    this.delegate("keydown", ".ah-tl-splitbar", (e, bar) => {
+      if (!mine(el, bar)) { return; }
+      const v = vert(bar.parentNode);
+      const step = e.shiftKey ? 50 : 10;
+      const d = { ArrowLeft: v ? -step : 0, ArrowRight: v ? step : 0,
+                  ArrowUp: v ? 0 : -step, ArrowDown: v ? 0 : step }[e.key];
       if (!d) { return; }
       e.preventDefault();
-      var r = resizeStart(el, this, 0);
+      const r = resizeStart(el, bar, 0);
       if (!r) { return; }
       resizeTo(el, r, d);
       if (r.moved) { commit(el); }
     });
-    $(document).on("pointermove" + s.ns, function (e) {
-      var r = state(el).resize;
+    this.listen(document, "pointermove", (e) => {
+      const r = state(el).resize;
       if (r) {
         resizeTo(el, r, (vert(r.group) ? e.clientX : e.clientY) - r.start);
       } else {
         dragMove(el, e);
       }
     });
-    $(document).on("pointerup" + s.ns + " pointercancel" + s.ns, function (e) {
-      var st = state(el), r = st.resize;
+    const up = (e) => {
+      const st = state(el), r = st.resize;
       if (r) {
         st.resize = null;
         r.bar.classList.remove("ah-tl-splitbar-active");
@@ -555,32 +578,34 @@ AH.define("tile-layout", {
       } else {
         dragEnd(el, e.type === "pointercancel");
       }
-    });
-    $(document).on("keydown" + s.ns, function (e) {
+    };
+    this.listen(document, "pointerup", up);
+    this.listen(document, "pointercancel", up);
+    this.listen(document, "keydown", (e) => {
       if (e.key !== "Escape") { return; }
-      var st = state(el);
+      const st = state(el);
       if (st.resize) { resizeCancel(el, st.resize); st.resize = null; }
       if (st.drag) { dragEnd(el, true); }
     });
-  },
-  destroy: function (el) {
-    var s = state(el);
-    if (s.drag) { dragEnd(el, true); }
-    $(document).off(s.ns);
-    $.removeData(el, "ah-tl");
-  },
-  methods: {
-    getValue: function (el) { return value(el); },
-    select: function (el, $el, id) {
-      var tab = findTab(el, id);
-      if (tab) {
-        selectTab($(tab).closest(".ah-tl-tab-group")[0], tab);
-        sync(el);
-      }
-    },
-    close: function (el, $el, id) {
-      var tab = findTab(el, id);
-      if (tab) { close(el, tab); }
+  }
+
+  teardown() {
+    const el = this.element;
+    if (state(el).drag) { dragEnd(el, true); }
+    states.delete(el);
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  getValue() { return value(this.element); }
+  select(id) {
+    const tab = findTab(this.element, id);
+    if (tab) {
+      selectTab(tabGroupOf(tab), tab);
+      sync(this.element);
     }
+  }
+  close(id) {
+    const tab = findTab(this.element, id);
+    if (tab) { close(this.element, tab); }
   }
 });

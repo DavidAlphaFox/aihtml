@@ -1,4 +1,4 @@
-/* Behaviour of the data grid (designs/04-components.md).
+/* Controller of the data grid (designs/04-components.md).
  *
  * Ported from sigil (data/datagrid). The server renders the header, the
  * rows, the pager and the status bar (aihtml_datagrid); this file keeps
@@ -9,30 +9,41 @@
  *                (.ah-dg-row-off), group rows and the pager come from the
  *                shared templates (datagrid_group_row, datagrid_pager),
  *                the status bar aggregates are recomputed
- *   remote mode  (data-ah-remote) every view change fires ah:query on the
- *                grid's hidden .ah-dg-query element (its data-* carry the
- *                view); the server answers with datagrid_rows/4, which
- *                morphs the rows and the pager in and calls rowsLoaded
+ *   remote mode  (data-ah-remote) the server rendered the first page; every
+ *                view change fires ah:query on the grid's hidden
+ *                .ah-dg-query element (its data-* carry the view); the
+ *                server answers with datagrid_rows/4, which morphs the rows
+ *                and the pager in and calls rowsLoaded. Nothing is asked
+ *                for on mount (refresh() does that on demand).
+ *
+ * Pager links (data-ah-href, the `href' option): the pager's buttons are
+ * <a href> links for crawlers and new tabs; a plain left click stays in
+ * the page (the same re-page or query as a button) and pushes the link's
+ * URL to the history (core's url operation: going back reloads it).
  *
  * Also: selection (single / multi / checkbox, data-ah-value + hidden input
  * + change), keyboard navigation over cells (roving tabindex, ARIA grid),
  * column resize, pinning (sticky), hiding, the column menu (template
  * datagrid_column_menu, positioned with AH.float), inline editing
- * (ah:edit), and CSV / Excel / PDF export (xlsx and jspdf through
- * AH.vendor, loaded on the first export).
+ * (ah:edit), and CSV / Excel / PDF export (xlsx, jspdf and jspdf-autotable
+ * by dynamic import(): separate chunks, loaded on the first export).
  *
- * Component events carry their details as data-* attributes of the root
- * while they are triggered (key, field, value, old, name, expanded), so
- * postbacks bound with on/2 receive them in Event.data.
+ * Component events are native CustomEvents (bubbling). Their details are
+ * in e.detail ({key, field, value, old, name, expanded}, whichever apply)
+ * and, while they are dispatched, also data-* attributes of the root, so
+ * postbacks bound with on/2 receive them in Event.data:
+ *   ah:sort {field, value: "asc" | "desc" | ""}, ah:filter {field, value},
+ *   ah:page {value}, ah:group-toggle {value, expanded},
+ *   ah:column-resize {field, value}, ah:edit {key, field, value, old},
+ *   ah:row-click / ah:row-dblclick {key, field}, ah:command {key, field,
+ *   name}, ah:toolbar {name}; ah:query (no detail) on .ah-dg-query.
  */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_values.js";
 import "virtual:ah-tpl/datagrid_column_menu";
 import "virtual:ah-tpl/datagrid_group_row";
 import "virtual:ah-tpl/datagrid_pager";
 
-var NS = AH.NS;
 var seq = 0;
 var CHECK = "__checkbox";
 var DETAIL = ["key", "field", "value", "old", "name", "expanded"];
@@ -140,26 +151,42 @@ function json(s, d) {
 }
 
 // ------------------------------------------------------------------
-// State
+// DOM helpers
 // ------------------------------------------------------------------
 
-function state(el) { return $.data(el, "ah-dg"); }
+function kids(el, sel) {
+  if (!el) { return []; }
+  return Array.prototype.filter.call(el.children, function (c) { return c.matches(sel); });
+}
+function kid(el, sel) { return kids(el, sel)[0] || null; }
+function qa(el, sel) { return el ? Array.from(el.querySelectorAll(sel)) : []; }
+function parseOne(html) {
+  var t = document.createElement("template");
+  t.innerHTML = html;
+  return t.content.firstElementChild;
+}
+function setStyle(node, props) { Object.assign(node.style, props); }
+
+// ------------------------------------------------------------------
+// State
+// ------------------------------------------------------------------
 
 function readCols(el, s) {
   s.cols = [];
   s.byField = Object.create(null);
-  $(el).find(".ah-dg-header-row").first().children(".ah-dg-header-cell").each(function () {
-    var h = this, f = h.getAttribute("data-field");
+  kids(el.querySelector(".ah-dg-header-row"), ".ah-dg-header-cell").forEach(function (h) {
+    var f = h.getAttribute("data-field");
+    var content = kid(h, ".ah-dg-header-cell-content");
     var c = {
       field: f, head: h, check: f === CHECK,
-      title: $(h).children(".ah-dg-header-cell-content").text(),
+      title: content ? content.textContent : "",
       type: h.getAttribute("data-type") || "text",
       editable: h.getAttribute("data-editable") === "true",
       sortable: f !== CHECK && h.getAttribute("data-sortable") !== "false",
       groupable: f !== CHECK && h.getAttribute("data-groupable") !== "false",
       pinned: h.getAttribute("data-pinned") === "true" ||
         (f === CHECK && h.style.position === "sticky"),
-      hidden: $(h).hasClass("ah-dg-col-hidden"),
+      hidden: h.classList.contains("ah-dg-col-hidden"),
       width: parseInt(h.style.width, 10) || h.offsetWidth || 100,
       minWidth: parseInt(h.getAttribute("data-min-width") || "40", 10),
       format: h.getAttribute("data-format"),
@@ -173,7 +200,7 @@ function readCols(el, s) {
 }
 
 function readRecs(s) {
-  var rows = $(s.body).children(".ah-dg-row").toArray();
+  var rows = kids(s.body, ".ah-dg-row");
   if (rows.length && rows[0].hasAttribute("data-i")) {
     rows.sort(function (a, b) {
       return parseInt(a.getAttribute("data-i"), 10) - parseInt(b.getAttribute("data-i"), 10);
@@ -187,8 +214,8 @@ function rec(r) { return { el: r, key: r.getAttribute("data-key"), cells: null }
 function cellOf(r, f) {
   if (!r.cells) {
     r.cells = Object.create(null);
-    $(r.el).children(".ah-dg-cell").each(function () {
-      r.cells[this.getAttribute("data-field")] = this;
+    kids(r.el, ".ah-dg-cell").forEach(function (c) {
+      r.cells[c.getAttribute("data-field")] = c;
     });
   }
   return r.cells[f] || null;
@@ -205,15 +232,18 @@ function writeState(el, s) {
   el.setAttribute("data-group-by", JSON.stringify(s.groupBy));
 }
 
-// Trigger a component event with its details as data-* of the root, so
+// Fire a component event with its details as data-* of the root, so
 // a postback bound on the root receives them in Event.data.
-function fire(el, name, detail) {
+function fire(el, s, name, detail) {
   detail = detail || {};
   DETAIL.forEach(function (k) {
     if (detail[k] !== undefined && detail[k] !== null) { el.setAttribute("data-" + k, String(detail[k])); }
   });
-  $(el).trigger(name, [detail]);
-  DETAIL.forEach(function (k) { el.removeAttribute("data-" + k); });
+  try {
+    s.ctl.fire(name, detail);
+  } finally {
+    DETAIL.forEach(function (k) { el.removeAttribute("data-" + k); });
+  }
 }
 
 // ------------------------------------------------------------------
@@ -303,34 +333,40 @@ function groupEl(s, g) {
     });
     if (parts.length) { aggs.push({ label: c.title, text: parts.join(", ") }); }
   });
-  var html = AH.tpl.datagrid_group_row({
+  return parseOne(AH.tpl.datagrid_group_row({
     id: g.id, level: g.level, aria_level: g.level + 1,
     expanded: g.collapsed ? "false" : "true", open: !g.collapsed,
     indent: g.level * 20, colspan: visibleCols(s).length,
     title: g.title, count: g.count, has_aggs: aggs.length > 0, aggs: aggs
-  });
-  return $($.parseHTML(html))[0];
+  }));
 }
 
 function statusbar(el, s, list) {
-  var $bar = $(el).find(".ah-dg-statusbar").first();
-  if (!$bar.length) { return; }
+  var bar = el.querySelector(".ah-dg-statusbar");
+  if (!bar) { return; }
   s.cols.forEach(function (c) {
     if (!c.aggs.length) { return; }
     var nums = numbers(list, c.field);
-    $bar.find(".ah-dg-statusbar-cell").filter(function () {
-      return this.getAttribute("data-field") === c.field;
-    }).find(".ah-dg-statusbar-item").each(function () {
-      var a = this.getAttribute("data-agg");
-      $(this).children(".ah-dg-statusbar-value").text(statusText(a, aggregate(a, nums)));
+    qa(bar, ".ah-dg-statusbar-cell").filter(function (cell) {
+      return cell.getAttribute("data-field") === c.field;
+    }).forEach(function (cell) {
+      qa(cell, ".ah-dg-statusbar-item").forEach(function (item) {
+        var a = item.getAttribute("data-agg");
+        kids(item, ".ah-dg-statusbar-value").forEach(function (v) {
+          v.textContent = statusText(a, aggregate(a, nums));
+        });
+      });
     });
   });
 }
 
+function isOff(node) { return !!node.closest(".ah-dg-row-off"); }
+
 function viewLocal(el, s) {
   var active = document.activeElement;
-  var hadFocus = active && $.contains(s.body, active);
-  var activeGroup = hadFocus ? $(active).closest(".ah-dg-group-row").attr("data-group-id") : null;
+  var hadFocus = !!active && active !== s.body && s.body.contains(active);
+  var activeGroupRow = hadFocus ? active.closest(".ah-dg-group-row") : null;
+  var activeGroup = activeGroupRow ? activeGroupRow.getAttribute("data-group-id") : null;
   var filters = Object.keys(s.filters).filter(function (f) {
     return s.filters[f] !== "" && s.byField[f];
   }).map(function (f) { return [f, String(s.filters[f]).toLowerCase()]; });
@@ -348,7 +384,7 @@ function viewLocal(el, s) {
   s.page = s.pageable ? Math.min(Math.max(1, s.page), pages) : 1;
   var lo = s.pageable ? (s.page - 1) * s.pageSize : 0;
   var hi = s.pageable ? lo + s.pageSize : total;
-  $(s.body).children(".ah-dg-group-row").remove();
+  kids(s.body, ".ah-dg-group-row").forEach(function (g) { g.remove(); });
   var frag = document.createDocumentFragment();
   var stamp = ++seq;
   var focusGroup = null;
@@ -363,12 +399,12 @@ function viewLocal(el, s) {
       return;
     }
     it.row.stamp = stamp;
-    $(it.row.el).toggleClass("ah-dg-row-off", !on);
+    it.row.el.classList.toggle("ah-dg-row-off", !on);
     frag.appendChild(it.row.el);
   });
   s.recs.forEach(function (r) {
     if (r.stamp !== stamp) {
-      $(r.el).addClass("ah-dg-row-off");
+      r.el.classList.add("ah-dg-row-off");
       frag.appendChild(r.el);
     }
   });
@@ -378,8 +414,8 @@ function viewLocal(el, s) {
   renderPager(el, s);
   paintSelection(el, s);
   if (hadFocus) {
-    if (focusGroup) { activate(el, s, $(focusGroup).children(".ah-dg-group-title")[0], true); }
-    else if (active.isConnected && !$(active).closest(".ah-dg-row-off").length) { active.focus(); }
+    if (focusGroup) { activate(el, s, kid(focusGroup, ".ah-dg-group-title"), true); }
+    else if (active.isConnected && !isOff(active)) { active.focus(); }
     else { resetActive(el, s, true); }
   } else {
     resetActive(el, s, false);
@@ -390,16 +426,17 @@ function viewLocal(el, s) {
 // Stripes and aria-rowindex of the rows on the page; the empty message.
 function paintRows(el, s, offset) {
   var idx = 0, ri = s.headerRows + offset + 1;
-  $(s.body).children(".ah-dg-row, .ah-dg-group-row").each(function () {
-    if ($(this).hasClass("ah-dg-row-off")) { this.removeAttribute("aria-rowindex"); return; }
-    if ($(this).hasClass("ah-dg-row")) {
-      $(this).toggleClass("ah-dg-row-even", idx % 2 === 0).toggleClass("ah-dg-row-odd", idx % 2 === 1);
-      this.setAttribute("aria-rowindex", String(ri++));
+  kids(s.body, ".ah-dg-row, .ah-dg-group-row").forEach(function (r) {
+    if (r.classList.contains("ah-dg-row-off")) { r.removeAttribute("aria-rowindex"); return; }
+    if (r.classList.contains("ah-dg-row")) {
+      r.classList.toggle("ah-dg-row-even", idx % 2 === 0);
+      r.classList.toggle("ah-dg-row-odd", idx % 2 === 1);
+      r.setAttribute("aria-rowindex", String(ri++));
     }
     idx++;
   });
   var empty = idx === 0;
-  $(s.body).toggleClass("ah-dg-body-empty", empty);
+  s.body.classList.toggle("ah-dg-body-empty", empty);
   if (s.empty) { s.empty.hidden = !empty; }
 }
 
@@ -424,13 +461,42 @@ function pagerView(s) {
   };
 }
 
+// The grid's href with the view filled in but {page}; mirrors
+// aihtml_datagrid:link_template/4.
+function linkTemplate(s) {
+  var sort = s.sort.map(function (sd) { return encodeURIComponent(sd[0]) + ":" + sd[1]; }).join(",");
+  return s.href.replace(/\{size\}/g, String(s.pageSize)).replace(/\{sort\}/g, sort)
+    .replace(/\{search\}/g, encodeURIComponent(s.search || ""));
+}
+
+function withLinks(v, t) {
+  var url = function (skip, p) { return skip ? "" : t.replace(/\{page\}/g, String(p)); };
+  v.link = true;
+  v.first_href = url(v.at_start, 1);
+  v.prev_href = url(v.at_start, v.prev);
+  v.next_href = url(v.at_end, v.next);
+  v.last_href = url(v.at_end, v.last);
+  v.pages.forEach(function (p) { p.link = true; p.href = url(false, p.page); });
+  return v;
+}
+
+// A plain left click follows a pager link in the page; any other (a new
+// tab, a download) is the browser's.
+function plainClick(e) {
+  return e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey;
+}
+
 function renderPager(el, s) {
   if (!s.pageable || !s.pagerWrap) { return; }
   var focused = document.activeElement;
-  var refocus = focused && $.contains(s.pagerWrap, focused) ?
+  var refocus = focused && focused !== s.pagerWrap && s.pagerWrap.contains(focused) ?
     (focused.getAttribute("data-page") ? "[aria-current=page]" : "select") : null;
-  s.pagerWrap.innerHTML = AH.tpl.datagrid_pager(pagerView(s));
-  if (refocus) { $(s.pagerWrap).find(refocus).first().trigger("focus"); }
+  var v = pagerView(s);
+  s.pagerWrap.innerHTML = AH.tpl.datagrid_pager(s.href ? withLinks(v, linkTemplate(s)) : v);
+  if (refocus) {
+    var again = s.pagerWrap.querySelector(refocus);
+    if (again) { again.focus(); }
+  }
 }
 
 function paintHeader(el, s) {
@@ -439,20 +505,23 @@ function paintHeader(el, s) {
     var i = -1;
     s.sort.forEach(function (sd, j) { if (sd[0] === c.field) { i = j; } });
     var dir = i >= 0 ? s.sort[i][1] : null;
-    $(c.head).toggleClass("ah-dg-header-cell-sorted", !!dir);
+    c.head.classList.toggle("ah-dg-header-cell-sorted", !!dir);
     c.head.setAttribute("aria-sort", dir === "asc" ? "ascending" : (dir === "desc" ? "descending" : "none"));
-    var icon = $(c.head).children(".ah-dg-header-sort-icon")[0];
+    var icon = kid(c.head, ".ah-dg-header-sort-icon");
     if (!icon) { return; }
     icon.textContent = dir === "asc" ? "▲" : (dir === "desc" ? "▼" : "");
     if (dir && s.sort.length > 1) {
-      $(icon).append($('<span class="ah-dg-header-sort-badge"></span>').text(String(i + 1)));
+      var badge = document.createElement("span");
+      badge.className = "ah-dg-header-sort-badge";
+      badge.textContent = String(i + 1);
+      icon.appendChild(badge);
     }
   });
   if (s.filterRow) {
-    $(s.filterRow).children(".ah-dg-filter-cell").each(function () {
-      var f = this.getAttribute("data-field");
-      $(this).toggleClass("ah-dg-filter-cell-active", !!s.filters[f]);
-      var input = $(this).children(".ah-dg-filter-input")[0];
+    kids(s.filterRow, ".ah-dg-filter-cell").forEach(function (cell) {
+      var f = cell.getAttribute("data-field");
+      cell.classList.toggle("ah-dg-filter-cell-active", !!s.filters[f]);
+      var input = kid(cell, ".ah-dg-filter-input");
       if (input && input !== document.activeElement && input.value !== (s.filters[f] || "")) {
         input.value = s.filters[f] || "";
       }
@@ -477,32 +546,34 @@ function query(el, s, exportFormat) {
   if (exportFormat) {
     q.setAttribute("data-export", exportFormat);
   } else {
-    loading(el, true);
+    loading(el, s, true);
   }
-  $(q).trigger("ah:query");
-  q.removeAttribute("data-export");
+  try {
+    s.ctl.fire("ah:query", null, q);
+  } finally {
+    q.removeAttribute("data-export");
+  }
 }
 
-function loading(el, on) {
-  var st = state(el);
-  $(el).children(".ah-dg-loading-overlay").css("display", on ? "flex" : "none");
+function loading(el, s, on) {
+  kids(el, ".ah-dg-loading-overlay").forEach(function (o) { o.style.display = on ? "flex" : "none"; });
   el.setAttribute("aria-busy", on ? "true" : "false");
-  if (st) { st.busy = on; }
+  s.busy = on;
 }
 
 // After the server morphed rows in (rowsLoaded, rowUpdated).
 function adoptRows(el, s) {
   if (s.remote) {
-    s.recs = $(s.body).children(".ah-dg-row").toArray().map(rec);
+    s.recs = kids(s.body, ".ah-dg-row").map(rec);
   } else {
     var byKey = Object.create(null);
-    $(s.body).children(".ah-dg-row").each(function () { byKey[this.getAttribute("data-key")] = this; });
+    kids(s.body, ".ah-dg-row").forEach(function (r) { byKey[r.getAttribute("data-key")] = r; });
     s.recs.forEach(function (r) {
       if (byKey[r.key] && byKey[r.key] !== r.el) { r.el = byKey[r.key]; }
       r.cells = null;
     });
   }
-  s.empty = $(s.body).children(".ah-dg-empty-message")[0] || null;
+  s.empty = kid(s.body, ".ah-dg-empty-message");
   layout(el, s, s.body);
 }
 
@@ -517,16 +588,16 @@ function layout(el, s, scope) {
   visibleCols(s).forEach(function (c) {
     if (c.pinned) { offsets[c.field] = left; left += c.width; lastPinned = c.field; }
   });
-  $(scope || el).find(CELLS).each(function () {
-    var c = s.byField[this.getAttribute("data-field")];
-    if (!c || $(this).closest(".ah-dg")[0] !== el) { return; }
-    this.style.width = c.width + "px";
-    $(this).toggleClass("ah-dg-col-hidden", c.hidden)
-      .toggleClass("ah-dg-cell-pinned-last", c.field === lastPinned && !c.hidden);
+  qa(scope || el, CELLS).forEach(function (cell) {
+    var c = s.byField[cell.getAttribute("data-field")];
+    if (!c || cell.closest(".ah-dg") !== el) { return; }
+    cell.style.width = c.width + "px";
+    cell.classList.toggle("ah-dg-col-hidden", c.hidden);
+    cell.classList.toggle("ah-dg-cell-pinned-last", c.field === lastPinned && !c.hidden);
     if (c.pinned && !c.hidden) {
-      $(this).css({ position: "sticky", left: offsets[c.field] + "px", zIndex: "2" });
-    } else if (this.style.position === "sticky") {
-      $(this).css({ position: "", left: "", zIndex: "" });
+      setStyle(cell, { position: "sticky", left: offsets[c.field] + "px", zIndex: "2" });
+    } else if (cell.style.position === "sticky") {
+      setStyle(cell, { position: "", left: "", zIndex: "" });
     }
   });
   el.setAttribute("aria-colcount", String(visibleCols(s).length));
@@ -537,7 +608,7 @@ function setHidden(el, s, c, hidden) {
   c.hidden = hidden;
   layout(el, s);
   if (!s.remote && s.groupBy.length) { viewLocal(el, s); }
-  if (s.active && $(s.active).hasClass("ah-dg-col-hidden")) { resetActive(el, s, false); }
+  if (s.active && s.active.classList.contains("ah-dg-col-hidden")) { resetActive(el, s, false); }
 }
 
 // ------------------------------------------------------------------
@@ -545,20 +616,20 @@ function setHidden(el, s, c, hidden) {
 // ------------------------------------------------------------------
 
 function pageRows(s) {
-  return $(s.body).children(".ah-dg-row").not(".ah-dg-row-off").toArray();
+  return kids(s.body, ".ah-dg-row").filter(function (r) { return !r.classList.contains("ah-dg-row-off"); });
 }
 
 function paintSelection(el, s) {
   var set = Object.create(null);
   s.sel.forEach(function (k) { set[k] = true; });
-  $(s.body).children(".ah-dg-row").each(function () {
-    var on = !!set[this.getAttribute("data-key")];
-    $(this).toggleClass("ah-dg-row-selected", on);
-    if (s.mode !== "none") { this.setAttribute("aria-selected", on ? "true" : "false"); }
-    var cb = $(this).children(".ah-dg-cell-checkbox").children("input")[0];
+  kids(s.body, ".ah-dg-row").forEach(function (r) {
+    var on = !!set[r.getAttribute("data-key")];
+    r.classList.toggle("ah-dg-row-selected", on);
+    if (s.mode !== "none") { r.setAttribute("aria-selected", on ? "true" : "false"); }
+    var cb = kid(kid(r, ".ah-dg-cell-checkbox"), "input");
     if (cb) { cb.checked = on; }
   });
-  var all = $(el).find(".ah-dg-select-all")[0];
+  var all = el.querySelector(".ah-dg-select-all");
   if (all) {
     var rows = pageRows(s);
     var n = rows.filter(function (r) { return set[r.getAttribute("data-key")]; }).length;
@@ -571,9 +642,9 @@ function writeValue(el, s, user) {
   var before = el.getAttribute("data-ah-value") || "";
   var v = AH.lib.values.join(s.sel);
   el.setAttribute("data-ah-value", v);
-  $(el).children("input[type=hidden][data-ah-input]").val(v);
+  kids(el, "input[type=hidden][data-ah-input]").forEach(function (i) { i.value = v; });
   paintSelection(el, s);
-  if (user && v !== before) { $(el).trigger("change"); }
+  if (user && v !== before) { s.ctl.fire("change"); }
 }
 
 function toggleKey(s, key) {
@@ -618,34 +689,31 @@ function selectAll(el, s, on) {
 
 function navRows(s) {
   var rows = [s.headerRow];
-  $(s.body).children(".ah-dg-row, .ah-dg-group-row").each(function () {
-    if (!$(this).hasClass("ah-dg-row-off")) { rows.push(this); }
+  kids(s.body, ".ah-dg-row, .ah-dg-group-row").forEach(function (r) {
+    if (!r.classList.contains("ah-dg-row-off")) { rows.push(r); }
   });
   return rows;
 }
 
 function cellAt(s, row, field) {
-  if ($(row).hasClass("ah-dg-group-row")) { return $(row).children(".ah-dg-group-title")[0]; }
+  if (!row) { return null; }
+  if (row.classList.contains("ah-dg-group-row")) { return kid(row, ".ah-dg-group-title"); }
   var sel = row === s.headerRow ? ".ah-dg-header-cell" : ".ah-dg-cell";
-  var found = null;
-  $(row).children(sel).each(function () {
-    if (this.getAttribute("data-field") === field) { found = this; return false; }
-  });
-  return found;
+  return kids(row, sel).filter(function (c) { return c.getAttribute("data-field") === field; })[0] || null;
 }
 
 function activate(el, s, cell, focus) {
   if (!cell) { return; }
   if (s.active && s.active !== cell) {
     s.active.removeAttribute("tabindex");
-    $(s.active).removeClass("ah-dg-cell-focused");
+    s.active.classList.remove("ah-dg-cell-focused");
   }
   s.active = cell;
   cell.setAttribute("tabindex", "0");
   var f = cell.getAttribute("data-field");
   if (f) { s.activeField = f; }
   if (focus) {
-    $(cell).addClass("ah-dg-cell-focused");
+    cell.classList.add("ah-dg-cell-focused");
     cell.focus({ preventScroll: false });
   }
 }
@@ -653,7 +721,7 @@ function activate(el, s, cell, focus) {
 // Keep a tab stop: the active cell, else the header cell of its column.
 function resetActive(el, s, focus) {
   var a = s.active;
-  if (a && a.isConnected && !$(a).closest(".ah-dg-row-off").length && !$(a).hasClass("ah-dg-col-hidden")) {
+  if (a && a.isConnected && !isOff(a) && !a.classList.contains("ah-dg-col-hidden")) {
     if (focus) { activate(el, s, a, true); }
     return;
   }
@@ -664,7 +732,7 @@ function resetActive(el, s, focus) {
 }
 
 function position(s, cell) {
-  var row = $(cell).closest(".ah-dg-row, .ah-dg-group-row, .ah-dg-header-row")[0];
+  var row = cell.closest(".ah-dg-row, .ah-dg-group-row, .ah-dg-header-row");
   var rows = navRows(s);
   return { rows: rows, r: rows.indexOf(row), row: row };
 }
@@ -689,11 +757,12 @@ function move(el, s, cell, dr, dc, e) {
 function keydown(el, s, e) {
   if (s.editing) { return; }
   var cell = e.target;
-  if (!$(cell).is(".ah-dg-cell, .ah-dg-header-cell, .ah-dg-group-title") ||
-      $(cell).closest(".ah-dg")[0] !== el) { return; }
-  var header = $(cell).hasClass("ah-dg-header-cell");
-  var group = $(cell).closest(".ah-dg-group-row")[0];
-  var row = $(cell).closest(".ah-dg-row")[0];
+  if (!(cell instanceof Element) ||
+      !cell.matches(".ah-dg-cell, .ah-dg-header-cell, .ah-dg-group-title") ||
+      cell.closest(".ah-dg") !== el) { return; }
+  var header = cell.classList.contains("ah-dg-header-cell");
+  var group = cell.closest(".ah-dg-group-row");
+  var row = cell.closest(".ah-dg-row");
   var field = cell.getAttribute("data-field");
   var c = field ? s.byField[field] : null;
   switch (e.key) {
@@ -766,20 +835,20 @@ function headerSort(el, s, c, multi) {
     s.sort = next ? [[c.field, next]] : [];
   }
   view(el, s);
-  fire(el, "ah:sort", { field: c.field, value: next || "" });
+  fire(el, s, "ah:sort", { field: c.field, value: next || "" });
 }
 
 function setSort(el, s, field, dir) {
   s.sort = dir ? [[field, dir]] : s.sort.filter(function (sd) { return sd[0] !== field; });
   view(el, s);
-  fire(el, "ah:sort", { field: field, value: dir || "" });
+  fire(el, s, "ah:sort", { field: field, value: dir || "" });
 }
 
 function setFilter(el, s, field, v) {
   if (v) { s.filters[field] = v; } else { delete s.filters[field]; }
   s.page = 1;
   view(el, s);
-  fire(el, "ah:filter", { field: field, value: v });
+  fire(el, s, "ah:filter", { field: field, value: v });
 }
 
 function goToPage(el, s, p) {
@@ -788,7 +857,7 @@ function goToPage(el, s, p) {
   if (p === s.page) { return; }
   s.page = p;
   view(el, s);
-  fire(el, "ah:page", { value: p });
+  fire(el, s, "ah:page", { value: p });
 }
 
 function toggleGroup(el, s, groupRow, open) {
@@ -798,7 +867,7 @@ function toggleGroup(el, s, groupRow, open) {
   if (open === false && collapsed) { return; }
   if (collapsed) { delete s.collapsed[id]; } else { s.collapsed[id] = true; }
   viewLocal(el, s);
-  fire(el, "ah:group-toggle", { value: id, expanded: collapsed ? "true" : "false" });
+  fire(el, s, "ah:group-toggle", { value: id, expanded: collapsed ? "true" : "false" });
 }
 
 function setGroupBy(el, s, fields) {
@@ -813,31 +882,37 @@ function setGroupBy(el, s, fields) {
 // ------------------------------------------------------------------
 
 function startResize(el, s, e, handle) {
-  var head = $(handle).closest(".ah-dg-header-cell")[0];
+  var head = handle.closest(".ah-dg-header-cell");
   var c = head && s.byField[head.getAttribute("data-field")];
   if (!c) { return; }
   e.preventDefault();
   e.stopPropagation();
-  var line = $(el).children(".ah-dg-resize-line")[0];
+  var line = kid(el, ".ah-dg-resize-line");
   var rootLeft = el.getBoundingClientRect().left;
   var startX = e.clientX, startW = head.getBoundingClientRect().width, w = startW;
   var edge = head.getBoundingClientRect().right - rootLeft;
-  $(line).css({ display: "block", left: edge + "px", top: 0, height: el.offsetHeight + "px" });
-  var ns = ".ahdgrz" + s.id;
-  $(document).on("pointermove" + ns, function (me) {
+  if (line) { setStyle(line, { display: "block", left: edge + "px", top: "0", height: el.offsetHeight + "px" }); }
+  if (s.resizeOff) { s.resizeOff.abort(); }
+  var off = s.resizeOff = new AbortController();
+  var opts = { signal: off.signal };
+  document.addEventListener("pointermove", function (me) {
     w = Math.max(c.minWidth, startW + me.clientX - startX);
-    $(line).css("left", (edge + w - startW) + "px");
-  }).on("pointerup" + ns + " pointercancel" + ns, function () {
-    $(document).off(ns);
-    $(line).css("display", "none");
+    if (line) { line.style.left = (edge + w - startW) + "px"; }
+  }, opts);
+  var end = function () {
+    off.abort();
+    s.resizeOff = null;
+    if (line) { line.style.display = "none"; }
     s.resized = Date.now();
     w = Math.round(w);
     if (w !== c.width) {
       c.width = w;
       layout(el, s);
-      fire(el, "ah:column-resize", { field: c.field, value: w });
+      fire(el, s, "ah:column-resize", { field: c.field, value: w });
     }
-  });
+  };
+  document.addEventListener("pointerup", end, opts);
+  document.addEventListener("pointercancel", end, opts);
 }
 
 // ------------------------------------------------------------------
@@ -877,30 +952,35 @@ function menuItems(s, c) {
   return items;
 }
 
+function menuEntries(s) { return kids(s.menu, ".ah-dg-column-menu-item"); }
+
 function openMenu(el, s, field, focusIndex) {
   var c = s.byField[field];
   if (!c || c.check || !s.menu) { return; }
   closeMenu(el, s, false);
   s.menu.innerHTML = AH.tpl.datagrid_column_menu({ items: menuItems(s, c) });
   s.menu.setAttribute("aria-label", s.labels.column_menu + ": " + c.title);
-  $(s.menu).addClass("ah-dg-column-menu-open");
+  s.menu.classList.add("ah-dg-column-menu-open");
   s.menuField = field;
   // the header cell: its ⋮ button is only displayed while hovered
   s.menuFloat = AH.float(s.menu, c.head, { placement: "bottom", align: "end", offset: 2 });
-  var items = $(s.menu).children(".ah-dg-column-menu-item");
-  items.eq(Math.min(focusIndex || 0, items.length - 1)).trigger("focus");
-  $(document).on("mousedown.ahdgmenu" + s.id, function (e) {
-    if (!$.contains(s.menu, e.target) && !$(e.target).closest(".ah-dg-column-menu-btn").length) {
+  var items = menuEntries(s);
+  var first = items[Math.min(focusIndex || 0, items.length - 1)];
+  if (first) { first.focus(); }
+  var off = s.menuOff = new AbortController();
+  document.addEventListener("mousedown", function (e) {
+    if (!s.menu.contains(e.target) && !(e.target.closest && e.target.closest(".ah-dg-column-menu-btn"))) {
       closeMenu(el, s, false);
     }
-  });
+  }, { signal: off.signal });
 }
 
 function closeMenu(el, s, refocus) {
-  if (!s.menu || !$(s.menu).hasClass("ah-dg-column-menu-open")) { return; }
-  $(document).off("mousedown.ahdgmenu" + s.id);
+  if (!s.menu || !s.menu.classList.contains("ah-dg-column-menu-open")) { return; }
+  if (s.menuOff) { s.menuOff.abort(); s.menuOff = null; }
   if (s.menuFloat) { s.menuFloat.stop(); s.menuFloat = null; }
-  $(s.menu).removeClass("ah-dg-column-menu-open").css({ position: "", left: "", top: "" });
+  s.menu.classList.remove("ah-dg-column-menu-open");
+  setStyle(s.menu, { position: "", left: "", top: "" });
   s.menu.innerHTML = "";
   var c = s.byField[s.menuField];
   s.menuField = null;
@@ -924,7 +1004,7 @@ function menuAction(el, s, item) {
     case "clear-groups": setGroupBy(el, s, []); break;
     case "toggle-column":
       // stays open: several columns are usually toggled in a row
-      var index = $(s.menu).children(".ah-dg-column-menu-item").index(item);
+      var index = menuEntries(s).indexOf(item);
       setHidden(el, s, c, !c.hidden);
       openMenu(el, s, s.byField[menuField].hidden ? visibleCols(s)[0].field : menuField, index);
       return;
@@ -933,13 +1013,14 @@ function menuAction(el, s, item) {
 }
 
 function menuKey(el, s, e) {
-  var items = $(s.menu).children(".ah-dg-column-menu-item");
-  var i = items.index(document.activeElement);
+  var items = menuEntries(s);
+  var i = items.indexOf(document.activeElement);
+  var n = items.length;
   switch (e.key) {
-    case "ArrowDown": items.eq((i + 1) % items.length).trigger("focus"); break;
-    case "ArrowUp": items.eq((i - 1 + items.length) % items.length).trigger("focus"); break;
-    case "Home": items.first().trigger("focus"); break;
-    case "End": items.last().trigger("focus"); break;
+    case "ArrowDown": if (n) { items[(i + 1) % n].focus(); } break;
+    case "ArrowUp": if (n) { items[(i - 1 + n) % n].focus(); } break;
+    case "Home": if (n) { items[0].focus(); } break;
+    case "End": if (n) { items[n - 1].focus(); } break;
     case "Enter": case " ": if (i >= 0) { menuAction(el, s, items[i]); } break;
     case "Escape": case "Tab": closeMenu(el, s, true); break;
     default: return;
@@ -954,25 +1035,27 @@ function menuKey(el, s, e) {
 
 function setCellValue(s, cell, c, v) {
   var t = display(s, c, v);
-  var $span = $(cell).children(".ah-dg-cell-content");
-  if (!$span.length) {
-    $(cell).empty();
-    $span = $('<span class="ah-dg-cell-content"></span>').appendTo(cell);
+  var span = kid(cell, ".ah-dg-cell-content");
+  if (!span) {
+    cell.textContent = "";
+    span = document.createElement("span");
+    span.className = "ah-dg-cell-content";
+    cell.appendChild(span);
   }
-  $span.text(t);
+  span.textContent = t;
   if (t !== v) { cell.setAttribute("data-v", v); } else { cell.removeAttribute("data-v"); }
 }
 
 function commit(el, s, cell, c, old, v) {
-  var row = $(cell).closest(".ah-dg-row")[0];
+  var row = cell.closest(".ah-dg-row");
   setCellValue(s, cell, c, v);
-  fire(el, "ah:edit", { key: row.getAttribute("data-key"), field: c.field, value: v, old: old });
+  fire(el, s, "ah:edit", { key: row.getAttribute("data-key"), field: c.field, value: v, old: old });
   if (!s.remote) { viewLocal(el, s); }
 }
 
 function beginEdit(el, s, cell) {
   var c = s.byField[cell.getAttribute("data-field")];
-  if (!c || !c.editable || s.editing || !$(cell).hasClass("ah-dg-cell")) { return; }
+  if (!c || !c.editable || s.editing || !cell.classList.contains("ah-dg-cell")) { return; }
   var old = raw(cell);
   activate(el, s, cell, false);
   if (c.type === "bool") {
@@ -1001,13 +1084,16 @@ function beginEdit(el, s, cell) {
   ed.setAttribute("aria-label", c.title);
   var content = document.createDocumentFragment();
   while (cell.firstChild) { content.appendChild(cell.firstChild); }
-  s.editing = { cell: cell, col: c, old: old, ed: ed, content: content };
-  $(cell).addClass("ah-dg-cell-editing");
+  var off = new AbortController();
+  var editing = s.editing = { cell: cell, col: c, old: old, ed: ed, content: content, off: off };
+  cell.classList.add("ah-dg-cell-editing");
   cell.appendChild(ed);
   ed.focus();
   if (kind === "text" || kind === "textarea") { ed.select(); }
-  $(ed).on("blur" + NS, function () { endEdit(el, s, true, false); })
-    .on("keydown" + NS, function (e) { editorKey(el, s, e); });
+  ed.addEventListener("blur", function () {
+    if (s.editing === editing) { endEdit(el, s, true, false); }
+  }, { signal: off.signal });
+  ed.addEventListener("keydown", function (e) { editorKey(el, s, e); }, { signal: off.signal });
 }
 
 function endEdit(el, s, save, refocus) {
@@ -1015,9 +1101,10 @@ function endEdit(el, s, save, refocus) {
   if (!ed) { return; }
   s.editing = null;
   var v = String(ed.ed.value);
-  $(ed.ed).off(NS).remove();
+  ed.off.abort();
+  ed.ed.remove();
   ed.cell.appendChild(ed.content);
-  $(ed.cell).removeClass("ah-dg-cell-editing");
+  ed.cell.classList.remove("ah-dg-cell-editing");
   if (save && v !== ed.old) { commit(el, s, ed.cell, ed.col, ed.old, v); }
   if (refocus) { activate(el, s, ed.cell, true); }
 }
@@ -1078,7 +1165,8 @@ function writeFile(el, s, fmt, headers, rows) {
     return Promise.resolve();
   }
   if (fmt === "xlsx") {
-    return AH.vendor("xlsx").then(function (XLSX) {
+    return import("xlsx").then(function (m) {
+      var XLSX = m.utils ? m : m.default;
       var ws = XLSX.utils.aoa_to_sheet([headers].concat(rows));
       ws["!cols"] = headers.map(function (h, i) {
         var w = String(h).length;
@@ -1087,16 +1175,19 @@ function writeFile(el, s, fmt, headers, rows) {
       });
       var wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-      XLSX.writeFile(wb, name + ".xlsx");
+      var bytes = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      download(new Blob([bytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+               name + ".xlsx");
     });
   }
   if (fmt === "pdf") {
-    return AH.vendor(["jspdf", "jspdf-autotable"]).then(function (libs) {
-      var doc = new libs[0].jsPDF({ orientation: headers.length > 6 ? "landscape" : "portrait", format: "a4" });
-      var opts = { head: [headers], body: rows, startY: 14, styles: { fontSize: 9 },
-                   headStyles: { fillColor: [66, 139, 202] } };
-      if (typeof doc.autoTable === "function") { doc.autoTable(opts); } else { libs[1](doc, opts); }
-      doc.save(name + ".pdf");
+    return Promise.all([import("jspdf"), import("jspdf-autotable")]).then(function (libs) {
+      var JsPDF = libs[0].jsPDF || libs[0].default.jsPDF;
+      var autoTable = libs[1].autoTable || libs[1].default;
+      var doc = new JsPDF({ orientation: headers.length > 6 ? "landscape" : "portrait", format: "a4" });
+      autoTable(doc, { head: [headers], body: rows, startY: 14, styles: { fontSize: 9 },
+                       headStyles: { fillColor: [66, 139, 202] } });
+      download(doc.output("blob"), name + ".pdf");
     });
   }
   return Promise.reject(new Error("aihtml: unknown export format " + fmt));
@@ -1124,7 +1215,7 @@ function exportGrid(el, s, fmt) {
 }
 
 // ------------------------------------------------------------------
-// Behaviour
+// Controller
 // ------------------------------------------------------------------
 
 function debounce(s, key, ms, f) {
@@ -1132,9 +1223,18 @@ function debounce(s, key, ms, f) {
   s.timers[key] = setTimeout(f, ms);
 }
 
-AH.define("datagrid", {
-  init: function (el, $el) {
-    var s = {
+// The nearest element matching sel from the event target, inside root.
+function hit(e, sel, root) {
+  var t = e.target;
+  var m = t instanceof Element ? t.closest(sel) : null;
+  return m && root.contains(m) ? m : null;
+}
+
+AH.register("datagrid", class extends AH.Controller {
+  setup() {
+    var el = this.element;
+    var s = this.s = {
+      ctl: this,
       id: ++seq,
       remote: el.hasAttribute("data-ah-remote"),
       mode: el.getAttribute("data-ah-selection") || "single",
@@ -1143,6 +1243,7 @@ AH.define("datagrid", {
       headerRows: parseInt(el.getAttribute("data-ah-header-rows") || "1", 10),
       labels: json(el.getAttribute("data-ah-labels"), {}),
       exportName: el.getAttribute("data-ah-export-name") || "data",
+      href: el.getAttribute("data-ah-href"),
       sort: json(el.getAttribute("data-sort"), []),
       filters: json(el.getAttribute("data-filter"), {}),
       groupBy: json(el.getAttribute("data-group-by"), []),
@@ -1152,145 +1253,161 @@ AH.define("datagrid", {
       collapsed: Object.create(null),
       sel: AH.lib.values.split(el.getAttribute("data-ah-value")).filter(Boolean),
       anchor: null, active: null, activeField: null, editing: null, timers: {},
-      body: $el.find(".ah-dg-body").first()[0],
-      headerRow: $el.find(".ah-dg-header-row").first()[0],
-      filterRow: $el.find(".ah-dg-header-filter-row").first()[0] || null,
-      pagerWrap: $el.find(".ah-dg-pager-wrap").first()[0] || null,
-      menu: $el.children(".ah-dg-column-menu")[0] || null,
-      q: $el.children(".ah-dg-query")[0] || null
+      menuOff: null, resizeOff: null, menuFloat: null,
+      body: el.querySelector(".ah-dg-body"),
+      headerRow: el.querySelector(".ah-dg-header-row"),
+      filterRow: el.querySelector(".ah-dg-header-filter-row"),
+      pagerWrap: el.querySelector(".ah-dg-pager-wrap"),
+      menu: kid(el, ".ah-dg-column-menu"),
+      q: kid(el, ".ah-dg-query")
     };
-    if (Array.isArray(s.filters) || typeof s.filters !== "object") { s.filters = {}; }
-    s.pageSizes = $el.find(".ah-dg-pager-size-select option").map(function () {
-      return parseInt(this.value, 10);
-    }).get();
+    if (Array.isArray(s.filters) || typeof s.filters !== "object" || !s.filters) { s.filters = {}; }
+    s.pageSizes = qa(el, ".ah-dg-pager-size-select option").map(function (o) {
+      return parseInt(o.value, 10);
+    });
     if (!s.pageSizes.length) { s.pageSizes = [10, 20, 50, 100]; }
-    $.data(el, "ah-dg", s);
-    s.empty = $(s.body).children(".ah-dg-empty-message")[0] || null;
+    s.empty = kid(s.body, ".ah-dg-empty-message");
     readCols(el, s);
     readRecs(s);
     s.total = s.remote ? parseInt(el.getAttribute("aria-rowcount") || "0", 10) - s.headerRows : s.recs.length;
     el.removeAttribute("tabindex");
 
-    var $bodyWrap = $el.find(".ah-dg-body-wrap").first();
-    $bodyWrap.on("scroll" + NS, function () {
-      var x = this.scrollLeft;
-      $el.find(".ah-dg-header-wrap, .ah-dg-statusbar-wrap").each(function () { this.scrollLeft = x; });
+    // the body scrolls the header and the status bar along (scroll does
+    // not bubble: captured on the root)
+    this.listen(el, "scroll", function (e) {
+      var wrap = el.querySelector(".ah-dg-body-wrap");
+      if (e.target !== wrap) { return; }
+      var x = wrap.scrollLeft;
+      qa(el, ".ah-dg-header-wrap, .ah-dg-statusbar-wrap").forEach(function (w) { w.scrollLeft = x; });
+    }, { capture: true });
+
+    // header: resize
+    this.delegate("pointerdown", ".ah-dg-resize-handle", function (e, h) { startResize(el, s, e, h); });
+
+    // clicks, the innermost target first (as jQuery's delegated
+    // handlers ran, with stopPropagation between them)
+    this.listen(el, "click", function (e) {
+      var m;
+      if ((m = hit(e, ".ah-dg-column-menu-btn", el))) {
+        e.preventDefault();
+        e.stopPropagation();
+        var f = m.getAttribute("data-field");
+        if (s.menuField === f) { closeMenu(el, s, true); } else { openMenu(el, s, f); }
+      } else if ((m = hit(e, ".ah-dg-header-cell", el))) {
+        if (m.closest(".ah-dg") !== el) { return; }
+        if (hit(e, ".ah-dg-resize-handle, .ah-dg-column-menu-btn, input", m)) { return; }
+        if (s.resized && Date.now() - s.resized < 300) { return; }
+        activate(el, s, m, true);
+        headerSort(el, s, s.byField[m.getAttribute("data-field")], e.shiftKey);
+      } else if ((m = hit(e, ".ah-dg-row-checkbox", el))) {
+        e.stopPropagation();
+        var row = m.closest(".ah-dg-row");
+        var key = row.getAttribute("data-key");
+        if ((s.sel.indexOf(key) >= 0) !== m.checked) { toggleKey(s, key); }
+        s.anchor = key;
+        writeValue(el, s, true);
+      } else if ((m = hit(e, ".ah-dg-command-btn", el))) {
+        e.stopPropagation();
+        var crow = m.closest(".ah-dg-row");
+        fire(el, s, "ah:command", { key: crow && crow.getAttribute("data-key"),
+                                    field: m.getAttribute("data-field"),
+                                    name: m.getAttribute("data-command") });
+      } else if ((m = hit(e, ".ah-dg-row", el))) {
+        if (m.closest(".ah-dg") !== el || s.editing) { return; }
+        var cell = hit(e, ".ah-dg-cell", m);
+        var field = cell ? cell.getAttribute("data-field") : null;
+        if (cell && !hit(e, "a, button, input, select, textarea", m)) {
+          activate(el, s, cell, true);
+        }
+        fire(el, s, "ah:row-click", { key: m.getAttribute("data-key"), field: field });
+        if (!hit(e, "a", m)) { selectRow(el, s, m, e, false); }
+        if (cell && s.editMode === "click" && cell.classList.contains("ah-dg-cell-editable")) {
+          beginEdit(el, s, cell);
+        }
+      } else if ((m = hit(e, ".ah-dg-group-row", el))) {
+        activate(el, s, kid(m, ".ah-dg-group-title"), true);
+        toggleGroup(el, s, m);
+      } else if ((m = hit(e, ".ah-dg-pager-button", el))) {
+        if (m.disabled) { return; }
+        var link = m.tagName === "A" ? m.getAttribute("href") : null;
+        if (link !== null && !plainClick(e)) { return; }
+        if (link !== null) { e.preventDefault(); }
+        var before = s.page;
+        goToPage(el, s, parseInt(m.getAttribute("data-page"), 10));
+        if (link && s.page !== before) { AH.apply([{ op: "url", mode: "push", value: link }]); }
+      } else if ((m = hit(e, ".ah-dg-toolbar-btn[data-export]", el))) {
+        exportGrid(el, s, m.getAttribute("data-export"));
+      } else if ((m = hit(e, ".ah-dg-toolbar-btn[data-name]", el))) {
+        fire(el, s, "ah:toolbar", { name: m.getAttribute("data-name") });
+      }
+    });
+    this.delegate("dblclick", ".ah-dg-row", function (e, row) {
+      if (row.closest(".ah-dg") !== el || s.editing) { return; }
+      var cell = hit(e, ".ah-dg-cell", row);
+      fire(el, s, "ah:row-dblclick", { key: row.getAttribute("data-key"),
+                                       field: cell ? cell.getAttribute("data-field") : null });
+      if (cell && s.editMode === "dblclick" && cell.classList.contains("ah-dg-cell-editable")) {
+        beginEdit(el, s, cell);
+      }
     });
 
-    // inner controls report to the grid, not as the grid's own change / input
-    $el.on("change" + NS + " input" + NS, "input, select, textarea", function (e) { e.stopPropagation(); });
-
-    // header: sort, menu, resize, select all
-    $el.on("pointerdown" + NS, ".ah-dg-resize-handle", function (e) { startResize(el, s, e, this); });
-    $el.on("click" + NS, ".ah-dg-header-cell", function (e) {
-      if ($(this).closest(".ah-dg")[0] !== el) { return; }
-      if ($(e.target).closest(".ah-dg-resize-handle, .ah-dg-column-menu-btn, input").length) { return; }
-      if (s.resized && Date.now() - s.resized < 300) { return; }
-      activate(el, s, this, true);
-      headerSort(el, s, s.byField[this.getAttribute("data-field")], e.shiftKey);
+    // select all, pager size
+    this.delegate("change", ".ah-dg-select-all", function (e, box) { selectAll(el, s, box.checked); });
+    this.delegate("change", ".ah-dg-pager-size-select", function (e, sel) {
+      s.pageSize = parseInt(sel.value, 10) || s.pageSize;
+      s.page = 1;
+      view(el, s);
+      fire(el, s, "ah:page", { value: 1 });
     });
-    $el.on("click" + NS, ".ah-dg-column-menu-btn", function (e) {
-      e.preventDefault();
-      e.stopPropagation();
-      var f = this.getAttribute("data-field");
-      if (s.menuField === f) { closeMenu(el, s, true); } else { openMenu(el, s, f); }
-    });
-    $el.on("change" + NS, ".ah-dg-select-all", function () { selectAll(el, s, this.checked); });
 
     // filter row, search box (debounced)
-    $el.on("input" + NS, ".ah-dg-filter-input", function () {
-      var input = this, f = input.getAttribute("data-field");
+    this.delegate("input", ".ah-dg-filter-input", function (e, input) {
+      var f = input.getAttribute("data-field");
       debounce(s, "f:" + f, s.remote ? 300 : 200, function () { setFilter(el, s, f, input.value); });
     });
-    $el.on("input" + NS, ".ah-dg-search-input", function () {
-      var input = this;
+    this.delegate("input", ".ah-dg-search-input", function (e, input) {
       debounce(s, "search", s.remote ? 300 : 200, function () {
         s.search = input.value;
         s.page = 1;
         view(el, s);
-        fire(el, "ah:filter", { field: "", value: input.value });
+        fire(el, s, "ah:filter", { field: "", value: input.value });
       });
-    });
-
-    // pager
-    $el.on("click" + NS, ".ah-dg-pager-button", function () {
-      if (this.disabled) { return; }
-      goToPage(el, s, parseInt(this.getAttribute("data-page"), 10));
-    });
-    $el.on("change" + NS, ".ah-dg-pager-size-select", function () {
-      s.pageSize = parseInt(this.value, 10) || s.pageSize;
-      s.page = 1;
-      view(el, s);
-      fire(el, "ah:page", { value: 1 });
-    });
-
-    // rows
-    $el.on("click" + NS, ".ah-dg-row-checkbox", function (e) {
-      e.stopPropagation();
-      var row = $(this).closest(".ah-dg-row")[0];
-      var key = row.getAttribute("data-key");
-      if ((s.sel.indexOf(key) >= 0) !== this.checked) { toggleKey(s, key); }
-      s.anchor = key;
-      writeValue(el, s, true);
-    });
-    $el.on("click" + NS, ".ah-dg-command-btn", function (e) {
-      e.stopPropagation();
-      var row = $(this).closest(".ah-dg-row")[0];
-      fire(el, "ah:command", { key: row && row.getAttribute("data-key"),
-                               field: this.getAttribute("data-field"),
-                               name: this.getAttribute("data-command") });
-    });
-    $el.on("click" + NS, ".ah-dg-row", function (e) {
-      if ($(this).closest(".ah-dg")[0] !== el || s.editing) { return; }
-      var cell = $(e.target).closest(".ah-dg-cell")[0];
-      var field = cell ? cell.getAttribute("data-field") : null;
-      if (cell && !$(e.target).closest("a, button, input, select, textarea").length) {
-        activate(el, s, cell, true);
-      }
-      fire(el, "ah:row-click", { key: this.getAttribute("data-key"), field: field });
-      if (!$(e.target).closest("a").length) { selectRow(el, s, this, e, false); }
-      if (cell && s.editMode === "click" && $(cell).hasClass("ah-dg-cell-editable")) { beginEdit(el, s, cell); }
-    });
-    $el.on("dblclick" + NS, ".ah-dg-row", function (e) {
-      if ($(this).closest(".ah-dg")[0] !== el || s.editing) { return; }
-      var cell = $(e.target).closest(".ah-dg-cell")[0];
-      fire(el, "ah:row-dblclick", { key: this.getAttribute("data-key"),
-                                    field: cell ? cell.getAttribute("data-field") : null });
-      if (cell && s.editMode === "dblclick" && $(cell).hasClass("ah-dg-cell-editable")) { beginEdit(el, s, cell); }
-    });
-    $el.on("click" + NS, ".ah-dg-group-row", function () {
-      activate(el, s, $(this).children(".ah-dg-group-title")[0], true);
-      toggleGroup(el, s, this);
-    });
-
-    // toolbar
-    $el.on("click" + NS, ".ah-dg-toolbar-btn[data-export]", function () {
-      exportGrid(el, s, this.getAttribute("data-export"));
-    });
-    $el.on("click" + NS, ".ah-dg-toolbar-btn[data-name]", function () {
-      fire(el, "ah:toolbar", { name: this.getAttribute("data-name") });
     });
 
     // keyboard, focus ring
-    $el.on("keydown" + NS, function (e) {
-      if (s.menu && $.contains(s.menu, e.target)) { menuKey(el, s, e); return; }
+    this.listen(el, "keydown", function (e) {
+      if (s.menu && s.menu.contains(e.target)) { menuKey(el, s, e); return; }
       keydown(el, s, e);
     });
-    $el.on("focusin" + NS, ".ah-dg-cell, .ah-dg-header-cell, .ah-dg-group-title", function () {
-      if (this === s.active) { $(this).addClass("ah-dg-cell-focused"); }
+    this.delegate("focusin", ".ah-dg-cell, .ah-dg-header-cell, .ah-dg-group-title", function (e, cell) {
+      if (cell === s.active) { cell.classList.add("ah-dg-cell-focused"); }
     });
-    $el.on("focusout" + NS, function (e) {
-      if (s.active && !$.contains(el, e.relatedTarget)) { $(s.active).removeClass("ah-dg-cell-focused"); }
+    this.listen(el, "focusout", function (e) {
+      var to = e.relatedTarget;
+      if (s.active && !(to && to !== el && el.contains(to))) { s.active.classList.remove("ah-dg-cell-focused"); }
     });
     if (s.menu) {
-      $(s.menu).on("click" + NS, ".ah-dg-column-menu-item", function (e) {
+      this.delegate("click", ".ah-dg-column-menu-item", function (e, item) {
         e.stopPropagation();
-        menuAction(el, s, this);
-      });
+        menuAction(el, s, item);
+      }, s.menu);
     }
     if (s.q) {
-      $(s.q).on("ah:error" + NS, function () { loading(el, false); });
+      this.listen(s.q, "ah:error", function () { loading(el, s, false); });
     }
+
+    // inner controls report to the grid, not as the grid's own change /
+    // input; registered last so the grid's own handlers above still run,
+    // and stopImmediatePropagation also keeps them from listeners added
+    // to the root later (as jQuery's delegated stopPropagation did)
+    var inner = function (e) {
+      var t = e.target;
+      if (t !== el && t instanceof Element && t.matches("input, select, textarea")) {
+        e.stopImmediatePropagation();
+      }
+    };
+    this.listen(el, "change", inner);
+    this.listen(el, "input", inner);
 
     layout(el, s);
     paintSelection(el, s);
@@ -1298,94 +1415,91 @@ AH.define("datagrid", {
       paintHeader(el, s);
       writeState(el, s);
       resetActive(el, s, false);
-      if (!el.hasAttribute("data-ah-loaded")) { query(el, s, null); }
     } else {
       view(el, s);
     }
-  },
-  destroy: function (el) {
-    var s = state(el);
-    if (!s) { return; }
+  }
+
+  teardown() {
+    var s = this.s;
     Object.keys(s.timers).forEach(function (k) { clearTimeout(s.timers[k]); });
-    $(document).off(".ahdgrz" + s.id).off("mousedown.ahdgmenu" + s.id);
-    if (s.menuFloat) { s.menuFloat.stop(); }
-    if (s.menu) { $(s.menu).off(NS); }
-    if (s.q) { $(s.q).off(NS); }
-    $(el).find(".ah-dg-body-wrap").off(NS);
-    if (s.editing) { $(s.editing.ed).off(NS); }
-  },
-  methods: {
-    setValue: function (el, $el, v) {
-      var s = state(el);
-      s.sel = AH.lib.values.split(Array.isArray(v) ? v : v == null ? "" : String(v)).filter(Boolean);
-      writeValue(el, s, false);
-    },
-    getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
-    sort: function (el, $el, field, dir) { setSort(el, state(el), String(field), dir || null); },
-    filter: function (el, $el, field, v) { setFilter(el, state(el), String(field), v ? String(v) : ""); },
-    search: function (el, $el, v) {
-      var s = state(el);
-      s.search = v ? String(v) : "";
-      $el.find(".ah-dg-search-input").val(s.search);
-      s.page = 1;
-      view(el, s);
-    },
-    goToPage: function (el, $el, p) { goToPage(el, state(el), parseInt(p, 10) || 1); },
-    groupBy: function (el, $el, fields) {
-      var s = state(el);
-      if (!s.remote) { setGroupBy(el, s, (fields || []).map(String)); }
-    },
-    showColumn: function (el, $el, f) { var s = state(el); if (s.byField[f]) { setHidden(el, s, s.byField[f], false); } },
-    hideColumn: function (el, $el, f) { var s = state(el); if (s.byField[f]) { setHidden(el, s, s.byField[f], true); } },
-    pinColumn: function (el, $el, f, pinned) {
-      var s = state(el);
-      if (s.byField[f]) { s.byField[f].pinned = pinned !== false; layout(el, s); }
-    },
-    setColumnWidth: function (el, $el, f, w) {
-      var s = state(el), c = s.byField[f];
-      if (c) { c.width = Math.max(c.minWidth, parseInt(w, 10) || c.width); layout(el, s); }
-    },
-    exportData: function (el, $el, fmt, headers, rows) {
-      var s = state(el);
-      return headers ? writeFile(el, s, String(fmt), headers, rows || []) : exportGrid(el, s, String(fmt));
-    },
-    refresh: function (el) {
-      var s = state(el);
-      if (s.remote) { query(el, s, null); } else { view(el, s); }
-    },
-    rowsLoaded: function (el, $el, total, page) {
-      var s = state(el);
-      s.total = parseInt(total, 10) || 0;
-      if (page) { s.page = parseInt(page, 10) || s.page; }
-      var pages = Math.ceil(s.total / s.pageSize);
-      if (s.pageable && pages > 0 && s.page > pages) {
-        s.page = pages;
-        writeState(el, s);
-        query(el, s, null);
-        return;
-      }
-      loading(el, false);
-      el.setAttribute("data-ah-loaded", "true");
-      el.setAttribute("aria-rowcount", String(s.total + s.headerRows));
-      adoptRows(el, s);
+    if (s.resizeOff) { s.resizeOff.abort(); s.resizeOff = null; }
+    if (s.menuOff) { s.menuOff.abort(); s.menuOff = null; }
+    if (s.menuFloat) { s.menuFloat.stop(); s.menuFloat = null; }
+    if (s.editing) { s.editing.off.abort(); }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  setValue(v) {
+    var s = this.s;
+    s.sel = AH.lib.values.split(Array.isArray(v) ? v : v == null ? "" : String(v)).filter(Boolean);
+    writeValue(this.element, s, false);
+  }
+  getValue() { return this.element.getAttribute("data-ah-value") || ""; }
+  sort(field, dir) { setSort(this.element, this.s, String(field), dir || null); }
+  filter(field, v) { setFilter(this.element, this.s, String(field), v ? String(v) : ""); }
+  search(v) {
+    var s = this.s;
+    s.search = v ? String(v) : "";
+    qa(this.element, ".ah-dg-search-input").forEach(function (i) { i.value = s.search; });
+    s.page = 1;
+    view(this.element, s);
+  }
+  goToPage(p) { goToPage(this.element, this.s, parseInt(p, 10) || 1); }
+  groupBy(fields) {
+    if (!this.s.remote) { setGroupBy(this.element, this.s, (fields || []).map(String)); }
+  }
+  showColumn(f) { var s = this.s; if (s.byField[f]) { setHidden(this.element, s, s.byField[f], false); } }
+  hideColumn(f) { var s = this.s; if (s.byField[f]) { setHidden(this.element, s, s.byField[f], true); } }
+  pinColumn(f, pinned) {
+    var s = this.s;
+    if (s.byField[f]) { s.byField[f].pinned = pinned !== false; layout(this.element, s); }
+  }
+  setColumnWidth(f, w) {
+    var s = this.s, c = s.byField[f];
+    if (c) { c.width = Math.max(c.minWidth, parseInt(w, 10) || c.width); layout(this.element, s); }
+  }
+  exportData(fmt, headers, rows) {
+    var s = this.s;
+    return headers ? writeFile(this.element, s, String(fmt), headers, rows || [])
+      : exportGrid(this.element, s, String(fmt));
+  }
+  refresh() {
+    var s = this.s;
+    if (s.remote) { query(this.element, s, null); } else { view(this.element, s); }
+  }
+  rowsLoaded(total, page) {
+    var el = this.element, s = this.s;
+    s.total = parseInt(total, 10) || 0;
+    if (page) { s.page = parseInt(page, 10) || s.page; }
+    var pages = Math.ceil(s.total / s.pageSize);
+    if (s.pageable && pages > 0 && s.page > pages) {
+      s.page = pages;
+      writeState(el, s);
+      query(el, s, null);
+      return;
+    }
+    loading(el, s, false);
+    el.setAttribute("data-ah-loaded", "true");
+    el.setAttribute("aria-rowcount", String(s.total + s.headerRows));
+    adoptRows(el, s);
+    paintRows(el, s, s.pageable ? (s.page - 1) * s.pageSize : 0);
+    paintSelection(el, s);
+    var focusLost = document.activeElement === document.body;
+    resetActive(el, s, focusLost);
+  }
+  rowUpdated(rowId) {
+    var el = this.element, s = this.s;
+    adoptRows(el, s);
+    if (s.remote) {
       paintRows(el, s, s.pageable ? (s.page - 1) * s.pageSize : 0);
       paintSelection(el, s);
-      var hadFocus = document.activeElement === document.body || $.contains(el, document.activeElement);
-      resetActive(el, s, hadFocus && document.activeElement === document.body);
-    },
-    rowUpdated: function (el, $el, rowId) {
-      var s = state(el);
-      adoptRows(el, s);
-      if (s.remote) {
-        paintRows(el, s, s.pageable ? (s.page - 1) * s.pageSize : 0);
-        paintSelection(el, s);
-      } else {
-        viewLocal(el, s);
-      }
-      var row = document.getElementById(rowId);
-      if (row && s.active && !s.active.isConnected) {
-        activate(el, s, cellAt(s, row, s.activeField), false);
-      }
+    } else {
+      viewLocal(el, s);
+    }
+    var row = document.getElementById(rowId);
+    if (row && s.active && !s.active.isConnected) {
+      activate(el, s, cellAt(s, row, s.activeField), false);
     }
   }
 });

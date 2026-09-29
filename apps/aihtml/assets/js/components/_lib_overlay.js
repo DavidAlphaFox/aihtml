@@ -12,14 +12,16 @@
  *     data-ah-close hold a selector; an empty data-ah-close closes the
  *     enclosing overlay
  *   - bubble positioning with an arrow (tooltip, popover)
- *   - the drawer / sheet behaviour (defineSlide)
+ *   - opacity fades (fade, fadeIn, fadeOut, stopFade)
+ *   - the drawer / sheet controller (defineSlide)
  *   - notification cards in a screen corner (toast, notification)
  *
- * Events on the component root: ah:open, ah:close [{result}], and for
- * window ah:collapse, ah:expand, ah:moved, ah:resize; notification cards
- * fire ah:click. */
+ * Events (native CustomEvents) on the component root: ah:opening and
+ * ah:closing (cancelable; the window's ah:closing has detail {result}),
+ * ah:open, ah:close (detail {result}), and for the window ah:collapse,
+ * ah:expand, ah:moving / ah:moved (detail {x, y}), ah:resize (detail
+ * {width, height}); notification cards fire ah:click. */
 // ah-load: [data-ah-open], [data-ah-toggle], [data-ah-close]
-import $ from "jquery";
 import AH from "../core.js";
 
 AH.lib = AH.lib || {};
@@ -27,8 +29,6 @@ AH.lib = AH.lib || {};
 // true handled it
 var L = AH.lib.overlay = { escHooks: [] };
 
-var NS = AH.NS;
-var GNS = ".ah-overlay";          // document-level listeners of the overlay behaviours
 var FOCUSABLE = "a[href], area[href], button:not([disabled]), " +
   "input:not([disabled]):not([type='hidden']), select:not([disabled]), " +
   "textarea:not([disabled]), iframe, [tabindex]:not([tabindex='-1']), " +
@@ -51,6 +51,96 @@ function num(el, name, dflt) {
   return isNaN(v) ? dflt : v;
 }
 
+// A native bubbling, cancelable event; returns false when a listener
+// prevented it.
+function fire(target, type, detail) {
+  return target.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true, detail: detail }));
+}
+
+// The elements from node up to the document that match selector
+// (innermost first): what a jQuery delegated handler ran for.
+function matching(node, selector) {
+  var out = [];
+  for (var n = node && node.nodeType === 1 ? node : node && node.parentElement; n; n = n.parentElement) {
+    if (n.matches(selector)) { out.push(n); }
+  }
+  return out;
+}
+
+function visible(el) {
+  return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
+}
+
+// ------------------------------------------------------------------
+// Fades (jQuery's fadeIn / fadeOut / animate({opacity}) before): one
+// running fade per element, a new one replaces it.
+// ------------------------------------------------------------------
+
+var fades = new WeakMap();
+
+// Stop the element's fade: where it is (the opacity it reached stays
+// inline), or at its end (jumpToEnd: its completion runs now).
+function stopFade(el, jumpToEnd) {
+  var f = fades.get(el);
+  if (!f) { return; }
+  fades.delete(el);
+  f.anim.onfinish = null;
+  if (!jumpToEnd) { el.style.opacity = window.getComputedStyle(el).opacity; }
+  f.anim.cancel();
+  if (jumpToEnd) { f.end(); }
+}
+
+// Fade el's opacity to `to' in ms, then done(). The final opacity stays
+// inline (as jQuery's animate left it) unless end() changes it.
+function fade(el, to, ms, done, end) {
+  stopFade(el, false);
+  var from = parseFloat(window.getComputedStyle(el).opacity);
+  var finish = function () {
+    el.style.opacity = String(to);
+    if (end) { end(); }
+    if (done) { done(); }
+  };
+  if (!ms || typeof el.animate !== "function") {
+    finish();
+    return;
+  }
+  el.style.opacity = String(to);
+  var anim = el.animate([{ opacity: isNaN(from) ? 1 : from }, { opacity: to }],
+                        { duration: ms, easing: "ease-in-out" });
+  var f = { anim: anim, end: finish };
+  fades.set(el, f);
+  anim.onfinish = function () {
+    if (fades.get(el) === f) { fades.delete(el); }
+    finish();
+  };
+}
+
+// Show a hidden element (its stylesheet display, block if that hides
+// it) and fade it in.
+function fadeIn(el, ms, done) {
+  stopFade(el, false);
+  if (window.getComputedStyle(el).display === "none") {
+    el.style.display = "";
+    if (window.getComputedStyle(el).display === "none") { el.style.display = "block"; }
+    el.style.opacity = "0";
+  }
+  fade(el, 1, ms, done, function () { el.style.opacity = ""; });
+}
+
+// Fade out, then display: none (opacity restored for the next show).
+function fadeOut(el, ms, done) {
+  if (window.getComputedStyle(el).display === "none") {
+    stopFade(el, false);
+    el.style.display = "none";
+    if (done) { done(); }
+    return;
+  }
+  fade(el, 0, ms, done, function () {
+    el.style.display = "none";
+    el.style.opacity = "";
+  });
+}
+
 // ------------------------------------------------------------------
 // z-index, scroll lock, stack of open overlays
 // ------------------------------------------------------------------
@@ -62,11 +152,11 @@ function nextZ() { return ++z; }
 
 var locks = 0;
 function lock() {
-  if (locks++ === 0) { $(document.body).addClass("ah-scroll-locked"); }
+  if (locks++ === 0) { document.body.classList.add("ah-scroll-locked"); }
 }
 function unlock() {
   locks = Math.max(0, locks - 1);
-  if (locks === 0) { $(document.body).removeClass("ah-scroll-locked"); }
+  if (locks === 0) { document.body.classList.remove("ah-scroll-locked"); }
 }
 
 // {el, trap: element to keep Tab in or null, esc: function -> handled?}
@@ -87,7 +177,7 @@ function pullStack(el, restore) {
   stack = kept;
   if (restore && gone && gone.returnTo && document.contains(gone.returnTo)) {
     var active = document.activeElement;
-    if (!active || active === document.body || $.contains(el, active) || active === el) {
+    if (!active || active === document.body || el.contains(active)) {
       try { gone.returnTo.focus({ preventScroll: true }); } catch (e) { /* not focusable */ }
     }
   }
@@ -95,23 +185,22 @@ function pullStack(el, restore) {
 
 function topOfStack() { return stack[stack.length - 1]; }
 
+// The visible focusable elements inside container (an array).
 function focusables(container) {
-  return $(container).find(FOCUSABLE).filter(function () {
-    return this.offsetWidth || this.offsetHeight || this.getClientRects().length;
-  });
+  return Array.from(container.querySelectorAll(FOCUSABLE)).filter(visible);
 }
 
 function trapTab(e, container) {
-  var $f = focusables(container);
+  var f = focusables(container);
   var active = document.activeElement;
-  if (!$f.length) {
+  if (!f.length) {
     e.preventDefault();
     container.focus();
     return;
   }
-  var first = $f[0];
-  var last = $f[$f.length - 1];
-  if (!$.contains(container, active) && active !== container) {
+  var first = f[0];
+  var last = f[f.length - 1];
+  if (!container.contains(active)) {
     e.preventDefault();
     first.focus();
   } else if (e.shiftKey && (active === first || active === container)) {
@@ -123,7 +212,7 @@ function trapTab(e, container) {
   }
 }
 
-$(document).on("keydown" + GNS, function (e) {
+document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
     for (var i = 0; i < L.escHooks.length; i++) {
       if (L.escHooks[i]()) { return; }
@@ -140,30 +229,47 @@ $(document).on("keydown" + GNS, function (e) {
 // Declarative triggers
 // ------------------------------------------------------------------
 
-$(document).on("click" + GNS, "[data-ah-open],[data-ah-toggle],[data-ah-close]", function (e) {
-  var trigger = this;
-  if (trigger.tagName === "A") { e.preventDefault(); }
-  var sel;
-  if ((sel = trigger.getAttribute("data-ah-open"))) {
-    AH.invoke($(sel), "open", { invoker: trigger });
+function each(sel, f) {
+  var els;
+  try { els = document.querySelectorAll(sel); } catch (err) {
+    console.error("aihtml: bad selector " + sel);
+    return;
   }
-  if ((sel = trigger.getAttribute("data-ah-toggle"))) {
-    AH.invoke($(sel), "toggle", { invoker: trigger });
-  }
-  if (trigger.hasAttribute("data-ah-close")) {
-    sel = trigger.getAttribute("data-ah-close");
-    var $t = sel ? $(sel) : $(trigger).closest(OVERLAYS);
-    if ($t.length) {
-      AH.invoke($t, "close", trigger.getAttribute("data-ah-result"));
+  els.forEach(f);
+}
+
+document.addEventListener("click", function (e) {
+  var triggers = matching(e.target, "[data-ah-open],[data-ah-toggle],[data-ah-close]");
+  for (var i = 0; i < triggers.length && !e.cancelBubble; i++) {
+    var trigger = triggers[i];
+    if (trigger.tagName === "A") { e.preventDefault(); }
+    var sel;
+    if ((sel = trigger.getAttribute("data-ah-open"))) {
+      each(sel, function (t) { AH.invoke(t, "open", { invoker: trigger }); });
+    }
+    if ((sel = trigger.getAttribute("data-ah-toggle"))) {
+      each(sel, function (t) { AH.invoke(t, "toggle", { invoker: trigger }); });
+    }
+    if (trigger.hasAttribute("data-ah-close")) {
+      sel = trigger.getAttribute("data-ah-close");
+      var result = trigger.getAttribute("data-ah-result");
+      if (sel) {
+        each(sel, function (t) { AH.invoke(t, "close", result); });
+      } else {
+        var t = trigger.closest(OVERLAYS);
+        if (t) { AH.invoke(t, "close", result); }
+      }
     }
   }
 });
 
 // Enter / Space on non-button close controls (popover title bar).
-$(document).on("keydown" + GNS, "[data-ah-close][role='button']", function (e) {
-  if (e.key === "Enter" || e.key === " ") {
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Enter" && e.key !== " ") { return; }
+  var c = e.target && e.target.closest ? e.target.closest("[data-ah-close][role='button']") : null;
+  if (c) {
     e.preventDefault();
-    $(this).trigger("click");
+    c.click();
   }
 });
 
@@ -171,13 +277,18 @@ $(document).on("keydown" + GNS, "[data-ah-close][role='button']", function (e) {
 // Positioning: AH.float (core.js) places the bubble with position:
 // fixed, flips it and follows scrolling; the side it used lands in
 // data-ah-placement, which is mirrored into sigil's arrow class
-// (<prefix><side>) whenever it changes.
+// (<prefix><side>) whenever it changes. sideClasses: the classes to
+// remove, space separated.
 // ------------------------------------------------------------------
 
 function floatWithArrow(el, anchor, side, offset, prefix, sideClasses) {
+  var remove = sideClasses.split(/\s+/).filter(Boolean);
   function sync() {
     var used = el.getAttribute("data-ah-placement");
-    if (used) { $(el).removeClass(sideClasses).addClass(prefix + used); }
+    if (used) {
+      el.classList.remove.apply(el.classList, remove);
+      el.classList.add(prefix + used);
+    }
   }
   var h = AH.float(el, anchor, { placement: side, align: "center", offset: offset });
   sync();
@@ -207,112 +318,111 @@ var DRAG_AXIS = {
 function defineSlide(name) {
   var P = "ah-" + name;
 
-  function panel(el) { return el.querySelector("." + P + "__panel"); }
-  function isOpen(el) { return el.getAttribute("data-state") === "open"; }
-  function setState(el, s) {
-    el.setAttribute("data-state", s);
-    var p = panel(el);
-    if (p) { p.setAttribute("data-state", s); }
-  }
-
-  function open(el) {
-    if (isOpen(el)) { return; }
-    var ev = $.Event("ah:opening");
-    $(el).trigger(ev);
-    if (ev.isDefaultPrevented()) { return; }
-    el.style.zIndex = nextZ();
-    void el.offsetHeight;             // first open: let the transition run
-    setState(el, "open");
-    lock();
-    var p = panel(el);
-    pushStack({
-      el: el, trap: p,
-      esc: function () {
-        if (!flag(el, "esc", true)) { return false; }
-        close(el);
-        return true;
-      }
-    });
-    if (p) { p.focus({ preventScroll: true }); }
-    $(el).trigger("ah:open");
-  }
-
-  function close(el, result) {
-    if (!isOpen(el)) { return; }
-    var ev = $.Event("ah:closing");
-    $(el).trigger(ev);
-    if (ev.isDefaultPrevented()) { return; }
-    var p = panel(el);
-    if (p) {
-      p.style.transform = "";
-      p.setAttribute("data-dragging", "false");
-    }
-    setState(el, "closed");
-    unlock();
-    pullStack(el, true);
-    $(el).trigger("ah:close", [{ result: result || null }]);
-  }
-
-  function addDrag(el, $el) {
-    var st = null;
-    $el.on("pointerdown" + NS, function (e) {
-      var oe = e.originalEvent;
-      var p = panel(el);
-      if (!p || !flag(el, "dismissible", true) || !p.contains(oe.target) ||
-          $(oe.target).closest("button, a, input, textarea, select, ." + P + "__body").length) {
-        return;
-      }
-      var side = p.getAttribute("data-side") || "bottom";
-      var r = p.getBoundingClientRect();
-      st = { side: side, size: DRAG_AXIS[side].dim === "w" ? r.width : r.height,
-             x0: oe.clientX, y0: oe.clientY, t0: oe.timeStamp, d: 0 };
-      p.setAttribute("data-dragging", "true");
-      try { p.setPointerCapture(oe.pointerId); } catch (err) { /* no capture */ }
-    });
-    $el.on("pointermove" + NS, function (e) {
-      if (!st) { return; }
-      var oe = e.originalEvent;
-      var ax = DRAG_AXIS[st.side];
-      var raw = ax.dim === "w" ? oe.clientX - st.x0 : oe.clientY - st.y0;
-      st.d = Math.max(0, ax.sign * raw);   // only towards closing
-      panel(el).style.transform = ax.prop + "(" + (ax.sign * st.d) + "px)";
-    });
-    $el.on("pointerup" + NS + " pointercancel" + NS, function (e) {
-      if (!st) { return; }
-      var s = st;
-      st = null;
-      var p = panel(el);
-      var dt = Math.max(1, e.originalEvent.timeStamp - s.t0);
-      p.setAttribute("data-dragging", "false");
-      // past 30% of the panel, or a flick faster than 0.5px/ms that
-      // also moved 50px (a short tap must not count as a flick)
-      if (s.d > s.size * 0.3 || (s.d / dt > 0.5 && s.d > 50)) {
-        close(el);
-      } else {
-        p.style.transform = "";
-      }
-    });
-  }
-
-  AH.define(name, {
-    init: function (el, $el) {
-      $el.on("mousedown" + NS, function (e) {
-        if (e.target === el && flag(el, "scrim", true)) { close(el); }
+  AH.register(name, class extends AH.Controller {
+    setup() {
+      var el = this.element;
+      this.listen(el, "mousedown", (e) => {
+        if (e.target === el && flag(el, "scrim", true)) { this.close(); }
       });
-      if (name === "drawer") { addDrag(el, $el); }
-      if (el.getAttribute("data-ah-initial") === "open") { open(el); }
-    },
-    destroy: function (el) {
-      if (isOpen(el)) {
+      if (name === "drawer") { this.addDrag(); }
+      if (el.getAttribute("data-ah-initial") === "open") { this.open(); }
+    }
+
+    teardown() {
+      if (this.isOpen()) {
         unlock();
-        pullStack(el, false);
+        pullStack(this.element, false);
       }
-    },
-    methods: {
-      open: function (el) { open(el); },
-      close: function (el, $el, result) { close(el, result); },
-      toggle: function (el) { if (isOpen(el)) { close(el); } else { open(el); } },
-      isOpen: function (el) { return isOpen(el); }
+    }
+
+    // methods (aihtml_action:call/4, AH.invoke)
+    open() {
+      var el = this.element;
+      if (this.isOpen()) { return; }
+      if (!this.fire("ah:opening")) { return; }
+      el.style.zIndex = nextZ();
+      void el.offsetHeight;             // first open: let the transition run
+      this.setState("open");
+      lock();
+      var p = this.panel();
+      pushStack({
+        el: el, trap: p,
+        esc: () => {
+          if (!flag(el, "esc", true)) { return false; }
+          this.close();
+          return true;
+        }
+      });
+      if (p) { p.focus({ preventScroll: true }); }
+      this.fire("ah:open");
+    }
+
+    close(result) {
+      if (!this.isOpen()) { return; }
+      if (!this.fire("ah:closing")) { return; }
+      var p = this.panel();
+      if (p) {
+        p.style.transform = "";
+        p.setAttribute("data-dragging", "false");
+      }
+      this.setState("closed");
+      unlock();
+      pullStack(this.element, true);
+      this.fire("ah:close", { result: result || null });
+    }
+
+    toggle() { if (this.isOpen()) { this.close(); } else { this.open(); } }
+
+    isOpen() { return this.element.getAttribute("data-state") === "open"; }
+
+    panel() { return this.element.querySelector("." + P + "__panel"); }
+
+    setState(s) {
+      this.element.setAttribute("data-state", s);
+      var p = this.panel();
+      if (p) { p.setAttribute("data-state", s); }
+    }
+
+    addDrag() {
+      var el = this.element;
+      var st = null;
+      this.listen(el, "pointerdown", (e) => {
+        var p = this.panel();
+        if (!p || !flag(el, "dismissible", true) || !p.contains(e.target) ||
+            e.target.closest("button, a, input, textarea, select, ." + P + "__body")) {
+          return;
+        }
+        var side = p.getAttribute("data-side") || "bottom";
+        var r = p.getBoundingClientRect();
+        st = { side: side, size: DRAG_AXIS[side].dim === "w" ? r.width : r.height,
+               x0: e.clientX, y0: e.clientY, t0: e.timeStamp, d: 0 };
+        p.setAttribute("data-dragging", "true");
+        try { p.setPointerCapture(e.pointerId); } catch (err) { /* no capture */ }
+      });
+      this.listen(el, "pointermove", (e) => {
+        if (!st) { return; }
+        var ax = DRAG_AXIS[st.side];
+        var raw = ax.dim === "w" ? e.clientX - st.x0 : e.clientY - st.y0;
+        st.d = Math.max(0, ax.sign * raw);   // only towards closing
+        this.panel().style.transform = ax.prop + "(" + (ax.sign * st.d) + "px)";
+      });
+      var up = (e) => {
+        if (!st) { return; }
+        var s = st;
+        st = null;
+        var p = this.panel();
+        var dt = Math.max(1, e.timeStamp - s.t0);
+        p.setAttribute("data-dragging", "false");
+        // past 30% of the panel, or a flick faster than 0.5px/ms that
+        // also moved 50px (a short tap must not count as a flick)
+        if (s.d > s.size * 0.3 || (s.d / dt > 0.5 && s.d > 50)) {
+          this.close();
+        } else {
+          p.style.transform = "";
+        }
+      };
+      this.listen(el, "pointerup", up);
+      this.listen(el, "pointercancel", up);
     }
   });
 }
@@ -327,13 +437,16 @@ function defineSlide(name) {
 var VARIANTS = { info: 1, success: 1, warning: 1, error: 1 };
 var CORNERS = { "top-right": 1, "top-left": 1, "bottom-right": 1, "bottom-left": 1 };
 
+// The corner container (an element), created on first use.
 function corner(pos) {
   pos = CORNERS[pos] ? pos : "top-right";
-  var $c = $("body > .ah-notify-container.ah-notify-" + pos);
-  if (!$c.length) {
-    $c = $('<div class="ah-notify-container ah-notify-' + pos + '"></div>').appendTo(document.body);
+  var c = document.querySelector("body > .ah-notify-container.ah-notify-" + pos);
+  if (!c) {
+    c = document.createElement("div");
+    c.className = "ah-notify-container ah-notify-" + pos;
+    document.body.appendChild(c);
   }
-  return $c;
+  return c;
 }
 
 // The view for templates/notification.mustache; aihtml_lib_overlay:card/2
@@ -356,65 +469,99 @@ function duration(v, dflt) {
   return v === undefined || v === null || v === "" ? dflt : Number(v);
 }
 
-// Put a card (HTML string or element) in its corner and run it.
+// HTML-escape text (for content put into a card).
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+
+// card element -> its close function
+var closers = new WeakMap();
+
+// Close a card shown by showCard (fades it out).
+function closeCard(card) {
+  var f = closers.get(card);
+  if (f) { f(); }
+}
+
+// Put a card (trusted HTML string or element) in its corner and run it.
 // o: {position, duration (ms, <= 0 stays), source}. Whether a click on
 // the card closes it is read from the markup (.ah-notify-clickable).
-// Events go to o.source (a notification template) or the card.
+// Events go to o.source (a notification template) or the card. Returns
+// the card element.
 function showCard(card, o) {
-  var $card = typeof card === "string" ? $($.parseHTML(card)).filter(".ah-notify") : $(card);
+  if (typeof card === "string") {
+    var t = document.createElement("template");
+    t.innerHTML = card;
+    card = Array.from(t.content.children).filter(function (n) {
+      return n.classList.contains("ah-notify");
+    })[0];
+    if (!card) { return undefined; }
+  }
   var pos = CORNERS[o.position] ? o.position : "top-right";
-  var $c = corner(pos);
-  if (pos.indexOf("bottom") === 0) { $card.prependTo($c); } else { $card.appendTo($c); }
-  var target = o.source || $card[0];
+  var c = corner(pos);
+  if (pos.indexOf("bottom") === 0) { c.insertBefore(card, c.firstChild); } else { c.appendChild(card); }
+  var target = o.source || card;
   var timer = null;
   var closed = false;
   function close() {
     if (closed) { return; }
     closed = true;
     clearTimeout(timer);
-    $card.stop(true).fadeOut(300, function () {
-      $card.remove();
-      if (!$c.children().length) { $c.remove(); }
-      $(target).trigger("ah:close", [{ result: null }]);
+    closers.delete(card);
+    fadeOut(card, 300, function () {
+      card.remove();
+      if (!c.children.length) { c.remove(); }
+      fire(target, "ah:close", { result: null });
     });
   }
   function arm() {
     if (o.duration > 0) { timer = setTimeout(close, o.duration); }
   }
-  $card.data("ahClose", close);
-  $card.on("click", ".ah-notify-close", function (e) {
-    e.stopPropagation();
-    close();
+  closers.set(card, close);
+  card.addEventListener("click", function (e) {
+    if (e.target.closest && e.target.closest(".ah-notify-close")) {
+      e.stopPropagation();
+      close();
+      return;
+    }
+    if (card.classList.contains("ah-notify-clickable")) {
+      fire(target, "ah:click");
+      close();
+    }
   });
-  $card.on("keydown", ".ah-notify-close", function (e) {
-    if (e.key === "Enter" || e.key === " ") {
+  card.addEventListener("keydown", function (e) {
+    if ((e.key === "Enter" || e.key === " ") &&
+        e.target.closest && e.target.closest(".ah-notify-close")) {
       e.preventDefault();
       close();
     }
   });
-  if ($card.hasClass("ah-notify-clickable")) {
-    $card.on("click", function () {
-      $(target).trigger("ah:click");
-      close();
-    });
-  }
   // hovering keeps the card (sigil lets it expire under the pointer)
-  $card.on("mouseenter", function () { clearTimeout(timer); })
-    .on("mouseleave", function () { if (!closed) { arm(); } });
+  card.addEventListener("mouseenter", function () { clearTimeout(timer); });
+  card.addEventListener("mouseleave", function () { if (!closed) { arm(); } });
   arm();
-  $card.css({ display: "flex", opacity: 0 }).animate({ opacity: 0.95 }, 300, function () {
-    $card.css("opacity", "");
-    $(target).trigger("ah:open");
+  card.style.display = "flex";
+  card.style.opacity = "0";
+  fade(card, 0.95, 300, function () {
+    card.style.opacity = "";
+    fire(target, "ah:open");
   });
-  return $card[0];
+  return card;
 }
 
-L.GNS = GNS;
 L.FOCUSABLE = FOCUSABLE;
 L.OVERLAYS = OVERLAYS;
 L.uid = uid;
 L.flag = flag;
 L.num = num;
+L.fire = fire;
+L.matching = matching;
+L.fade = fade;
+L.fadeIn = fadeIn;
+L.fadeOut = fadeOut;
+L.stopFade = stopFade;
 L.nextZ = nextZ;
 L.lock = lock;
 L.unlock = unlock;
@@ -428,4 +575,6 @@ L.defineSlide = defineSlide;
 L.corner = corner;
 L.cardView = cardView;
 L.duration = duration;
+L.escapeHtml = escapeHtml;
 L.showCard = showCard;
+L.closeCard = closeCard;

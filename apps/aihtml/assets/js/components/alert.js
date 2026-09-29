@@ -1,21 +1,15 @@
-/* alert behaviour (designs/04-components.md): dismiss. */
-import $ from "jquery";
+/* alert behaviour (designs/04-components.md): dismiss. "ah:dismiss"
+   (cancelable, no detail) before the alert is removed. */
 import AH from "../core.js";
 import "./_lib_display.js";
 
-var NS = AH.NS;
+AH.register("alert", class extends AH.Controller {
+  setup() {
+    this.delegate("click", ".ah-alert-close", () => { this.dismiss(); });
+  }
 
-function dismiss(el, $el) {
-  var ev = $.Event("ah:dismiss");
-  $el.trigger(ev);
-  if (!ev.isDefaultPrevented()) { AH.lib.display.drop(el); }
-}
-
-AH.define("alert", {
-  init: function (el, $el) {
-    $el.on("click" + NS, ".ah-alert-close", function () { dismiss(el, $el); });
-  },
-  methods: {
-    dismiss: dismiss
+  // methods (aihtml_action:call/4, AH.invoke)
+  dismiss() {
+    if (this.fire("ah:dismiss")) { AH.lib.display.drop(this.element); }
   }
 });

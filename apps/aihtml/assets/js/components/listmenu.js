@@ -1,45 +1,50 @@
 /* Behaviour of the listmenu component (designs/04-components.md), ported
-   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js. */
-import $ from "jquery";
+   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js.
+   Value contract: data-ah-value (the chosen item's data-key), the hidden
+   input and "change" on the root. ah:navigate fires on the root after a
+   page change, detail {id, label, page}. */
 import AH from "../core.js";
 import "./_lib_nav.js";
 
-var NS = AH.NS;
-var L = AH.lib.nav;
-var setValue = L.setValue;
-var byKey = L.byKey;
+const N = AH.lib.nav;
+const setValue = N.setValue;
+const byKey = N.byKey;
+
+function showEl(n) { n.style.display = ""; }
+function hideEl(n) { n.style.display = "none"; }
 
 function animateSwap(oldEl, newEl, kind, dir, done) {
   if (!oldEl || oldEl === newEl) {
-    $(newEl).show();
+    showEl(newEl);
     done();
     return;
   }
   if (kind === "none" || !newEl.animate) {
-    $(oldEl).hide();
-    $(newEl).show();
+    hideEl(oldEl);
+    showEl(newEl);
     done();
     return;
   }
-  var dur = 250;
+  const dur = 250;
   if (kind === "fade") {
     oldEl.animate([{ opacity: 1 }, { opacity: 0 }], { duration: dur / 2 }).onfinish = function () {
-      $(oldEl).hide();
-      $(newEl).show();
+      hideEl(oldEl);
+      showEl(newEl);
       newEl.animate([{ opacity: 0 }, { opacity: 1 }], { duration: dur / 2 }).onfinish = done;
     };
     return;
   }
   // slide: the old page leaves to one side while the new one comes in
-  var s = dir > 0 ? "-100%" : "100%";
-  var e = dir > 0 ? "100%" : "-100%";
-  $(newEl).show();
-  $(oldEl).css({ position: "absolute", top: 0, left: 0, width: "100%" });
+  const s = dir > 0 ? "-100%" : "100%";
+  const e = dir > 0 ? "100%" : "-100%";
+  showEl(newEl);
+  Object.assign(oldEl.style, { position: "absolute", top: "0", left: "0", width: "100%" });
   oldEl.animate([{ transform: "translateX(0)" }, { transform: "translateX(" + s + ")" }],
                 { duration: dur, easing: "ease" });
   newEl.animate([{ transform: "translateX(" + e + ")" }, { transform: "translateX(0)" }],
                 { duration: dur, easing: "ease" }).onfinish = function () {
-    $(oldEl).hide().css({ position: "", top: "", left: "", width: "" });
+    hideEl(oldEl);
+    Object.assign(oldEl.style, { position: "", top: "", left: "", width: "" });
     done();
   };
 }
@@ -48,147 +53,83 @@ function animateSwap(oldEl, newEl, kind, dir, done) {
 // listmenu (sigil listmenu.cljs, listmenu/nav.cljs)
 // ------------------------------------------------------------------
 
-var LM_FOCUS = "ah-listmenu-item-focus";
+const LM_FOCUS = "ah-listmenu-item-focus";
 
-function lmState(el) {
-  var st = $.data(el, "ah-listmenu");
-  if (!st) {
-    var s = el.getAttribute("data-ah-stack");
-    st = { stack: s ? s.split(",") : [], busy: false };
-    $.data(el, "ah-listmenu", st);
-  }
-  return st;
+function lmPage(el, id) {
+  return Array.from(el.querySelectorAll(".ah-listmenu-page")).find(function (p) {
+    return p.getAttribute("data-page-id") === String(id);
+  }) || null;
 }
 
-function lmPage($el, id) {
-  return $el.find(".ah-listmenu-page").filter(function () {
-    return this.getAttribute("data-page-id") === String(id);
+function lmItemLabel(el, itemId) {
+  const it = Array.from(el.querySelectorAll(".ah-listmenu-item")).find(function (i) {
+    return i.getAttribute("data-item-id") === String(itemId);
   });
+  const label = it ? it.querySelector(":scope > .ah-listmenu-item-label") : null;
+  return label ? label.textContent : "";
 }
 
-function lmCurrent($el) {
-  var st = lmState($el[0]);
-  return lmPage($el, st.stack.length ? st.stack[st.stack.length - 1] : "root");
+function lmItems(page) {
+  return page ? Array.from(page.querySelectorAll(":scope > .ah-listmenu-item")).filter(function (i) {
+    return !i.classList.contains("ah-listmenu-item-disabled") && i.style.display !== "none";
+  }) : [];
 }
 
-function lmItemLabel($el, itemId) {
-  return $el.find(".ah-listmenu-item").filter(function () {
-    return this.getAttribute("data-item-id") === String(itemId);
-  }).children(".ah-listmenu-item-label").text();
-}
-
-function lmHeader($el) {
-  var st = lmState($el[0]);
-  var root = !st.stack.length;
-  $el.find(".ah-listmenu-back").toggle(!root);
-  $el.find(".ah-listmenu-title").text(root ? "" : lmItemLabel($el, st.stack[st.stack.length - 1]));
-}
-
-function lmItems($page) {
-  return $page.children(".ah-listmenu-item").filter(function () {
-    return !$(this).hasClass("ah-listmenu-item-disabled") && this.style.display !== "none";
-  });
-}
-
-function lmFocus($el, item) {
-  $el.find("." + LM_FOCUS).removeClass(LM_FOCUS);
+function lmFocus(el, item) {
+  el.querySelectorAll("." + LM_FOCUS).forEach(function (n) { n.classList.remove(LM_FOCUS); });
   if (item) {
-    $(item).addClass(LM_FOCUS);
+    item.classList.add(LM_FOCUS);
     if (item.scrollIntoView) { item.scrollIntoView({ block: "nearest" }); }
   }
 }
 
-function lmFilter($el, text) {
-  var t = (text || "").toLowerCase();
-  lmCurrent($el).children(".ah-listmenu-item").each(function () {
-    var label = $(this).children(".ah-listmenu-item-label").text().toLowerCase();
-    $(this).toggle(!t || label.indexOf(t) !== -1);
+function lmMark(el, key) {
+  el.querySelectorAll(".ah-listmenu-item-selected").forEach(function (n) {
+    n.classList.remove("ah-listmenu-item-selected");
+    n.setAttribute("aria-checked", "false");
+  });
+  byKey(el, ".ah-listmenu-item:not([aria-haspopup])", "data-key", key).forEach(function (n) {
+    n.classList.add("ah-listmenu-item-selected");
+    n.setAttribute("aria-checked", "true");
   });
 }
 
-function lmGo($el, pageId, dir, focus) {
-  var st = lmState($el[0]);
-  if (st.busy) { return; }
-  var $old = lmCurrent($el);
-  var $new = lmPage($el, pageId === null ? "root" : pageId);
-  if (!$new.length) { return; }
-  var label = dir > 0 ? lmItemLabel($el, pageId) : lmItemLabel($el, st.stack[st.stack.length - 1]);
-  var id = dir > 0 ? pageId : st.stack[st.stack.length - 1];
-  if (dir > 0) { st.stack.push(String(pageId)); } else { st.stack.pop(); }
-  lmHeader($el);
-  var $input = $el.find(".ah-listmenu-filter-input");
-  if ($input.val()) { $input.val(""); $old.children().show(); }
-  st.busy = true;
-  animateSwap($old[0], $new[0], $el.attr("data-ah-animation") || "slide", dir, function () {
-    st.busy = false;
-    lmFocus($el, focus ? lmItems($new).get(0) : null);
-    $el.trigger("ah:navigate", [{ id: id, label: label, page: $new.attr("data-page-id") }]);
-  });
-}
-
-function lmBack($el, focus) {
-  var st = lmState($el[0]);
-  if (!st.stack.length) { return; }
-  lmGo($el, st.stack.length > 1 ? st.stack[st.stack.length - 2] : null, -1, focus);
-}
-
-function lmMark($el, key) {
-  $el.find(".ah-listmenu-item-selected").removeClass("ah-listmenu-item-selected")
-    .attr("aria-checked", "false");
-  byKey($el, ".ah-listmenu-item:not([aria-haspopup])", "data-key", key)
-    .addClass("ah-listmenu-item-selected").attr("aria-checked", "true");
-}
-
-function lmActivate($el, item, focus) {
-  var $i = $(item);
-  if ($i.hasClass("ah-listmenu-item-disabled")) { return; }
-  if ($i.attr("aria-haspopup")) {
-    lmGo($el, $i.attr("data-item-id"), 1, focus);
-    return;
-  }
-  var href = $i.attr("data-href");
-  if (href) {
-    window.location.href = href;
-    return;
-  }
-  var key = $i.attr("data-key");
-  lmMark($el, key);
-  if ($el.attr("data-ah-value") !== key) { setValue($el, key, "change"); }
-}
-
-AH.define("listmenu", {
-  init: function (el, $el) {
-    lmState(el);
-    $el.on("click" + NS, ".ah-listmenu-item", function () {
-      lmFocus($el, null);
-      lmActivate($el, this, false);
+AH.register("listmenu", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    const self = this;
+    const s = el.getAttribute("data-ah-stack");
+    this.stack = s ? s.split(",") : [];
+    this.busy = false;
+    this.delegate("click", ".ah-listmenu-item", function (e, item) {
+      lmFocus(el, null);
+      self.activate(item, false);
     });
-    $el.on("click" + NS, ".ah-listmenu-back", function () { lmBack($el, false); });
-    $el.on("input" + NS, ".ah-listmenu-filter-input", function (e) {
+    this.delegate("click", ".ah-listmenu-back", function () { self.goBack(false); });
+    this.delegate("input", ".ah-listmenu-filter-input", function (e, input) {
       e.stopPropagation();
-      lmFilter($el, this.value);
+      self.applyFilter(input.value);
     });
     // the filter's own change must not look like a new value
-    $el.on("change" + NS, ".ah-listmenu-filter-input", function (e) { e.stopPropagation(); });
-    $el.on("keydown" + NS, function (e) {
-      var inFilter = $(e.target).hasClass("ah-listmenu-filter-input");
-      var $page = lmCurrent($el);
-      var items = lmItems($page).get();
-      var cur = items.indexOf($el.find("." + LM_FOCUS)[0]);
+    this.delegate("change", ".ah-listmenu-filter-input", function (e) { e.stopPropagation(); });
+    this.listen(el, "keydown", function (e) {
+      const inFilter = e.target.classList.contains("ah-listmenu-filter-input");
+      const items = lmItems(self.current());
+      const cur = items.indexOf(el.querySelector("." + LM_FOCUS));
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
-          lmFocus($el, items[Math.min(items.length - 1, cur + 1)]);
+          lmFocus(el, items[Math.min(items.length - 1, cur + 1)]);
           break;
         case "ArrowUp":
           e.preventDefault();
-          lmFocus($el, items[Math.max(0, cur - 1)]);
+          lmFocus(el, items[Math.max(0, cur - 1)]);
           break;
         case "Home":
         case "End":
           if (inFilter) { return; }
           e.preventDefault();
-          lmFocus($el, items[e.key === "Home" ? 0 : items.length - 1]);
+          lmFocus(el, items[e.key === "Home" ? 0 : items.length - 1]);
           break;
         case "Enter":
         case " ":
@@ -196,42 +137,114 @@ AH.define("listmenu", {
           if (inFilter && e.key !== "Enter") { return; }
           if (cur < 0) { return; }
           e.preventDefault();
-          lmActivate($el, items[cur], true);
+          self.activate(items[cur], true);
           break;
         case "ArrowLeft":
         case "Backspace":
         case "Escape":
           if (inFilter && e.key !== "Escape") { return; }
-          if (!lmState(el).stack.length) { return; }
+          if (!self.stack.length) { return; }
           e.preventDefault();
-          lmBack($el, true);
+          self.goBack(true);
           break;
         default:
           break;
       }
     });
-    $el.on("focus" + NS, function () {
-      if (!$el.find("." + LM_FOCUS).length) {
-        var $sel = lmCurrent($el).children(".ah-listmenu-item-selected");
-        lmFocus($el, $sel[0] || lmItems(lmCurrent($el)).get(0));
+    this.listen(el, "focus", function () {
+      if (!el.querySelector("." + LM_FOCUS)) {
+        const page = self.current();
+        const sel = page ? page.querySelector(":scope > .ah-listmenu-item-selected") : null;
+        lmFocus(el, sel || lmItems(page)[0]);
       }
     });
-    $el.on("blur" + NS, function () { lmFocus($el, null); });
-  },
-  destroy: function (el) {
-    $.removeData(el, "ah-listmenu");
-  },
-  methods: {
-    setValue: function (el, $el, key) { lmMark($el, key); setValue($el, key); },
-    back: function (el, $el) { lmBack($el, false); },
-    navigate: function (el, $el, key) {
-      var $i = byKey(lmCurrent($el), ".ah-listmenu-item[aria-haspopup]", "data-key", key);
-      if ($i.length) { lmGo($el, $i.attr("data-item-id"), 1, false); }
-    },
-    filter: function (el, $el, text) {
-      $el.find(".ah-listmenu-filter-input").val(text || "");
-      lmFilter($el, text);
-    },
-    currentPage: function (el, $el) { return lmCurrent($el).attr("data-page-id"); }
+    this.listen(el, "blur", function () { lmFocus(el, null); });
+  }
+
+  current() {
+    return lmPage(this.element, this.stack.length ? this.stack[this.stack.length - 1] : "root");
+  }
+
+  header() {
+    const el = this.element;
+    const root = !this.stack.length;
+    el.querySelectorAll(".ah-listmenu-back").forEach(function (b) { b.style.display = root ? "none" : ""; });
+    const title = root ? "" : lmItemLabel(el, this.stack[this.stack.length - 1]);
+    el.querySelectorAll(".ah-listmenu-title").forEach(function (t) { t.textContent = title; });
+  }
+
+  applyFilter(text) {
+    const t = (text || "").toLowerCase();
+    const page = this.current();
+    if (!page) { return; }
+    page.querySelectorAll(":scope > .ah-listmenu-item").forEach(function (i) {
+      const l = i.querySelector(":scope > .ah-listmenu-item-label");
+      const label = (l ? l.textContent : "").toLowerCase();
+      i.style.display = !t || label.indexOf(t) !== -1 ? "" : "none";
+    });
+  }
+
+  go(pageId, dir, focus) {
+    const el = this.element;
+    const self = this;
+    if (this.busy) { return; }
+    const old = this.current();
+    const next = lmPage(el, pageId === null ? "root" : pageId);
+    if (!next) { return; }
+    const top = this.stack[this.stack.length - 1];
+    const label = dir > 0 ? lmItemLabel(el, pageId) : lmItemLabel(el, top);
+    const id = dir > 0 ? pageId : top;
+    if (dir > 0) { this.stack.push(String(pageId)); } else { this.stack.pop(); }
+    this.header();
+    const input = el.querySelector(".ah-listmenu-filter-input");
+    if (input && input.value) {
+      input.value = "";
+      if (old) { Array.from(old.children).forEach(showEl); }
+    }
+    this.busy = true;
+    animateSwap(old, next, el.getAttribute("data-ah-animation") || "slide", dir, function () {
+      self.busy = false;
+      lmFocus(el, focus ? lmItems(next)[0] : null);
+      self.fire("ah:navigate", { id: id, label: label, page: next.getAttribute("data-page-id") });
+    });
+  }
+
+  goBack(focus) {
+    if (!this.stack.length) { return; }
+    this.go(this.stack.length > 1 ? this.stack[this.stack.length - 2] : null, -1, focus);
+  }
+
+  activate(item, focus) {
+    const el = this.element;
+    if (item.classList.contains("ah-listmenu-item-disabled")) { return; }
+    if (item.getAttribute("aria-haspopup")) {
+      this.go(item.getAttribute("data-item-id"), 1, focus);
+      return;
+    }
+    const href = item.getAttribute("data-href");
+    if (href) {
+      window.location.href = href;
+      return;
+    }
+    const key = item.getAttribute("data-key");
+    lmMark(el, key);
+    if (el.getAttribute("data-ah-value") !== key) { setValue(el, key, "change"); }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke); they fire no change
+  setValue(key) { lmMark(this.element, key); setValue(this.element, key); }
+  back() { this.goBack(false); }
+  navigate(key) {
+    const i = byKey(this.current(), ".ah-listmenu-item[aria-haspopup]", "data-key", key)[0];
+    if (i) { this.go(i.getAttribute("data-item-id"), 1, false); }
+  }
+  filter(text) {
+    const input = this.element.querySelector(".ah-listmenu-filter-input");
+    if (input) { input.value = text || ""; }
+    this.applyFilter(text);
+  }
+  currentPage() {
+    const p = this.current();
+    return p ? p.getAttribute("data-page-id") : undefined;
   }
 });

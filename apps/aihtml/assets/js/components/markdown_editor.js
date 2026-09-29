@@ -4,9 +4,9 @@
  * keys, task list, clipboard, placeholder, slash menu, block handle, drag,
  * stats footer).
  *
- * ProseMirror and markdown-it come from the vendor bundle
- * (priv/static/vendor/prosemirror.min.js, global AHProseMirror), loaded on
- * demand with AH.vendor("prosemirror"). Until it has loaded the root shows
+ * ProseMirror and markdown-it are a chunk of their own
+ * (assets/vendor/prosemirror.entry.js), loaded on demand with
+ * AH.vendor("prosemirror"). Until it has loaded the root shows
  * the server's <textarea> with the Markdown source, which then stays in the
  * DOM, hidden, as the form field.
  *
@@ -23,14 +23,17 @@
  * `change' (as a native textarea), or at once for an edit made while the
  * editor has no focus (a drag, a task checkbox, exec from the server).
  * setValue changes the value silently. */
-import $ from "jquery";
 import AH from "../core.js";
 
-var NS = AH.NS;
 var uid = 0;
 var KIT = null;          // schema, parser, serializer: one per page
 
-function state(el) { return el._ahMde; }
+function fire(el, type) {
+  el.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true }));
+}
+
+// ProseMirror's own input/change events are not the component's.
+function swallow(e) { e.stopPropagation(); }
 
 // ==================================================================
 // Schema, Markdown parser and serializer (prose_editor/schema.cljs,
@@ -785,26 +788,34 @@ function slashPlugin(st) {
   var K = st.K, el = st.el;
   var menu = el.querySelector(".ah-pm-slash-menu");
   if (!menu) { return null; }
-  var $menu = $(menu), caret = el.querySelector(".ah-md-editor-caret");
+  var caret = el.querySelector(".ah-md-editor-caret");
   var list = menu.querySelector(".ah-pm-slash-menu-content");
   var m = st.menu = { open: false, pos: null, float: null };
 
-  function items() { return $menu.find(".ah-pm-slash-menu-item"); }
-  function selected() { return Math.max(0, items().index(items().filter(".selected"))); }
+  function items() { return Array.from(menu.querySelectorAll(".ah-pm-slash-menu-item")); }
+  function selected() {
+    return Math.max(0, items().findIndex(function (it) { return it.classList.contains("selected"); }));
+  }
   function select(i) {
-    var $it = items(), n = $it.length;
+    var all = items(), n = all.length;
     i = (i + n) % n;
-    $it.removeClass("selected").attr("aria-selected", "false");
-    var it = $it.eq(i).addClass("selected").attr("aria-selected", "true")[0];
+    all.forEach(function (x) {
+      x.classList.remove("selected");
+      x.setAttribute("aria-selected", "false");
+    });
+    var it = all[i];
+    it.classList.add("selected");
+    it.setAttribute("aria-selected", "true");
     // scroll the list, not the page
     var top = it.offsetTop - list.offsetTop;
     if (top < list.scrollTop) { list.scrollTop = top; }
     else if (top + it.offsetHeight > list.scrollTop + list.clientHeight) {
       list.scrollTop = top + it.offsetHeight - list.clientHeight;
     }
-    var group = $(it).closest(".ah-pm-slash-menu-group").attr("data-group");
-    $menu.find(".ah-pm-slash-menu-tab").each(function () {
-      $(this).toggleClass("active", this.getAttribute("data-group") === group);
+    var g = it.closest(".ah-pm-slash-menu-group");
+    var group = g ? g.getAttribute("data-group") : null;
+    menu.querySelectorAll(".ah-pm-slash-menu-tab").forEach(function (tab) {
+      tab.classList.toggle("active", tab.getAttribute("data-group") === group);
     });
     if (st.view) { st.view.dom.setAttribute("aria-activedescendant", it.id); }
   }
@@ -847,23 +858,25 @@ function slashPlugin(st) {
 
   return new K.P.state.Plugin({
     view: function () {
-      var ns = ".ahmde" + st.uid;
-      $menu.on("mousedown" + ns, function (e) {
+      var off = new AbortController();
+      menu.addEventListener("mousedown", function (e) {
         e.preventDefault();
-        var tab = $(e.target).closest(".ah-pm-slash-menu-tab")[0];
+        var tab = e.target.closest(".ah-pm-slash-menu-tab");
         if (tab) {
-          var g = $menu.find('.ah-pm-slash-menu-group[data-group="' + tab.getAttribute("data-group") + '"]')[0];
+          var g = Array.prototype.filter.call(menu.querySelectorAll(".ah-pm-slash-menu-group"), function (x) {
+            return x.getAttribute("data-group") === tab.getAttribute("data-group");
+          })[0];
           if (g) {
             list.scrollTop = g.offsetTop - list.offsetTop;
-            select(items().index($(g).find(".ah-pm-slash-menu-item").first()));
+            select(items().indexOf(g.querySelector(".ah-pm-slash-menu-item")));
           }
           return;
         }
-        confirm($(e.target).closest(".ah-pm-slash-menu-item")[0]);
-      });
-      $(document).on("mousedown" + ns, function (e) {
+        confirm(e.target.closest(".ah-pm-slash-menu-item"));
+      }, { signal: off.signal });
+      document.addEventListener("mousedown", function (e) {
         if (m.open && !menu.contains(e.target)) { hide(); }
-      });
+      }, { signal: off.signal });
       return {
         // "/" typed into an empty top-level paragraph opens the menu.
         // Read from the document rather than handleTextInput, which
@@ -879,8 +892,7 @@ function slashPlugin(st) {
         },
         destroy: function () {
           hide();
-          $menu.off(ns);
-          $(document).off(ns);
+          off.abort();
         }
       };
     },
@@ -942,14 +954,17 @@ function handlePlugin(st) {
 
   return new st.K.P.state.Plugin({
     view: function (view) {
-      var ns = ".ahmde" + st.uid;
-      var $h = $(handle);
-      $h.on("mouseenter" + ns, function () {
+      var off = new AbortController(), opts = { signal: off.signal };
+      handle.addEventListener("mouseenter", function () {
         cancel();
         handle.classList.add("ah-pm-block-handle--visible");
-      }).on("mouseleave" + ns, hideLater)
-        .on("mousedown" + ns, ".ah-pm-block-handle-add", function (e) { e.preventDefault(); })
-        .on("click" + ns, ".ah-pm-block-handle-add", function (e) {
+      }, opts);
+      handle.addEventListener("mouseleave", hideLater, opts);
+      handle.addEventListener("mousedown", function (e) {
+        if (e.target.closest(".ah-pm-block-handle-add")) { e.preventDefault(); }
+      }, opts);
+      handle.addEventListener("click", function (e) {
+          if (!e.target.closest(".ah-pm-block-handle-add")) { return; }
           e.preventDefault();
           var pos = block && posOf(st.view, block);
           if (pos == null) { return; }
@@ -961,10 +976,10 @@ function handlePlugin(st) {
           if (st.menu) {
             requestAnimationFrame(function () { if (st.view) { st.menu.show(after + 1); } });
           }
-        });
+        }, opts);
       return { update: function () {
         if (block && !view.dom.contains(block)) { hideNow(); }
-      }, destroy: function () { cancel(); hideNow(); $h.off(ns); } };
+      }, destroy: function () { cancel(); hideNow(); off.abort(); } };
     },
     props: { handleDOMEvents: {
       mousemove: function (view, e) {
@@ -1010,8 +1025,9 @@ function dragPlugin(st) {
 
   return new st.K.P.state.Plugin({
     view: function (view) {
-      var ns = ".ahmdedrag" + st.uid;
-      $(el).on("mousedown" + ns, ".ah-pm-block-handle-drag", function (e) {
+      var off = new AbortController(), moving = null;
+      el.addEventListener("mousedown", function (e) {
+        if (!e.target.closest || !e.target.closest(".ah-pm-block-handle-drag")) { return; }
         var b = st.handleBlock, p = b && posOf(view, b);
         if (p == null || e.button !== 0) { return; }
         e.preventDefault();
@@ -1020,13 +1036,16 @@ function dragPlugin(st) {
         b.classList.add("ah-pm-dragging");
         var r = b.getBoundingClientRect(), c = b.cloneNode(true);
         c.classList.add("ah-pm-drag-clone");
-        $(c).css({ position: "fixed", opacity: 0.6, pointerEvents: "none", zIndex: 1000,
-                   width: r.width + "px", transform: "rotate(1deg)", margin: 0,
-                   boxShadow: "0 4px 16px var(--ah-color-bg-overlay)",
-                   left: (e.clientX - 16) + "px", top: (e.clientY - 16) + "px" });
+        Object.assign(c.style, { position: "fixed", opacity: "0.6", pointerEvents: "none", zIndex: "1000",
+                                 width: r.width + "px", transform: "rotate(1deg)", margin: "0",
+                                 boxShadow: "0 4px 16px var(--ah-color-bg-overlay)",
+                                 left: (e.clientX - 16) + "px", top: (e.clientY - 16) + "px" });
         document.body.appendChild(c);
         d.clone = c;
-        $(document).on("mousemove" + ns, function (ev) {
+        if (moving) { moving.abort(); }
+        moving = new AbortController();
+        var mv = { signal: AbortSignal.any ? AbortSignal.any([moving.signal, off.signal]) : moving.signal };
+        document.addEventListener("mousemove", function (ev) {
           var at = dropAt(view, ev.clientY), cr = content.getBoundingClientRect();
           if (at) {
             indicator.style.top = (at.y - cr.top + content.scrollTop - 1) + "px";
@@ -1036,17 +1055,19 @@ function dragPlugin(st) {
             d.clone.style.left = (ev.clientX - 16) + "px";
             d.clone.style.top = (ev.clientY - 16) + "px";
           }
-        }).on("mouseup" + ns, function (ev) {
-          $(document).off("mousemove" + ns + " mouseup" + ns);
+        }, mv);
+        document.addEventListener("mouseup", function (ev) {
+          moving.abort();
+          moving = null;
           var from = d.pos, at = dropAt(view, ev.clientY);
           end();
           if (from != null && at) { moveBlock(view, from, at.pos); }
-        });
-      });
+        }, mv);
+      }, { signal: off.signal });
       return { destroy: function () {
         end();
-        $(el).off(ns);
-        $(document).off(ns);
+        if (moving) { moving.abort(); moving = null; }
+        off.abort();
       } };
     }
   });
@@ -1092,15 +1113,20 @@ function statsPlugin(st) {
   var max = +st.el.getAttribute("data-ah-max-chars") || 0;
   var timer = null;
   function fill(doc) {
-    var s = stats(doc), $f = $(foot);
-    $f.find('[data-stat="chars"]').text(s.chars);
-    $f.find('[data-stat="words"]').text(s.words);
-    $f.find('[data-stat="paragraphs"]').text(s.paragraphs);
+    var s = stats(doc);
+    var put = function (name, text) {
+      foot.querySelectorAll('[data-stat="' + name + '"]').forEach(function (n) { n.textContent = String(text); });
+    };
+    put("chars", s.chars);
+    put("words", s.words);
+    put("paragraphs", s.paragraphs);
     if (max) {
       var over = s.chars > max;
-      $f.find('[data-stat="limit"]').text(s.chars + "/" + max)
-        .toggleClass("ah-pm-stats__value--warning", over);
-      $f.find(".ah-pm-stats__warning").prop("hidden", !over);
+      put("limit", s.chars + "/" + max);
+      foot.querySelectorAll('[data-stat="limit"]').forEach(function (n) {
+        n.classList.toggle("ah-pm-stats__value--warning", over);
+      });
+      foot.querySelectorAll(".ah-pm-stats__warning").forEach(function (n) { n.hidden = !over; });
       st.el.classList.toggle("ah-md-editor-over", over);
     }
   }
@@ -1130,14 +1156,14 @@ function labelsOf(el) {
 function publish(st, md) {
   st.el.setAttribute("data-ah-value", md);
   if (st.ta && st.ta.value !== md) { st.ta.value = md; }
-  $(st.el).trigger("input");
+  fire(st.el, "input");
 }
 
 function commit(st) {
   var v = st.el.getAttribute("data-ah-value") || "";
   if (v !== st.committed) {
     st.committed = v;
-    $(st.el).trigger("change");
+    fire(st.el, "change");
   }
 }
 
@@ -1210,30 +1236,33 @@ function mountEditor(st, P) {
   });
   st.view = view;
   // ProseMirror's own input/change events are not the component's
-  $(view.dom).on("input" + NS + " change" + NS, function (e) { e.stopPropagation(); });
+  view.dom.addEventListener("input", swallow);
+  view.dom.addEventListener("change", swallow);
   if (st.ta) { st.ta.hidden = true; }
   el.classList.add("ah-md-editor-ready");
   return view;
 }
 
-AH.define("markdown-editor", {
-  init: function (el, $el) {
-    var st = el._ahMde = {
+AH.register("markdown-editor", class extends AH.Controller {
+  setup() {
+    var el = this.element;
+    var st = this.st = {
       el: el, uid: ++uid, view: null, K: null, labels: labelsOf(el),
       ta: el.querySelector(".ah-md-editor-source"),
       committed: el.getAttribute("data-ah-value") || "", destroyed: false
     };
     // Until the editor is up the textarea is the editor.
     if (st.ta) {
-      $(st.ta).on("input" + NS, function (e) {
+      this.listen(st.ta, "input", function (e) {
         e.stopPropagation();
         if (!st.view) { publish(st, st.ta.value); }
-      }).on("change" + NS, function (e) {
+      });
+      this.listen(st.ta, "change", function (e) {
         e.stopPropagation();
         if (!st.view) { commit(st); }
       });
     }
-    $el.on("focusout" + NS, function (e) {
+    this.listen(el, "focusout", function (e) {
       if (st.view && e.target === st.view.dom) { commit(st); }
     });
     st.ready = AH.vendor("prosemirror").then(function (P) {
@@ -1243,68 +1272,58 @@ AH.define("markdown-editor", {
     st.ready.catch(function (err) {
       if (!st.destroyed) { console.error("aihtml: markdown editor not loaded", err); }
     });
-  },
-  destroy: function (el) {
-    var st = state(el);
-    if (!st) { return; }
+  }
+
+  teardown() {
+    var st = this.st, el = this.element;
     st.destroyed = true;
     if (st.view) {
-      $(st.view.dom).off(NS);
+      st.view.dom.removeEventListener("input", swallow);
+      st.view.dom.removeEventListener("change", swallow);
       st.view.destroy();
       st.view = null;
     }
-    if (st.place) { st.place.remove(); }
-    if (st.ta) { $(st.ta).off(NS); st.ta.hidden = false; }
+    if (st.place) { st.place.remove(); st.place = null; }
+    if (st.ta) { st.ta.hidden = false; }
     el.classList.remove("ah-md-editor-ready", "ah-md-editor-over");
-    delete el._ahMde;
-  },
-  methods: {
-    getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
-    setValue: function (el, $el, md) {
-      var st = state(el);
-      md = md == null ? "" : String(md);
-      el.setAttribute("data-ah-value", md);
-      if (st) {
-        st.committed = md;
-        if (st.ta) { st.ta.value = md; }
-        if (st.view) { setDoc(st, md); }
-      }
-    },
-    getHtml: function (el) {
-      var st = state(el);
-      if (!st || !st.view) { return null; }
-      var div = document.createElement("div");
-      div.appendChild(st.K.P.model.DOMSerializer.fromSchema(st.K.schema)
-                        .serializeFragment(st.view.state.doc.content));
-      return div.innerHTML;
-    },
-    getJson: function (el) {
-      var st = state(el);
-      return st && st.view ? st.view.state.doc.toJSON() : null;
-    },
-    focus: function (el) {
-      var st = state(el);
-      if (st && st.view) { st.view.focus(); } else if (st && st.ta) { st.ta.focus(); }
-    },
-    blur: function (el) {
-      var st = state(el);
-      if (!st) { return; }
-      if (st.view) { st.view.dom.blur(); } else if (st.ta) { st.ta.blur(); }
-      if (st.view && !focused(st)) { commit(st); }
-    },
-    exec: function (el, $el, cmd, opts) {
-      var st = state(el);
-      if (!st) { return false; }
-      if (!st.view) { st.ready.then(function () { exec(st, cmd, opts || {}); }); return false; }
-      return exec(st, cmd, opts || {});
-    },
-    stats: function (el) {
-      var st = state(el);
-      return st && st.view ? stats(st.view.state.doc) : null;
-    },
-    ready: function (el) { var st = state(el); return st ? st.ready : Promise.reject(); },
-    view: function (el) { var st = state(el); return st ? st.view : null; }
   }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  getValue() { return this.element.getAttribute("data-ah-value") || ""; }
+  setValue(md) {
+    var st = this.st;
+    md = md == null ? "" : String(md);
+    this.element.setAttribute("data-ah-value", md);
+    st.committed = md;
+    if (st.ta) { st.ta.value = md; }
+    if (st.view) { setDoc(st, md); }
+  }
+  getHtml() {
+    var st = this.st;
+    if (!st.view) { return null; }
+    var div = document.createElement("div");
+    div.appendChild(st.K.P.model.DOMSerializer.fromSchema(st.K.schema)
+                      .serializeFragment(st.view.state.doc.content));
+    return div.innerHTML;
+  }
+  getJson() { return this.st.view ? this.st.view.state.doc.toJSON() : null; }
+  focus() {
+    var st = this.st;
+    if (st.view) { st.view.focus(); } else if (st.ta) { st.ta.focus(); }
+  }
+  blur() {
+    var st = this.st;
+    if (st.view) { st.view.dom.blur(); } else if (st.ta) { st.ta.blur(); }
+    if (st.view && !focused(st)) { commit(st); }
+  }
+  exec(cmd, opts) {
+    var st = this.st;
+    if (!st.view) { st.ready.then(function () { exec(st, cmd, opts || {}); }); return false; }
+    return exec(st, cmd, opts || {});
+  }
+  stats() { return this.st.view ? stats(this.st.view.state.doc) : null; }
+  ready() { return this.st.ready; }
+  view() { return this.st.view; }
 });
 
 // exec-command! (core.cljs): marks, blocks, undo / redo.

@@ -188,7 +188,7 @@ behaviour_names_test() ->
     ?assertEqual([], Bad).
 
 %% every behaviour of the catalog is defined in the browser runtime, so the
-%% bundle's lazy loader can find it: AH.define("<name>") in a component
+%% bundle's lazy loader can find it: AH.register/define("<name>") in a component
 %% file (or core.js), or "// ah-define: <name>" for a helper-registered one
 behaviours_are_defined_in_js_test() ->
     %% the sources: priv and src are symlinked into _build, assets is not
@@ -198,5 +198,6 @@ behaviours_are_defined_in_js_test() ->
                                      filelib:wildcard(filename:join(Js, "components/*.js"))]]),
     Missing = [B || #{behavior := B} <- aihtml_catalog:prefabs(), B =/= none,
                     binary:match(Src, [<<"define(\"", B/binary, "\"">>,
+                                       <<"register(\"", B/binary, "\"">>,
                                        <<"// ah-define: ", B/binary, "\n">>]) =:= nomatch],
     ?assertEqual([], Missing).

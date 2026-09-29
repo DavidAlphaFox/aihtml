@@ -1,48 +1,50 @@
-/* Behaviour of panel: a scroll area with an optional collapsible header. */
-import $ from "jquery";
+/* Behaviour of panel: a scroll area with an optional collapsible header.
+ * A user toggle fires ah:expand / ah:collapse (no detail) on the root
+ * when the slide ends. */
 import AH from "../core.js";
+import "./_lib_layout.js";
 
-var NS = AH.NS;
+const L = AH.lib.layout;
 
-
-function panelSet(el, $el, open, user) {
-  var $w = $el.children(".ah-panel-wrapper");
-  var $t = $el.children(".ah-panel-header").children(".ah-panel-toggle");
-  if (!$t.length || ($t.attr("aria-expanded") === "true") === open) {
+function panelSet(el, open, user) {
+  const w = el.querySelector(":scope > .ah-panel-wrapper");
+  const t = el.querySelector(":scope > .ah-panel-header > .ah-panel-toggle");
+  if (!t || (t.getAttribute("aria-expanded") === "true") === open) {
     return;
   }
-  $t.attr("aria-expanded", String(open));
-  $el.toggleClass("ah-panel-collapsed", !open);
-  $w.stop(true, true)[open ? "slideDown" : "slideUp"](200, function () {
+  t.setAttribute("aria-expanded", String(open));
+  el.classList.toggle("ah-panel-collapsed", !open);
+  const done = function () {
     if (user) {
-      $el.trigger(open ? "ah:expand" : "ah:collapse");
+      el.dispatchEvent(new CustomEvent(open ? "ah:expand" : "ah:collapse",
+                                       { bubbles: true, cancelable: true }));
     }
-  });
+  };
+  if (w) { L.slide(w, open, 200, done); } else { done(); }
 }
 
-AH.define("panel", {
-  init: function (el, $el) {
-    $el.on("click" + NS, ".ah-panel-toggle", function (e) {
-      if ($(this).closest(".ah-panel")[0] !== el) {
+AH.register("panel", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    this.delegate("click", ".ah-panel-toggle", function (e, t) {
+      if (t.closest(".ah-panel") !== el) {
         return;
       }
       e.preventDefault();
-      panelSet(el, $el, this.getAttribute("aria-expanded") !== "true", true);
+      panelSet(el, t.getAttribute("aria-expanded") !== "true", true);
     });
-  },
-  methods: {
-    scrollTo: function (el, $el, x, y) {
-      var w = $el.children(".ah-panel-wrapper")[0];
-      if (w) {
-        w.scrollLeft = x || 0;
-        w.scrollTop = y || 0;
-      }
-    },
-    refresh: function () { /* native scrolling: nothing to measure */ },
-    collapse: function (el, $el) { panelSet(el, $el, false, false); },
-    expand: function (el, $el) { panelSet(el, $el, true, false); },
-    toggle: function (el, $el) {
-      panelSet(el, $el, $el.hasClass("ah-panel-collapsed"), false);
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  scrollTo(x, y) {
+    const w = this.element.querySelector(":scope > .ah-panel-wrapper");
+    if (w) {
+      w.scrollLeft = x || 0;
+      w.scrollTop = y || 0;
     }
   }
+  refresh() { /* native scrolling: nothing to measure */ }
+  collapse() { panelSet(this.element, false, false); }
+  expand() { panelSet(this.element, true, false); }
+  toggle() { panelSet(this.element, this.element.classList.contains("ah-panel-collapsed"), false); }
 });

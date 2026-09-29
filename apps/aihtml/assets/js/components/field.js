@@ -3,11 +3,13 @@
    rows, or as sigil's tooltip bubble. Ported from sigil
    (sigil.components.form.validator). */
 // ah-load: [data-ah-validate]
-import $ from "jquery";
 import AH from "../core.js";
 
-var NS = AH.NS;
 var seq = 0;
+var rulesCache = new WeakMap();   // control -> parsed rules
+var hints = new WeakMap();        // control -> its message element
+var owners = new WeakMap();       // tooltip bubble -> control
+var floats = new WeakMap();       // tooltip bubble -> AH.float handle
 
 function trim(s) { return String(s === null || s === undefined ? "" : s).trim(); }
 
@@ -26,7 +28,8 @@ function trim(s) { return String(s === null || s === undefined ? "" : s).trim();
 // tooltip bubble (.ah-validator-hint) or an error label. Inside a
 // field/4 row ("auto", the default) the label goes under the control.
 //
-//   ah:validation-error {invalid: [el]} / ah:validation-success  on the form
+//   ah:validation-error (detail {invalid: [el]}) / ah:validation-success
+//                                         native events on the form
 //   AH.fn("validate", target) -> bool     check a form or control
 //   AH.fn("clearValidation", target)      remove every message
 
@@ -60,8 +63,11 @@ function isNative(el) {
 
 function valueOf(el) {
   if (isNative(el)) {
-    var v = $(el).val();
-    return Array.isArray(v) ? v.join(",") : String(v === null || v === undefined ? "" : v);
+    if (el.tagName === "SELECT" && el.multiple) {
+      return Array.from(el.selectedOptions).map(function (o) { return o.value; }).join(",");
+    }
+    var v = el.value;
+    return String(v === null || v === undefined ? "" : v);
   }
   return el.getAttribute("data-ah-value") || "";
 }
@@ -95,17 +101,27 @@ var RULES = {
   },
   pattern: function (v, _el, a) { return blank(v) || new RegExp("^(?:" + a[0] + ")$").test(v); },
   same_as: function (v, _el, a) {
-    var other = $(a[0])[0];
+    var other = find(a[0]);
     return !other || valueOf(other) === v;
   }
 };
 
+// An element, or the first match of a selector ("#id").
+function find(target) {
+  if (!target) { return null; }
+  if (typeof target === "string") {
+    try { return document.querySelector(target); } catch (err) { return null; }
+  }
+  if (target.nodeType) { return target; }
+  return target[0] || null;      // an array-like of elements
+}
+
 function rulesOf(el) {
-  var r = $.data(el, "ah-rules");
+  var r = rulesCache.get(el);
   if (!r) {
     try { r = JSON.parse(el.getAttribute("data-ah-validate") || "[]"); }
     catch (err) { r = []; }
-    $.data(el, "ah-rules", r);
+    rulesCache.set(el, r);
   }
   return r;
 }
@@ -127,28 +143,29 @@ function failure(el) {
 function hintMode(el) {
   var mode = el.getAttribute("data-ah-validate-hint") || "auto";
   if (mode === "auto") {
-    return $(el).closest(".ah-form-body").length ? "field" : "tooltip";
+    return el.closest(".ah-form-body") ? "field" : "tooltip";
   }
   return mode;
 }
 
 function hideHint(el) {
-  var $el = $(el);
-  $el.removeClass("ah-validator-error-element").removeAttr("aria-invalid");
-  var hint = $.data(el, "ah-hint");
+  el.classList.remove("ah-validator-error-element");
+  el.removeAttribute("aria-invalid");
+  var hint = hints.get(el);
   if (hint) {
     removeHint(hint);
-    $.removeData(el, "ah-hint");
+    hints.delete(el);
   }
-  var $body = $el.closest(".ah-form-body");
-  if ($body.length && !$body.find(".ah-validator-error-element").length) {
-    $body.children(".ah-form-error").remove();
-    $body.closest(".ah-form-row-invalid").removeClass("ah-form-row-invalid");
+  var body = el.closest(".ah-form-body");
+  if (body && !body.querySelector(".ah-validator-error-element")) {
+    Array.prototype.forEach.call(body.querySelectorAll(":scope > .ah-form-error"), function (x) { x.remove(); });
+    var row = body.closest(".ah-form-row-invalid");
+    if (row) { row.classList.remove("ah-form-row-invalid"); }
   }
-  var desc = $el.attr("aria-describedby");
+  var desc = el.getAttribute("aria-describedby");
   if (desc && /ah-vh\d+/.test(desc)) {
     desc = trim(desc.replace(/\bah-vh\d+\b/g, ""));
-    if (desc) { $el.attr("aria-describedby", desc); } else { $el.removeAttr("aria-describedby"); }
+    if (desc) { el.setAttribute("aria-describedby", desc); } else { el.removeAttribute("aria-describedby"); }
   }
 }
 
@@ -157,60 +174,73 @@ function hideHint(el) {
 // from the side in data-ah-placement.
 function floatTooltip(el, hint) {
   var pos = el.getAttribute("data-ah-validate-position") || "right";
-  $.data(hint, "ah-float", AH.float(hint, el, { placement: pos, align: "center", offset: 8 }));
+  floats.set(hint, AH.float(hint, el, { placement: pos, align: "center", offset: 8 }));
 }
 
 function removeHint(hint) {
-  var f = $.data(hint, "ah-float");
-  if (f) { f.stop(); }
-  $(hint).remove();
+  var f = floats.get(hint);
+  if (f) { f.stop(); floats.delete(hint); }
+  hint.remove();
 }
 
 function showHint(el, message) {
   hideHint(el);
-  var $el = $(el);
   var id = "ah-vh" + (++seq);
-  $el.addClass("ah-validator-error-element").attr("aria-invalid", "true");
-  $el.attr("aria-describedby", trim(($el.attr("aria-describedby") || "") + " " + id));
+  el.classList.add("ah-validator-error-element");
+  el.setAttribute("aria-invalid", "true");
+  el.setAttribute("aria-describedby", trim((el.getAttribute("aria-describedby") || "") + " " + id));
   var mode = hintMode(el);
-  var $hint;
+  var hint;
   if (mode === "field") {
-    var $body = $el.closest(".ah-form-body");
-    $body.children(".ah-form-error").remove();
-    $hint = $("<div class=\"ah-form-error ah-validator-error-label\" role=\"alert\"></div>")
-      .attr("id", id).text(message).appendTo($body);
-    $body.closest(".ah-form-row, .ah-form-col").addClass("ah-form-row-invalid");
-    $.data(el, "ah-hint", $hint[0]);
+    var body = el.closest(".ah-form-body");
+    Array.prototype.forEach.call(body.querySelectorAll(":scope > .ah-form-error"), function (x) { x.remove(); });
+    hint = document.createElement("div");
+    hint.className = "ah-form-error ah-validator-error-label";
+    hint.setAttribute("role", "alert");
+    hint.id = id;
+    hint.textContent = message;
+    body.appendChild(hint);
+    var row = body.closest(".ah-form-row, .ah-form-col");
+    if (row) { row.classList.add("ah-form-row-invalid"); }
+    hints.set(el, hint);
     return;
   }
   if (mode === "label") {
-    $hint = $("<label class=\"ah-validator-error-label\" role=\"alert\"></label>")
-      .attr({ id: id, "for": el.id || null }).text(message);
-    if (el.getAttribute("data-ah-validate-position") === "top") { $hint.insertBefore(el); }
-    else { $hint.insertAfter(el); }
-    $.data(el, "ah-hint", $hint[0]);
+    hint = document.createElement("label");
+    hint.className = "ah-validator-error-label";
+    hint.setAttribute("role", "alert");
+    hint.id = id;
+    if (el.id) { hint.htmlFor = el.id; }
+    hint.textContent = message;
+    if (el.getAttribute("data-ah-validate-position") === "top") { el.before(hint); }
+    else { el.after(hint); }
+    hints.set(el, hint);
     return;
   }
-  $hint = $("<div class=\"ah-validator-hint\" role=\"alert\">" +
-            "<div class=\"ah-validator-arrow\"></div></div>")
-    .attr("id", id).append(document.createTextNode(message)).appendTo(document.body);
-  $hint.data("ah-owner", el);
-  floatTooltip(el, $hint[0]);
-  $hint.addClass("ah-validator-hint-visible");
-  $hint.on("click", function () { hideHint(el); });     // sigil: click closes
-  $.data(el, "ah-hint", $hint[0]);
+  hint = document.createElement("div");
+  hint.className = "ah-validator-hint";
+  hint.setAttribute("role", "alert");
+  hint.id = id;
+  hint.innerHTML = "<div class=\"ah-validator-arrow\"></div>";
+  hint.appendChild(document.createTextNode(message));
+  document.body.appendChild(hint);
+  owners.set(hint, el);
+  floatTooltip(el, hint);
+  hint.classList.add("ah-validator-hint-visible");
+  hint.addEventListener("click", function () { hideHint(el); });     // sigil: click closes
+  hints.set(el, hint);
 }
 
 // Bubbles whose control has left the page (replaced by an action).
 function sweep() {
-  $(".ah-validator-hint").each(function () {
-    var owner = $(this).data("ah-owner");
-    if (!owner || !document.body.contains(owner)) { removeHint(this); }
+  document.querySelectorAll(".ah-validator-hint").forEach(function (hint) {
+    var owner = owners.get(hint);
+    if (!owner || !document.body.contains(owner)) { removeHint(hint); }
   });
 }
 
 function skip(el) {
-  return el.disabled || el.type === "hidden" || !$(el).is(":visible");
+  return el.disabled || el.type === "hidden" || el.getClientRects().length === 0;
 }
 
 function checkOne(el) {
@@ -221,19 +251,28 @@ function checkOne(el) {
   return !msg;
 }
 
+// scope and its descendants carrying data-ah-validate.
+function controls(scope) {
+  var out = scope.matches && scope.matches("[data-ah-validate]") ? [scope] : [];
+  return out.concat(Array.from(scope.querySelectorAll("[data-ah-validate]")));
+}
+
+function fire(target, type, detail) {
+  target.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true, detail: detail }));
+}
+
 function checkAll(scope) {
   var invalid = [];
-  $(scope).find("[data-ah-validate]").addBack("[data-ah-validate]").each(function () {
-    if (!checkOne(this)) { invalid.push(this); }
+  controls(scope).forEach(function (el) {
+    if (!checkOne(el)) { invalid.push(el); }
   });
-  var $scope = $(scope);
   if (invalid.length) {
     var first = invalid[0];
     if (first.scrollIntoView) { first.scrollIntoView({ block: "nearest", behavior: "smooth" }); }
     first.focus({ preventScroll: true });
-    $scope.trigger("ah:validation-error", [{ invalid: invalid }]);
+    fire(scope, "ah:validation-error", { invalid: invalid });
   } else {
-    $scope.trigger("ah:validation-success");
+    fire(scope, "ah:validation-success");
   }
   return invalid.length === 0;
 }
@@ -267,20 +306,39 @@ function triggers(el) {
   return (el.getAttribute("data-ah-validate-on") || "blur").split(/\s+/);
 }
 
-$(document).on("focusout" + NS, "[data-ah-validate]", function (e) {
-  if (e.relatedTarget && this.contains(e.relatedTarget)) { return; }
-  if (triggers(this).indexOf("blur") >= 0) { checkOne(this); }
-});
-$(document).on("input" + NS + " change" + NS, "[data-ah-validate]", function (e) {
-  if (e.target !== this && !isNative(e.target) && e.type === "input") { return; }
-  if (triggers(this).indexOf(e.type) >= 0 || $(this).hasClass("ah-validator-error-element")) {
-    checkOne(this);
+// Like a delegated jQuery handler: fn(match, e) for every element
+// matching the selector from the target up to the document.
+function eachMatch(e, selector, fn) {
+  var n = e.target && e.target.closest ? e.target.closest(selector) : null;
+  while (n) {
+    fn(n, e);
+    n = n.parentElement ? n.parentElement.closest(selector) : null;
   }
+}
+
+document.addEventListener("focusout", function (e) {
+  eachMatch(e, "[data-ah-validate]", function (el) {
+    if (e.relatedTarget && el.contains(e.relatedTarget)) { return; }
+    if (triggers(el).indexOf("blur") >= 0) { checkOne(el); }
+  });
 });
 
-AH.fn("validate", function (target) { return checkAll($(target)[0] || document.body); });
+function onEdit(e) {
+  eachMatch(e, "[data-ah-validate]", function (el) {
+    if (e.target !== el && !isNative(e.target) && e.type === "input") { return; }
+    if (triggers(el).indexOf(e.type) >= 0 || el.classList.contains("ah-validator-error-element")) {
+      checkOne(el);
+    }
+  });
+}
+document.addEventListener("input", onEdit);
+document.addEventListener("change", onEdit);
+
+// validate(target): target is a form or control (an element or a
+// selector); the default is the whole page.
+AH.fn("validate", function (target) { return checkAll(find(target) || document.body); });
 AH.fn("clearValidation", function (target) {
-  $(target || document.body).find("[data-ah-validate]").addBack("[data-ah-validate]")
-    .each(function () { hideHint(this); });
+  var scope = target ? find(target) : document.body;
+  if (scope) { controls(scope).forEach(hideHint); }
   sweep();
 });

@@ -1,7 +1,6 @@
 /* Helpers shared by the display component behaviours (chip, badge,
    progressbar, progress-circle, kpi-card, timeline, ranking-list,
    tag-cloud, alert). Internal: AH.lib.display. */
-import $ from "jquery";
 import AH from "../core.js";
 
 AH.lib = AH.lib || {};
@@ -19,14 +18,16 @@ AH.lib.display = {
   // Remove an element the way the runtime does (behaviours destroyed first).
   drop: function (el) {
     AH.destroy(el);
-    $(el).remove();
+    el.remove();
   },
 
   // Enter / Space act as a click on focusable non-button elements.
-  keyClick: function (e) {
+  // target: the element that acts (default e.currentTarget), so it can be
+  // used directly as a delegate() handler (handler(e, match)).
+  keyClick: function (e, target) {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
-      $(e.currentTarget).trigger("click");
+      (target || e.currentTarget).click();
     }
   }
 };

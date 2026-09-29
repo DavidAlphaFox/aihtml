@@ -2,16 +2,16 @@
  * AH.lib.choice.defineGroup; arrow keys move the selection.
  */
 // ah-define: radio-cards
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_choice.js";
 
 var L = AH.lib.choice;
 
 function syncCard(input) {
-  $(input).closest(".ah-radio-cards__card")
-    .attr("data-selected", input.checked ? "true" : "false")
-    .attr("data-disabled", input.disabled ? "true" : "false");
+  var card = input.closest(".ah-radio-cards__card");
+  if (!card) { return; }
+  card.setAttribute("data-selected", input.checked ? "true" : "false");
+  card.setAttribute("data-disabled", input.disabled ? "true" : "false");
 }
 
 L.defineGroup("radio-cards", {

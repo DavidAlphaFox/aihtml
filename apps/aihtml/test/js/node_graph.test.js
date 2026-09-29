@@ -2,8 +2,9 @@
  * aihtml_node_graph:node_graph/3. SERVER holds renders of a three-node
  * graph (a -> b, c unconnected, group g1 around a and b): "edit" with a
  * node library (id "ng", name "graph") and "ro" read-only with a minimap
- * (id "ro"); regenerate them from Erlang if the markup changes. */
-(function (T, $, AH) {
+ * (id "ro"); regenerate them from Erlang if the markup changes. Events
+ * are native; every fixture insertion awaits T.ready. */
+(function (T, AH) {
   "use strict";
 
   var SERVER = {"edit":"<div class=\"ah-node-graph\" data-ah=\"node-graph\" data-ah-value=\"{&quot;links&quot;:[{&quot;id&quot;:&quot;e1&quot;,&quot;source&quot;:[&quot;a&quot;,0],&quot;target&quot;:[&quot;b&quot;,0]}],&quot;nodes&quot;:[{&quot;id&quot;:&quot;a&quot;,&quot;type&quot;:&quot;Src&quot;,&quot;pos&quot;:[0,0],&quot;outputs&quot;:[{&quot;name&quot;:&quot;out&quot;,&quot;type&quot;:&quot;IMAGE&quot;}],&quot;inputs&quot;:[]},{&quot;id&quot;:&quot;b&quot;,&quot;title&quot;:&quot;Op&quot;,&quot;pos&quot;:[400,0],&quot;outputs&quot;:[{&quot;name&quot;:&quot;o&quot;,&quot;type&quot;:&quot;IMAGE&quot;}],&quot;inputs&quot;:[{&quot;name&quot;:&quot;in&quot;,&quot;type&quot;:&quot;IMAGE&quot;},{&quot;name&quot;:&quot;m&quot;,&quot;type&quot;:&quot;MASK&quot;}]},{&quot;id&quot;:&quot;c&quot;,&quot;title&quot;:&quot;End&quot;,&quot;pos&quot;:[800,0],&quot;outputs&quot;:[],&quot;inputs&quot;:[{&quot;name&quot;:&quot;in&quot;,&quot;type&quot;:&quot;*&quot;}]}],&quot;groups&quot;:[{&quot;id&quot;:&quot;g1&quot;,&quot;title&quot;:&quot;G&quot;,&quot;bounds&quot;:[-20,-40,700,200]}]}\" data-ah-link-mode=\"spline\" style=\"height:400px\" id=\"ng\"><div class=\"ah-node-graph-viewport\" tabindex=\"0\" role=\"application\" aria-roledescription=\"node graph\" aria-label=\"Node graph\" data-grid=\"true\"><div class=\"ah-node-graph-canvas\" style=\"transform:scale3d(1,1,1) translate3d(0px,0px,0)\"><div class=\"ah-node-graph-groups\"><div class=\"ah-node-graph-group\" data-group-id=\"g1\" style=\"transform:translate3d(-20px,-40px,0);width:700px;height:200px;\"><div class=\"ah-node-graph-group-header\"><span class=\"ah-node-graph-group-title\">G</span><button class=\"ah-node-graph-group-delete\" type=\"button\" aria-label=\"Delete group\" title=\"Delete group frame (nodes stay)\">&times;</button></div><span class=\"ah-node-graph-group-resize\"></span></div></div><svg class=\"ah-node-graph-links\" aria-hidden=\"true\"><g class=\"ah-node-graph-link\" data-link-id=\"e1\"><path class=\"ah-node-graph-link-hit\" d=\"M240,44 C280,44 360,44 400,44\"></path><path class=\"ah-node-graph-link-line\" d=\"M240,44 C280,44 360,44 400,44\" style=\"stroke:var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))\"></path></g></svg><div class=\"ah-node-graph-nodes\"><div class=\"ah-node-graph-node\" data-node-id=\"a\" role=\"group\" aria-label=\"Src\" style=\"transform:translate3d(0px,0px,0);--ah-ng-node-width:240px;\"><div class=\"ah-node-graph-node-header\"><button class=\"ah-node-graph-collapse\" type=\"button\" aria-label=\"Collapse node\" aria-expanded=\"true\"></button><span class=\"ah-node-graph-node-title\">Src</span><span class=\"ah-node-graph-node-type\">Src</span></div><div class=\"ah-node-graph-node-body\"><div class=\"ah-node-graph-slots\"><div class=\"ah-node-graph-slot-col\" data-side=\"in\"></div><div class=\"ah-node-graph-slot-col\" data-side=\"out\"><div class=\"ah-node-graph-slot\" data-kind=\"output\" data-connected=\"true\" data-slot-key=\"a:o0\" data-slot-index=\"0\"><span class=\"ah-node-graph-slot-hit\" title=\"IMAGE\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))\"></span></span><span class=\"ah-node-graph-slot-label\">out</span></div></div></div><div class=\"ah-node-graph-widgets\"><div class=\"ah-node-graph-widget\"><i class=\"w\">w</i></div></div></div><span class=\"ah-node-graph-node-resize\"></span></div><div class=\"ah-node-graph-node\" data-node-id=\"b\" role=\"group\" aria-label=\"Op\" style=\"transform:translate3d(400px,0px,0);--ah-ng-node-width:240px;\"><div class=\"ah-node-graph-node-header\"><button class=\"ah-node-graph-collapse\" type=\"button\" aria-label=\"Collapse node\" aria-expanded=\"true\"></button><span class=\"ah-node-graph-node-title\">Op</span></div><div class=\"ah-node-graph-node-body\"><div class=\"ah-node-graph-slots\"><div class=\"ah-node-graph-slot-col\" data-side=\"in\"><div class=\"ah-node-graph-slot\" data-kind=\"input\" data-connected=\"true\" data-slot-key=\"b:i0\" data-slot-index=\"0\"><span class=\"ah-node-graph-slot-hit\" title=\"IMAGE\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))\"></span></span><span class=\"ah-node-graph-slot-label\">in</span></div><div class=\"ah-node-graph-slot\" data-kind=\"input\" data-slot-key=\"b:i1\" data-slot-index=\"1\"><span class=\"ah-node-graph-slot-hit\" title=\"MASK\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-MASK, var(--ah-datatype-default, #aaa))\"></span></span><span class=\"ah-node-graph-slot-label\">m</span></div></div><div class=\"ah-node-graph-slot-col\" data-side=\"out\"><div class=\"ah-node-graph-slot\" data-kind=\"output\" data-slot-key=\"b:o0\" data-slot-index=\"0\"><span class=\"ah-node-graph-slot-hit\" title=\"IMAGE\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))\"></span></span><span class=\"ah-node-graph-slot-label\">o</span></div></div></div></div><span class=\"ah-node-graph-node-resize\"></span></div><div class=\"ah-node-graph-node\" data-node-id=\"c\" role=\"group\" aria-label=\"End\" style=\"transform:translate3d(800px,0px,0);--ah-ng-node-width:240px;\"><div class=\"ah-node-graph-node-header\"><button class=\"ah-node-graph-collapse\" type=\"button\" aria-label=\"Collapse node\" aria-expanded=\"true\"></button><span class=\"ah-node-graph-node-title\">End</span></div><div class=\"ah-node-graph-node-body\"><div class=\"ah-node-graph-slots\"><div class=\"ah-node-graph-slot-col\" data-side=\"in\"><div class=\"ah-node-graph-slot\" data-kind=\"input\" data-slot-key=\"c:i0\" data-slot-index=\"0\"><span class=\"ah-node-graph-slot-hit\" title=\"*\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-default, #aaa)\"></span></span><span class=\"ah-node-graph-slot-label\">in</span></div></div><div class=\"ah-node-graph-slot-col\" data-side=\"out\"></div></div></div><span class=\"ah-node-graph-node-resize\"></span></div></div><div class=\"ah-node-graph-marquee\" hidden></div></div></div><div class=\"ah-node-graph-toolbar\" role=\"toolbar\" aria-label=\"Graph tools\"><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"hand\" title=\"Pan the canvas (or hold Space / middle-drag)\" aria-label=\"Pan the canvas (or hold Space / middle-drag)\" aria-pressed=\"false\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15\"></path></svg></button><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"zoom-in\" title=\"Zoom in\" aria-label=\"Zoom in\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"></path></svg></button><span class=\"ah-node-graph-zoom\" aria-live=\"polite\">100%</span><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"zoom-out\" title=\"Zoom out\" aria-label=\"Zoom out\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path></svg></button><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"fit\" title=\"Fit to view\" aria-label=\"Fit to view\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5\"></path></svg></button><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"undo\" title=\"Undo\" aria-label=\"Undo\" disabled><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3\"></path></svg></button><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"redo\" title=\"Redo\" aria-label=\"Redo\" disabled><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m15 14 5-5-5-5M20 9H9a5 5 0 0 0 0 10h3\"></path></svg></button><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"delete\" title=\"Delete selection (Del)\" aria-label=\"Delete selection (Del)\" disabled><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6\"></path></svg></button></div><script class=\"ah-node-graph-data\" type=\"application/json\">{\"library\":[{\"label\":\"Image Blur\",\"node\":{\"id\":\"n0\",\"type\":\"Blur\",\"pos\":[0,0],\"outputs\":[{\"name\":\"o\",\"type\":\"IMAGE\"}],\"inputs\":[{\"name\":\"image\",\"type\":\"IMAGE\"}],\"html\":{\"widgets\":[\"<b>r<\\/b>\"]}},\"type\":\"Blur\",\"category\":\"image\"}]}</script><input type=\"hidden\" name=\"graph\" value=\"{&quot;links&quot;:[{&quot;id&quot;:&quot;e1&quot;,&quot;source&quot;:[&quot;a&quot;,0],&quot;target&quot;:[&quot;b&quot;,0]}],&quot;nodes&quot;:[{&quot;id&quot;:&quot;a&quot;,&quot;type&quot;:&quot;Src&quot;,&quot;pos&quot;:[0,0],&quot;outputs&quot;:[{&quot;name&quot;:&quot;out&quot;,&quot;type&quot;:&quot;IMAGE&quot;}],&quot;inputs&quot;:[]},{&quot;id&quot;:&quot;b&quot;,&quot;title&quot;:&quot;Op&quot;,&quot;pos&quot;:[400,0],&quot;outputs&quot;:[{&quot;name&quot;:&quot;o&quot;,&quot;type&quot;:&quot;IMAGE&quot;}],&quot;inputs&quot;:[{&quot;name&quot;:&quot;in&quot;,&quot;type&quot;:&quot;IMAGE&quot;},{&quot;name&quot;:&quot;m&quot;,&quot;type&quot;:&quot;MASK&quot;}]},{&quot;id&quot;:&quot;c&quot;,&quot;title&quot;:&quot;End&quot;,&quot;pos&quot;:[800,0],&quot;outputs&quot;:[],&quot;inputs&quot;:[{&quot;name&quot;:&quot;in&quot;,&quot;type&quot;:&quot;*&quot;}]}],&quot;groups&quot;:[{&quot;id&quot;:&quot;g1&quot;,&quot;title&quot;:&quot;G&quot;,&quot;bounds&quot;:[-20,-40,700,200]}]}\"></div>","ro":"<div class=\"ah-node-graph\" data-ah=\"node-graph\" data-ah-value=\"{&quot;links&quot;:[{&quot;id&quot;:&quot;e1&quot;,&quot;source&quot;:[&quot;a&quot;,0],&quot;target&quot;:[&quot;b&quot;,0]}],&quot;nodes&quot;:[{&quot;id&quot;:&quot;a&quot;,&quot;type&quot;:&quot;Src&quot;,&quot;pos&quot;:[0,0],&quot;outputs&quot;:[{&quot;name&quot;:&quot;out&quot;,&quot;type&quot;:&quot;IMAGE&quot;}],&quot;inputs&quot;:[]},{&quot;id&quot;:&quot;b&quot;,&quot;title&quot;:&quot;Op&quot;,&quot;pos&quot;:[400,0],&quot;outputs&quot;:[{&quot;name&quot;:&quot;o&quot;,&quot;type&quot;:&quot;IMAGE&quot;}],&quot;inputs&quot;:[{&quot;name&quot;:&quot;in&quot;,&quot;type&quot;:&quot;IMAGE&quot;},{&quot;name&quot;:&quot;m&quot;,&quot;type&quot;:&quot;MASK&quot;}]},{&quot;id&quot;:&quot;c&quot;,&quot;title&quot;:&quot;End&quot;,&quot;pos&quot;:[800,0],&quot;outputs&quot;:[],&quot;inputs&quot;:[{&quot;name&quot;:&quot;in&quot;,&quot;type&quot;:&quot;*&quot;}]}],&quot;groups&quot;:[{&quot;id&quot;:&quot;g1&quot;,&quot;title&quot;:&quot;G&quot;,&quot;bounds&quot;:[-20,-40,700,200]}]}\" data-ah-link-mode=\"spline\" data-read-only=\"true\" style=\"height:300px\" id=\"ro\"><div class=\"ah-node-graph-viewport\" tabindex=\"0\" role=\"application\" aria-roledescription=\"node graph\" aria-label=\"Node graph\" data-grid=\"true\"><div class=\"ah-node-graph-canvas\" style=\"transform:scale3d(1,1,1) translate3d(0px,0px,0)\"><div class=\"ah-node-graph-groups\"><div class=\"ah-node-graph-group\" data-group-id=\"g1\" style=\"transform:translate3d(-20px,-40px,0);width:700px;height:200px;\"><div class=\"ah-node-graph-group-header\"><span class=\"ah-node-graph-group-title\">G</span></div></div></div><svg class=\"ah-node-graph-links\" aria-hidden=\"true\"><g class=\"ah-node-graph-link\" data-link-id=\"e1\"><path class=\"ah-node-graph-link-hit\" d=\"M240,44 C280,44 360,44 400,44\"></path><path class=\"ah-node-graph-link-line\" d=\"M240,44 C280,44 360,44 400,44\" style=\"stroke:var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))\"></path></g></svg><div class=\"ah-node-graph-nodes\"><div class=\"ah-node-graph-node\" data-node-id=\"a\" role=\"group\" aria-label=\"Src\" style=\"transform:translate3d(0px,0px,0);--ah-ng-node-width:240px;\"><div class=\"ah-node-graph-node-header\"><button class=\"ah-node-graph-collapse\" type=\"button\" aria-label=\"Collapse node\" aria-expanded=\"true\"></button><span class=\"ah-node-graph-node-title\">Src</span><span class=\"ah-node-graph-node-type\">Src</span></div><div class=\"ah-node-graph-node-body\"><div class=\"ah-node-graph-slots\"><div class=\"ah-node-graph-slot-col\" data-side=\"in\"></div><div class=\"ah-node-graph-slot-col\" data-side=\"out\"><div class=\"ah-node-graph-slot\" data-kind=\"output\" data-connected=\"true\" data-slot-key=\"a:o0\" data-slot-index=\"0\"><span class=\"ah-node-graph-slot-hit\" title=\"IMAGE\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))\"></span></span><span class=\"ah-node-graph-slot-label\">out</span></div></div></div><div class=\"ah-node-graph-widgets\"><div class=\"ah-node-graph-widget\"><i class=\"w\">w</i></div></div></div></div><div class=\"ah-node-graph-node\" data-node-id=\"b\" role=\"group\" aria-label=\"Op\" style=\"transform:translate3d(400px,0px,0);--ah-ng-node-width:240px;\"><div class=\"ah-node-graph-node-header\"><button class=\"ah-node-graph-collapse\" type=\"button\" aria-label=\"Collapse node\" aria-expanded=\"true\"></button><span class=\"ah-node-graph-node-title\">Op</span></div><div class=\"ah-node-graph-node-body\"><div class=\"ah-node-graph-slots\"><div class=\"ah-node-graph-slot-col\" data-side=\"in\"><div class=\"ah-node-graph-slot\" data-kind=\"input\" data-connected=\"true\" data-slot-key=\"b:i0\" data-slot-index=\"0\"><span class=\"ah-node-graph-slot-hit\" title=\"IMAGE\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))\"></span></span><span class=\"ah-node-graph-slot-label\">in</span></div><div class=\"ah-node-graph-slot\" data-kind=\"input\" data-slot-key=\"b:i1\" data-slot-index=\"1\"><span class=\"ah-node-graph-slot-hit\" title=\"MASK\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-MASK, var(--ah-datatype-default, #aaa))\"></span></span><span class=\"ah-node-graph-slot-label\">m</span></div></div><div class=\"ah-node-graph-slot-col\" data-side=\"out\"><div class=\"ah-node-graph-slot\" data-kind=\"output\" data-slot-key=\"b:o0\" data-slot-index=\"0\"><span class=\"ah-node-graph-slot-hit\" title=\"IMAGE\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))\"></span></span><span class=\"ah-node-graph-slot-label\">o</span></div></div></div></div></div><div class=\"ah-node-graph-node\" data-node-id=\"c\" role=\"group\" aria-label=\"End\" style=\"transform:translate3d(800px,0px,0);--ah-ng-node-width:240px;\"><div class=\"ah-node-graph-node-header\"><button class=\"ah-node-graph-collapse\" type=\"button\" aria-label=\"Collapse node\" aria-expanded=\"true\"></button><span class=\"ah-node-graph-node-title\">End</span></div><div class=\"ah-node-graph-node-body\"><div class=\"ah-node-graph-slots\"><div class=\"ah-node-graph-slot-col\" data-side=\"in\"><div class=\"ah-node-graph-slot\" data-kind=\"input\" data-slot-key=\"c:i0\" data-slot-index=\"0\"><span class=\"ah-node-graph-slot-hit\" title=\"*\"><span class=\"ah-node-graph-dot\" data-shape=\"circle\" style=\"--ah-ng-dot-color:var(--ah-datatype-default, #aaa)\"></span></span><span class=\"ah-node-graph-slot-label\">in</span></div></div><div class=\"ah-node-graph-slot-col\" data-side=\"out\"></div></div></div></div></div><div class=\"ah-node-graph-marquee\" hidden></div></div></div><div class=\"ah-node-graph-toolbar\" role=\"toolbar\" aria-label=\"Graph tools\"><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"hand\" title=\"Pan the canvas (or hold Space / middle-drag)\" aria-label=\"Pan the canvas (or hold Space / middle-drag)\" aria-pressed=\"false\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M18 11V6a2 2 0 0 0-4 0v5M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15\"></path></svg></button><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"zoom-in\" title=\"Zoom in\" aria-label=\"Zoom in\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 5v14M5 12h14\"></path></svg></button><span class=\"ah-node-graph-zoom\" aria-live=\"polite\">100%</span><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"zoom-out\" title=\"Zoom out\" aria-label=\"Zoom out\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"></path></svg></button><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"fit\" title=\"Fit to view\" aria-label=\"Fit to view\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5\"></path></svg></button><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"undo\" title=\"Undo\" aria-label=\"Undo\" disabled><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M9 14 4 9l5-5M4 9h11a5 5 0 0 1 0 10h-3\"></path></svg></button><button class=\"ah-node-graph-tool\" type=\"button\" data-action=\"redo\" title=\"Redo\" aria-label=\"Redo\" disabled><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"m15 14 5-5-5-5M20 9H9a5 5 0 0 0 0 10h3\"></path></svg></button></div><div class=\"ah-node-graph-minimap\" aria-hidden=\"true\"></div></div>"};
@@ -31,19 +32,22 @@
     ".ah-node-graph-ctxmenu,.ah-node-graph-search,.ah-node-graph-minimap{position:absolute}" +
     ".ah-node-graph-minimap{width:176px;height:120px}";
   if (!document.getElementById("ng-test-css")) {
-    $("<style id=\"ng-test-css\">").text(CSS).appendTo("head");
+    var st = document.createElement("style");
+    st.id = "ng-test-css";
+    st.textContent = CSS;
+    document.head.appendChild(st);
   }
 
-  function mount(fx, name, noLibrary) {
+  async function mount(fx, name, noLibrary) {
     fx.innerHTML = SERVER[name];
-    if (noLibrary) { $(fx).find("script.ah-node-graph-data").remove(); }
-    AH.mount(fx);
+    if (noLibrary) { fx.querySelectorAll("script.ah-node-graph-data").forEach(function (n) { n.remove(); }); }
+    await T.ready(fx);
     return fx.firstChild;
   }
   function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
   function center(el) { var r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }
   function pe(type, target, x, y, extra) {
-    target.dispatchEvent(new PointerEvent(type, $.extend({ bubbles: true, cancelable: true, clientX: x, clientY: y,
+    target.dispatchEvent(new PointerEvent(type, Object.assign({ bubbles: true, cancelable: true, clientX: x, clientY: y,
       button: 0, buttons: type === "pointerup" ? 0 : 1, pointerId: 1, pointerType: "mouse", isPrimary: true }, extra || {})));
   }
   async function drag(el, from, to) {
@@ -59,17 +63,20 @@
   function slot(el, key) { return el.querySelector('[data-slot-key="' + key + '"]'); }
   function value(el) { return JSON.parse(el.getAttribute("data-ah-value")); }
   function node(el, id) { return value(el).nodes.filter(function (n) { return n.id === id; })[0]; }
-  function key(el, k, mods) { $(el).trigger($.Event("keydown", $.extend({ key: k }, mods || {}))); }
+  function key(el, k, mods) { T.key(el, k, mods); }
   function vp(el) { return el.querySelector(".ah-node-graph-viewport"); }
+  function texts(root, sel) {
+    return Array.prototype.map.call(root.querySelectorAll(sel), function (n) { return n.textContent; });
+  }
   function ops(log) { return log.map(function (d) { return d.op; }); }
   function changes(el) {
     var log = [];
-    $(el).on("change", function (e, d) { log.push(d); });
+    el.addEventListener("change", function (e) { if (e.target === el) { log.push(e.detail); } });
     return log;
   }
 
-  T.test("node-graph: adopts the server's cards and exposes the graph", function (fx) {
-    var el = mount(fx, "edit");
+  T.test("node-graph: adopts the server's cards and exposes the graph", async function (fx) {
+    var el = await mount(fx, "edit");
     var a = card(el, "a");
     T.eq(AH.invoke(el, "getGraph").nodes.map(function (n) { return n.id; }), ["a", "b", "c"]);
     T.eq(AH.invoke(el, "getGraph").links, [{ id: "e1", source: ["a", 0], target: ["b", 0] }]);
@@ -81,7 +88,7 @@
   });
 
   T.test("node-graph: dragging a card moves it and fires change", async function (fx) {
-    var el = mount(fx, "edit");
+    var el = await mount(fx, "edit");
     var log = changes(el);
     var h = card(el, "c").querySelector(".ah-node-graph-node-header");
     var c = center(h);
@@ -91,7 +98,7 @@
     T.eq(log[0].changed.nodes.map(function (n) { return n.id; }), ["c"]);
     T.eq(el.getAttribute("data-op"), "move");
     T.eq(JSON.parse(el.getAttribute("data-changed")).nodes[0].pos, [830, 12]);
-    T.eq(JSON.parse($(el).children("input[name=graph]").val()).nodes[2].pos, [830, 12]);
+    T.eq(JSON.parse(el.querySelector(":scope > input[name=graph]").value).nodes[2].pos, [830, 12]);
     T.eq(card(el, "c").style.transform, "translate3d(830px, 12px, 0px)");
     T.eq(el.querySelector('[data-action="undo"]').disabled, false);
     // a click without movement is not an edit
@@ -101,7 +108,7 @@
   });
 
   T.test("node-graph: link drag dims incompatible slots and connects", async function (fx) {
-    var el = mount(fx, "edit");
+    var el = await mount(fx, "edit");
     var log = changes(el);
     var from = center(hit(el, "a:o0"));
     pe("pointerdown", hit(el, "a:o0"), from[0], from[1]);
@@ -126,8 +133,8 @@
     T.eq(log.length, 1);
   });
 
-  T.test("node-graph: a link that closes a cycle is refused", function (fx) {
-    var el = mount(fx, "edit");
+  T.test("node-graph: a link that closes a cycle is refused", async function (fx) {
+    var el = await mount(fx, "edit");
     AH.invoke(el, "setGraph", { nodes: [
       { id: "x", pos: [0, 0], inputs: [{ name: "i" }], outputs: [{ name: "o" }] },
       { id: "y", pos: [400, 0], inputs: [{ name: "i" }], outputs: [{ name: "o" }] }],
@@ -140,9 +147,9 @@
   });
 
   T.test("node-graph: detaching an input link without a library fires ah:link-drop", async function (fx) {
-    var el = mount(fx, "edit", true);
+    var el = await mount(fx, "edit", true);
     var log = changes(el), drops = [];
-    $(el).on("ah:link-drop", function (e, d) { drops.push(d.origin.node + ":" + d.origin.kind); });
+    el.addEventListener("ah:link-drop", function (e) { drops.push(e.detail.origin.node + ":" + e.detail.origin.kind); });
     var c = center(hit(el, "b:i0"));
     await drag(hit(el, "b:i0"), c, [c[0] - 100, c[1] + 150]);
     T.eq(ops(log), ["disconnect"]);
@@ -152,10 +159,10 @@
     T.eq(value(el).links, []);
   });
 
-  T.test("node-graph: keyboard delete, undo, redo, select all, selection events", function (fx) {
-    var el = mount(fx, "edit");
+  T.test("node-graph: keyboard delete, undo, redo, select all, selection events", async function (fx) {
+    var el = await mount(fx, "edit");
     var log = changes(el), sels = [];
-    $(el).on("ah:selection-change", function (e, ids) { sels.push(ids.join(",")); });
+    el.addEventListener("ah:selection-change", function (e) { sels.push(e.detail.join(",")); });
     var c = center(card(el, "b").querySelector(".ah-node-graph-node-title"));
     pe("pointerdown", card(el, "b"), c[0], c[1]);
     pe("pointerup", document, c[0], c[1]);
@@ -183,8 +190,8 @@
     T.ok(card(el, "a"));
   });
 
-  T.test("node-graph: arrows nudge, Ctrl+D duplicates with the widgets", function (fx) {
-    var el = mount(fx, "edit");
+  T.test("node-graph: arrows nudge, Ctrl+D duplicates with the widgets", async function (fx) {
+    var el = await mount(fx, "edit");
     var log = changes(el);
     AH.invoke(el, "selectNodes", ["a"]);
     key(vp(el), "ArrowRight");
@@ -197,18 +204,18 @@
     T.eq(card(el, "n1").querySelector(".ah-node-graph-widget").innerHTML, '<i class="w">w</i>');
   });
 
-  T.test("node-graph: collapse and rename keep the live widget element", function (fx) {
-    var el = mount(fx, "edit");
+  T.test("node-graph: collapse and rename keep the live widget element", async function (fx) {
+    var el = await mount(fx, "edit");
     var log = changes(el);
     var w = card(el, "a").querySelector(".w");
-    $(card(el, "a").querySelector(".ah-node-graph-collapse")).trigger("click");
+    card(el, "a").querySelector(".ah-node-graph-collapse").click();
     T.eq(node(el, "a").collapsed, true);
     T.eq(card(el, "a").getAttribute("data-collapsed"), "true");
     T.eq(card(el, "a").querySelector(".ah-node-graph-collapse").getAttribute("aria-expanded"), "false");
     T.eq(card(el, "a").querySelector(".w"), w, "moved into the new card");
-    $(card(el, "a").querySelector(".ah-node-graph-collapse")).trigger("click");
+    card(el, "a").querySelector(".ah-node-graph-collapse").click();
     T.eq(node(el, "a").collapsed, undefined);
-    $(card(el, "b").querySelector(".ah-node-graph-node-title")).trigger("dblclick");
+    T.fire(card(el, "b").querySelector(".ah-node-graph-node-title"), "dblclick", { detail: 2 });
     var input = card(el, "b").querySelector(".ah-node-graph-node-title-input");
     input.value = "Blend";
     key(input, "Enter");
@@ -217,26 +224,26 @@
     T.eq(ops(log), ["collapse", "collapse", "rename"]);
   });
 
-  T.test("node-graph: context menu on a node, keyboard and delete", function (fx) {
-    var el = mount(fx, "edit");
+  T.test("node-graph: context menu on a node, keyboard and delete", async function (fx) {
+    var el = await mount(fx, "edit");
     var log = changes(el);
     var c = center(card(el, "c"));
     card(el, "c").dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: c[0], clientY: c[1] }));
     var menu = el.querySelector(".ah-node-graph-ctxmenu");
     T.ok(menu);
-    T.eq($(menu).find(".ah-node-graph-ctxmenu-item > span:first-child").map(function () { return this.textContent; }).get(),
+    T.eq(texts(menu, ".ah-node-graph-ctxmenu-item > span:first-child"),
          ["Collapse", "Duplicate node", "Copy node", "Delete node"]);
     T.eq(document.activeElement, menu.firstChild);
     key(document.activeElement, "ArrowUp");
     T.eq(document.activeElement, menu.lastChild, "wraps");
-    $(document.activeElement).trigger("click");
+    document.activeElement.click();
     T.ok(!el.querySelector(".ah-node-graph-ctxmenu"));
     T.eq(ops(log), ["remove"]);
     T.ok(!card(el, "c"));
   });
 
-  T.test("node-graph: the search menu adds a library node with its widgets", function (fx) {
-    var el = mount(fx, "edit");
+  T.test("node-graph: the search menu adds a library node with its widgets", async function (fx) {
+    var el = await mount(fx, "edit");
     var log = changes(el);
     var r = vp(el).getBoundingClientRect();
     vp(el).dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: r.left + 100, clientY: r.top + 300 }));
@@ -244,10 +251,11 @@
     T.ok(s);
     var input = s.querySelector("input");
     T.eq(document.activeElement, input);
-    T.eq($(s).find(".ah-node-graph-search-label").map(function () { return this.textContent; }).get(),
+    T.eq(texts(s, ".ah-node-graph-search-label"),
          ["New group frame", "Image Blur"]);
-    $(input).val("blur").trigger("input");
-    T.eq($(s).find(".ah-node-graph-search-item").length, 1);
+    input.value = "blur";
+    T.fire(input, "input");
+    T.eq(s.querySelectorAll(".ah-node-graph-search-item").length, 1);
     T.eq(input.getAttribute("aria-activedescendant"), s.querySelector("li").id);
     key(input, "Enter");
     T.ok(!el.querySelector(".ah-node-graph-search"));
@@ -263,7 +271,7 @@
   });
 
   T.test("node-graph: moving a group frame takes the nodes inside", async function (fx) {
-    var el = mount(fx, "edit");
+    var el = await mount(fx, "edit");
     var log = changes(el);
     var h = el.querySelector(".ah-node-graph-group-header");
     var c = center(h);
@@ -275,8 +283,8 @@
     T.eq(node(el, "c").pos, [800, 0], "outside the frame");
   });
 
-  T.test("node-graph: setGraph replaces without change and clears history", function (fx) {
-    var el = mount(fx, "edit");
+  T.test("node-graph: setGraph replaces without change and clears history", async function (fx) {
+    var el = await mount(fx, "edit");
     var log = changes(el);
     AH.invoke(el, "selectNodes", ["a"]);
     key(vp(el), "Delete");
@@ -289,9 +297,9 @@
     T.eq(el.querySelector('[data-action="undo"]').disabled, true);
   });
 
-  T.test("node-graph: zoom buttons, fit and wheel", function (fx) {
-    var el = mount(fx, "edit");
-    $(el.querySelector('[data-action="zoom-in"]')).trigger("click");
+  T.test("node-graph: zoom buttons, fit and wheel", async function (fx) {
+    var el = await mount(fx, "edit");
+    el.querySelector('[data-action="zoom-in"]').click();
     T.eq(el.querySelector(".ah-node-graph-zoom").textContent, "125%");
     AH.invoke(el, "fitView");
     T.ok(parseInt(el.querySelector(".ah-node-graph-zoom").textContent, 10) <= 100);
@@ -302,7 +310,7 @@
   });
 
   T.test("node-graph: read-only looks, selects and pans but does not edit", async function (fx) {
-    var el = mount(fx, "ro");
+    var el = await mount(fx, "ro");
     var log = changes(el);
     var h = card(el, "a").querySelector(".ah-node-graph-node-header");
     var c = center(h);
@@ -317,13 +325,29 @@
     T.ok(!el.querySelector(".ah-node-graph-node-resize"));
   });
 
-  T.test("node-graph: destroy drops the document listeners of a pending drag", function (fx) {
-    var el = mount(fx, "edit");
+  T.test("node-graph: removal drops the document listeners of a pending drag", async function (fx) {
+    var el = await mount(fx, "edit");
     var c = center(card(el, "a").querySelector(".ah-node-graph-node-title"));
     pe("pointerdown", card(el, "a"), c[0], c[1]);
-    AH.destroy(fx);
+    el.remove();
+    await sleep(0);
     pe("pointermove", document, c[0] + 50, c[1]);
     pe("pointerup", document, c[0] + 50, c[1]);
     T.eq(node(el, "a").pos, [0, 0]);
   });
-})(window.AHTest, window.jQuery, window.AH);
+
+  T.test("node-graph: re-inserted, it works again with one set of listeners", async function (fx) {
+    var el = await mount(fx, "edit");
+    el.remove();
+    await sleep(0);
+    fx.appendChild(el);
+    await T.ready(fx);
+    var log = changes(el);
+    AH.invoke(el, "selectNodes", ["c"]);
+    key(vp(el), "ArrowRight");
+    T.eq(ops(log), ["move"], "one change per edit");
+    T.eq(node(el, "c").pos, [810, 0]);
+    el.querySelector('[data-action="undo"]').click();
+    T.eq(node(el, "c").pos, [800, 0]);
+  });
+})(window.AHTest, window.AH);

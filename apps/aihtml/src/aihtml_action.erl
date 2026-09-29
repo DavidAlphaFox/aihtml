@@ -221,8 +221,9 @@ title(Ctx, Title) -> push(Ctx, #{op => title, value => text(Title)}).
 -spec redirect(ctx(), iodata()) -> ok.
 redirect(Ctx, Url) -> push(Ctx, #{op => redirect, value => text(Url)}).
 
-%% @doc Run JavaScript in the browser. `$' and `AH' are in scope. Never
-%% build the code from user input.
+%% @doc Run JavaScript in the browser. `AH' is in scope (the runtime no
+%% longer includes jQuery; a page that loads it itself can use its
+%% globals). Never build the code from user input.
 -spec js(ctx(), iodata()) -> ok.
 js(Ctx, Code) -> push(Ctx, #{op => js, code => text(Code)}).
 
@@ -237,10 +238,10 @@ call(Ctx, global, Method, Args) when is_list(Args) ->
 call(Ctx, Target, Method, Args) when is_list(Args) ->
     push(Ctx, target(Target, #{op => call, method => text(Method), args => Args})).
 
-%% @doc Fire a DOM event in the browser (it bubbles, like jQuery's
-%% trigger): on `Target', or on the document with `document'. Page
-%% scripts can listen for it, and elements can bind actions to it with
-%% aihtml:on/2 (`on('ah:saved', ...)'); `Detail' is passed as JSON.
+%% @doc Fire a DOM event in the browser (a bubbling CustomEvent): on
+%% `Target', or on the document with `document'. Page scripts can listen
+%% for it (`Detail', passed as JSON, is the event's `detail'), and
+%% elements can bind actions to it with aihtml:on/2 (`on('ah:saved', ...)').
 -spec trigger(ctx(), target() | document, atom() | binary(), term()) -> ok.
 trigger(Ctx, document, Event, Detail) ->
     push(Ctx, #{op => trigger, event => text(Event), detail => Detail});

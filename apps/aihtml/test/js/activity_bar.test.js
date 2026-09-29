@@ -1,7 +1,7 @@
 /* activity_bar: the activity-bar behaviour on the markup the server renders.
  * SERVER holds renders of aihtml_activity_bar:activity_bar/4, generated from Erlang;
  * regenerate them if the markup changes. */
-(function (T, $, AH) {
+(function (T, AH) {
   "use strict";
 
   var SERVER =
@@ -10,62 +10,80 @@
   }
 ;
 
-  function mount(fx, name) {
+  async function mount(fx, name) {
     fx.innerHTML = SERVER[name];
-    AH.mount(fx);
+    await T.ready(fx);
     return fx.querySelector("[data-ah]");
   }
 
-  function key(target, k, extra) {
-    $(target).trigger($.Event("keydown", $.extend({ key: k }, extra || {})));
-  }
-
+  // the value (or the event's detail) each time type fires on el itself
   function events(el, type) {
     var got = [];
-    $(el).on(type, function (e, d) { if (e.target === el) { got.push(d === undefined ? el.getAttribute("data-ah-value") : d); } });
+    el.addEventListener(type, function (e) {
+      if (e.target === el) { got.push(e.detail == null ? el.getAttribute("data-ah-value") : e.detail); }
+    });
     return got;
+  }
+
+  function q(el, sel) { return el.querySelector(sel); }
+  function qa(el, sel) { return Array.prototype.slice.call(el.querySelectorAll(sel)); }
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms || 0); }); }
+
+  // take el out of the page (its controller tears down) and put it back
+  async function reinsert(fx, el) {
+    fx.removeChild(el);
+    await wait(0);
+    fx.appendChild(el);
+    await T.ready(fx);
   }
 
   // ------------------------------------------------------------------ activity-bar
 
-  T.test("activity-bar: click activates, fires change and ah:select", function (fx) {
-    var el = mount(fx, "a");
+  T.test("activity-bar: click activates, fires change and ah:select", async function (fx) {
+    var el = await mount(fx, "a");
     var changes = events(el, "change");
     var selects = events(el, "ah:select");
-    $(el).find("[data-id=b]").trigger("click");
+    q(el, "[data-id=b]").click();
     T.eq(el.getAttribute("data-ah-value"), "b");
-    T.eq($(el).children("input[type=hidden]").val(), "b");
-    T.eq($(el).find("[data-id=b]").attr("aria-selected"), "true");
-    T.eq($(el).find("[data-id=b]").attr("tabindex"), "0");
-    T.eq($(el).find("[data-id=a]").attr("data-active"), "false");
+    T.eq(q(el, ":scope > input[type=hidden]").value, "b");
+    T.eq(q(el, "[data-id=b]").getAttribute("aria-selected"), "true");
+    T.eq(q(el, "[data-id=b]").getAttribute("tabindex"), "0");
+    T.eq(q(el, "[data-id=a]").getAttribute("data-active"), "false");
     T.eq(changes, ["b"]);
     T.eq(selects, ["b"]);
     // the active item again: select, no change
-    $(el).find("[data-id=b]").trigger("click");
+    q(el, "[data-id=b]").click();
     T.eq(changes.length, 1);
     T.eq(selects.length, 2);
   });
 
-  T.test("activity-bar: arrows skip disabled items and wrap", function (fx) {
-    var el = mount(fx, "a");
-    var b = $(el).find("[data-id=b]")[0];
-    key(b, "ArrowDown");
+  T.test("activity-bar: arrows skip disabled items and wrap", async function (fx) {
+    var el = await mount(fx, "a");
+    T.key(q(el, "[data-id=b]"), "ArrowDown");
     T.eq(el.getAttribute("data-ah-value"), "d", "skips disabled c");
-    key($(el).find("[data-id=d]")[0], "ArrowDown");
+    T.key(q(el, "[data-id=d]"), "ArrowDown");
     T.eq(el.getAttribute("data-ah-value"), "a", "wraps");
-    key($(el).find("[data-id=a]")[0], "End");
+    T.key(q(el, "[data-id=a]"), "End");
     T.eq(el.getAttribute("data-ah-value"), "d");
-    $(el).find("[data-id=c]").trigger("click");
+    T.fire(q(el, "[data-id=c]"), "click");
     T.eq(el.getAttribute("data-ah-value"), "d", "disabled does nothing");
   });
 
-  T.test("activity-bar: setValue / getValue do not fire change", function (fx) {
-    var el = mount(fx, "a");
+  T.test("activity-bar: setValue / getValue do not fire change", async function (fx) {
+    var el = await mount(fx, "a");
     var changes = events(el, "change");
     AH.invoke(el, "setValue", "d");
     T.eq(AH.invoke(el, "getValue"), "d");
-    T.eq($(el).find("[data-id=d]").attr("data-active"), "true");
+    T.eq(q(el, "[data-id=d]").getAttribute("data-active"), "true");
     T.eq(changes.length, 0);
   });
 
-})(window.AHTest, window.jQuery, window.AH);
+  T.test("activity-bar: removed and inserted again, it still works", async function (fx) {
+    var el = await mount(fx, "a");
+    await reinsert(fx, el);
+    var changes = events(el, "change");
+    q(el, "[data-id=d]").click();
+    T.eq(changes, ["d"]);
+  });
+
+})(window.AHTest, window.AH);

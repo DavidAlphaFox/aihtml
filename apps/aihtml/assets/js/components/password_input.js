@@ -3,7 +3,6 @@
 import AH from "../core.js";
 import "./_lib_input.js";
 
-var NS = AH.NS;
 var L = AH.lib.input;
 
 var SPECIALS = "<>@!#$%^&*()_+[]{}?:;|'\"\\,./~`-=";
@@ -31,60 +30,64 @@ var STRENGTH = {
   strong: ["Strong", "100%", "var(--ah-color-success)"]
 };
 
-function updateStrength($el, pw) {
-  var $fill = $el.find(".ah-pwd-strength-fill");
-  var $text = $el.find(".ah-pwd-strength-text");
-  if (!$fill.length) { return; }
-  if (!pw) {
-    $fill.css({ width: "0", backgroundColor: "transparent" });
-    $text.text("");
-    $el.removeAttr("data-strength");
-    return;
-  }
-  var level = strength(pw), d = STRENGTH[level];
-  $fill.css({ width: d[1], backgroundColor: d[2] });
-  $text.text(d[0]);
-  $el.attr("data-strength", level);
-}
-
-function pwdInput($el) { return $el.find("input.ah-pwd").first(); }
-
-function setVisible($el, show) {
-  var $input = pwdInput($el);
-  $el.toggleClass("ah-pwd-visible", show);
-  $input.attr("type", show ? "text" : "password");
-  $el.find(".ah-pwd-toggle")
-    .attr("aria-pressed", show ? "true" : "false")
-    .attr("aria-label", show ? "Hide password" : "Show password");
-}
-
-AH.define("password-input", {
-  init: function (el, $el) {
-    var $input = pwdInput($el);
-    L.focusShell($el, $input, "ah-pwd");
-    $input.on("input" + NS, function () {
-      updateStrength($el, $input.val());
-      L.syncLabel($el, "ah-pwd", $input.val() !== "", true);
+AH.register("password-input", class extends AH.Controller {
+  setup() {
+    var input = this.field();
+    if (!input) { return; }
+    L.focusShell(this, input, "ah-pwd");
+    this.listen(input, "input", () => {
+      this.updateStrength(input.value);
+      L.syncLabel(this.element, "ah-pwd", input.value !== "", true);
     });
     // mousedown: keep the focus (and caret) in the field
-    $el.on("mousedown" + NS, ".ah-pwd-toggle", function (e) { e.preventDefault(); });
-    $el.on("click" + NS, ".ah-pwd-toggle", function (e) {
+    this.delegate("mousedown", ".ah-pwd-toggle", (e) => { e.preventDefault(); });
+    this.delegate("click", ".ah-pwd-toggle", (e) => {
       e.preventDefault();
-      setVisible($el, !$el.hasClass("ah-pwd-visible"));
+      this.setVisible(!this.element.classList.contains("ah-pwd-visible"));
     });
-    updateStrength($el, $input.val());
-  },
-  methods: {
-    getValue: function (el, $el) { return pwdInput($el).val(); },
-    setValue: function (el, $el, v) {
-      var $input = pwdInput($el);
-      $input.val(v == null ? "" : String(v));
-      updateStrength($el, $input.val());
-      L.syncLabel($el, "ah-pwd", $input.val() !== "", false);
-    },
-    toggle: function (el, $el, show) {
-      setVisible($el, show === undefined ? !$el.hasClass("ah-pwd-visible") : !!show);
-    },
-    focus: function (el, $el) { pwdInput($el).trigger("focus"); }
+    this.updateStrength(input.value);
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  getValue() { return this.field().value; }
+  setValue(v) {
+    var input = this.field();
+    input.value = v == null ? "" : String(v);
+    this.updateStrength(input.value);
+    L.syncLabel(this.element, "ah-pwd", input.value !== "", false);
+  }
+  toggle(show) {
+    this.setVisible(show === undefined ? !this.element.classList.contains("ah-pwd-visible") : !!show);
+  }
+  focus() { this.field().focus(); }
+
+  field() { return this.element.querySelector("input.ah-pwd"); }
+
+  updateStrength(pw) {
+    var el = this.element;
+    var fill = el.querySelector(".ah-pwd-strength-fill");
+    var texts = el.querySelectorAll(".ah-pwd-strength-text");
+    if (!fill) { return; }
+    var fills = el.querySelectorAll(".ah-pwd-strength-fill");
+    if (!pw) {
+      fills.forEach((f) => { f.style.width = "0"; f.style.backgroundColor = "transparent"; });
+      texts.forEach((t) => { t.textContent = ""; });
+      el.removeAttribute("data-strength");
+      return;
+    }
+    var level = strength(pw), d = STRENGTH[level];
+    fills.forEach((f) => { f.style.width = d[1]; f.style.backgroundColor = d[2]; });
+    texts.forEach((t) => { t.textContent = d[0]; });
+    el.setAttribute("data-strength", level);
+  }
+
+  setVisible(show) {
+    var el = this.element, input = this.field();
+    el.classList.toggle("ah-pwd-visible", show);
+    if (input) { input.setAttribute("type", show ? "text" : "password"); }
+    el.querySelectorAll(".ah-pwd-toggle").forEach((b) => {
+      b.setAttribute("aria-pressed", show ? "true" : "false");
+      b.setAttribute("aria-label", show ? "Hide password" : "Show password");
+    });
   }
 });

@@ -5,12 +5,21 @@
  *
  * The server renders all HTML. This file only adds behaviour to it:
  *
- *   AH.define(name, {init, destroy, methods})  behaviour for [data-ah="<name>"]
+ *   AH.register(name, class extends AH.Controller {...})
+ *                                     behaviour for [data-ah="<name>"]
  *   AH.invoke(el, method, ...args)    call a behaviour method
  *   AH.fn(name, f)                    page-level function (toast, ...)
- *   AH.mount(root)                    attach behaviours inside root
+ *   AH.mount(root) / AH.destroy(root) attach / detach behaviours in root
+ *   AH.ready(root)                    promise: root's components are usable
+ *   AH.swap(target, html, mode)       put server HTML into the page
  *   AH.theme.get() / .set(axis, v)    the four theme axes on <html>
  *   AH.fetch(el)                      run an element's data-ah-fetch
+ *   AH.float(popup, anchor, opts)     pin a popup next to its anchor
+ *   AH.vendor(name)                   load an optional third-party library
+ *
+ * Functions taking elements accept an element, a selector, an array of
+ * elements or a jQuery-like object. AH.swap returns the inserted top-level
+ * nodes (an array), AH.mount the root element; AH.destroy returns nothing.
  *
  * Actions: elements with data-ah-on="event:token" call Erlang. Each event
  * is one POST to <body data-ah-action>; the reply is an AG-UI event stream
@@ -32,20 +41,72 @@
  * component; Vite bundles them into priv/static/js, one chunk per module,
  * loaded when the page first needs them (see lazy loading below).
  *
- * Events, all namespaced so AH.destroy can remove them:
- *   ah:theme {axis, value}       on document, after a theme change
- *   ah:before-fetch / ah:after-fetch / ah:error   around a round trip
+ * Events: native, bubbling, cancelable CustomEvents; the data is e.detail.
+ *   ah:theme {axis, value}                    on document, after a change
+ *   ah:before-fetch {url, method}             on the element; cancelable
+ *   ah:after-fetch {url}                      on the element
+ *   ah:error {url, status, body} (fetch), {status} or {message, code}
+ *            (action), {stream: true} (push, on document)
+ *   the server's trigger op: {event} with detail = its Detail
  */
-import $ from "jquery";
 import { Application, Controller, defaultSchema } from "@hotwired/stimulus";
 
 const AH = (function () {
   "use strict";
 
   var NS = ".ah";
-  var behaviors = {};
-  // this module's own URL (see vendor below)
-  var SELF = import.meta.url;
+
+  // ------------------------------------------------------------------
+  // Elements
+  // ------------------------------------------------------------------
+
+  // The elements x stands for: an element (or document), a selector, an
+  // array or NodeList, or a jQuery-like object (anything with .jquery).
+  function all(x) {
+    if (!x) { return []; }
+    if (typeof x === "string") { return Array.from(document.querySelectorAll(x)); }
+    if (x.nodeType) { return [x]; }
+    if (x.jquery || Array.isArray(x) || typeof x.length === "number") {
+      return Array.prototype.filter.call(x, function (n) { return n && n.nodeType; });
+    }
+    return [];
+  }
+
+  function one(x) {
+    return x && x.nodeType ? x : all(x)[0];
+  }
+
+  // node itself when it matches, then its descendants that do
+  function withSelf(node, sel) {
+    if (!node || !node.querySelectorAll) { return []; }
+    var out = node.matches && node.matches(sel) ? [node] : [];
+    Array.prototype.push.apply(out, node.querySelectorAll(sel));
+    return out;
+  }
+
+  function fire(target, type, detail) {
+    return target.dispatchEvent(
+      new CustomEvent(type, { bubbles: true, cancelable: true, detail: detail }));
+  }
+
+  // One listener on document for events on elements matching selector,
+  // like jQuery's delegated .on(type, selector, fn): handler(e, match)
+  // runs for the target and every matching ancestor, innermost first,
+  // until one stops propagation. As in jQuery, a click with a button
+  // other than the primary one, and a click on a disabled element, is
+  // not delegated.
+  function delegateDocument(type, selector, handler) {
+    document.addEventListener(type, function (e) {
+      if (type === "click" && e.button >= 1) { return; }
+      var n = e.target && e.target.nodeType === 1 ? e.target
+            : e.target && e.target.parentElement;
+      for (n = n && n.closest(selector); n; n = n.parentElement && n.parentElement.closest(selector)) {
+        if (type === "click" && n.disabled === true) { continue; }
+        handler(e, n);
+        if (e.cancelBubble) { return; }
+      }
+    });
+  }
 
   // ------------------------------------------------------------------
   // Behaviours
@@ -55,68 +116,141 @@ const AH = (function () {
   // data-ah (not data-controller), so the server's HTML stays the same,
   // and data-ah-do for in-browser actions (data-action is used by the
   // components themselves).
-  //
-  // AH.define(name, {init, destroy, methods}) is the adapter for the
-  // behaviours written before Stimulus: it registers a controller that
-  // runs init on connect and destroy on disconnect. Two things keep the
-  // old guarantees:
-  // - mount(root) initialises the loaded behaviours inside root at once, so
-  //   code that inserts a component and uses it right away (a server "call"
-  //   op after an "html" op, tests) works; Stimulus connects later and sees
-  //   the element is already initialised.
-  // - Stimulus disconnects an element that is moved (morph, preserve) and
-  //   connects it again; destroy therefore waits a microtask and only runs
-  //   if the element really left the page, so moved components keep state.
-  // spec: {init(el, $el), destroy(el, $el), methods: {name(el, $el, ...args)}}
   var app = null;
-  var SCHEMA = $.extend({}, defaultSchema, {
+  var SCHEMA = Object.assign({}, defaultSchema, {
     controllerAttribute: "data-ah",
     actionAttribute: "data-ah-do"
   });
 
-  function define(name, spec) {
-    behaviors[name] = spec;
-    if (app) { register(name); }
+  // ---- Native controllers (designs/06-bundling.md, phase 2) ----
+  //
+  // AH.register(name, class extends AH.Controller { ... }) registers a
+  // Stimulus controller written without jQuery. AH.Controller adds what
+  // every aihtml component needs on top of Stimulus:
+  //   setup() / teardown()   run once when the element enters the page and
+  //                          once when it really leaves it; a move (morph,
+  //                          preserve) disconnects and reconnects without
+  //                          running them again, so the component keeps
+  //                          its state. AH.destroy(el) runs teardown at
+  //                          once, AH.mount(el) runs setup again (morph
+  //                          does both for a component whose DOM changed).
+  //   this.listen(target, type, handler[, options])
+  //                          addEventListener that is removed on teardown
+  //                          (one AbortController per element)
+  //   this.fire(type, detail[, target])
+  //                          a native, bubbling, cancelable CustomEvent;
+  //                          the server's on(Event, ...) and Stimulus
+  //                          actions both see it
+  //   this.delegate(type, selector, handler[, root])
+  //                          a delegated listener (handler(e, match))
+  //   this.signal            the AbortSignal of this setup (for fetch)
+  // Public methods of the controller are what aihtml_action:call/4 and
+  // AH.invoke(el, method, ...args) reach.
+  var classes = {};
+  var connectWaiters = new Map();
+
+  class AHController extends Controller {
+    connect() {
+      if (!this._ah) { this._ahStart(); }
+      connected(this.element);
+    }
+    disconnect() {
+      var self = this, el = this.element;
+      queueMicrotask(function () {
+        if (!el.isConnected) { self._ahStop(); }
+      });
+    }
+    _ahStart() {
+      this._ah = new AbortController();
+      listenFor(this.element);
+      if (this.setup) { this.setup(); }
+    }
+    _ahStop() {
+      if (!this._ah) { return; }
+      this._ah.abort();
+      this._ah = null;
+      if (this.teardown) { this.teardown(); }
+    }
+    get signal() { return this._ah ? this._ah.signal : undefined; }
+    listen(target, type, handler, options) {
+      target.addEventListener(type, handler,
+                              Object.assign({}, options || {}, { signal: this._ah.signal }));
+    }
+    fire(type, detail, target) {
+      return fire(target || this.element, type, detail);
+    }
+    // Delegated listener: handler(e, match) for events on descendants of
+    // root (default the element) matching selector, like jQuery's
+    // .on(type, selector, fn). Non-bubbling events (mouseenter,
+    // mouseleave) need mouseover/mouseout or a listener per element.
+    delegate(type, selector, handler, root) {
+      var scope = root || this.element;
+      this.listen(scope, type, function (e) {
+        var hit = e.target && e.target.closest ? e.target.closest(selector) : null;
+        if (hit && scope.contains(hit)) { handler.call(hit, e, hit); }
+      });
+    }
+  }
+
+  function register(name, Klass) {
+    classes[name] = Klass;
+    if (app) { app.register(name, Klass); }
     var cbs = pending[name] || [];
     delete pending[name];
     cbs.forEach(function (cb) { cb(); });
   }
 
-  function register(name) {
-    app.register(name, class extends Controller {
-      connect() {
-        listenFor(this.element);
-        initElement(this.element);
-      }
-      disconnect() {
-        var el = this.element;
-        queueMicrotask(function () {
-          if (!el.isConnected) { teardown(el); }
-        });
-      }
-    });
+  function controllerOf(el, name) {
+    return app ? app.getControllerForElementAndIdentifier(el, name) : null;
   }
 
-  function initElement(el) {
-    var b = behaviors[el.getAttribute("data-ah")];
-    if (!b || el.hasAttribute("data-ah-mounted")) {
-      return;
-    }
-    el.setAttribute("data-ah-mounted", "");
-    if (b.init) {
-      b.init(el, $(el));
+  // The native controller of el while it is set up, else null.
+  function liveController(el) {
+    var name = el.getAttribute("data-ah");
+    var c = classes[name] ? controllerOf(el, name) : null;
+    return c && c._ah ? c : null;
+  }
+
+  function isMounted(el) {
+    return el.hasAttribute("data-ah-mounted") || !!liveController(el);
+  }
+
+  function connected(el) {
+    var cbs = connectWaiters.get(el);
+    if (cbs) {
+      connectWaiters.delete(el);
+      cbs.forEach(function (cb) { cb(); });
     }
   }
 
-  function teardown(el) {
-    if (!el.hasAttribute("data-ah-mounted")) {
-      return;
+  // Call cb once el's behaviour is usable: loaded and connected. Elements
+  // without a behaviour call it at once.
+  function whenReady(el, cb) {
+    var name = el.getAttribute("data-ah");
+    if (classes[name]) {
+      if (controllerOf(el, name)) {
+        cb();
+      } else {
+        var cbs = connectWaiters.get(el) || [];
+        cbs.push(cb);
+        connectWaiters.set(el, cbs);
+      }
+    } else if (lazy.behaviours[name]) {
+      whenDefined(name, function () { whenReady(el, cb); });
+    } else {
+      cb();
     }
-    var b = behaviors[el.getAttribute("data-ah")];
-    if (b && b.destroy) {
-      b.destroy(el, $(el));
-    }
-    $(el).off(NS).removeAttr("data-ah-mounted");
+  }
+
+  // A promise that resolves when every component inside root is usable
+  // (its chunk loaded, its controller connected). Tests and page scripts
+  // await it after inserting HTML; the runtime itself queues calls instead.
+  function ready(root) {
+    var node = one(root || document);
+    if (!node) { return Promise.resolve(); }
+    return Promise.all(withSelf(node, "[data-ah]").map(function (el) {
+      return new Promise(function (res) { whenReady(el, res); });
+    })).then(function () { return undefined; });
   }
 
   // Run a method of the behaviour an element carries. Used by the server's
@@ -126,22 +260,22 @@ const AH = (function () {
   function invoke(target, method) {
     var args = Array.prototype.slice.call(arguments, 2);
     var result;
-    $(target).each(function () {
-      var el = this;
+    all(target).forEach(function (el) {
       var name = el.getAttribute("data-ah");
       var run = function () {
-        var b = behaviors[name];
-        if (!b || !b.methods || !b.methods[method]) {
-          console.error("aihtml: no method " + method + " on", el);
-          return undefined;
+        var c = controllerOf(el, name);
+        if (c && typeof c[method] === "function") {
+          return c[method].apply(c, args);
         }
-        initElement(el);
-        return b.methods[method].apply(null, [el, $(el)].concat(args));
+        console.error("aihtml: no method " + method + " on", el);
+        return undefined;
       };
-      if (behaviors[name] || !lazy.behaviours[name]) {
+      if (classes[name] && !controllerOf(el, name)) {
+        whenReady(el, run);
+      } else if (classes[name] || !lazy.behaviours[name]) {
         result = run();
       } else {
-        whenDefined(name, run);
+        whenReady(el, run);
       }
     });
     return result;
@@ -167,19 +301,33 @@ const AH = (function () {
     }
   }
 
+  // Attach behaviours inside root (default the document): action listeners
+  // for the events root binds, controllers stopped by AH.destroy set up
+  // again, missing chunks
+  // loaded. Native controllers of new elements connect on their own
+  // (await AH.ready(root) to use them). Returns the (first) root element.
   function mount(rootEl) {
-    var $root = $(rootEl || document);
-    listenFor($root);
-    $root.find("[data-ah]").addBack("[data-ah]").each(function () {
-      initElement(this);
+    var roots = all(rootEl || document);
+    roots.forEach(function (root) {
+      listenFor(root);
+      withSelf(root, "[data-ah]").forEach(function (el) {
+        var name = el.getAttribute("data-ah");
+        var c = classes[name] ? controllerOf(el, name) : null;
+        if (c && !c._ah && el.isConnected) { c._ahStart(); }
+      });
+      scan(root);
     });
-    scan($root);
-    return $root;
+    return roots[0];
   }
 
+  // Detach the behaviours inside root (teardown now, listeners removed),
+  // before root is removed or re-mounted.
   function destroy(rootEl) {
-    $(rootEl).find("[data-ah-mounted]").addBack("[data-ah-mounted]").each(function () {
-      teardown(this);
+    all(rootEl).forEach(function (root) {
+      withSelf(root, "[data-ah]").forEach(function (el) {
+        var c = liveController(el);
+        if (c) { c._ahStop(); }
+      });
     });
   }
 
@@ -214,13 +362,13 @@ const AH = (function () {
   }
 
   function scan(root) {
-    var node = $(root || document)[0];
+    var node = one(root || document);
     if (!node || !node.querySelectorAll) { return; }
-    var els = node.matches && node.matches("[data-ah]") ? [node] : [];
-    Array.prototype.push.apply(els, node.querySelectorAll("[data-ah]"));
-    els.forEach(function (el) {
+    withSelf(node, "[data-ah]").forEach(function (el) {
       var name = el.getAttribute("data-ah");
-      if (!behaviors[name] && lazy.behaviours[name]) { loadChunk(lazy.behaviours[name]); }
+      if (!classes[name] && lazy.behaviours[name]) {
+        loadChunk(lazy.behaviours[name]);
+      }
     });
     lazy.triggers.forEach(function (t) {
       if ((node.matches && node.matches(t[0])) || node.querySelector(t[0])) { loadChunk(t[1]); }
@@ -229,18 +377,18 @@ const AH = (function () {
 
   // Load every registered component (tests, pages that want no delay).
   function loadAll() {
-    var all = new Set();
-    Object.keys(lazy.behaviours).forEach(function (k) { all.add(lazy.behaviours[k]); });
-    Object.keys(lazy.fns).forEach(function (k) { all.add(lazy.fns[k]); });
-    lazy.triggers.forEach(function (t) { all.add(t[1]); });
-    return Promise.all(Array.from(all).map(loadChunk));
+    var set = new Set();
+    Object.keys(lazy.behaviours).forEach(function (k) { set.add(lazy.behaviours[k]); });
+    Object.keys(lazy.fns).forEach(function (k) { set.add(lazy.fns[k]); });
+    lazy.triggers.forEach(function (t) { set.add(t[1]); });
+    return Promise.all(Array.from(set).map(loadChunk));
   }
 
   // Start Stimulus with the registry; main.js calls this once.
   function start(registry) {
     lazy = registry || lazy;
     app = Application.start(document.documentElement, SCHEMA);
-    Object.keys(behaviors).forEach(register);
+    Object.keys(classes).forEach(function (n) { app.register(n, classes[n]); });
     new MutationObserver(function (records) {
       records.forEach(function (r) {
         if (r.type === "attributes") { scan(r.target); }
@@ -270,9 +418,9 @@ const AH = (function () {
   var floating = [];
 
   function floatPopup(popup, anchor, opts) {
-    popup = $(popup)[0];
-    anchor = $(anchor)[0];
-    opts = $.extend({ placement: "bottom", align: "start", offset: 4, matchWidth: false }, opts);
+    popup = one(popup);
+    anchor = one(anchor);
+    opts = Object.assign({ placement: "bottom", align: "start", offset: 4, matchWidth: false }, opts);
     var handle = {
       update: function () { place(popup, anchor, opts); },
       stop: function () {
@@ -280,11 +428,14 @@ const AH = (function () {
         popup.style.position = popup.style.top = popup.style.left = "";
         popup.style.right = popup.style.bottom = popup.style.minWidth = "";
         popup.removeAttribute("data-ah-placement");
-        if (!floating.length) { $(window).off(".ahfloat"); }
+        if (!floating.length) {
+          window.removeEventListener("resize", updateAll);
+          window.removeEventListener("scroll", updateAll, true);
+        }
       }
     };
     if (!floating.length) {
-      $(window).on("resize.ahfloat", updateAll);
+      window.addEventListener("resize", updateAll);
       window.addEventListener("scroll", updateAll, true);
     }
     floating.push(handle);
@@ -293,10 +444,6 @@ const AH = (function () {
   }
 
   function updateAll() {
-    if (!floating.length) {
-      window.removeEventListener("scroll", updateAll, true);
-      return;
-    }
     floating.forEach(function (h) { h.update(); });
   }
 
@@ -364,8 +511,8 @@ const AH = (function () {
     get: function () {
       var out = {};
       var html = document.documentElement;
-      $.each(AXES, function (axis, attr) {
-        out[axis] = html.getAttribute(attr);
+      Object.keys(AXES).forEach(function (axis) {
+        out[axis] = html.getAttribute(AXES[axis]);
       });
       return out;
     },
@@ -377,36 +524,83 @@ const AH = (function () {
       var t = load();
       t[axis] = value;
       save(t);
-      $(document).trigger("ah:theme", [{ axis: axis, value: value }]);
+      fire(document, "ah:theme", { axis: axis, value: value });
     },
     reset: function () {
       save({});
     }
   };
 
-  define("theme-switcher", {
-    init: function (el, $el) {
-      function sync() {
-        var current = theme.get();
-        $el.find("[data-ah-axis]").each(function () {
-          var axis = this.getAttribute("data-ah-axis");
-          if (current[axis]) {
-            $(this).val(current[axis]);
-          }
-        });
-      }
-      sync();
-      // Follow changes made elsewhere (AH.theme.set, another switcher).
-      $.data(el, "ah-sync", sync);
-      $(document).on("ah:theme" + NS, sync);
-      $el.on("change" + NS, "[data-ah-axis]", function () {
-        theme.set(this.getAttribute("data-ah-axis"), $(this).val());
+  // The theme switcher (aihtml_theme:switcher/2): one select per axis
+  // (data-ah-axis), kept in step with <html>, also when the theme changes
+  // elsewhere (AH.theme.set, another switcher).
+  register("theme-switcher", class extends AHController {
+    setup() {
+      this.sync();
+      this.listen(document, "ah:theme", () => this.sync());
+      this.delegate("change", "[data-ah-axis]", (e, sel) => {
+        theme.set(sel.getAttribute("data-ah-axis"), sel.value);
       });
-    },
-    destroy: function (el) {
-      $(document).off("ah:theme" + NS, $.data(el, "ah-sync"));
+    }
+    sync() {
+      var current = theme.get();
+      this.element.querySelectorAll("[data-ah-axis]").forEach(function (sel) {
+        var v = current[sel.getAttribute("data-ah-axis")];
+        if (v) { setVal(sel, v); }
+      });
     }
   });
+
+  // ------------------------------------------------------------------
+  // Form values
+  // ------------------------------------------------------------------
+
+  // A control's value, as jQuery's .val() reads it: an array for a
+  // multiple select, the value otherwise.
+  function valueOf(el) {
+    if (el.tagName === "SELECT" && el.multiple) {
+      return Array.from(el.selectedOptions).map(function (o) { return o.value; });
+    }
+    return el.value;
+  }
+
+  // Set a control's value, as jQuery's .val(v) does: a select selects the
+  // matching option(s) (none when nothing matches), a checkbox or radio
+  // given an array is checked when its value is in it.
+  function setVal(el, v) {
+    if (el.tagName === "SELECT") {
+      var vals = [].concat(v === null || v === undefined ? [] : v).map(String);
+      var hits = Array.from(el.options).filter(function (o) { return vals.indexOf(o.value) >= 0; });
+      if (!el.multiple) { hits = hits.slice(-1); }       // the last one, as in jQuery
+      // (deselecting the chosen option of a single select selects the
+      // first one again, so select the hits instead of reading back)
+      Array.from(el.options).forEach(function (o) { o.selected = hits.indexOf(o) >= 0; });
+      if (!hits.length) { el.selectedIndex = -1; }
+    } else if (Array.isArray(v) && (el.type === "checkbox" || el.type === "radio")) {
+      el.checked = v.map(String).indexOf(el.value) >= 0;
+    } else {
+      el.value = v === null || v === undefined ? "" : String(v);
+    }
+  }
+
+  // The successful controls of a form, as [name, value] pairs, like
+  // jQuery's serializeArray: named, enabled input/select/textarea, no
+  // file or button inputs, checkboxes and radios only when checked.
+  function formFields(form) {
+    var out = [];
+    Array.from(form.elements).forEach(function (el) {
+      if (!el.name || el.matches(":disabled") || !/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName) ||
+          /^(submit|button|image|reset|file)$/i.test(el.type) ||
+          ((el.type === "checkbox" || el.type === "radio") && !el.checked) ||
+          (el.tagName === "SELECT" && !el.multiple && el.selectedIndex < 0)) {
+        return;
+      }
+      [].concat(valueOf(el)).forEach(function (v) {
+        out.push([el.name, String(v).replace(/\r?\n/g, "\r\n")]);
+      });
+    });
+    return out;
+  }
 
   // ------------------------------------------------------------------
   // Server round trips
@@ -427,13 +621,13 @@ const AH = (function () {
   // the server sees the change.
   function payload(el) {
     if (el.tagName === "FORM") {
-      return $(el).serialize();
+      return new URLSearchParams(formFields(el)).toString();
     }
     if (!el.name) {
       return "";
     }
     var off = (el.type === "checkbox" || el.type === "radio") && !el.checked;
-    return $.param([{ name: el.name, value: off ? "" : $(el).val() }]);
+    return new URLSearchParams([[el.name, off ? "" : String(valueOf(el))]]).toString();
   }
 
   // ------------------------------------------------------------------
@@ -448,52 +642,72 @@ const AH = (function () {
   //
   // Every mode restores focus afterwards: the focused element is found
   // again by id and its selection is put back.
+  //
+  // swap(target, html, mode) returns the inserted top-level nodes (an
+  // array; empty for morph, which mounts what it adds itself, and none).
+  // Scripts in the HTML are dropped, as with jQuery's parseHTML.
 
-  function swap($target, html, mode) {
+  function swap(target, html, mode) {
     var focus = captureFocus();
-    var $new = doSwap($target, html, mode);
+    var added = doSwap(all(target), html, mode);
     restoreFocus(focus);
-    return $new;
+    return added;
   }
 
-  function doSwap($target, html, mode) {
+  var EXECUTABLE = /^$|^module$|\/(?:java|ecma)script/i;
+
+  function parseHTML(html) {
+    var tpl = document.createElement("template");
+    tpl.innerHTML = html;
+    tpl.content.querySelectorAll("script").forEach(function (s) {
+      if (EXECUTABLE.test(s.type)) { s.remove(); }
+    });
+    return Array.from(tpl.content.childNodes);
+  }
+
+  function doSwap(targets, html, mode) {
     if (mode === "morph" || mode === "morph_inner") {
-      $target.each(function () { morph(this, html, mode === "morph"); });
-      return $();                  // morph mounts what it adds itself
+      targets.forEach(function (t) { morph(t, html, mode === "morph"); });
+      return [];
     }
-    if (mode === "none") {
-      return $();
+    if (mode === "none" || !targets.length) {
+      return [];
     }
-    var $new = $($.parseHTML(html, document, false));
-    var pantry = stashPreserved($new);
-    var settle = prepareSettle($new);
-    insert($target, $new, mode);
+    var nodes = parseHTML(html);
+    var pantry = stashPreserved(nodes);
+    var settle = prepareSettle(nodes);
+    var added = insert(targets, nodes, mode);
     restorePreserved(pantry);
-    finishSettle($target, $new.filter(function () { return this.nodeType === 1; }), settle);
-    return $new;
+    finishSettle(targets, added.filter(function (n) { return n.nodeType === 1; }), settle);
+    return added;
   }
 
-  function insert($target, $new, mode) {
-    switch (mode) {
-      case "outer":
-        destroy($target);
-        if ($new.length) {
-          $target.replaceWith($new);
-        } else {
-          $target.remove();
-        }
-        return $new;
-      case "append":
-        $target.append($new);
-        return $new;
-      case "prepend":
-        $target.prepend($new);
-        return $new;
-      default:
-        destroy($target.children());
-        $target.empty().append($new);
-        return $new;
-    }
+  // With several targets, all but the last get a copy of the nodes (as
+  // jQuery's manipulation methods do). Returns every inserted node.
+  function insert(targets, nodes, mode) {
+    var added = [];
+    targets.forEach(function (t, i) {
+      var these = i === targets.length - 1 ? nodes
+        : nodes.map(function (n) { return n.cloneNode(true); });
+      Array.prototype.push.apply(added, these);
+      switch (mode) {
+        case "outer":
+          destroy(t);
+          t.replaceWith.apply(t, these);
+          break;
+        case "append":
+          t.append.apply(t, these);
+          break;
+        case "prepend":
+          t.prepend.apply(t, these);
+          break;
+        default:
+          destroy(Array.from(t.children));
+          t.replaceChildren.apply(t, these);
+          break;
+      }
+    });
+    return added;
   }
 
   // ---- preserve -----------------------------------------------------
@@ -513,13 +727,15 @@ const AH = (function () {
     }
   }
 
-  function stashPreserved($new) {
+  function stashPreserved(nodes) {
     var found = [];
-    $new.find("[data-ah-preserve][id]").addBack("[data-ah-preserve][id]").each(function () {
-      var old = document.getElementById(this.id);
-      if (old && old !== this && old.hasAttribute("data-ah-preserve")) {
-        found.push({ placeholder: this, el: old });
-      }
+    nodes.forEach(function (n) {
+      withSelf(n, "[data-ah-preserve][id]").forEach(function (ph) {
+        var old = document.getElementById(ph.id);
+        if (old && old !== ph && old.hasAttribute("data-ah-preserve")) {
+          found.push({ placeholder: ph, el: old });
+        }
+      });
     });
     if (!found.length) {
       return found;
@@ -559,44 +775,46 @@ const AH = (function () {
   var SETTLE_MS = 20;
   var SETTLE_ATTRS = ["class", "style", "width", "height"];
 
-  function prepareSettle($new) {
+  function prepareSettle(nodes) {
     var list = [];
-    $new.find("[id]").addBack("[id]").each(function () {
-      var old = document.getElementById(this.id);
-      if (!old || old === this || this.hasAttribute("data-ah") ||
-          this.hasAttribute("data-ah-preserve")) {
-        return;
-      }
-      var el = this, saved = {};
-      SETTLE_ATTRS.forEach(function (a) {
-        saved[a] = el.getAttribute(a);
-        var v = old.getAttribute(a);
-        if (v === null) { el.removeAttribute(a); } else { el.setAttribute(a, v); }
+    nodes.forEach(function (n) {
+      withSelf(n, "[id]").forEach(function (el) {
+        var old = document.getElementById(el.id);
+        if (!old || old === el || el.hasAttribute("data-ah") ||
+            el.hasAttribute("data-ah-preserve")) {
+          return;
+        }
+        var saved = {};
+        SETTLE_ATTRS.forEach(function (a) {
+          saved[a] = el.getAttribute(a);
+          var v = old.getAttribute(a);
+          if (v === null) { el.removeAttribute(a); } else { el.setAttribute(a, v); }
+        });
+        list.push({ el: el, saved: saved });
       });
-      list.push({ el: el, saved: saved });
     });
     return list;
   }
 
-  function finishSettle($target, $added, list) {
-    $added.addClass("ah-added");
-    $target.addClass("ah-settling");
+  function finishSettle(targets, added, list) {
+    added.forEach(function (el) { el.classList.add("ah-added"); });
+    targets.forEach(function (el) { el.classList.add("ah-settling"); });
     setTimeout(function () {
       list.forEach(function (x) {
         SETTLE_ATTRS.forEach(function (a) {
           if (x.saved[a] === null) { x.el.removeAttribute(a); } else { x.el.setAttribute(a, x.saved[a]); }
         });
       });
-      dropClass($added, "ah-added");
-      dropClass($target, "ah-settling");
+      dropClass(added, "ah-added");
+      dropClass(targets, "ah-settling");
     }, SETTLE_MS);
   }
 
   // Remove a transient class without leaving class="" behind.
-  function dropClass($els, cls) {
-    $els.each(function () {
-      this.classList.remove(cls);
-      if (this.getAttribute("class") === "") { this.removeAttribute("class"); }
+  function dropClass(els, cls) {
+    els.forEach(function (el) {
+      el.classList.remove(cls);
+      if (el.getAttribute("class") === "") { el.removeAttribute("class"); }
     });
   }
 
@@ -636,8 +854,9 @@ const AH = (function () {
   // node type and tag agree. Attributes are synced, except data-ah-mounted.
   // Form controls take the server's value unless they have the focus,
   // where the user is typing. A mounted component whose subtree changed is
-  // re-initialised on its existing nodes (destroy, then mount); added nodes
-  // are mounted; removed ones are destroyed first.
+  // re-initialised on its existing nodes (destroy, then mount: teardown
+  // and setup for a native controller); added nodes are mounted; removed
+  // ones are destroyed first.
 
   function morph(target, html, outer) {
     var tpl = document.createElement("template");
@@ -657,7 +876,7 @@ const AH = (function () {
     ctx.changed.filter(function (el) {
       return !ctx.changed.some(function (other) { return other !== el && other.contains(el); });
     }).forEach(function (el) {
-      if (document.contains(el) && el.hasAttribute("data-ah-mounted")) {
+      if (document.contains(el) && isMounted(el)) {
         destroy(el);
         mount(el);
       }
@@ -666,7 +885,7 @@ const AH = (function () {
       return el.nodeType === 1 && document.contains(el);
     });
     added.forEach(function (el) { mount(el); });
-    finishSettle($(target), $(added), []);
+    finishSettle([target], added, []);
   }
 
   function elementChildren(node) {
@@ -688,7 +907,7 @@ const AH = (function () {
     }
     if (!sameKind(old, neu)) {
       var fresh = document.importNode(neu, true);
-      destroy(old);
+      if (old.nodeType === 1) { destroy(old); }
       old.parentNode.replaceChild(fresh, old);
       ctx.added.push(fresh);
       return true;
@@ -711,7 +930,7 @@ const AH = (function () {
     } else if (old.tagName === "SELECT" && old !== document.activeElement) {
       Array.prototype.forEach.call(old.options, function (o) { o.selected = o.hasAttribute("selected"); });
     }
-    if (changed && old.hasAttribute("data-ah-mounted") && ctx.changed.indexOf(old) < 0) {
+    if (changed && isMounted(old) && ctx.changed.indexOf(old) < 0) {
       ctx.changed.push(old);
     }
     return changed;
@@ -804,98 +1023,126 @@ const AH = (function () {
   // one to finish does not clear the others' state.
 
   function resolve(el, sel) {
-    if (!sel) { return $(); }
-    if (sel === "this") { return $(el); }
+    if (!sel) { return []; }
+    if (sel === "this") { return [el]; }
     var m = /^closest\s+(.+)$/.exec(sel);
-    return m ? $(el).closest(m[1]) : $(sel);
+    if (m) {
+      var c = el.closest(m[1]);
+      return c ? [c] : [];
+    }
+    return Array.from(document.querySelectorAll(sel));
   }
 
-  function bump($els, cls, by) {
-    $els.each(function () {
-      var n = ($.data(this, "ah-count-" + cls) || 0) + by;
-      $.data(this, "ah-count-" + cls, n);
+  var counts = new WeakMap();        // el -> {class or "disabled": n, wasDisabled}
+
+  function bump(els, cls, by) {
+    els.forEach(function (el) {
+      var st = counts.get(el) || {};
+      counts.set(el, st);
+      var n = (st[cls] || 0) + by;
+      st[cls] = n;
       if (cls === "disabled") {
         if (n > 0 && by > 0 && n === 1) {
-          $.data(this, "ah-was-disabled", this.disabled);
-          this.disabled = true;
+          st.wasDisabled = el.disabled;
+          el.disabled = true;
         } else if (n === 0) {
-          this.disabled = !!$.data(this, "ah-was-disabled");
+          el.disabled = !!st.wasDisabled;
         }
       } else {
-        $(this).toggleClass(cls, n > 0);
+        el.classList.toggle(cls, n > 0);
       }
     });
   }
 
   function requestStart(el) {
-    var $ind = $(el).add(resolve(el, el.getAttribute("data-ah-indicator")));
-    var $dis = resolve(el, el.getAttribute("data-ah-disable"));
+    var ind = Array.from(new Set([el].concat(resolve(el, el.getAttribute("data-ah-indicator")))));
+    var dis = resolve(el, el.getAttribute("data-ah-disable"));
     el.setAttribute("aria-busy", "true");
-    bump($ind, "ah-request", 1);
-    bump($dis, "disabled", 1);
+    bump(ind, "ah-request", 1);
+    bump(dis, "disabled", 1);
     var ended = false;
     return function () {
       if (ended) { return; }
       ended = true;
-      bump($ind, "ah-request", -1);
-      bump($dis, "disabled", -1);
-      if (!$(el).hasClass("ah-request")) { el.removeAttribute("aria-busy"); }
+      bump(ind, "ah-request", -1);
+      bump(dis, "disabled", -1);
+      if (!el.classList.contains("ah-request")) { el.removeAttribute("aria-busy"); }
     };
   }
 
-  function fetchFor(el) {
-    var $el = $(el);
-    var method = ($el.attr("data-ah-fetch") || "get").toUpperCase();
-    var url = $el.attr("data-ah-url") || (el.tagName === "FORM" ? $el.attr("action") : "");
-    var sel = $el.attr("data-ah-target") || "this";
-    var $target = sel === "this" ? $el : $(sel);
-    var question = $el.attr("data-ah-confirm");
+  // Run el's data-ah-fetch round trip. Returns a promise that resolves to
+  // true once the response is swapped in, false when the request was
+  // cancelled (data-ah-confirm, ah:before-fetch prevented) or failed
+  // (ah:error). GET and HEAD send the payload in the query string, the
+  // other methods as a form-encoded body.
+  function fetchFor(target) {
+    var el = one(target);
+    var method = (el.getAttribute("data-ah-fetch") || "get").toUpperCase();
+    var url = el.getAttribute("data-ah-url") ||
+      (el.tagName === "FORM" ? el.getAttribute("action") || "" : "");
+    var sel = el.getAttribute("data-ah-target") || "this";
+    var targets = sel === "this" ? [el] : all(sel);
+    var question = el.getAttribute("data-ah-confirm");
 
     if (question && !window.confirm(question)) {
-      return $.Deferred().reject().promise();
+      return Promise.resolve(false);
     }
-    var before = $.Event("ah:before-fetch");
-    $el.trigger(before, [{ url: url, method: method }]);
-    if (before.isDefaultPrevented()) {
-      return $.Deferred().reject().promise();
+    if (!fire(el, "ah:before-fetch", { url: url, method: method })) {
+      return Promise.resolve(false);
     }
 
     var end = requestStart(el);
-    return $.ajax({
-      url: url,
+    var data = payload(el);
+    var init = {
       method: method,
-      data: payload(el),
-      dataType: "html",
-      headers: { "X-Aihtml": "1", "X-Aihtml-Target": sel }
-    })
-      .done(function (html) {
-        var $new = swap($target, html, $el.attr("data-ah-swap") || "inner");
-        $new.each(function () {
-          if (this.nodeType === 1) {
-            mount(this);
-          }
-        });
-        $el.trigger("ah:after-fetch", [{ url: url }]);
-      })
-      .fail(function (xhr) {
-        $el.trigger("ah:error", [{ url: url, status: xhr.status, body: xhr.responseText }]);
-      })
-      .always(end);
+      credentials: "same-origin",
+      headers: { "X-Aihtml": "1", "X-Aihtml-Target": sel,
+                 "X-Requested-With": "XMLHttpRequest", "Accept": "text/html, */*; q=0.01" }
+    };
+    var href = url;
+    if (method === "GET" || method === "HEAD") {
+      if (data) { href = url.replace(/#.*$/, "") + (url.indexOf("?") >= 0 ? "&" : "?") + data; }
+    } else {
+      init.body = data;
+      init.headers["Content-Type"] = "application/x-www-form-urlencoded; charset=UTF-8";
+    }
+    var status = 0;
+    return window.fetch(href, init).then(function (resp) {
+      status = resp.status;
+      return resp.text().then(function (body) {
+        if (!resp.ok) { throw { status: status, body: body }; }
+        return body;
+      });
+    }).then(function (html) {
+      swap(targets, html, el.getAttribute("data-ah-swap") || "inner").forEach(function (n) {
+        if (n.nodeType === 1) { mount(n); }
+      });
+      fire(el, "ah:after-fetch", { url: url });
+      return true;
+    }).catch(function (err) {
+      var failed = err && err.status !== undefined ? err : { status: status, body: "" };
+      fire(el, "ah:error", { url: url, status: failed.status, body: failed.body });
+      if (!(err && err.status !== undefined)) { console.error(err); }
+      return false;
+    }).then(function (ok) {
+      end();
+      return ok;
+    });
   }
 
   // One delegated listener per event type covers content added later.
-  $.each(["click", "change", "submit", "input"], function (_, type) {
-    $(document).on(type + NS, "[data-ah-fetch]", function (e) {
-      if ((this.getAttribute("data-ah-trigger") || defaultTrigger(this)) !== type) {
+  ["click", "change", "submit", "input"].forEach(function (type) {
+    delegateDocument(type, "[data-ah-fetch]", function (e, el) {
+      if ((el.getAttribute("data-ah-trigger") || defaultTrigger(el)) !== type) {
         return;
       }
       if (type === "submit" || type === "click") {
         e.preventDefault();
       }
-      if (this.getAttribute("aria-busy") === "true") {
+      if (el.getAttribute("aria-busy") === "true") {
         return;
       }
-      fetchFor(this);
+      fetchFor(el);
     });
   });
 
@@ -918,7 +1165,6 @@ const AH = (function () {
   var threadId = newId();
   var seq = 0;
   var timers = {};
-  var inflight = {};
 
   function newId() {
     if (window.crypto && window.crypto.randomUUID) {
@@ -944,20 +1190,20 @@ const AH = (function () {
     var form = el.tagName === "FORM" ? el : el.form;
     var fields = {};
     if (form) {
-      $.each($(form).serializeArray(), function (_, f) { fields[f.name] = f.value; });
+      formFields(form).forEach(function (f) { fields[f[0]] = f[1]; });
     }
     var values = {};
     var include = el.getAttribute("data-ah-include");
     if (include) {
-      $(include).each(function () {
-        var key = this.id || this.name;
-        var check = this.type === "checkbox" || this.type === "radio";
-        if (key) { values[key] = check ? this.checked : $(this).val(); }
+      document.querySelectorAll(include).forEach(function (x) {
+        var key = x.id || x.name;
+        var check = x.type === "checkbox" || x.type === "radio";
+        if (key) { values[key] = check ? x.checked : valueOf(x); }
       });
     }
     var data = {};
-    $.each(el.dataset, function (k, v) {
-      if (k.indexOf("ah") !== 0) { data[k] = v; }
+    Object.keys(el.dataset).forEach(function (k) {
+      if (k.indexOf("ah") !== 0) { data[k] = el.dataset[k]; }
     });
     var control = /^(INPUT|SELECT|TEXTAREA|BUTTON)$/.test(el.tagName);
     var check = el.type === "checkbox" || el.type === "radio";
@@ -965,7 +1211,7 @@ const AH = (function () {
     // keeps its value in data-ah-value, which wins over a native value;
     // see designs/04-components.md.
     var value = el.hasAttribute("data-ah-value") ? el.getAttribute("data-ah-value")
-      : (control ? $(el).val() : null);
+      : (control ? valueOf(el) : null);
     return {
       type: e.type,
       id: el.id,
@@ -978,42 +1224,59 @@ const AH = (function () {
     };
   }
 
-  function actionTarget(op) {
+  // The elements an operation targets (op.id, else the selector op.sel).
+  function actionTargets(op) {
     if (op.id !== undefined) {
       var el = document.getElementById(op.id);
-      return el ? $(el) : $();
+      return el ? [el] : [];
     }
-    return $(op.sel);
+    return op.sel === undefined ? [] : Array.from(document.querySelectorAll(op.sel));
+  }
+
+  function classList(s) {
+    return String(s || "").split(/\s+/).filter(Boolean);
   }
 
   var OPS = {
-    html: function (op, $t) {
-      swap($t, op.html, op.swap).each(function () {
-        if (this.nodeType === 1) { mount(this); }
+    html: function (op, ts) {
+      swap(ts, op.html, op.swap).forEach(function (n) {
+        if (n.nodeType === 1) { mount(n); }
       });
     },
-    remove: function (op, $t) {
-      destroy($t);
-      $t.remove();
+    remove: function (op, ts) {
+      destroy(ts);
+      ts.forEach(function (el) { el.remove(); });
     },
-    attr: function (op, $t) {
-      if (op.value === null) { $t.removeAttr(op.name); } else { $t.attr(op.name, op.value); }
+    attr: function (op, ts) {
+      ts.forEach(function (el) {
+        if (op.value === null) { el.removeAttribute(op.name); } else { el.setAttribute(op.name, op.value); }
+      });
     },
-    "class": function (op, $t) {
-      if (op.add) { $t.addClass(op.add); }
-      if (op.remove) { $t.removeClass(op.remove); }
+    "class": function (op, ts) {
+      ts.forEach(function (el) {
+        if (op.add) { el.classList.add.apply(el.classList, classList(op.add)); }
+        if (op.remove) {
+          el.classList.remove.apply(el.classList, classList(op.remove));
+          if (el.getAttribute("class") === "") { el.removeAttribute("class"); }
+        }
+      });
     },
-    val: function (op, $t) {
-      if (typeof op.value === "boolean") { $t.prop("checked", op.value); } else { $t.val(op.value); }
+    val: function (op, ts) {
+      ts.forEach(function (el) {
+        if (typeof op.value === "boolean") { el.checked = op.value; } else { setVal(el, op.value); }
+      });
     },
-    focus: function (op, $t) { $t.trigger("focus"); },
+    focus: function (op, ts) { ts.forEach(function (el) { el.focus(); }); },
     title: function (op) { document.title = op.value; },
     redirect: function (op) { window.location.href = op.value; },
-    // Fire a DOM event (jQuery trigger, bubbles) on the target, or on the
-    // document without one; elements may bind actions to it with on/2.
-    trigger: function (op, $t) {
-      var $on = (op.id === undefined && op.sel === undefined) ? $(document) : $t;
-      $on.trigger(op.event, [op.detail === undefined ? null : op.detail]);
+    // Fire a DOM event (a bubbling CustomEvent, detail = op.detail) on the
+    // target, or on the document without one; elements may bind actions
+    // to it with on/2.
+    trigger: function (op, ts) {
+      var on = (op.id === undefined && op.sel === undefined) ? [document] : ts;
+      on.forEach(function (t) {
+        fire(t, op.event, op.detail === undefined ? null : op.detail);
+      });
     },
     // Browser history: push or replace the URL without a request. Going
     // back or forward to an entry made here reloads that URL, so the
@@ -1028,24 +1291,26 @@ const AH = (function () {
         history.pushState({ ah: true }, "", op.value);
       }
     },
-    call: function (op, $t) {
+    call: function (op, ts) {
       var args = op.args || [];
       if (op.id === undefined && op.sel === undefined) {
         callFn(op.method, args);
       } else {
-        invoke.apply(null, [$t, op.method].concat(args));
+        invoke.apply(null, [ts, op.method].concat(args));
       }
     },
+    // AH is in scope; so is the page's global $ when the page has one
+    // (the code runs in the global scope).
     js: function (op) {
       /* jshint evil: true */
-      new Function("$", "AH", op.code)($, api);
+      new Function("AH", op.code)(api);
     }
   };
 
   function applyOps(ops) {
     ops.forEach(function (op) {
       try {
-        OPS[op.op](op, actionTarget(op));
+        OPS[op.op](op, actionTargets(op));
       } catch (err) {
         console.error("aihtml: operation failed", op, err);
       }
@@ -1061,7 +1326,7 @@ const AH = (function () {
         }
         break;
       case "RUN_ERROR":
-        $(el).trigger("ah:error", [{ message: ev.message, code: ev.code }]);
+        fire(el, "ah:error", { message: ev.message, code: ev.code });
         console.error("aihtml: action failed:", ev.message);
         break;
       default:
@@ -1108,9 +1373,9 @@ const AH = (function () {
   var syncs = {};
 
   function runAction(el, spec, e) {
-    var payload = eventPayload(el, e);          // also gives el an id
+    var body = eventPayload(el, e);          // also gives el an id
     var scopeSel = el.getAttribute("data-ah-sync-scope");
-    var scope = scopeSel ? ($(el).closest(scopeSel)[0] || el) : el;
+    var scope = scopeSel ? (el.closest(scopeSel) || el) : el;
     if (!scope.id) {
       scope.id = "ah-e" + (++seq);
     }
@@ -1123,15 +1388,15 @@ const AH = (function () {
         return;
       }
       if (strategy === "queue") {
-        running.queued = function () { send(el, spec, payload, key); };
+        running.queued = function () { send(el, spec, body, key); };
         return;
       }
       running.ctrl.abort();
     }
-    send(el, spec, payload, key);
+    send(el, spec, body, key);
   }
 
-  function send(el, spec, payload, key) {
+  function send(el, spec, body, key) {
     var url = document.body.getAttribute("data-ah-action") || "/aihtml/action";
     var ctrl = new AbortController();
     var st = { ctrl: ctrl, queued: null };
@@ -1149,13 +1414,13 @@ const AH = (function () {
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "text/event-stream" },
       body: JSON.stringify({ threadId: threadId, runId: newId(), action: spec.token,
-                             event: payload, streamId: stream.id }),
+                             event: body, streamId: stream.id }),
       signal: ctrl.signal
     }).then(function (resp) {
       if (!resp.ok) {
         // 403 invalid_action: the page was rendered with a secret this
         // server does not know (development restart, rotated secret).
-        $(el).trigger("ah:error", [{ status: resp.status }]);
+        fire(el, "ah:error", { status: resp.status });
         throw new Error("aihtml: action refused with HTTP " + resp.status);
       }
       return readStream(resp.body, function (ev) { onAgui(el, ev); });
@@ -1164,49 +1429,63 @@ const AH = (function () {
     }).then(done, done);
   }
 
+  // What an event of `type` on an element with data-ah-on does.
+  function onActionEvent(el, e, type) {
+    // A value-bearing component reports its own change/input from its
+    // root; the same events bubbling up from controls inside it (an
+    // input in a tab panel, say) are not its value changing.
+    if ((type === "change" || type === "input") && e.target !== el &&
+        el.hasAttribute("data-ah-value")) {
+      return;
+    }
+    specs(el).forEach(function (s) {
+      if (s.event !== type) {
+        return;
+      }
+      if (type === "submit" || (type === "click" && (el.tagName === "A" || el.type === "submit"))) {
+        e.preventDefault();
+      }
+      var question = el.getAttribute("data-ah-confirm");
+      if (question && !window.confirm(question)) {
+        return;
+      }
+      if (s.debounce) {
+        clearTimeout(timers[el.id + s.token]);
+        timers[el.id + s.token] = setTimeout(function () { runAction(el, s, e); }, s.debounce);
+      } else {
+        runAction(el, s, e);
+      }
+    });
+  }
+
   // One delegated listener per event type, registered on first use: the
   // common DOM events up front, component events (ah:close, ah:remove, ...)
   // when an element on the page binds them (see mount).
   var listening = {};
+
+  // A delegated listener on document for bubbling events; mouseenter/mouseleave do not bubble, so they are caught in
+  // the capture phase and only count on the element itself (what
+  // jQuery's delegated mouseenter emulates).
   function listen(type) {
     if (listening[type]) {
       return;
     }
     listening[type] = true;
-    $(document).on(type + NS, "[data-ah-on]", function (e) {
-      var el = this;
-      // A value-bearing component reports its own change/input from its
-      // root; the same events bubbling up from controls inside it (an
-      // input in a tab panel, say) are not its value changing.
-      if ((type === "change" || type === "input") && e.target !== el &&
-          el.hasAttribute("data-ah-value")) {
-        return;
-      }
-      specs(el).forEach(function (s) {
-        if (s.event !== type) {
-          return;
-        }
-        if (type === "submit" || (type === "click" && (el.tagName === "A" || el.type === "submit"))) {
-          e.preventDefault();
-        }
-        var question = el.getAttribute("data-ah-confirm");
-        if (question && !window.confirm(question)) {
-          return;
-        }
-        if (s.debounce) {
-          clearTimeout(timers[el.id + s.token]);
-          timers[el.id + s.token] = setTimeout(function () { runAction(el, s, e); }, s.debounce);
-        } else {
-          runAction(el, s, e);
-        }
-      });
-    });
+    if (type === "mouseenter" || type === "mouseleave") {
+      document.addEventListener(type, function (e) {
+        var el = e.target;
+        if (el && el.nodeType === 1 && el.matches("[data-ah-on]")) { onActionEvent(el, e, type); }
+      }, true);
+    } else {
+      delegateDocument(type, "[data-ah-on]", function (e, el) { onActionEvent(el, e, type); });
+    }
   }
-  $.each(ACTION_EVENTS, function (_, type) { listen(type); });
+
+  ACTION_EVENTS.forEach(function (type) { listen(type); });
 
   function listenFor(root) {
-    $(root).find("[data-ah-on]").addBack("[data-ah-on]").each(function () {
-      specs(this).forEach(function (s) { listen(s.event); });
+    withSelf(root, "[data-ah-on]").forEach(function (el) {
+      specs(el).forEach(function (s) { listen(s.event); });
     });
   }
 
@@ -1226,8 +1505,8 @@ const AH = (function () {
 
   function syncStream() {
     var tokens = [];
-    $("[data-ah-subscribe]").each(function () {
-      var t = this.getAttribute("data-ah-subscribe");
+    document.querySelectorAll("[data-ah-subscribe]").forEach(function (el) {
+      var t = el.getAttribute("data-ah-subscribe");
       if (tokens.indexOf(t) < 0) { tokens.push(t); }
     });
     tokens.sort();
@@ -1267,14 +1546,14 @@ const AH = (function () {
       // EventSource retries by itself; CLOSED means the server refused the
       // topics (e.g. a secret the server no longer has).
       if (es.readyState === 2) {
-        $(document).trigger("ah:error", [{ stream: true }]);
+        fire(document, "ah:error", { stream: true });
       }
     };
   }
 
   function refreshAll() {
-    $("[data-ah-refresh]").each(function () {
-      runAction(this, { event: "refresh", token: this.getAttribute("data-ah-refresh") },
+    document.querySelectorAll("[data-ah-refresh]").forEach(function (el) {
+      runAction(el, { event: "refresh", token: el.getAttribute("data-ah-refresh") },
                 { type: "refresh" });
     });
   }
@@ -1286,66 +1565,70 @@ const AH = (function () {
   });
 
   // ------------------------------------------------------------------
-  // Optional third-party scripts (priv/static/vendor), loaded on demand
+  // Optional third-party libraries, loaded on demand
   // ------------------------------------------------------------------
 
   // AH.vendor("echarts").then(function (echarts) { ... }) loads a library
-  // once per page and resolves with its global; a list loads in order and
-  // resolves with the list of globals. A library already on the page (its
-  // global is defined) is not loaded again. Files come from the body's
-  // data-ah-vendor directory, else from vendor/ beside the bundle's js/.
+  // once per page and resolves with it; a list resolves with the list of
+  // libraries, in the same order. Each library is its own chunk of the
+  // bundle (vite.config.mjs), fetched by a dynamic import() the first time
+  // it is asked for: a page without charts, exports or the Markdown editor
+  // downloads none of them. Their licences are in js/THIRD-PARTY-LICENSES.txt.
+  //
+  //   echarts          the echarts namespace (init, graphic, ...)
+  //   xlsx             the SheetJS namespace (utils, write, writeFile, ...)
+  //   jspdf            the jsPDF namespace ({jsPDF, ...})
+  //   jspdf-autotable  the autoTable(doc, options) function
+  //   prosemirror      ProseMirror + markdown-it (assets/vendor/prosemirror.entry.js)
+  //
+  // A namespace resolves as a plain object copy of the module namespace
+  // (which is frozen), so that, as with the globals of the old script
+  // files, a page or a test can wrap or replace a library function
+  // (XLSX.writeFile, ...) for every component using it.
+  function plain(m) { return Object.assign({}, m); }
   var VENDOR = {
-    echarts: { file: "echarts.min.js", global: "echarts" },
-    xlsx: { file: "xlsx.full.min.js", global: "XLSX" },
-    jspdf: { file: "jspdf.umd.min.js", global: "jspdf" },
-    "jspdf-autotable": { file: "jspdf.plugin.autotable.min.js", global: "autoTable",
-                         deps: ["jspdf"] },
-    prosemirror: { file: "prosemirror.min.js", global: "AHProseMirror" }
+    echarts: function () { return import("echarts").then(plain); },
+    xlsx: function () { return import("xlsx").then(plain); },
+    jspdf: function () { return import("jspdf").then(plain); },
+    "jspdf-autotable": function () {
+      return import("jspdf-autotable").then(function (m) { return m.autoTable; });
+    },
+    prosemirror: function () {
+      return import("../vendor/prosemirror.entry.js").then(function (m) {
+        // also the global of the old script bundle, still read by page
+        // scripts (and tests) written against it
+        return (window.AHProseMirror = plain(m));
+      });
+    }
   };
   var vendorLoads = {};
 
-  function vendorDir() {
-    var dir = document.body && document.body.getAttribute("data-ah-vendor");
-    if (dir) { return dir.replace(/\/?$/, "/"); }
-    // the bundle is in priv/static/js, the vendor files in priv/static/vendor
-    return SELF ? SELF.replace(/[^\/]*$/, "") + "../vendor/" : "/aihtml/vendor/";
-  }
-
   function vendor(names) {
-    if (Array.isArray(names)) {
-      return names.reduce(function (p, n) {
-        return p.then(function (acc) {
-          return vendor(n).then(function (g) { return acc.concat([g]); });
-        });
-      }, Promise.resolve([]));
-    }
-    var lib = VENDOR[names];
-    if (!lib) { return Promise.reject(new Error("aihtml: unknown vendor library " + names)); }
+    if (Array.isArray(names)) { return Promise.all(names.map(vendor)); }
+    var load = Object.prototype.hasOwnProperty.call(VENDOR, names) && VENDOR[names];
+    if (!load) { return Promise.reject(new Error("aihtml: unknown vendor library " + names)); }
     if (!vendorLoads[names]) {
-      vendorLoads[names] = vendor(lib.deps || []).then(function () {
-        if (window[lib.global]) { return window[lib.global]; }
-        return new Promise(function (ok, fail) {
-          var s = document.createElement("script");
-          s.src = vendorDir() + lib.file;
-          s.onload = function () { ok(window[lib.global]); };
-          s.onerror = function () {
-            delete vendorLoads[names];
-            fail(new Error("aihtml: cannot load " + s.src));
-          };
-          document.head.appendChild(s);
-        });
+      vendorLoads[names] = load().catch(function (err) {
+        delete vendorLoads[names];   // a later call tries again
+        throw err;
       });
     }
     return vendorLoads[names];
   }
 
-  $(function () {
+  // Once the document is parsed (and after main.js has started Stimulus):
+  // mount the page and open the push stream.
+  function boot() {
     mount(document);
     syncStream();
-  });
+  }
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    setTimeout(boot);
+  }
 
   var api = {
-    define: define,
     invoke: invoke,
     fn: fn,
     float: floatPopup,
@@ -1354,12 +1637,15 @@ const AH = (function () {
     theme: theme,
     fetch: fetchFor,
     vendor: vendor,
+    Controller: AHController,
+    register: register,
+    ready: ready,
     start: start,
     loadAll: loadAll,
     stimulus: function () { return app; },
     apply: applyOps,
     swap: swap,
-    morph: function (target, html) { morph($(target)[0], html, true); },
+    morph: function (target, html) { morph(one(target), html, true); },
     settleDelay: SETTLE_MS,
     NS: NS,
     version: "0.3.0"

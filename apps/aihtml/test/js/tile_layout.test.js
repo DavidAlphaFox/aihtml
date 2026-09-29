@@ -1,7 +1,7 @@
 /* tile-layout behaviour on the markup the server renders. SERVER holds
  * renders of aihtml_tile_layout:tile_layout/4, generated from Erlang;
  * regenerate them if the markup changes. */
-(function (T, $, AH) {
+(function (T, AH) {
   "use strict";
 
   var SERVER =
@@ -10,20 +10,21 @@
 }
 ;
 
-  function mount(fx, name) {
+  async function mount(fx, name) {
     fx.innerHTML = SERVER[name];
-    AH.mount(fx);
+    await T.ready(fx);
     return fx.querySelector("[data-ah]");
   }
 
-  function key(target, k, extra) {
-    $(target).trigger($.Event("keydown", $.extend({ key: k }, extra || {})));
-  }
+  function q(el, sel) { return el.querySelector(sel); }
+  function qa(sel) { return document.querySelectorAll(sel); }
 
   function events(el, type) {
     var got = [];
-    $(el).on(type, function (e, d) {
-      if (e.target === el) { got.push(d === undefined ? el.getAttribute("data-ah-value") : d); }
+    el.addEventListener(type, function (e) {
+      if (e.target === el) {
+        got.push(e.detail === undefined || e.detail === null ? el.getAttribute("data-ah-value") : e.detail);
+      }
     });
     return got;
   }
@@ -36,65 +37,67 @@
   // ------------------------------------------------------------------ tile-layout
 
   // the test page loads no stylesheet: the grid rules the layout needs
-  $("<style>").text(".ah-tl{position:relative;overflow:hidden}" +
+  var style = document.createElement("style");
+  style.textContent = (".ah-tl{position:relative;overflow:hidden}" +
     ".ah-tl-group{display:grid;width:100%;height:100%;min-width:0;min-height:0}" +
     ".ah-tl-vertical{grid-auto-flow:column}.ah-tl-horizontal{grid-auto-flow:row}" +
     ".ah-tl-tab-group{display:flex;flex-direction:column;min-width:0;min-height:0}" +
     ".ah-tl-tab-content{display:none}.ah-tl-tab-content-active{display:block}" +
-    ".ah-tl-drop-area{position:absolute}").appendTo("head");
+    ".ah-tl-drop-area{position:absolute}");
+  document.head.appendChild(style);
 
-  function tl(fx) {
-    var el = mount(fx, "t");
+  async function tl(fx) {
+    var el = await mount(fx, "t");
     el.style.width = "600px";
     return el;
   }
 
   function val(el) { return JSON.parse(el.getAttribute("data-ah-value")); }
 
-  T.test("tile-layout: the browser writes the value the server wrote", function (fx) {
-    var el = tl(fx);
+  T.test("tile-layout: the browser writes the value the server wrote", async function (fx) {
+    var el = await tl(fx);
     var server = el.getAttribute("data-ah-value");
     AH.invoke(el, "select", "a");
     T.eq(el.getAttribute("data-ah-value"), server);
     T.eq(JSON.stringify(AH.invoke(el, "getValue")), server);
   });
 
-  T.test("tile-layout: tab click and keys select, fire change", function (fx) {
-    var el = tl(fx);
+  T.test("tile-layout: tab click and keys select, fire change", async function (fx) {
+    var el = await tl(fx);
     var changes = events(el, "change");
-    $(el).find("[data-tab-id=b]").trigger("click");
+    q(el, "[data-tab-id=b]").click();
     T.eq(val(el).root.items[0].active, "b");
-    T.ok($(el).find("#tl-panel-b").hasClass("ah-tl-tab-content-active"));
-    T.eq($(el).find("[data-tab-id=b]").attr("aria-selected"), "true");
-    key($(el).find("[data-tab-id=b]")[0], "ArrowRight");
+    T.ok(q(el, "#tl-panel-b").classList.contains("ah-tl-tab-content-active"));
+    T.eq(q(el, "[data-tab-id=b]").getAttribute("aria-selected"), "true");
+    T.key(q(el, "[data-tab-id=b]"), "ArrowRight");
     T.eq(val(el).root.items[0].active, "a");
-    T.eq($(el).children("input[type=hidden]").val(), el.getAttribute("data-ah-value"));
+    T.eq(q(el, ":scope > input[type=hidden]").value, el.getAttribute("data-ah-value"));
     T.eq(changes.length, 2);
   });
 
-  T.test("tile-layout: closing tabs, then the empty group", function (fx) {
-    var el = tl(fx);
+  T.test("tile-layout: closing tabs, then the empty group", async function (fx) {
+    var el = await tl(fx);
     var changes = events(el, "change");
-    $(el).find("[data-tab-id=a] .ah-tl-tab-close")[0].click();
+    q(el, "[data-tab-id=a] .ah-tl-tab-close").click();
     T.eq(val(el).closed, ["a"]);
     T.eq(val(el).root.items[0].active, "b");
-    key($(el).find("[data-tab-id=b]")[0], "Delete");
+    T.key(q(el, "[data-tab-id=b]"), "Delete");
     var v = val(el);
     T.eq(v.closed, ["a", "b"]);
     // the left group went, and the columns group with a single child gave way to it
     T.eq(v.root.type, "rows");
     T.eq(v.root.items.map(function (n) { return n.id; }), ["ed", "bot"]);
-    T.eq($(el).find(".ah-tl-splitbar").length, 1);
-    key($(el).find("[data-tab-id=t]")[0], "Delete");
+    T.eq(el.querySelectorAll(".ah-tl-splitbar").length, 1);
+    T.key(q(el, "[data-tab-id=t]"), "Delete");
     T.eq(val(el).closed, ["a", "b"], "t cannot close");
     T.eq(changes.length, 2);
   });
 
-  T.test("tile-layout: splitbar keys and drag resize as fr tracks", function (fx) {
-    var el = tl(fx);
+  T.test("tile-layout: splitbar keys and drag resize as fr tracks", async function (fx) {
+    var el = await tl(fx);
     var changes = events(el, "change");
-    var bar = $(el).find(".ah-tl-splitbar-v")[0];
-    key(bar, "ArrowRight", { shiftKey: true });
+    var bar = q(el, ".ah-tl-splitbar-v");
+    T.key(bar, "ArrowRight", { shiftKey: true });
     var sizes = val(el).root.items.map(function (n) { return n.size; });
     T.ok(/fr$/.test(sizes[0]) && /fr$/.test(sizes[1]), sizes.join());
     T.ok(parseFloat(sizes[0]) > parseFloat(sizes[1]), "left grew");
@@ -102,38 +105,38 @@
     pe("pointerdown", bar, r.left + 1, r.top + 10);
     pe("pointermove", document, r.left - 99, r.top + 10);
     pe("pointerup", document, r.left - 99, r.top + 10);
-    var lr = $(el).find("[data-id=left]")[0].getBoundingClientRect();
+    var lr = q(el, "[data-id=left]").getBoundingClientRect();
     T.ok(Math.abs(lr.right - (r.left - 100)) < 3, "left ends at " + lr.right);
     T.eq(changes.length, 2);
   });
 
-  T.test("tile-layout: dragging a tab onto a tile makes a tab group", function (fx) {
-    var el = tl(fx);
-    var tab = $(el).find("[data-tab-id=b]")[0];
+  T.test("tile-layout: dragging a tab onto a tile makes a tab group", async function (fx) {
+    var el = await tl(fx);
+    var tab = q(el, "[data-tab-id=b]");
     var tr = tab.getBoundingClientRect();
-    var ed = $(el).find("[data-id=ed]")[0].getBoundingClientRect();
+    var ed = q(el, "[data-id=ed]").getBoundingClientRect();
     var cx = ed.left + ed.width / 2, cy = ed.top + ed.height / 2;
     pe("pointerdown", tab, tr.left + 3, tr.top + 3);
     pe("pointermove", document, tr.left + 20, tr.top + 20);
     pe("pointermove", document, cx, cy);
-    T.eq($(el).children(".ah-tl-drop-area").length, 1);
+    T.eq(el.querySelectorAll(":scope > .ah-tl-drop-area").length, 1);
     pe("pointerup", document, cx, cy);
-    T.eq($(el).children(".ah-tl-drop-area").length, 0);
-    T.eq($(".ah-tl-feedback, .ah-tl-overlay").length, 0);
+    T.eq(el.querySelectorAll(":scope > .ah-tl-drop-area").length, 0);
+    T.eq(qa(".ah-tl-feedback, .ah-tl-overlay").length, 0);
     var g = val(el).root.items[1].items[0];
     T.eq(g.type, "tabs");
     T.eq(g.tabs, ["ed", "b"]);
     T.eq(g.active, "b");
     // the tile's content moved into its tab panel, the tab from the template
-    T.eq($(el).find("#tl-panel-ed").text(), "editor");
-    T.eq($(el).find("#tl-tab-ed .ah-tl-tab-label").text(), "Editor");
+    T.eq(q(el, "#tl-panel-ed").textContent, "editor");
+    T.eq(q(el, "#tl-tab-ed .ah-tl-tab-label").textContent, "Editor");
   });
 
-  T.test("tile-layout: dragging a tab to an edge splits the pane", function (fx) {
-    var el = tl(fx);
-    var tab = $(el).find("[data-tab-id=t]")[0];
+  T.test("tile-layout: dragging a tab to an edge splits the pane", async function (fx) {
+    var el = await tl(fx);
+    var tab = q(el, "[data-tab-id=t]");
     var tr = tab.getBoundingClientRect();
-    var left = $(el).find("[data-id=left]")[0].getBoundingClientRect();
+    var left = q(el, "[data-id=left]").getBoundingClientRect();
     var x = left.left + left.width / 2, y = left.bottom - 5;
     pe("pointerdown", tab, tr.left + 3, tr.top + 3);
     pe("pointermove", document, tr.left + 20, tr.top + 20);
@@ -147,19 +150,36 @@
     // the old bottom group was emptied and removed; ed stands alone
     T.eq(v.items[1].type, "item");
     T.eq(v.items[1].id, "ed");
-    T.eq($(el).find("#tl-panel-t").text(), "tt");
+    T.eq(q(el, "#tl-panel-t").textContent, "tt");
   });
 
-  T.test("tile-layout: Escape cancels a drag", function (fx) {
-    var el = tl(fx);
+  T.test("tile-layout: Escape cancels a drag", async function (fx) {
+    var el = await tl(fx);
     var before = el.getAttribute("data-ah-value");
-    var tab = $(el).find("[data-tab-id=a]")[0];
+    var tab = q(el, "[data-tab-id=a]");
     var tr = tab.getBoundingClientRect();
     pe("pointerdown", tab, tr.left + 3, tr.top + 3);
     pe("pointermove", document, tr.left + 200, tr.top + 100);
-    key(document, "Escape");
+    T.key(document, "Escape");
     pe("pointerup", document, tr.left + 200, tr.top + 100);
     T.eq(el.getAttribute("data-ah-value"), before);
-    T.eq($(".ah-tl-feedback, .ah-tl-overlay").length, 0);
+    T.eq(qa(".ah-tl-feedback, .ah-tl-overlay").length, 0);
   });
-})(window.AHTest, window.jQuery, window.AH);
+
+  T.test("tile-layout: tab events carry the id; works again after re-insertion", async function (fx) {
+    var el = await tl(fx);
+    var sel = events(el, "ah:tab-select"), closed = events(el, "ah:tab-close");
+    q(el, "[data-tab-id=b]").click();
+    q(el, "[data-tab-id=a] .ah-tl-tab-close").click();
+    T.eq(sel, ["b"]);
+    T.eq(closed, ["a"]);
+    AH.invoke(el, "close", "b");
+    T.eq(closed, ["a", "b"]);
+    el.remove();
+    await new Promise(function (res) { setTimeout(res, 0); });
+    el = await tl(fx);
+    T.eq(val(el).closed, [], "a fresh layout");
+    q(el, "[data-tab-id=b]").click();
+    T.eq(val(el).root.items[0].active, "b");
+  });
+})(window.AHTest, window.AH);

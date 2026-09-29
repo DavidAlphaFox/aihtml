@@ -1,101 +1,60 @@
 /* Behaviour of the navbar component (designs/04-components.md), ported
-   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js. */
-import $ from "jquery";
+   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js.
+   Value contract: data-ah-value (the selected item's data-key), the
+   hidden input and "change" on the root. */
 import AH from "../core.js";
 import "./_lib_nav.js";
 
-var NS = AH.NS;
-var L = AH.lib.nav;
-var instanceNs = L.instanceNs;
-var setValue = L.setValue;
-var byKey = L.byKey;
+const N = AH.lib.nav;
+const setValue = N.setValue;
+const byKey = N.byKey;
 
 // ------------------------------------------------------------------
 // navbar (sigil navbar.cljs, navbar/popup.cljs)
 // ------------------------------------------------------------------
 
-function navbarMark($scope, key) {
-  $scope.find(".ah-navbar-item").each(function () {
-    var on = this.getAttribute("data-key") === String(key);
-    $(this).toggleClass("ah-navbar-item-selected", on).attr("aria-selected", String(on));
-    if ($scope.hasClass("ah-navbar")) { this.setAttribute("tabindex", on ? "0" : "-1"); }
+function navbarMark(scope, key) {
+  const bar = scope.classList.contains("ah-navbar");
+  scope.querySelectorAll(".ah-navbar-item").forEach(function (it) {
+    const on = it.getAttribute("data-key") === String(key);
+    it.classList.toggle("ah-navbar-item-selected", on);
+    it.setAttribute("aria-selected", String(on));
+    if (bar) { it.setAttribute("tabindex", on ? "0" : "-1"); }
   });
 }
 
-function navbarSelect($el, item, e) {
-  if ($(item).hasClass("ah-navbar-item-disabled") || $el.attr("data-ah-selection") === "false") {
+function navbarSelect(el, item, e) {
+  if (item.classList.contains("ah-navbar-item-disabled") || el.getAttribute("data-ah-selection") === "false") {
     if (e && !item.getAttribute("href")) { e.preventDefault(); }
     return;
   }
-  var key = item.getAttribute("data-key");
-  navbarMark($el, key);
+  const key = item.getAttribute("data-key");
+  navbarMark(el, key);
   if (!item.getAttribute("href")) {
     if (e) { e.preventDefault(); }
-    if ($el.attr("data-ah-value") !== key) { setValue($el, key, "change"); }
+    if (el.getAttribute("data-ah-value") !== key) { setValue(el, key, "change"); }
   }
 }
 
-function navbarPopupClose($el) {
-  var $p = $.data($el[0], "ah-navbar-popup");
-  if ($p) {
-    var h = $.data($p[0], "ah-float");
-    if (h) { h.stop(); }
-    $p.remove();
-    $.removeData($el[0], "ah-navbar-popup");
-    $el.find(".ah-navbar-header").attr("aria-expanded", "false");
-  }
-}
+function headers(el) { return el.querySelectorAll(".ah-navbar-header"); }
 
-function navbarPopupOpen($el) {
-  var $p = $('<div class="ah-navbar-popup" role="listbox"></div>');
-  $el.children(".ah-navbar-item").each(function () {
-    var $c = $(this).clone().removeAttr("id style").attr({ role: "option", tabindex: "0" });
-    $c.find("[id]").removeAttr("id");
-    $p.append($c);
-  });
-  $p.css({ width: $el.outerWidth() + "px", display: "block" });
-  $("body").append($p);
-  $.data($el[0], "ah-navbar-popup", $p);
-  $.data($p[0], "ah-float", AH.float($p[0], $el[0], { placement: "bottom", offset: 0, matchWidth: true }));
-  $el.find(".ah-navbar-header").attr("aria-expanded", "true");
-  $p.on("click", ".ah-navbar-item", function (e) {
-    var $orig = byKey($el, ".ah-navbar-item", "data-key", this.getAttribute("data-key"));
-    if ($orig.length) { navbarSelect($el, $orig[0], e); }
-    navbarPopupClose($el);
-  });
-  $p.on("keydown", ".ah-navbar-item", function (e) {
-    var items = $p.children(".ah-navbar-item").get();
-    var i = items.indexOf(this);
-    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-      e.preventDefault();
-      items[(i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length].focus();
-    } else if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      this.click();
-      $el.find(".ah-navbar-header")[0].focus();
-    } else if (e.key === "Escape") {
-      navbarPopupClose($el);
-      $el.find(".ah-navbar-header")[0].focus();
-    }
-  });
-  var sel = $p.children(".ah-navbar-item-selected").get(0) || $p.children(".ah-navbar-item").get(0);
-  return sel;
-}
-
-AH.define("navbar", {
-  init: function (el, $el) {
-    var ns = instanceNs(el);
-    $el.on("click" + NS, ".ah-navbar-item", function (e) { navbarSelect($el, this, e); });
-    $el.on("mouseenter" + NS, ".ah-navbar-item", function () { $(this).addClass("ah-navbar-item-hover"); });
-    $el.on("mouseleave" + NS, ".ah-navbar-item", function () { $(this).removeClass("ah-navbar-item-hover"); });
+AH.register("navbar", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    const self = this;
+    this.popup = null;
+    this.delegate("click", ".ah-navbar-item", function (e, item) { navbarSelect(el, item, e); });
+    N.hover(this, ".ah-navbar-item",
+            function (item) { item.classList.add("ah-navbar-item-hover"); },
+            function (item) { item.classList.remove("ah-navbar-item-hover"); });
     // tabs pattern: arrows move focus, Enter / Space select
-    $el.on("keydown" + NS, ".ah-navbar-item", function (e) {
-      var items = $el.children(".ah-navbar-item").filter(function () {
-        return !$(this).hasClass("ah-navbar-item-disabled");
-      }).get();
-      var i = items.indexOf(this);
-      var n = items.length;
-      var to = null;
+    this.delegate("keydown", ".ah-navbar-item", function (e, item) {
+      const items = Array.from(el.querySelectorAll(":scope > .ah-navbar-item")).filter(function (i) {
+        return !i.classList.contains("ah-navbar-item-disabled");
+      });
+      const i = items.indexOf(item);
+      const n = items.length;
+      let to = null;
       switch (e.key) {
         case "ArrowRight": case "ArrowDown": to = (i + 1) % n; break;
         case "ArrowLeft": case "ArrowUp": to = (i - 1 + n) % n; break;
@@ -103,59 +62,116 @@ AH.define("navbar", {
         case "End": to = n - 1; break;
         case "Enter": case " ":
           e.preventDefault();
-          this.click();
+          item.click();
           return;
         default: return;
       }
       e.preventDefault();
-      $(items).attr("tabindex", "-1");
+      items.forEach(function (x) { x.setAttribute("tabindex", "-1"); });
       items[to].setAttribute("tabindex", "0");
       items[to].focus();
     });
-    var toggle = function () {
-      if ($.data(el, "ah-navbar-popup")) { navbarPopupClose($el); return null; }
-      return navbarPopupOpen($el);
+    const toggle = function () {
+      if (self.popup) { self.popupClose(); return null; }
+      return self.popupOpen();
     };
-    $el.on("click" + NS, ".ah-navbar-header", function () { toggle(); });
-    $el.on("keydown" + NS, ".ah-navbar-header", function (e) {
+    this.delegate("click", ".ah-navbar-header", function () { toggle(); });
+    this.delegate("keydown", ".ah-navbar-header", function (e) {
       if (e.key === "Enter" || e.key === " " || e.key === "ArrowDown") {
         e.preventDefault();
-        var first = $.data(el, "ah-navbar-popup") && e.key === "ArrowDown" ? null : toggle();
+        const first = self.popup && e.key === "ArrowDown" ? null : toggle();
         if (first) { first.focus(); }
       } else if (e.key === "Escape") {
-        navbarPopupClose($el);
+        self.popupClose();
       }
     });
-    $(document).on("mousedown" + ns, function (e) {
-      var $p = $.data(el, "ah-navbar-popup");
-      if ($p && !$.contains($p[0], e.target) && !$(e.target).closest(".ah-navbar-header").length) {
-        navbarPopupClose($el);
+    this.listen(document, "mousedown", function (e) {
+      const p = self.popup;
+      const t = e.target;
+      if (p && !p.contains(t) && !(t.closest && t.closest(".ah-navbar-header"))) {
+        self.popupClose();
       }
     });
-    var minW = parseInt(el.getAttribute("data-ah-minimize-width"), 10);
+    const minW = parseInt(el.getAttribute("data-ah-minimize-width"), 10);
     if (minW && el.getAttribute("data-ah-minimized") !== "static") {
-      var check = function () {
-        var small = window.innerWidth <= minW;
-        $el.toggleClass("ah-navbar-minimized", small);
-        if (!small) { navbarPopupClose($el); }
+      const check = function () {
+        const small = window.innerWidth <= minW;
+        el.classList.toggle("ah-navbar-minimized", small);
+        if (!small) { self.popupClose(); }
       };
-      $(window).on("resize" + ns, check);
+      this.listen(window, "resize", check);
       check();
     }
-  },
-  destroy: function (el, $el) {
-    var ns = instanceNs(el);
-    $(document).off(ns);
-    $(window).off(ns);
-    navbarPopupClose($el);
-  },
-  methods: {
-    setValue: function (el, $el, key) { navbarMark($el, key); setValue($el, key); },
-    select: function (el, $el, key) {
-      var $i = byKey($el, ".ah-navbar-item", "data-key", key);
-      if ($i.length) { navbarSelect($el, $i[0], null); }
-    },
-    minimize: function (el, $el) { $el.addClass("ah-navbar-minimized"); },
-    restore: function (el, $el) { $el.removeClass("ah-navbar-minimized"); navbarPopupClose($el); }
   }
+
+  teardown() { this.popupClose(); }
+
+  popupClose() {
+    const p = this.popup;
+    if (p) {
+      if (this.popupFloat) { this.popupFloat.stop(); this.popupFloat = null; }
+      p.remove();
+      this.popup = null;
+      headers(this.element).forEach(function (h) { h.setAttribute("aria-expanded", "false"); });
+    }
+  }
+
+  popupOpen() {
+    const el = this.element;
+    const self = this;
+    const p = document.createElement("div");
+    p.className = "ah-navbar-popup";
+    p.setAttribute("role", "listbox");
+    el.querySelectorAll(":scope > .ah-navbar-item").forEach(function (it) {
+      const c = it.cloneNode(true);
+      c.removeAttribute("id");
+      c.removeAttribute("style");
+      c.setAttribute("role", "option");
+      c.setAttribute("tabindex", "0");
+      c.querySelectorAll("[id]").forEach(function (n) { n.removeAttribute("id"); });
+      p.appendChild(c);
+    });
+    p.style.width = el.offsetWidth + "px";
+    p.style.display = "block";
+    document.body.appendChild(p);
+    this.popup = p;
+    this.popupFloat = AH.float(p, el, { placement: "bottom", offset: 0, matchWidth: true });
+    headers(el).forEach(function (h) { h.setAttribute("aria-expanded", "true"); });
+    // the popup is removed on close, its listeners too
+    p.addEventListener("click", function (e) {
+      const item = e.target.closest(".ah-navbar-item");
+      if (!item || !p.contains(item)) { return; }
+      const orig = byKey(el, ".ah-navbar-item", "data-key", item.getAttribute("data-key"))[0];
+      if (orig) { navbarSelect(el, orig, e); }
+      self.popupClose();
+    });
+    p.addEventListener("keydown", function (e) {
+      const item = e.target.closest(".ah-navbar-item");
+      if (!item || !p.contains(item)) { return; }
+      const items = Array.from(p.querySelectorAll(":scope > .ah-navbar-item"));
+      const i = items.indexOf(item);
+      const head = el.querySelector(".ah-navbar-header");
+      if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+        e.preventDefault();
+        items[(i + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length].focus();
+      } else if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        item.click();
+        if (head) { head.focus(); }
+      } else if (e.key === "Escape") {
+        self.popupClose();
+        if (head) { head.focus(); }
+      }
+    });
+    return p.querySelector(":scope > .ah-navbar-item-selected") || p.querySelector(":scope > .ah-navbar-item");
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke); they fire no change
+  setValue(key) { navbarMark(this.element, key); setValue(this.element, key); }
+  select(key) {
+    const i = byKey(this.element, ".ah-navbar-item", "data-key", key)[0];
+    if (i) { navbarSelect(this.element, i, null); }
+  }
+  minimize() { this.element.classList.add("ah-navbar-minimized"); }
+  restore() { this.element.classList.remove("ah-navbar-minimized"); this.popupClose(); }
 });

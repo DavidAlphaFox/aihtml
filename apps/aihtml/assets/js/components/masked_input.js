@@ -5,18 +5,19 @@
  *                    or pasted; input on each edit, change on blur
  *
  * The root keeps data-ah-value and its hidden input in step and fires
- * "input" / "change".
+ * "input" / "change" (native events, detail: the value).
  *
- * The server renders the whole first state, so init only binds events.
+ * The server renders the whole first state, so setup only binds events.
  */
-import $ from "jquery";
 import AH from "../core.js";
 
-var NS = AH.NS;
+function emit(el, type, detail) {
+  el.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true, detail: detail }));
+}
 
-function setValue($el, v) {
-  $el.attr("data-ah-value", v);
-  $el.children("input[type=hidden]").val(v);
+function setValue(el, v) {
+  el.setAttribute("data-ah-value", v);
+  el.querySelectorAll(":scope > input[type=hidden]").forEach(function (h) { h.value = v; });
 }
 
 // ------------------------------------------------------------------
@@ -25,6 +26,8 @@ function setValue($el, v) {
 //
 // The mask is a list of positions {re, ch} (editable, ch null when
 // empty) or {lit} (a literal), parsed as aihtml_masked_input:parse_mask.
+// st: {el, input, label, prompt, literals, items, focusValue}, kept on
+// the controller.
 
 var MASK_RE = { "9": "\\d", "0": "\\d", "#": "[\\d|+|-]", "A": "\\w", "a": "\\w",
                 "L": "[a-zA-Z]", "l": "[a-zA-Z]", "c": ".", "C": "." };
@@ -60,8 +63,6 @@ function maskFill(items, text) {
   });
   return items;
 }
-
-function maskState(el) { return $.data(el, "ah-mask"); }
 
 function maskDisplay(st) {
   return st.items.map(function (it) {
@@ -120,27 +121,27 @@ function clearRange(st, a, b) {
 // What the field shows: the mask, or nothing for an empty field with a
 // floating label (the label stands there) while it has no focus.
 function maskText(st) {
-  return st.$label.length && document.activeElement !== st.input && maskRaw(st) === ""
+  return st.label && document.activeElement !== st.input && maskRaw(st) === ""
     ? "" : maskDisplay(st);
 }
 
 // Show the items; fire input when the value changed.
-function maskShow(el, $el, cursor, fire) {
-  var st = maskState(el), old = $el.attr("data-ah-value"), v = maskValue(st);
+function maskShow(st, cursor, fire) {
+  var el = st.el, old = el.getAttribute("data-ah-value"), v = maskValue(st);
   st.input.value = maskText(st);
-  setValue($el, v);
+  setValue(el, v);
   if (cursor != null) { setCursor(st, cursor); }
-  if (st.$label.length && document.activeElement !== st.input) {
-    st.$label.toggleClass("ah-masked-input-label-float", maskRaw(st) !== "");
+  if (st.label && document.activeElement !== st.input) {
+    st.label.classList.toggle("ah-masked-input-label-float", maskRaw(st) !== "");
   }
-  if (fire && v !== old) { $el.trigger("input", [v]); }
+  if (fire && v !== old) { emit(el, "input", v); }
 }
 
 // Type one character (sigil's do-insert-char!: into the next editable
 // position if it fits, else jump past the literal it names) or paste a
 // text (sigil's do-paste!: characters that do not fit are skipped).
-function maskInsert(el, $el, text) {
-  var st = maskState(el), sel = selection(st), chars = Array.from(text), pos = sel.start, i, j;
+function maskInsert(st, text) {
+  var sel = selection(st), chars = Array.from(text), pos = sel.start, i, j;
   var cleared = sel.end > sel.start;
   if (cleared) { clearRange(st, sel.start, sel.end); }
   if (chars.length === 1) {
@@ -148,16 +149,16 @@ function maskInsert(el, $el, text) {
     if (i >= 0 && st.items[i].re.test(chars[0])) {
       st.items[i].ch = chars[0];
       j = nextEditable(st, i + 1);
-      maskShow(el, $el, j < 0 ? st.items.length : j, true);
+      maskShow(st, j < 0 ? st.items.length : j, true);
       return;
     }
     for (j = pos; j < st.items.length; j++) {
       if (st.items[j].lit === chars[0]) {
-        if (cleared) { maskShow(el, $el, j + 1, true); } else { setCursor(st, j + 1); }
+        if (cleared) { maskShow(st, j + 1, true); } else { setCursor(st, j + 1); }
         return;
       }
     }
-    if (cleared) { maskShow(el, $el, sel.start, true); }
+    if (cleared) { maskShow(st, sel.start, true); }
     return;
   }
   var k = 0;
@@ -167,43 +168,45 @@ function maskInsert(el, $el, text) {
     k++;
   }
   i = firstEmpty(st);
-  maskShow(el, $el, i < 0 ? st.items.length : i, true);
+  maskShow(st, i < 0 ? st.items.length : i, true);
 }
 
-function maskDelete(el, $el, back) {
-  var st = maskState(el), sel = selection(st), i;
+function maskDelete(st, back) {
+  var sel = selection(st), i;
   if (sel.end > sel.start) {
     clearRange(st, sel.start, sel.end);
-    maskShow(el, $el, sel.start, true);
+    maskShow(st, sel.start, true);
   } else if (back) {
     i = prevEditable(st, sel.start);
-    if (i >= 0) { st.items[i].ch = null; maskShow(el, $el, i, true); }
+    if (i >= 0) { st.items[i].ch = null; maskShow(st, i, true); }
   } else {
     i = nextEditable(st, sel.start);
-    if (i >= 0) { st.items[i].ch = null; maskShow(el, $el, sel.start, true); }
+    if (i >= 0) { st.items[i].ch = null; maskShow(st, sel.start, true); }
   }
 }
 
 function maskBlocked(st) { return st.input.disabled || st.input.readOnly; }
 
-AH.define("masked-input", {
-  init: function (el, $el) {
-    var $in = $el.children("input.ah-masked-input");
-    var st = {
-      input: $in[0],
-      $label: $el.children(".ah-masked-input-label"),
+AH.register("masked-input", class extends AH.Controller {
+  setup() {
+    var el = this.element;
+    var inp = el.querySelector(":scope > input.ah-masked-input");
+    var st = this.st = {
+      el: el,
+      input: inp,
+      label: el.querySelector(":scope > .ah-masked-input-label"),
       prompt: el.getAttribute("data-ah-prompt") || "_",
       literals: el.hasAttribute("data-ah-literals"),
       items: maskParse(el.getAttribute("data-ah-mask")),
       focusValue: null
     };
-    $.data(el, "ah-mask", st);
+    if (!inp) { return; }
     // the server filled the mask: read the positions back
-    Array.from($in.val()).forEach(function (c, i) {
+    Array.from(inp.value).forEach(function (c, i) {
       if (editable(st, i) && c !== st.prompt) { st.items[i].ch = c; }
     });
 
-    $in.on("keydown" + NS, function (e) {
+    this.listen(inp, "keydown", (e) => {
       var k = e.key || "";
       if (e.keyCode === 229) { return; }                       // IME: beforeinput
       if (e.ctrlKey || e.metaKey || e.altKey) {
@@ -213,7 +216,7 @@ AH.define("masked-input", {
           setTimeout(function () {
             if (st.input.value === maskDisplay(st) && sel.end > sel.start) {
               clearRange(st, sel.start, sel.end);
-              maskShow(el, $el, sel.start, true);
+              maskShow(st, sel.start, true);
             }
           }, 10);
         }
@@ -221,40 +224,38 @@ AH.define("masked-input", {
       }
       if (k === "Backspace" || k === "Delete") {
         e.preventDefault();
-        if (!maskBlocked(st)) { maskDelete(el, $el, k === "Backspace"); }
+        if (!maskBlocked(st)) { maskDelete(st, k === "Backspace"); }
       } else if (k.length > 0 && Array.from(k).length === 1) {
         e.preventDefault();
-        if (!maskBlocked(st)) { maskInsert(el, $el, k); }
+        if (!maskBlocked(st)) { maskInsert(st, k); }
       }
     });
-    $in.on("beforeinput" + NS, function (je) {
-      var e = je.originalEvent;
-      if (!e) { return; }
+    this.listen(inp, "beforeinput", (e) => {
       switch (e.inputType) {
         case "insertText": case "insertReplacementText": case "insertCompositionText":
           e.preventDefault();
-          if (e.data && !maskBlocked(st)) { maskInsert(el, $el, e.data); }
+          if (e.data && !maskBlocked(st)) { maskInsert(st, e.data); }
           break;
         case "insertFromPaste": case "insertFromDrop":
           e.preventDefault();                              // the paste handler
           break;
         case "deleteContentBackward": case "deleteByCut":
           e.preventDefault();
-          if (!maskBlocked(st)) { maskDelete(el, $el, true); }
+          if (!maskBlocked(st)) { maskDelete(st, true); }
           break;
         case "deleteContentForward":
           e.preventDefault();
-          if (!maskBlocked(st)) { maskDelete(el, $el, false); }
+          if (!maskBlocked(st)) { maskDelete(st, false); }
           break;
       }
     });
-    $in.on("paste" + NS, function (je) {
-      var e = je.originalEvent, text = e && e.clipboardData && e.clipboardData.getData("text/plain");
-      je.preventDefault();
-      if (text && !maskBlocked(st)) { maskInsert(el, $el, text); }
+    this.listen(inp, "paste", (e) => {
+      var text = e.clipboardData && e.clipboardData.getData("text/plain");
+      e.preventDefault();
+      if (text && !maskBlocked(st)) { maskInsert(st, text); }
     });
     // safety net: whatever got through, show the items again
-    $in.on("input" + NS, function () {
+    this.listen(inp, "input", () => {
       var s = selection(st);
       if (st.input.value !== maskText(st)) {
         st.input.value = maskText(st);
@@ -262,7 +263,7 @@ AH.define("masked-input", {
       }
     });
     // sigil's snap-to-editable: a click lands on an editable position
-    $in.on("mouseup" + NS, function () {
+    this.listen(inp, "mouseup", () => {
       if (maskBlocked(st)) { return; }
       var s = selection(st), n = s.start, e = firstEmpty(st);
       if (s.start !== s.end) { return; }
@@ -273,50 +274,50 @@ AH.define("masked-input", {
       if (n < 0) { n = prevEditable(st, s.start); }
       setCursor(st, n < 0 ? 0 : n);
     });
-    $in.on("focus" + NS, function () {
-      $el.addClass("ah-masked-input-focused");
-      st.$label.addClass("ah-masked-input-label-float");
+    this.listen(inp, "focus", () => {
+      el.classList.add("ah-masked-input-focused");
+      if (st.label) { st.label.classList.add("ah-masked-input-label-float"); }
       st.input.value = maskDisplay(st);
-      st.focusValue = $el.attr("data-ah-value");
+      st.focusValue = el.getAttribute("data-ah-value");
       setTimeout(function () {
         if (document.activeElement !== st.input) { return; }
         var e = firstEmpty(st);
         if (e >= 0) { setCursor(st, e); }
       }, 0);
     });
-    $in.on("blur" + NS, function () {
-      $el.removeClass("ah-masked-input-focused");
-      st.$label.toggleClass("ah-masked-input-label-float", maskRaw(st) !== "");
+    this.listen(inp, "blur", () => {
+      el.classList.remove("ah-masked-input-focused");
+      if (st.label) { st.label.classList.toggle("ah-masked-input-label-float", maskRaw(st) !== ""); }
       st.input.value = maskText(st);
-      var v = $el.attr("data-ah-value");
-      if (st.focusValue !== null && v !== st.focusValue) { $el.trigger("change", [v]); }
+      var v = el.getAttribute("data-ah-value");
+      if (st.focusValue !== null && v !== st.focusValue) { this.fire("change", v); }
       st.focusValue = null;
     });
-  },
-  methods: {
-    setValue: function (el, $el, v) {
-      var st = maskState(el);
-      maskFill(st.items, v);
-      maskShow(el, $el, null, false);
-      if (st.focusValue !== null) { st.focusValue = $el.attr("data-ah-value"); }
-    },
-    getValue: function (el, $el) { return $el.attr("data-ah-value"); },
-    getMaskedValue: function (el) { return maskDisplay(maskState(el)); },
-    isComplete: function (el) {
-      return maskState(el).items.every(function (it) { return it.lit != null || it.ch != null; });
-    },
-    clear: function (el, $el) {
-      var st = maskState(el), old = $el.attr("data-ah-value");
-      maskFill(st.items, "");
-      maskShow(el, $el, null, false);
-      if (old !== "") { $el.trigger("change", [""]); }
-    },
-    setMask: function (el, $el, mask) {
-      var st = maskState(el), raw = maskRaw(st);
-      st.items = maskFill(maskParse(mask), raw);
-      $el.attr("data-ah-mask", mask);
-      maskShow(el, $el, null, false);
-    },
-    focus: function (el) { maskState(el).input.focus(); }
   }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  setValue(v) {
+    var st = this.st;
+    maskFill(st.items, v);
+    maskShow(st, null, false);
+    if (st.focusValue !== null) { st.focusValue = this.element.getAttribute("data-ah-value"); }
+  }
+  getValue() { return this.element.getAttribute("data-ah-value"); }
+  getMaskedValue() { return maskDisplay(this.st); }
+  isComplete() {
+    return this.st.items.every(function (it) { return it.lit != null || it.ch != null; });
+  }
+  clear() {
+    var st = this.st, old = this.element.getAttribute("data-ah-value");
+    maskFill(st.items, "");
+    maskShow(st, null, false);
+    if (old !== "") { this.fire("change", ""); }
+  }
+  setMask(mask) {
+    var st = this.st, raw = maskRaw(st);
+    st.items = maskFill(maskParse(mask), raw);
+    this.element.setAttribute("data-ah-mask", mask);
+    maskShow(st, null, false);
+  }
+  focus() { this.st.input.focus(); }
 });

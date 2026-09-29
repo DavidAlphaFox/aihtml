@@ -3,14 +3,20 @@
  * `chart' behaviour of _lib_chart.js draws the graph): node selection
  * (ah:select, data-ah-value), detail card, toolbar (fit, refresh ->
  * ah:refresh), keyboard (arrows, Home/End, Escape) and a live region
- * naming the node.
+ * naming the node. The visually hidden table of nodes and links beside
+ * the canvas (aihtml_lib_chart:data_text/2) follows the graph's data:
+ * the server's new table when setOption brings one (chart_update/3),
+ * else rebuilt from the canvas's option (ah:chart-data).
+ *
+ * Events (native CustomEvents on the root, bubbling):
+ *   ah:select      detail: {id} (null when cleared), user selections only
+ *   ah:node-click  detail: {id}
+ *   ah:refresh     no detail
  */
-import $ from "jquery";
 import AH from "../core.js";
+import { updateText } from "./_lib_chart.js";
 
-var NS = AH.NS;
-
-function canvas(el) { return $(el).children(".ah-relation-graph__canvas")[0]; }
+function canvas(el) { return el.querySelector(":scope > .ah-relation-graph__canvas"); }
 
 // The nodes in data order: [{id, name, index}]; tree nodes depth first.
 function nodes(el) {
@@ -54,12 +60,15 @@ function highlight(el) {
 }
 
 function showDetail(el, id) {
-  var $card = $(el).children(".ah-relation-graph__detail");
-  var $items = $card.find(".ah-relation-graph__detail-item");
-  $items.attr("hidden", "hidden");
-  var $hit = $items.filter(function () { return this.getAttribute("data-node") === id; });
-  $hit.removeAttr("hidden");
-  $card.attr("data-visible", id && $hit.length ? "true" : "false");
+  var card = el.querySelector(":scope > .ah-relation-graph__detail");
+  if (!card) { return; }
+  var hits = 0;
+  card.querySelectorAll(".ah-relation-graph__detail-item").forEach(function (item) {
+    var hit = item.getAttribute("data-node") === id;
+    if (hit) { hits++; item.removeAttribute("hidden"); }
+    else { item.setAttribute("hidden", "hidden"); }
+  });
+  card.setAttribute("data-visible", id && hits ? "true" : "false");
 }
 
 function select(el, id, user) {
@@ -67,10 +76,15 @@ function select(el, id, user) {
   var changed = el.getAttribute("data-ah-value") !== id;
   el.setAttribute("data-ah-value", id);
   var n = id ? findNode(el, id) : null;
-  $(el).children(".ah-relation-graph__live").text(n ? n.name : "");
+  el.querySelectorAll(":scope > .ah-relation-graph__live").forEach(function (live) {
+    live.textContent = n ? n.name : "";
+  });
   showDetail(el, id);
   highlight(el);
-  if (user && changed) { $(el).trigger("ah:select", [{ id: id || null }]); }
+  if (user && changed) {
+    el.dispatchEvent(new CustomEvent("ah:select", { bubbles: true, cancelable: true,
+                                                    detail: { id: id || null } }));
+  }
 }
 
 // Pan so that the node is in the middle (graph layouts only).
@@ -87,38 +101,46 @@ function focusNode(el, id) {
                          dx: chart.getWidth() / 2 - p[0], dy: chart.getHeight() / 2 - p[1] });
 }
 
-AH.define("relation-graph", {
-  init: function (el, $el) {
+AH.register("relation-graph", class extends AH.Controller {
+  setup() {
+    var el = this.element, self = this;
     var c = canvas(el);
     var focused = false;
-    $(c).on("ah:chart-click" + NS, function (e, info) {
+    var label = el.getAttribute("aria-label");
+    this.listen(c, "ah:chart-click", function (e) {
+      var info = e.detail;
       if (!info || info.componentType !== "series" || info.dataType === "edge") { return; }
       var d = info.data || {};
       var id = d.id !== undefined ? String(d.id) : info.name;
       if (!id || id === "__root__") { return; }
-      $el.trigger("ah:node-click", [{ id: id }]);
+      self.fire("ah:node-click", { id: id });
       select(el, id, true);
     });
-    $(c).on("ah:chart-ready" + NS, function () {
+    this.listen(c, "ah:chart-ready", function () {
       highlight(el);
       var f = el.getAttribute("data-ah-focus");
       if (f && !focused) {
         focused = true;
         // a force layout settles for a while first
-        setTimeout(function () { focusNode(el, f); },
+        setTimeout(function () { if (self.signal && !self.signal.aborted) { focusNode(el, f); } },
                    el.getAttribute("data-layout") === "force" ? 800 : 50);
       }
     });
-    $el.on("click" + NS, ".ah-relation-graph__tool", function () {
-      var act = this.getAttribute("data-act");
-      AH.invoke(c, "resetView");
-      if (act === "refresh") { $el.trigger("ah:refresh"); }
+    this.listen(c, "ah:chart-data", function (e) {
+      var html = e.detail && e.detail.text;
+      if (typeof html === "string") { updateText(el, c, null, html, label); }
+      else { updateText(el, c, AH.invoke(c, "getOption"), undefined, label); }
     });
-    $el.on("click" + NS, ".ah-relation-graph__detail-close", function () {
+    this.delegate("click", ".ah-relation-graph__tool", function (e, tool) {
+      var act = tool.getAttribute("data-act");
+      AH.invoke(c, "resetView");
+      if (act === "refresh") { self.fire("ah:refresh"); }
+    });
+    this.delegate("click", ".ah-relation-graph__detail-close", function () {
       select(el, null, true);
       el.focus();
     });
-    $el.on("keydown" + NS, function (e) {
+    this.listen(el, "keydown", function (e) {
       if (e.target !== el) { return; }
       var list = nodes(el);
       if (!list.length) { return; }
@@ -141,15 +163,15 @@ AH.define("relation-graph", {
       e.preventDefault();
       select(el, next.id, true);
     });
-  },
-  methods: {
-    select: function (el, $el, id) { select(el, id, false); },
-    getSelected: function (el) { return el.getAttribute("data-ah-value") || null; },
-    focus: function (el, $el, id) { focusNode(el, id); },
-    fit: function (el) { AH.invoke(canvas(el), "resetView"); },
-    setOption: function (el, $el, option, notMerge) {
-      AH.invoke(canvas(el), "setOption", option, notMerge);
-      highlight(el);
-    }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  select(id) { select(this.element, id, false); }
+  getSelected() { return this.element.getAttribute("data-ah-value") || null; }
+  focus(id) { focusNode(this.element, id); }
+  fit() { AH.invoke(canvas(this.element), "resetView"); }
+  setOption(option, notMerge, html) {
+    AH.invoke(canvas(this.element), "setOption", option, notMerge, html);
+    highlight(this.element);
   }
 });

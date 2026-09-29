@@ -1,77 +1,92 @@
-/* Behaviour of expander (value "true" / "false"; fires change). */
-import $ from "jquery";
+/* Behaviour of expander (value "true" / "false"; fires change).
+ * Events on the root: ah:expanding / ah:collapsing when a change starts,
+ * ah:expanded / ah:collapsed when its animation ends (no detail). */
 import AH from "../core.js";
 import "./_lib_layout.js";
 
-var NS = AH.NS;
-var L = AH.lib.layout;
+const L = AH.lib.layout;
 
-function expIsOpen($el) {
-  return $el.children(".ah-expander-header").attr("aria-expanded") === "true";
+function fire(el, type) {
+  el.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true }));
 }
 
-function expSet(el, $el, open, user) {
-  if (expIsOpen($el) === open) {
+function header(el) { return el.querySelector(":scope > .ah-expander-header"); }
+
+function expIsOpen(el) {
+  const h = header(el);
+  return !!h && h.getAttribute("aria-expanded") === "true";
+}
+
+function expSet(el, open, user) {
+  if (expIsOpen(el) === open) {
     return;
   }
-  var $h = $el.children(".ah-expander-header");
-  var $b = $el.children(".ah-expander-body");
-  var anim = el.getAttribute("data-animation") || "slide";
-  var dur = parseInt(el.getAttribute("data-duration") || "250", 10);
-  $el.trigger(open ? "ah:expanding" : "ah:collapsing");
-  $h.toggleClass("ah-expander-header-expanded", open).attr("aria-expanded", String(open));
-  $h.children(".ah-expander-arrow").toggleClass("ah-expander-arrow-expanded", open);
-  L.setValue(el, $el, String(open));
-  var done = function () {
-    $el.trigger(open ? "ah:expanded" : "ah:collapsed");
+  const h = header(el);
+  const b = el.querySelector(":scope > .ah-expander-body");
+  const anim = el.getAttribute("data-animation") || "slide";
+  const dur = parseInt(el.getAttribute("data-duration") || "250", 10);
+  fire(el, open ? "ah:expanding" : "ah:collapsing");
+  h.classList.toggle("ah-expander-header-expanded", open);
+  h.setAttribute("aria-expanded", String(open));
+  h.querySelectorAll(":scope > .ah-expander-arrow").forEach(function (a) {
+    a.classList.toggle("ah-expander-arrow-expanded", open);
+  });
+  L.setValue(el, String(open));
+  const done = function () {
+    fire(el, open ? "ah:expanded" : "ah:collapsed");
   };
-  $b.stop(true, true);
-  if (anim === "slide") {
-    $b[open ? "slideDown" : "slideUp"](dur, done);
-  } else if (anim === "fade") {
-    $b[open ? "fadeIn" : "fadeOut"](dur, done);
+  if (b) {
+    L.stop(b);
+    if (anim === "slide") {
+      L.slide(b, open, dur, done);
+    } else if (anim === "fade") {
+      L.fade(b, open, dur, done);
+    } else {
+      if (open) { L.show(b); } else { L.hide(b); }
+      done();
+    }
   } else {
-    $b[open ? "show" : "hide"]();
     done();
   }
   if (user) {
-    $el.trigger("change");
+    fire(el, "change");
   }
   // Accordion: opening one closes the others sharing its name.
-  var group = el.getAttribute("data-accordion");
+  const group = el.getAttribute("data-accordion");
   if (open && group) {
-    $("[data-ah=expander]").each(function () {
-      if (this !== el && this.getAttribute("data-accordion") === group) {
-        expSet(this, $(this), false, user);
+    document.querySelectorAll("[data-ah=expander]").forEach(function (other) {
+      if (other !== el && other.getAttribute("data-accordion") === group) {
+        expSet(other, false, user);
       }
     });
   }
 }
 
-AH.define("expander", {
-  init: function (el, $el) {
-    var mode = el.getAttribute("data-toggle-mode") || "click";
+AH.register("expander", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    const mode = el.getAttribute("data-toggle-mode") || "click";
     if (mode === "none") {
       return;
     }
-    var fromUser = function (e) {
-      if (this.parentNode !== el || $el.hasClass("ah-expander-disabled")) {
+    const fromUser = function (e, h) {
+      if (h.parentNode !== el || el.classList.contains("ah-expander-disabled")) {
         return;
       }
       e.preventDefault();
-      expSet(el, $el, !expIsOpen($el), true);
+      expSet(el, !expIsOpen(el), true);
     };
-    $el.on(mode + NS, ".ah-expander-header", fromUser);
-    $el.on("keydown" + NS, ".ah-expander-header", function (e) {
-      if (e.target === this && (L.key(e) === "Enter" || L.key(e) === " ")) {
-        fromUser.call(this, e);
+    this.delegate(mode, ".ah-expander-header", fromUser);
+    this.delegate("keydown", ".ah-expander-header", function (e, h) {
+      if (e.target === h && (L.key(e) === "Enter" || L.key(e) === " ")) {
+        fromUser(e, h);
       }
     });
-  },
-  methods: {
-    open: function (el, $el) { expSet(el, $el, true, false); },
-    close: function (el, $el) { expSet(el, $el, false, false); },
-    toggle: function (el, $el) { expSet(el, $el, !expIsOpen($el), false); },
-    isOpen: function (el, $el) { return expIsOpen($el); }
   }
+
+  // methods (aihtml_action:call/4, AH.invoke); they fire no change
+  open() { expSet(this.element, true, false); }
+  close() { expSet(this.element, false, false); }
+  toggle() { expSet(this.element, !expIsOpen(this.element), false); }
+  isOpen() { return expIsOpen(this.element); }
 });

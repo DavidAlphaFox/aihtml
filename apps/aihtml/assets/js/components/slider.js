@@ -1,16 +1,8 @@
 /* Behaviour of slider (designs/04-components.md). Ported from sigil
-   (sigil.components.form.slider). */
-import $ from "jquery";
+   (sigil.components.form.slider). The root keeps data-ah-value and the
+   hidden input in step and fires "input" / "change" (native events, no
+   detail). */
 import AH from "../core.js";
-
-var NS = AH.NS;
-
-// Value-bearing contract: data-ah-value + hidden input (change/input
-// are fired by the caller).
-function writeValue($el, value) {
-  $el.attr("data-ah-value", value);
-  $el.children("input[type=hidden]").val(value);
-}
 
 // ------------------------------------------------------------------
 // slider
@@ -24,36 +16,6 @@ function writeValue($el, value) {
 
 var THUMB = 18;
 
-function slConf(el, $el) {
-  var c = $.data(el, "ah-slider");
-  if (!c) {
-    var step = parseFloat($el.attr("data-ah-step")) || 1;
-    c = {
-      min: parseFloat($el.attr("data-ah-min")) || 0,
-      max: parseFloat($el.attr("data-ah-max")),
-      step: step,
-      decimals: (String(step).split(".")[1] || "").length,
-      minRange: parseFloat($el.attr("data-ah-min-range")) || 0,
-      vertical: $el.hasClass("ah-slider-vertical"),
-      range: $el.hasClass("ah-slider-range-slider")
-    };
-    if (isNaN(c.max)) { c.max = 100; }
-    $.data(el, "ah-slider", c);
-  }
-  return c;
-}
-
-function slValues($el) {
-  return String($el.attr("data-ah-value") || "").split(",").map(parseFloat);
-}
-
-function slSnap(c, v) {
-  var n = Math.round((v - c.min) / c.step);
-  var snapped = c.min + n * c.step;
-  snapped = Math.max(c.min, Math.min(c.max, snapped));
-  return parseFloat(snapped.toFixed(c.decimals));
-}
-
 function frac(r) {
   return "calc((100% - " + THUMB + "px) * " + (+r.toFixed(4)) + ")";
 }
@@ -62,155 +24,71 @@ function fracCenter(r) {
   return "calc((100% - " + THUMB + "px) * " + (+r.toFixed(4)) + " + " + THUMB / 2 + "px)";
 }
 
-function slRender(el, $el, vals) {
-  var c = slConf(el, $el);
-  var ratio = function (v) { return (v - c.min) / (c.max - c.min); };
-  var $range = $el.find(".ah-slider-range");
-  var $end = $el.find(".ah-slider-thumb-end");
-  var $start = $el.find(".ah-slider-thumb-start");
-  var pos = function ($t, v) {
-    if (c.vertical) { $t.css("top", frac(1 - ratio(v))); } else { $t.css("left", frac(ratio(v))); }
-  };
-  if (c.range) {
-    pos($start, vals[0]);
-    pos($end, vals[1]);
-    if (c.vertical) {
-      $range.css({ bottom: fracCenter(ratio(vals[0])), height: frac(ratio(vals[1]) - ratio(vals[0])) });
-    } else {
-      $range.css({ left: fracCenter(ratio(vals[0])), width: frac(ratio(vals[1]) - ratio(vals[0])) });
-    }
-    $start.attr({ "aria-valuenow": vals[0], "aria-valuetext": vals[0] });
-    $end.attr({ "aria-valuenow": vals[1], "aria-valuetext": vals[1] });
-  } else {
-    pos($end, vals[0]);
-    if (c.vertical) { $range.css({ bottom: 0, height: fracCenter(ratio(vals[0])) }); }
-    else { $range.css({ left: 0, width: fracCenter(ratio(vals[0])) }); }
-    $el.attr({ "aria-valuenow": vals[0], "aria-valuetext": vals[0] });
-  }
-  writeValue($el, vals.join(","));
-  slTooltip(el, $el);
+function css(node, props) {
+  if (node) { Object.assign(node.style, props); }
 }
 
-function slTooltip(el, $el) {
-  var $tip = $el.children(".ah-slider-tooltip");
-  var s = $.data(el, "ah-slider-state") || {};
-  if (!$tip.length) { return; }
-  var thumb = s.thumb === "start" ? $el.find(".ah-slider-thumb-start")[0]
-    : $el.find(".ah-slider-thumb-end")[0];
-  var vals = slValues($el);
-  $tip.text(s.thumb === "start" ? vals[0] : vals[vals.length - 1]);
-  var root = el.getBoundingClientRect();
-  var r = thumb.getBoundingClientRect();
-  if (slConf(el, $el).vertical) {
-    $tip.css("top", (r.top + r.height / 2 - root.top) + "px");
-  } else {
-    $tip.css("left", (r.left + r.width / 2 - root.left) + "px");
-  }
-}
+AH.register("slider", class extends AH.Controller {
+  setup() {
+    var el = this.element, c = this.conf();
+    var state = this.state = { dragging: false, thumb: undefined, startValue: null };
 
-// Set one thumb ("start" | "end") to v, keeping the range ordered.
-function slSet(el, $el, which, v) {
-  var c = slConf(el, $el);
-  var vals = slValues($el);
-  v = slSnap(c, v);
-  if (c.range) {
-    if (which === "start") { vals[0] = Math.min(v, vals[1] - c.minRange); }
-    else { vals[1] = Math.max(v, vals[0] + c.minRange); }
-    vals[0] = Math.max(c.min, vals[0]);
-    vals[1] = Math.min(c.max, vals[1]);
-  } else {
-    vals = [v];
-  }
-  var old = $el.attr("data-ah-value");
-  slRender(el, $el, vals);
-  return $el.attr("data-ah-value") !== old;
-}
-
-function slFromPointer(el, $el, e) {
-  var c = slConf(el, $el);
-  var r = $el.find(".ah-slider-track")[0].getBoundingClientRect();
-  var ratio = c.vertical
-    ? 1 - (e.clientY - r.top - THUMB / 2) / (r.height - THUMB)
-    : (e.clientX - r.left - THUMB / 2) / (r.width - THUMB);
-  ratio = Math.max(0, Math.min(1, ratio));
-  return c.min + ratio * (c.max - c.min);
-}
-
-function slDisabled($el) {
-  return $el.hasClass("ah-slider-disabled") || $el.attr("aria-disabled") === "true";
-}
-
-function slShowTip($el, on) {
-  $el.children(".ah-slider-tooltip").toggleClass("ah-slider-tooltip-visible", on);
-}
-
-function slStep(el, $el, which, delta) {
-  var c = slConf(el, $el);
-  var vals = slValues($el);
-  var cur = c.range ? (which === "start" ? vals[0] : vals[1]) : vals[0];
-  if (slSet(el, $el, which, cur + delta)) {
-    $el.trigger("input").trigger("change");
-  }
-}
-
-AH.define("slider", {
-  init: function (el, $el) {
-    var c = slConf(el, $el);
-    var state = {};
-    $.data(el, "ah-slider-state", state);
-
-    $el.on("pointerdown" + NS, ".ah-slider-content", function (e) {
-      if (slDisabled($el) || e.button !== 0) { return; }
+    this.delegate("pointerdown", ".ah-slider-content", (e) => {
+      if (this.disabled() || e.button !== 0) { return; }
       e.preventDefault();
-      var $thumb = $(e.target).closest(".ah-slider-thumb");
-      var v = slFromPointer(el, $el, e);
+      var thumb = e.target.closest(".ah-slider-thumb");
+      var v = this.fromPointer(e);
       var which = "end";
       if (c.range) {
-        if ($thumb.length) {
-          which = $thumb.hasClass("ah-slider-thumb-start") ? "start" : "end";
+        if (thumb) {
+          which = thumb.classList.contains("ah-slider-thumb-start") ? "start" : "end";
         } else {
-          var vals = slValues($el);
+          var vals = this.values();
           which = Math.abs(v - vals[0]) <= Math.abs(v - vals[1]) ? "start" : "end";
         }
       }
       state.dragging = true;
       state.thumb = which;
-      state.startValue = $el.attr("data-ah-value");
-      var $t = $el.find(".ah-slider-thumb-" + which).addClass("ah-slider-thumb-dragging");
-      (c.range ? $t[0] : el).focus({ preventScroll: true });
-      slShowTip($el, true);
+      state.startValue = el.getAttribute("data-ah-value");
+      var t = el.querySelector(".ah-slider-thumb-" + which);
+      if (t) { t.classList.add("ah-slider-thumb-dragging"); }
+      var target = c.range ? t : el;
+      if (target) { target.focus({ preventScroll: true }); }
+      this.showTip(true);
       try { el.setPointerCapture(e.pointerId); } catch (err) { /* synthetic event */ }
       // Pressing the track jumps the nearest thumb there.
-      if (!$thumb.length && slSet(el, $el, which, v)) { $el.trigger("input"); }
-      slTooltip(el, $el);
+      if (!thumb && this.set(which, v)) { this.fire("input"); }
+      this.tooltip();
     });
-    $el.on("pointermove" + NS, function (e) {
+    this.listen(el, "pointermove", (e) => {
       if (!state.dragging) { return; }
-      if (slSet(el, $el, state.thumb, slFromPointer(el, $el, e))) { $el.trigger("input"); }
+      if (this.set(state.thumb, this.fromPointer(e))) { this.fire("input"); }
     });
-    $el.on("pointerup" + NS + " pointercancel" + NS, function (e) {
+    var up = (e) => {
       if (!state.dragging) { return; }
       state.dragging = false;
-      $el.find(".ah-slider-thumb").removeClass("ah-slider-thumb-dragging");
+      el.querySelectorAll(".ah-slider-thumb").forEach((t) => { t.classList.remove("ah-slider-thumb-dragging"); });
       try { el.releasePointerCapture(e.pointerId); } catch (err) { /* not captured */ }
-      if (!el.contains(document.activeElement)) { slShowTip($el, false); }
-      if ($el.attr("data-ah-value") !== state.startValue) { $el.trigger("change"); }
-    });
+      if (!el.contains(document.activeElement)) { this.showTip(false); }
+      if (el.getAttribute("data-ah-value") !== state.startValue) { this.fire("change"); }
+    };
+    this.listen(el, "pointerup", up);
+    this.listen(el, "pointercancel", up);
 
-    $el.on("click" + NS, ".ah-slider-button", function () {
-      if (slDisabled($el)) { return; }
-      var inc = $(this).hasClass("ah-slider-button-next");
+    this.delegate("click", ".ah-slider-button", (e, btn) => {
+      if (this.disabled()) { return; }
+      var inc = btn.classList.contains("ah-slider-button-next");
       // sigil: in range mode "+" moves the end thumb, "-" the start one
-      slStep(el, $el, c.range ? (inc ? "end" : "start") : "end", inc ? c.step : -c.step);
+      this.stepBy(c.range ? (inc ? "end" : "start") : "end", inc ? c.step : -c.step);
     });
 
-    $el.on("keydown" + NS, function (e) {
-      if (slDisabled($el)) { return; }
+    this.listen(el, "keydown", (e) => {
+      if (this.disabled()) { return; }
       var which = "end";
       if (c.range) {
-        var $t = $(e.target).closest(".ah-slider-thumb");
-        if (!$t.length) { return; }
-        which = $t.hasClass("ah-slider-thumb-start") ? "start" : "end";
+        var t = e.target.closest && e.target.closest(".ah-slider-thumb");
+        if (!t) { return; }
+        which = t.classList.contains("ah-slider-thumb-start") ? "start" : "end";
       }
       state.thumb = which;
       var big = c.step * Math.max(1, Math.round((c.max - c.min) / c.step / 10));
@@ -218,56 +96,187 @@ AH.define("slider", {
                     PageUp: big, PageDown: -big }[e.key];
       if (delta !== undefined) {
         e.preventDefault();
-        slShowTip($el, true);
-        slStep(el, $el, which, delta);
+        this.showTip(true);
+        this.stepBy(which, delta);
       } else if (e.key === "Home" || e.key === "End") {
         e.preventDefault();
-        slShowTip($el, true);
-        if (slSet(el, $el, which, e.key === "Home" ? c.min : c.max)) {
-          $el.trigger("input").trigger("change");
+        this.showTip(true);
+        if (this.set(which, e.key === "Home" ? c.min : c.max)) {
+          this.fire("input");
+          this.fire("change");
         }
       }
     });
 
-    el.addEventListener("wheel", state.wheel = function (e) {
-      if (slDisabled($el) || !el.contains(document.activeElement)) { return; }
+    this.listen(el, "wheel", (e) => {
+      if (this.disabled() || !el.contains(document.activeElement)) { return; }
       e.preventDefault();
-      var which = c.range && $(document.activeElement).hasClass("ah-slider-thumb-start")
+      var which = c.range && document.activeElement.classList.contains("ah-slider-thumb-start")
         ? "start" : "end";
-      slStep(el, $el, which, e.deltaY < 0 ? c.step : -c.step);
+      this.stepBy(which, e.deltaY < 0 ? c.step : -c.step);
     }, { passive: false });
 
-    $el.on("focusin" + NS, function (e) {
-      $el.addClass("ah-slider-focused");
+    this.listen(el, "focusin", (e) => {
+      el.classList.add("ah-slider-focused");
       if (c.range) {
-        state.thumb = $(e.target).hasClass("ah-slider-thumb-start") ? "start" : "end";
+        state.thumb = e.target.classList.contains("ah-slider-thumb-start") ? "start" : "end";
       }
-      slTooltip(el, $el);
+      this.tooltip();
     });
-    $el.on("focusout" + NS, function (e) {
+    this.listen(el, "focusout", (e) => {
       if (!e.relatedTarget || !el.contains(e.relatedTarget)) {
-        $el.removeClass("ah-slider-focused");
-        if (!state.dragging) { slShowTip($el, false); }
+        el.classList.remove("ah-slider-focused");
+        if (!state.dragging) { this.showTip(false); }
       }
     });
-  },
-  destroy: function (el) {
-    var s = $.data(el, "ah-slider-state");
-    if (s && s.wheel) { el.removeEventListener("wheel", s.wheel); }
-    $.removeData(el, "ah-slider");
-    $.removeData(el, "ah-slider-state");
-  },
-  methods: {
-    getValue: function (el, $el) { return $el.attr("data-ah-value"); },
-    // setValue(v | [lo, hi] | "lo,hi"[, silent])
-    setValue: function (el, $el, v, silent) {
-      var c = slConf(el, $el);
-      var vals = Array.isArray(v) ? v : String(v).split(",");
-      vals = vals.map(function (x) { return slSnap(c, parseFloat(x)); });
-      if (c.range) { vals = [Math.min(vals[0], vals[1]), Math.max(vals[0], vals[1])]; }
-      var old = $el.attr("data-ah-value");
-      slRender(el, $el, vals);
-      if (!silent && $el.attr("data-ah-value") !== old) { $el.trigger("change"); }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  getValue() { return this.element.getAttribute("data-ah-value"); }
+  // setValue(v | [lo, hi] | "lo,hi"[, silent])
+  setValue(v, silent) {
+    var c = this.conf();
+    var vals = Array.isArray(v) ? v : String(v).split(",");
+    vals = vals.map((x) => this.snap(parseFloat(x)));
+    if (c.range) { vals = [Math.min(vals[0], vals[1]), Math.max(vals[0], vals[1])]; }
+    var old = this.element.getAttribute("data-ah-value");
+    this.render(vals);
+    if (!silent && this.element.getAttribute("data-ah-value") !== old) { this.fire("change"); }
+  }
+
+  conf() {
+    if (!this.c) {
+      var el = this.element;
+      var step = parseFloat(el.getAttribute("data-ah-step")) || 1;
+      var c = {
+        min: parseFloat(el.getAttribute("data-ah-min")) || 0,
+        max: parseFloat(el.getAttribute("data-ah-max")),
+        step: step,
+        decimals: (String(step).split(".")[1] || "").length,
+        minRange: parseFloat(el.getAttribute("data-ah-min-range")) || 0,
+        vertical: el.classList.contains("ah-slider-vertical"),
+        range: el.classList.contains("ah-slider-range-slider")
+      };
+      if (isNaN(c.max)) { c.max = 100; }
+      this.c = c;
+    }
+    return this.c;
+  }
+
+  values() {
+    return String(this.element.getAttribute("data-ah-value") || "").split(",").map(parseFloat);
+  }
+
+  snap(v) {
+    var c = this.conf();
+    var n = Math.round((v - c.min) / c.step);
+    var snapped = c.min + n * c.step;
+    snapped = Math.max(c.min, Math.min(c.max, snapped));
+    return parseFloat(snapped.toFixed(c.decimals));
+  }
+
+  render(vals) {
+    var el = this.element, c = this.conf();
+    var ratio = (v) => (v - c.min) / (c.max - c.min);
+    var range = el.querySelector(".ah-slider-range");
+    var end = el.querySelector(".ah-slider-thumb-end");
+    var start = el.querySelector(".ah-slider-thumb-start");
+    var pos = (t, v) => {
+      if (!t) { return; }
+      if (c.vertical) { t.style.top = frac(1 - ratio(v)); } else { t.style.left = frac(ratio(v)); }
+    };
+    var aria = (node, v) => {
+      if (!node) { return; }
+      node.setAttribute("aria-valuenow", v);
+      node.setAttribute("aria-valuetext", v);
+    };
+    if (c.range) {
+      pos(start, vals[0]);
+      pos(end, vals[1]);
+      if (c.vertical) {
+        css(range, { bottom: fracCenter(ratio(vals[0])), height: frac(ratio(vals[1]) - ratio(vals[0])) });
+      } else {
+        css(range, { left: fracCenter(ratio(vals[0])), width: frac(ratio(vals[1]) - ratio(vals[0])) });
+      }
+      aria(start, vals[0]);
+      aria(end, vals[1]);
+    } else {
+      pos(end, vals[0]);
+      if (c.vertical) { css(range, { bottom: "0px", height: fracCenter(ratio(vals[0])) }); }
+      else { css(range, { left: "0px", width: fracCenter(ratio(vals[0])) }); }
+      aria(el, vals[0]);
+    }
+    // Value-bearing contract: data-ah-value + hidden input
+    var v = vals.join(",");
+    el.setAttribute("data-ah-value", v);
+    el.querySelectorAll(":scope > input[type=hidden]").forEach((h) => { h.value = v; });
+    this.tooltip();
+  }
+
+  tooltip() {
+    var el = this.element;
+    var tip = el.querySelector(":scope > .ah-slider-tooltip");
+    var s = this.state || {};
+    if (!tip) { return; }
+    var thumb = s.thumb === "start" ? el.querySelector(".ah-slider-thumb-start")
+      : el.querySelector(".ah-slider-thumb-end");
+    var vals = this.values();
+    tip.textContent = s.thumb === "start" ? vals[0] : vals[vals.length - 1];
+    if (!thumb) { return; }
+    var root = el.getBoundingClientRect();
+    var r = thumb.getBoundingClientRect();
+    if (this.conf().vertical) {
+      tip.style.top = (r.top + r.height / 2 - root.top) + "px";
+    } else {
+      tip.style.left = (r.left + r.width / 2 - root.left) + "px";
+    }
+  }
+
+  // Set one thumb ("start" | "end") to v, keeping the range ordered.
+  set(which, v) {
+    var c = this.conf();
+    var vals = this.values();
+    v = this.snap(v);
+    if (c.range) {
+      if (which === "start") { vals[0] = Math.min(v, vals[1] - c.minRange); }
+      else { vals[1] = Math.max(v, vals[0] + c.minRange); }
+      vals[0] = Math.max(c.min, vals[0]);
+      vals[1] = Math.min(c.max, vals[1]);
+    } else {
+      vals = [v];
+    }
+    var old = this.element.getAttribute("data-ah-value");
+    this.render(vals);
+    return this.element.getAttribute("data-ah-value") !== old;
+  }
+
+  fromPointer(e) {
+    var c = this.conf();
+    var r = this.element.querySelector(".ah-slider-track").getBoundingClientRect();
+    var ratio = c.vertical
+      ? 1 - (e.clientY - r.top - THUMB / 2) / (r.height - THUMB)
+      : (e.clientX - r.left - THUMB / 2) / (r.width - THUMB);
+    ratio = Math.max(0, Math.min(1, ratio));
+    return c.min + ratio * (c.max - c.min);
+  }
+
+  disabled() {
+    var el = this.element;
+    return el.classList.contains("ah-slider-disabled") || el.getAttribute("aria-disabled") === "true";
+  }
+
+  showTip(on) {
+    var tip = this.element.querySelector(":scope > .ah-slider-tooltip");
+    if (tip) { tip.classList.toggle("ah-slider-tooltip-visible", on); }
+  }
+
+  stepBy(which, delta) {
+    var c = this.conf();
+    var vals = this.values();
+    var cur = c.range ? (which === "start" ? vals[0] : vals[1]) : vals[0];
+    if (this.set(which, cur + delta)) {
+      this.fire("input");
+      this.fire("change");
     }
   }
 });

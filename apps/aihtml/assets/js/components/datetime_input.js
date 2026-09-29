@@ -1,12 +1,14 @@
 /* Behaviour of the datetime_input (designs/04-components.md). Ported from
  * sigil: form/datetime_input (+ format, editor, dropdown). Dates are day
- * numbers (AH.lib.date). */
-import $ from "jquery";
+ * numbers (AH.lib.date).
+ *
+ * Value-bearing: data-ah-value and the hidden input; `input` on the root
+ * while editing, `change` on leaving (or picking in the drop-down);
+ * `ah:open` / `ah:close` around the drop-down calendar. */
 import AH from "../core.js";
 import "./_lib_date.js";
 import "virtual:ah-tpl/datetime_input_calendar";
 
-var NS = AH.NS;
 var D = AH.lib.date;
 var dnum = D.dnum, ymd = D.ymd, sow = D.sow, lastDay = D.lastDay, addMonths = D.addMonths,
     pad = D.pad, pad4 = D.pad4, isoDate = D.isoDate, todayNum = D.todayNum,
@@ -19,9 +21,8 @@ function ensureId(el, prefix) {
 }
 
 function outside(el, e) {
-  return e.target.isConnected !== false && !$.contains(el, e.target) && e.target !== el;
+  return e.target.isConnected !== false && !el.contains(e.target);
 }
-
 
 function readJson(el, attr, dflt) {
   try { return JSON.parse(el.getAttribute(attr) || "null") || dflt; } catch (err) { return dflt; }
@@ -133,7 +134,7 @@ function segValue(v, seg) {
 
 // The day is clamped to the month's length (sigil's js/Date rolls over).
 function setSeg(v0, seg, val) {
-  var v = $.extend({}, v0);
+  var v = Object.assign({}, v0);
   switch (seg.type) {
     case "year": v.y = val; break;
     case "year2": v.y = Math.floor(v.y / 100) * 100 + val; break;
@@ -163,8 +164,6 @@ function segText(v, seg) {
 
 function segMax(v, seg) { return seg.type === "day" ? lastDay(v.y, v.mo) : seg.max; }
 
-function dtiState(el) { return $.data(el, "ah-dti"); }
-
 function dtiEditable(st) { return st.segs.map(function (s, i) { return s.editable ? i : -1; })
   .filter(function (i) { return i >= 0; }); }
 
@@ -180,35 +179,37 @@ function dtiSelect(st) {
 
 // Show the value, publish it (data-ah-value, hidden input) and fire
 // `input' when it changed; `change' fires on leaving (dtiCommit).
-function dtiShow(el, $el) {
-  var st = dtiState(el);
+function dtiShow(c) {
+  var st = c.st, el = c.element;
   st.input.value = dtiDisplay(st);
   dtiSelect(st);
   var iso = dtiIso(st.value, st.kind), old = el.getAttribute("data-ah-value") || "";
   el.setAttribute("data-ah-value", iso);
-  $el.children("input[type=hidden]").val(iso);
-  $el.find(".ah-dti-label").toggleClass("ah-dti-label-float", !!st.value || $el.hasClass("ah-dti-focused"));
-  if (iso !== old) { $el.trigger("input"); }
-  if (st.open) { dtiRenderCal(el); }
+  var hidden = el.querySelector(":scope > input[type=hidden]");
+  if (hidden) { hidden.value = iso; }
+  var float = !!st.value || el.classList.contains("ah-dti-focused");
+  el.querySelectorAll(".ah-dti-label").forEach(function (l) { l.classList.toggle("ah-dti-label-float", float); });
+  if (iso !== old) { c.fire("input"); }
+  if (st.open) { dtiRenderCal(c); }
 }
 
 function dtiClamp(st, v) {
   if (!v) { return v; }
   var k = dtiOrd(v, st.kind);
-  if (st.min && k < dtiOrd(st.min, st.kind)) { return $.extend({}, st.min); }
-  if (st.max && k > dtiOrd(st.max, st.kind)) { return $.extend({}, st.max); }
+  if (st.min && k < dtiOrd(st.min, st.kind)) { return Object.assign({}, st.min); }
+  if (st.max && k > dtiOrd(st.max, st.kind)) { return Object.assign({}, st.max); }
   return v;
 }
 
-function dtiCommit(el, $el) {
-  var st = dtiState(el);
+function dtiCommit(c) {
+  var st = c.st;
   dtiFlush(st);
   st.value = dtiClamp(st, st.value);
-  dtiShow(el, $el);
+  dtiShow(c);
   var iso = dtiIso(st.value, st.kind);
   if (iso !== st.committed) {
     st.committed = iso;
-    $el.trigger("change");
+    c.fire("change");
   }
 }
 
@@ -227,22 +228,25 @@ function dtiFlush(st) {
   if (st.value && !isNaN(n)) { st.value = setSeg(st.value, seg, Math.max(seg.min, Math.min(seg.max, n))); }
 }
 
-function dtiFocusSeg(el, $el, i) {
-  var st = dtiState(el);
+function dtiFocusSeg(c, i) {
+  var st = c.st;
   dtiFlush(st);
   st.active = i;
-  dtiShow(el, $el);
+  dtiShow(c);
 }
 
-function dtiAnnounce(el, $el) {
-  var st = dtiState(el), seg = st.segs[st.active];
-  if (seg && st.value) { $el.find(".ah-dti-live").text(SEG_NAMES[seg.type] + " " + segText(st.value, seg)); }
+function dtiAnnounce(c) {
+  var st = c.st, seg = st.segs[st.active];
+  if (seg && st.value) {
+    var text = SEG_NAMES[seg.type] + " " + segText(st.value, seg);
+    c.element.querySelectorAll(".ah-dti-live").forEach(function (l) { l.textContent = text; });
+  }
 }
 
 // editor.cljs handle-digit!: buffer until the part is full, then commit
 // and move on
-function dtiDigit(el, $el, ch) {
-  var st = dtiState(el), seg = st.segs[st.active];
+function dtiDigit(c, ch) {
+  var st = c.st, seg = st.segs[st.active];
   if (!seg || !seg.editable || seg.type === "ampm") { return; }
   dtiEnsure(st);
   st.buf += ch;
@@ -252,7 +256,7 @@ function dtiDigit(el, $el, ch) {
     st.value = setSeg(st.value, seg, Math.max(seg.min, Math.min(segMax(st.value, seg), n)));
     var next = dtiEditable(st).filter(function (i) { return i > st.active; })[0];
     if (next !== undefined) { st.active = next; }
-    dtiShow(el, $el);
+    dtiShow(c);
   } else {
     // preview: the typed digits right-aligned in the part
     var shown = dtiDisplay(st), p = (new Array(seg.len - st.buf.length + 1)).join(" ") + st.buf;
@@ -261,8 +265,8 @@ function dtiDigit(el, $el, ch) {
   }
 }
 
-function dtiStep(el, $el, delta, big) {
-  var st = dtiState(el), seg = st.segs[st.active];
+function dtiStep(c, delta, big) {
+  var st = c.st, seg = st.segs[st.active];
   if (!seg || !seg.editable) { return; }
   dtiEnsure(st);
   dtiFlush(st);
@@ -279,62 +283,64 @@ function dtiStep(el, $el, delta, big) {
     }
     st.value = setSeg(v, seg, n);
   }
-  dtiShow(el, $el);
-  dtiAnnounce(el, $el);
+  dtiShow(c);
+  dtiAnnounce(c);
 }
 
-function dtiMoveSeg(el, $el, dir) {
-  var st = dtiState(el), eds = dtiEditable(st);
+function dtiMoveSeg(c, dir) {
+  var st = c.st, eds = dtiEditable(st);
   var next = dir > 0 ? eds.filter(function (i) { return i > st.active; })[0]
     : eds.filter(function (i) { return i < st.active; }).pop();
   if (next === undefined) { dtiFlush(st); return false; }
-  dtiFocusSeg(el, $el, next);
+  dtiFocusSeg(c, next);
   return true;
 }
 
-function dtiBlocked($el) { return $el.hasClass("ah-dti-disabled") || $el.hasClass("ah-dti-readonly"); }
+function dtiBlocked(el) {
+  return el.classList.contains("ah-dti-disabled") || el.classList.contains("ah-dti-readonly");
+}
 
 // editor.cljs on-keydown
-function dtiKey(el, $el, e) {
-  var st = dtiState(el), k = e.key;
+function dtiKey(c, e) {
+  var st = c.st, el = c.element, k = e.key;
   if (k === "Tab") {
-    if (!dtiBlocked($el) && dtiMoveSeg(el, $el, e.shiftKey ? -1 : 1)) { e.preventDefault(); } else { dtiClose(el, $el); }
+    if (!dtiBlocked(el) && dtiMoveSeg(c, e.shiftKey ? -1 : 1)) { e.preventDefault(); } else { dtiClose(c); }
     return;
   }
   if (e.ctrlKey || e.metaKey) { return; }
   if (k === "Escape") {
-    if (st.open) { e.preventDefault(); dtiClose(el, $el); }
+    if (st.open) { e.preventDefault(); dtiClose(c); }
     return;
   }
   e.preventDefault();
-  if (dtiBlocked($el)) { return; }
+  if (dtiBlocked(el)) { return; }
   if ((k === "ArrowDown" && e.altKey) || k === "F4") {
-    if (st.open) { dtiClose(el, $el); } else { dtiOpen(el, $el); }
+    if (st.open) { dtiClose(c); } else { dtiOpen(c); }
     return;
   }
-  if (/^[0-9]$/.test(k)) { dtiDigit(el, $el, k); return; }
+  if (/^[0-9]$/.test(k)) { dtiDigit(c, k); return; }
   var eds = dtiEditable(st), seg = st.segs[st.active];
   switch (k) {
-    case "ArrowUp": dtiStep(el, $el, 1, false); break;
-    case "ArrowDown": dtiStep(el, $el, -1, false); break;
-    case "PageUp": dtiStep(el, $el, 10, true); break;
-    case "PageDown": dtiStep(el, $el, -10, true); break;
-    case "ArrowLeft": dtiMoveSeg(el, $el, -1); break;
-    case "ArrowRight": dtiMoveSeg(el, $el, 1); break;
-    case "Home": dtiFocusSeg(el, $el, eds[0]); break;
-    case "End": dtiFocusSeg(el, $el, eds[eds.length - 1]); break;
+    case "ArrowUp": dtiStep(c, 1, false); break;
+    case "ArrowDown": dtiStep(c, -1, false); break;
+    case "PageUp": dtiStep(c, 10, true); break;
+    case "PageDown": dtiStep(c, -10, true); break;
+    case "ArrowLeft": dtiMoveSeg(c, -1); break;
+    case "ArrowRight": dtiMoveSeg(c, 1); break;
+    case "Home": dtiFocusSeg(c, eds[0]); break;
+    case "End": dtiFocusSeg(c, eds[eds.length - 1]); break;
     case "Backspace":
     case "Delete":
       if (seg && seg.editable && st.value) {
         st.buf = "";
         st.value = setSeg(st.value, seg, seg.min);
-        dtiShow(el, $el);
+        dtiShow(c);
       }
       break;
     case "a": case "A": case "p": case "P":
       if (seg && seg.type === "ampm" && st.value) {
         st.value = setSeg(st.value, seg, /a/i.test(k) ? 0 : 1);
-        dtiShow(el, $el);
+        dtiShow(c);
       }
       break;
     default: break;
@@ -381,168 +387,189 @@ function dtiCalView(st) {
            hours: st.value ? pad(st.value.h) : "", minutes: st.value ? pad(st.value.mi) : "" };
 }
 
-function dtiRenderCal(el) {
-  var st = dtiState(el);
+function dtiRenderCal(c) {
+  var st = c.st;
   var focused = document.activeElement;
-  var field = focused && $.contains(st.$dd[0], focused) ? focused.getAttribute("data-field") : null;
-  st.$dd.html(AH.tpl.datetime_input_calendar(dtiCalView(st)));
-  if (field) { st.$dd.find('[data-field="' + field + '"]').trigger("focus"); }
+  var field = focused && st.dd.contains(focused) ? focused.getAttribute("data-field") : null;
+  st.dd.innerHTML = AH.tpl.datetime_input_calendar(dtiCalView(st));
+  if (field) {
+    var again = st.dd.querySelector('[data-field="' + field + '"]');
+    if (again) { again.focus(); }
+  }
   if (st.float) { st.float.update(); }
 }
 
-function dtiOpen(el, $el) {
-  var st = dtiState(el);
-  if (st.open || !st.$dd.length || dtiBlocked($el)) { return; }
+function dtiOpen(c) {
+  var st = c.st, el = c.element;
+  if (st.open || !st.dd || dtiBlocked(el)) { return; }
   var v = st.value;
   var t = ymd(todayNum());
   st.navY = v ? v.y : t[0];
   st.navM = v ? v.mo : t[1];
   st.open = true;
-  st.$dd.prop("hidden", false);
-  dtiRenderCal(el);
-  st.float = AH.float(st.$dd[0], $el.children(".ah-dti-row")[0], { offset: 2 });
-  $(st.input).attr("aria-expanded", "true");
-  $(document).on("mousedown" + st.ns, function (e) { if (outside(el, e)) { dtiClose(el, $el); } });
-  $el.trigger("ah:open");
+  st.dd.hidden = false;
+  dtiRenderCal(c);
+  st.float = AH.float(st.dd, el.querySelector(":scope > .ah-dti-row"), { offset: 2 });
+  st.input.setAttribute("aria-expanded", "true");
+  st.outside = new AbortController();
+  document.addEventListener("mousedown", function (e) { if (outside(el, e)) { dtiClose(c); } },
+                            { signal: st.outside.signal });
+  c.fire("ah:open");
 }
 
-function dtiClose(el, $el) {
-  var st = dtiState(el);
+function dtiClose(c) {
+  var st = c.st;
   if (!st.open) { return; }
   st.open = false;
-  st.$dd.prop("hidden", true).empty();
+  st.dd.hidden = true;
+  st.dd.innerHTML = "";
   if (st.float) { st.float.stop(); st.float = null; }
-  $(st.input).attr("aria-expanded", "false");
-  $(document).off(st.ns);
-  $el.trigger("ah:close");
+  st.input.setAttribute("aria-expanded", "false");
+  if (st.outside) { st.outside.abort(); st.outside = null; }
+  c.fire("ah:close");
 }
 
 // dropdown.cljs on-day-click: keep the time, clamp, fire change
-function dtiPickDay(el, $el, iso) {
-  var st = dtiState(el), d = parseDate(iso);
+function dtiPickDay(c, iso) {
+  var st = c.st, d = parseDate(iso);
   if (d === null) { return; }
   var p = ymd(d), v = st.value || { h: 0, mi: 0, s: 0 };
   st.value = dtiClamp(st, { y: p[0], mo: p[1], d: p[2], h: v.h, mi: v.mi, s: v.s });
   st.navY = st.value.y;
   st.navM = st.value.mo;
-  dtiShow(el, $el);
-  dtiCommit(el, $el);
-  if (!st.showTime) { dtiClose(el, $el); st.input.focus(); }
+  dtiShow(c);
+  dtiCommit(c);
+  if (!st.showTime) { dtiClose(c); st.input.focus(); }
 }
 
 function dtiSpinStop(st) { clearTimeout(st.spin); st.spin = null; }
 
-AH.define("datetime-input", {
-  init: function (el, $el) {
+AH.register("datetime-input", class extends AH.Controller {
+  setup() {
+    var c = this, el = this.element;
     ensureId(el, "ah-dti");
     var segs = dtiSegments(el.getAttribute("data-ah-format") || "yyyy-MM-dd");
     var kind = dtiKind(segs);
     var first = parseInt(el.getAttribute("data-ah-first-day") || "0", 10);
-    var st = {
-      ns: ".ahdti" + (++seq),
+    var st = this.st = {
       segs: segs, kind: kind,
-      input: $el.find("input.ah-dti-input")[0],
-      $dd: $el.children(".ah-dti-dropdown"),
+      input: el.querySelector("input.ah-dti-input"),
+      dd: el.querySelector(":scope > .ah-dti-dropdown"),
       value: dtiParse(el.getAttribute("data-ah-value"), kind),
       min: dtiParse(el.getAttribute("data-ah-min"), kind),
       max: dtiParse(el.getAttribute("data-ah-max"), kind),
       first: first >= 0 && first <= 6 ? first : 0,
       showTime: el.hasAttribute("data-ah-show-time"),
-      L: $.extend({}, DTI_LABELS, readJson(el, "data-ah-labels", {})),
-      active: null, buf: "", open: false, float: null, spin: null
+      L: Object.assign({}, DTI_LABELS, readJson(el, "data-ah-labels", {})),
+      active: null, buf: "", open: false, float: null, spin: null, outside: null
     };
     st.committed = dtiIso(st.value, kind);
-    $.data(el, "ah-dti", st);
-    var $in = $(st.input);
-    $in.on("focus" + NS, function () {
-      $el.addClass("ah-dti-focused");
+    var input = st.input;
+    this.listen(input, "focus", function () {
+      el.classList.add("ah-dti-focused");
       if (st.active === null) { st.active = dtiEditable(st)[0]; }
-      $el.find(".ah-dti-label").addClass("ah-dti-label-float");
+      el.querySelectorAll(".ah-dti-label").forEach(function (l) { l.classList.add("ah-dti-label-float"); });
       setTimeout(function () { dtiSelect(st); }, 0);
-    }).on("mouseup" + NS, function () {
+    });
+    this.listen(input, "mouseup", function () {
       if (!st.value) { return; }
-      dtiFocusSeg(el, $el, dtiSegAt(st, st.input.selectionStart || 0));
-    }).on("keydown" + NS, function (e) { dtiKey(el, $el, e); })
-      // the text field is internal: only the root reports changes
-      .on("change" + NS + " input" + NS, function (e) { e.stopPropagation(); });
+      dtiFocusSeg(c, dtiSegAt(st, st.input.selectionStart || 0));
+    });
+    this.listen(input, "keydown", function (e) { dtiKey(c, e); });
+    // the text field is internal: only the root reports changes
+    var stop = function (e) { e.stopPropagation(); };
+    this.listen(input, "change", stop);
+    this.listen(input, "input", stop);
     // leaving the component (the time fields of the drop-down are inside)
-    $el.on("focusout" + NS, function (e) {
-      if (e.relatedTarget && $.contains(el, e.relatedTarget)) { return; }
+    this.listen(el, "focusout", function (e) {
+      if (e.relatedTarget && el.contains(e.relatedTarget)) { return; }
       setTimeout(function () {
-        if ($.contains(el, document.activeElement)) { return; }
-        $el.removeClass("ah-dti-focused");
-        dtiCommit(el, $el);
-        dtiClose(el, $el);
+        if (el.contains(document.activeElement)) { return; }
+        el.classList.remove("ah-dti-focused");
+        dtiCommit(c);
+        dtiClose(c);
       }, 0);
     });
-    $el.on("click" + NS, ".ah-dti-cal-btn", function () {
-      if (dtiBlocked($el)) { return; }
+    this.delegate("click", ".ah-dti-cal-btn", function () {
+      if (dtiBlocked(el)) { return; }
       st.input.focus();
-      if (st.open) { dtiClose(el, $el); } else { dtiOpen(el, $el); }
+      if (st.open) { dtiClose(c); } else { dtiOpen(c); }
     });
-    $el.on("mousedown" + NS, ".ah-dti-cal-btn", function (e) { e.preventDefault(); });
+    this.delegate("mousedown", ".ah-dti-cal-btn", function (e) { e.preventDefault(); });
     // spinner: step, then repeat after 400ms every 120ms while held
-    $el.on("mousedown" + NS, ".ah-dti-spin", function (e) {
+    this.delegate("mousedown", ".ah-dti-spin", function (e, spin) {
       e.preventDefault();
-      if (dtiBlocked($el)) { return; }
-      var delta = $(this).hasClass("ah-dti-spin-up") ? 1 : -1;
+      if (dtiBlocked(el)) { return; }
+      var delta = spin.classList.contains("ah-dti-spin-up") ? 1 : -1;
       if (st.active === null) { st.active = dtiEditable(st)[0]; }
       st.input.focus();
       dtiSpinStop(st);
-      dtiStep(el, $el, delta, false);
-      var rep = function () { dtiStep(el, $el, delta, false); st.spin = setTimeout(rep, 120); };
+      dtiStep(c, delta, false);
+      var rep = function () { dtiStep(c, delta, false); st.spin = setTimeout(rep, 120); };
       st.spin = setTimeout(rep, 400);
-    }).on("mouseup" + NS + " mouseleave" + NS, ".ah-dti-spin", function () { dtiSpinStop(st); });
+    });
+    this.delegate("mouseup", ".ah-dti-spin", function () { dtiSpinStop(st); });
+    el.querySelectorAll(".ah-dti-spin").forEach(function (spin) {
+      c.listen(spin, "mouseleave", function () { dtiSpinStop(st); });
+    });
     // drop-down: keep the focus in the field, except for the time inputs
-    st.$dd.on("mousedown" + NS, function (e) {
-      if (!$(e.target).is("input")) { e.preventDefault(); }
-    }).on("click" + NS, ".ah-dti-cal-day", function () {
-      if (!$(this).hasClass("ah-dti-cal-day-disabled")) { dtiPickDay(el, $el, this.getAttribute("data-date")); }
-    }).on("click" + NS, "[data-action]", function () {
-      var n = dnum(st.navY, st.navM, 1);
-      var t = ymd(addMonths(n, this.getAttribute("data-action") === "prev-month" ? -1 : 1));
-      st.navY = t[0];
-      st.navM = t[1];
-      dtiRenderCal(el);
-    }).on("change" + NS, ".ah-dti-time-input", function (e) {
-      e.stopPropagation();
-      var n = parseInt(this.value, 10);
-      if (isNaN(n)) { return; }
-      dtiEnsure(st);
-      st.value = $.extend({}, st.value);
-      if (this.getAttribute("data-field") === "hours") { st.value.h = Math.max(0, Math.min(23, n)); }
-      else { st.value.mi = Math.max(0, Math.min(59, n)); }
-      dtiShow(el, $el);
-      dtiCommit(el, $el);
-    }).on("input" + NS, ".ah-dti-time-input", function (e) { e.stopPropagation(); })
-      .on("keydown" + NS, ".ah-dti-time-input", function (e) {
-        if (e.key === "Escape") { e.preventDefault(); dtiClose(el, $el); st.input.focus(); }
-        if (e.key === "Enter") { e.preventDefault(); $(this).trigger("change"); }
+    var dd = st.dd;
+    if (dd) {
+      this.listen(dd, "mousedown", function (e) {
+        if (!e.target.matches("input")) { e.preventDefault(); }
       });
-  },
-  destroy: function (el, $el) {
-    var st = dtiState(el);
+      this.delegate("click", ".ah-dti-cal-day", function (e, day) {
+        if (!day.classList.contains("ah-dti-cal-day-disabled")) { dtiPickDay(c, day.getAttribute("data-date")); }
+      }, dd);
+      this.delegate("click", "[data-action]", function (e, b) {
+        var n = dnum(st.navY, st.navM, 1);
+        var t = ymd(addMonths(n, b.getAttribute("data-action") === "prev-month" ? -1 : 1));
+        st.navY = t[0];
+        st.navM = t[1];
+        dtiRenderCal(c);
+      }, dd);
+      this.delegate("change", ".ah-dti-time-input", function (e, f) {
+        e.stopPropagation();
+        var n = parseInt(f.value, 10);
+        if (isNaN(n)) { return; }
+        dtiEnsure(st);
+        st.value = Object.assign({}, st.value);
+        if (f.getAttribute("data-field") === "hours") { st.value.h = Math.max(0, Math.min(23, n)); }
+        else { st.value.mi = Math.max(0, Math.min(59, n)); }
+        dtiShow(c);
+        dtiCommit(c);
+      }, dd);
+      this.delegate("input", ".ah-dti-time-input", function (e) { e.stopPropagation(); }, dd);
+      this.delegate("keydown", ".ah-dti-time-input", function (e, f) {
+        if (e.key === "Escape") { e.preventDefault(); dtiClose(c); st.input.focus(); }
+        if (e.key === "Enter") { e.preventDefault(); f.dispatchEvent(new Event("change", { bubbles: true })); }
+      }, dd);
+    }
+  }
+
+  teardown() {
+    var st = this.st;
     if (!st) { return; }
     dtiSpinStop(st);
-    dtiClose(el, $el);
-  },
-  methods: {
-    setValue: function (el, $el, v) {
-      var st = dtiState(el);
-      st.value = v ? dtiParse(v, st.kind) : null;
-      st.buf = "";
-      st.committed = dtiIso(st.value, st.kind);
-      dtiShow(el, $el);
-    },
-    getValue: function (el) { return el.getAttribute("data-ah-value"); },
-    clear: function (el, $el) {
-      var st = dtiState(el);
-      st.value = null;
-      st.buf = "";
-      dtiShow(el, $el);
-      dtiCommit(el, $el);
-    },
-    open: function (el, $el) { dtiOpen(el, $el); },
-    close: function (el, $el) { dtiClose(el, $el); }
+    dtiClose(this);
   }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  setValue(v) {
+    var st = this.st;
+    st.value = v ? dtiParse(v, st.kind) : null;
+    st.buf = "";
+    st.committed = dtiIso(st.value, st.kind);
+    dtiShow(this);
+  }
+  getValue() { return this.element.getAttribute("data-ah-value"); }
+  clear() {
+    var st = this.st;
+    st.value = null;
+    st.buf = "";
+    dtiShow(this);
+    dtiCommit(this);
+  }
+  open() { dtiOpen(this); }
+  close() { dtiClose(this); }
 });

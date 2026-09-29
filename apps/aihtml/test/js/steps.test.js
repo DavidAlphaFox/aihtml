@@ -2,7 +2,7 @@
  * steps_indicator) equal what the server renders for the same state.
  * SERVER holds server renders of aihtml_steps:steps/4 (id "s"), generated
  * from Erlang; regenerate them if the markup changes. */
-(function (T, $, AH) {
+(function (T, AH) {
   "use strict";
 
   var SERVER = {
@@ -11,7 +11,7 @@
 };
 
   // Markup with attributes and class tokens sorted, so that the order in
-  // which jQuery adds them does not matter.
+  // which the runtime adds them does not matter.
   function norm(node) {
     if (node.nodeType === 3) { return node.nodeValue; }
     var attrs = Array.prototype.map.call(node.attributes, function (a) {
@@ -28,17 +28,38 @@
     return norm(d.querySelector(sel));
   }
 
-  function mount(fx, name) {
+  async function mount(fx, name) {
     fx.innerHTML = SERVER[name];
-    AH.mount(fx);
+    await T.ready(fx);
     return fx.firstChild;
   }
 
-  T.test("steps: indicators after select equal the server render", function (fx) {
-    var el = mount(fx, "st0");
+  T.test("steps: indicators after select equal the server render", async function (fx) {
+    var el = await mount(fx, "st0");
     AH.invoke(el, "select", 2);
     T.eq(norm(el.querySelector(".ah-steps-header")), server("st2", ".ah-steps-header"));
     AH.invoke(el, "select", 0);
     T.eq(norm(el.querySelector(".ah-steps-header")), server("st0", ".ah-steps-header"));
   });
-})(window.AHTest, window.jQuery, window.AH);
+
+  T.test("steps: click and arrows select, fire change; methods do not", async function (fx) {
+    var el = await mount(fx, "st0");
+    var seen = [];
+    el.addEventListener("change", function (e) {
+      if (e.target === el) { seen.push(el.getAttribute("data-ah-value")); }
+    });
+    var items = el.querySelectorAll(".ah-steps-item");
+    items[2].click();
+    T.eq(norm(el.querySelector(".ah-steps-header")), server("st2", ".ah-steps-header"));
+    T.key(items[2], "ArrowRight");
+    T.eq(document.activeElement, items[3]);
+    T.key(items[3], "Home");
+    T.eq(seen, ["2", "3", "0"]);
+    AH.invoke(el, "last");
+    T.eq(AH.invoke(el, "value"), 3);
+    AH.invoke(el, "setStatus", 1, "error");
+    T.ok(items[1].classList.contains("ah-steps-item-error"));
+    T.ok(items[1].querySelector(".ah-steps-indicator").innerHTML !== "2", "error indicator");
+    T.eq(seen.length, 3);
+  });
+})(window.AHTest, window.AH);

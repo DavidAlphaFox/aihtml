@@ -2,23 +2,17 @@
  * sigil: form/timepicker (+ timepicker/math, timepicker/svg).
  *
  * Value-bearing: data-ah-value and the hidden input follow the value, the
- * root fires `change` on commit. Native input/change events of the inner
- * text field are stopped at the root so they are not taken for the
- * component's own events. */
-import $ from "jquery";
+ * root fires `change` on commit (detail: {value}). Native input/change
+ * events of the inner text field are stopped at the root so they are not
+ * taken for the component's own events. */
 import AH from "../core.js";
 import "./_lib_picker.js";
 import "virtual:ah-tpl/timepicker_header";
 import "virtual:ah-tpl/timepicker_numbers";
 
-var NS = AH.NS;
 var P = AH.lib.picker;
 var uid = P.uid, clamp = P.clamp, round2 = P.round2, disabled = P.disabled,
-  fenceNativeEvents = P.fenceNativeEvents, openPopup = P.openPopup,
-  closePopup = P.closePopup, stopFloat = P.stopFloat, pointerXY = P.pointerXY, drag = P.drag;
-
-function popupOf($el) { return P.popupOf($el, TP); }
-function isOpen($el) { return P.isOpen($el, TP); }
+  pointerXY = P.pointerXY;
 
 // ------------------------------------------------------------------
 // timepicker (sigil timepicker, timepicker/math, timepicker/svg)
@@ -63,8 +57,6 @@ function parseTime(s) {
   return h * 60 + min;
 }
 
-function tpState(el) { return $.data(el, "ah-tp"); }
-
 function tpAllowed(st, t) { return t >= st.lo && t <= st.hi; }
 
 function tpHourAllowed(st, h) {
@@ -106,17 +98,25 @@ function tpHeaderView(st, isDisabled) {
   };
 }
 
-// Redraw header and clock from the state (sigil sync-header!, sync-clock!).
-function tpRender(el) {
-  var st = tpState(el);
-  var $el = $(el);
-  var $header = $el.find("." + TP + "-header");
-  var focusedAction = $header.find(":focus").attr("data-action");
-  // Same markup as the server's first render: templates/timepicker_header.mustache
-  $header.html(AH.tpl.timepicker_header(tpHeaderView(st, disabled(el))));
-  if (focusedAction) { $header.find("[data-action='" + focusedAction + "']").trigger("focus"); }
+function tpCurrent(st) { return pad2(st.h) + ":" + pad2(st.m); }
 
-  var svg = $el.find("." + TP + "-svg")[0];
+
+// Redraw header and clock from the state (sigil sync-header!, sync-clock!).
+function tpRender(c) {
+  var st = c.st, el = c.element;
+  var header = el.querySelector("." + TP + "-header");
+  if (header) {
+    var focused = header.querySelector(":focus");
+    var focusedAction = focused && focused.getAttribute("data-action");
+    // Same markup as the server's first render: templates/timepicker_header.mustache
+    header.innerHTML = AH.tpl.timepicker_header(tpHeaderView(st, disabled(el)));
+    if (focusedAction) {
+      var again = header.querySelector("[data-action='" + focusedAction + "']");
+      if (again) { again.focus(); }
+    }
+  }
+
+  var svg = el.querySelector("." + TP + "-svg");
   if (!svg) { return; }
   var g = svg.querySelector("." + TP + "-numbers");
   var p = to12(st.h);
@@ -169,26 +169,24 @@ function tpRender(el) {
 
 // Commit a value ("HH:MM" or ""): data-ah-value, hidden input, field
 // text, clear button; `change` when it differs from the current one.
-function tpCommit(el, value, silent) {
-  var st = tpState(el);
-  var $el = $(el);
+function tpCommit(c, value, silent) {
+  var st = c.st, el = c.element;
   var old = el.getAttribute("data-ah-value") || "";
   el.setAttribute("data-ah-value", value);
-  $el.children("input[type=hidden]").val(value);
-  $el.find("." + TP + "-input").val(tpDisplay(st, value));
-  $el.find("." + TP + "-clear").prop("hidden", value === "");
+  var hidden = el.querySelector(":scope > input[type=hidden]");
+  if (hidden) { hidden.value = value; }
+  el.querySelectorAll("." + TP + "-input").forEach(function (i) { i.value = tpDisplay(st, value); });
+  el.querySelectorAll("." + TP + "-clear").forEach(function (b) { b.hidden = value === ""; });
   if (!silent && value !== old) {
-    $el.trigger("change", [{ value: value }]);
+    c.fire("change", { value: value });
   }
 }
 
-function tpCurrent(st) { return pad2(st.h) + ":" + pad2(st.m); }
-
 // Load the committed value into the state, or now (rounded to the step)
 // when empty, like sigil's default.
-function tpLoad(el) {
-  var st = tpState(el);
-  var t = parseTime(el.getAttribute("data-ah-value"));
+function tpLoad(c) {
+  var st = c.st;
+  var t = parseTime(c.element.getAttribute("data-ah-value"));
   if (t === null) {
     var now = new Date();
     t = now.getHours() * 60 + Math.round(now.getMinutes() / st.step) * st.step;
@@ -199,9 +197,8 @@ function tpLoad(el) {
   tpClampState(st);
 }
 
-function tpFromPolar(el, e) {
-  var st = tpState(el);
-  var svg = $(el).find("." + TP + "-svg")[0];
+function tpFromPolar(c, e) {
+  var svg = c.element.querySelector("." + TP + "-svg");
   var rect = svg.getBoundingClientRect();
   var pt = pointerXY(e);
   var dx = (pt.x - rect.left) / rect.width * 260 - CX;
@@ -212,8 +209,7 @@ function tpFromPolar(el, e) {
 }
 
 // sigil compute-from-polar with snap-hour / snap-minute.
-function tpApplyPolar(el, polar) {
-  var st = tpState(el);
+function tpApplyPolar(st, polar) {
   if (st.mode === "hours") {
     var idx = Math.round(polar.angle / (TWO_PI / 12)) % 12;
     var h;
@@ -255,27 +251,27 @@ function tpStep(st, dir) {
   return false;
 }
 
-function tpSetMode(el, mode) {
-  tpState(el).mode = mode;
-  tpRender(el);
+function tpSetMode(c, mode) {
+  c.st.mode = mode;
+  tpRender(c);
 }
 
-function tpSetPeriod(el, period) {
-  var st = tpState(el);
+function tpSetPeriod(c, period) {
+  var st = c.st;
   var h = to24(to12(st.h).h12, period);
   var t = clamp(h * 60 + st.m, st.lo, st.hi);
   st.h = Math.floor(t / 60);
   st.m = t % 60;
-  tpRender(el);
-  tpCommit(el, tpCurrent(st));
+  tpRender(c);
+  tpCommit(c, tpCurrent(st));
 }
 
-AH.define("timepicker", {
-  init: function (el, $el) {
-    el.setAttribute("data-ah-uid", P.nextId());
+AH.register("timepicker", class extends AH.Controller {
+  setup() {
+    var c = this, el = this.element;
     var lo = parseTime(el.getAttribute("data-min"));
     var hi = parseTime(el.getAttribute("data-max"));
-    var st = {
+    var st = this.st = {
       mode: "hours",
       format: el.getAttribute("data-format") === "24h" ? "24h" : "12h",
       step: parseInt(el.getAttribute("data-step"), 10) || 5,
@@ -284,70 +280,70 @@ AH.define("timepicker", {
       hi: hi === null ? 24 * 60 - 1 : hi,
       h: 12, m: 0
     };
-    $.data(el, "ah-tp", st);
-    tpLoad(el);
-    var $input = $el.find("." + TP + "-input");
-    var $popup = popupOf($el);
-    var $svg = $el.find("." + TP + "-svg");
-    var popup = $popup.length > 0;
+    tpLoad(this);
+    var input = el.querySelector("." + TP + "-input");
+    var popupEl = P.popupOf(el, TP);
+    var svg = el.querySelector("." + TP + "-svg");
+    var popup = !!popupEl;
     if (popup) {
-      $popup.attr("id", $popup.attr("id") || uid("ah-tp-popup-"));
-      $input.attr("aria-controls", $popup.attr("id"));
+      popupEl.id = popupEl.id || uid("ah-tp-popup-");
+      if (input) { input.setAttribute("aria-controls", popupEl.id); }
     }
-    fenceNativeEvents($el);
+    P.fenceNativeEvents(this);
+    var isOpen = function () { return P.isOpen(el, TP); };
 
-    function open(focusClock) {
-      openPopup(el, $el, TP, $input, function () {
+    var open = this._open = function (focusClock) {
+      P.openPopup(c, TP, input, function () {
         st.mode = "hours";
-        tpLoad(el);
-        tpRender(el);
+        tpLoad(c);
+        tpRender(c);
       });
-      if (focusClock) { $svg.trigger("focus"); }
-    }
-    function close(refocus) { closePopup(el, $el, TP, $input, refocus); }
-    $.data(el, "ah-tp-open", open);
-    $.data(el, "ah-tp-close", close);
+      if (focusClock && svg) { svg.focus(); }
+    };
+    var close = this._close = function (refocus) { P.closePopup(c, TP, input, refocus); };
 
     // Field: click toggles; typing a time commits on change.
-    $el.on("mousedown" + NS, "." + TP + "-input-area", function (e) {
-      if ($(e.target).closest("." + TP + "-clear").length) { return; }
-      if (isOpen($el)) {
-        if (!$(e.target).is($input)) { e.preventDefault(); close(true); }
+    this.delegate("mousedown", "." + TP + "-input-area", function (e) {
+      if (e.target.closest("." + TP + "-clear")) { return; }
+      if (isOpen()) {
+        if (e.target !== input) { e.preventDefault(); close(true); }
       } else {
         open(false);
       }
     });
-    $input.on("keydown" + NS, function (e) {
-      if (e.key === "ArrowDown" || (e.key === " " && !$input.val())) {
-        e.preventDefault();
-        open(true);
-      } else if (e.key === "Enter" && !isOpen($el)) {
-        e.preventDefault();
-        $input.trigger("change");
-      }
-    });
-    $input.on("change" + NS, function () {
-      var text = $input.val();
-      if (String(text).trim() === "") { tpCommit(el, ""); return; }
-      var t = parseTime(text);
-      if (t === null) {
-        $input.val(tpDisplay(st, el.getAttribute("data-ah-value") || ""));
-        return;
-      }
-      t = clamp(t, st.lo, st.hi);
-      st.h = Math.floor(t / 60);
-      st.m = t % 60;
-      tpRender(el);
-      tpCommit(el, tpCurrent(st));
-    });
-    $el.on("click" + NS, "." + TP + "-clear", function (e) {
+    if (input) {
+      this.listen(input, "keydown", function (e) {
+        if (e.key === "ArrowDown" || (e.key === " " && !input.value)) {
+          e.preventDefault();
+          open(true);
+        } else if (e.key === "Enter" && !isOpen()) {
+          e.preventDefault();
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+      });
+      this.listen(input, "change", function () {
+        var text = input.value;
+        if (String(text).trim() === "") { tpCommit(c, ""); return; }
+        var t = parseTime(text);
+        if (t === null) {
+          input.value = tpDisplay(st, el.getAttribute("data-ah-value") || "");
+          return;
+        }
+        t = clamp(t, st.lo, st.hi);
+        st.h = Math.floor(t / 60);
+        st.m = t % 60;
+        tpRender(c);
+        tpCommit(c, tpCurrent(st));
+      });
+    }
+    this.delegate("click", "." + TP + "-clear", function (e) {
       e.preventDefault();
-      tpCommit(el, "");
+      tpCommit(c, "");
       close(false);
-      $input.trigger("focus");
+      if (input) { input.focus(); }
     });
-    $el.on("keydown" + NS, function (e) {
-      if (e.key === "Escape" && isOpen($el)) {
+    this.listen(el, "keydown", function (e) {
+      if (e.key === "Escape" && isOpen()) {
         e.preventDefault();
         e.stopPropagation();
         close(true);
@@ -357,90 +353,93 @@ AH.define("timepicker", {
     // Header: hours / minutes / AM / PM (sigil setup-header-clicks!).
     function headerAction(action) {
       if (disabled(el)) { return; }
-      if (action === "select-hours") { tpSetMode(el, "hours"); }
-      else if (action === "select-minutes") { tpSetMode(el, "minutes"); }
-      else if (action === "set-am") { tpSetPeriod(el, "am"); }
-      else if (action === "set-pm") { tpSetPeriod(el, "pm"); }
+      if (action === "select-hours") { tpSetMode(c, "hours"); }
+      else if (action === "select-minutes") { tpSetMode(c, "minutes"); }
+      else if (action === "set-am") { tpSetPeriod(c, "am"); }
+      else if (action === "set-pm") { tpSetPeriod(c, "pm"); }
     }
-    $el.on("click" + NS, "." + TP + "-header [data-action]", function () {
-      headerAction(this.getAttribute("data-action"));
+    this.delegate("click", "." + TP + "-header [data-action]", function (e, t) {
+      headerAction(t.getAttribute("data-action"));
     });
-    $el.on("keydown" + NS, "." + TP + "-header [data-action]", function (e) {
+    this.delegate("keydown", "." + TP + "-header [data-action]", function (e, t) {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        headerAction(this.getAttribute("data-action"));
+        headerAction(t.getAttribute("data-action"));
       }
     });
 
     // Clock: drag (sigil setup-clock-drag!) and keyboard.
     var dragMode = null;
-    drag($svg, el, function (e) {
-      var polar = tpFromPolar(el, e);
+    P.drag(this, svg, function (e) {
+      var polar = tpFromPolar(c, e);
       if (polar.radius <= 20) { return false; }
       dragMode = st.mode;
-      if (tpApplyPolar(el, polar)) { tpRender(el); }
+      if (tpApplyPolar(st, polar)) { tpRender(c); }
     }, function (e) {
-      if (tpApplyPolar(el, tpFromPolar(el, e))) { tpRender(el); }
+      if (tpApplyPolar(st, tpFromPolar(c, e))) { tpRender(c); }
     }, function () {
-      tpCommit(el, tpCurrent(st));
+      tpCommit(c, tpCurrent(st));
       if (dragMode === "hours" && st.auto) {
-        tpSetMode(el, "minutes");
+        tpSetMode(c, "minutes");
       } else if (dragMode === "minutes" && popup) {
         close(true);
       }
       dragMode = null;
     });
-    $svg.on("keydown" + NS, function (e) {
-      if (disabled(el)) { return; }
-      var dir = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 }[e.key];
-      if (dir) {
-        e.preventDefault();
-        if (tpStep(st, dir)) {
-          tpRender(el);
-          tpCommit(el, tpCurrent(st));
+    if (svg) {
+      this.listen(svg, "keydown", function (e) {
+        if (disabled(el)) { return; }
+        var dir = { ArrowUp: 1, ArrowRight: 1, ArrowDown: -1, ArrowLeft: -1 }[e.key];
+        if (dir) {
+          e.preventDefault();
+          if (tpStep(st, dir)) {
+            tpRender(c);
+            tpCommit(c, tpCurrent(st));
+          }
+        } else if (e.key === "Home" || e.key === "End") {
+          e.preventDefault();
+          var t = e.key === "Home" ? st.lo : st.hi;
+          if (st.mode === "hours") {
+            st.h = Math.floor(t / 60);
+            tpClampState(st);
+          } else {
+            var base = st.h * 60;
+            var m = e.key === "Home" ? 0 : 60 - st.step;
+            while (!tpAllowed(st, base + m) && m >= 0 && m < 60) { m += e.key === "Home" ? st.step : -st.step; }
+            if (m >= 0 && m < 60) { st.m = m; }
+          }
+          tpRender(c);
+          tpCommit(c, tpCurrent(st));
+        } else if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          tpCommit(c, tpCurrent(st));
+          if (st.mode === "hours") {
+            tpSetMode(c, "minutes");
+          } else if (popup) {
+            close(true);
+          }
         }
-      } else if (e.key === "Home" || e.key === "End") {
-        e.preventDefault();
-        var t = e.key === "Home" ? st.lo : st.hi;
-        if (st.mode === "hours") {
-          st.h = Math.floor(t / 60);
-          tpClampState(st);
-        } else {
-          var base = st.h * 60;
-          var m = e.key === "Home" ? 0 : 60 - st.step;
-          while (!tpAllowed(st, base + m) && m >= 0 && m < 60) { m += e.key === "Home" ? st.step : -st.step; }
-          if (m >= 0 && m < 60) { st.m = m; }
-        }
-        tpRender(el);
-        tpCommit(el, tpCurrent(st));
-      } else if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        tpCommit(el, tpCurrent(st));
-        if (st.mode === "hours") {
-          tpSetMode(el, "minutes");
-        } else if (popup) {
-          close(true);
-        }
-      }
-    });
-    if (!popup) { tpRender(el); }
-  },
-  destroy: function (el) { stopFloat(el); },
-  methods: {
-    getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
-    // Set the value without firing change (server driven).
-    setValue: function (el, $el, v) {
-      var t = parseTime(v == null ? "" : String(v));
-      var st = tpState(el);
-      if (t === null) { tpCommit(el, "", true); return; }
-      st.h = Math.floor(t / 60);
-      st.m = t % 60;
-      tpRender(el);
-      tpCommit(el, tpCurrent(st), true);
-    },
-    clear: function (el) { tpCommit(el, ""); },
-    open: function (el) { $.data(el, "ah-tp-open")(true); },
-    close: function (el) { $.data(el, "ah-tp-close")(false); },
-    setMode: function (el, $el, mode) { tpSetMode(el, mode === "minutes" ? "minutes" : "hours"); }
+      });
+    }
+    if (!popup) { tpRender(this); }
   }
+
+  teardown() { P.stopFloat(this); }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  getValue() { return this.element.getAttribute("data-ah-value") || ""; }
+  // Set the value without firing change (server driven).
+  setValue(v) {
+    var t = parseTime(v == null ? "" : String(v));
+    var st = this.st;
+    if (t === null) { tpCommit(this, "", true); return; }
+    st.h = Math.floor(t / 60);
+    st.m = t % 60;
+    tpRender(this);
+    tpCommit(this, tpCurrent(st), true);
+  }
+  clear() { tpCommit(this, ""); }
+  open() { this._open(true); }
+  close() { this._close(false); }
+  setMode(mode) { tpSetMode(this, mode === "minutes" ? "minutes" : "hours"); }
 });

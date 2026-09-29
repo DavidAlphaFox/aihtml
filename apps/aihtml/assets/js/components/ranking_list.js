@@ -1,16 +1,16 @@
-/* ranking-list behaviour (designs/04-components.md): clickable rows. */
-import $ from "jquery";
+/* ranking-list behaviour (designs/04-components.md): clickable rows fire
+   "ah:item-click" with detail {index}. */
 import AH from "../core.js";
 import "./_lib_display.js";
 
-var NS = AH.NS;
-var L = AH.lib.display;
+const L = AH.lib.display;
+const ITEM = ".ah-ranking-list__item--clickable";
 
-AH.define("ranking-list", {
-  init: function (el, $el) {
-    $el.on("click" + NS, ".ah-ranking-list__item--clickable", function () {
-      $el.trigger("ah:item-click", [{ index: L.num(this.getAttribute("data-idx"), 0) }]);
+AH.register("ranking-list", class extends AH.Controller {
+  setup() {
+    this.delegate("click", ITEM, (e, item) => {
+      this.fire("ah:item-click", { index: L.num(item.getAttribute("data-idx"), 0) });
     });
-    $el.on("keydown" + NS, ".ah-ranking-list__item--clickable", L.keyClick);
+    this.delegate("keydown", ITEM, L.keyClick);
   }
 });

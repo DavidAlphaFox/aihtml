@@ -1,4 +1,4 @@
-/* Behaviour of the data table (designs/04-components.md).
+/* Controller of the data table (designs/04-components.md).
  *
  * Ported from sigil (data/datatable). The server renders every row,
  * header and pager; this file moves state around in that DOM. Local mode:
@@ -13,21 +13,39 @@
  * chooser work in both modes. Shared helpers are in _lib_table.js
  * (AH.lib.table).
  *
+ * Links: with the href option the pager's prev / next / page buttons are
+ * <a href> (crawlable; the page at the URL renders that state). A plain
+ * left click is intercepted: the table pages as above and the link's URL
+ * is pushed to the history (core's url op; back / forward reload it).
+ * The pager re-rendered here fills the template (the pager's data-href)
+ * from the current sort and search.
+ *
  * The view state lives in the DOM (root data-* attributes, filter inputs,
- * row attributes), so a morph that re-initialises the behaviour keeps it.
- * The selection is the root's data-ah-value (keys joined with commas),
- * mirrored into a hidden input; "change" fires when the user changes it,
- * never from methods.
+ * row attributes), so a morph keeps it; the server calls refresh after
+ * one. The selection is the root's data-ah-value (keys joined with
+ * commas), mirrored into a hidden input; "change" fires when the user
+ * changes it, never from methods.
+ *
+ * Events (native CustomEvents, bubbling; the detail in e.detail):
+ *   ah:query          {sort, dir, page, pageSize, search, filters}
+ *   ah:sort           {field, dir}
+ *   ah:page           {page, pageSize}
+ *   ah:filter         {filters, search}
+ *   ah:row-click, ah:row-dblclick, ah:row-expand, ah:row-collapse  {key}
+ *                     (the key is also the root's data-key)
+ *   ah:cell-edit      {key, field, value, old}, fired on the cell
+ *   ah:columns        {hidden}
+ *   ah:column-resize  {field, width}
  */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_table.js";
 import "./_lib_values.js";
 import "virtual:ah-tpl/datatable_pager";
 
-var NS = AH.NS;
 var L = AH.lib.table;
 var V = AH.lib.values;
+var kids = L.kids;
+var kid = L.kid;
 var keysOf = L.keysOf;
 var toKeys = L.toKeys;
 var writeValue = L.writeValue;
@@ -42,59 +60,67 @@ var markRows = L.markRows;
 var headerCheck = L.headerCheck;
 var focusRow = L.focusRow;
 var part = L.part;
-var bindScroll = L.bindScroll;
-var watchGutter = L.watchGutter;
-var bindResize = L.bindResize;
+var partTable = L.partTable;
 var nextSort = L.nextSort;
 var writeSort = L.writeSort;
 var isOff = L.isOff;
 var OWN = L.OWN;
 
+function qa(root, sel) { return root ? Array.from(root.querySelectorAll(sel)) : []; }
+function header(el) { return part(el, "ah-dt", "header"); }
+
 function dtBody(el) { return document.getElementById(el.id + "-rows"); }
-function dtRows(el) { return $(dtBody(el)).children("tr.ah-dt-row"); }
-function dtShown(el) { return dtRows(el).filter(function () { return !this.hidden; }).toArray(); }
+function dtRows(el) { return kids(dtBody(el), "tr.ah-dt-row"); }
+function dtShown(el) { return dtRows(el).filter(function (r) { return !r.hidden; }); }
 function dtRemote(el) { return el.getAttribute("data-mode") === "remote"; }
 function dtByKey(el, key) {
   key = String(key);
-  return dtRows(el).filter(function () { return this.getAttribute("data-key") === key; })[0] || null;
+  return dtRows(el).filter(function (r) { return r.getAttribute("data-key") === key; })[0] || null;
 }
 function dtDetail(el, key) {
-  return $(dtBody(el)).children("tr.ah-dt-row-details").filter(function () {
-    return this.getAttribute("data-key") === key;
+  return kids(dtBody(el), "tr.ah-dt-row-details").filter(function (r) {
+    return r.getAttribute("data-key") === key;
   })[0] || null;
 }
-function dtHeaderRow(el) { return part(el, "ah-dt", "header").find("> table > thead > tr.ah-dt-header-row")[0]; }
+function dtHeaderRow(el) {
+  return kid(kid(partTable(el, "ah-dt", "header"), "thead"), "tr.ah-dt-header-row");
+}
 function dtTh(el, field) {
-  return $(dtHeaderRow(el)).children("th[data-field]").filter(function () {
-    return this.getAttribute("data-field") === field;
+  return kids(dtHeaderRow(el), "th[data-field]").filter(function (th) {
+    return th.getAttribute("data-field") === field;
   })[0] || null;
 }
 function dtCell(tr, field) {
-  return $(tr).children("td[data-field]").filter(function () {
-    return this.getAttribute("data-field") === field;
+  return kids(tr, "td[data-field]").filter(function (td) {
+    return td.getAttribute("data-field") === field;
   })[0] || null;
 }
 function num(v, d) { var n = parseInt(v, 10); return n > 0 ? n : d; }
+function keyOf(r) { return r.getAttribute("data-key"); }
+function siblingInput(sel) {
+  return sel.parentNode ? kid(sel.parentNode, ".ah-dt-adv-filter-input") : null;
+}
 
 // Column filters from the filter row: text, or {condition, value}.
 function dtFilters(el) {
   var f = {};
-  var $h = part(el, "ah-dt", "header");
-  $h.find(".ah-dt-filter-input").each(function () {
-    if (this.value) { f[this.getAttribute("data-field")] = this.value; }
+  var h = header(el);
+  qa(h, ".ah-dt-filter-input").forEach(function (i) {
+    if (i.value) { f[i.getAttribute("data-field")] = i.value; }
   });
-  $h.find(".ah-dt-adv-filter-select").each(function () {
-    var cond = this.value;
-    var v = $(this).siblings(".ah-dt-adv-filter-input").val() || "";
-    if (cond === "empty" || cond === "not_empty") { f[this.getAttribute("data-field")] = { condition: cond, value: "" }; }
-    else if (v) { f[this.getAttribute("data-field")] = { condition: cond, value: v }; }
+  qa(h, ".ah-dt-adv-filter-select").forEach(function (s) {
+    var cond = s.value;
+    var input = siblingInput(s);
+    var v = (input && input.value) || "";
+    if (cond === "empty" || cond === "not_empty") { f[s.getAttribute("data-field")] = { condition: cond, value: "" }; }
+    else if (v) { f[s.getAttribute("data-field")] = { condition: cond, value: v }; }
   });
   return f;
 }
 
 function dtSearch(el) {
-  var $s = part(el, "ah-dt", "header").find(".ah-dt-search-input");
-  return $s.length ? $s.val() : (el.getAttribute("data-search") || "");
+  var s = qa(header(el), ".ah-dt-search-input")[0];
+  return s ? s.value : (el.getAttribute("data-search") || "");
 }
 
 function lower(s) { return String(s).toLowerCase(); }
@@ -131,8 +157,9 @@ function dtMatches(tr, fields, search, filters, types) {
   });
 }
 
-// The pager's view data, as aihtml_datatable:pager_view/5 builds it.
-function pagerView(page, size, total, sizes, t) {
+// The pager's view data, as aihtml_datatable:pager_view/6 builds it;
+// base is the href template with {sort} and {search} filled in, or null.
+function pagerView(page, size, total, sizes, t, base) {
   var pages = Math.max(1, Math.ceil(total / size));
   var start = total === 0 ? 0 : (page - 1) * size + 1;
   var end = Math.min(page * size, total);
@@ -150,13 +177,20 @@ function pagerView(page, size, total, sizes, t) {
     if (page < pages - 2) { btns.push(0); }
     btns.push(pages);
   }
+  var link = base != null;
+  var url = function (p) {
+    return link ? base.split("{page}").join(String(p)).split("{size}").join(String(size)) : "";
+  };
   var all = sizes.concat([size]).filter(function (s, j, a) { return a.indexOf(s) === j; })
     .sort(function (a, b) { return a - b; });
   return {
     info: info, prev_label: t.prev, next_label: t.next, size_label: t.size,
     prev_disabled: page <= 1, next_disabled: page >= pages,
+    prev_link: link && page > 1, prev_href: url(page - 1),
+    next_link: link && page < pages, next_href: url(page + 1),
     buttons: btns.map(function (b) {
-      return b === 0 ? { gap: true, page: 0, active: false } : { gap: false, page: b, active: b === page };
+      return b === 0 ? { gap: true, page: 0, active: false, link: false, href: "" }
+        : { gap: false, page: b, active: b === page, link: link && b !== page, href: url(b) };
     }),
     has_sizes: sizes.length > 0,
     sizes: all.map(function (s) { return { size: s, selected: s === size }; })
@@ -164,33 +198,53 @@ function pagerView(page, size, total, sizes, t) {
 }
 
 function dtPager(el, page, size, total) {
-  var $c = $(el).children(".ah-dt-pager-container");
-  if (!$c.length || !AH.tpl || !AH.tpl.datatable_pager) { return; }
-  var sizes = ($c.attr("data-sizes") || "").split(",").filter(Boolean).map(Number);
-  var t = { info: $c.attr("data-info"), prev: $c.attr("data-prev"), next: $c.attr("data-next"),
-            size: $c.attr("data-size") };
-  $c.html(AH.tpl.datatable_pager(pagerView(page, size, total, sizes, t)));
+  var c = kid(el, ".ah-dt-pager-container");
+  if (!c || !AH.tpl || !AH.tpl.datatable_pager) { return; }
+  var sizes = (c.getAttribute("data-sizes") || "").split(",").filter(Boolean).map(Number);
+  var t = { info: c.getAttribute("data-info"), prev: c.getAttribute("data-prev"),
+            next: c.getAttribute("data-next"), size: c.getAttribute("data-size") };
+  c.innerHTML = AH.tpl.datatable_pager(pagerView(page, size, total, sizes, t, linkBase(el, c)));
 }
+
+// The href template (data-href of the pager) with {sort} and {search}
+// filled in from the current view, as aihtml_datatable:link_base/3 does.
+function linkBase(el, c) {
+  var tpl = c.getAttribute("data-href");
+  if (tpl == null) { return null; }
+  var field = el.getAttribute("data-sort-field"), dir = el.getAttribute("data-sort-dir");
+  var sort = field && dir ? field + ":" + dir : "";
+  return tpl.split("{sort}").join(encodeURIComponent(sort))
+    .split("{search}").join(encodeURIComponent(dtSearch(el)));
+}
+
+// A plain left click on a pager link is handled in place; any other
+// click (new tab, window, download) is left to the browser.
+function plainClick(e) {
+  return e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey;
+}
+
+function pushUrl(url) { AH.apply([{ op: "url", mode: "push", value: url }]); }
+
+function headerBox(el) { return qa(header(el), ".ah-dt-header-checkbox")[0] || null; }
 
 function dtStripes(el, shown) {
   var alt = el.getAttribute("data-alt-rows") === "true";
-  shown.forEach(function (r, i) { $(r).toggleClass("ah-dt-row-alt", alt && i % 2 === 1); });
-  $(dtBody(el)).children("tr.ah-dt-row-empty").prop("hidden", shown.length > 0);
-  var $rows = dtRows(el);
-  var stop = $rows.filter("[tabindex='0']")[0];
-  if (!stop || stop.hidden) { focusRow($rows, shown[0], false); }
-  headerCheck(part(el, "ah-dt", "header").find(".ah-dt-header-checkbox"), keysOf(el),
-              shown.map(function (r) { return r.getAttribute("data-key"); }));
+  shown.forEach(function (r, i) { r.classList.toggle("ah-dt-row-alt", alt && i % 2 === 1); });
+  kids(dtBody(el), "tr.ah-dt-row-empty").forEach(function (r) { r.hidden = shown.length > 0; });
+  var rows = dtRows(el);
+  var stop = rows.filter(function (r) { return r.getAttribute("tabindex") === "0"; })[0];
+  if (!stop || stop.hidden) { focusRow(rows, shown[0], false); }
+  headerCheck(headerBox(el), keysOf(el), shown.map(keyOf));
 }
 
 // Local mode: search, filters, sort and page over the rendered rows.
 function dtApply(el) {
   var body = dtBody(el);
-  var rows = dtRows(el).toArray();
+  var rows = dtRows(el);
   var fields = [], types = {};
-  $(dtHeaderRow(el)).children("th[data-field]").each(function () {
-    fields.push(this.getAttribute("data-field"));
-    types[this.getAttribute("data-field")] = this.getAttribute("data-type");
+  kids(dtHeaderRow(el), "th[data-field]").forEach(function (th) {
+    fields.push(th.getAttribute("data-field"));
+    types[th.getAttribute("data-field")] = th.getAttribute("data-type");
   });
   var search = lower(String(dtSearch(el)).trim());
   var filters = dtFilters(el);
@@ -203,10 +257,10 @@ function dtApply(el) {
   });
   var rest = rows.filter(function (r) { return match.indexOf(r) < 0; })
     .sort(function (a, b) { return ord(a) - ord(b); });
-  var end = $(body).children("tr.ah-dt-row-empty")[0] || null;
+  var end = kid(body, "tr.ah-dt-row-empty");
   match.concat(rest).forEach(function (r) {
     body.insertBefore(r, end);
-    var d = dtDetail(el, r.getAttribute("data-key"));
+    var d = dtDetail(el, keyOf(r));
     if (d) { body.insertBefore(d, end); }
   });
   var size = num(el.getAttribute("data-page-size"), 0);
@@ -220,7 +274,7 @@ function dtApply(el) {
   rows.forEach(function (r) {
     var on = shown.indexOf(r) >= 0;
     r.hidden = !on;
-    var d = dtDetail(el, r.getAttribute("data-key"));
+    var d = dtDetail(el, keyOf(r));
     if (d) { d.hidden = !on; }
   });
   dtStripes(el, shown);
@@ -228,84 +282,98 @@ function dtApply(el) {
 }
 
 // Remote mode: the state goes on the root and the server answers.
-function dtQuery(el) {
+function dtQuery(ctl, el) {
   var f = dtFilters(el);
   if (Object.keys(f).length) { el.setAttribute("data-filters", JSON.stringify(f)); }
   else { el.removeAttribute("data-filters"); }
   var s = dtSearch(el);
   if (s) { el.setAttribute("data-search", s); } else { el.removeAttribute("data-search"); }
-  $(el).children(".ah-dt-content").addClass("ah-dt-loading");
-  $(el).trigger("ah:query", [{ sort: el.getAttribute("data-sort-field"), dir: el.getAttribute("data-sort-dir"),
-                               page: num(el.getAttribute("data-page"), 1),
-                               pageSize: num(el.getAttribute("data-page-size"), 0) || null,
-                               search: s, filters: f }]);
+  kids(el, ".ah-dt-content").forEach(function (c) { c.classList.add("ah-dt-loading"); });
+  ctl.fire("ah:query", { sort: el.getAttribute("data-sort-field"), dir: el.getAttribute("data-sort-dir"),
+                         page: num(el.getAttribute("data-page"), 1),
+                         pageSize: num(el.getAttribute("data-page-size"), 0) || null,
+                         search: s, filters: f });
 }
 
-function dtView(el) {
-  if (dtRemote(el)) { dtQuery(el); } else { dtApply(el); }
+function dtView(ctl, el) {
+  if (dtRemote(el)) { dtQuery(ctl, el); } else { dtApply(el); }
 }
 
-function dtSelect(el, keys, user) {
+function dtSelect(ctl, el, keys, user) {
   var prev = keysOf(el);
   markRows(dtRows(el), "ah-dt", keys, el.getAttribute("data-selection"));
   writeValue(el, keys);
-  headerCheck(part(el, "ah-dt", "header").find(".ah-dt-header-checkbox"), keys,
-              dtShown(el).map(function (r) { return r.getAttribute("data-key"); }));
-  if (user && !sameKeys(prev, keys)) { $(el).trigger("change"); }
+  headerCheck(headerBox(el), keys, dtShown(el).map(keyOf));
+  if (user && !sameKeys(prev, keys)) { ctl.fire("change"); }
 }
 
-function dtEvent(el, name, key, extra) {
+function dtEvent(ctl, el, name, key, extra) {
   el.setAttribute("data-key", key);
-  $(el).trigger(name, [$.extend({ key: key }, extra || {})]);
+  ctl.fire(name, Object.assign({ key: key }, extra || {}));
 }
 
-function dtSetDetails(el, key, open, user) {
+function expandBtns(tr) {
+  var out = [];
+  kids(tr, "td").forEach(function (td) { out.push.apply(out, kids(td, ".ah-dt-expand-btn")); });
+  return out;
+}
+
+function dtSetDetails(ctl, el, key, open, user) {
   var tr = dtByKey(el, key), d = dtDetail(el, key);
   if (!tr || !d) { return; }
-  var was = !$(d).hasClass("ah-dt-row-details-hidden");
+  var was = !d.classList.contains("ah-dt-row-details-hidden");
   if (was === open) { return; }
-  $(d).toggleClass("ah-dt-row-details-hidden", !open);
-  $(tr).find("> td > .ah-dt-expand-btn").toggleClass("ah-dt-expand-btn-open", open)
-    .attr("aria-expanded", String(open));
+  d.classList.toggle("ah-dt-row-details-hidden", !open);
+  expandBtns(tr).forEach(function (b) {
+    b.classList.toggle("ah-dt-expand-btn-open", open);
+    b.setAttribute("aria-expanded", String(open));
+  });
   var list = V.split(el.getAttribute("data-expanded")).filter(function (k) { return k && k !== key; });
   if (open) { list.push(key); }
   if (list.length) { el.setAttribute("data-expanded", V.join(list)); } else { el.removeAttribute("data-expanded"); }
-  if (user) { dtEvent(el, open ? "ah:row-expand" : "ah:row-collapse", key); }
+  if (user) { dtEvent(ctl, el, open ? "ah:row-expand" : "ah:row-collapse", key); }
 }
 
-function dtSetHidden(el, field, hide) {
+function dtSetHidden(ctl, el, field, hide) {
   var th = dtTh(el, field);
   if (!th) { return; }
   var row = th.parentNode;
   var idx = Array.prototype.indexOf.call(row.children, th);
-  var $both = part(el, "ah-dt", "header").add(part(el, "ah-dt", "body"));
-  $both.find("> table > colgroup").each(function () {
-    var c = this.children[idx];
-    if (c) { c.hidden = hide; }
+  [partTable(el, "ah-dt", "header"), partTable(el, "ah-dt", "body")].forEach(function (t) {
+    kids(t, "colgroup").forEach(function (g) {
+      var c = g.children[idx];
+      if (c) { c.hidden = hide; }
+    });
   });
   th.hidden = hide;
-  part(el, "ah-dt", "header").find("> table > thead > tr.ah-dt-filter-row").each(function () {
-    if (this.children[idx]) { this.children[idx].hidden = hide; }
+  kids(kid(partTable(el, "ah-dt", "header"), "thead"), "tr.ah-dt-filter-row").forEach(function (tr) {
+    if (tr.children[idx]) { tr.children[idx].hidden = hide; }
   });
-  dtRows(el).each(function () { var c = dtCell(this, field); if (c) { c.hidden = hide; } });
-  var hidden = $(row).children("th[data-field]").filter(function () { return this.hidden; })
-    .map(function () { return this.getAttribute("data-field"); }).get();
+  dtRows(el).forEach(function (r) { var c = dtCell(r, field); if (c) { c.hidden = hide; } });
+  var hidden = kids(row, "th[data-field]").filter(function (h) { return h.hidden; })
+    .map(function (h) { return h.getAttribute("data-field"); });
   if (hidden.length) { el.setAttribute("data-hidden", V.join(hidden)); } else { el.removeAttribute("data-hidden"); }
-  var span = $(row).children("th").filter(function () { return !this.hidden; }).length;
-  $(dtBody(el)).find("> tr > td.ah-dt-cell-empty, > tr > td.ah-dt-row-details-cell").attr("colspan", span);
-  $(el).children(".ah-dt-chooser-panel").find(".ah-dt-chooser-checkbox").each(function () {
-    if (this.getAttribute("data-field") === field) { this.checked = !hide; }
+  var span = kids(row, "th").filter(function (h) { return !h.hidden; }).length;
+  kids(dtBody(el), "tr").forEach(function (tr) {
+    kids(tr, "td.ah-dt-cell-empty, td.ah-dt-row-details-cell").forEach(function (td) {
+      td.setAttribute("colspan", span);
+    });
   });
-  $(el).trigger("ah:columns", [{ hidden: hidden }]);
+  kids(el, ".ah-dt-chooser-panel").forEach(function (p) {
+    qa(p, ".ah-dt-chooser-checkbox").forEach(function (cb) {
+      if (cb.getAttribute("data-field") === field) { cb.checked = !hide; }
+    });
+  });
+  ctl.fire("ah:columns", { hidden: hidden });
 }
 
 // ---- inline editing ------------------------------------------------
 
 function dtEditable(el) { return el.getAttribute("data-editable") === "true"; }
 
-function dtBeginEdit(el, st, td) {
+function dtBeginEdit(ctl, el, st, td) {
   if (!td || !dtEditable(el) || isOff(el)) { return; }
-  if (st.edit) { dtEndEdit(el, st, true); }
+  if (st.edit) { dtEndEdit(ctl, el, st, true); }
   var tr = td.parentNode;
   var field = td.getAttribute("data-field");
   var th = dtTh(el, field);
@@ -328,7 +396,7 @@ function dtBeginEdit(el, st, td) {
 }
 
 // Commit (or cancel) the open editor; returns the edited cell.
-function dtEndEdit(el, st, commit) {
+function dtEndEdit(ctl, el, st, commit) {
   var ed = st.edit;
   if (!ed) { return null; }
   st.edit = null;
@@ -338,7 +406,9 @@ function dtEndEdit(el, st, commit) {
     return ed.td;
   }
   ed.td.innerHTML = "";
-  $("<span>").text(value).appendTo(ed.td);
+  var span = document.createElement("span");
+  span.textContent = value;
+  ed.td.appendChild(span);
   ed.td.setAttribute("data-value", value);
   var key = ed.tr.getAttribute("data-key");
   ed.td.setAttribute("data-key", key);
@@ -349,65 +419,63 @@ function dtEndEdit(el, st, commit) {
     ed.td.setAttribute("data-ah-on", "ah:cell-edit:" + token);
     AH.mount(ed.td);
   }
-  $(ed.td).trigger("ah:cell-edit", [{ key: key, field: ed.field, value: value, old: ed.old }]);
+  ctl.fire("ah:cell-edit", { key: key, field: ed.field, value: value, old: ed.old }, ed.td);
   return ed.td;
 }
 
-function dtEditKey(el, st, e) {
+function dtEditKey(ctl, el, st, e) {
   var ed = st.edit;
   if (!ed || e.target !== ed.input) { return; }
   e.stopPropagation();
   if (e.key === "Escape") {
     e.preventDefault();
-    dtEndEdit(el, st, false);
+    dtEndEdit(ctl, el, st, false);
     focusRow(dtRows(el), ed.tr, true);
   } else if (e.key === "Enter") {
     e.preventDefault();
-    dtEndEdit(el, st, true);
+    dtEndEdit(ctl, el, st, true);
     focusRow(dtRows(el), ed.tr, true);
   } else if (e.key === "Tab") {
     e.preventDefault();
     var cells = [];
     dtShown(el).forEach(function (r) {
-      $(r).children("td.ah-dt-cell-editable").each(function () { if (!this.hidden) { cells.push(this); } });
+      kids(r, "td.ah-dt-cell-editable").forEach(function (td) { if (!td.hidden) { cells.push(td); } });
     });
     var i = cells.indexOf(ed.td);
     var next = cells[i + (e.shiftKey ? -1 : 1)];
-    dtEndEdit(el, st, true);
-    if (next) { dtBeginEdit(el, st, next); } else { focusRow(dtRows(el), ed.tr, true); }
+    dtEndEdit(ctl, el, st, true);
+    if (next) { dtBeginEdit(ctl, el, st, next); } else { focusRow(dtRows(el), ed.tr, true); }
   }
 }
 
 // ---- column chooser -------------------------------------------------
 
 function dtChooser(el, st, open) {
-  var $p = $(el).children(".ah-dt-chooser-panel");
-  var btn = part(el, "ah-dt", "header").find(".ah-dt-chooser-btn")[0];
-  if (!$p.length || !btn) { return; }
+  var p = kid(el, ".ah-dt-chooser-panel");
+  var btn = qa(header(el), ".ah-dt-chooser-btn")[0];
+  if (!p || !btn) { return; }
   if (st.float) { st.float.stop(); st.float = null; }
-  $(document).off(".ahdtbch" + st.id);
-  $p.toggleClass("ah-dt-chooser-panel-open", open);
+  if (st.chooserOff) { st.chooserOff.abort(); st.chooserOff = null; }
+  p.classList.toggle("ah-dt-chooser-panel-open", open);
   btn.setAttribute("aria-expanded", String(open));
   if (!open) { return; }
-  st.float = AH.float($p[0], btn, { placement: "bottom", align: "end", offset: 4 });
-  $(document).on("mousedown.ahdtbch" + st.id, function (e) {
-    if (!$.contains($p[0], e.target) && !$.contains(btn, e.target) && e.target !== btn) {
-      dtChooser(el, st, false);
-    }
-  }).on("keydown.ahdtbch" + st.id, function (e) {
+  st.float = AH.float(p, btn, { placement: "bottom", align: "end", offset: 4 });
+  var off = st.chooserOff = new AbortController();
+  document.addEventListener("mousedown", function (e) {
+    if (!p.contains(e.target) && !btn.contains(e.target)) { dtChooser(el, st, false); }
+  }, { signal: off.signal });
+  document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { dtChooser(el, st, false); btn.focus(); }
-  });
+  }, { signal: off.signal });
 }
 
 // ---- events -----------------------------------------------------------
 
-function dtKeydown(el, st, e) {
-  var tr = e.target;
-  if (!$(tr).is("tr.ah-dt-row") || tr.parentNode !== dtBody(el) || isOff(el) ||
-      e.altKey || e.metaKey) { return; }
+function dtKeydown(ctl, el, st, e, tr) {
+  if (e.target !== tr || tr.parentNode !== dtBody(el) || isOff(el) || e.altKey || e.metaKey) { return; }
   var vis = dtShown(el);
   var i = vis.indexOf(tr);
-  var key = tr.getAttribute("data-key");
+  var key = keyOf(tr);
   var to = null;
   switch (e.key) {
     case "ArrowDown": to = vis[Math.min(i + 1, vis.length - 1)]; break;
@@ -416,19 +484,19 @@ function dtKeydown(el, st, e) {
     case "End": to = vis[vis.length - 1]; break;
     case "PageDown": to = vis[Math.min(i + 10, vis.length - 1)]; break;
     case "PageUp": to = vis[Math.max(i - 10, 0)]; break;
-    case "ArrowRight": dtSetDetails(el, key, true, true); break;
-    case "ArrowLeft": dtSetDetails(el, key, false, true); break;
+    case "ArrowRight": dtSetDetails(ctl, el, key, true, true); break;
+    case "ArrowLeft": dtSetDetails(ctl, el, key, false, true); break;
     case "F2":
     case "Enter":
       if (dtEditable(el)) {
-        var cell = $(tr).children("td.ah-dt-cell-editable").filter(function () { return !this.hidden; })[0];
-        if (cell) { dtBeginEdit(el, st, cell); break; }
+        var cell = kids(tr, "td.ah-dt-cell-editable").filter(function (td) { return !td.hidden; })[0];
+        if (cell) { dtBeginEdit(ctl, el, st, cell); break; }
       }
       if (e.key === "F2") { break; }
       /* falls through */
     case " ":
       var next = keySelect(el.getAttribute("data-selection"), keysOf(el), key);
-      if (next) { dtSelect(el, next, true); st.anchor = key; }
+      if (next) { dtSelect(ctl, el, next, true); st.anchor = key; }
       break;
     default:
       return;
@@ -437,181 +505,221 @@ function dtKeydown(el, st, e) {
   if (to) { focusRow(dtRows(el), to, true); }
 }
 
-function dtClick(el, st, e) {
-  var tr = $(e.target).closest("tr.ah-dt-row")[0];
-  if (!tr || tr.parentNode !== dtBody(el) || isOff(el)) { return; }
-  var key = tr.getAttribute("data-key");
-  if ($(e.target).closest(".ah-dt-expand-btn").length) {
-    dtSetDetails(el, key, !$(e.target).closest(".ah-dt-expand-btn").hasClass("ah-dt-expand-btn-open"), true);
+function dtClick(ctl, el, st, e, tr) {
+  if (tr.parentNode !== dtBody(el) || isOff(el)) { return; }
+  var key = keyOf(tr);
+  var btn = e.target.closest(".ah-dt-expand-btn");
+  if (btn && tr.contains(btn)) {
+    dtSetDetails(ctl, el, key, !btn.classList.contains("ah-dt-expand-btn-open"), true);
     return;
   }
-  if (st.edit && $.contains(st.edit.td, e.target)) { return; }
+  if (st.edit && st.edit.td.contains(e.target) && st.edit.td !== e.target) { return; }
   focusRow(dtRows(el), tr, false);
-  if ($(e.target).closest(OWN).length) { return; }
+  var own = e.target.closest(OWN);
+  if (own && tr.contains(own)) { return; }
   var next = clickSelect(el.getAttribute("data-selection"), keysOf(el), key, e, st.anchor,
-                         dtShown(el).map(function (r) { return r.getAttribute("data-key"); }));
+                         dtShown(el).map(keyOf));
   if (next) {
-    dtSelect(el, next, true);
+    dtSelect(ctl, el, next, true);
     if (!e.shiftKey) { st.anchor = key; }
   }
-  dtEvent(el, "ah:row-click", key);
+  dtEvent(ctl, el, "ah:row-click", key);
 }
 
-function dtGoTo(el, page) {
+function dtGoTo(ctl, el, page) {
   el.setAttribute("data-page", Math.max(1, page));
-  dtView(el);
-  $(el).trigger("ah:page", [{ page: num(el.getAttribute("data-page"), 1),
-                              pageSize: num(el.getAttribute("data-page-size"), 0) }]);
+  dtView(ctl, el);
+  ctl.fire("ah:page", { page: num(el.getAttribute("data-page"), 1),
+                        pageSize: num(el.getAttribute("data-page-size"), 0) });
 }
 
-function dtFiltered(el) {
+function dtFiltered(ctl, el) {
   el.setAttribute("data-page", 1);
-  dtView(el);
-  $(el).trigger("ah:filter", [{ filters: dtFilters(el), search: dtSearch(el) }]);
+  dtView(ctl, el);
+  ctl.fire("ah:filter", { filters: dtFilters(el), search: dtSearch(el) });
 }
 
-AH.define("datatable", {
-  init: function (el, $el) {
-    var st = { id: L.nextId(), anchor: null, edit: null, float: null, timer: null, stopResize: null };
-    $.data(el, "ah-datatable", st);
+var FILTER_INPUTS = ".ah-dt-filter-input, .ah-dt-adv-filter-input, .ah-dt-search-input";
+
+AH.register("datatable", class extends AH.Controller {
+  setup() {
+    var el = this.element, ctl = this;
+    var st = this.st = { id: L.nextId(), anchor: null, edit: null, float: null, timer: null,
+                         stopResize: null, chooserOff: null, ro: null };
     var debounced = function () {
       clearTimeout(st.timer);
-      st.timer = setTimeout(function () { dtFiltered(el); }, 200);
+      st.timer = setTimeout(function () { dtFiltered(ctl, el); }, 200);
     };
-    $el.on("click" + NS, "tbody > tr.ah-dt-row", function (e) { dtClick(el, st, e); });
-    $el.on("dblclick" + NS, "tbody > tr.ah-dt-row", function (e) {
-      if (this.parentNode !== dtBody(el)) { return; }
-      var td = $(e.target).closest("td.ah-dt-cell-editable")[0];
-      if (td && td.parentNode === this) { dtBeginEdit(el, st, td); }
-      dtEvent(el, "ah:row-dblclick", this.getAttribute("data-key"));
+    var ROW = "tbody > tr.ah-dt-row";
+    this.delegate("click", ROW, function (e, tr) { dtClick(ctl, el, st, e, tr); });
+    this.delegate("dblclick", ROW, function (e, tr) {
+      if (tr.parentNode !== dtBody(el)) { return; }
+      var td = e.target.closest("td.ah-dt-cell-editable");
+      if (td && td.parentNode === tr) { dtBeginEdit(ctl, el, st, td); }
+      dtEvent(ctl, el, "ah:row-dblclick", keyOf(tr));
     });
-    $el.on("keydown" + NS, "tbody > tr.ah-dt-row", function (e) { dtKeydown(el, st, e); });
-    $el.on("keydown" + NS, ".ah-dt-editor", function (e) { dtEditKey(el, st, e); });
-    $el.on("focusout" + NS, ".ah-dt-editor", function () {
+    this.listen(el, "keydown", function (e) {
+      if (!(e.target instanceof Element)) { return; }
+      if (e.target.matches(".ah-dt-editor")) { dtEditKey(ctl, el, st, e); return; }
+      var tr = e.target.closest(ROW);
+      if (tr && el.contains(tr)) { dtKeydown(ctl, el, st, e, tr); return; }
+      var th = e.target.closest(".ah-dt-th-sortable");
+      if (th && el.contains(th) && (e.key === "Enter" || e.key === " ")) {
+        e.preventDefault();
+        th.click();
+      }
+    });
+    this.delegate("focusout", ".ah-dt-editor", function () {
       var ed = st.edit;
-      setTimeout(function () { if (st.edit === ed && ed) { dtEndEdit(el, st, true); } }, 0);
+      setTimeout(function () { if (st.edit === ed && ed) { dtEndEdit(ctl, el, st, true); } }, 0);
     });
-    $el.on("change" + NS, ".ah-dt-row-checkbox", function (e) {
-      e.stopPropagation();
-      var k = $(this).closest("tr")[0].getAttribute("data-key");
-      var rest = keysOf(el).filter(function (x) { return x !== k; });
-      dtSelect(el, this.checked ? rest.concat([k]) : rest, true);
+    // Inner controls (row / header boxes, filters, pager, chooser) report
+    // to the table, not as its own change: stopImmediatePropagation also
+    // keeps them from listeners on the root added after this one, as
+    // jQuery's delegated stopPropagation did.
+    this.listen(el, "change", function (e) {
+      var t = e.target;
+      if (!(t instanceof Element) || t === el) { return; }
+      if (t.matches(".ah-dt-row-checkbox")) {
+        e.stopImmediatePropagation();
+        var k = keyOf(t.closest("tr"));
+        var rest = keysOf(el).filter(function (x) { return x !== k; });
+        dtSelect(ctl, el, t.checked ? rest.concat([k]) : rest, true);
+      } else if (t.matches(".ah-dt-header-checkbox")) {
+        e.stopImmediatePropagation();
+        var page = dtShown(el).map(keyOf);
+        var others = keysOf(el).filter(function (x) { return page.indexOf(x) < 0; });
+        dtSelect(ctl, el, t.checked ? others.concat(page) : others, true);
+      } else if (t.matches(FILTER_INPUTS)) {
+        e.stopImmediatePropagation();
+      } else if (t.matches(".ah-dt-adv-filter-select")) {
+        e.stopImmediatePropagation();
+        var none = t.value === "empty" || t.value === "not_empty";
+        var input = siblingInput(t);
+        if (input) {
+          input.disabled = none;
+          if (none) { input.value = ""; }
+        }
+        dtFiltered(ctl, el);
+      } else if (t.matches(".ah-dt-pager-size-select")) {
+        e.stopImmediatePropagation();
+        el.setAttribute("data-page-size", num(t.value, 10));
+        dtGoTo(ctl, el, 1);
+      } else if (t.matches(".ah-dt-chooser-checkbox")) {
+        e.stopImmediatePropagation();
+        dtSetHidden(ctl, el, t.getAttribute("data-field"), !t.checked);
+      }
     });
-    $el.on("change" + NS, ".ah-dt-header-checkbox", function (e) {
-      e.stopPropagation();
-      var page = dtShown(el).map(function (r) { return r.getAttribute("data-key"); });
-      var rest = keysOf(el).filter(function (k) { return page.indexOf(k) < 0; });
-      dtSelect(el, this.checked ? rest.concat(page) : rest, true);
-    });
-    $el.on("click" + NS, ".ah-dt-th-sortable", function (e) {
-      if ($(e.target).closest(".ah-dt-resize-handle").length || isOff(el)) { return; }
-      var field = this.getAttribute("data-field");
+    this.delegate("click", ".ah-dt-th-sortable", function (e, th) {
+      if (e.target.closest(".ah-dt-resize-handle") || isOff(el)) { return; }
+      var field = th.getAttribute("data-field");
       var dir = nextSort(el, field);
       writeSort(el, "ah-dt", dir ? field : null, dir);
       el.setAttribute("data-page", 1);
-      dtView(el);
-      $el.trigger("ah:sort", [{ field: field, dir: dir }]);
+      dtView(ctl, el);
+      ctl.fire("ah:sort", { field: field, dir: dir });
     });
-    $el.on("keydown" + NS, ".ah-dt-th-sortable", function (e) {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); $(this).trigger("click"); }
-    });
-    $el.on("input" + NS, ".ah-dt-filter-input, .ah-dt-adv-filter-input, .ah-dt-search-input", function (e) {
-      e.stopPropagation();
+    this.delegate("input", FILTER_INPUTS, function (e) {
+      e.stopImmediatePropagation();
       debounced();
     });
-    $el.on("change" + NS, ".ah-dt-filter-input, .ah-dt-adv-filter-input, .ah-dt-search-input", function (e) {
-      e.stopPropagation();
+    // Pager buttons; with href they are links: a plain click pages in
+    // place and pushes the link's URL, other clicks go to the browser.
+    var pagerClick = function (e, b, page) {
+      var href = b.tagName === "A" ? b.getAttribute("href") : null;
+      if (href !== null) {
+        if (!plainClick(e)) { return; }
+        e.preventDefault();
+      }
+      dtGoTo(ctl, el, page);
+      if (href !== null) { pushUrl(href); }
+    };
+    this.delegate("click", ".ah-dt-pager-btn-num", function (e, b) { pagerClick(e, b, num(b.getAttribute("data-page"), 1)); });
+    this.delegate("click", ".ah-dt-pager-btn-prev", function (e, b) { pagerClick(e, b, num(el.getAttribute("data-page"), 1) - 1); });
+    this.delegate("click", ".ah-dt-pager-btn-next", function (e, b) { pagerClick(e, b, num(el.getAttribute("data-page"), 1) + 1); });
+    this.delegate("click", ".ah-dt-chooser-btn", function () {
+      var p = kid(el, ".ah-dt-chooser-panel");
+      dtChooser(el, st, !(p && p.classList.contains("ah-dt-chooser-panel-open")));
     });
-    $el.on("change" + NS, ".ah-dt-adv-filter-select", function (e) {
-      e.stopPropagation();
-      var none = this.value === "empty" || this.value === "not_empty";
-      var $in = $(this).siblings(".ah-dt-adv-filter-input").prop("disabled", none);
-      if (none) { $in.val(""); }
-      dtFiltered(el);
+    this.listen(el, "ah:error", function () {
+      kids(el, ".ah-dt-content").forEach(function (c) { c.classList.remove("ah-dt-loading"); });
     });
-    $el.on("click" + NS, ".ah-dt-pager-btn-num", function () { dtGoTo(el, num(this.getAttribute("data-page"), 1)); });
-    $el.on("click" + NS, ".ah-dt-pager-btn-prev", function () { dtGoTo(el, num(el.getAttribute("data-page"), 1) - 1); });
-    $el.on("click" + NS, ".ah-dt-pager-btn-next", function () { dtGoTo(el, num(el.getAttribute("data-page"), 1) + 1); });
-    $el.on("change" + NS, ".ah-dt-pager-size-select", function (e) {
-      e.stopPropagation();
-      el.setAttribute("data-page-size", num(this.value, 10));
-      dtGoTo(el, 1);
-    });
-    $el.on("click" + NS, ".ah-dt-chooser-btn", function () {
-      dtChooser(el, st, !$el.children(".ah-dt-chooser-panel").hasClass("ah-dt-chooser-panel-open"));
-    });
-    $el.on("change" + NS, ".ah-dt-chooser-checkbox", function (e) {
-      e.stopPropagation();
-      dtSetHidden(el, this.getAttribute("data-field"), !this.checked);
-    });
-    $el.on("ah:error" + NS, function () { $el.children(".ah-dt-content").removeClass("ah-dt-loading"); });
-    bindScroll(el, "ah-dt");
-    bindResize(el, $el, "ah-dt", st);
-    watchGutter(el, "ah-dt", st);
+    L.bindScroll(this, el, "ah-dt");
+    L.bindResize(this, el, "ah-dt", st);
+    L.watchGutter(el, "ah-dt", st);
     if (dtRemote(el)) { dtStripes(el, dtShown(el)); } else { dtApply(el); }
-  },
-  destroy: function (el) {
-    var st = $.data(el, "ah-datatable");
-    if (st) {
-      clearTimeout(st.timer);
-      if (st.float) { st.float.stop(); }
-      if (st.stopResize) { st.stopResize(); }
-      if (st.ro) { st.ro.disconnect(); }
-      $(document).off(".ahdtbch" + st.id);
-    }
-    part(el, "ah-dt", "body").off(NS);
-  },
-  methods: {
-    getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
-    setValue: function (el, $el, v) {
-      dtSelect(el, toKeys(v).filter(function (k) { return dtByKey(el, k); }), false);
-    },
-    clearSelection: function (el) { dtSelect(el, [], false); },
-    sort: function (el, $el, field, dir) {
-      dir = dir === "asc" || dir === "desc" ? dir : null;
-      writeSort(el, "ah-dt", dir ? field : null, dir);
-      el.setAttribute("data-page", 1);
-      dtView(el);
-    },
-    goToPage: function (el, $el, page) { el.setAttribute("data-page", num(page, 1)); dtView(el); },
-    setPageSize: function (el, $el, size) {
-      el.setAttribute("data-page-size", num(size, 10));
-      el.setAttribute("data-page", 1);
-      dtView(el);
-    },
-    setSearch: function (el, $el, text) {
-      part(el, "ah-dt", "header").find(".ah-dt-search-input").val(text || "");
-      if (text) { el.setAttribute("data-search", text); } else { el.removeAttribute("data-search"); }
-      el.setAttribute("data-page", 1);
-      dtView(el);
-    },
-    clearFilters: function (el) {
-      var $h = part(el, "ah-dt", "header");
-      $h.find(".ah-dt-filter-input, .ah-dt-adv-filter-input, .ah-dt-search-input").val("");
-      $h.find(".ah-dt-adv-filter-select").val("contains");
-      $h.find(".ah-dt-adv-filter-input").prop("disabled", false);
-      el.removeAttribute("data-search");
-      el.setAttribute("data-page", 1);
-      dtView(el);
-    },
-    showColumn: function (el, $el, field) { dtSetHidden(el, String(field), false); },
-    hideColumn: function (el, $el, field) { dtSetHidden(el, String(field), true); },
-    expandRow: function (el, $el, key) { dtSetDetails(el, String(key), true, false); },
-    collapseRow: function (el, $el, key) { dtSetDetails(el, String(key), false, false); },
-    refresh: function (el) {
-      markRows(dtRows(el), "ah-dt", keysOf(el), el.getAttribute("data-selection"));
-      V.split(el.getAttribute("data-hidden")).filter(Boolean).forEach(function (f) {
-        dtRows(el).each(function () { var c = dtCell(this, f); if (c) { c.hidden = true; } });
-      });
-      V.split(el.getAttribute("data-expanded")).filter(Boolean).forEach(function (k) {
-        var d = dtDetail(el, k);
-        if (d && $(d).hasClass("ah-dt-row-details-hidden")) {
-          $(d).removeClass("ah-dt-row-details-hidden");
-          $(dtByKey(el, k)).find("> td > .ah-dt-expand-btn").addClass("ah-dt-expand-btn-open")
-            .attr("aria-expanded", "true");
+  }
+
+  teardown() {
+    var st = this.st;
+    clearTimeout(st.timer);
+    if (st.float) { st.float.stop(); st.float = null; }
+    if (st.stopResize) { st.stopResize(); }
+    if (st.ro) { st.ro.disconnect(); }
+    if (st.chooserOff) { st.chooserOff.abort(); st.chooserOff = null; }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  getValue() { return this.element.getAttribute("data-ah-value") || ""; }
+  setValue(v) {
+    var el = this.element;
+    dtSelect(this, el, toKeys(v).filter(function (k) { return dtByKey(el, k); }), false);
+  }
+  clearSelection() { dtSelect(this, this.element, [], false); }
+  sort(field, dir) {
+    var el = this.element;
+    dir = dir === "asc" || dir === "desc" ? dir : null;
+    writeSort(el, "ah-dt", dir ? field : null, dir);
+    el.setAttribute("data-page", 1);
+    dtView(this, el);
+  }
+  goToPage(page) { this.element.setAttribute("data-page", num(page, 1)); dtView(this, this.element); }
+  setPageSize(size) {
+    var el = this.element;
+    el.setAttribute("data-page-size", num(size, 10));
+    el.setAttribute("data-page", 1);
+    dtView(this, el);
+  }
+  setSearch(text) {
+    var el = this.element;
+    qa(header(el), ".ah-dt-search-input").forEach(function (i) { i.value = text || ""; });
+    if (text) { el.setAttribute("data-search", text); } else { el.removeAttribute("data-search"); }
+    el.setAttribute("data-page", 1);
+    dtView(this, el);
+  }
+  clearFilters() {
+    var el = this.element, h = header(el);
+    qa(h, FILTER_INPUTS).forEach(function (i) { i.value = ""; });
+    qa(h, ".ah-dt-adv-filter-select").forEach(function (s) { s.value = "contains"; });
+    qa(h, ".ah-dt-adv-filter-input").forEach(function (i) { i.disabled = false; });
+    el.removeAttribute("data-search");
+    el.setAttribute("data-page", 1);
+    dtView(this, el);
+  }
+  showColumn(field) { dtSetHidden(this, this.element, String(field), false); }
+  hideColumn(field) { dtSetHidden(this, this.element, String(field), true); }
+  expandRow(key) { dtSetDetails(this, this.element, String(key), true, false); }
+  collapseRow(key) { dtSetDetails(this, this.element, String(key), false, false); }
+  refresh() {
+    var el = this.element;
+    markRows(dtRows(el), "ah-dt", keysOf(el), el.getAttribute("data-selection"));
+    V.split(el.getAttribute("data-hidden")).filter(Boolean).forEach(function (f) {
+      dtRows(el).forEach(function (r) { var c = dtCell(r, f); if (c) { c.hidden = true; } });
+    });
+    V.split(el.getAttribute("data-expanded")).filter(Boolean).forEach(function (k) {
+      var d = dtDetail(el, k);
+      if (d && d.classList.contains("ah-dt-row-details-hidden")) {
+        d.classList.remove("ah-dt-row-details-hidden");
+        var tr = dtByKey(el, k);
+        if (tr) {
+          expandBtns(tr).forEach(function (b) {
+            b.classList.add("ah-dt-expand-btn-open");
+            b.setAttribute("aria-expanded", "true");
+          });
         }
-      });
-      if (dtRemote(el)) { dtStripes(el, dtShown(el)); } else { dtApply(el); }
-    }
+      }
+    });
+    kids(el, ".ah-dt-content").forEach(function (c) { c.classList.remove("ah-dt-loading"); });
+    if (dtRemote(el)) { dtStripes(el, dtShown(el)); } else { dtApply(el); }
   }
 });

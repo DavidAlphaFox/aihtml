@@ -38,7 +38,7 @@
 -export([br/0, hr/2, img/2]).
 %% Escape hatches and rendering.
 -export([el/4, void/3, text/1, safe/1, render/1, render_binary/1, page/2]).
-%% Server round trips for the jQuery runtime.
+%% Server round trips for the browser runtime.
 -export([fetch/3, fetch/4]).
 %% Browser events that call Erlang actions (see aihtml_action).
 -export([on/2, on/3, preserve/0]).

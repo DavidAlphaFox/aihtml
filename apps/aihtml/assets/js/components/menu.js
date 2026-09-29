@@ -1,151 +1,183 @@
 /* Behaviour of the menu component (designs/04-components.md), ported
-   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js. */
-import $ from "jquery";
+   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js.
+   Value contract: data-ah-value (the chosen leaf's data-id), the hidden
+   input and "change" on the root. */
 import AH from "../core.js";
 import "./_lib_nav.js";
 
-var NS = AH.NS;
-var L = AH.lib.nav;
-var instanceNs = L.instanceNs;
-var visible = L.visible;
-var setValue = L.setValue;
-var byKey = L.byKey;
+const N = AH.lib.nav;
+const visible = N.visible;
+const setValue = N.setValue;
+const byKey = N.byKey;
 
 function touchOnly() {
   return window.matchMedia && window.matchMedia("(hover: none)").matches;
 }
 
+function child(node, sel) { return node ? node.querySelector(":scope > " + sel) : null; }
+
 // ------------------------------------------------------------------
 // menu (sigil menu.cljs, menu/submenu, menu/keyboard, menu/responsive)
 // ------------------------------------------------------------------
 
-var M_OPEN = "ah-menu-submenu-open";
-var M_FOCUS = "ah-menu-link-focus";
+const M_OPEN = "ah-menu-submenu-open";
+const M_FOCUS = "ah-menu-link-focus";
+const TOP_LINKS = ".ah-menu-list > .ah-menu-item:not(.ah-menu-item-disabled) > .ah-menu-link";
 
 // Submenus float (AH.float) so an ancestor with overflow: hidden cannot
 // clip them: below a horizontal bar's top-level item, to the right of
 // any other item. AH.float flips and clamps them to the viewport.
+const floats = new WeakMap();
+
 function subFloat(sub, on, opts) {
-  var h = $.data(sub, "ah-float");
-  if (h) { h.stop(); $.removeData(sub, "ah-float"); }
-  if (on) { $.data(sub, "ah-float", AH.float(sub, opts.anchor, opts)); }
+  const h = floats.get(sub);
+  if (h) { h.stop(); floats.delete(sub); }
+  if (on) { floats.set(sub, AH.float(sub, opts.anchor, opts)); }
 }
 
-function subClose($subs) {
-  $subs.each(function () { subFloat(this, false); })
-    .removeClass(M_OPEN).css({ left: "", right: "", top: "", bottom: "" });
+function subClose(subs) {
+  Array.from(subs).forEach(function (s) {
+    subFloat(s, false);
+    s.classList.remove(M_OPEN);
+    s.style.left = s.style.right = s.style.top = s.style.bottom = "";
+  });
 }
 
-function menuOpenSub($item, $el) {
-  var $sub = $item.children(".ah-menu-submenu");
-  if (!$sub.length || $sub.hasClass(M_OPEN)) { return; }
-  $sub.addClass(M_OPEN);
-  if (!$el.hasClass("ah-menu-is-minimized") && !$item.closest(".ah-menu-drawer").length) {
-    var bar = $item.parent().hasClass("ah-menu-list") && $el.hasClass("ah-menu-horizontal");
-    var $link = $item.children(".ah-menu-link");
-    subFloat($sub[0], true, {
-      anchor: bar ? $link[0] : $item[0],
-      placement: bar ? "bottom" : ($sub.hasClass("ah-menu-open-left") ? "left" : "right"),
-      align: $sub.hasClass("ah-menu-open-up") ? "end" : (bar && $sub.hasClass("ah-menu-open-left") ? "end" : "start"),
+function menuOpenSub(item, el) {
+  const sub = child(item, ".ah-menu-submenu");
+  if (!sub || sub.classList.contains(M_OPEN)) { return; }
+  sub.classList.add(M_OPEN);
+  const link = child(item, ".ah-menu-link");
+  if (!el.classList.contains("ah-menu-is-minimized") && !item.closest(".ah-menu-drawer")) {
+    const bar = item.parentNode.classList.contains("ah-menu-list") &&
+      el.classList.contains("ah-menu-horizontal");
+    const left = sub.classList.contains("ah-menu-open-left");
+    subFloat(sub, true, {
+      anchor: bar ? link : item,
+      placement: bar ? "bottom" : (left ? "left" : "right"),
+      align: sub.classList.contains("ah-menu-open-up") ? "end" : (bar && left ? "end" : "start"),
       offset: 0
     });
   }
-  $item.children(".ah-menu-link").attr("aria-expanded", "true");
+  if (link) { link.setAttribute("aria-expanded", "true"); }
 }
 
-function menuCloseSub($item) {
-  var $sub = $item.children(".ah-menu-submenu");
-  if (!$sub.length) { return; }
-  subClose($sub.find("." + M_OPEN));
-  $sub.find("[aria-expanded=true]").attr("aria-expanded", "false");
-  subClose($sub);
-  $item.children(".ah-menu-link").attr("aria-expanded", "false");
+function menuCloseSub(item) {
+  const sub = child(item, ".ah-menu-submenu");
+  if (!sub) { return; }
+  subClose(sub.querySelectorAll("." + M_OPEN));
+  sub.querySelectorAll("[aria-expanded=true]").forEach(function (n) {
+    n.setAttribute("aria-expanded", "false");
+  });
+  subClose([sub]);
+  const link = child(item, ".ah-menu-link");
+  if (link) { link.setAttribute("aria-expanded", "false"); }
 }
 
-function menuCloseSiblings($item) {
-  $item.siblings(".ah-menu-has-submenu").each(function () { menuCloseSub($(this)); });
+function menuCloseSiblings(item) {
+  Array.from(item.parentNode.children).forEach(function (s) {
+    if (s !== item && s.classList.contains("ah-menu-has-submenu")) { menuCloseSub(s); }
+  });
 }
 
-function menuCloseAll($el) {
-  subClose($el.find("." + M_OPEN));
-  $el.find("[aria-expanded=true]").not(".ah-menu-minimized-btn").attr("aria-expanded", "false");
+function menuCloseAll(el) {
+  subClose(el.querySelectorAll("." + M_OPEN));
+  el.querySelectorAll("[aria-expanded=true]:not(.ah-menu-minimized-btn)").forEach(function (n) {
+    n.setAttribute("aria-expanded", "false");
+  });
 }
 
-function menuFocus($el, link) {
-  $el.find("." + M_FOCUS).removeClass(M_FOCUS);
-  $(link).addClass(M_FOCUS);
+function clearFocus(el) {
+  el.querySelectorAll("." + M_FOCUS).forEach(function (n) { n.classList.remove(M_FOCUS); });
+}
+
+function menuFocus(el, link) {
+  clearFocus(el);
+  link.classList.add(M_FOCUS);
   link.focus();
 }
 
-function siblingLinks($item) {
-  return $item.parent().children(".ah-menu-item:not(.ah-menu-item-disabled)")
-    .children(".ah-menu-link").get();
+function siblingLinks(item) {
+  return Array.from(item.parentNode.querySelectorAll(
+    ":scope > .ah-menu-item:not(.ah-menu-item-disabled) > .ah-menu-link"));
 }
 
-function firstIn($item) {
-  return $item.children(".ah-menu-submenu").find(".ah-menu-item:not(.ah-menu-item-disabled) > .ah-menu-link")
-    .get(0);
+function firstIn(item) {
+  const sub = child(item, ".ah-menu-submenu");
+  return sub ? sub.querySelector(".ah-menu-item:not(.ah-menu-item-disabled) > .ah-menu-link") : null;
 }
 
-function menuPopupClose($el) {
-  if ($el.hasClass("ah-menu-popup")) {
-    menuCloseAll($el);
-    $el.removeClass("ah-menu-open");
+function menuPopupClose(el) {
+  if (el.classList.contains("ah-menu-popup")) {
+    menuCloseAll(el);
+    el.classList.remove("ah-menu-open");
   }
 }
 
-function menuPopupOpen($el, x, y) {
-  $el.addClass("ah-menu-open").css({ left: x + "px", top: y + "px" });
-  var w = $el[0].offsetWidth;
-  var h = $el[0].offsetHeight;
-  var ax = x + w > window.innerWidth ? Math.max(0, window.innerWidth - w) : x;
-  var ay = y + h > window.innerHeight ? Math.max(0, window.innerHeight - h) : y;
-  $el.css({ left: ax + "px", top: ay + "px" });
-  $el[0].focus();
+function menuPopupOpen(el, x, y) {
+  el.classList.add("ah-menu-open");
+  el.style.left = x + "px";
+  el.style.top = y + "px";
+  const w = el.offsetWidth;
+  const h = el.offsetHeight;
+  const ax = x + w > window.innerWidth ? Math.max(0, window.innerWidth - w) : x;
+  const ay = y + h > window.innerHeight ? Math.max(0, window.innerHeight - h) : y;
+  el.style.left = ax + "px";
+  el.style.top = ay + "px";
+  el.focus();
+}
+
+function markActive(el, link) {
+  el.querySelectorAll(".ah-menu-link-active").forEach(function (n) {
+    n.classList.remove("ah-menu-link-active");
+    n.removeAttribute("aria-current");
+  });
+  if (link) {
+    link.classList.add("ah-menu-link-active");
+    link.setAttribute("aria-current", "true");
+  }
 }
 
 // A leaf was chosen: follow its href, or make its key the value.
-function menuSelect($el, $link, e) {
-  var href = $link.attr("href");
-  if (!href) {
+function menuSelect(el, link, e) {
+  if (!link.getAttribute("href")) {
     if (e) { e.preventDefault(); }
-    $el.find(".ah-menu-link-active").removeClass("ah-menu-link-active").removeAttr("aria-current");
-    $link.addClass("ah-menu-link-active").attr("aria-current", "true");
-    setValue($el, $link.attr("data-id"), "change");
+    markActive(el, link);
+    setValue(el, link.getAttribute("data-id"), "change");
   }
-  menuCloseAll($el);
-  $el.find("." + M_FOCUS).removeClass(M_FOCUS);
-  menuPopupClose($el);
+  menuCloseAll(el);
+  clearFocus(el);
+  menuPopupClose(el);
 }
 
-function menuKeydown($el, e) {
-  var $focused = $el.find("." + M_FOCUS);
-  var $item = $focused.length ? $focused.parent() : null;
-  var horizontal = $el.hasClass("ah-menu-horizontal");
-  var topLevel = $item && $item.parent().hasClass("ah-menu-list");
-  var step = function (d) {
-    if (!$item) { return; }
-    var links = siblingLinks($item);
-    var i = links.indexOf($focused[0]);
-    if (links.length) { menuFocus($el, links[(i + d + links.length) % links.length]); }
+function menuKeydown(el, e) {
+  let focused = el.querySelector("." + M_FOCUS);
+  let item = focused ? focused.parentNode : null;
+  const horizontal = el.classList.contains("ah-menu-horizontal");
+  const topLevel = item && item.parentNode.classList.contains("ah-menu-list");
+  const step = function (d) {
+    if (!item) { return; }
+    const links = siblingLinks(item);
+    const i = links.indexOf(focused);
+    if (links.length) { menuFocus(el, links[(i + d + links.length) % links.length]); }
   };
-  var openFirst = function () {
-    menuCloseSiblings($item);
-    menuOpenSub($item, $el);
-    var f = firstIn($item);
-    if (f) { menuFocus($el, f); }
+  const openFirst = function () {
+    menuCloseSiblings(item);
+    menuOpenSub(item, el);
+    const f = firstIn(item);
+    if (f) { menuFocus(el, f); }
   };
-  if (!$item && /^Arrow|^Home$|^End$/.test(e.key)) {
+  if (!item && /^Arrow|^Home$|^End$/.test(e.key)) {
     e.preventDefault();
-    var first = $el.find(".ah-menu-list > .ah-menu-item:not(.ah-menu-item-disabled) > .ah-menu-link").get(0);
-    if (first) { menuFocus($el, first); }
+    const first = el.querySelector(TOP_LINKS);
+    if (first) { menuFocus(el, first); }
     return;
   }
-  if (!$item && e.key !== "Escape" && e.key !== "Tab") { return; }
+  if (!item && e.key !== "Escape" && e.key !== "Tab") { return; }
   switch (e.key) {
     case "ArrowDown":
       e.preventDefault();
-      if (horizontal && topLevel && $item.hasClass("ah-menu-has-submenu")) { openFirst(); }
+      if (horizontal && topLevel && item.classList.contains("ah-menu-has-submenu")) { openFirst(); }
       else { step(1); }
       break;
     case "ArrowUp":
@@ -154,257 +186,296 @@ function menuKeydown($el, e) {
       break;
     case "ArrowRight":
       e.preventDefault();
-      if (horizontal && topLevel) { menuCloseAll($el); step(1); }
-      else if ($item.hasClass("ah-menu-has-submenu")) { openFirst(); }
+      if (horizontal && topLevel) { menuCloseAll(el); step(1); }
+      else if (item.classList.contains("ah-menu-has-submenu")) { openFirst(); }
       else if (horizontal) {
         // leave a submenu to the next top-level item, as menubars do
-        var $top = $item.parents(".ah-menu-list > .ah-menu-item").last();
-        menuCloseAll($el);
-        $focused = $top.children(".ah-menu-link");
-        $item = $top;
-        step(1);
+        let top = null;
+        for (let n = item.parentNode; n && n !== el; n = n.parentNode) {
+          if (n.matches(".ah-menu-list > .ah-menu-item")) { top = n; }
+        }
+        menuCloseAll(el);
+        if (top) {
+          focused = child(top, ".ah-menu-link");
+          item = top;
+          step(1);
+        }
       }
       break;
     case "ArrowLeft":
       e.preventDefault();
-      if (horizontal && topLevel) { menuCloseAll($el); step(-1); }
+      if (horizontal && topLevel) { menuCloseAll(el); step(-1); }
       else {
-        var $parentItem = $item.parent().closest(".ah-menu-item");
-        if ($parentItem.length) {
-          menuCloseSub($parentItem);
-          menuFocus($el, $parentItem.children(".ah-menu-link")[0]);
+        const parentItem = item.parentNode.closest(".ah-menu-item");
+        if (parentItem && el.contains(parentItem)) {
+          menuCloseSub(parentItem);
+          menuFocus(el, child(parentItem, ".ah-menu-link"));
         }
       }
       break;
     case "Home":
     case "End":
       e.preventDefault();
-      if ($item) {
-        var ls = siblingLinks($item);
-        if (ls.length) { menuFocus($el, ls[e.key === "Home" ? 0 : ls.length - 1]); }
+      if (item) {
+        const ls = siblingLinks(item);
+        if (ls.length) { menuFocus(el, ls[e.key === "Home" ? 0 : ls.length - 1]); }
       }
       break;
     case "Enter":
     case " ":
       e.preventDefault();
-      if ($item.hasClass("ah-menu-has-submenu")) { openFirst(); }
-      else { $focused[0].click(); }
+      if (item.classList.contains("ah-menu-has-submenu")) { openFirst(); }
+      else { focused.click(); }
       break;
-    case "Escape":
+    case "Escape": {
       e.preventDefault();
-      var $up = $item ? $item.parent().closest(".ah-menu-item") : $();
-      if ($up.length && $up.children(".ah-menu-submenu").hasClass(M_OPEN) && !$el.hasClass("ah-menu-popup")) {
-        menuCloseSub($up);
-        menuFocus($el, $up.children(".ah-menu-link")[0]);
+      const up = item ? item.parentNode.closest(".ah-menu-item") : null;
+      const upSub = up && el.contains(up) ? child(up, ".ah-menu-submenu") : null;
+      if (upSub && upSub.classList.contains(M_OPEN) && !el.classList.contains("ah-menu-popup")) {
+        menuCloseSub(up);
+        menuFocus(el, child(up, ".ah-menu-link"));
       } else {
-        menuCloseAll($el);
-        $el.find("." + M_FOCUS).removeClass(M_FOCUS);
-        menuPopupClose($el);
-        if (visible($el[0])) { $el[0].focus(); }
+        menuCloseAll(el);
+        clearFocus(el);
+        menuPopupClose(el);
+        if (visible(el)) { el.focus(); }
       }
       break;
+    }
     case "Tab":
-      menuCloseAll($el);
-      $el.find("." + M_FOCUS).removeClass(M_FOCUS);
-      menuPopupClose($el);
+      menuCloseAll(el);
+      clearFocus(el);
+      menuPopupClose(el);
       break;
     default:
       break;
   }
 }
 
-function menuDrawerClose(st) {
-  if (!st.drawer) { return; }
-  st.drawer.removeClass("ah-menu-drawer-open");
-  st.backdrop.removeClass("ah-menu-drawer-backdrop-visible");
-}
-
-function menuMinimize($el, st) {
-  if ($el.hasClass("ah-menu-is-minimized")) { return; }
-  $el.addClass("ah-menu-is-minimized");
-  var title = $el.attr("data-title") || "Menu";
-  var $drawer = $('<div class="ah-menu-drawer" role="dialog" aria-modal="true"></div>');
-  var $head = $('<div class="ah-menu-drawer-title"><span></span>' +
-                '<button type="button" class="ah-menu-drawer-close" aria-label="Close">×</button></div>');
-  $head.children("span").text(title);
-  var $list = $('<div class="ah-menu-drawer-list"></div>')
-    .append($el.children(".ah-menu-list").clone().removeAttr("id"));
-  $list.find("[id]").removeAttr("id");
-  $list.find("." + M_OPEN).removeClass(M_OPEN);
-  $drawer.attr("aria-label", title).append($head, $list);
-  var $backdrop = $('<div class="ah-menu-drawer-backdrop"></div>');
-  $("body").append($backdrop, $drawer);
-  st.drawer = $drawer;
-  st.backdrop = $backdrop;
-  $drawer.on("click", ".ah-menu-drawer-close", function () { menuDrawerClose(st); });
-  $backdrop.on("click", function () { menuDrawerClose(st); });
-  $drawer.on("keydown", function (e) {
-    if (e.key === "Escape") { menuDrawerClose(st); $el.children(".ah-menu-minimized-btn")[0].focus(); }
-  });
-  $drawer.on("click", ".ah-menu-has-submenu > .ah-menu-link", function (e) {
-    e.preventDefault();
-    var $sub = $(this).parent().children(".ah-menu-submenu").toggleClass(M_OPEN);
-    $(this).attr("aria-expanded", String($sub.hasClass(M_OPEN)));
-  });
-  $drawer.on("click", ".ah-menu-item:not(.ah-menu-has-submenu):not(.ah-menu-item-disabled) > .ah-menu-link",
-    function (e) {
-      var $orig = byKey($el, ".ah-menu-link", "data-id", this.getAttribute("data-id"));
-      if (!this.getAttribute("href")) { e.preventDefault(); }
-      if ($orig.length) { menuSelect($el, $orig.first(), null); }
-      $drawer.find(".ah-menu-link-active").removeClass("ah-menu-link-active");
-      $(this).addClass("ah-menu-link-active");
-      menuDrawerClose(st);
-    });
-}
-
-function menuRestore($el, st) {
-  if (!$el.hasClass("ah-menu-is-minimized")) { return; }
-  $el.removeClass("ah-menu-is-minimized");
-  if (st.drawer) { st.drawer.remove(); st.backdrop.remove(); }
-  st.drawer = st.backdrop = null;
-}
-
-AH.define("menu", {
-  init: function (el, $el) {
-    var st = { openT: null, closeT: null, drawer: null, backdrop: null };
-    $.data(el, "ah-menu", st);
-    var ns = instanceNs(el);
-    var clickToOpen = el.hasAttribute("data-ah-click-to-open");
+AH.register("menu", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    const self = this;
+    this.openT = null;
+    this.closeT = null;
+    this.drawer = null;
+    this.backdrop = null;
+    const clickToOpen = el.hasAttribute("data-ah-click-to-open");
 
     // hover opens submenus, with a short intent delay when a sibling is open
-    $el.on("mouseenter" + NS, ".ah-menu-has-submenu", function () {
-      if (clickToOpen || $el.hasClass("ah-menu-is-minimized")) { return; }
-      var $item = $(this);
-      clearTimeout(st.closeT);
-      clearTimeout(st.openT);
-      var open = function () {
-        st.openT = null;
-        menuCloseSiblings($item);
-        menuOpenSub($item, $el);
+    N.hover(this, ".ah-menu-has-submenu", function (item) {
+      if (clickToOpen || el.classList.contains("ah-menu-is-minimized")) { return; }
+      clearTimeout(self.closeT);
+      clearTimeout(self.openT);
+      const open = function () {
+        self.openT = null;
+        menuCloseSiblings(item);
+        menuOpenSub(item, el);
       };
-      if ($item.parent().find("> .ah-menu-item > ." + M_OPEN).length) {
-        st.openT = setTimeout(open, 60);
+      if (item.parentNode.querySelector(":scope > .ah-menu-item > ." + M_OPEN)) {
+        self.openT = setTimeout(open, 60);
       } else {
         open();
       }
-    });
-    $el.on("mouseleave" + NS, ".ah-menu-has-submenu", function () {
+    }, function (item) {
       if (clickToOpen) { return; }
-      var $item = $(this);
-      clearTimeout(st.openT);
-      st.closeT = setTimeout(function () {
-        menuCloseSiblings($item);
-        menuCloseSub($item);
+      clearTimeout(self.openT);
+      self.closeT = setTimeout(function () {
+        menuCloseSiblings(item);
+        menuCloseSub(item);
       }, 200);
     });
     // click toggles a submenu (always in click-to-open or touch mode;
     // otherwise it opens one that hover has not opened, e.g. from a
     // screen reader)
-    $el.on("click" + NS, ".ah-menu-has-submenu > .ah-menu-link", function (e) {
+    this.delegate("click", ".ah-menu-has-submenu > .ah-menu-link", function (e, link) {
       e.preventDefault();
-      var $item = $(this).parent();
-      var open = $item.children(".ah-menu-submenu").hasClass(M_OPEN);
+      const item = link.parentNode;
+      const open = child(item, ".ah-menu-submenu").classList.contains(M_OPEN);
       if (open && (clickToOpen || touchOnly())) {
-        menuCloseSub($item);
+        menuCloseSub(item);
       } else if (!open) {
-        menuCloseSiblings($item);
-        menuOpenSub($item, $el);
+        menuCloseSiblings(item);
+        menuOpenSub(item, el);
       }
     });
-    $el.on("click" + NS, ".ah-menu-item:not(.ah-menu-has-submenu):not(.ah-menu-item-disabled) > .ah-menu-link",
-      function (e) { menuSelect($el, $(this), e); });
-    $el.on("click" + NS, ".ah-menu-item-disabled > .ah-menu-link", function (e) { e.preventDefault(); });
+    this.delegate("click", ".ah-menu-item:not(.ah-menu-has-submenu):not(.ah-menu-item-disabled) > .ah-menu-link",
+      function (e, link) { menuSelect(el, link, e); });
+    this.delegate("click", ".ah-menu-item-disabled > .ah-menu-link", function (e) { e.preventDefault(); });
 
     // outside click closes everything
-    $(document).on("mousedown" + ns, function (e) {
-      if (!$.contains(el, e.target) && !$(e.target).closest(".ah-menu-drawer").length) {
-        menuCloseAll($el);
-        $el.find("." + M_FOCUS).removeClass(M_FOCUS);
-        menuPopupClose($el);
+    this.listen(document, "mousedown", function (e) {
+      const t = e.target;
+      if (!el.contains(t) && !(t.closest && t.closest(".ah-menu-drawer"))) {
+        menuCloseAll(el);
+        clearFocus(el);
+        menuPopupClose(el);
       }
     });
 
     // context menu
-    if ($el.hasClass("ah-menu-popup")) {
-      var target = el.getAttribute("data-ah-popup-target");
-      $.data(el, "ah-menu-target", target || document);
-      $(target || document).on("contextmenu" + ns, function (e) {
+    if (el.classList.contains("ah-menu-popup")) {
+      const target = el.getAttribute("data-ah-popup-target");
+      const onContext = function (e) {
         e.preventDefault();
-        menuCloseAll($el);
-        menuPopupOpen($el, e.clientX, e.clientY);
-      });
+        menuCloseAll(el);
+        menuPopupOpen(el, e.clientX, e.clientY);
+      };
+      if (target) {
+        document.querySelectorAll(target).forEach(function (t) { self.listen(t, "contextmenu", onContext); });
+      } else {
+        this.listen(document, "contextmenu", onContext);
+      }
     }
 
     if (el.getAttribute("data-ah-keyboard") !== "false") {
-      $el.on("keydown" + NS, function (e) {
-        if (e.target === el || $(e.target).hasClass("ah-menu-link")) { menuKeydown($el, e); }
+      this.listen(el, "keydown", function (e) {
+        if (e.target === el || e.target.classList.contains("ah-menu-link")) { menuKeydown(el, e); }
       });
-      $el.on("focus" + NS, function () {
-        if (!$el.find("." + M_FOCUS).length && !$el.hasClass("ah-menu-is-minimized")) {
-          var f = $el.find(".ah-menu-list > .ah-menu-item:not(.ah-menu-item-disabled) > .ah-menu-link").get(0);
-          if (f) { menuFocus($el, f); }
+      this.listen(el, "focus", function () {
+        if (!el.querySelector("." + M_FOCUS) && !el.classList.contains("ah-menu-is-minimized")) {
+          const f = el.querySelector(TOP_LINKS);
+          if (f) { menuFocus(el, f); }
         }
       });
     }
 
     // responsive collapse to a hamburger + drawer
-    $el.on("click" + NS, ".ah-menu-minimized-btn", function () {
-      if (!st.drawer) { return; }
-      st.backdrop.addClass("ah-menu-drawer-backdrop-visible");
+    this.delegate("click", ".ah-menu-minimized-btn", function () {
+      if (!self.drawer) { return; }
+      self.backdrop.classList.add("ah-menu-drawer-backdrop-visible");
+      const drawer = self.drawer;
       requestAnimationFrame(function () {
-        st.drawer.addClass("ah-menu-drawer-open");
-        var f = st.drawer.find(".ah-menu-link").get(0);
+        drawer.classList.add("ah-menu-drawer-open");
+        const f = drawer.querySelector(".ah-menu-link");
         if (f) { f.setAttribute("tabindex", "0"); f.focus(); }
       });
     });
-    var minW = parseInt(el.getAttribute("data-ah-minimize-width"), 10);
+    const minW = parseInt(el.getAttribute("data-ah-minimize-width"), 10);
     if (minW) {
-      var check = function () {
-        if (window.innerWidth <= minW) { menuMinimize($el, st); } else { menuRestore($el, st); }
+      const check = function () {
+        if (window.innerWidth <= minW) { self.minimize(); } else { self.restore(); }
       };
-      var t = null;
-      $(window).on("resize" + ns, function () { clearTimeout(t); t = setTimeout(check, 150); });
+      let t = null;
+      this.listen(window, "resize", function () { clearTimeout(t); t = setTimeout(check, 150); });
       check();
     }
-  },
-  destroy: function (el, $el) {
-    var st = $.data(el, "ah-menu") || {};
-    var ns = instanceNs(el);
-    $(document).off(ns);
-    $(window).off(ns);
-    var target = $.data(el, "ah-menu-target");
-    if (target) { $(target).off(ns); }
-    clearTimeout(st.openT);
-    clearTimeout(st.closeT);
-    menuCloseAll($el);
-    menuRestore($el, st);
-  },
-  methods: {
-    open: function (el, $el, x, y) { menuPopupOpen($el, x, y); },
-    close: function (el, $el) { menuCloseAll($el); $el.removeClass("ah-menu-open"); },
-    closeAll: function (el, $el) { menuCloseAll($el); },
-    openItem: function (el, $el, key) {
-      var $l = byKey($el, ".ah-menu-link", "data-id", key);
-      if ($l.length) { menuOpenSub($l.parent(), $el); }
-    },
-    closeItem: function (el, $el, key) {
-      var $l = byKey($el, ".ah-menu-link", "data-id", key);
-      if ($l.length) { menuCloseSub($l.parent()); }
-    },
-    disableItem: function (el, $el, key) {
-      byKey($el, ".ah-menu-link", "data-id", key).attr("aria-disabled", "true")
-        .parent().addClass("ah-menu-item-disabled");
-    },
-    enableItem: function (el, $el, key) {
-      byKey($el, ".ah-menu-link", "data-id", key).removeAttr("aria-disabled")
-        .parent().removeClass("ah-menu-item-disabled");
-    },
-    setValue: function (el, $el, key) {
-      $el.find(".ah-menu-link-active").removeClass("ah-menu-link-active").removeAttr("aria-current");
-      byKey($el, ".ah-menu-link", "data-id", key).addClass("ah-menu-link-active").attr("aria-current", "true");
-      setValue($el, key);
-    },
-    minimize: function (el, $el) { menuMinimize($el, $.data(el, "ah-menu")); },
-    restore: function (el, $el) { menuRestore($el, $.data(el, "ah-menu")); }
+  }
+
+  teardown() {
+    clearTimeout(this.openT);
+    clearTimeout(this.closeT);
+    menuCloseAll(this.element);
+    this.restore();
+  }
+
+  drawerClose() {
+    if (!this.drawer) { return; }
+    this.drawer.classList.remove("ah-menu-drawer-open");
+    this.backdrop.classList.remove("ah-menu-drawer-backdrop-visible");
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke); they fire no change
+  open(x, y) { menuPopupOpen(this.element, x, y); }
+  close() { menuCloseAll(this.element); this.element.classList.remove("ah-menu-open"); }
+  closeAll() { menuCloseAll(this.element); }
+  openItem(key) {
+    const l = byKey(this.element, ".ah-menu-link", "data-id", key)[0];
+    if (l) { menuOpenSub(l.parentNode, this.element); }
+  }
+  closeItem(key) {
+    const l = byKey(this.element, ".ah-menu-link", "data-id", key)[0];
+    if (l) { menuCloseSub(l.parentNode); }
+  }
+  disableItem(key) {
+    byKey(this.element, ".ah-menu-link", "data-id", key).forEach(function (l) {
+      l.setAttribute("aria-disabled", "true");
+      l.parentNode.classList.add("ah-menu-item-disabled");
+    });
+  }
+  enableItem(key) {
+    byKey(this.element, ".ah-menu-link", "data-id", key).forEach(function (l) {
+      l.removeAttribute("aria-disabled");
+      l.parentNode.classList.remove("ah-menu-item-disabled");
+    });
+  }
+  setValue(key) {
+    const el = this.element;
+    markActive(el, null);
+    byKey(el, ".ah-menu-link", "data-id", key).forEach(function (l) {
+      l.classList.add("ah-menu-link-active");
+      l.setAttribute("aria-current", "true");
+    });
+    setValue(el, key);
+  }
+
+  minimize() {
+    const el = this.element;
+    const self = this;
+    if (el.classList.contains("ah-menu-is-minimized")) { return; }
+    el.classList.add("ah-menu-is-minimized");
+    const title = el.getAttribute("data-title") || "Menu";
+    const drawer = document.createElement("div");
+    drawer.className = "ah-menu-drawer";
+    drawer.setAttribute("role", "dialog");
+    drawer.setAttribute("aria-modal", "true");
+    drawer.setAttribute("aria-label", title);
+    drawer.innerHTML = '<div class="ah-menu-drawer-title"><span></span>' +
+      '<button type="button" class="ah-menu-drawer-close" aria-label="Close">×</button></div>' +
+      '<div class="ah-menu-drawer-list"></div>';
+    drawer.querySelector(".ah-menu-drawer-title > span").textContent = title;
+    const orig = child(el, ".ah-menu-list");
+    if (orig) {
+      const list = orig.cloneNode(true);
+      list.removeAttribute("id");
+      list.querySelectorAll("[id]").forEach(function (n) { n.removeAttribute("id"); });
+      list.querySelectorAll("." + M_OPEN).forEach(function (n) { n.classList.remove(M_OPEN); });
+      drawer.querySelector(".ah-menu-drawer-list").appendChild(list);
+    }
+    const backdrop = document.createElement("div");
+    backdrop.className = "ah-menu-drawer-backdrop";
+    document.body.append(backdrop, drawer);
+    this.drawer = drawer;
+    this.backdrop = backdrop;
+    // the drawer and backdrop are removed on restore, their listeners too
+    backdrop.addEventListener("click", function () { self.drawerClose(); });
+    drawer.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        self.drawerClose();
+        const btn = child(el, ".ah-menu-minimized-btn");
+        if (btn) { btn.focus(); }
+      }
+    });
+    drawer.addEventListener("click", function (e) {
+      const t = e.target;
+      if (t.closest(".ah-menu-drawer-close")) { self.drawerClose(); return; }
+      const parent = t.closest(".ah-menu-has-submenu > .ah-menu-link");
+      if (parent && drawer.contains(parent)) {
+        e.preventDefault();
+        const sub = child(parent.parentNode, ".ah-menu-submenu");
+        const on = sub.classList.toggle(M_OPEN);
+        parent.setAttribute("aria-expanded", String(on));
+        return;
+      }
+      const leaf = t.closest(".ah-menu-item:not(.ah-menu-has-submenu):not(.ah-menu-item-disabled) > .ah-menu-link");
+      if (leaf && drawer.contains(leaf)) {
+        const same = byKey(el, ".ah-menu-link", "data-id", leaf.getAttribute("data-id"))[0];
+        if (!leaf.getAttribute("href")) { e.preventDefault(); }
+        if (same) { menuSelect(el, same, null); }
+        drawer.querySelectorAll(".ah-menu-link-active").forEach(function (n) {
+          n.classList.remove("ah-menu-link-active");
+        });
+        leaf.classList.add("ah-menu-link-active");
+        self.drawerClose();
+      }
+    });
+  }
+
+  restore() {
+    const el = this.element;
+    if (!el.classList.contains("ah-menu-is-minimized")) { return; }
+    el.classList.remove("ah-menu-is-minimized");
+    if (this.drawer) { this.drawer.remove(); this.backdrop.remove(); }
+    this.drawer = this.backdrop = null;
   }
 });

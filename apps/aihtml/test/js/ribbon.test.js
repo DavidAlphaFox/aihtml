@@ -1,7 +1,7 @@
 /* ribbon behaviour on the markup the server renders. SERVER holds
  * renders of aihtml_ribbon:ribbon/4, generated from Erlang; regenerate
  * them if the markup changes. */
-(function (T, $, AH) {
+(function (T, AH) {
   "use strict";
 
   var SERVER =
@@ -11,77 +11,79 @@
 }
 ;
 
-  function mount(fx, name) {
+  async function mount(fx, name) {
     fx.innerHTML = SERVER[name];
-    AH.mount(fx);
+    await T.ready(fx);
     return fx.querySelector("[data-ah]");
   }
 
-  function key(target, k, extra) {
-    $(target).trigger($.Event("keydown", $.extend({ key: k }, extra || {})));
-  }
+  function key(target, k, extra) { T.key(target, k, extra); }
 
+  // change records the value, ah:command its detail
   function events(el, type) {
     var got = [];
-    $(el).on(type, function (e, d) {
-      if (e.target === el) { got.push(d === undefined ? el.getAttribute("data-ah-value") : d); }
+    el.addEventListener(type, function (e) {
+      if (e.target === el) { got.push(e.detail == null ? el.getAttribute("data-ah-value") : e.detail); }
     });
     return got;
   }
+  function tab(el, k) { return el.querySelector(".ah-ribbon-tab[data-key=" + k + "]"); }
+  function panel(el, k) { return el.querySelector(".ah-ribbon-tab-content[data-key=" + k + "]"); }
+  function cmd(el, c) { return el.querySelector("[data-command=" + c + "]"); }
 
   // ------------------------------------------------------------------ ribbon
 
-  T.test("ribbon: click switches tabs and fires change", function (fx) {
-    var el = mount(fx, "r");
+  T.test("ribbon: click switches tabs and fires change", async function (fx) {
+    var el = await mount(fx, "r");
     var changes = events(el, "change");
-    $(el).find(".ah-ribbon-tab[data-key=view]").trigger("click");
+    tab(el, "view").click();
     T.eq(el.getAttribute("data-ah-value"), "view");
-    T.eq($(el).children("input[type=hidden]").val(), "view");
-    T.eq($(el).find(".ah-ribbon-tab[data-key=view]").attr("aria-selected"), "true");
-    T.eq($(el).find(".ah-ribbon-tab[data-key=view]").attr("tabindex"), "0");
-    T.eq($(el).find(".ah-ribbon-tab[data-key=home]").attr("tabindex"), "-1");
-    T.ok($(el).find(".ah-ribbon-tab-content[data-key=view]").hasClass("ah-ribbon-tab-content-active"));
-    T.ok(!$(el).find(".ah-ribbon-tab-content[data-key=home]").hasClass("ah-ribbon-tab-content-active"));
-    $(el).find(".ah-ribbon-tab[data-key=edit]").trigger("click");
+    T.eq(el.querySelector(":scope > input[type=hidden]").value, "view");
+    T.eq(tab(el, "view").getAttribute("aria-selected"), "true");
+    T.eq(tab(el, "view").getAttribute("tabindex"), "0");
+    T.eq(tab(el, "home").getAttribute("tabindex"), "-1");
+    T.ok(panel(el, "view").classList.contains("ah-ribbon-tab-content-active"));
+    T.ok(!panel(el, "home").classList.contains("ah-ribbon-tab-content-active"));
+    T.fire(tab(el, "edit"), "click");
     T.eq(el.getAttribute("data-ah-value"), "view", "disabled tab");
     T.eq(changes, ["view"]);
   });
 
-  T.test("ribbon: arrows skip disabled tabs and wrap", function (fx) {
-    var el = mount(fx, "r");
-    key($(el).find(".ah-ribbon-tab[data-key=home]")[0], "ArrowRight");
+  T.test("ribbon: arrows skip disabled tabs and wrap", async function (fx) {
+    var el = await mount(fx, "r");
+    key(tab(el, "home"), "ArrowRight");
     T.eq(el.getAttribute("data-ah-value"), "view");
-    key($(el).find(".ah-ribbon-tab[data-key=view]")[0], "End");
+    key(tab(el, "view"), "End");
     T.eq(el.getAttribute("data-ah-value"), "data");
-    key($(el).find(".ah-ribbon-tab[data-key=data]")[0], "ArrowRight");
+    key(tab(el, "data"), "ArrowRight");
     T.eq(el.getAttribute("data-ah-value"), "home");
-    key($(el).find(".ah-ribbon-tab[data-key=home]")[0], "ArrowLeft");
+    key(tab(el, "home"), "ArrowLeft");
     T.eq(el.getAttribute("data-ah-value"), "data");
   });
 
-  T.test("ribbon: commands and toggles fire ah:command with data-command", function (fx) {
-    var el = mount(fx, "r");
+  T.test("ribbon: commands and toggles fire ah:command with data-command", async function (fx) {
+    var el = await mount(fx, "r");
     var cmds = events(el, "ah:command");
-    $(el).find("[data-command=paste]").trigger("click");
+    cmd(el, "paste").click();
     T.eq(el.getAttribute("data-command"), "paste");
     T.ok(!el.hasAttribute("data-pressed"));
-    $(el).find("[data-command=bold]").trigger("click");
+    cmd(el, "bold").click();
     T.eq(el.getAttribute("data-pressed"), "true");
-    T.eq($(el).find("[data-command=bold]").attr("aria-pressed"), "true");
-    T.ok($(el).find("[data-command=bold]").hasClass("ah-ribbon-button-pressed"));
+    T.eq(cmd(el, "bold").getAttribute("aria-pressed"), "true");
+    T.ok(cmd(el, "bold").classList.contains("ah-ribbon-button-pressed"));
     T.eq(cmds, [{ command: "paste", pressed: null }, { command: "bold", pressed: true }]);
     AH.invoke(el, "setPressed", "bold", false);
-    T.eq($(el).find("[data-command=bold]").attr("aria-pressed"), "false");
+    T.eq(cmd(el, "bold").getAttribute("aria-pressed"), "false");
     AH.invoke(el, "disableCommand", "paste");
-    $(el).find("[data-command=paste]").trigger("click");
+    T.fire(cmd(el, "paste"), "click");
     T.eq(cmds.length, 2, "disabled command");
   });
 
-  T.test("ribbon: dropdown menu opens, navigates and runs an item", function (fx) {
-    var el = mount(fx, "r");
+  T.test("ribbon: dropdown menu opens, navigates and runs an item", async function (fx) {
+    var el = await mount(fx, "r");
     var cmds = events(el, "ah:command");
-    var tog = $(el).find("[data-menu=more]")[0];
-    var menu = $(tog).siblings(".ah-ribbon-menu")[0];
+    var tog = el.querySelector("[data-menu=more]");
+    var menu = tog.parentNode.querySelector(".ah-ribbon-menu");
     key(tog, "ArrowDown");
     T.ok(!menu.hidden);
     T.eq(tog.getAttribute("aria-expanded"), "true");
@@ -92,26 +94,26 @@
     T.ok(menu.hidden);
     T.eq(document.activeElement, tog);
     tog.click();
-    $(menu).find("[data-command=c]")[0].click();
+    menu.querySelector("[data-command=c]").click();
     T.ok(menu.hidden);
     T.eq(cmds, [{ command: "c", pressed: null }]);
   });
 
-  T.test("ribbon: collapsed panels open on a tab click and close on a command", function (fx) {
-    var el = mount(fx, "rc");
+  T.test("ribbon: collapsed panels open on a tab click and close on a command", async function (fx) {
+    var el = await mount(fx, "rc");
     var ev = [];
-    $(el).on("ah:collapse ah:expand", function (e) { ev.push(e.type); });
+    ["ah:collapse", "ah:expand"].forEach(function (t) { el.addEventListener(t, function (e) { ev.push(e.type); }); });
     T.ok(el.classList.contains("ah-ribbon-mode-collapsed"));
-    $(el).find(".ah-ribbon-tab[data-key=home]").trigger("click");
+    tab(el, "home").click();
     T.ok(el.classList.contains("ah-ribbon-open"));
-    $(el).find(".ah-ribbon-tab[data-key=home]").trigger("click");
+    tab(el, "home").click();
     T.ok(!el.classList.contains("ah-ribbon-open"), "same tab toggles");
-    $(el).find(".ah-ribbon-tab[data-key=home]").trigger("click");
-    $(el).find("[data-command=paste]").trigger("click");
+    tab(el, "home").click();
+    cmd(el, "paste").click();
     T.ok(!el.classList.contains("ah-ribbon-open"));
-    $(el).find(".ah-ribbon-collapse-btn")[0].click();
+    el.querySelector(".ah-ribbon-collapse-btn").click();
     T.ok(el.classList.contains("ah-ribbon-mode-default"));
-    T.eq($(el).find(".ah-ribbon-collapse-btn").attr("aria-expanded"), "true");
+    T.eq(el.querySelector(".ah-ribbon-collapse-btn").getAttribute("aria-expanded"), "true");
     key(el, "F1", { ctrlKey: true });
     T.ok(el.classList.contains("ah-ribbon-mode-collapsed"));
     T.eq(ev, ["ah:expand", "ah:collapse"]);
@@ -120,15 +122,39 @@
     T.eq(ev.length, 2, "methods fire nothing");
   });
 
-  T.test("ribbon: select method does not fire change", function (fx) {
-    var el = mount(fx, "r");
+  T.test("ribbon: select method does not fire change", async function (fx) {
+    var el = await mount(fx, "r");
     var changes = events(el, "change");
     AH.invoke(el, "select", "data");
     T.eq(AH.invoke(el, "getValue"), "data");
     AH.invoke(el, "disableTab", "view");
-    T.ok($(el).find(".ah-ribbon-tab[data-key=view]")[0].disabled);
+    T.ok(tab(el, "view").disabled);
     AH.invoke(el, "enableTab", "edit");
-    T.ok(!$(el).find(".ah-ribbon-tab[data-key=edit]")[0].disabled);
+    T.ok(!tab(el, "edit").disabled);
     T.eq(changes.length, 0);
   });
-})(window.AHTest, window.jQuery, window.AH);
+
+  T.test("ribbon: a click outside closes an open menu and a floating panel; cleanup", async function (fx) {
+    var el = await mount(fx, "rc");
+    tab(el, "home").click();
+    var tog = el.querySelector("[data-menu=more]"), menu = tog.parentNode.querySelector(".ah-ribbon-menu");
+    tog.click();
+    T.ok(!menu.hidden);
+    T.fire(document.body, "pointerdown");
+    T.ok(menu.hidden, "menu closed");
+    T.ok(!el.classList.contains("ah-ribbon-open"), "panel closed");
+    tab(el, "home").click();
+    key(tab(el, "home"), "Escape");
+    T.ok(!el.classList.contains("ah-ribbon-open"), "Escape closes the panel");
+    // removed with an open menu: closed; re-inserted, it works again
+    tog.click();
+    el.remove();
+    await new Promise(function (r) { setTimeout(r, 0); });
+    T.ok(menu.hidden);
+    fx.appendChild(el);
+    await T.ready(fx);
+    var changes = events(el, "change");
+    tab(el, "view").click();
+    T.eq(changes, ["view"]);
+  });
+})(window.AHTest, window.AH);

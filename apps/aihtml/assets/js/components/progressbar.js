@@ -1,33 +1,39 @@
-/* progressbar behaviour (designs/04-components.md): setValue / getValue. */
-import $ from "jquery";
+/* progressbar behaviour (designs/04-components.md): setValue / getValue.
+   "change" and, at max, "ah:complete" with detail {previous, value}. */
 import AH from "../core.js";
 import "./_lib_display.js";
 import "./_lib_progress.js";
 
-var num = AH.lib.display.num, clamp = AH.lib.display.clamp;
-var P = AH.lib.progress;
+const { num, clamp } = AH.lib.display;
+const P = AH.lib.progress;
 
-AH.define("progressbar", {
-  methods: {
-    setValue: function (el, $el, value, text) {
-      var lo = num($el.attr("data-ah-min"), 0), hi = num($el.attr("data-ah-max"), 100);
-      var old = num($el.attr("data-ah-value"), lo);
-      var v = clamp(num(value, lo), lo, hi);
-      var p = P.pct(v, lo, hi);
-      var dim = $el.hasClass("ah-progressbar-vertical") ? "height" : "width";
-      $el.removeClass("ah-progressbar-indeterminate").removeAttr("aria-busy");
-      $el.children(".ah-progressbar-value, .ah-progressbar-value-vertical").css(dim, p + "%");
-      $el.children(".ah-progressbar-range").each(function () {
-        var stop = num(this.getAttribute("data-ah-stop"), hi);
-        $(this).css(dim, P.pct(Math.min(stop, hi, v), lo, hi) + "%");
-      });
-      var label = text !== undefined && text !== null ? String(text)
-        : ($el.attr("data-ah-text") === "custom" ? null : Math.round(p) + "%");
-      if (label !== null) { $el.find(".ah-progressbar-text").text(label); }
-      $el.attr({ "data-ah-value": v, "aria-valuenow": v,
-                 "aria-valuetext": label !== null ? label : Math.round(p) + "%" });
-      P.fire($el, old, v, hi);
-    },
-    getValue: function (el, $el) { return num($el.attr("data-ah-value"), 0); }
+AH.register("progressbar", class extends AH.Controller {
+  // methods (aihtml_action:call/4, AH.invoke)
+  setValue(value, text) {
+    const el = this.element;
+    const lo = num(el.getAttribute("data-ah-min"), 0), hi = num(el.getAttribute("data-ah-max"), 100);
+    const old = num(el.getAttribute("data-ah-value"), lo);
+    const v = clamp(num(value, lo), lo, hi);
+    const p = P.pct(v, lo, hi);
+    const dim = el.classList.contains("ah-progressbar-vertical") ? "height" : "width";
+    el.classList.remove("ah-progressbar-indeterminate");
+    el.removeAttribute("aria-busy");
+    el.querySelectorAll(":scope > .ah-progressbar-value, :scope > .ah-progressbar-value-vertical")
+      .forEach((n) => { n.style[dim] = p + "%"; });
+    el.querySelectorAll(":scope > .ah-progressbar-range").forEach((n) => {
+      const stop = num(n.getAttribute("data-ah-stop"), hi);
+      n.style[dim] = P.pct(Math.min(stop, hi, v), lo, hi) + "%";
+    });
+    const label = text !== undefined && text !== null ? String(text)
+      : (el.getAttribute("data-ah-text") === "custom" ? null : Math.round(p) + "%");
+    if (label !== null) {
+      el.querySelectorAll(".ah-progressbar-text").forEach((n) => { n.textContent = label; });
+    }
+    el.setAttribute("data-ah-value", String(v));
+    el.setAttribute("aria-valuenow", String(v));
+    el.setAttribute("aria-valuetext", label !== null ? label : Math.round(p) + "%");
+    P.fire(el, old, v, hi);
   }
+
+  getValue() { return num(this.element.getAttribute("data-ah-value"), 0); }
 });

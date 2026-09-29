@@ -8,8 +8,17 @@
  * builders (calMonth, calTimegrid, calList) are the twins of month_view/4,
  * timegrid_view/4 and list_view/4 in aihtml_calendar.erl: both feed the
  * same templates (calendar_month, calendar_timegrid, calendar_list).
- * Recurring events are expanded by AH.lib.rrule. */
-import $ from "jquery";
+ * Recurring events are expanded by AH.lib.rrule.
+ *
+ * Events: `change` when the date or view changed; ah:event-click (detail
+ * {event, raw}), ah:more-click ({date}; cancelable: preventDefault keeps
+ * the view), ah:event-drop / ah:event-resize ({event, from, to, allDay,
+ * days?}), ah:select ({from, to, allDay}). Their fields are also written
+ * to the root as data-* (Event.data of a postback).
+ *
+ * With the href option (data-ah-href) the toolbar entries are links to
+ * the state they lead to; a plain click still navigates here and pushes
+ * the link's URL, modified clicks are left to the browser. */
 import AH from "../core.js";
 import "./_lib_date.js";
 import "./_lib_rrule.js";
@@ -17,7 +26,6 @@ import "virtual:ah-tpl/calendar_list";
 import "virtual:ah-tpl/calendar_month";
 import "virtual:ah-tpl/calendar_timegrid";
 
-var NS = AH.NS;
 var D = AH.lib.date, RR = AH.lib.rrule;
 var DAY = D.DAY, dnum = D.dnum, ymd = D.ymd, dow = D.dow, sow = D.sow, lastDay = D.lastDay,
     addMonths = D.addMonths, pad = D.pad, isoDate = D.isoDate, todayNum = D.todayNum,
@@ -96,7 +104,6 @@ function calNormalize(e, n) {
   return out;
 }
 
-// ---- recurrence (sigil's calendar/recurrence.cljs) ----
 // ---- recurrence (AH.lib.rrule) ----
 
 // Instances overlapping [rs, re), in event order.
@@ -309,134 +316,172 @@ function calView(st) {
 
 // ---- behaviour ----
 
-function calState(el) { return $.data(el, "ah-cal"); }
-
-function calRender(el, $el) {
-  var st = calState(el);
-  var $scroll = st.$container.find(".ah-calendar-timegrid-scroll");
-  var scroll = $scroll.length && st.renderedView === st.view ? $scroll[0].scrollTop : null;
+function calRender(c) {
+  var st = c.st, el = c.element;
+  var sc = st.container.querySelector(".ah-calendar-timegrid-scroll");
+  var scroll = sc && st.renderedView === st.view ? sc.scrollTop : null;
   var v = calView(st);
   st.insts = {};
   v.insts.forEach(function (i) { st.insts[i.id] = i; });
   st.range = [v.rs, v.re];
-  st.$container.html(v.html);
-  st.$title.text(v.title);
-  $el.find(".ah-calendar-view-btn").each(function () {
-    var on = this.getAttribute("data-view") === st.view;
-    $(this).toggleClass("ah-calendar-view-btn-active", on).attr("aria-pressed", String(on));
+  st.container.innerHTML = v.html;
+  st.titles.forEach(function (t) { t.textContent = v.title; });
+  el.querySelectorAll(".ah-calendar-view-btn").forEach(function (b) {
+    var on = b.getAttribute("data-view") === st.view;
+    b.classList.toggle("ah-calendar-view-btn-active", on);
+    if (b.tagName === "A") {
+      if (on) { b.setAttribute("aria-current", "true"); } else { b.removeAttribute("aria-current"); }
+    } else {
+      b.setAttribute("aria-pressed", String(on));
+    }
   });
+  calLinks(c);
   var iso = isoDate(st.cur);
   el.setAttribute("data-ah-value", iso);
-  $el.children("input[type=hidden]").val(iso);
+  var hidden = el.querySelector(":scope > input[type=hidden]");
+  if (hidden) { hidden.value = iso; }
   el.setAttribute("data-view", st.view);
   el.setAttribute("data-start", isoDate(v.rs));
   el.setAttribute("data-end", isoDate(v.re));
   clearInterval(st.timer);
   st.timer = null;
-  $scroll = st.$container.find(".ah-calendar-timegrid-scroll");
-  if ($scroll.length) {
+  sc = st.container.querySelector(".ah-calendar-timegrid-scroll");
+  if (sc) {
     // keep the scroll position while the view stays, else show the morning
-    $scroll[0].scrollTop = scroll !== null ? scroll : Math.max(Math.round(7 * 60 * st.slotH / st.slotDur) - 10, 0);
-    calNow(el);
-    st.timer = setInterval(function () { calNow(el); }, 60000);
+    sc.scrollTop = scroll !== null ? scroll : Math.max(Math.round(7 * 60 * st.slotH / st.slotDur) - 10, 0);
+    calNow(st);
+    st.timer = setInterval(function () { calNow(st); }, 60000);
   }
   st.renderedView = st.view;
 }
 
 // The current time line, when today is in the visible range.
-function calNow(el) {
-  var st = calState(el);
-  var $ind = st.$container.find(".ah-calendar-timegrid-now-indicator");
+function calNow(st) {
   var now = new Date(), t = todayNum();
-  if (t >= st.range[0] && t < st.range[1]) {
-    $ind.css({ display: "block",
-               top: Math.round((now.getHours() * 60 + now.getMinutes()) * st.slotH / st.slotDur) + "px" });
-  } else {
-    $ind.css({ display: "none" });
-  }
+  st.container.querySelectorAll(".ah-calendar-timegrid-now-indicator").forEach(function (ind) {
+    if (t >= st.range[0] && t < st.range[1]) {
+      ind.style.display = "block";
+      ind.style.top = Math.round((now.getHours() * 60 + now.getMinutes()) * st.slotH / st.slotDur) + "px";
+    } else {
+      ind.style.display = "none";
+    }
+  });
 }
 
 // Navigation re-renders and fires change when the date or view changed.
-function calGo(el, $el, cur, view) {
-  var st = calState(el);
+function calGo(c, cur, view) {
+  var st = c.st;
   var changed = cur !== st.cur || view !== st.view;
   st.cur = cur;
   st.view = view;
-  calRender(el, $el);
-  if (changed) { $el.trigger("change"); }
+  calRender(c);
+  if (changed) { c.fire("change"); }
 }
 
-function calStep(el, $el, dir) {
-  var st = calState(el), c = st.cur;
+// The day prev (-1) or next (1) shows; the twin of step/4.
+function calStepDay(st, dir) {
   switch (st.view) {
-    case "month": c = addMonths(c, dir); break;
-    case "week": c += 7 * dir; break;
-    case "day": c += dir; break;
-    default: c += st.agendaDays * dir; break;
+    case "month": return addMonths(st.cur, dir);
+    case "week": return st.cur + 7 * dir;
+    case "day": return st.cur + dir;
+    default: return st.cur + st.agendaDays * dir;
   }
-  calGo(el, $el, c, st.view);
+}
+
+function calStep(c, dir) {
+  calGo(c, calStepDay(c.st, dir), c.st.view);
+}
+
+// With the href option (data-ah-href: a template with {date} and {view})
+// the toolbar entries are links; point them at the states they lead to
+// from the shown date (the twin of nav_url/3).
+function calLinks(c) {
+  var st = c.st, el = c.element, tpl = el.getAttribute("data-ah-href");
+  if (!tpl) { return; }
+  var url = function (d, view) {
+    return tpl.replace(/\{date\}/g, isoDate(d)).replace(/\{view\}/g, view);
+  };
+  var set = function (sel, d) {
+    el.querySelectorAll("a" + sel).forEach(function (a) { a.setAttribute("href", url(d, st.view)); });
+  };
+  set(".ah-calendar-btn-prev", calStepDay(st, -1));
+  set(".ah-calendar-btn-next", calStepDay(st, 1));
+  set(".ah-calendar-btn-today", todayNum());
+  el.querySelectorAll("a.ah-calendar-view-btn").forEach(function (a) {
+    a.setAttribute("href", url(st.cur, a.getAttribute("data-view")));
+  });
+}
+
+// A click on a toolbar entry: buttons always navigate here; a link only
+// on a plain left click (the browser opens modified clicks), whose
+// default is then prevented and whose URL is pushed after the navigation
+// (a reload or going back asks the server for that state).
+function calToolbar(c, sel, go) {
+  c.delegate("click", sel, function (e, t) {
+    var url = "";
+    if (t.tagName === "A") {
+      if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) { return; }
+      e.preventDefault();
+      url = t.getAttribute("href");
+    }
+    go(t);
+    if (url) { AH.apply([{ op: "url", mode: "push", value: url }]); }
+  });
 }
 
 // Details of an interaction as data-* on the root (Event.data of a
-// postback), then the component event.
+// postback), then the component event (detail: the details). Returns
+// false when a listener called preventDefault.
 var DETAIL_ATTRS = ["data-event", "data-from", "data-to", "data-days", "data-all-day", "data-date"];
-function calFire(el, $el, name, detail) {
+function calFire(c, name, detail) {
+  var el = c.element;
   DETAIL_ATTRS.forEach(function (a) { el.removeAttribute(a); });
-  $.each(detail, function (k, v) {
+  Object.keys(detail).forEach(function (k) {
     if (k === "raw") { return; }
-    el.setAttribute("data-" + k.replace(/[A-Z]/g, function (c) { return "-" + c.toLowerCase(); }), String(v));
+    el.setAttribute("data-" + k.replace(/[A-Z]/g, function (x) { return "-" + x.toLowerCase(); }), String(detail[k]));
   });
-  var ev = $.Event(name);
-  $el.trigger(ev, [detail]);
-  return ev;
+  return c.fire(name, detail);
 }
 
-function calSource(st, instId) {
-  var inst = st.insts[instId];
-  return inst ? inst.src : null;
-}
-
-function calEventClick(el, $el, target) {
-  var st = calState(el);
-  var inst = st.insts[target.getAttribute("data-eventid")];
+function calEventClick(c, target) {
+  var inst = c.st.insts[target.getAttribute("data-eventid")];
   if (!inst) { return; }
-  calFire(el, $el, "ah:event-click", { event: inst.src.id, raw: $.extend({}, inst.src,
+  calFire(c, "ah:event-click", { event: inst.src.id, raw: Object.assign({}, inst.src,
     { start: isoTime(inst.s, inst.allDay), end: isoTime(inst.e, inst.allDay) }) });
 }
 
-function calMore(el, $el, target) {
-  var st = calState(el);
+function calMore(c, target) {
+  var st = c.st;
   var date = target.getAttribute("data-date");
-  var ev = calFire(el, $el, "ah:more-click", { date: date });
-  if (!ev.isDefaultPrevented() && st.views.indexOf("day") >= 0) {
-    calGo(el, $el, parseDate(date), "day");
+  var go = calFire(c, "ah:more-click", { date: date });
+  if (go && st.views.indexOf("day") >= 0) {
+    calGo(c, parseDate(date), "day");
   }
 }
 
 // Shift an event (the whole series for a recurring one) and re-render.
-function calMove(el, $el, src, dStart, dEnd, name, days) {
-  var st = calState(el);
+function calMove(c, src, dStart, dEnd, name, days) {
+  var st = c.st;
   var s = parseTime(src.start).t + dStart, e = parseTime(src.end).t + dEnd;
   if (e <= s) { return; }
   var allDay = src.allDay && s % DAY === 0 && e % DAY === 0;
   src.start = isoTime(s, allDay);
   src.end = isoTime(e, allDay);
   src.allDay = allDay;
-  calRender(el, $el);
+  calRender(c);
   var detail = { event: src.id, from: src.start, to: src.end, allDay: allDay };
   if (days !== undefined) { detail.days = days; }
-  calFire(el, $el, name, detail);
+  calFire(c, name, detail);
   st.justDragged = true;
 }
 
 // Hit testing by rectangles (the event layer covers the day cells).
-function cellAt($cells, x, y) {
-  var hit = null;
-  $cells.each(function () {
-    var r = this.getBoundingClientRect();
-    if (x >= r.left && x <= r.right && (y === null || (y >= r.top && y <= r.bottom))) { hit = this; return false; }
-  });
-  return hit;
+function cellAt(cells, x, y) {
+  for (var i = 0; i < cells.length; i++) {
+    var r = cells[i].getBoundingClientRect();
+    if (x >= r.left && x <= r.right && (y === null || (y >= r.top && y <= r.bottom))) { return cells[i]; }
+  }
+  return null;
 }
 
 function slotMinutes(st, col, y) {
@@ -447,61 +492,70 @@ function slotMinutes(st, col, y) {
 
 function ghost(evEl, e) {
   var r = evEl.getBoundingClientRect();
-  var $g = $(evEl).clone().addClass("ah-calendar-event-ghost").removeAttr("tabindex role")
-    .css({ position: "fixed", zIndex: 9999, opacity: 0.7, pointerEvents: "none", margin: 0,
-           width: r.width + "px", height: r.height + "px", left: r.left + "px", top: r.top + "px" })
-    .appendTo(document.body);
-  return { $g: $g, dx: e.clientX - r.left, dy: e.clientY - r.top };
+  var g = evEl.cloneNode(true);
+  g.classList.add("ah-calendar-event-ghost");
+  g.removeAttribute("tabindex");
+  g.removeAttribute("role");
+  Object.assign(g.style, { position: "fixed", zIndex: 9999, opacity: 0.7, pointerEvents: "none", margin: 0,
+                           width: r.width + "px", height: r.height + "px", left: r.left + "px", top: r.top + "px" });
+  document.body.appendChild(g);
+  return { g: g, dx: e.clientX - r.left, dy: e.clientY - r.top };
 }
 
 // One drag at a time: mousedown decides the mode, document mousemove
-// and mouseup (namespaced per calendar) carry it out.
-function calDragStart(el, $el, e) {
-  var st = calState(el);
-  if (e.which !== 1) { return; }
-  var $t = $(e.target), $c = st.$container;
-  var evEl = $t.closest(".ah-calendar-daygrid-event, .ah-calendar-timegrid-event, .ah-calendar-allday-event")[0];
+// and mouseup (removed when the drag ends) carry it out.
+function calDragStart(c, e) {
+  var st = c.st, cont = st.container;
+  if (e.button !== 0) { return; }
+  var t = e.target;
+  var evEl = t.closest(".ah-calendar-daygrid-event, .ah-calendar-timegrid-event, .ah-calendar-allday-event");
   var d = null;
-  if ($t.hasClass("ah-calendar-timegrid-resize-handle") && st.editable) {
-    var rEv = $t.closest(".ah-calendar-timegrid-event")[0];
+  if (t.classList.contains("ah-calendar-timegrid-resize-handle") && st.editable) {
+    var rEv = t.closest(".ah-calendar-timegrid-event");
     d = { mode: "resize", ev: rEv, inst: st.insts[rEv.getAttribute("data-eventid")],
-          col: $t.closest(".ah-calendar-timegrid-day-col")[0] };
+          col: t.closest(".ah-calendar-timegrid-day-col") };
   } else if (evEl && st.editable) {
-    var kind = $(evEl).hasClass("ah-calendar-daygrid-event") ? "month"
-      : ($(evEl).hasClass("ah-calendar-allday-event") ? "allday" : "timed");
+    var kind = evEl.classList.contains("ah-calendar-daygrid-event") ? "month"
+      : (evEl.classList.contains("ah-calendar-allday-event") ? "allday" : "timed");
     d = { mode: "move", kind: kind, ev: evEl, inst: st.insts[evEl.getAttribute("data-eventid")],
           x0: e.clientX, y0: e.clientY, started: false };
+    if (!d.inst) { return; }
     if (kind === "month") {
-      var c0 = cellAt($c.find(".ah-calendar-day"), e.clientX, e.clientY);
+      var c0 = cellAt(cont.querySelectorAll(".ah-calendar-day"), e.clientX, e.clientY);
       d.origin = c0 ? parseDate(c0.getAttribute("data-date")) : Math.floor(d.inst.s / DAY);
     } else if (kind === "allday") {
-      d.origin = parseDate($(evEl).closest(".ah-calendar-timegrid-allday-cell").attr("data-date"));
+      var ac = evEl.closest(".ah-calendar-timegrid-allday-cell");
+      d.origin = parseDate(ac ? ac.getAttribute("data-date") : null);
     }
-  } else if (!evEl && st.selectable && $t.closest(".ah-calendar-daygrid-body").length &&
-             !$t.closest(".ah-calendar-day-more").length) {
-    var cell = cellAt($c.find(".ah-calendar-day"), e.clientX, e.clientY);
+  } else if (!evEl && st.selectable && t.closest(".ah-calendar-daygrid-body") &&
+             !t.closest(".ah-calendar-day-more")) {
+    var cell = cellAt(cont.querySelectorAll(".ah-calendar-day"), e.clientX, e.clientY);
     if (cell) { d = { mode: "select", from: parseDate(cell.getAttribute("data-date")) }; d.to = d.from; }
-  } else if (!evEl && st.selectable && $t.closest(".ah-calendar-timegrid-day-col").length) {
-    var col = $t.closest(".ah-calendar-timegrid-day-col")[0];
+  } else if (!evEl && st.selectable && t.closest(".ah-calendar-timegrid-day-col")) {
+    var col = t.closest(".ah-calendar-timegrid-day-col");
     var m0 = Math.min(slotMinutes(st, col, e.clientY), DAY - st.slotDur);
+    var ph = document.createElement("div");
+    ph.className = "ah-calendar-timegrid-create-placeholder";
+    ph.style.left = "0px";
+    ph.style.right = "0px";
+    col.appendChild(ph);
     d = { mode: "create", col: col, day: parseDate(col.getAttribute("data-date")), m0: m0,
-          top: m0, bot: m0 + st.slotDur,
-          $ph: $('<div class="ah-calendar-timegrid-create-placeholder"></div>')
-            .css({ left: 0, right: 0 }).appendTo(col) };
+          top: m0, bot: m0 + st.slotDur, ph: ph };
   }
   if (!d || !d.inst && (d.mode === "move" || d.mode === "resize")) { return; }
   e.preventDefault();
   st.drag = d;
-  calDragPaint(el, e);
-  $(document).on("mousemove" + st.ns, function (me) { calDragPaint(el, me); })
-    .on("mouseup" + st.ns, function (ue) { calDragEnd(el, $el, ue); })
-    .on("keydown" + st.ns, function (ke) {
-      if (ke.key === "Escape") { calDragCancel(el); }
-    });
+  calDragPaint(c, e);
+  var ac2 = st.dragAc = new AbortController(), o = { signal: ac2.signal };
+  document.addEventListener("mousemove", function (me) { calDragPaint(c, me); }, o);
+  document.addEventListener("mouseup", function (ue) { calDragEnd(c, ue); }, o);
+  document.addEventListener("keydown", function (ke) {
+    if (ke.key === "Escape") { calDragCancel(c); }
+  }, o);
 }
 
-function calDragPaint(el, e) {
-  var st = calState(el), d = st.drag, $c = st.$container;
+function calDragPaint(c, e) {
+  var st = c.st, d = st.drag, cont = st.container;
   if (!d) { return; }
   switch (d.mode) {
     case "move":
@@ -510,21 +564,23 @@ function calDragPaint(el, e) {
         d.started = true;
         d.g = ghost(d.ev, e);
       }
-      d.g.$g.css({ left: e.clientX - d.g.dx + "px", top: e.clientY - d.g.dy + "px" });
+      d.g.g.style.left = e.clientX - d.g.dx + "px";
+      d.g.g.style.top = e.clientY - d.g.dy + "px";
       break;
     case "resize": {
       var m = Math.max(slotMinutes(st, d.col, e.clientY), d.inst.s % DAY + st.slotDur);
       d.end = m;
-      $(d.ev).css("height", Math.round((m - d.inst.s % DAY) * st.slotH / st.slotDur) + "px");
+      d.ev.style.height = Math.round((m - d.inst.s % DAY) * st.slotH / st.slotDur) + "px";
       break;
     }
     case "select": {
-      var cell = cellAt($c.find(".ah-calendar-day"), e.clientX, e.clientY);
+      var days = cont.querySelectorAll(".ah-calendar-day");
+      var cell = cellAt(days, e.clientX, e.clientY);
       if (cell) { d.to = parseDate(cell.getAttribute("data-date")); }
       var a = Math.min(d.from, d.to), b = Math.max(d.from, d.to);
-      $c.find(".ah-calendar-day").each(function () {
-        var n = parseDate(this.getAttribute("data-date"));
-        $(this).toggleClass("ah-calendar-day-selected", n >= a && n <= b);
+      days.forEach(function (x) {
+        var n = parseDate(x.getAttribute("data-date"));
+        x.classList.toggle("ah-calendar-day-selected", n >= a && n <= b);
       });
       break;
     }
@@ -532,28 +588,30 @@ function calDragPaint(el, e) {
       var cur = slotMinutes(st, d.col, e.clientY);
       d.top = Math.min(d.m0, cur);
       d.bot = Math.min(Math.max(d.m0 + st.slotDur, cur + st.slotDur), DAY);
-      d.$ph.css({ top: Math.round(d.top * st.slotH / st.slotDur) + "px",
-                  height: Math.round((d.bot - d.top) * st.slotH / st.slotDur) + "px" });
+      d.ph.style.top = Math.round(d.top * st.slotH / st.slotDur) + "px";
+      d.ph.style.height = Math.round((d.bot - d.top) * st.slotH / st.slotDur) + "px";
       break;
     }
     default: break;
   }
 }
 
-function calDragCancel(el) {
-  var st = calState(el), d = st.drag;
-  $(document).off(st.ns);
+function calDragCancel(c) {
+  var st = c.st, d = st.drag;
+  if (st.dragAc) { st.dragAc.abort(); st.dragAc = null; }
   st.drag = null;
   if (!d) { return; }
-  if (d.g) { d.g.$g.remove(); }
-  if (d.$ph) { d.$ph.remove(); }
-  st.$container.find(".ah-calendar-day-selected").removeClass("ah-calendar-day-selected");
-  if (d.mode === "resize") { calRender(el, $(el)); }
+  if (d.g) { d.g.g.remove(); }
+  if (d.ph) { d.ph.remove(); }
+  st.container.querySelectorAll(".ah-calendar-day-selected").forEach(function (x) {
+    x.classList.remove("ah-calendar-day-selected");
+  });
+  if (d.mode === "resize") { calRender(c); }
 }
 
-function calDragEnd(el, $el, e) {
-  var st = calState(el), d = st.drag, $c = st.$container;
-  calDragCancel(el);
+function calDragEnd(c, e) {
+  var st = c.st, d = st.drag, cont = st.container;
+  calDragCancel(c);
   if (!d) { return; }
   var src = d.inst ? d.inst.src : null;
   switch (d.mode) {
@@ -561,21 +619,21 @@ function calDragEnd(el, $el, e) {
       if (!d.started) { return; }                    // a click
       st.justDragged = true;
       if (d.kind === "timed") {
-        var col = cellAt($c.find(".ah-calendar-timegrid-day-col"), e.clientX, null);
+        var col = cellAt(cont.querySelectorAll(".ah-calendar-timegrid-day-col"), e.clientX, null);
         if (!col) { return; }
         var day = parseDate(col.getAttribute("data-date"));
         var top = e.clientY - d.g.dy;                // the ghost's top edge
         var start = day * DAY + Math.min(slotMinutes(st, col, top), DAY - st.slotDur);
         var delta = start - d.inst.s;
         if (delta) {
-          calMove(el, $el, src, delta, delta, "ah:event-drop", day - Math.floor(d.inst.s / DAY));
+          calMove(c, src, delta, delta, "ah:event-drop", day - Math.floor(d.inst.s / DAY));
         }
       } else {
         var sel = d.kind === "month" ? ".ah-calendar-day" : ".ah-calendar-timegrid-allday-cell";
-        var cell = cellAt($c.find(sel), e.clientX, d.kind === "month" ? e.clientY : null);
+        var cell = cellAt(cont.querySelectorAll(sel), e.clientX, d.kind === "month" ? e.clientY : null);
         if (!cell) { return; }
         var days = parseDate(cell.getAttribute("data-date")) - d.origin;
-        if (days) { calMove(el, $el, src, days * DAY, days * DAY, "ah:event-drop", days); }
+        if (days) { calMove(c, src, days * DAY, days * DAY, "ah:event-drop", days); }
       }
       break;
     }
@@ -583,19 +641,19 @@ function calDragEnd(el, $el, e) {
       st.justDragged = true;
       var end = Math.floor(d.inst.s / DAY) * DAY + (d.end === undefined ? d.inst.e % DAY : d.end);
       if (d.end !== undefined && end !== d.inst.e) {
-        calMove(el, $el, src, 0, end - d.inst.e, "ah:event-resize");
+        calMove(c, src, 0, end - d.inst.e, "ah:event-resize");
       }
       break;
     }
     case "select": {
       var a = Math.min(d.from, d.to), b = Math.max(d.from, d.to);
-      calFire(el, $el, "ah:select", { from: isoDate(a), to: isoDate(b + 1), allDay: true });
+      calFire(c, "ah:select", { from: isoDate(a), to: isoDate(b + 1), allDay: true });
       break;
     }
     case "create":
       st.justDragged = true;
-      calFire(el, $el, "ah:select", { from: isoTime(d.day * DAY + d.top, false),
-                                      to: isoTime(d.day * DAY + d.bot, false), allDay: false });
+      calFire(c, "ah:select", { from: isoTime(d.day * DAY + d.top, false),
+                                to: isoTime(d.day * DAY + d.bot, false), allDay: false });
       break;
     default: break;
   }
@@ -608,21 +666,21 @@ function calFind(st, id) {
   return -1;
 }
 
-AH.define("calendar", {
-  init: function (el, $el) {
+AH.register("calendar", class extends AH.Controller {
+  setup() {
+    var c = this, el = this.element;
     ensureId(el, "ah-cal");
     var num = function (a, dflt) {
       var n = parseInt(el.getAttribute(a) || "", 10);
       return n > 0 || (n === 0 && dflt === 0) ? n : dflt;
     };
-    var st = {
-      ns: ".ahcal" + (++seq),
-      $container: $el.children(".ah-calendar-view-container"),
-      $title: $el.find(".ah-calendar-title"),
+    var st = this.st = {
+      container: el.querySelector(":scope > .ah-calendar-view-container"),
+      titles: Array.from(el.querySelectorAll(".ah-calendar-title")),
       events: readJson(el, "data-ah-events", []).map(calNormalize),
       view: el.getAttribute("data-ah-view") || "month",
-      views: $el.find(".ah-calendar-view-btn").map(function () {
-        return this.getAttribute("data-view"); }).get(),
+      views: Array.from(el.querySelectorAll(".ah-calendar-view-btn"), function (b) {
+        return b.getAttribute("data-view"); }),
       cur: parseDate(el.getAttribute("data-ah-value")) || todayNum(),
       first: Math.min(num("data-ah-first-day", 0), 6),
       agendaDays: num("data-ah-agenda-days", 30),
@@ -630,82 +688,83 @@ AH.define("calendar", {
       slotDur: num("data-ah-slot-duration", 30),
       slotH: num("data-ah-slot-height", 20),
       hour24: el.getAttribute("data-ah-hour-format") === "24",
-      L: $.extend({}, CAL_LABELS, readJson(el, "data-ah-labels", {})),
-      editable: $el.hasClass("ah-calendar-editable"),
-      selectable: $el.hasClass("ah-calendar-selectable"),
-      insts: {}, range: [0, 0], timer: null, drag: null, justDragged: false
+      L: Object.assign({}, CAL_LABELS, readJson(el, "data-ah-labels", {})),
+      editable: el.classList.contains("ah-calendar-editable"),
+      selectable: el.classList.contains("ah-calendar-selectable"),
+      insts: {}, range: [0, 0], timer: null, drag: null, dragAc: null, justDragged: false
     };
-    $.data(el, "ah-cal", st);
     // the server rendered the same view; render again for the browser's today
-    calRender(el, $el);
+    calRender(this);
 
-    $el.on("click" + NS, ".ah-calendar-btn-prev", function () { calStep(el, $el, -1); })
-      .on("click" + NS, ".ah-calendar-btn-next", function () { calStep(el, $el, 1); })
-      .on("click" + NS, ".ah-calendar-btn-today", function () { calGo(el, $el, todayNum(), st.view); })
-      .on("click" + NS, ".ah-calendar-view-btn", function () {
-        calGo(el, $el, st.cur, this.getAttribute("data-view"));
-      })
-      .on("click" + NS, ".ah-calendar-event, .ah-calendar-list-event", function (e) {
-        e.stopPropagation();
-        if (st.justDragged) { st.justDragged = false; return; }
-        calEventClick(el, $el, this);
-      })
-      .on("click" + NS, ".ah-calendar-day-more", function (e) {
-        e.stopPropagation();
-        calMore(el, $el, this);
-      })
-      .on("keydown" + NS, ".ah-calendar-event, .ah-calendar-list-event, .ah-calendar-day-more", function (e) {
-        if (e.key !== "Enter" && e.key !== " ") { return; }
-        e.preventDefault();
-        if ($(this).hasClass("ah-calendar-day-more")) { calMore(el, $el, this); } else { calEventClick(el, $el, this); }
-      });
-    st.$container.on("mousedown" + NS, function (e) {
-      st.justDragged = false;
-      calDragStart(el, $el, e);
+    calToolbar(c, ".ah-calendar-btn-prev", function () { calStep(c, -1); });
+    calToolbar(c, ".ah-calendar-btn-next", function () { calStep(c, 1); });
+    calToolbar(c, ".ah-calendar-btn-today", function () { calGo(c, todayNum(), st.view); });
+    calToolbar(c, ".ah-calendar-view-btn", function (b) { calGo(c, st.cur, b.getAttribute("data-view")); });
+    this.delegate("click", ".ah-calendar-event, .ah-calendar-list-event", function (e, ev) {
+      e.stopPropagation();
+      if (st.justDragged) { st.justDragged = false; return; }
+      calEventClick(c, ev);
     });
-  },
-  destroy: function (el) {
-    var st = calState(el);
+    this.delegate("click", ".ah-calendar-day-more", function (e, more) {
+      e.stopPropagation();
+      calMore(c, more);
+    });
+    this.delegate("keydown", ".ah-calendar-event, .ah-calendar-list-event, .ah-calendar-day-more", function (e, t) {
+      if (e.key !== "Enter" && e.key !== " ") { return; }
+      e.preventDefault();
+      if (t.classList.contains("ah-calendar-day-more")) { calMore(c, t); } else { calEventClick(c, t); }
+    });
+    this.listen(st.container, "mousedown", function (e) {
+      st.justDragged = false;
+      calDragStart(c, e);
+    });
+  }
+
+  teardown() {
+    var st = this.st;
     if (!st) { return; }
-    if (st.drag) { calDragCancel(el); }
-    $(document).off(st.ns);
+    if (st.drag) { calDragCancel(this); }
     clearInterval(st.timer);
-  },
-  methods: {
-    prev: function (el, $el) { calStep(el, $el, -1); },
-    next: function (el, $el) { calStep(el, $el, 1); },
-    today: function (el, $el) { calGo(el, $el, todayNum(), calState(el).view); },
-    changeView: function (el, $el, v) {
-      if (["month", "week", "day", "list"].indexOf(v) >= 0) { calGo(el, $el, calState(el).cur, v); }
-    },
-    setValue: function (el, $el, v) {
-      var d = parseDate(String(v || "").slice(0, 10));
-      if (d !== null) { calState(el).cur = d; calRender(el, $el); }
-    },
-    getValue: function (el) { return el.getAttribute("data-ah-value"); },
-    setEvents: function (el, $el, evs) {
-      calState(el).events = (evs || []).map(calNormalize);
-      calRender(el, $el);
-    },
-    addEvent: function (el, $el, ev) {
-      var st = calState(el), n = calNormalize(ev, st.events.length + 1), i = calFind(st, n.id);
-      if (i >= 0) { st.events[i] = n; } else { st.events.push(n); }
-      calRender(el, $el);
-    },
-    updateEvent: function (el, $el, id, changes) {
-      var st = calState(el), i = calFind(st, id);
-      if (i < 0) { return; }
-      var merged = $.extend({}, st.events[i], changes || {});
-      if (changes && (changes.start || changes.end) && changes.allDay === undefined) { delete merged.allDay; }
-      st.events[i] = calNormalize(merged, i + 1);
-      calRender(el, $el);
-    },
-    removeEvent: function (el, $el, id) {
-      var st = calState(el), i = calFind(st, id);
-      if (i >= 0) { st.events.splice(i, 1); calRender(el, $el); }
-    },
-    getEvents: function (el) {
-      return calState(el).events.map(function (e) { return $.extend({}, e); });
-    }
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  prev() { calStep(this, -1); }
+  next() { calStep(this, 1); }
+  today() { calGo(this, todayNum(), this.st.view); }
+  changeView(v) {
+    if (["month", "week", "day", "list"].indexOf(v) >= 0) { calGo(this, this.st.cur, v); }
+  }
+  setValue(v) {
+    var d = parseDate(String(v || "").slice(0, 10));
+    if (d !== null) { this.st.cur = d; calRender(this); }
+  }
+  getValue() { return this.element.getAttribute("data-ah-value"); }
+  setEvents(evs) {
+    this.st.events = (evs || []).map(calNormalize);
+    calRender(this);
+  }
+  addEvent(ev) {
+    var st = this.st, n = calNormalize(ev, st.events.length + 1), i = calFind(st, n.id);
+    if (i >= 0) { st.events[i] = n; } else { st.events.push(n); }
+    calRender(this);
+  }
+  updateEvent(id, changes) {
+    var st = this.st, i = calFind(st, id);
+    if (i < 0) { return; }
+    // fields set to undefined are not copied (as before)
+    var merged = Object.assign({}, st.events[i]);
+    Object.keys(changes || {}).forEach(function (k) {
+      if (changes[k] !== undefined) { merged[k] = changes[k]; }
+    });
+    if (changes && (changes.start || changes.end) && changes.allDay === undefined) { delete merged.allDay; }
+    st.events[i] = calNormalize(merged, i + 1);
+    calRender(this);
+  }
+  removeEvent(id) {
+    var st = this.st, i = calFind(st, id);
+    if (i >= 0) { st.events.splice(i, 1); calRender(this); }
+  }
+  getEvents() {
+    return this.st.events.map(function (e) { return Object.assign({}, e); });
   }
 });

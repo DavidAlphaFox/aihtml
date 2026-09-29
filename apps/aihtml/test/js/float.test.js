@@ -1,5 +1,5 @@
 /* AH.float: popups escape overflow clipping and follow their anchor. */
-(function (T, $, AH) {
+(function (T, AH) {
   "use strict";
 
   function setup(fx, cardStyle) {
@@ -53,4 +53,16 @@
     window.scrollTo(0, 0);
     fx.style.height = "";
   });
-})(window.AHTest, window.jQuery, window.AH);
+  T.test("it takes jQuery-like objects and places on the right, centered", function (fx) {
+    var e = setup(fx);
+    e[0].style.height = "10px";
+    var h = AH.float({ jquery: "x", length: 1, 0: e[0] }, { jquery: "x", length: 1, 0: e[1] },
+                     { placement: "right", align: "center", offset: 6 });
+    var a = e[1].getBoundingClientRect(), p = e[0].getBoundingClientRect();
+    T.eq(e[0].getAttribute("data-ah-placement"), "right");
+    T.eq(Math.round(p.left), Math.round(a.right + 6));
+    T.eq(Math.round(p.top + p.height / 2), Math.round(a.top + a.height / 2));
+    h.stop();
+    T.eq(e[0].getAttribute("data-ah-placement"), null);
+  });
+})(window.AHTest, window.AH);

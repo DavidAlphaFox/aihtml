@@ -1,21 +1,21 @@
 /* timeline behaviour (designs/04-components.md): cards with a
-   description expand on click / Enter. */
-import $ from "jquery";
+   description expand on click / Enter; "ah:toggle" with detail
+   {expanded, index} (index: the item's position in the timeline). */
 import AH from "../core.js";
 import "./_lib_display.js";
 
-var NS = AH.NS;
+const ITEM = ".ah-timeline-item[ah-collapsible]";
 
-AH.define("timeline", {
-  init: function (el, $el) {
-    $el.on("click" + NS, ".ah-timeline-item[ah-collapsible]", function () {
-      var $item = $(this).toggleClass("ah-timeline-item-expanded");
-      var on = $item.hasClass("ah-timeline-item-expanded");
-      $item.attr("aria-expanded", on ? "true" : "false");
+AH.register("timeline", class extends AH.Controller {
+  setup() {
+    this.delegate("click", ITEM, (e, item) => {
+      const on = item.classList.toggle("ah-timeline-item-expanded");
+      item.setAttribute("aria-expanded", on ? "true" : "false");
       // three grid cells per item
-      var cell = $item.closest(".ah-timeline-near-cell, .ah-timeline-far-cell").index();
-      $el.trigger("ah:toggle", [on, Math.floor(cell / 3)]);
+      const cell = item.closest(".ah-timeline-near-cell, .ah-timeline-far-cell");
+      const i = cell && cell.parentNode ? Array.prototype.indexOf.call(cell.parentNode.children, cell) : -1;
+      this.fire("ah:toggle", { expanded: on, index: Math.floor(i / 3) });
     });
-    $el.on("keydown" + NS, ".ah-timeline-item[ah-collapsible]", AH.lib.display.keyClick);
+    this.delegate("keydown", ITEM, AH.lib.display.keyClick);
   }
 });

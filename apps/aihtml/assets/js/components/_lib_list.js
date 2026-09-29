@@ -2,7 +2,6 @@
  * transfer.js, ported from sigil): ids, the value-bearing contract and
  * row helpers. All rows, columns and lists are rendered on the server;
  * the behaviours show, hide, mark and move them. */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_values.js";
 
@@ -14,11 +13,25 @@ function ensureId(el, prefix) {
 }
 
 // Value-bearing contract: data-ah-value + hidden input, then `change`.
-function publish(el, $el, value, fire) {
+// publish(el, value, fire): a native bubbling "change" on el.
+function publish(el, value, fire) {
   var old = el.getAttribute("data-ah-value") || "";
   el.setAttribute("data-ah-value", value);
-  $el.children("input[type=hidden]").val(value);
-  if (fire && old !== value) { $el.trigger("change"); }
+  el.querySelectorAll(":scope > input[type=hidden]").forEach(function (h) { h.value = value; });
+  if (fire && old !== value) {
+    el.dispatchEvent(new Event("change", { bubbles: true, cancelable: true }));
+  }
+}
+
+// Direct children of el matching selector.
+function kids(el, selector) {
+  return el ? Array.prototype.filter.call(el.children, function (c) { return c.matches(selector); }) : [];
+}
+
+// Text content of the first direct child matching selector ("" if none).
+function childText(el, selector) {
+  var c = kids(el, selector)[0];
+  return c ? c.textContent : "";
 }
 
 // A value text (AH.lib.values) or an array -> values. With `single`
@@ -51,6 +64,8 @@ AH.lib = AH.lib || {};
 AH.lib.list = {
   ensureId: ensureId,
   publish: publish,
+  kids: kids,
+  childText: childText,
   split: split,
   join: join,
   shown: shown,

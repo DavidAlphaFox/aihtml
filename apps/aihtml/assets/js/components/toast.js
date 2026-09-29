@@ -4,15 +4,13 @@
  * click on a [data-ah-toast] element (shows_toast/2) pops one without a
  * server round trip. Cards: _lib_overlay.js. */
 // ah-load: [data-ah-toast]
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_overlay.js";
 import "virtual:ah-tpl/notification";
 import "virtual:ah-tpl/toast";
 
 var L = AH.lib.overlay;
-var GNS = L.GNS,
-    cardView = L.cardView,
+var cardView = L.cardView,
     duration = L.duration,
     showCard = L.showCard;
 
@@ -32,14 +30,16 @@ function toast(o) {
 AH.fn("toast", toast);
 AH.toast = toast;
 
-$(document).on("click" + GNS, "[data-ah-toast]", function () {
-  var $t = $(this);
-  toast({
-    title: $t.attr("data-ah-toast"),
-    description: $t.attr("data-ah-toast-description"),
-    variant: $t.attr("data-ah-toast-variant"),
-    duration: $t.attr("data-ah-toast-duration"),
-    position: $t.attr("data-ah-toast-position"),
-    closable: $t.attr("data-ah-toast-closable")
+document.addEventListener("click", function (e) {
+  L.matching(e.target, "[data-ah-toast]").forEach(function (t) {
+    function a(n) { var v = t.getAttribute(n); return v === null ? undefined : v; }
+    toast({
+      title: a("data-ah-toast"),
+      description: a("data-ah-toast-description"),
+      variant: a("data-ah-toast-variant"),
+      duration: a("data-ah-toast-duration"),
+      position: a("data-ah-toast-position"),
+      closable: a("data-ah-toast-closable")
+    });
   });
 });

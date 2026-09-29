@@ -10,12 +10,17 @@
  * ah:selection-change (data-selection), a link dropped on empty canvas
  * without a node library fires ah:link-drop (data-origin, data-point).
  *
+ * Events (native CustomEvents on the root, bubbling):
+ *   change               detail: {op, changed, removed, graph}
+ *   ah:selection-change  detail: the selected node ids (array)
+ *   ah:link-drop         detail: {origin: {node, kind, index, detach},
+ *                        point: [x, y]}
+ *
  * Coordinates: graph units are the nodes' world coordinates; the camera
  * {x, y, z} maps them to the viewport: screen = (graph + [x, y]) * z. A
  * card's slots sit 30 (header) + 4 + 20 * i + 10 below its top, as in
  * node_graph.css and the Erlang module.
  */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_values.js";
 import "virtual:ah-tpl/node_graph_group";
@@ -29,7 +34,6 @@ var TITLE_H = 30, SLOT_H = 20, PAD_TOP = 4, PAD_BOTTOM = 8;
 var DEFAULT_W = 240, MIN_W = 225, MIN_H = 60;
 var GRID_DISPLAY = 50, MIN_Z = 0.1, MAX_Z = 4;
 var SNAP_RADIUS = 22, MINI_W = 176, MINI_H = 120, MINI_PAD = 8;
-var KEY = "ahNodeGraph";
 var FALLBACK = "var(--ah-datatype-default, #aaa)";
 var TWO_SLICES = ["M0 50 A 50 50 0 0 1 100 50", "M100 50 A 50 50 0 0 1 0 50"];
 var THREE_SLICES = ["M0 50A50 50 0 0 0 75 93L50 50", "M75 93A50 50 0 0 0 75 7L50 50",
@@ -183,7 +187,7 @@ function normalize(g) {
   g = g && typeof g === "object" ? g : {};
   return {
     nodes: (g.nodes || []).map(function (n, i) {
-      var c = $.extend({}, n);
+      var c = Object.assign({}, n);
       c.id = String(c.id === undefined ? "n" + i : c.id);
       c.pos = c.pos || [0, 0];
       c.inputs = c.inputs || [];
@@ -191,14 +195,14 @@ function normalize(g) {
       return c;
     }),
     links: (g.links || []).map(function (l, i) {
-      var c = $.extend({}, l);
+      var c = Object.assign({}, l);
       c.id = String(c.id === undefined ? "l" + i : c.id);
       c.source = [String(l.source[0]), l.source[1]];
       c.target = [String(l.target[0]), l.target[1]];
       return c;
     }),
     groups: (g.groups || []).map(function (gr, i) {
-      var c = $.extend({}, gr);
+      var c = Object.assign({}, gr);
       c.id = String(c.id === undefined ? "g" + (i + 1) : c.id);
       return c;
     })
@@ -439,9 +443,51 @@ function outType(g, l) {
 // State
 // ------------------------------------------------------------------
 
-function state(el) { return $.data(el, KEY); }
-
 function opts(st) { return st.opts; }
+
+// Direct children of el matching selector (kids), the first one (kid).
+function kids(el, selector) {
+  return el ? Array.prototype.filter.call(el.children, function (c) { return c.matches(selector); }) : [];
+}
+
+function kid(el, selector) { return kids(el, selector)[0] || null; }
+
+// Trusted HTML (templates, literals) -> its top-level elements.
+function parse(html) {
+  var t = document.createElement("template");
+  t.innerHTML = html;
+  return Array.from(t.content.children);
+}
+
+function fire(st, type, detail) {
+  st.ctl.fire(type, detail);
+}
+
+// Delegated listeners in bubbling order, which the wiring below relies
+// on: per event type one listener on the root; handlers run from the
+// target up to the root, in binding order at each level, with `this' the
+// matched element, and an inner handler's stopPropagation keeps the outer
+// ones from running (a slot's pointerdown and its card's, a card's and
+// the viewport's).
+function on(st, type, selector, fn) {
+  var list = st.handlers[type];
+  if (!list) {
+    list = st.handlers[type] = [];
+    st.ctl.listen(st.el, type, function (e) { dispatch(st.el, list, e); });
+  }
+  list.push([selector, fn]);
+}
+
+function dispatch(root, list, e) {
+  if (e.type === "click" && e.button >= 1) { return; }
+  for (var cur = e.target; cur && cur !== root; cur = cur.parentNode) {
+    if (cur.nodeType !== 1) { continue; }
+    for (var i = 0; i < list.length; i++) {
+      if (cur.matches(list[i][0])) { list[i][1].call(cur, e); }
+    }
+    if (e.cancelBubble) { return; }
+  }
+}
 
 function graphJson(g) { return JSON.stringify(g); }
 
@@ -450,18 +496,18 @@ function graphJson(g) { return JSON.stringify(g); }
 function cardHtml(card) {
   var out = { widgets: [], body: null };
   if (!card) { return out; }
-  var body = $(card).children(".ah-node-graph-node-body");
-  body.children(".ah-node-graph-widgets").children(".ah-node-graph-widget").each(function () {
-    out.widgets.push(cleanHtml(this));
+  var body = kid(card, ".ah-node-graph-node-body");
+  kids(kid(body, ".ah-node-graph-widgets"), ".ah-node-graph-widget").forEach(function (w) {
+    out.widgets.push(cleanHtml(w));
   });
-  var custom = body.children(".ah-node-graph-custom")[0];
+  var custom = kid(body, ".ah-node-graph-custom");
   if (custom) { out.body = cleanHtml(custom); }
   return out;
 }
 
 function cleanHtml(el) {
   var c = el.cloneNode(true);
-  $(c).find("[data-ah-mounted]").removeAttr("data-ah-mounted");
+  c.querySelectorAll("[data-ah-mounted]").forEach(function (m) { m.removeAttribute("data-ah-mounted"); });
   return c.innerHTML;
 }
 
@@ -473,8 +519,8 @@ function takeHtml(st, n) {
 }
 
 function cardOf(st, id) {
-  return $(st.nodesEl).children(".ah-node-graph-node").filter(function () {
-    return this.getAttribute("data-node-id") === id;
+  return kids(st.nodesEl, ".ah-node-graph-node").filter(function (c) {
+    return c.getAttribute("data-node-id") === id;
   })[0] || null;
 }
 
@@ -491,8 +537,8 @@ function cardSig(st, n, conn) {
 
 function renderNodes(st) {
   var box = st.nodesEl, conn = connIndex(st.g), cards = {};
-  $(box).children(".ah-node-graph-node").each(function () {
-    cards[this.getAttribute("data-node-id")] = this;
+  kids(box, ".ah-node-graph-node").forEach(function (c) {
+    cards[c.getAttribute("data-node-id")] = c;
   });
   var prev = null;
   st.g.nodes.forEach(function (n) {
@@ -510,44 +556,50 @@ function renderNodes(st) {
     if (want !== card) { box.insertBefore(card, want); }
     prev = card;
   });
-  $.each(cards, function (_, card) { AH.destroy(card); $(card).remove(); });
+  // removed cards: their widgets' behaviours are torn down by the runtime
+  Object.keys(cards).forEach(function (k) { cards[k].remove(); });
   measure(st);
 }
 
 function renderCard(st, n, conn, old) {
   var pending = st.pending[n.id];
   delete st.pending[n.id];
-  var body = old && $(old).children(".ah-node-graph-node-body");
-  var oldW = !pending && body && body.children(".ah-node-graph-widgets")[0];
-  var oldB = !pending && body && body.children(".ah-node-graph-custom")[0];
+  var body = old && kid(old, ".ah-node-graph-node-body");
+  var oldW = !pending && body && kid(body, ".ah-node-graph-widgets");
+  var oldB = !pending && body && kid(body, ".ah-node-graph-custom");
   var hw = pending || {
-    widgets: oldW ? $(oldW).children().map(function () { return ""; }).get() : [],
+    widgets: oldW ? Array.from(oldW.children).map(function () { return ""; }) : [],
     body: oldB ? "" : null
   };
-  var card = $($.parseHTML(AH.tpl.node_graph_node(nodeView(n, conn, opts(st).readOnly, hw))))
-    .filter(".ah-node-graph-node")[0];
-  var nb = $(card).children(".ah-node-graph-node-body");
-  if (oldW) { nb.children(".ah-node-graph-widgets").replaceWith(oldW); }
-  if (oldB) { nb.children(".ah-node-graph-custom").replaceWith(oldB); }
-  var refocus = old && old.contains(document.activeElement) &&
-    $(document.activeElement).hasClass("ah-node-graph-collapse");
+  var card = parse(AH.tpl.node_graph_node(nodeView(n, conn, opts(st).readOnly, hw)))
+    .filter(function (x) { return x.matches(".ah-node-graph-node"); })[0];
+  var nb = kid(card, ".ah-node-graph-node-body");
+  var slotW = oldW && kid(nb, ".ah-node-graph-widgets");
+  if (slotW) { slotW.replaceWith(oldW); }
+  var slotB = oldB && kid(nb, ".ah-node-graph-custom");
+  if (slotB) { slotB.replaceWith(oldB); }
+  var act = document.activeElement;
+  var refocus = old && act && old.contains(act) && act.classList.contains("ah-node-graph-collapse");
+  // widgets moved over keep their behaviours; new widget HTML (pending)
+  // is mounted, and the old card's torn down, by the runtime
   if (old) {
-    if (pending) { AH.destroy(old); }
     old.parentNode.replaceChild(card, old);
   } else {
     st.nodesEl.appendChild(card);
   }
-  if (pending) { AH.mount(card); }
-  if (refocus) { $(card).find(".ah-node-graph-collapse").first().trigger("focus"); }
+  if (refocus) {
+    var btn = card.querySelector(".ah-node-graph-collapse");
+    if (btn) { btn.focus(); }
+  }
   return card;
 }
 
 // Card heights only the browser knows (widget rows): for marquee hits,
 // fit and the minimap. Nodes with their own height keep it.
 function measure(st) {
-  $(st.nodesEl).children(".ah-node-graph-node").each(function () {
-    var id = this.getAttribute("data-node-id");
-    var h = this.offsetHeight;
+  kids(st.nodesEl, ".ah-node-graph-node").forEach(function (card) {
+    var id = card.getAttribute("data-node-id");
+    var h = card.offsetHeight;
     if (h > 0) { st.sizes[id] = h; }
   });
 }
@@ -576,16 +628,16 @@ function renderLinks(st) {
 function updateLinkPaths(st) {
   var sm = shownMap(st, true), mode = opts(st).mode;
   var detached = st.linkDrag && st.linkDrag.origin.detach;
-  $(st.linksEl).children(".ah-node-graph-link").each(function () {
-    var l = findLink(st.g, this.getAttribute("data-link-id"));
+  kids(st.linksEl, ".ah-node-graph-link").forEach(function (link) {
+    var l = findLink(st.g, link.getAttribute("data-link-id"));
     var pts = l && l.id !== detached ? linkPoints(st, l, sm, true) : null;
-    if (!pts) { this.style.display = "none"; return; }
-    this.style.display = "";
+    if (!pts) { link.style.display = "none"; return; }
+    link.style.display = "";
     var d = chainPath(mode, pts);
-    $(this).children("path").attr("d", d);
-    $(this).children(".ah-node-graph-waypoint").each(function () {
-      var q = pts[parseInt(this.getAttribute("data-index"), 10) + 1];
-      if (q) { this.setAttribute("cx", num(q[0])); this.setAttribute("cy", num(q[1])); }
+    kids(link, "path").forEach(function (p) { p.setAttribute("d", d); });
+    kids(link, ".ah-node-graph-waypoint").forEach(function (w) {
+      var q = pts[parseInt(w.getAttribute("data-index"), 10) + 1];
+      if (q) { w.setAttribute("cx", num(q[0])); w.setAttribute("cy", num(q[1])); }
     });
   });
 }
@@ -609,27 +661,27 @@ function renderAll(st) {
 // Drag frame: cards, group frames and link paths follow st.nodeDrag.
 function applyNodeDrag(st) {
   var d = st.nodeDrag;
-  $(st.nodesEl).children(".ah-node-graph-node").each(function () {
-    var n = findNode(st.g, this.getAttribute("data-node-id"));
+  kids(st.nodesEl, ".ah-node-graph-node").forEach(function (card) {
+    var n = findNode(st.g, card.getAttribute("data-node-id"));
     if (!n) { return; }
     var s = shown(st, n, true);
     var moved = d && d.ids && d.ids[n.id];
-    this.style.transform = "translate3d(" + num(s.x) + "px," + num(s.y) + "px,0)";
-    if (moved) { this.setAttribute("data-dragging", "true"); } else { this.removeAttribute("data-dragging"); }
+    card.style.transform = "translate3d(" + num(s.x) + "px," + num(s.y) + "px,0)";
+    if (moved) { card.setAttribute("data-dragging", "true"); } else { card.removeAttribute("data-dragging"); }
     if (d && d.resize && d.resize.id === n.id) {
-      this.style.setProperty("--ah-ng-node-width", num(d.resize.w) + "px");
-      this.style.setProperty("--ah-ng-node-height", num(d.resize.h) + "px");
-      this.setAttribute("data-sized", "true");
+      card.style.setProperty("--ah-ng-node-width", num(d.resize.w) + "px");
+      card.style.setProperty("--ah-ng-node-height", num(d.resize.h) + "px");
+      card.setAttribute("data-sized", "true");
     }
   });
-  $(st.groupsEl).children(".ah-node-graph-group").each(function () {
-    var gr = findGroup(st.g, this.getAttribute("data-group-id"));
+  kids(st.groupsEl, ".ah-node-graph-group").forEach(function (frame) {
+    var gr = findGroup(st.g, frame.getAttribute("data-group-id"));
     if (!gr) { return; }
     var b = d && d.groupResize && d.groupResize.id === gr.id ? d.groupResize.bounds : gr.bounds;
     var mv = d && d.group === gr.id ? [d.dx, d.dy] : [0, 0];
-    this.style.transform = "translate3d(" + num(b[0] + mv[0]) + "px," + num(b[1] + mv[1]) + "px,0)";
-    this.style.width = num(b[2]) + "px";
-    this.style.height = num(b[3]) + "px";
+    frame.style.transform = "translate3d(" + num(b[0] + mv[0]) + "px," + num(b[1] + mv[1]) + "px,0)";
+    frame.style.width = num(b[2]) + "px";
+    frame.style.height = num(b[3]) + "px";
   });
   updateLinkPaths(st);
   renderMinimap(st);
@@ -638,18 +690,18 @@ function applyNodeDrag(st) {
 // Link drag frame: slot states and the link following the pointer.
 function applyLinkDrag(st) {
   var drag = st.linkDrag;
-  $(st.nodesEl).find(".ah-node-graph-slot").each(function () {
-    if (!drag) { this.removeAttribute("data-drag-state"); return; }
-    var k = this.getAttribute("data-slot-key");
+  st.nodesEl.querySelectorAll(".ah-node-graph-slot").forEach(function (slot) {
+    if (!drag) { slot.removeAttribute("data-drag-state"); return; }
+    var k = slot.getAttribute("data-slot-key");
     var c = drag.candidate;
-    this.setAttribute("data-drag-state",
+    slot.setAttribute("data-drag-state",
                       c && k === slotKey(c[0], c[1], c[2]) ? "candidate"
                       : drag.compatible[k] ? "compatible" : "dimmed");
   });
-  if (st.dragLinkEl) { $(st.dragLinkEl).remove(); st.dragLinkEl = null; }
-  $(st.linksEl).children(".ah-node-graph-link").each(function () {
-    if (drag && drag.origin.detach === this.getAttribute("data-link-id")) {
-      this.style.display = "none";
+  if (st.dragLinkEl) { st.dragLinkEl.remove(); st.dragLinkEl = null; }
+  kids(st.linksEl, ".ah-node-graph-link").forEach(function (link) {
+    if (drag && drag.origin.detach === link.getAttribute("data-link-id")) {
+      link.style.display = "none";
     }
   });
   if (!drag) { return; }
@@ -682,15 +734,15 @@ function applyMarquee(st) {
 }
 
 function applySelection(st) {
-  $(st.nodesEl).children(".ah-node-graph-node").each(function () {
-    if (st.sel.indexOf(this.getAttribute("data-node-id")) >= 0) {
-      this.setAttribute("data-selected", "true");
-    } else { this.removeAttribute("data-selected"); }
+  kids(st.nodesEl, ".ah-node-graph-node").forEach(function (card) {
+    if (st.sel.indexOf(card.getAttribute("data-node-id")) >= 0) {
+      card.setAttribute("data-selected", "true");
+    } else { card.removeAttribute("data-selected"); }
   });
-  $(st.linksEl).children(".ah-node-graph-link").each(function () {
-    if (st.lsel.indexOf(this.getAttribute("data-link-id")) >= 0) {
-      this.setAttribute("data-selected", "true");
-    } else { this.removeAttribute("data-selected"); }
+  kids(st.linksEl, ".ah-node-graph-link").forEach(function (link) {
+    if (st.lsel.indexOf(link.getAttribute("data-link-id")) >= 0) {
+      link.setAttribute("data-selected", "true");
+    } else { link.removeAttribute("data-selected"); }
   });
   applyToolbar(st);
 }
@@ -708,12 +760,13 @@ function applyCamera(st) {
 }
 
 function applyToolbar(st) {
-  var bar = $(st.el).children(".ah-node-graph-toolbar");
-  if (!bar.length) { return; }
-  bar.find(".ah-node-graph-zoom").text(Math.round(st.cam.z * 100) + "%");
-  bar.find('[data-action="undo"]').prop("disabled", !st.past.length);
-  bar.find('[data-action="redo"]').prop("disabled", !st.future.length);
-  bar.find('[data-action="delete"]').prop("disabled", !st.sel.length && !st.lsel.length);
+  var bar = kid(st.el, ".ah-node-graph-toolbar");
+  if (!bar) { return; }
+  function all(sel, f) { bar.querySelectorAll(sel).forEach(f); }
+  all(".ah-node-graph-zoom", function (z) { z.textContent = Math.round(st.cam.z * 100) + "%"; });
+  all('[data-action="undo"]', function (b) { b.disabled = !st.past.length; });
+  all('[data-action="redo"]', function (b) { b.disabled = !st.future.length; });
+  all('[data-action="delete"]', function (b) { b.disabled = !st.sel.length && !st.lsel.length; });
 }
 
 function miniTransform(content, view) {
@@ -729,7 +782,7 @@ function viewBox(st) {
 }
 
 function renderMinimap(st) {
-  var mini = $(st.el).children(".ah-node-graph-minimap")[0];
+  var mini = kid(st.el, ".ah-node-graph-minimap");
   if (!mini) { return; }
   var boxes = st.g.nodes.map(function (n) { return shown(st, n, true); });
   var view = viewBox(st);
@@ -752,7 +805,7 @@ function renderMinimap(st) {
 function writeValue(st) {
   var json = graphJson(st.g);
   st.el.setAttribute("data-ah-value", json);
-  $(st.el).children("input[type=hidden]").val(json);
+  kids(st.el, "input[type=hidden]").forEach(function (h) { h.value = json; });
 }
 
 function diffList(a, b) {
@@ -774,7 +827,7 @@ function emit(st, op, old) {
   st.el.setAttribute("data-op", op);
   st.el.setAttribute("data-changed", JSON.stringify(changed));
   st.el.setAttribute("data-removed", JSON.stringify(removed));
-  $(st.el).trigger("change", [{ op: op, changed: changed, removed: removed, graph: clone(st.g) }]);
+  fire(st, "change", { op: op, changed: changed, removed: removed, graph: clone(st.g) });
 }
 
 // The one way to change the graph: fn edits a copy; a real change goes
@@ -824,7 +877,7 @@ function setSelection(st, nodes, links) {
   renderMinimap(st);
   if (AH.lib.values.join(st.sel) !== before) {
     st.el.setAttribute("data-selection", AH.lib.values.join(st.sel));
-    $(st.el).trigger("ah:selection-change", [st.sel.slice()]);
+    fire(st, "ah:selection-change", st.sel.slice());
   }
 }
 
@@ -875,12 +928,12 @@ function paste(st, clip, op) {
   var map;
   var ok = mutate(st, op, function (g) {
     map = insert(g, clip.graph, 20, 20);
-    $.each(map, function (from, to) { st.pending[to] = clip.html[from]; });
+    Object.keys(map).forEach(function (from) { st.pending[map[from]] = clip.html[from]; });
   });
   if (ok) {
     select(st, clip.graph.nodes.map(function (n) { return map[n.id]; }), "replace");
   } else if (map) {
-    $.each(map, function (_, to) { delete st.pending[to]; });
+    Object.keys(map).forEach(function (from) { delete st.pending[map[from]]; });
   }
 }
 
@@ -918,9 +971,8 @@ function zoomBy(st, f, sx, sy) {
 // ------------------------------------------------------------------
 
 function beginDrag(st, e, spec) {
-  var oe = e.originalEvent || e;
-  var x0 = oe.clientX, y0 = oe.clientY, pid = oe.pointerId;
-  var mouse = oe.pointerType !== "touch";
+  var x0 = e.clientX, y0 = e.clientY, pid = e.pointerId;
+  var mouse = e.pointerType !== "touch";
   var threshold = spec.threshold || 0;
   var started = threshold === 0, done = false;
   var last = { x: x0, y: y0, dx: 0, dy: 0 };
@@ -993,8 +1045,7 @@ function clientToHost(st, cx, cy) {
 }
 
 function point(e) {
-  var oe = e.originalEvent || e;
-  return [oe.clientX, oe.clientY];
+  return [e.clientX, e.clientY];
 }
 
 // ------------------------------------------------------------------
@@ -1006,7 +1057,7 @@ function closeOverlay(st, refocus) {
   if (!o) { return; }
   st.overlay = null;
   o.cleanup();
-  $(o.el).remove();
+  o.el.remove();
   if (refocus) { st.vp.focus(); }
 }
 
@@ -1022,22 +1073,22 @@ function openOverlay(st, el, at) {
   function outside(e) { if (!el.contains(e.target)) { closeOverlay(st); } }
   function key(e) { if (e.key === "Escape") { e.preventDefault(); closeOverlay(st, true); } }
   var t = setTimeout(function () { document.addEventListener("pointerdown", outside, true); }, 0);
-  $(el).on("keydown", key);
+  el.addEventListener("keydown", key);
   st.overlay = {
     el: el,
     cleanup: function () {
       clearTimeout(t);
       document.removeEventListener("pointerdown", outside, true);
-      $(el).off("keydown", key);
+      el.removeEventListener("keydown", key);
     }
   };
-  $(el).on("contextmenu", function (e) { e.preventDefault(); });
+  el.addEventListener("contextmenu", function (e) { e.preventDefault(); });
 }
 
 // items: [{label, hint, danger, run}]
 function contextMenu(st, at, items) {
   items = items.filter(Boolean);
-  var el = $('<div class="ah-node-graph-ctxmenu" role="menu" aria-label="Actions"></div>')[0];
+  var el = parse('<div class="ah-node-graph-ctxmenu" role="menu" aria-label="Actions"></div>')[0];
   el.innerHTML = AH.tpl.node_graph_menu({
     items: items.map(function (it, i) {
       return { index: String(i), label: it.label, danger: !!it.danger,
@@ -1045,19 +1096,21 @@ function contextMenu(st, at, items) {
     })
   });
   openOverlay(st, el, at);
-  var buttons = $(el).children(".ah-node-graph-ctxmenu-item");
-  $(el).on("click", ".ah-node-graph-ctxmenu-item", function () {
-    var it = items[parseInt(this.getAttribute("data-index"), 10)];
+  var buttons = kids(el, ".ah-node-graph-ctxmenu-item");
+  el.addEventListener("click", function (e) {
+    var b = e.target.closest(".ah-node-graph-ctxmenu-item");
+    if (!b || !el.contains(b)) { return; }
+    var it = items[parseInt(b.getAttribute("data-index"), 10)];
     closeOverlay(st, true);
     if (it && it.run) { it.run(); }
   });
-  $(el).on("keydown", function (e) {
-    var i = buttons.index(document.activeElement), n = buttons.length;
+  el.addEventListener("keydown", function (e) {
+    var i = buttons.indexOf(document.activeElement), n = buttons.length;
     var next = { ArrowDown: (i + 1) % n, ArrowUp: (i - 1 + n) % n, Home: 0, End: n - 1 }[e.key];
-    if (next !== undefined) { e.preventDefault(); buttons.eq(next).trigger("focus"); }
+    if (next !== undefined && buttons[next]) { e.preventDefault(); buttons[next].focus(); }
     if (e.key === "Tab") { e.preventDefault(); closeOverlay(st, true); }
   });
-  buttons.first().trigger("focus");
+  if (buttons[0]) { buttons[0].focus(); }
 }
 
 function filterItems(items, q) {
@@ -1077,11 +1130,11 @@ function searchMenu(st, at, graphPt, origin) {
   var items = st.library;
   var listId = st.el.id + "-search-" + (++seq);
   var s = { q: "", active: 0 };
-  var el = $('<div class="ah-node-graph-search" role="dialog" aria-label="Add node"></div>')[0];
-  var input = $('<input class="ah-node-graph-search-input" type="text" role="combobox" ' +
-                'aria-autocomplete="list" aria-expanded="true" placeholder="Search nodes…">')[0];
+  var el = parse('<div class="ah-node-graph-search" role="dialog" aria-label="Add node"></div>')[0];
+  var input = parse('<input class="ah-node-graph-search-input" type="text" role="combobox" ' +
+                    'aria-autocomplete="list" aria-expanded="true" placeholder="Search nodes…">')[0];
   input.setAttribute("aria-controls", listId);
-  var body = $('<div class="ah-node-graph-search-body"></div>')[0];
+  var body = parse('<div class="ah-node-graph-search-body"></div>')[0];
   el.appendChild(input);
   el.appendChild(body);
   function list() { return filterItems(canvas, s.q).concat(filterItems(items, s.q)); }
@@ -1096,7 +1149,7 @@ function searchMenu(st, at, graphPt, origin) {
     });
     if (n) { input.setAttribute("aria-activedescendant", listId + "-" + idx); }
     else { input.removeAttribute("aria-activedescendant"); }
-    var act = $(body).find('[data-active="true"]')[0];
+    var act = body.querySelector('[data-active="true"]');
     if (act && act.scrollIntoView) { act.scrollIntoView({ block: "nearest" }); }
   }
   function pick(i) {
@@ -1114,17 +1167,19 @@ function searchMenu(st, at, graphPt, origin) {
   }
   openOverlay(st, el, at);
   paint();
-  $(input).on("input", function () { s.q = input.value; s.active = 0; paint(); });
-  $(input).on("keydown", function (e) {
+  input.addEventListener("input", function () { s.q = input.value; s.active = 0; paint(); });
+  input.addEventListener("keydown", function (e) {
     var n = list().length;
     if (e.key === "ArrowDown") { e.preventDefault(); s.active++; paint(); }
     else if (e.key === "ArrowUp") { e.preventDefault(); s.active--; paint(); }
     else if (e.key === "Enter") { e.preventDefault(); pick(n ? ((s.active % n) + n) % n : 0); }
   });
   // pointerdown, not click: the input's blur comes before click
-  $(body).on("pointerdown", ".ah-node-graph-search-item", function (e) {
+  body.addEventListener("pointerdown", function (e) {
+    var item = e.target.closest(".ah-node-graph-search-item");
+    if (!item || !body.contains(item)) { return; }
     e.preventDefault();
-    pick(parseInt(this.getAttribute("data-index"), 10));
+    pick(parseInt(item.getAttribute("data-index"), 10));
   });
   input.focus();
 }
@@ -1138,7 +1193,7 @@ function addNode(st, item, pos, origin) {
   delete src.html;
   mutate(st, "add", function (g) {
     id = freshId(ids(g.nodes), "n");
-    var n = $.extend(src, { id: id, pos: pos, title: item.label || item.type, type: item.type });
+    var n = Object.assign(src, { id: id, pos: pos, title: item.label || item.type, type: item.type });
     n.inputs = n.inputs || [];
     n.outputs = n.outputs || [];
     g.nodes.push(n);
@@ -1209,7 +1264,9 @@ function nearestCandidate(st, compat, origin, p, radius) {
 
 function editTitle(st, span, commit) {
   var old = span.textContent;
-  var input = $('<input type="text">').addClass(span.className + "-input")[0];
+  var input = document.createElement("input");
+  input.type = "text";
+  input.className = span.className + "-input";
   input.value = old;
   input.setAttribute("aria-label", "Title");
   span.parentNode.replaceChild(input, span);
@@ -1223,13 +1280,13 @@ function editTitle(st, span, commit) {
     if (input.parentNode) { input.parentNode.replaceChild(span, input); }
     st.vp.focus();
   }
-  $(input).on("pointerdown", function (e) { e.stopPropagation(); });
-  $(input).on("blur", function () {
+  input.addEventListener("pointerdown", function (e) { e.stopPropagation(); });
+  input.addEventListener("blur", function () {
     var v = input.value.trim();
     restore(v || old);
     if (v && v !== old) { commit(v); }
   });
-  $(input).on("keydown", function (e) {
+  input.addEventListener("keydown", function (e) {
     e.stopPropagation();
     if (e.key === "Enter") { e.preventDefault(); input.blur(); }
     if (e.key === "Escape") { e.preventDefault(); restore(old); }
@@ -1241,32 +1298,31 @@ function editTitle(st, span, commit) {
 // ------------------------------------------------------------------
 
 function nodeIdOf(el) {
-  var card = $(el).closest(".ah-node-graph-node")[0];
+  var card = el.closest(".ah-node-graph-node");
   return card ? card.getAttribute("data-node-id") : null;
 }
 
 function linkIdOf(el) {
-  var g = $(el).closest(".ah-node-graph-link")[0];
+  var g = el.closest(".ah-node-graph-link");
   return g ? g.getAttribute("data-link-id") : null;
 }
 
 function groupIdOf(el) {
-  var g = $(el).closest(".ah-node-graph-group")[0];
+  var g = el.closest(".ah-node-graph-group");
   return g ? g.getAttribute("data-group-id") : null;
 }
 
 function isEditable(t) {
   return /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName) || t.isContentEditable ||
-    $(t).closest(".ah-node-graph-widget, .ah-node-graph-custom, .ah-node-graph-search, .ah-node-graph-ctxmenu").length > 0;
+    !!t.closest(".ah-node-graph-widget, .ah-node-graph-custom, .ah-node-graph-search, .ah-node-graph-ctxmenu");
 }
 
 function stop(e) { e.stopPropagation(); }
 
 function wireNodes(st) {
-  var $el = $(st.el), NS = AH.NS;
-  $el.on("pointerdown" + NS, ".ah-node-graph-collapse, .ah-node-graph-widget, .ah-node-graph-custom, " +
+  on(st, "pointerdown", ".ah-node-graph-collapse, .ah-node-graph-widget, .ah-node-graph-custom, " +
          ".ah-node-graph-tool, .ah-node-graph-group-delete", stop);
-  $el.on("click" + NS, ".ah-node-graph-collapse", function (e) {
+  on(st, "click", ".ah-node-graph-collapse", function (e) {
     e.stopPropagation();
     var id = nodeIdOf(this);
     mutate(st, "collapse", function (g) {
@@ -1278,11 +1334,11 @@ function wireNodes(st) {
   });
   // Tabbing onto a card's collapse button selects the card, so the
   // keyboard reaches nodes (Delete, arrows, Ctrl+D, ...).
-  $el.on("focusin" + NS, ".ah-node-graph-collapse", function () {
+  on(st, "focusin", ".ah-node-graph-collapse", function () {
     var id = nodeIdOf(this);
     if (st.sel.length !== 1 || st.sel[0] !== id) { select(st, [id], "replace"); }
   });
-  $el.on("dblclick" + NS, ".ah-node-graph-node-title", function (e) {
+  on(st, "dblclick", ".ah-node-graph-node-title", function (e) {
     if (opts(st).readOnly) { return; }
     e.stopPropagation();
     var id = nodeIdOf(this);
@@ -1292,10 +1348,10 @@ function wireNodes(st) {
   });
 
   // resize handle
-  $el.on("pointerdown" + NS, ".ah-node-graph-node-resize", function (e) {
+  on(st, "pointerdown", ".ah-node-graph-node-resize", function (e) {
     e.stopPropagation();
     if (e.button !== 0 || opts(st).readOnly) { return; }
-    var card = $(this).closest(".ah-node-graph-node")[0];
+    var card = this.closest(".ah-node-graph-node");
     var id = card.getAttribute("data-node-id"), n = findNode(st.g, id);
     var w0 = nodeWidth(n), h0 = n.height || card.offsetHeight || nodeHeight(n);
     var hMin = Math.max(MIN_H, TITLE_H + PAD_TOP + SLOT_H * Math.max(n.inputs.length, n.outputs.length) + PAD_BOTTOM);
@@ -1320,10 +1376,10 @@ function wireNodes(st) {
   });
 
   // slots: drag a link out
-  $el.on("pointerdown" + NS, ".ah-node-graph-slot-hit", function (e) {
+  on(st, "pointerdown", ".ah-node-graph-slot-hit", function (e) {
     e.stopPropagation();
     if (e.button !== 0 || opts(st).readOnly) { return; }
-    var slotEl = $(this).closest(".ah-node-graph-slot")[0];
+    var slotEl = this.closest(".ah-node-graph-slot");
     var origin = originOf(st.g, nodeIdOf(this), slotEl.getAttribute("data-kind"),
                           parseInt(slotEl.getAttribute("data-slot-index"), 10));
     var compat = compatibleMap(st.g, origin, opts(st).allowCycles);
@@ -1357,7 +1413,7 @@ function wireNodes(st) {
             st.el.setAttribute("data-origin", origin.node + ":" + origin.kind + ":" + origin.index);
             st.el.setAttribute("data-point", Math.round(gp[0]) + "," + Math.round(gp[1]));
             if (!origin.detach || !dropLink(st, origin, null)) { renderLinks(st); }
-            $(st.el).trigger("ah:link-drop", [{ origin: origin, point: gp }]);
+            fire(st, "ah:link-drop", { origin: origin, point: gp });
           }
         }
       },
@@ -1367,7 +1423,7 @@ function wireNodes(st) {
   });
 
   // the card itself: select and move
-  $el.on("pointerdown" + NS, ".ah-node-graph-node", function (e) {
+  on(st, "pointerdown", ".ah-node-graph-node", function (e) {
     if (e.button !== 0 || st.hand) { return; }
     e.stopPropagation();
     var id = this.getAttribute("data-node-id");
@@ -1405,7 +1461,7 @@ function wireNodes(st) {
     });
   });
 
-  $el.on("contextmenu" + NS, ".ah-node-graph-node", function (e) {
+  on(st, "contextmenu", ".ah-node-graph-node", function (e) {
     e.preventDefault();
     e.stopPropagation();
     var p = point(e);
@@ -1447,7 +1503,10 @@ function nodeMenu(st, id, at) {
   var many = list.length > 1, ro = opts(st).readOnly;
   contextMenu(st, at, [
     ro ? null : { label: n.collapsed ? "Expand" : "Collapse",
-                  run: function () { $(cardOf(st, id)).find(".ah-node-graph-collapse").first().trigger("click"); } },
+                  run: function () {
+                    var card = cardOf(st, id), btn = card && card.querySelector(".ah-node-graph-collapse");
+                    if (btn) { btn.click(); }
+                  } },
     ro ? null : { label: many ? "Duplicate " + list.length + " nodes" : "Duplicate node", hint: "Ctrl+D",
                   run: function () { duplicate(st, list); } },
     { label: many ? "Copy " + list.length + " nodes" : "Copy node", hint: "Ctrl+C",
@@ -1458,21 +1517,20 @@ function nodeMenu(st, id, at) {
 }
 
 function wireLinks(st) {
-  var $el = $(st.el), NS = AH.NS;
-  $el.on("pointerdown" + NS, ".ah-node-graph-link-hit", function (e) {
+  on(st, "pointerdown", ".ah-node-graph-link-hit", function (e) {
     e.stopPropagation();
     var id = linkIdOf(this);
     st.vp.focus({ preventScroll: true });
     setSelection(st, [], e.shiftKey ? st.lsel.concat(st.lsel.indexOf(id) < 0 ? [id] : []) : [id]);
   });
   // double click adds a reroute point
-  $el.on("dblclick" + NS, ".ah-node-graph-link-hit", function (e) {
+  on(st, "dblclick", ".ah-node-graph-link-hit", function (e) {
     e.stopPropagation();
     if (opts(st).readOnly) { return; }
     var p = point(e);
     addWaypoint(st, linkIdOf(this), clientToGraph(st, p[0], p[1]));
   });
-  $el.on("contextmenu" + NS, ".ah-node-graph-link-hit", function (e) {
+  on(st, "contextmenu", ".ah-node-graph-link-hit", function (e) {
     e.preventDefault();
     e.stopPropagation();
     var id = linkIdOf(this), p = point(e), gp = clientToGraph(st, p[0], p[1]);
@@ -1487,7 +1545,7 @@ function wireLinks(st) {
     ]);
   });
   // reroute points: drag to move, double click to remove
-  $el.on("pointerdown" + NS, ".ah-node-graph-waypoint", function (e) {
+  on(st, "pointerdown", ".ah-node-graph-waypoint", function (e) {
     e.stopPropagation();
     if (e.button !== 0 || opts(st).readOnly) { return; }
     var id = linkIdOf(this), i = parseInt(this.getAttribute("data-index"), 10);
@@ -1510,7 +1568,7 @@ function wireLinks(st) {
       cancel: function () { st.wpDrag = null; updateLinkPaths(st); }
     });
   });
-  $el.on("dblclick" + NS, ".ah-node-graph-waypoint", function (e) {
+  on(st, "dblclick", ".ah-node-graph-waypoint", function (e) {
     e.stopPropagation();
     var id = linkIdOf(this), i = parseInt(this.getAttribute("data-index"), 10);
     mutate(st, "reroute", function (g) {
@@ -1537,8 +1595,7 @@ function addWaypoint(st, id, p) {
 }
 
 function wireGroups(st) {
-  var $el = $(st.el), NS = AH.NS;
-  $el.on("pointerdown" + NS, ".ah-node-graph-group-header", function (e) {
+  on(st, "pointerdown", ".ah-node-graph-group-header", function (e) {
     if (e.button !== 0 || opts(st).readOnly || st.hand) { return; }
     e.stopPropagation();
     var id = groupIdOf(this), gr = findGroup(st.g, id);
@@ -1576,7 +1633,7 @@ function wireGroups(st) {
       cancel: function () { st.nodeDrag = null; applyNodeDrag(st); }
     });
   });
-  $el.on("dblclick" + NS, ".ah-node-graph-group-title", function (e) {
+  on(st, "dblclick", ".ah-node-graph-group-title", function (e) {
     if (opts(st).readOnly) { return; }
     e.stopPropagation();
     var id = groupIdOf(this);
@@ -1584,11 +1641,11 @@ function wireGroups(st) {
       mutate(st, "group-rename", function (g) { findGroup(g, id).title = v; });
     });
   });
-  $el.on("click" + NS, ".ah-node-graph-group-delete", function (e) {
+  on(st, "click", ".ah-node-graph-group-delete", function (e) {
     e.stopPropagation();
     removeGroup(st, groupIdOf(this));
   });
-  $el.on("pointerdown" + NS, ".ah-node-graph-group-resize", function (e) {
+  on(st, "pointerdown", ".ah-node-graph-group-resize", function (e) {
     e.stopPropagation();
     if (e.button !== 0 || opts(st).readOnly) { return; }
     var id = groupIdOf(this), b0 = findGroup(st.g, id).bounds;
@@ -1606,7 +1663,7 @@ function wireGroups(st) {
       cancel: function () { st.nodeDrag = null; applyNodeDrag(st); }
     });
   });
-  $el.on("contextmenu" + NS, ".ah-node-graph-group", function (e) {
+  on(st, "contextmenu", ".ah-node-graph-group", function (e) {
     e.preventDefault();
     e.stopPropagation();
     if (opts(st).readOnly) { return; }
@@ -1630,22 +1687,20 @@ function wheelFactor(e) {
 }
 
 function wireViewport(st) {
-  var $el = $(st.el), NS = AH.NS, vp = st.vp;
+  var vp = st.vp;
   var pointers = {}, pinch = null, cancel = null;
 
-  // native, non-passive: jQuery's wheel may be passive and then the page scrolls
-  function onWheel(e) {
+  // non-passive, or the page scrolls too
+  st.ctl.listen(vp, "wheel", function (e) {
     e.preventDefault();
     var s = clientToScreen(st, e.clientX, e.clientY);
     zoomBy(st, wheelFactor(e), s[0], s[1]);
-  }
-  vp.addEventListener("wheel", onWheel, { passive: false });
-  st.cleanups.push(function () { vp.removeEventListener("wheel", onWheel); });
+  }, { passive: false });
 
   function touches() { return Object.keys(pointers).map(function (k) { return pointers[k]; }); }
 
-  $el.on("pointerdown" + NS, ".ah-node-graph-viewport", function (e) {
-    var oe = e.originalEvent || e;
+  on(st, "pointerdown", ".ah-node-graph-viewport", function (e) {
+    var oe = e;
     if (oe.pointerType === "touch") { pointers[oe.pointerId] = [oe.clientX, oe.clientY]; }
     var tp = touches();
     if (tp.length === 2) {
@@ -1690,8 +1745,8 @@ function wireViewport(st) {
     });
   });
 
-  $el.on("pointermove" + NS, ".ah-node-graph-viewport", function (e) {
-    var oe = e.originalEvent || e;
+  on(st, "pointermove", ".ah-node-graph-viewport", function (e) {
+    var oe = e;
     if (!pointers[oe.pointerId]) { return; }
     pointers[oe.pointerId] = [oe.clientX, oe.clientY];
     var tp = touches();
@@ -1708,21 +1763,17 @@ function wireViewport(st) {
     delete pointers[e.pointerId];
     if (touches().length < 2) { pinch = null; }
   }
-  document.addEventListener("pointerup", lift);
-  document.addEventListener("pointercancel", lift);
-  st.cleanups.push(function () {
-    document.removeEventListener("pointerup", lift);
-    document.removeEventListener("pointercancel", lift);
-  });
+  st.ctl.listen(document, "pointerup", lift);
+  st.ctl.listen(document, "pointercancel", lift);
 
-  $el.on("contextmenu" + NS, ".ah-node-graph-viewport", function (e) {
+  on(st, "contextmenu", ".ah-node-graph-viewport", function (e) {
     e.preventDefault();
     if (opts(st).readOnly) { return; }
     var p = point(e);
     searchMenu(st, clientToHost(st, p[0], p[1]), clientToGraph(st, p[0], p[1]), null);
   });
 
-  $el.on("keydown" + NS, ".ah-node-graph-viewport", function (e) {
+  on(st, "keydown", ".ah-node-graph-viewport", function (e) {
     if (isEditable(e.target)) { return; }
     var k = e.key, mod = e.ctrlKey || e.metaKey, lower = k.length === 1 ? k.toLowerCase() : k;
     var ro = opts(st).readOnly, onButton = e.target.tagName === "BUTTON";
@@ -1776,7 +1827,7 @@ function wireViewport(st) {
       }
     }
   });
-  $el.on("keyup" + NS, ".ah-node-graph-viewport", function (e) {
+  on(st, "keyup", ".ah-node-graph-viewport", function (e) {
     if (e.key === " ") {
       st.space = false;
       if (!st.hand) { vp.removeAttribute("data-hand"); }
@@ -1785,8 +1836,7 @@ function wireViewport(st) {
 }
 
 function wireToolbar(st) {
-  var $el = $(st.el), NS = AH.NS;
-  $el.on("click" + NS, ".ah-node-graph-tool", function (e) {
+  on(st, "click", ".ah-node-graph-tool", function (e) {
     e.stopPropagation();
     switch (this.getAttribute("data-action")) {
       case "zoom-in": zoomBy(st, 1.25); break;
@@ -1804,7 +1854,7 @@ function wireToolbar(st) {
     }
   });
   // minimap: click to centre the view there
-  $el.on("pointerdown" + NS, ".ah-node-graph-minimap", function (e) {
+  on(st, "pointerdown", ".ah-node-graph-minimap", function (e) {
     e.stopPropagation();
     var view = viewBox(st);
     var t = miniTransform(contentBounds(st.g.nodes.map(function (n) { return shown(st, n, false); })), view);
@@ -1820,7 +1870,7 @@ function wireToolbar(st) {
 // ------------------------------------------------------------------
 
 function readLibrary(el) {
-  var s = $(el).children("script.ah-node-graph-data")[0];
+  var s = kid(el, "script.ah-node-graph-data");
   if (!s) { return []; }
   try { return JSON.parse(s.textContent).library || []; } catch (x) { return []; }
 }
@@ -1837,17 +1887,18 @@ function setGraph(st, graph) {
   writeValue(st);
 }
 
-AH.define("node-graph", {
-  init: function (el, $el) {
+AH.register("node-graph", class extends AH.Controller {
+  setup() {
+    var el = this.element;
     if (!el.id) { el.id = "ah-g" + (++seq) + Date.now().toString(36); }
-    var vp = $el.children(".ah-node-graph-viewport")[0];
-    var canvas = $(vp).children(".ah-node-graph-canvas")[0];
+    var vp = kid(el, ".ah-node-graph-viewport");
+    var canvas = kid(vp, ".ah-node-graph-canvas");
     var st = {
-      el: el, vp: vp, canvasEl: canvas,
-      groupsEl: $(canvas).children(".ah-node-graph-groups")[0],
-      linksEl: $(canvas).children(".ah-node-graph-links")[0],
-      nodesEl: $(canvas).children(".ah-node-graph-nodes")[0],
-      marqueeEl: $(canvas).children(".ah-node-graph-marquee")[0],
+      el: el, ctl: this, handlers: {}, vp: vp, canvasEl: canvas,
+      groupsEl: kid(canvas, ".ah-node-graph-groups"),
+      linksEl: kid(canvas, ".ah-node-graph-links"),
+      nodesEl: kid(canvas, ".ah-node-graph-nodes"),
+      marqueeEl: kid(canvas, ".ah-node-graph-marquee"),
       opts: {
         mode: el.getAttribute("data-ah-link-mode") || "spline",
         snap: parseInt(el.getAttribute("data-ah-snap") || "0", 10) || 0,
@@ -1859,10 +1910,10 @@ AH.define("node-graph", {
       cam: { x: 0, y: 0, z: 1 },
       sel: [], lsel: [], sizes: {}, past: [], future: [], clip: null, pending: {},
       nodeDrag: null, linkDrag: null, wpDrag: null, marquee: null, dragLinkEl: null,
-      hand: false, space: false, drags: [], cleanups: [], overlay: null
+      hand: false, space: false, drags: [], overlay: null
     };
     try { st.g = normalize(JSON.parse(el.getAttribute("data-ah-value") || "{}")); } catch (x) { /* empty */ }
-    $.data(el, KEY, st);
+    this.st = st;
     // adopt the server's cards: same template, same data
     var conn = connIndex(st.g);
     st.g.nodes.forEach(function (n) {
@@ -1877,24 +1928,22 @@ AH.define("node-graph", {
     wireToolbar(st);
     applyCamera(st);
     if (el.getAttribute("data-ah-auto-fit") === "true") { fit(st); }
-  },
-  destroy: function (el) {
-    var st = state(el);
-    if (!st) { return; }
-    st.drags.slice().forEach(function (f) { f(); });
-    st.cleanups.forEach(function (f) { f(); });
-    closeOverlay(st);
-    $.removeData(el, KEY);
-  },
-  methods: {
-    getGraph: function (el) { return clone(state(el).g); },
-    getValue: function (el) { return el.getAttribute("data-ah-value"); },
-    setGraph: function (el, $el, graph) { setGraph(state(el), graph); },
-    fitView: function (el) { fit(state(el)); },
-    undo: function (el) { undo(state(el)); },
-    redo: function (el) { redo(state(el)); },
-    getSelection: function (el) { return state(el).sel.slice(); },
-    selectNodes: function (el, $el, list) { select(state(el), (list || []).map(String), "replace"); },
-    deleteSelection: function (el) { deleteSelection(state(el)); }
   }
+
+  teardown() {
+    var st = this.st;
+    st.drags.slice().forEach(function (f) { f(); });
+    closeOverlay(st);
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  getGraph() { return clone(this.st.g); }
+  getValue() { return this.element.getAttribute("data-ah-value"); }
+  setGraph(graph) { setGraph(this.st, graph); }
+  fitView() { fit(this.st); }
+  undo() { undo(this.st); }
+  redo() { redo(this.st); }
+  getSelection() { return this.st.sel.slice(); }
+  selectNodes(list) { select(this.st, (list || []).map(String), "replace"); }
+  deleteSelection() { deleteSelection(this.st); }
 });

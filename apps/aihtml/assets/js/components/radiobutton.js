@@ -1,39 +1,37 @@
 /* radiobutton behaviour (designs/04-components.md): restyles every radio
  * of the native group when one changes; locked. Methods never fire change.
  */
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_choice.js";
 
-var NS = AH.NS;
 var L = AH.lib.choice;
 
 // The radios a browser treats as one group with this one.
 function sameGroup(input) {
   if (!input.name) {
-    return $(input);
+    return [input];
   }
-  return $(input.form || document).find("input[type=radio]").filter(function () {
-    return this.name === input.name && this.form === input.form;
+  return Array.from((input.form || document).querySelectorAll("input[type=radio]")).filter(function (r) {
+    return r.name === input.name && r.form === input.form;
   });
 }
 
 function syncRadioGroup(input) {
-  sameGroup(input).each(function () { L.syncRadio(this); });
+  sameGroup(input).forEach(function (r) { L.syncRadio(r); });
 }
 
-AH.define("radiobutton", {
-  init: function (el, $el) {
-    L.bindLocked(el, $el);
-    $el.on("change" + NS, L.INPUT, function () { syncRadioGroup(this); });
-  },
-  methods: {
-    setChecked: function (el, $el, v) {
-      var input = L.inputOf($el);
-      input.checked = L.truthy(v);
-      syncRadioGroup(input);
-    },
-    getValue: function (el, $el) { return L.inputOf($el).checked; },
-    setDisabled: function (el, $el, on) { L.setDisabled(el, L.inputOf($el), on, L.syncRadio); }
+AH.register("radiobutton", class extends AH.Controller {
+  setup() {
+    L.bindLocked(this);
+    this.delegate("change", L.INPUT, (e, input) => { syncRadioGroup(input); });
   }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  setChecked(v) {
+    var input = L.inputOf(this.element);
+    input.checked = L.truthy(v);
+    syncRadioGroup(input);
+  }
+  getValue() { return L.inputOf(this.element).checked; }
+  setDisabled(on) { L.setDisabled(L.inputOf(this.element), on, L.syncRadio); }
 });

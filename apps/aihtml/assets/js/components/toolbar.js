@@ -1,15 +1,15 @@
 /* Behaviour of the toolbar component (designs/04-components.md), ported
-   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js. */
-import $ from "jquery";
+   from sigil's components/layout/*.cljs; shared helpers in _lib_nav.js.
+   A tool with data-key sets data-ah-value (and the hidden input) and
+   fires "change" on the root; ah:open / ah:close (no detail) follow the
+   overflow popup. */
 import AH from "../core.js";
 import "./_lib_nav.js";
 
-var NS = AH.NS;
-var L = AH.lib.nav;
-var instanceNs = L.instanceNs;
-var visible = L.visible;
-var setValue = L.setValue;
-var byKey = L.byKey;
+const N = AH.lib.nav;
+const visible = N.visible;
+const setValue = N.setValue;
+const byKey = N.byKey;
 
 // ------------------------------------------------------------------
 // toolbar (sigil toolbar.cljs, toolbar/overflow.cljs)
@@ -19,223 +19,247 @@ var byKey = L.byKey;
 // so their handlers and data-ah-on keep working, and moved back when
 // there is room again.
 
-function tbState(el) { return $.data(el, "ah-toolbar"); }
+function outerWidth(n) {
+  const cs = getComputedStyle(n);
+  return n.offsetWidth + (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0);
+}
 
-function tbTools($el) {
-  return $el.children(".ah-toolbar-tool").map(function () {
-    var $prev = $(this).prev();
+function innerWidth(n) {
+  const cs = getComputedStyle(n);
+  return n.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);
+}
+
+function tbTools(el) {
+  return Array.from(el.querySelectorAll(":scope > .ah-toolbar-tool")).map(function (tool) {
+    const prev = tool.previousElementSibling;
     return {
-      el: this,
-      sep: $prev.hasClass("ah-toolbar-separator") ? $prev[0] : null,
-      minimizable: this.getAttribute("data-ah-minimizable") !== "false",
-      button: $(this).children("button.ah-toolbar-tool-el").length > 0
+      el: tool,
+      sep: prev && prev.classList.contains("ah-toolbar-separator") ? prev : null,
+      minimizable: tool.getAttribute("data-ah-minimizable") !== "false",
+      button: !!tool.querySelector(":scope > button.ah-toolbar-tool-el")
     };
-  }).get();
-}
-
-function tbMinimize(st, t) {
-  if (t.min) { return; }
-  t.min = true;
-  $(t.el).css("display", "none");
-  if (t.sep) { $(t.sep).css("display", "none"); }
-  $(t.menuSep).addClass("ah-toolbar-popup-separator-visible");
-  $(t.popupTool).append($(t.el).children()).addClass("ah-toolbar-popup-tool-visible");
-}
-
-function tbRestore(st, t) {
-  if (!t.min) { return; }
-  t.min = false;
-  $(t.el).append($(t.popupTool).children()).css("display", "");
-  if (t.sep) { $(t.sep).css("display", ""); }
-  $(t.menuSep).removeClass("ah-toolbar-popup-separator-visible");
-  $(t.popupTool).removeClass("ah-toolbar-popup-tool-visible");
-}
-
-function tbGroups(st) {
-  var shown = st.tools.filter(function (t) { return !t.min; });
-  shown.forEach(function (t, i) {
-    var prev = i > 0 && shown[i - 1].button && !t.sep;
-    var next = i + 1 < shown.length && shown[i + 1].button && !shown[i + 1].sep;
-    var $t = $(t.el).removeClass("ah-toolbar-tool-first ah-toolbar-tool-inner ah-toolbar-tool-last");
-    if (!t.button) { return; }
-    if (prev && next) { $t.addClass("ah-toolbar-tool-inner"); }
-    else if (next) { $t.addClass("ah-toolbar-tool-first"); }
-    else if (prev) { $t.addClass("ah-toolbar-tool-last"); }
   });
 }
 
-function tbLayout($el) {
-  var st = tbState($el[0]);
-  if (!st || !visible($el[0])) { return; }
-  var $btn = $el.children(".ah-toolbar-minimize-btn");
-  var avail = function () {
-    // the button's margin-left is auto, so count its box only
-    return $el.width() - ($btn.hasClass("ah-toolbar-minimize-visible") ? $btn[0].offsetWidth : 0);
-  };
-  var used = function () {
-    return st.tools.reduce(function (acc, t) {
-      if (t.min) { return acc; }
-      return acc + $(t.el).outerWidth(true) + (t.sep ? $(t.sep).outerWidth(true) : 0);
-    }, 0);
-  };
-  var cands;
-  // minimise from the right while the tools overflow
-  while (used() > avail() &&
-         (cands = st.tools.filter(function (t) { return t.minimizable && !t.min; })).length) {
-    $btn.addClass("ah-toolbar-minimize-visible");
-    tbMinimize(st, cands[cands.length - 1]);
-  }
-  // restore from the left while they fit
-  var hidden;
-  while ((hidden = st.tools.filter(function (t) { return t.minimizable && t.min; })).length) {
-    var t = hidden[0];
-    tbRestore(st, t);
-    if (hidden.length === 1) { $btn.removeClass("ah-toolbar-minimize-visible"); }
-    if (used() > avail()) {
-      $btn.addClass("ah-toolbar-minimize-visible");
-      tbMinimize(st, t);
-      break;
-    }
-  }
-  var any = st.tools.some(function (t) { return t.min; });
-  $btn.toggleClass("ah-toolbar-minimize-visible", any);
-  if (!any) { tbClose($el); }
-  tbGroups(st);
+function tbMinimize(t) {
+  if (t.min) { return; }
+  t.min = true;
+  t.el.style.display = "none";
+  if (t.sep) { t.sep.style.display = "none"; }
+  if (t.menuSep) { t.menuSep.classList.add("ah-toolbar-popup-separator-visible"); }
+  t.popupTool.append.apply(t.popupTool, Array.from(t.el.children));
+  t.popupTool.classList.add("ah-toolbar-popup-tool-visible");
 }
 
-function tbOpen($el) {
-  var st = tbState($el[0]);
-  if (st.open) { return; }
-  var w = parseInt($el.attr("data-ah-popup-width"), 10) || 200;
-  st.popup.css({ width: w + "px" }).addClass("ah-toolbar-popup-open");
-  st.float = AH.float(st.popup[0], $el[0], { placement: "bottom", align: "end", offset: 0 });
-  st.open = true;
-  $el.children(".ah-toolbar-minimize-btn").attr("aria-expanded", "true");
-  $el.trigger("ah:open");
+function tbRestore(t) {
+  if (!t.min) { return; }
+  t.min = false;
+  t.el.append.apply(t.el, Array.from(t.popupTool.children));
+  t.el.style.display = "";
+  if (t.sep) { t.sep.style.display = ""; }
+  if (t.menuSep) { t.menuSep.classList.remove("ah-toolbar-popup-separator-visible"); }
+  t.popupTool.classList.remove("ah-toolbar-popup-tool-visible");
 }
 
-function tbClose($el) {
-  var st = tbState($el[0]);
-  if (!st || !st.open) { return; }
-  st.popup.removeClass("ah-toolbar-popup-open");
-  if (st.float) { st.float.stop(); st.float = null; }
-  st.open = false;
-  $el.children(".ah-toolbar-minimize-btn").attr("aria-expanded", "false");
-  $el.trigger("ah:close");
+function tbGroups(st) {
+  const shown = st.tools.filter(function (t) { return !t.min; });
+  shown.forEach(function (t, i) {
+    const prev = i > 0 && shown[i - 1].button && !t.sep;
+    const next = i + 1 < shown.length && shown[i + 1].button && !shown[i + 1].sep;
+    t.el.classList.remove("ah-toolbar-tool-first", "ah-toolbar-tool-inner", "ah-toolbar-tool-last");
+    if (!t.button) { return; }
+    if (prev && next) { t.el.classList.add("ah-toolbar-tool-inner"); }
+    else if (next) { t.el.classList.add("ah-toolbar-tool-first"); }
+    else if (prev) { t.el.classList.add("ah-toolbar-tool-last"); }
+  });
 }
 
-function tbActivate($el, btn) {
-  var $b = $(btn);
-  var key = $b.attr("data-key");
-  if (btn.hasAttribute("data-ah-toggle")) {
-    var on = $b.attr("aria-pressed") !== "true";
-    $b.attr("aria-pressed", String(on)).toggleClass("ah-btn-toggled", on);
-  }
-  if (key) { setValue($el, key, "change"); }
-}
-
-AH.define("toolbar", {
-  init: function (el, $el) {
-    var ns = instanceNs(el);
-    var $popup = $('<div class="ah-toolbar-popup" role="menu" aria-label="Overflow tools"></div>');
-    var st = { tools: tbTools($el), popup: $popup, open: false };
+AH.register("toolbar", class extends AH.Controller {
+  setup() {
+    const el = this.element;
+    const self = this;
+    const popup = document.createElement("div");
+    popup.className = "ah-toolbar-popup";
+    popup.setAttribute("role", "menu");
+    popup.setAttribute("aria-label", "Overflow tools");
+    const st = this.st = { tools: tbTools(el), popup: popup, open: false, float: null, ro: null };
     st.tools.forEach(function (t) {
       if (t.sep) {
-        t.menuSep = $('<div class="ah-toolbar-popup-separator" role="separator"></div>')
-          .appendTo($popup)[0];
+        t.menuSep = document.createElement("div");
+        t.menuSep.className = "ah-toolbar-popup-separator";
+        t.menuSep.setAttribute("role", "separator");
+        popup.appendChild(t.menuSep);
       }
-      t.popupTool = $('<div class="ah-toolbar-popup-tool"></div>').appendTo($popup)[0];
+      t.popupTool = document.createElement("div");
+      t.popupTool.className = "ah-toolbar-popup-tool";
+      popup.appendChild(t.popupTool);
       t.min = false;
     });
-    $("body").append($popup);
-    $.data(el, "ah-toolbar", st);
+    document.body.appendChild(popup);
 
-    var onTool = function (e) {
-      var btn = e.currentTarget;
+    const onTool = function (e, btn) {
       if (btn.disabled) { return; }
-      tbActivate($el, btn);
-      if ($.contains($popup[0], btn) && !btn.hasAttribute("data-ah-toggle")) { tbClose($el); }
+      self.activate(btn);
+      if (popup.contains(btn) && !btn.hasAttribute("data-ah-toggle")) { self.close(); }
     };
-    $el.on("click" + NS, "button.ah-toolbar-tool-el", onTool);
-    $popup.on("click", "button.ah-toolbar-tool-el", onTool);
-    $popup.on("keydown", function (e) {
+    this.delegate("click", "button.ah-toolbar-tool-el", onTool);
+    this.delegate("click", "button.ah-toolbar-tool-el", onTool, popup);
+    this.listen(popup, "keydown", function (e) {
       if (e.key === "Escape") {
-        tbClose($el);
-        $el.children(".ah-toolbar-minimize-btn")[0].focus();
+        self.close();
+        const btn = self.minBtn();
+        if (btn) { btn.focus(); }
       }
     });
-    $el.on("click" + NS, ".ah-toolbar-minimize-btn", function (e) {
+    this.delegate("click", ".ah-toolbar-minimize-btn", function (e) {
       e.stopPropagation();
-      if (st.open) { tbClose($el); } else { tbOpen($el); }
+      if (st.open) { self.close(); } else { self.open(); }
     });
-    $el.on("keydown" + NS, ".ah-toolbar-minimize-btn", function (e) {
+    this.delegate("keydown", ".ah-toolbar-minimize-btn", function (e) {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        if (st.open) { tbClose($el); }
+        if (st.open) { self.close(); }
         else {
-          tbOpen($el);
-          var f = $popup.find("button:not([disabled]), select, input, [tabindex]").filter(function () {
-            return visible(this);
-          }).get(0);
+          self.open();
+          const f = Array.from(popup.querySelectorAll("button:not([disabled]), select, input, [tabindex]"))
+            .filter(visible)[0];
           if (f) { f.focus(); }
         }
       }
     });
     // arrows move between tools, Home / End jump to the ends
-    $el.on("keydown" + NS, function (e) {
+    this.listen(el, "keydown", function (e) {
       if (!/^(ArrowLeft|ArrowRight|Home|End)$/.test(e.key)) { return; }
       if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) { return; }
-      var items = $el.find(".ah-toolbar-tool button:not([disabled]), .ah-toolbar-tool select, " +
-                          ".ah-toolbar-tool input, .ah-toolbar-minimize-btn")
-        .filter(function () { return visible(this); }).get();
-      var i = items.indexOf(e.target);
+      const items = Array.from(el.querySelectorAll(
+        ".ah-toolbar-tool button:not([disabled]), .ah-toolbar-tool select, " +
+        ".ah-toolbar-tool input, .ah-toolbar-minimize-btn")).filter(visible);
+      const i = items.indexOf(e.target);
       if (i < 0) { return; }
-      var n = items.length;
-      var to = e.key === "Home" ? 0 : e.key === "End" ? n - 1
+      const n = items.length;
+      const to = e.key === "Home" ? 0 : e.key === "End" ? n - 1
         : (i + (e.key === "ArrowRight" ? 1 : -1) + n) % n;
       e.preventDefault();
       items[to].focus();
     });
-    $(document).on("mousedown" + ns, function (e) {
-      if (st.open && !$.contains($popup[0], e.target) &&
-          !$(e.target).closest(".ah-toolbar-minimize-btn").length) {
-        tbClose($el);
+    this.listen(document, "mousedown", function (e) {
+      const t = e.target;
+      if (st.open && !popup.contains(t) && !(t.closest && t.closest(".ah-toolbar-minimize-btn"))) {
+        self.close();
       }
     });
     if (window.ResizeObserver) {
-      st.ro = new ResizeObserver(function () { tbLayout($el); });
+      st.ro = new ResizeObserver(function () { self.layout(); });
       st.ro.observe(el);
     } else {
-      $(window).on("resize" + ns, function () { tbLayout($el); });
+      this.listen(window, "resize", function () { self.layout(); });
     }
-    requestAnimationFrame(function () { tbLayout($el); });
-  },
-  destroy: function (el) {
-    var st = tbState(el);
-    var ns = instanceNs(el);
-    $(document).off(ns);
-    $(window).off(ns);
-    if (st) {
-      if (st.ro) { st.ro.disconnect(); }
-      if (st.float) { st.float.stop(); }
-      st.tools.forEach(function (t) { tbRestore(st, t); });
-      st.popup.remove();
+    requestAnimationFrame(function () { self.layout(); });
+  }
+
+  teardown() {
+    const st = this.st;
+    if (!st) { return; }
+    if (st.ro) { st.ro.disconnect(); }
+    if (st.float) { st.float.stop(); }
+    st.tools.forEach(tbRestore);
+    st.popup.remove();
+    this.st = null;
+  }
+
+  minBtn() { return this.element.querySelector(":scope > .ah-toolbar-minimize-btn"); }
+
+  activate(btn) {
+    const key = btn.getAttribute("data-key");
+    if (btn.hasAttribute("data-ah-toggle")) {
+      const on = btn.getAttribute("aria-pressed") !== "true";
+      btn.setAttribute("aria-pressed", String(on));
+      btn.classList.toggle("ah-btn-toggled", on);
     }
-    $.removeData(el, "ah-toolbar");
-  },
-  methods: {
-    layout: function (el, $el) { tbLayout($el); },
-    open: function (el, $el) { tbOpen($el); },
-    close: function (el, $el) { tbClose($el); },
-    disableTool: function (el, $el, key, disabled) {
-      var st = tbState(el);
-      var $b = byKey($el.add(st ? st.popup : $()), "button.ah-toolbar-tool-el", "data-key", key);
-      $b.prop("disabled", disabled !== false);
-    },
-    setPressed: function (el, $el, key, pressed) {
-      var st = tbState(el);
-      byKey($el.add(st ? st.popup : $()), "button.ah-toolbar-tool-el", "data-key", key)
-        .attr("aria-pressed", String(!!pressed)).toggleClass("ah-btn-toggled", !!pressed);
+    if (key) { setValue(this.element, key, "change"); }
+  }
+
+  buttons(key) {
+    const scopes = [this.element];
+    if (this.st) { scopes.push(this.st.popup); }
+    return byKey(scopes, "button.ah-toolbar-tool-el", "data-key", key);
+  }
+
+  // methods (aihtml_action:call/4, AH.invoke)
+  layout() {
+    const el = this.element;
+    const st = this.st;
+    if (!st || !visible(el)) { return; }
+    const btn = this.minBtn();
+    const avail = function () {
+      // the button's margin-left is auto, so count its box only
+      return innerWidth(el) -
+        (btn && btn.classList.contains("ah-toolbar-minimize-visible") ? btn.offsetWidth : 0);
+    };
+    const used = function () {
+      return st.tools.reduce(function (acc, t) {
+        if (t.min) { return acc; }
+        return acc + outerWidth(t.el) + (t.sep ? outerWidth(t.sep) : 0);
+      }, 0);
+    };
+    const showBtn = function (on) { if (btn) { btn.classList.toggle("ah-toolbar-minimize-visible", on); } };
+    let cands;
+    // minimise from the right while the tools overflow
+    while (used() > avail() &&
+           (cands = st.tools.filter(function (t) { return t.minimizable && !t.min; })).length) {
+      showBtn(true);
+      tbMinimize(cands[cands.length - 1]);
     }
+    // restore from the left while they fit
+    let hidden;
+    while ((hidden = st.tools.filter(function (t) { return t.minimizable && t.min; })).length) {
+      const t = hidden[0];
+      tbRestore(t);
+      if (hidden.length === 1) { showBtn(false); }
+      if (used() > avail()) {
+        showBtn(true);
+        tbMinimize(t);
+        break;
+      }
+    }
+    const any = st.tools.some(function (t) { return t.min; });
+    showBtn(any);
+    if (!any) { this.close(); }
+    tbGroups(st);
+  }
+
+  open() {
+    const st = this.st;
+    if (!st || st.open) { return; }
+    const w = parseInt(this.element.getAttribute("data-ah-popup-width"), 10) || 200;
+    st.popup.style.width = w + "px";
+    st.popup.classList.add("ah-toolbar-popup-open");
+    st.float = AH.float(st.popup, this.element, { placement: "bottom", align: "end", offset: 0 });
+    st.open = true;
+    const btn = this.minBtn();
+    if (btn) { btn.setAttribute("aria-expanded", "true"); }
+    this.fire("ah:open");
+  }
+
+  close() {
+    const st = this.st;
+    if (!st || !st.open) { return; }
+    st.popup.classList.remove("ah-toolbar-popup-open");
+    if (st.float) { st.float.stop(); st.float = null; }
+    st.open = false;
+    const btn = this.minBtn();
+    if (btn) { btn.setAttribute("aria-expanded", "false"); }
+    this.fire("ah:close");
+  }
+
+  disableTool(key, disabled) {
+    this.buttons(key).forEach(function (b) { b.disabled = disabled !== false; });
+  }
+
+  setPressed(key, pressed) {
+    this.buttons(key).forEach(function (b) {
+      b.setAttribute("aria-pressed", String(!!pressed));
+      b.classList.toggle("ah-btn-toggled", !!pressed);
+    });
   }
 });

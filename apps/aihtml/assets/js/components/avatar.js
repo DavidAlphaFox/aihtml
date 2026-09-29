@@ -1,21 +1,14 @@
 /* avatar behaviour (designs/04-components.md): a failed image shows the
    fallback underneath. */
-import $ from "jquery";
 import AH from "../core.js";
 
-var NS = AH.NS;
-
-AH.define("avatar", {
-  init: function (el, $el) {
-    $el.find(".ah-avatar__image").each(function () {
-      var img = this;
-      var broken = function () { $(img).addClass("ah-avatar__image--broken"); };
-      // error does not bubble, and may have happened before init
-      $(img).on("error" + NS, broken);
+AH.register("avatar", class extends AH.Controller {
+  setup() {
+    this.element.querySelectorAll(".ah-avatar__image").forEach((img) => {
+      const broken = () => { img.classList.add("ah-avatar__image--broken"); };
+      // error does not bubble, and may have happened before setup
+      this.listen(img, "error", broken);
       if (img.complete && img.naturalWidth === 0) { broken(); }
     });
-  },
-  destroy: function (el, $el) {
-    $el.find(".ah-avatar__image").off(NS);
   }
 });

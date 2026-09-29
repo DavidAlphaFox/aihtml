@@ -3,12 +3,12 @@
  * Pointer events (mouse, pen, touch) instead of sigil's mouse + touch
  * sequence; one drag at a time on the page (AH.lib.dnd.drag, shared by
  * both components), tracked on the document with its own namespace and
- * unbound when the drag ends or the component is destroyed.
+ * unbound when the drag ends or the component is destroyed. Everything
+ * takes and returns elements; fire(target, type, detail) dispatches the
+ * components' native events.
  */
-import $ from "jquery";
 import AH from "../core.js";
 
-var DOC_NS = ".ahdnd";
 var EDGE = 20, SPEED = 10;   // auto scroll: edge width and px per frame
 
 AH.lib = AH.lib || {};
@@ -46,15 +46,15 @@ function floatingCopy(el, cls, opacity) {
   var r = pageRect(el);
   var copy = el.cloneNode(true);
   copy.removeAttribute("id");
-  $(copy).find("[id]").removeAttr("id");
+  copy.querySelectorAll("[id]").forEach(function (n) { n.removeAttribute("id"); });
   copy.removeAttribute("tabindex");
   copy.setAttribute("aria-hidden", "true");
   copy.className += " " + cls;
   copyVars(el, copy);
-  $(copy).css({ position: "absolute", margin: 0, boxSizing: "border-box",
-                width: r.width + "px", height: r.height + "px",
-                left: r.left + "px", top: r.top + "px", opacity: opacity,
-                zIndex: 999999, pointerEvents: "none" });
+  Object.assign(copy.style, { position: "absolute", margin: "0", boxSizing: "border-box",
+                              width: r.width + "px", height: r.height + "px",
+                              left: r.left + "px", top: r.top + "px", opacity: String(opacity),
+                              zIndex: "999999", pointerEvents: "none" });
   document.body.appendChild(copy);
   return copy;
 }
@@ -92,40 +92,52 @@ function swallowClick() {
 }
 
 function editable(t) {
-  return $(t).closest("input, textarea, select, [contenteditable=''], [contenteditable=true]").length > 0;
+  return !!(t && t.closest &&
+            t.closest("input, textarea, select, [contenteditable=''], [contenteditable=true]"));
 }
 
-function announce($live, text) {
-  $live.text("");
-  setTimeout(function () { $live.text(text); }, 20);
+// Say text in the live region `live' (an element; nothing without one).
+function announce(live, text) {
+  if (!live) { return; }
+  live.textContent = "";
+  setTimeout(function () { live.textContent = text; }, 20);
 }
 
 function label(el) {
-  return el.getAttribute("aria-label") || $(el).text().trim().replace(/\s+/g, " ").slice(0, 60);
+  return el.getAttribute("aria-label") || el.textContent.trim().replace(/\s+/g, " ").slice(0, 60);
+}
+
+// A native bubbling, cancelable event on target.
+function fire(target, type, detail) {
+  return target.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true, detail: detail }));
 }
 
 // Document listeners for one drag; `move', `end' and `cancel' get the
 // pointer event (or nothing for a cancel from the keyboard).
+var tracking = null;   // AbortController of the document listeners
+
 function track(d, move, end, cancel) {
   L.drag = d;
-  var $doc = $(document);
-  $doc.on("pointermove" + DOC_NS, function (e) {
+  if (tracking) { tracking.abort(); }
+  tracking = new AbortController();
+  var o = { signal: tracking.signal };
+  document.addEventListener("pointermove", function (e) {
     if (e.pointerId === d.pointerId) { move(e); }
-  });
-  $doc.on("pointerup" + DOC_NS, function (e) {
+  }, o);
+  document.addEventListener("pointerup", function (e) {
     if (e.pointerId === d.pointerId) { untrack(); end(e); }
-  });
-  $doc.on("pointercancel" + DOC_NS, function (e) {
+  }, o);
+  document.addEventListener("pointercancel", function (e) {
     if (e.pointerId === d.pointerId) { untrack(); cancel(); }
-  });
-  $doc.on("keydown" + DOC_NS, function (e) {
+  }, o);
+  document.addEventListener("keydown", function (e) {
     if (e.key === "Escape") { e.preventDefault(); untrack(); cancel(); }
-  });
+  }, o);
   d.cancel = function () { untrack(); cancel(); };
 }
 
 function untrack() {
-  $(document).off(DOC_NS);
+  if (tracking) { tracking.abort(); tracking = null; }
   if (L.drag && L.drag.raf) { cancelAnimationFrame(L.drag.raf); }
   L.drag = null;
 }
@@ -146,6 +158,7 @@ L.swallowClick = swallowClick;
 L.editable = editable;
 L.announce = announce;
 L.label = label;
+L.fire = fire;
 L.track = track;
 L.untrack = untrack;
 L.cancelFor = cancelFor;
