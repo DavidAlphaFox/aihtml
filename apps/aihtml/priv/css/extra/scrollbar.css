@@ -1,0 +1,85 @@
+/* aihtml additions for the scrollbar component (aihtml_scrollbar).
+   sigil styles live in ../sigil/components. */
+
+/* ---- scrollbar: standalone host ---------------------------------------- */
+
+/* sigil's .ah-scrollbar is absolutely positioned inside its host. */
+.ah-scrollbar-host {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+}
+
+.ah-scrollbar-host:not(.ah-scrollbar-area) {
+  width: 100%;
+  height: 14px;
+}
+
+.ah-scrollbar-host-vertical:not(.ah-scrollbar-area) {
+  width: 14px;
+  height: 200px;
+}
+
+.ah-scrollbar-host:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 2px;
+}
+
+/* ---- scrollbar: scroll area ------------------------------------------- */
+
+.ah-scrollbar-area {
+  overflow: hidden;
+}
+
+.ah-scrollbar-viewport {
+  height: 100%;
+  overflow: auto;
+  scrollbar-width: none;
+  overscroll-behavior: contain;
+}
+
+.ah-scrollbar-viewport::-webkit-scrollbar {
+  display: none;
+}
+
+.ah-scrollbar-viewport:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: -2px;
+}
+
+.ah-scrollbar-area > .ah-scrollbar,
+.ah-scrollbar-area > .ah-scrollbar-corner {
+  display: none;
+}
+
+.ah-scrollbar-area-v {
+  padding-right: 14px;
+}
+
+.ah-scrollbar-area-h {
+  padding-bottom: 14px;
+}
+
+.ah-scrollbar-area-v > .ah-scrollbar-vertical,
+.ah-scrollbar-area-h > .ah-scrollbar-horizontal {
+  display: flex;
+}
+
+.ah-scrollbar-area-v.ah-scrollbar-area-h > .ah-scrollbar-vertical {
+  bottom: 14px;
+}
+
+.ah-scrollbar-area-v.ah-scrollbar-area-h > .ah-scrollbar-horizontal {
+  right: 14px;
+}
+
+/* the square where the two bars meet (sigil's .ah-panel-corner) */
+.ah-scrollbar-area-v.ah-scrollbar-area-h > .ah-scrollbar-corner {
+  display: block;
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  background: var(--ah-color-grey-100);
+}
