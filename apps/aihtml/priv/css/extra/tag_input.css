@@ -1,0 +1,5 @@
+/* aihtml additions for the tag_input component (designs/04-components.md).
+   sigil styles live in ../sigil/components. */
+
+/* ---- tag input: the delete button of a disabled chip ---- */
+.ah-tag-input[data-disabled="true"] .ah-chip__delete { display: none; }
