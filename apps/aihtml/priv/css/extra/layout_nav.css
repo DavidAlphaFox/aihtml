@@ -1,0 +1,195 @@
+/* aihtml additions for the layout_nav components (designs/04-components.md).
+   Owned by that group; sigil styles live in ../sigil/components. */
+
+/* nav-tree (used by sidenav): sigil styles in ../sigil/components/nav_tree.css;
+   only the disabled item state is added here. */
+
+
+/* ==========================================================================
+   sidenav: head row with the collapse toggle, collapsed (icon-only) form
+   ========================================================================== */
+.ah-sidenav {
+  transition: width .2s ease, padding .2s ease;
+}
+.ah-sidenav__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ah-sidenav__head > .ah-sidenav__brand { min-width: 0; }
+.ah-sidenav__toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 8px;
+  padding: 0;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--ah-transition-fast), transform .2s ease;
+}
+.ah-sidenav__toggle:hover { background: var(--ah-color-grey-100); color: var(--ah-color-text); }
+.ah-sidenav__toggle:focus-visible,
+.ah-nav-tree__item:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-primary);
+  outline-offset: -2px;
+}
+.ah-nav-tree__item--disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+.ah-nav-tree__icon > img { width: 20px; height: 20px; }
+.ah-sidenav__brand-mark > img { width: 100%; height: 100%; object-fit: contain; }
+
+.ah-sidenav.ah-sidenav-collapsed {
+  --ah-ssn-width: 72px;
+  --ah-ssn-padding: 16px 10px;
+  overflow-x: hidden;
+}
+.ah-sidenav-collapsed .ah-sidenav__head {
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 12px;
+}
+.ah-sidenav-collapsed .ah-sidenav__brand { padding: 4px 0; }
+.ah-sidenav-collapsed .ah-sidenav__toggle { transform: rotate(180deg); margin-top: 0; }
+.ah-sidenav-collapsed .ah-sidenav__brand-name,
+.ah-sidenav-collapsed .ah-nav-tree__label,
+.ah-sidenav-collapsed .ah-nav-tree__caret,
+.ah-sidenav-collapsed .ah-nav-tree__children,
+.ah-sidenav-collapsed .ah-sidenav__footer {
+  display: none;
+}
+.ah-sidenav-collapsed .ah-nav-tree__group-label {
+  height: 1px;
+  padding: 0;
+  margin: 4px 8px;
+  overflow: hidden;
+  color: transparent;
+  background: var(--ah-color-border);
+}
+.ah-sidenav-collapsed .ah-nav-tree__item { justify-content: center; padding: 11px 0; }
+.ah-sidenav-collapsed .ah-nav-tree__node:has(.ah-is-active) > .ah-nav-tree__item--parent {
+  color: var(--ah-snt-accent-dark);
+  background: var(--ah-snt-accent-soft-strong);
+}
+
+/* ==========================================================================
+   navbar: brand / trailing slots; the hamburger header only when minimized
+   ========================================================================== */
+.ah-navbar { align-items: stretch; }
+.ah-navbar-brand,
+.ah-navbar-extra {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  flex: none;
+  padding: 0 var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+}
+.ah-navbar-brand { border-right: var(--ah-border-width) solid var(--ah-color-border); }
+.ah-navbar-extra { margin-left: auto; padding-right: var(--ah-spacing-sm); }
+a.ah-navbar-item { text-decoration: none; }
+.ah-navbar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.ah-navbar-popup .ah-navbar-item { justify-content: flex-start; }
+.ah-navbar-icon { width: 16px; height: 16px; flex: none; }
+.ah-navbar-item:focus-visible,
+.ah-navbar-header:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-text);
+  outline-offset: -3px;
+}
+.ah-navbar-item-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+.ah-navbar-vertical .ah-navbar-brand { border-right: none;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border); padding: var(--ah-spacing-sm) var(--ah-spacing-md); }
+.ah-navbar-vertical .ah-navbar-extra { margin: 0; padding: var(--ah-spacing-sm) var(--ah-spacing-md); }
+.ah-navbar-vertical .ah-navbar-item { justify-content: flex-start; }
+.ah-navbar:not(.ah-navbar-minimized) > .ah-navbar-header { display: none; }
+.ah-navbar-minimized > .ah-navbar-item,
+.ah-navbar-minimized > .ah-navbar-brand,
+.ah-navbar-minimized > .ah-navbar-extra { display: none; }
+
+/* ==========================================================================
+   toolbar: height as sigil's default (35px), tools moved into the popup
+   ========================================================================== */
+.ah-toolbar { min-height: 35px; }
+.ah-toolbar .ah-toolbar-tool-el.ah-btn-toggled {
+  background-color: var(--ah-color-grey-200);
+}
+.ah-toolbar-tool-el:not(.ah-btn) { display: flex; align-items: center; }
+.ah-toolbar .ah-btn:disabled { opacity: var(--ah-state-disabled-opacity); cursor: default; }
+.ah-toolbar-icon { width: 16px; height: 16px; flex: none; }
+.ah-toolbar-tool-el.ah-btn { gap: 4px; }
+.ah-toolbar-minimize-btn:focus-visible,
+.ah-toolbar .ah-btn:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+.ah-toolbar-popup-tool:has(> .ah-btn) { padding: 1px 4px; }
+.ah-toolbar-popup .ah-btn {
+  width: 100%;
+  justify-content: flex-start;
+  border: none;
+  background-color: transparent;
+  color: var(--ah-color-text);
+}
+.ah-toolbar-popup .ah-btn:hover { background-color: var(--ah-color-bg-subtle); }
+.ah-toolbar-popup .ah-btn-toggled { background-color: var(--ah-color-grey-200); }
+
+/* ==========================================================================
+   splitter: keyboard focus, dragging, collapsed first pane
+   ========================================================================== */
+.ah-splitter-splitbar:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-primary);
+  outline-offset: 0;
+  background: var(--ah-color-grey-300);
+}
+.ah-splitter-dragging { user-select: none; }
+.ah-splitter-dragging > .ah-splitter-splitbar { background: var(--ah-color-grey-300); }
+.ah-splitter-collapsed > .ah-splitter-splitbar .ah-splitter-collapse-btn::after {
+  display: inline-block;
+  transform: rotate(180deg);
+}
+.ah-splitter-splitbar { touch-action: none; }
+.ah-splitter-horizontal > .ah-splitter-splitbar .ah-splitter-collapse-btn { height: 100%; }
+
+/* ==========================================================================
+   listmenu: selected value and keyboard focus
+   ========================================================================== */
+.ah-listmenu-item-selected {
+  color: var(--ah-color-primary);
+  font-weight: var(--ah-font-weight-semibold);
+  background: color-mix(in srgb, var(--ah-color-primary) 8%, transparent);
+}
+.ah-listmenu-item-focus {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+.ah-listmenu:not(:focus-within) .ah-listmenu-item-focus { outline: none; }
+.ah-listmenu-icon { width: 16px; height: 16px; flex: none; margin-right: 8px; }
+.ah-listmenu-filter-input { background: var(--ah-color-bg); color: var(--ah-color-text); }
+
+/* ==========================================================================
+   status bar: left and right groups of segments
+   ========================================================================== */
+.ah-status-bar__side {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.ah-status-bar__side--right { margin-left: auto; }
