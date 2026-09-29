@@ -1,0 +1,14 @@
+/* aihtml additions for form_layout (aihtml_form_layout); sigil styles live in
+   ../sigil/components. Its rows are field/4 rows (field.css). */
+
+.ah-form-columns {
+  align-items: flex-start;
+}
+
+.ah-form-col {
+  min-width: 0;
+}
+
+.ah-form-row[hidden] {
+  display: none;
+}
