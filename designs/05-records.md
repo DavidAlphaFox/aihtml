@@ -1,6 +1,6 @@
 # 05 元素 record
 
-组件的数据模型改为带统一前缀 `ah_` 的 record，`button/4` 这类函数只是构建 record 的简写。本文定下 record 的格式、渲染分发、构建函数的兼容方式和迁移步骤。按钮组（`aihtml_form_buttons`）是第一个样板，其余 9 组已按同一样板迁移完毕。
+组件的数据模型改为带统一前缀 `ah_` 的 record，`button/4` 这类函数只是构建 record 的简写。本文定下 record 的格式、渲染分发、构建函数的兼容方式和迁移步骤。迁移先以按钮组为样板，再推广到全部组件；之后每个组件拆成了自己的模块 `aihtml_<name>`（见 [04-components.md](04-components.md)）。
 
 ## 动机
 
@@ -37,7 +37,7 @@ button(<<"Save">>, save, [primary, <<"mt-2">>], [{disabled, true}])
 
 | 位置 | 字段 | 默认值 | 说明 |
 |---|---|---|---|
-| 2 | `module` | 所在组模块 | 负责渲染的模块，必须导出 `render/1` |
+| 2 | `module` | 组件模块，如 `aihtml_button` | 负责渲染的模块，必须导出 `render/1` |
 | 3 | `id` | `undefined` | 根元素的 `id` |
 | 4 | `css` | `[]` | 字面类名（binary），通常是 Tailwind 类；修饰符写在字段里，不写在这里 |
 | 5 | `attrs` | `[]` | 根元素的 HTML 属性，写法与原来的 Attrs 相同 |
@@ -58,7 +58,7 @@ button(<<"Save">>, save, [primary, <<"mt-2">>], [{disabled, true}])
   - 选项：目录 `options` 里的每个键。
   - 组件读取的 HTML 属性（`disabled`、`name`）也改为字段，布尔的默认 `false`。
 - **类型**：每个字段都写类型，修饰符字段写出所有取值。
-- **头文件**：每组一个，`include/aihtml_<group>.hrl`。`include/aihtml_records.hrl` 汇总各组，`aihtml.hrl` 引用它，因此页面模块 include `aihtml.hrl` 就能同时用构建函数和 record。组模块自己不 include `aihtml.hrl`（会与导入的函数冲突），只 include 本组的头文件。
+- **头文件**：每个组件一个，`include/aihtml_<name>.hrl`，里面只有 record；字段类型引用组件模块导出的类型（如 `aihtml_button:variant()`），头文件自己不定义类型，所以全部头文件放在一起也不会重名。`include/aihtml_records.hrl` 由 `scripts/gen-facade.escript` 生成，汇总全部头文件；`aihtml.hrl` 引用它，因此页面模块 include `aihtml.hrl` 就能同时用构建函数和 record。组件模块自己不 include `aihtml.hrl`（会与导入的函数冲突），只 include 自己的头文件。
 
 字段与目录一致由测试保证：每个组、标志、选项都要有同名字段，默认值与目录的默认一致。目录仍是文档页 API 表的来源。
 
@@ -66,15 +66,24 @@ button(<<"Save">>, save, [primary, <<"mt-2">>], [{disabled, true}])
 
 `aihtml_html:render/1` 遇到第 1 位是原子、第 2 位也是原子、至少 7 个元素的元组，就调用 `Module:render(R)`，再渲染它的返回值。返回值可以是 `#el{}`、iodata，也可以是另一个组件的 record，所以组件之间能直接组合。`{safe, IoData}` 的第 2 位不是原子，不会被误判。
 
-每个组模块实现 `aihtml_element` 行为，导出一个按 record 名分子句的 `render/1`：
+每个组件模块实现 `aihtml_element` 行为，导出 `render/1` 渲染自己的 record：
 
 ```erlang
-render(#ah_button{} = B) -> ...;
-render(#ah_toggle_button{} = B) -> ...;
+-module(aihtml_button).
+-behaviour(aihtml_element).
+-include("aihtml_button.hrl").
+
+button(Content, Value, Css, Attrs) ->
+    aihtml_element:build(?MODULE, #ah_button{body = Content, value = Value}, Css, Attrs).
+
+render(#ah_button{} = B) ->
+    aihtml_html:el(button, B#ah_button.body, aihtml_element:classes(?MODULE, B),
+                   [[{type, button}], aihtml_element:root_attrs(B, click)]).
 ```
 
-`aihtml_element` 提供渲染子句常用的辅助函数：
-- `classes(R, Fields, Entry)`：把修饰符字段和标志字段转成类名，并校验每个取值属于对应的组。
+`aihtml_element` 提供构建函数和渲染子句常用的辅助函数：
+- `build(?MODULE, R, Css, Attrs)`：把 Css 里的修饰符原子和 Attrs 里与字段同名的键填进 record（字段表取自模块的 `fields/1`，目录条目取自 `catalog/0`）。
+- `classes(?MODULE, R)`：把修饰符字段和标志字段转成类名，并校验每个取值属于对应的组。
 - `root_attrs(R, Event)`：`id`、postback 绑定和 `attrs` 字段，拼在组件自己的根属性后面。
 
 组件不再在构建时生成 HTML，因此**字段取值在渲染时校验**，例如 `icon_position = middle` 在 `render/1` 里报错。修饰符名在构建函数解析 Css 时就会报错，字段名在编译期报错。
@@ -87,7 +96,7 @@ render(#ah_toggle_button{} = B) -> ...;
 #ah_button{module = myapp_fancy_button, body = <<"Save">>}
 ```
 
-`myapp_fancy_button:render/1` 可以先处理自己的部分，再调用 `aihtml_form_buttons:render/1`。
+`myapp_fancy_button:render/1` 可以先处理自己的部分，再调用 `aihtml_button:render/1`。
 
 ### 自定义组件
 
@@ -108,7 +117,7 @@ render(#myapp_card{title = T, body = B} = R) ->
 签名保持不变：`button(Content, Value, Css, Attrs)` 仍然可用，只是返回 record。它通过 `aihtml_element:build/5` 把参数填进 record：
 
 - **Css**：原子按目录解析成组字段和标志字段，重复或冲突的修饰符照旧立即报错；binary 放进 `css` 字段。
-- **Attrs**：原子键与 record 字段同名的，取出来放进字段，包括 `id`、`disabled`、`name` 和各个选项；其余留在 `attrs` 字段里原样输出。`module`、`css`、`attrs`、`postback`、`delegate` 不会从 Attrs 里取，postback 只能在 record 里写，因为构建函数里的 `?MODULE` 是组模块而不是调用方。
+- **Attrs**：原子键与 record 字段同名的，取出来放进字段，包括 `id`、`disabled`、`name` 和各个选项；其余留在 `attrs` 字段里原样输出。`module`、`css`、`attrs`、`postback`、`delegate` 不会从 Attrs 里取，postback 只能在 record 里写，因为构建函数里的 `?MODULE` 是组件模块而不是调用方。
 
 **构建函数这条路仍然查不出选项拼写错误**：写错的键会被当成 HTML 属性。需要编译期检查的地方请直接写 record。
 
@@ -132,9 +141,10 @@ render(#myapp_card{title = T, body = B} = R) ->
 ## 迁移步骤
 
 1. **基础设施与按钮组（已完成）**：`aihtml_element`（行为、`build/5`、辅助函数）、`aihtml_html` 的渲染分发、`aihtml_catalog:parse_css/2`、按钮组的头文件与 `render/1`、字段与目录一致的测试。
-2. **其余 9 组（已完成）**：每组照按钮组的样板改，一组一个头文件，演示和测试的 HTML 输出不变。每组都在演示站加了一个"record 写法"示例。
-3. **普通标签**：`#ah_el{}`。
-4. **文档（已完成）**：演示站 API 页加上 record 写法和字段表（`aihtml_example_records` 从 debug_info 读字段，从头文件读注释），README 的调用约定加上 record 写法。
+2. **其余 9 组（已完成）**：每组照按钮组的样板改，演示和测试的 HTML 输出不变。每组都在演示站加了一个"record 写法"示例。
+3. **一个组件一个模块（已完成）**：原来的 26 个组模块拆成 110 个组件模块和若干 `aihtml_lib_*` 共享模块，头文件、JS、CSS、测试、演示都按组件一一对应；449 个演示的 HTML 与拆分前一致。
+4. **普通标签**：`#ah_el{}`。
+5. **文档（已完成）**：演示站 API 页加上 record 写法和字段表（`aihtml_example_records` 从 debug_info 读字段，从头文件读注释），README 的调用约定加上 record 写法。
 
 ## 样板：按钮组
 

@@ -35,12 +35,13 @@ login() ->
 | 路径 | 内容 |
 |---|---|
 | `apps/aihtml` | 类库本体，其它项目只依赖它 |
-| `apps/aihtml/include` | `aihtml.hrl`（导入全部构建函数和 record）、每组组件的 record 头文件、自定义组件用的 `aihtml_element.hrl` |
+| `apps/aihtml/src` | 核心模块（`aihtml`、`aihtml_html`、`aihtml_action`……），每个组件一个模块 `aihtml_<组件名>`，以及组件共用的 `aihtml_lib_*` |
+| `apps/aihtml/include` | `aihtml.hrl`（导入全部构建函数和 record）、每个组件一个 record 头文件 `aihtml_<组件名>.hrl`、自定义组件用的 `aihtml_element.hrl` |
 | `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
 | `apps/aihtml/priv/static` | 预构建产物：`aihtml.css`、`aihtml.js`，以及 `vendor/` 下的 jQuery 和按需加载的 echarts、xlsx、jspdf（见「第三方库」） |
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
 | `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
-| `apps/aihtml/assets/js` | 运行时 `core.js` 与各组件行为，由 `scripts/build-js.mjs` 拼成 `aihtml.js` |
+| `apps/aihtml/assets/js` | 运行时 `core.js` 与各组件行为（`components/<组件名>.js`，共用部分在 `_lib_*.js`），由 `scripts/build-js.mjs` 拼成 `aihtml.js` |
 | `apps/aihtml_example` | cowboy 示例站：`/` 首页，`/components/:name` 组件文档（演示、代码、API），`/demo` 实时演示，`/fetch` URL 片段模式。组件示例 `aihtml_example_demo_*` 也在这里，不在库里 |
 | `scripts/` | 构建与测试脚本：样式移植、JS 构建、模板编译器、门面生成、预览 |
 | `designs/` | 设计文档 |
@@ -68,7 +69,7 @@ login() ->
 - **代码**：该组件的全部示例函数。
 - **API**：签名、record 字段、修饰符、选项、事件、方法、CSS 类名。
 
-示例写在 `apps/aihtml_example/src/aihtml_example_demo_<group>.erl`，写法见 `designs/04-components.md`。
+示例写在 `apps/aihtml_example/src/aihtml_example_demo_<组件名>.erl`，写法见 `designs/04-components.md`。
 
 ### record 写法
 
@@ -100,7 +101,7 @@ record 写法适合选项多的组件，也便于在渲染前查看和修改元�
 | `attrs` | HTML 属性，写法与函数写法的 Attrs 相同，可以放 `on/3`、`fetch/3` 的结果 |
 | `postback` | `Action`、`{Action, Args}` 或 `{Action, Args, OnOpts}`，绑定在组件的主事件上 |
 | `delegate` | postback 调用的 action 模块，默认是写这个 record 的模块 |
-| `module` | 负责渲染的模块，默认是组件所在的组模块 |
+| `module` | 负责渲染的模块，默认是组件自己的模块，例如 `aihtml_button` |
 
 `postback` 是 `on/3` 的简写。下面两种写法等价：
 
@@ -134,9 +135,9 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 ## 组件
 
-从 sigil 移植了 110 个组件，分为 26 组，约定见 `designs/04-components.md`：
+从 sigil 移植了 110 个组件，每个组件一个模块 `aihtml_<组件名>`，文件组织和约定见 `designs/04-components.md`。按用途分类如下：
 
-| 组 | 组件 |
+| 类别 | 组件 |
 |---|---|
 | 按钮 | button, button_group, link_button, toggle_button, dropdown_button, split_button, segmented_control |
 | 选择 | checkbox, checkbox_group, radiobutton, radiobutton_group, radio_cards, switch_button, rating_group |
@@ -165,7 +166,7 @@ render(#myapp_card{title = T, body = B} = R) ->
 | 功能区与分栏 | ribbon, tile_layout（可拖分隔条、标签组的分栏布局） |
 
 - **取值组件**：自定义控件把当前值写在根元素的 `data-ah-value`，用隐藏 input 参与表单，值改变时在根元素上触发 `change`。所以 `on(change, {M, A, Args})` 写在组件的 Attrs 里就能收到事件，`Event.value` 就是这个值。
-- **服务端驱动**：action 里用 `aihtml_action:call(Ctx, Target, Method, Args)` 调用组件方法，例如打开抽屉、设置进度；也可以用 `aihtml_overlay:toast(Ctx, Msg, Opts)` 等封装。
+- **服务端驱动**：action 里用 `aihtml_action:call(Ctx, Target, Method, Args)` 调用组件方法，例如打开抽屉、设置进度；也可以用 `aihtml_toast:toast(Ctx, Msg, Opts)`、`aihtml_lib_overlay:open(Ctx, Target)` 等封装。
 - **辅助函数**：组件之外的函数也由 `aihtml` 门面导出，include `aihtml.hrl` 后可直接调用。前几个在 action 里用：需要服务端补数据的组件，由 action 调用它们回应，它们在服务端渲染 HTML，再形变替换进组件，浏览器不拼 HTML。后几个生成属性，拼进元素的 Attrs：
 
   | 函数 | 用途 |
@@ -208,7 +209,7 @@ render(#myapp_card{title = T, body = B} = R) ->
       datagrid_rows(Ctx, Event, Rows, Total).
   ```
 - **样式**：sigil 的样式由 `scripts/port-sigil.mjs` 导入到 `priv/css/sigil`，前缀由 `sigil-` 改为 `ah-`，并保留 MIT 声明。
-- **门面**：`aihtml` 的组件函数和 `aihtml.hrl` 的导入由 `scripts/gen-facade.escript` 从各组模块生成，包括组件函数和各组 `facade_extras/0` 列出的辅助函数。新增组件后，运行 `rebar3 compile && escript scripts/gen-facade.escript`。
+- **门面**：`aihtml` 的组件函数、`aihtml.hrl` 的导入和 `aihtml_records.hrl` 由 `scripts/gen-facade.escript` 从各组件模块生成，包括构建函数和各模块 `facade_extras/0` 列出的辅助函数。新增组件时，把模块加进 `aihtml_catalog` 的 `?COMPONENTS`，再运行 `rebar3 compile && escript scripts/gen-facade.escript`。
 
 ## 交互模型
 
@@ -567,7 +568,8 @@ Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字�
 | `aihtml_example_source` | 示例函数的源码提取和语法高亮 |
 | `aihtml_example_records` | 组件 record 的字段、类型、默认值和说明，供 API 标签使用 |
 | `aihtml_example_demos` | 示例注册表：按组件组找到 `aihtml_example_demo_<group>` 模块 |
-| `aihtml_example_demo_<group>` | 18 个示例模块，每组组件一个 |
+| `aihtml_example_demo_<组件名>` | 示例模块，每个组件一个 |
+| `aihtml_example_fixture_*` | 几个示例模块共用的演示数据和小函数 |
 | `aihtml_example_actions` | `/demo` 页面及其 action |
 | `aihtml_example_page`、`aihtml_example_api`、`aihtml_example_views` | `/fetch` 页面、片段接口和共用视图 |
 | `aihtml_example_store` | Mnesia 数据层 |
@@ -578,7 +580,7 @@ Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字�
 
 ### 添加组件示例
 
-在对应的 `aihtml_example_demo_<group>.erl` 里做三件事：
+在组件对应的 `aihtml_example_demo_<组件名>.erl` 里做三件事：
 1. 写一个导出的无参函数，返回 `aihtml:html()`，写法和应用代码一样。
 2. 在 `demos/0` 里登记这个函数，并给出中文小标题。
 3. 组件第一次出现时，还要给出站点上的显示名 `title` 和一句中文简介 `summary`，简介用在首页卡片上。
@@ -604,7 +606,7 @@ action(search, _Args, #{value := Query} = Event, Ctx) ->
     set_items(Ctx, Event, [C || C <- cities(), string:find(C, Query) =/= nomatch]).
 ```
 
-新增一组组件时，`aihtml_example_demos` 会按命名自动找到新的示例模块，不需要登记。
+新增组件时，`aihtml_example_demos` 会按命名（`aihtml_<name>` 对应 `aihtml_example_demo_<name>`）自动找到它的示例模块，不需要登记。
 
 ### 测试与样式
 

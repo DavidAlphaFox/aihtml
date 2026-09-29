@@ -1,6 +1,6 @@
 # 04 组件移植约定
 
-把 sigil（`~/workspace/sigil`，ClojureScript + jQuery）的核心组件移植为 aihtml 的 Erlang 预制件。本文是所有组件组共同遵守的约定。
+把 sigil（`~/workspace/sigil`，ClojureScript + jQuery）的核心组件移植为 aihtml 的 Erlang 预制件。本文是所有组件共同遵守的约定。
 
 ## 范围
 
@@ -8,39 +8,27 @@
 - 通用、常用。
 - 不依赖大型 npm 包，适合"服务端渲染 + jQuery 增强"。
 
-共 110 个，分为 26 组，分三批移植。每组一个 Erlang 模块、一个 JS 文件、一个补充 CSS 文件和一个测试模块：
+共 110 个，分三批移植。**每个组件一个 Erlang 模块** `aihtml_<name>`（`<name>` 就是组件名，也就是构建函数名），此外 `aihtml_theme` 提供主题切换器。按类别：
 
-| 组 | 模块 | 组件（函数名） |
-|---|---|---|
-| form_buttons | `aihtml_form_buttons` | button, button_group, link_button, toggle_button, dropdown_button, split_button, segmented_control |
-| form_choice | `aihtml_form_choice` | checkbox, checkbox_group, radiobutton, radiobutton_group, radio_cards, switch_button, rating_group |
-| form_text | `aihtml_form_text` | input, textarea, password_input, number_input, input_otp, tag_input |
-| form_select | `aihtml_form_select` | dropdownlist, select（原生）, slider, form_layout（sigil 的 form）, field, validator 相关 |
-| form_pickers | `aihtml_form_pickers` | datepicker, combobox |
-| form_time_color | `aihtml_form_time_color` | timepicker, colorpicker |
-| layout_basic | `aihtml_layout_basic` | card, panel, expander, tabs, tab_bar, breadcrumbs, pagination, steps, skeleton, loader, empty |
-| layout_nav | `aihtml_layout_nav` | menu, navbar, sidenav, toolbar, splitter, listmenu, status_bar |
-| overlay | `aihtml_overlay` | tooltip, popover, drawer, sheet, toast, notification, window |
-| display | `aihtml_display` | avatar, badge, chip, aspect_ratio, kbd, time_ago, expandable_text, progressbar, progress_circle, meter, statistic, kpi_card, timeline, ranking_list, tag_cloud, alert |
-| form_calendar | `aihtml_form_calendar` | calendar（事件日历）, datetime_input |
-| form_lists | `aihtml_form_lists` | cascader, listbox, transfer |
-| form_entry | `aihtml_form_entry` | masked_input, formatted_input, range_selector, repeat_button |
-| form_upload | `aihtml_form_upload` | upload |
-| data_tree | `aihtml_data_tree` | tree, nav_tree, diff, heatmap_calendar |
-| layout_scroll | `aihtml_layout_scroll` | scrollview, scrollbar, responsive_panel |
-| layout_bars | `aihtml_layout_bars` | activity_bar, navigationbar, command |
-| layout_dnd | `aihtml_layout_dnd` | sortable, dragdrop |
+| 类别 | 组件 |
+|---|---|
+| 按钮 | button, link_button, toggle_button, button_group, segmented_control, dropdown_button, split_button, repeat_button |
+| 选择 | checkbox, radiobutton, switch_button, checkbox_group, radiobutton_group, radio_cards, rating_group |
+| 文本与录入 | input, textarea, password_input, number_input, input_otp, tag_input, masked_input, formatted_input |
+| 选择与表单 | dropdownlist, select（原生）, slider, range_selector, field, form_layout（sigil 的 form，校验用 `validate/1`） |
+| 选择器与日期 | datepicker, combobox, timepicker, colorpicker, calendar（事件日历）, datetime_input |
+| 列表与上传 | cascader, listbox, transfer, upload |
+| 基础布局 | card, panel, expander, tabs, tab_bar, breadcrumbs, pagination, steps, skeleton, loader, empty |
+| 导航与工具栏 | menu, navbar, sidenav, toolbar, splitter, listmenu, status_bar, activity_bar, navigationbar, nav_tree |
+| 滚动与工作区 | scrollview, scrollbar, responsive_panel, sortable, dragdrop, docking, dock_layout, ribbon, tile_layout |
+| 浮层 | tooltip, popover, drawer, sheet, toast, notification, window, command |
+| 展示 | avatar, badge, chip, aspect_ratio, kbd, time_ago, expandable_text, alert, progressbar, progress_circle, meter, statistic, kpi_card, timeline, ranking_list, tag_cloud |
+| 数据 | tree, diff, heatmap_calendar, datagrid, pivotgrid, treegrid, datatable, gantt, scheduler, swimlane, node_graph |
+| 图表 | chart, area_chart, bar_chart, donut_chart, radar_chart, relation_graph |
 
-| data_grid | `aihtml_data_grid` | datagrid |
-| data_pivot | `aihtml_data_pivot` | pivotgrid |
-| data_tables | `aihtml_data_tables` | treegrid, datatable |
-| data_schedule | `aihtml_data_schedule` | gantt, scheduler, swimlane |
-| data_charts | `aihtml_data_charts` | chart, area_chart, bar_chart, donut_chart, radar_chart, relation_graph |
-| data_graph | `aihtml_data_graph` | node_graph |
-| layout_dock | `aihtml_layout_dock` | docking, dock_layout |
-| layout_tiles | `aihtml_layout_tiles` | ribbon, tile_layout |
+组件的目录顺序（演示站导航、首页卡片的顺序）由 `aihtml_catalog` 的 `?COMPONENTS` 决定。
 
-第二批和第三批从一开始就按 [05-records.md](05-records.md) 的 record 方式实现。第三批的重型组件另有两条约定：
+所有组件都按 [05-records.md](05-records.md) 的 record 方式实现。重型组件另有两条约定：
 - **数据留在服务端**：大数据量组件支持本地和远程两种模式，远程模式下每次视图变化发一个 action，由服务端渲染新的一页（见 README「组件」一节）。
 - **第三方库按需加载**：echarts、xlsx、jspdf 放在 `priv/static/vendor`，组件用 `AH.vendor(name)` 在需要时加载，不打包进 `aihtml.js`。
 
@@ -51,22 +39,30 @@
 
 ## 文件与所有权
 
-每组只写自己的文件，不改共享文件：
+一个组件的全部文件都以它的名字命名，一一对应。以 button 为例：
 
 ```
-apps/aihtml/src/aihtml_<group>.erl          组件函数 + catalog/0 + examples/0
-apps/aihtml/assets/js/components/<group>.js 行为
-apps/aihtml/priv/css/extra/<group>.css      aihtml 需要的补充样式
-apps/aihtml/test/aihtml_<group>_tests.erl   EUnit
+apps/aihtml/src/aihtml_button.erl                     构建函数、render/1、fields/1、catalog/0（一条）、facade_extras/0（有辅助函数时）
+apps/aihtml/include/aihtml_button.hrl                 record #ah_button{}（只有 record，字段类型引用模块导出的类型）
+apps/aihtml/assets/js/components/button.js            行为（有时）
+apps/aihtml/priv/css/extra/button.css                 aihtml 的补充样式（有时）
+apps/aihtml/templates/button_*.mustache               共享模板（有时）
+apps/aihtml/test/aihtml_button_tests.erl              EUnit
+apps/aihtml/test/js/button.test.js                    浏览器测试（有时）
+apps/aihtml_example/src/aihtml_example_demo_button.erl  演示
 ```
 
-- **sigil 样式已统一移植**到 `apps/aihtml/priv/css/sigil/components/*.css`，由 `scripts/port-sigil.mjs` 导入，`sigil-` 已改为 `ah-`。组件应输出与 sigil 相同的 DOM 结构和类名，这样这些样式能直接生效。必要时可以修改本组组件对应的 sigil css 文件，但要在报告里写明。
-- **共享文件由集成者修改**：`aihtml.erl`（门面）、`aihtml.hrl`、`aihtml_catalog.erl`、`aihtml_html.erl`、`core.js`、`aihtml.css`、`components.css`。有需要请写进报告。
-- **不要 include `aihtml.hrl`。** 集成后它会导入所有组件函数，与组内同名定义冲突。标签请用 `aihtml_html:el/4` 和 `aihtml_html:void/3`。
+- **共享代码**：几个组件共用的代码放在内部模块 `aihtml_lib_<主题>.erl`，JS 放在 `components/_lib_<主题>.js`（挂在 `AH.lib.<主题>` 上；文件名以下划线开头，构建时排在组件文件之前），CSS 放在 `extra/lib_<主题>.css`。例如 `aihtml_lib_rrule`（calendar 与 scheduler 共用的重复规则展开）、`aihtml_lib_table`（treegrid 与 datatable 共用的列模型）、`_lib_chart.js`（六种图表共用的 echarts 加载、主题和缩放）。几行的小函数直接复制，不必抽出。组件之间也可以直接复用：例如 repeat_button 的 `render/1` 返回一个 `#ah_button{}`，由 `aihtml_button` 渲染成按钮。
+- **多个组件共用的模板**在它们的 lib 模块里声明；只有一个组件用的模板跟着组件走。
+- **演示共用的数据**放在 `apps/aihtml_example/src/aihtml_example_fixture_<主题>.erl`。
+- **生成的文件不要手改**：`aihtml.erl` 的组件部分、`aihtml.hrl` 的导入、`aihtml_records.hrl` 由 `scripts/gen-facade.escript` 生成；`priv/css/extra/index.css` 由 `scripts/gen-css-index.mjs` 生成。
+- **sigil 样式已统一移植**到 `apps/aihtml/priv/css/sigil/components/*.css`，由 `scripts/port-sigil.mjs` 导入，`sigil-` 已改为 `ah-`。组件应输出与 sigil 相同的 DOM 结构和类名，这样这些样式能直接生效；修正写在组件自己的 `extra/<name>.css` 里。
+- **共享文件由集成者修改**：`aihtml_catalog.erl`（新组件要加进 `?COMPONENTS`）、`aihtml_html.erl`、`aihtml_element.erl`、`core.js`、`aihtml.css`、`components.css`。
+- **组件模块不要 include `aihtml.hrl`**：它会导入所有组件函数，与模块里的同名定义冲突。标签请用 `aihtml_html:el/4` 和 `aihtml_html:void/3`；record 只 include 自己的头文件。
 
 ## Erlang 约定
 
-**record**：每组按 [05-records.md](05-records.md) 在 `include/aihtml_<group>.hrl` 里定义 `ah_` 前缀的 record（头文件里的类型名要带本组前缀，如 `ah_nav_item()`），组件函数只负责构建 record，HTML 由 `render/1` 生成。
+**record**：按 [05-records.md](05-records.md) 在 `include/aihtml_<name>.hrl` 里定义 `#ah_<name>{}`。头文件不定义类型，字段类型引用组件模块（或 lib 模块）导出的类型，例如 `aihtml_button:variant()`。构建函数写 `aihtml_element:build(?MODULE, #ah_<name>{...}, Css, Attrs)`，`render/1` 里用 `aihtml_element:classes(?MODULE, R)` 取类名。
 
 **签名**：最后两个参数固定为 `Css, Attrs`。
 
@@ -85,16 +81,15 @@ apps/aihtml/test/aihtml_<group>_tests.erl   EUnit
 - 默认是写到根元素或原生控件上的 HTML 属性。
 - sigil 的非 HTML 属性（标题、图标、最大值……）作为组件选项，键名列在 entry 的 `options` 里，用 `aihtml_catalog:split_options(Entry, Attrs)` 取出。
 
-**Catalog**：`catalog() -> [entry()]`，格式见 `aihtml_catalog` 的类型说明。
+**Catalog**：`catalog() -> [entry()]`，只有本组件的一条，格式见 `aihtml_catalog` 的类型说明。
 - `name` 就是函数名。
 - `category` 取 form | layout | overlay | data | media | text。
 - `behavior` 是 `data-ah` 的值，没有行为时写 `none`。
 - `events` 是组件触发的 DOM 事件。
-- 组内调用写 `aihtml_catalog:classes(aihtml_catalog:entry(?MODULE, Name), Css)`，不要依赖全局查找。
 
-**示例**：放在 `apps/aihtml_example/src/aihtml_example_demo_<group>.erl`，不放在库里。这些是演示站的内容，由 `/components/<name>` 展示，参照 `aihtml_example_demo_form_buttons.erl`：
+**示例**：放在 `apps/aihtml_example/src/aihtml_example_demo_<name>.erl`，不放在库里。这些是演示站的内容，由 `/components/<name>` 展示，参照 `aihtml_example_demo_button.erl`：
 - **包含头文件**：模块 `-include_lib("aihtml/include/aihtml.hrl")`，写法和应用代码一样。示例模块可以 include，因为它不定义组件函数。
-- **`demos/0` 的格式**：返回 `[#{component, title, summary, demos}]`。
+- **`demos/0` 的格式**：返回 `[#{component, title, summary, demos}]`，只有本组件的一条。
   - `title`：站点上显示的名字，例如 `<<"RadioButton">>`。
   - `summary`：一句中文简介，用在首页卡片上。
   - `demos`：`[{中文小标题, 函数名}]`。
@@ -140,30 +135,37 @@ apps/aihtml/test/aihtml_<group>_tests.erl   EUnit
 
 ## 验证
 
-不要运行 rebar3，多个组并行时会争用 `_build` 锁。请用下面的命令：
+单独验证一个组件（多个人并行时不要运行 rebar3，它们会争用 `_build` 锁）：
 
 ```sh
 cd /home/david/workspace/aihtml
-OUT=/tmp/claude-1000/-home-david-workspace-aihtml/76c5fd47-5eb3-4cff-98d3-521ddcab594c/scratchpad/<group>
-mkdir -p $OUT/ebin
+N=button; OUT=/tmp/aihtml-$N; mkdir -p $OUT/ebin
 FLAGS="+debug_info +warnings_as_errors +warn_missing_spec +warn_export_vars +warn_shadow_vars +warn_obsolete_guard"
 PA="-pa _build/default/lib/aihtml/ebin -pa _build/default/lib/beamai_render/ebin"
 
-erlc -o $OUT/ebin $PA $FLAGS apps/aihtml/src/aihtml_<group>.erl
-erlc -o $OUT/ebin -pa $OUT/ebin $PA +debug_info apps/aihtml/test/aihtml_<group>_tests.erl
+erlc -o $OUT/ebin -pa $OUT/ebin $PA -I apps/aihtml/include $FLAGS apps/aihtml/src/aihtml_$N.erl
+# 私有的门面和 aihtml.hrl，能看到刚编译的模块；源码里的门面在集成时再生成
+escript scripts/gen-facade.escript --out $OUT/facade $OUT/ebin
+erlc -o $OUT/ebin $PA -I $OUT/facade/aihtml/include $OUT/facade/aihtml.erl
+erlc -o $OUT/ebin -pa $OUT/ebin $PA -I apps/aihtml/include +debug_info apps/aihtml/test/aihtml_${N}_tests.erl
+erlc -o $OUT/ebin -pa $OUT/ebin $PA -I $OUT/facade $FLAGS apps/aihtml_example/src/aihtml_example_demo_$N.erl
 # 注意：多个 -pa 时，后出现的排在代码路径最前面，所以 _build 要用 -pz 放到最后，
 # 否则会加载 _build 里旧的 beam，测到的不是刚编译的模块。
 erl -noshell -pa $OUT/ebin -pz _build/default/lib/*/ebin \
-    -eval 'case eunit:test(aihtml_<group>_tests) of ok -> halt(0); _ -> halt(1) end.'
+    -eval 'case eunit:test(aihtml_'$N'_tests) of ok -> halt(0); _ -> halt(1) end.'
 
-node --check apps/aihtml/assets/js/components/<group>.js
+node --check apps/aihtml/assets/js/components/$N.js
+node scripts/test-js.mjs "$N:"          # 过滤条件匹配测试名
 
-# 预览：渲染 examples/0，构建 CSS/JS，截图并收集控制台错误
-escript scripts/preview-group.escript aihtml_example_demo_<group> $OUT/page $OUT/ebin
+# 预览：渲染演示，构建 CSS/JS，截图并收集控制台错误
+node scripts/gen-css-index.mjs
+escript scripts/preview-group.escript aihtml_example_demo_$N $OUT/page $OUT/ebin
 node scripts/preview.mjs $OUT/page/index.html $OUT/shot.png --width=1200
 node scripts/preview.mjs $OUT/page/index.html $OUT/dark.png --theme=dark
 node scripts/preview.mjs $OUT/page/index.html $OUT/x.png --script=$OUT/interact.js  # 交互测试
 ```
+
+接入之后，完整检查用 `rebar3 compile && escript scripts/gen-facade.escript && rebar3 eunit && rebar3 dialyzer && npm run build && npm test`。
 
 `preview.mjs` 每次启动独立的无头 Chromium，并行运行不会互相干扰。截图用 Read 工具查看，并与 sigil 的外观对照。
 
@@ -190,7 +192,7 @@ node scripts/preview.mjs $OUT/page/index.html $OUT/x.png --script=$OUT/interact.
 验证方法：
 - **两端一致**：`aihtml_tpl_tests` 可以和其它 EUnit 一样用 erlc 编译运行。
 - **模板编译器**：`node scripts/mustache.test.mjs` 运行 Mustache 规范用例。
-- **浏览器测试**：`node scripts/test-js.mjs` 运行 `apps/aihtml/test/js/*.test.js`，可以添加本组的测试文件。
+- **浏览器测试**：`node scripts/test-js.mjs` 运行 `apps/aihtml/test/js/*.test.js`，每个组件一个测试文件。
 - **参考实现**：`tag_input` 的标签（`templates/tag_input_chip.mustache`）。
 
 ## 弹层定位
