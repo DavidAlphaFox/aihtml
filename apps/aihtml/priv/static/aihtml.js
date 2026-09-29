@@ -316,10 +316,20 @@
       $target.each(function () { morph(this, html, mode === "morph"); });
       return $();                  // morph mounts what it adds itself
     }
+    if (mode === "none") {
+      return $();
+    }
     var $new = $($.parseHTML(html, document, false));
+    var pantry = stashPreserved($new);
+    var settle = prepareSettle($new);
+    insert($target, $new, mode);
+    restorePreserved(pantry);
+    finishSettle($target, $new.filter(function () { return this.nodeType === 1; }), settle);
+    return $new;
+  }
+
+  function insert($target, $new, mode) {
     switch (mode) {
-      case "none":
-        return $();
       case "outer":
         destroy($target);
         if ($new.length) {
@@ -339,6 +349,110 @@
         $target.empty().append($new);
         return $new;
     }
+  }
+
+  // ---- preserve -----------------------------------------------------
+  //
+  // An element with data-ah-preserve and an id is never replaced: when new
+  // content brings an element with the same id, the existing one (a
+  // playing video, an editor with unsaved text, a mounted component) is
+  // moved into its place and the new copy is dropped. Moves use
+  // moveBefore where the browser has it, which keeps iframes and media
+  // running.
+
+  function moveTo(parent, node, before) {
+    if (parent.moveBefore && node.isConnected && parent.isConnected) {
+      parent.moveBefore(node, before || null);
+    } else {
+      parent.insertBefore(node, before || null);
+    }
+  }
+
+  function stashPreserved($new) {
+    var found = [];
+    $new.find("[data-ah-preserve][id]").addBack("[data-ah-preserve][id]").each(function () {
+      var old = document.getElementById(this.id);
+      if (old && old !== this && old.hasAttribute("data-ah-preserve")) {
+        found.push({ placeholder: this, el: old });
+      }
+    });
+    if (!found.length) {
+      return found;
+    }
+    var pantry = document.getElementById("ah-preserve-pantry");
+    if (!pantry) {
+      pantry = document.createElement("div");
+      pantry.id = "ah-preserve-pantry";
+      pantry.hidden = true;
+      document.body.appendChild(pantry);
+    }
+    found.forEach(function (f) { moveTo(pantry, f.el); });
+    return found;
+  }
+
+  function restorePreserved(found) {
+    found.forEach(function (f) {
+      var ph = f.placeholder;
+      if (ph.parentNode) {
+        moveTo(ph.parentNode, f.el, ph);
+        ph.parentNode.removeChild(ph);
+      }
+    });
+  }
+
+  // ---- settle -------------------------------------------------------
+  //
+  // After a swap the new top-level elements carry the class ah-added and
+  // the swap target ah-settling, both removed SETTLE_MS later, so CSS can
+  // animate what just arrived (.ah-added { opacity: 0 } plus a transition).
+  // An element whose id already existed first takes the old element's
+  // class, style, width and height, and gets its new ones after the delay:
+  // a class or style change between the two renders becomes a CSS
+  // transition. Component roots (data-ah) are left out; their behaviours
+  // read the real attributes on init.
+
+  var SETTLE_MS = 20;
+  var SETTLE_ATTRS = ["class", "style", "width", "height"];
+
+  function prepareSettle($new) {
+    var list = [];
+    $new.find("[id]").addBack("[id]").each(function () {
+      var old = document.getElementById(this.id);
+      if (!old || old === this || this.hasAttribute("data-ah") ||
+          this.hasAttribute("data-ah-preserve")) {
+        return;
+      }
+      var el = this, saved = {};
+      SETTLE_ATTRS.forEach(function (a) {
+        saved[a] = el.getAttribute(a);
+        var v = old.getAttribute(a);
+        if (v === null) { el.removeAttribute(a); } else { el.setAttribute(a, v); }
+      });
+      list.push({ el: el, saved: saved });
+    });
+    return list;
+  }
+
+  function finishSettle($target, $added, list) {
+    $added.addClass("ah-added");
+    $target.addClass("ah-settling");
+    setTimeout(function () {
+      list.forEach(function (x) {
+        SETTLE_ATTRS.forEach(function (a) {
+          if (x.saved[a] === null) { x.el.removeAttribute(a); } else { x.el.setAttribute(a, x.saved[a]); }
+        });
+      });
+      dropClass($added, "ah-added");
+      dropClass($target, "ah-settling");
+    }, SETTLE_MS);
+  }
+
+  // Remove a transient class without leaving class="" behind.
+  function dropClass($els, cls) {
+    $els.each(function () {
+      this.classList.remove(cls);
+      if (this.getAttribute("class") === "") { this.removeAttribute("class"); }
+    });
   }
 
   function captureFocus() {
@@ -403,11 +517,11 @@
         mount(el);
       }
     });
-    ctx.added.forEach(function (el) {
-      if (el.nodeType === 1 && document.contains(el)) {
-        mount(el);
-      }
+    var added = ctx.added.filter(function (el) {
+      return el.nodeType === 1 && document.contains(el);
     });
+    added.forEach(function (el) { mount(el); });
+    finishSettle($(target), $(added), []);
   }
 
   function elementChildren(node) {
@@ -424,6 +538,9 @@
 
   // Returns true when anything under `old` changed.
   function morphNode(old, neu, ctx) {
+    if (old.nodeType === 1 && old.id && old.hasAttribute("data-ah-preserve")) {
+      return false;                 // preserved: never patched
+    }
     if (!sameKind(old, neu)) {
       var fresh = document.importNode(neu, true);
       destroy(old);
@@ -533,6 +650,54 @@
     return syncValue(old, neu.getAttribute("value") || "");
   }
 
+  // ---- request state ------------------------------------------------
+  //
+  // While a request runs: aria-busy on the element, the class ah-request
+  // on it and on its indicators (data-ah-indicator), and the elements named
+  // by data-ah-disable are disabled. Selectors may be "this" or
+  // "closest <selector>". Overlapping requests are counted, so the first
+  // one to finish does not clear the others' state.
+
+  function resolve(el, sel) {
+    if (!sel) { return $(); }
+    if (sel === "this") { return $(el); }
+    var m = /^closest\s+(.+)$/.exec(sel);
+    return m ? $(el).closest(m[1]) : $(sel);
+  }
+
+  function bump($els, cls, by) {
+    $els.each(function () {
+      var n = ($.data(this, "ah-count-" + cls) || 0) + by;
+      $.data(this, "ah-count-" + cls, n);
+      if (cls === "disabled") {
+        if (n > 0 && by > 0 && n === 1) {
+          $.data(this, "ah-was-disabled", this.disabled);
+          this.disabled = true;
+        } else if (n === 0) {
+          this.disabled = !!$.data(this, "ah-was-disabled");
+        }
+      } else {
+        $(this).toggleClass(cls, n > 0);
+      }
+    });
+  }
+
+  function requestStart(el) {
+    var $ind = $(el).add(resolve(el, el.getAttribute("data-ah-indicator")));
+    var $dis = resolve(el, el.getAttribute("data-ah-disable"));
+    el.setAttribute("aria-busy", "true");
+    bump($ind, "ah-request", 1);
+    bump($dis, "disabled", 1);
+    var ended = false;
+    return function () {
+      if (ended) { return; }
+      ended = true;
+      bump($ind, "ah-request", -1);
+      bump($dis, "disabled", -1);
+      if (!$(el).hasClass("ah-request")) { el.removeAttribute("aria-busy"); }
+    };
+  }
+
   function fetchFor(el) {
     var $el = $(el);
     var method = ($el.attr("data-ah-fetch") || "get").toUpperCase();
@@ -550,7 +715,7 @@
       return $.Deferred().reject().promise();
     }
 
-    $el.attr("aria-busy", "true");
+    var end = requestStart(el);
     return $.ajax({
       url: url,
       method: method,
@@ -570,9 +735,7 @@
       .fail(function (xhr) {
         $el.trigger("ah:error", [{ url: url, status: xhr.status, body: xhr.responseText }]);
       })
-      .always(function () {
-        $el.removeAttr("aria-busy");
-      });
+      .always(end);
   }
 
   // One delegated listener per event type covers content added later.
@@ -701,6 +864,25 @@
     focus: function (op, $t) { $t.trigger("focus"); },
     title: function (op) { document.title = op.value; },
     redirect: function (op) { window.location.href = op.value; },
+    // Fire a DOM event (jQuery trigger, bubbles) on the target, or on the
+    // document without one; elements may bind actions to it with on/2.
+    trigger: function (op, $t) {
+      var $on = (op.id === undefined && op.sel === undefined) ? $(document) : $t;
+      $on.trigger(op.event, [op.detail === undefined ? null : op.detail]);
+    },
+    // Browser history: push or replace the URL without a request. Going
+    // back or forward to an entry made here reloads that URL, so the
+    // server renders it; the pages stay stateless.
+    url: function (op) {
+      if (!history.state || !history.state.ah) {
+        history.replaceState({ ah: true }, "", location.href);
+      }
+      if (op.mode === "replace") {
+        history.replaceState({ ah: true }, "", op.value);
+      } else {
+        history.pushState({ ah: true }, "", op.value);
+      }
+    },
     call: function (op, $t) {
       var args = op.args || [];
       if (op.id === undefined && op.sel === undefined) {
@@ -767,20 +949,55 @@
     return pump();
   }
 
+  // ---- request coordination ---------------------------------------
+  //
+  // Requests are coordinated per key: the element and event, or, with
+  // data-ah-sync-scope="<selector>", the closest matching ancestor, so
+  // several elements (the fields of one form) share one queue. When a
+  // request for the key is already running, data-ah-sync decides:
+  //   drop     ignore the new one (default for click, submit, ...)
+  //   replace  abort the running one, send the new one (default for
+  //            input, change, keyup, keydown)
+  //   queue    send the new one when the running one ends; a later one
+  //            replaces a waiting one (only the latest waits)
+
+  var syncs = {};
+
   function runAction(el, spec, e) {
-    var url = document.body.getAttribute("data-ah-action") || "/aihtml/action";
     var payload = eventPayload(el, e);          // also gives el an id
-    var key = el.id + "/" + spec.event;
-    if (LATEST_WINS[spec.event] && inflight[key]) {
-      inflight[key].abort();
+    var scopeSel = el.getAttribute("data-ah-sync-scope");
+    var scope = scopeSel ? ($(el).closest(scopeSel)[0] || el) : el;
+    if (!scope.id) {
+      scope.id = "ah-e" + (++seq);
     }
+    var key = scopeSel ? "scope/" + scope.id : el.id + "/" + spec.event;
+    var strategy = el.getAttribute("data-ah-sync") ||
+      (LATEST_WINS[spec.event] ? "replace" : "drop");
+    var running = syncs[key];
+    if (running) {
+      if (strategy === "drop") {
+        return;
+      }
+      if (strategy === "queue") {
+        running.queued = function () { send(el, spec, payload, key); };
+        return;
+      }
+      running.ctrl.abort();
+    }
+    send(el, spec, payload, key);
+  }
+
+  function send(el, spec, payload, key) {
+    var url = document.body.getAttribute("data-ah-action") || "/aihtml/action";
     var ctrl = new AbortController();
-    inflight[key] = ctrl;
-    el.setAttribute("aria-busy", "true");
+    var st = { ctrl: ctrl, queued: null };
+    syncs[key] = st;
+    var end = requestStart(el);
     var done = function () {
-      if (inflight[key] === ctrl) {
-        delete inflight[key];
-        el.removeAttribute("aria-busy");
+      end();
+      if (syncs[key] === st) {
+        delete syncs[key];
+        if (st.queued) { st.queued(); }
       }
     };
     return window.fetch(url, {
@@ -827,9 +1044,6 @@
         }
         if (type === "submit" || (type === "click" && (el.tagName === "A" || el.type === "submit"))) {
           e.preventDefault();
-        }
-        if (!LATEST_WINS[type] && el.getAttribute("aria-busy") === "true") {
-          return;             // ignore double clicks while a run is going
         }
         var question = el.getAttribute("data-ah-confirm");
         if (question && !window.confirm(question)) {
@@ -921,6 +1135,12 @@
     });
   }
 
+  window.addEventListener("popstate", function (e) {
+    if (e.state && e.state.ah) {
+      window.location.reload();
+    }
+  });
+
   $(function () {
     mount(document);
     syncStream();
@@ -938,6 +1158,7 @@
     apply: applyOps,
     swap: swap,
     morph: function (target, html) { morph($(target)[0], html, true); },
+    settleDelay: SETTLE_MS,
     NS: NS,
     version: "0.3.0"
   };
