@@ -1,0 +1,7 @@
+/* aihtml additions for radio_cards (designs/04-components.md). The native
+   input is hidden visually (lib_choice.css); the card shows its focus. */
+
+.ah-radio-cards__card:has(> .ah-choice-input:focus-visible) {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: 2px;
+}
