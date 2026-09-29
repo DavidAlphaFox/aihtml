@@ -33,6 +33,7 @@
                        today = undefined :: aihtml_lib_date:date(),
                        toolbar = true :: boolean(),
                        source = undefined :: undefined | aihtml_action:ref(),
+                       href = undefined :: undefined | unicode:chardata(),
                        labels = #{} :: aihtml_scheduler:labels(),
                        name = undefined :: undefined | atom() | iodata()}).
 

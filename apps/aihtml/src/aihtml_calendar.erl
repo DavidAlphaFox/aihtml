@@ -20,6 +20,16 @@
 %%% exclusive), so a postback receives them in `Event.data' and may answer
 %%% with `set_events(Ctx, Event, Events)' to load the range lazily.
 %%%
+%%% With `{href, <<"/events?date={date}&view={view}">>}' the toolbar's
+%%% prev, next, today and view buttons are links (`<a href>') to the date
+%%% and view they lead to, so every state has a URL the server can render
+%%% by itself (crawlers and pages opened without script follow them; the
+%%% page reads `date' and `view' from its query). A plain click is still
+%%% handled in the browser, which also pushes the link's URL, so back,
+%%% forward and bookmarks work (going back reloads that URL); modified
+%%% clicks (new tab) follow the link. The links are kept pointing at the
+%%% neighbours of the shown date.
+%%%
 %%% Interactions fire component events on the root, after writing their
 %%% details to data attributes (so that `Event.data' carries them):
 %%%
@@ -92,8 +102,9 @@
 %% (days of the list view, default 30), `day_max_events' (event rows per
 %% month cell, default 3), `slot_duration' (minutes, default 30),
 %% `slot_height' (px, default 20), `height' (px, default 600; `undefined'
-%% lets the content decide), `hour_format' (12 or 24), `labels' (see
-%% `labels()').
+%% lets the content decide), `hour_format' (12 or 24), `href' (a URL
+%% template with {date} and {view}: the toolbar becomes links, see the
+%% module doc), `labels' (see `labels()').
 -spec calendar(aihtml_lib_date:date(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_calendar{}.
 calendar(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_calendar{value = Value}, Css, Attrs).
@@ -135,28 +146,24 @@ render(#ah_calendar{view = View, views = Views, first_day = First,
              labels => L},
     {RS, RE, Title} = profile(View, Cur, Opts),
     Value = ?D:iso_date(Cur),
+    Href = R#ah_calendar.href,
+    Nav = #{href => Href, cur => Cur, today => maps:get(today, Opts), view => View,
+            agenda => R#ah_calendar.agenda_days},
     Toolbar =
         ?H:el('div',
               [?H:el('div',
-                     [?H:el(button, <<"‹"/utf8>>,
-                            [<<"ah-calendar-btn ah-calendar-btn-prev">>],
-                            [{type, button}, {aria_label, lbl(prev, L)}]),
-                      ?H:el(button, <<"›"/utf8>>,
-                            [<<"ah-calendar-btn ah-calendar-btn-next">>],
-                            [{type, button}, {aria_label, lbl(next, L)}]),
-                      ?H:el(button, lbl(today, L), [<<"ah-calendar-btn ah-calendar-btn-today">>],
-                            [{type, button}])],
+                     [nav_btn(<<"‹"/utf8>>, <<"ah-calendar-btn ah-calendar-btn-prev">>,
+                              [{aria_label, lbl(prev, L)}], nav_url(Nav, prev, View)),
+                      nav_btn(<<"›"/utf8>>, <<"ah-calendar-btn ah-calendar-btn-next">>,
+                              [{aria_label, lbl(next, L)}], nav_url(Nav, next, View)),
+                      nav_btn(lbl(today, L), <<"ah-calendar-btn ah-calendar-btn-today">>,
+                              [], nav_url(Nav, today, View))],
                      [<<"ah-calendar-toolbar-left">>], []),
                ?H:el('div', ?H:el(h2, Title, [<<"ah-calendar-title">>],
                                   [{id, sub_id(Id, <<"title">>)}, {aria_live, polite}]),
                      [<<"ah-calendar-toolbar-center">>], []),
                ?H:el('div',
-                     [?H:el(button, lbl(V, L),
-                            [<<"ah-calendar-view-btn">>,
-                             [<<"ah-calendar-view-btn-active">> || V =:= View]],
-                            [{type, button}, {data_view, V},
-                             {aria_pressed, atom_to_binary(V =:= View)}])
-                      || V <- Views],
+                     [view_btn(V, View, lbl(V, L), nav_url(Nav, current, V)) || V <- Views],
                      [<<"ah-calendar-toolbar-right">>], [])],
               [<<"ah-calendar-toolbar">>], []),
     Body = aihtml_tpl:safe(view_html(View, Id, Cur, RS, RE, Events, Opts)),
@@ -180,9 +187,44 @@ render(#ah_calendar{view = View, views = Views, first_day = First,
                                  _ -> iolist_to_binary(aihtml_json:encode(L))
                              end},
             {data_view, View}, {data_start, ?D:iso_date(RS)}, {data_end, ?D:iso_date(RE)},
+            {data_ah_href, case Href of undefined -> undefined; _ -> text(Href) end},
             {style, [[<<"height:">>, integer_to_binary(Height), <<"px">>]
                      || is_integer(Height)]}],
            ?E:root_attrs(R, change)]).
+
+%% A toolbar button, or with the `href' option a link to the same state
+%% (the behaviour follows it in the page; without script the server
+%% renders the linked page).
+nav_btn(Content, Class, Attrs, undefined) ->
+    ?H:el(button, Content, [Class], [{type, button} | Attrs]);
+nav_btn(Content, Class, Attrs, Url) ->
+    ?H:el(a, Content, [Class], [{href, Url} | Attrs]).
+
+view_btn(V, View, Label, undefined) ->
+    ?H:el(button, Label, [<<"ah-calendar-view-btn">>, [<<"ah-calendar-view-btn-active">> || V =:= View]],
+          [{type, button}, {data_view, V}, {aria_pressed, atom_to_binary(V =:= View)}]);
+view_btn(V, View, Label, Url) ->
+    ?H:el(a, Label, [<<"ah-calendar-view-btn">>, [<<"ah-calendar-view-btn-active">> || V =:= View]],
+          [{href, Url}, {data_view, V}, {aria_current, V =:= View andalso <<"true">>}]).
+
+%% The link of a toolbar entry: the date prev / next / today moves to in
+%% view `V', or the current date (a view button), put in the template.
+nav_url(#{href := undefined}, _, _) -> undefined;
+nav_url(#{href := Href, cur := Cur, today := Today, view := View, agenda := Agenda}, Which, V) ->
+    D = case Which of
+            prev -> step(View, Cur, -1, Agenda);
+            next -> step(View, Cur, 1, Agenda);
+            today -> Today;
+            current -> Cur
+        end,
+    B = binary:replace(text(Href), <<"{date}">>, ?D:iso_date(D), [global]),
+    binary:replace(B, <<"{view}">>, atom_to_binary(V), [global]).
+
+%% The day prev (-1) or next (1) shows (the twin of calStep in calendar.js).
+step(month, D, Dir, _) -> ?D:add_months(D, Dir);
+step(week, D, Dir, _) -> D + 7 * Dir;
+step(day, D, Dir, _) -> D + Dir;
+step(list, D, Dir, Agenda) -> D + Agenda * Dir.
 
 check_first_day(F) ->
     (is_integer(F) andalso F >= 0 andalso F =< 6) orelse error({aihtml, {bad_first_day, F}}).
@@ -622,7 +664,7 @@ catalog() ->
        root => <<"ah-calendar">>,
        flags => [editable, selectable],
        options => [events, view, views, first_day, agenda_days, day_max_events,
-                   slot_duration, slot_height, height, hour_format, labels],
+                   slot_duration, slot_height, height, hour_format, href, labels],
        behavior => <<"calendar">>,
        events => [<<"change">>, <<"ah:event-click">>, <<"ah:event-drop">>,
                   <<"ah:event-resize">>, <<"ah:select">>, <<"ah:more-click">>],
@@ -646,6 +688,10 @@ catalog() ->
              slot_height => <<"Pixel height of a time slot (default 20).">>,
              height => <<"Height in px (default 600); undefined lets the content decide.">>,
              hour_format => <<"12 (default, 9:00 AM) or 24 (09:00).">>,
+             href => <<"URL template with {date} (ISO) and {view}: prev, next, today and the "
+                       "view buttons become links to that state, which the server renders when "
+                       "a link is opened directly (crawlers, new tabs, bookmarks). A plain "
+                       "click still navigates in the page and pushes the link's URL.">>,
              labels => <<"Map of texts and formats: today, prev, next, month, week, day, "
                          "list, all_day, all_day_short, more (\"+{n} more\"), no_events, "
                          "no_events_hint, am, pm, months, months_short, weekdays, "

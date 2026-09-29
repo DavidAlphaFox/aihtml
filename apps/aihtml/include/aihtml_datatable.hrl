@@ -12,7 +12,8 @@
 %% resize and chooser. Local mode: every row is rendered and the browser
 %% sorts, filters and pages. Remote mode (`source', an action ref): each
 %% view change fires 'ah:query' on the root and the action answers with
-%% aihtml_datatable:datatable_rows/3. Postback fires on change
+%% aihtml_datatable:datatable_rows/3. With `href' (a URL template) the
+%% pager's buttons are links a crawler can follow. Postback fires on change
 %% (Event.value: the selected keys, comma separated); cell edits go to
 %% the `edit' action.
 -record(ah_datatable, {?AH_BASE(aihtml_datatable),
@@ -33,6 +34,7 @@
                        page_sizes = [5, 10, 25, 50] :: [pos_integer()],
                        total = undefined :: undefined | non_neg_integer(),
                        source = undefined :: undefined | aihtml_action:ref(),
+                       href = undefined :: undefined | iodata(),
                        editable = false :: boolean(),
                        edit = undefined :: undefined | aihtml_action:ref(),
                        row_details = undefined :: undefined | fun((map()) -> aihtml_html:html()),

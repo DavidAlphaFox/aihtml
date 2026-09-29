@@ -104,3 +104,8 @@
 .ah-dg .ah-dg-cell-editable {
   cursor: text;
 }
+
+/* Pager buttons as links (the href option) look like the buttons. */
+a.ah-dg-pager-button {
+  text-decoration: none;
+}

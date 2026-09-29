@@ -1,7 +1,8 @@
 %%%-------------------------------------------------------------------
 %%% @doc Internal: what the echarts components share (chart, area_chart,
 %%% bar_chart, donut_chart, radar_chart, relation_graph): the root with
-%%% the option's JSON data island, sizes, the common option parts of the
+%%% the option's JSON data island and its readable data table (see
+%%% "Readable data" below), sizes, the common option parts of the
 %%% convenience charts (title, legend, tooltip, grid, palette), series
 %%% normalisation, the catalog docs and methods, and small checks. The
 %%% browser side is assets/js/components/_lib_chart.js (the `chart'
@@ -10,7 +11,7 @@
 %%%-------------------------------------------------------------------
 -module(aihtml_lib_chart).
 
--export([chart_root/8, island/1, renderer/1, size_style/2, check_option/1,
+-export([chart_root/8, island/1, data_text/2, data_text_update/2, renderer/1, size_style/2, check_option/1,
          value_axis/2, name_side/2, axis_chart/8, common/7, legend_ok/1, color_kv/1,
          norm_series/1, categories/2, events/0, methods/0, size_docs/0, axis_docs/0,
          bool/2, list/2, text/1]).
@@ -45,24 +46,31 @@
 
 %% @doc Internal: the root of a chart component (chart, area_chart,
 %% bar_chart, donut_chart, radar_chart), `Option' drawn from its data
-%% island. The caller computes `Classes' before `Option': they check the
-%% modifier fields before the option does.
+%% island, its data readable in a visually hidden table (data_text/2)
+%% that the root names with aria-describedby. The root is a figure, not
+%% an img: the children of an img are presentational, so a screen reader
+%% could not move through the table's cells. The caller computes
+%% `Classes' before `Option': they check the modifier fields before the
+%% option does.
 -spec chart_root(aihtml_element:element(), css(), option(), boolean(), boolean(), size(),
                  size(), canvas | svg) -> html().
 chart_root(R, Classes, Option, Loading, Disabled, W, H, Renderer) ->
     bool(loading, Loading),
     bool(disabled, Disabled),
+    {Text, TextId} = data_text(R, Option),
     ?H:el('div',
           [island(Option),
+           Text,
            case Disabled of
                true -> ?H:el('div', [], [<<"ah-chart-overlay">>], []);
                false -> []
            end],
           Classes,
-          [[{role, img}, {data_ah, <<"chart">>},
+          [[{role, figure}, {data_ah, <<"chart">>},
             {data_ah_renderer, renderer(Renderer)},
             {data_ah_loading, Loading andalso <<"true">>},
             {aria_disabled, Disabled andalso <<"true">>},
+            {aria_describedby, TextId},
             {style, size_style(W, H)}],
            ?E:root_attrs(R, 'ah:chart-click')]).
 
@@ -110,6 +118,402 @@ size(K, V) -> error({aihtml, {bad_option, K, V}}).
 check_option(O) ->
     is_map(O) orelse error({aihtml, {bad_option, option, O}}),
     O.
+
+%%%===================================================================
+%%% Readable data
+%%%===================================================================
+
+%% The classes of the readable data node (ah-sr-only: visually hidden,
+%% still read by screen readers; extra/chart.css).
+-define(TEXT_CSS, [<<"ah-chart-text">>, <<"ah-sr-only">>]).
+%% Rows past this many are left out of the table; a last row says how many.
+-define(MAX_ROWS, 500).
+%% Series types drawn on a category axis whose data the axis table reads.
+-define(CARTESIAN, [<<"line">>, <<"bar">>, <<"scatter">>, <<"effectScatter">>,
+                    <<"pictorialBar">>]).
+
+%% @doc Internal: the data of a chart as text that search engines and
+%% screen readers can read: `{Html, Id}'. Html is a table in a visually
+%% hidden div (`class="ah-chart-text ah-sr-only"'), captioned with the option's title
+%% or else the root's aria-label, rows and columns read off simple option
+%% shapes: a dataset source; series on a category axis (categories x
+%% series); points on two value axes (x, y); a heatmap on two category
+%% axes (y x x); pie and funnel data (name, value, share); radar
+%% (indicators x series); a graph (nodes, their category and the nodes
+%% they link to); a tree (nodes and their children). An option of another shape gives
+%% just the caption, in a paragraph; without a caption either, nothing
+%% (`{[], undefined}'). `Id' is the root's id plus "-data" (or a
+%% generated one), for the root's aria-describedby. The browser applies
+%% the same rules (dataText in _lib_chart.js) when data changes there.
+-spec data_text(aihtml_element:element(), option()) -> {html(), binary() | undefined}.
+data_text(R, Option) ->
+    #{id := RootId, attrs := Attrs} = ?E:base(R),
+    case text_node(Option, caption(Option, Attrs)) of
+        none -> {[], undefined};
+        Node ->
+            Id = case RootId of
+                     undefined ->
+                         N = erlang:unique_integer([positive]),
+                         <<"ah-chart-text-", (integer_to_binary(N))/binary>>;
+                     _ -> <<(text(RootId))/binary, "-data">>
+                 end,
+            {Node(Id), Id}
+    end.
+
+%% @doc Internal: data_text/2's node as HTML without an id (<<>> when
+%% there is none), for chart_update/3: the browser puts it in place of
+%% the chart's current one, keeping that one's id (and its caption when
+%% the new node has none, since an update record seldom repeats the
+%% aria-label).
+-spec data_text_update(aihtml_element:element(), option()) -> binary().
+data_text_update(R, Option) ->
+    #{attrs := Attrs} = ?E:base(R),
+    case text_node(Option, caption(Option, Attrs)) of
+        none -> <<>>;
+        Node -> ?H:render_binary(Node(undefined))
+    end.
+
+text_node(Option, Caption) ->
+    case table(Option) of
+        {Head0, Rows0} ->
+            W = lists:max([length(Head0) | [length(Rw) || Rw <- Rows0]]),
+            Head = pad(Head0, W),
+            Rows = [pad(Rw, W) || Rw <- lists:sublist(Rows0, ?MAX_ROWS)],
+            More = length(Rows0) - length(Rows),
+            %% in a div: a table grows to its content whatever its width,
+            %% so the div is what stays 1px x 1px (the overflow is clipped)
+            fun(Id) ->
+                    ?H:el('div', ?H:el(table,
+                          [[?H:el(caption, Caption, [], []) || Caption =/= undefined],
+                           ?H:el(thead, ?H:el(tr, [?H:el(th, H, [], [{scope, col}]) || H <- Head],
+                                              [], []), [], []),
+                           ?H:el(tbody,
+                                 [[?H:el(tr, [?H:el(th, First, [], [{scope, row}])
+                                              | [?H:el(td, C, [], []) || C <- Cells]], [], [])
+                                   || [First | Cells] <- Rows],
+                                  [?H:el(tr, ?H:el(td, <<"And ", (integer_to_binary(More))/binary,
+                                                         " more rows.">>, [], [{colspan, W}]),
+                                         [], []) || More > 0]],
+                                 [], [])],
+                          [], []), ?TEXT_CSS, [{id, Id}])
+            end;
+        none when Caption =/= undefined ->
+            fun(Id) -> ?H:el(p, Caption, ?TEXT_CSS, [{id, Id}]) end;
+        none -> none
+    end.
+
+pad(Row, W) -> Row ++ lists:duplicate(W - length(Row), <<>>).
+
+%% The option's title, or else the root's aria-label.
+caption(Option, Attrs) ->
+    case [T || M <- all(get(title, Option)), T <- [str(get(text, M))], T =/= <<>>] of
+        [T | _] -> T;
+        [] ->
+            case proplists:get_value(<<"aria-label">>, ?H:attrs(Attrs)) of
+                B when is_binary(B), B =/= <<>> -> B;
+                _ -> undefined
+            end
+    end.
+
+%% {Head, Rows} of an option, or none.
+table(O) ->
+    case dataset_table(first(get(dataset, O))) of
+        none -> series_table(O, all(get(series, O)));
+        T -> T
+    end.
+
+dataset_table(D) ->
+    case get(source, D) of
+        [First | _] = Src when is_list(First) ->
+            case lists:all(fun is_list/1, Src) of
+                true -> {[str(C) || C <- First], [[str(C) || C <- Rw] || Rw <- tl(Src)]};
+                false -> none
+            end;
+        [First | _] = Src when is_map(First) ->
+            case lists:all(fun is_map/1, Src) of
+                true ->
+                    Dims = case all(get(dimensions, D)) of
+                               [] -> lists:usort([str(K) || K <- maps:keys(First)]);
+                               Ds -> [case is_map(Dm) of true -> str(get(name, Dm));
+                                                         false -> str(Dm) end || Dm <- Ds]
+                           end,
+                    {Dims, [[str(field(K, Rw)) || K <- Dims] || Rw <- Src]};
+                false -> none
+            end;
+        _ -> none
+    end.
+
+series_table(_, []) -> none;
+series_table(O, Series) ->
+    Types = lists:usort([str(get(type, S)) || S <- Series]),
+    Is = fun(Allowed) -> lists:all(fun(T) -> lists:member(T, Allowed) end, Types) end,
+    case Is([<<"pie">>, <<"funnel">>]) of
+        true -> pie_table(Series);
+        false ->
+            case {Types, Series} of
+                {[<<"radar">>], _} -> radar_table(O, Series);
+                {[<<"graph">>], [S]} -> graph_table(S);
+                {[<<"tree">>], [S]} -> tree_table(S);
+                {[<<"heatmap">>], [S]} -> heatmap_table(O, S);
+                _ ->
+                    case Is(?CARTESIAN) of
+                        true -> axis_table(O, Series);
+                        false -> none
+                    end
+            end
+    end.
+
+%% Categories x series.
+axis_table(O, Series) ->
+    Axes = [A || A <- [first(get(xAxis, O)), first(get(yAxis, O))], is_category(A)],
+    Cols = [cells(get(data, S)) || S <- Series],
+    case Axes =/= [] andalso not lists:member(error, Cols) of
+        false when Axes =:= [] -> xy_table(O, Series);
+        false -> none;
+        true ->
+            [Axis | _] = Axes,
+            Labels = [str(C) || C <- all(get(data, Axis))],
+            N = lists:max([length(Labels) | [length(C) || C <- Cols]]),
+            Name = case str(get(name, Axis)) of
+                       <<>> -> <<"Category">>;
+                       Nm -> Nm
+                   end,
+            {[Name | [series_name(S, I) || {I, S} <- lists:enumerate(Series)]],
+             [[nth(I, Labels, integer_to_binary(I)) | [nth(I, C, <<>>) || C <- Cols]]
+              || I <- lists:seq(1, N)]}
+    end.
+
+%% Points on two value axes: x, y (and the series, with more than one).
+xy_table(O, Series) ->
+    Parts = [[xy(D) || D <- all(get(data, S))] || S <- Series],
+    case lists:member(error, lists:append(Parts)) of
+        true -> none;
+        false ->
+            Multi = length(Series) > 1,
+            {[<<"Series">> || Multi] ++ [axis_name(get(xAxis, O), <<"X">>),
+                                         axis_name(get(yAxis, O), <<"Y">>)],
+             lists:append([[[series_name(S, I) || Multi] ++ P || P <- Ps]
+                           || {I, {S, Ps}} <- lists:enumerate(lists:zip(Series, Parts))])}
+    end.
+
+xy(D) when is_map(D) -> xy(get(value, D));
+xy([X, Y | _]) ->
+    case cells([X, Y]) of
+        error -> error;
+        Cs -> Cs
+    end;
+xy(_) -> error.
+
+axis_name(Axis, Default) ->
+    case str(get(name, first(Axis))) of
+        <<>> -> Default;
+        N -> N
+    end.
+
+%% A heatmap on two category axes: y categories x x categories.
+heatmap_table(O, S) ->
+    X = first(get(xAxis, O)),
+    Y = first(get(yAxis, O)),
+    Xs = [str(C) || C <- all(get(data, X))],
+    Ys = [str(C) || C <- all(get(data, Y))],
+    Cells = [heat_cell(D, Xs, Ys) || D <- all(get(data, S))],
+    case is_category(X) andalso is_category(Y) andalso Xs =/= [] andalso Ys =/= []
+        andalso not lists:member(error, Cells) of
+        false -> none;
+        true ->
+            M = maps:from_list(Cells),
+            {[axis_name(Y, <<"Category">>) | Xs],
+             [[Yl | [maps:get({I, J}, M, <<>>) || I <- lists:seq(1, length(Xs))]]
+              || {J, Yl} <- lists:enumerate(Ys)]}
+    end.
+
+heat_cell(D, Xs, Ys) when is_map(D) -> heat_cell(get(value, D), Xs, Ys);
+heat_cell([Xi, Yi, V | _], Xs, Ys) ->
+    case {axis_pos(Xi, Xs), axis_pos(Yi, Ys), cells([V])} of
+        {none, _, _} -> error;
+        {_, none, _} -> error;
+        {_, _, error} -> error;
+        {I, J, [C]} -> {{I, J}, C}
+    end;
+heat_cell(_, _, _) -> error.
+
+%% The 1-based position on a category axis of a 0-based index or a label.
+axis_pos(V, Labels) when is_integer(V), V >= 0, V < length(Labels) -> V + 1;
+axis_pos(V, Labels) -> index(str(V), Labels).
+
+is_category(A) when is_map(A) ->
+    case str(get(type, A)) of
+        <<"category">> -> true;
+        <<>> -> is_list(get(data, A));
+        _ -> false
+    end;
+is_category(_) -> false.
+
+%% Name, value, share (and the series, with more than one).
+pie_table(Series) ->
+    Parts = [pie_rows(get(data, S)) || S <- Series],
+    case lists:member(error, Parts) of
+        true -> none;
+        false ->
+            Multi = length(Series) > 1,
+            {[<<"Series">> || Multi] ++ [<<"Name">>, <<"Value">>, <<"Share">>],
+             lists:append([[[series_name(S, I) || Multi] ++ Rw || Rw <- Rows]
+                           || {I, {S, Rows}} <- lists:enumerate(lists:zip(Series, Parts))])}
+    end.
+
+pie_rows(Data) when is_list(Data) ->
+    Items = [case D of
+                 _ when is_map(D) -> {str(get(name, D)), get(value, D)};
+                 _ -> {<<>>, D}
+             end || D <- Data],
+    case lists:all(fun({_, V}) -> is_number(V) orelse blank(V) end, Items) of
+        false -> error;
+        true ->
+            Total = lists:sum([V || {_, V} <- Items, is_number(V)]),
+            [[N, str(V), share(V, Total)] || {N, V} <- Items]
+    end;
+pie_rows(_) -> error.
+
+share(V, Total) when is_number(V), Total > 0 ->
+    <<(float_to_binary(V * 100 / Total, [{decimals, 1}]))/binary, "%">>;
+share(_, _) -> <<>>.
+
+%% Indicators x series.
+radar_table(O, Series) ->
+    Inds = [case is_map(I) of true -> str(get(name, I)); false -> str(I) end
+            || I <- all(get(indicator, first(get(radar, O))))],
+    Items = [case D of
+                 _ when is_map(D) -> {str(get(name, D)), cells(get(value, D))};
+                 _ -> {<<>>, cells(D)}
+             end || S <- Series, D <- all(get(data, S))],
+    case Inds =/= [] andalso not lists:any(fun({_, V}) -> V =:= error end, Items) of
+        false -> none;
+        true ->
+            {[<<"Indicator">> | [case N of <<>> -> series_name(#{}, I); _ -> N end
+                                 || {I, {N, _}} <- lists:enumerate(Items)]],
+             [[Ind | [nth(J, V, <<>>) || {_, V} <- Items]] || {J, Ind} <- lists:enumerate(Inds)]}
+    end.
+
+%% Nodes, their category and the nodes they link to.
+graph_table(S) ->
+    Nodes = all(first([get(data, S), get(nodes, S)])),
+    Links = all(first([get(links, S), get(edges, S)])),
+    Cats = [case is_map(C) of true -> str(get(name, C)); false -> str(C) end
+            || C <- all(get(categories, S))],
+    case Nodes =/= [] andalso lists:all(fun is_map/1, Nodes ++ Links) of
+        false -> none;
+        true ->
+            Ids = [{str(first([get(id, N), get(name, N)])), str(get(name, N))} || N <- Nodes],
+            Names = [case Nm of <<>> -> Id; _ -> Nm end || {Id, Nm} <- Ids],
+            Ends = [{node_index(get(source, L), Ids), node_index(get(target, L), Ids),
+                     str(get(target, L)), str(get(value, L))} || L <- Links],
+            Out = fun(I) ->
+                          join([case Lb of <<>> -> T; _ -> <<T/binary, " (", Lb/binary, ")">> end
+                                || {Src, Tg, Raw, Lb} <- Ends, Src =:= I,
+                                   T <- [case Tg of none -> Raw; _ -> lists:nth(Tg, Names) end]])
+                  end,
+            {[<<"Node">>] ++ [<<"Category">> || Cats =/= []] ++ [<<"Links to">>],
+             [[Name] ++ [case get(category, N) of
+                             C when is_integer(C) -> nth(C + 1, Cats, <<>>);
+                             C -> str(C)
+                         end || Cats =/= []] ++ [Out(I)]
+              || {I, {N, Name}} <- lists:enumerate(lists:zip(Nodes, Names))]}
+    end.
+
+%% The 1-based position of the node a link end names (a 0-based index,
+%% an id or a name), or none.
+node_index(Ref, Ids) when is_integer(Ref), Ref >= 0, Ref < length(Ids) -> Ref + 1;
+node_index(Ref, Ids) ->
+    R = str(Ref),
+    case {index(R, [Id || {Id, _} <- Ids]), index(R, [Nm || {_, Nm} <- Ids])} of
+        {none, I} -> I;
+        {I, _} -> I
+    end.
+
+index(X, L) -> index(X, L, 1).
+index(_, [], _) -> none;
+index(X, [X | _], I) -> I;
+index(X, [_ | T], I) -> index(X, T, I + 1).
+
+%% Nodes and their children, depth first.
+tree_table(S) ->
+    case tree_rows(all(get(data, S))) of
+        [] -> none;
+        Rows -> {[<<"Node">>, <<"Children">>], Rows}
+    end.
+
+tree_rows(Nodes) ->
+    lists:append(
+      [begin
+           Kids = [K || K <- all(get(children, N)), is_map(K)],
+           Own = case str(get(id, N)) of
+                     <<"__root__">> -> [];
+                     _ -> [[str(get(name, N)), join([str(get(name, K)) || K <- Kids])]]
+                 end,
+           Own ++ tree_rows(Kids)
+       end || N <- Nodes, is_map(N)]).
+
+series_name(S, I) ->
+    case str(get(name, S)) of
+        <<>> -> <<"Series ", (integer_to_binary(I))/binary>>;
+        N -> N
+    end.
+
+%% The cells of a data list (a value, or a map with a value), or error
+%% when one is not a scalar.
+cells(L) when is_list(L) ->
+    Vs = [case D of
+              _ when is_map(D) -> get(value, D);
+              _ -> D
+          end || D <- L],
+    case lists:all(fun(V) -> is_number(V) orelse is_binary(V) orelse is_atom(V) end, Vs) of
+        true -> [str(V) || V <- Vs];
+        false -> error
+    end;
+cells(_) -> error.
+
+nth(I, L, _) when I >= 1, I =< length(L) -> lists:nth(I, L);
+nth(_, _, Default) -> Default.
+
+join(L) -> iolist_to_binary(lists:join(<<", ">>, L)).
+
+blank(V) -> V =:= undefined orelse V =:= null orelse V =:= <<"-">>.
+
+%% A scalar as table text: numbers as JavaScript writes them, missing
+%% values ("-", null) empty, anything else (lists, maps) empty too.
+str(V) when is_binary(V) -> case V of <<"-">> -> <<>>; _ -> V end;
+str(V) when is_integer(V) -> integer_to_binary(V);
+str(V) when is_float(V), V == trunc(V), abs(V) < 1.0e15 -> integer_to_binary(trunc(V));
+str(V) when is_float(V) -> float_to_binary(V, [short]);
+str(V) when V =:= undefined; V =:= null -> <<>>;
+str(V) when is_atom(V) -> atom_to_binary(V);
+str(_) -> <<>>.
+
+%% A key of an option map, written as an atom or a binary.
+get(K, M) when is_map(M) ->
+    case M of
+        #{K := V} -> V;
+        _ -> maps:get(atom_to_binary(K), M, undefined)
+    end;
+get(_, _) -> undefined.
+
+%% A dataset row's field named K (a binary), whatever its key's type.
+field(K, Row) ->
+    case [V || {Kx, V} <- maps:to_list(Row), str(Kx) =:= K] of
+        [V | _] -> V;
+        [] -> undefined
+    end.
+
+all(undefined) -> [];
+all(null) -> [];
+all(L) when is_list(L) -> L;
+all(X) -> [X].
+
+%% The first defined of a list of values, or the first of a list.
+first([]) -> undefined;
+first([X | Rest]) when X =:= undefined; X =:= null -> first(Rest);
+first([X | _]) -> X;
+first(X) -> X.
 
 %%%===================================================================
 %%% Common option parts (sigil's chart helpers)

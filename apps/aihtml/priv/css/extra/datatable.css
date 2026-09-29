@@ -53,3 +53,8 @@
 [data-theme="dark"] .ah-dt-row-selected:hover {
   background: color-mix(in srgb, var(--ah-color-primary) 34%, var(--ah-color-bg-paper)) !important;
 }
+
+/* Pager buttons rendered as links (href option) look like the buttons. */
+a.ah-dt-pager-btn {
+  text-decoration: none;
+}

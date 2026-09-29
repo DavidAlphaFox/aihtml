@@ -25,6 +25,7 @@
                       slot_height = 20 :: pos_integer(),
                       height = 600 :: undefined | pos_integer(),
                       hour_format = 12 :: 12 | 24,
+                      href = undefined :: undefined | unicode:chardata(),
                       labels = #{} :: aihtml_calendar:labels(),
                       name = undefined :: undefined | atom() | iodata()}).
 

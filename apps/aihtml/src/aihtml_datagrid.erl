@@ -41,13 +41,31 @@
 %%% applied here, so the first paint is already the final view.
 %%%
 %%% Remote mode (`{source, {Mod, Action, Args}}'): the page holds one page
-%%% of rows. Every view change (sort, filter row, search box, page, page
-%%% size) POSTs the source action from a hidden element of the grid, with
-%%% the view state in `Event.data' (sort, filter, search, page, pageSize,
+%%% of rows, and the server always renders it: `Rows' are the page shown
+%%% first (`page', `sort', `filters' say which) and `total' the number of
+%%% matching rows (default: the number of `Rows'); no rows render the
+%%% empty message. The grid does not ask for rows when it mounts, so the
+%%% first page is in the HTML for crawlers and for the first paint; a page
+%%% that wants a client-side first load calls the `refresh' method
+%%% (`aihtml_action:call(Ctx, {id, Id}, refresh, [])' or `AH.invoke').
+%%% Every view change (sort, filter row, search box, page, page size)
+%%% POSTs the source action from a hidden element of the grid, with the
+%%% view state in `Event.data' (sort, filter, search, page, pageSize,
 %%% export, grid, render). The action reads it with `datagrid_query/1'
 %%% and answers with `datagrid_rows(Ctx, Event, Rows, Total)', which
-%%% renders the rows and the pager here and morphs them in. Without an
-%%% initial `total' the grid asks for its first page when it mounts.
+%%% renders the rows and the pager here and morphs them in.
+%%%
+%%% == Crawlable pages ==
+%%%
+%%% With `href' (a URL template) the pager's buttons are links: `{page}',
+%%% `{size}', `{sort}' (`field:asc,field:desc') and `{search}' are filled
+%%% in from the view, URL-encoded. The page serving that URL renders the
+%%% grid in that state (reading the query into `page', `page_size',
+%%% `sort' and the rows), so a crawler or a click without JavaScript gets
+%%% that page from the server. With JavaScript a plain click stays in the
+%%% page (the local re-page or the remote query as without links) and
+%%% pushes the link's URL to the history; going back reloads it.
+%%%
 %%% Export in remote mode asks the same action with `export' set and
 %%% `limit' infinity; datagrid_rows/4 then sends the formatted rows to the
 %%% browser, which writes the file. Grouping and the status bar are local
@@ -154,7 +172,8 @@
 %% `filter_row', `pageable', `statusbar'. Options: `value' (selected row
 %% keys), `key_field' (default id), `height', `page', `page_size',
 %% `page_sizes', `sort', `filters', `group_by', `edit_mode', `column_menu',
-%% `toolbar', `export_name', `labels', `source', `total'; see catalog/0.
+%% `toolbar', `export_name', `labels', `source', `total', `href'; see
+%% catalog/0.
 -spec datagrid([column()], [row()], css(), attrs()) -> #ah_datagrid{}.
 datagrid(Columns, Rows, Css, Attrs) ->
     ?E:build(?MODULE, #ah_datagrid{columns = Columns, rows = Rows}, Css, Attrs).
@@ -243,7 +262,8 @@ render(#ah_datagrid{} = R0) ->
                    false -> []
                end,
                case Pageable of
-                   true -> ?H:el('div', pager(Page, PageSize, Total, Cfg),
+                   true -> ?H:el('div', pager(Page, PageSize, Total, Cfg,
+                                             link_template(Cfg, PageSize, Sort, <<>>)),
                                  [<<"ah-dg-pager-wrap">>], [{id, sub_id(Id, <<"pager">>)}]);
                    false -> []
                end],
@@ -284,7 +304,8 @@ render(#ah_datagrid{} = R0) ->
             {data_ah_header_rows, HeaderRows},
             {data_ah_export_name, text(R#ah_datagrid.export_name)},
             {data_ah_labels, json(L)},
-            {data_ah_loaded, Remote andalso R#ah_datagrid.total =/= undefined andalso <<"true">>},
+            {data_ah_loaded, Remote andalso <<"true">>},
+            {data_ah_href, maps:get(href, Cfg, undefined)},
             {data_sort, json([[F, D] || {F, D} <- Sort])},
             {data_filter, json(maps:from_list(Filters))},
             {data_page, Page},
@@ -321,6 +342,11 @@ check(#ah_datagrid{} = R) ->
         T when is_integer(T), T >= 0 -> ok;
         T -> bad(total, T)
     end,
+    case R#ah_datagrid.href of
+        undefined -> ok;
+        U when is_binary(U); is_list(U) -> ok;
+        U -> bad(href, U)
+    end,
     case R#ah_datagrid.height of
         undefined -> ok;
         Hh when is_integer(Hh), Hh > 0 -> ok;
@@ -348,10 +374,14 @@ filters_list(L) -> L.
 %% rows like this render did.
 cfg_of(Id, #ah_datagrid{columns = Columns, selection = Sel, key_field = KeyField,
                         labels = Labels, page_sizes = Sizes, page_size = PageSize,
-                        pageable = Pageable}) ->
-    cfg_from(#{id => Id, columns => Columns, key_field => KeyField, selection => Sel,
-               labels => Labels, page_sizes => lists:usort([PageSize | Sizes]),
-               page_size => PageSize, pageable => Pageable}).
+                        pageable = Pageable, href = Href}) ->
+    Spec = #{id => Id, columns => Columns, key_field => KeyField, selection => Sel,
+             labels => Labels, page_sizes => lists:usort([PageSize | Sizes]),
+             page_size => PageSize, pageable => Pageable},
+    cfg_from(case Href of
+                 undefined -> Spec;
+                 _ -> Spec#{href => text(Href)}
+             end).
 
 cfg_from(#{columns := Columns, selection := Sel, labels := Labels} = Spec) ->
     Cols0 = [col(C) || C <- Columns],
@@ -1055,29 +1085,73 @@ tool_button(Label, Icon, Attrs) ->
            ?H:el(span, Label, [<<"ah-dg-toolbar-btn-text">>], [])],
           [<<"ah-dg-toolbar-btn">>], [{type, button} | Attrs]).
 
-pager(Page, PageSize, Total, #{page_sizes := Sizes, labels := L}) ->
-    aihtml_tpl:safe(tpl_datagrid_pager(pager_view(Page, PageSize, Total, #{sizes => Sizes, labels => L}))).
+pager(Page, PageSize, Total, #{page_sizes := Sizes, labels := L}, Link) ->
+    Opts = #{sizes => Sizes, labels => L},
+    aihtml_tpl:safe(tpl_datagrid_pager(
+                      pager_view(Page, PageSize, Total, case Link of
+                                                            undefined -> Opts;
+                                                            _ -> Opts#{href => Link}
+                                                        end))).
 
 %% @doc The view data of templates/datagrid_pager.mustache (the browser
 %% builds the same). Pages are 1-based; at most 7 page buttons around the
-%% current page.
+%% current page. With `href' (a link template whose only placeholder
+%% left is `{page}', see link_template/4) the buttons are links.
 -spec pager_view(pos_integer(), pos_integer(), non_neg_integer(),
-                 #{sizes := [pos_integer()], labels := #{atom() => binary()}}) -> map().
-pager_view(Page0, PageSize, Total, #{sizes := Sizes, labels := L}) ->
+                 #{sizes := [pos_integer()], labels := #{atom() => binary()},
+                   href => binary()}) -> map().
+pager_view(Page0, PageSize, Total, #{sizes := Sizes, labels := L} = Opts) ->
     Pages = ceil_div(Total, PageSize),
     Page = max(1, min(Page0, max(1, Pages))),
     Half = ?PAGER_BUTTONS div 2,
     End = min(Pages, max(1, Page - Half) + ?PAGER_BUTTONS - 1),
     Start = max(1, End - ?PAGER_BUTTONS + 1),
-    #{label => maps:get(pages, L), info => subst(maps:get(total, L), Total),
-      prev => max(1, Page - 1), next => min(max(1, Pages), Page + 1), last => max(1, Pages),
-      at_start => Page =< 1, at_end => Page >= Pages,
-      first_label => maps:get(first_page, L), prev_label => maps:get(prev_page, L),
-      next_label => maps:get(next_page, L), last_label => maps:get(last_page, L),
-      pages => [#{page => P, active => P =:= Page} || P <- lists:seq(Start, End), Pages > 0],
-      size_label => maps:get(page_size, L),
-      sizes => [#{size => S, text => subst(maps:get(per_page, L), S), selected => S =:= PageSize}
-                || S <- lists:usort([PageSize | Sizes])]}.
+    Prev = max(1, Page - 1),
+    Next = min(max(1, Pages), Page + 1),
+    Last = max(1, Pages),
+    AtStart = Page =< 1,
+    AtEnd = Page >= Pages,
+    View = #{label => maps:get(pages, L), info => subst(maps:get(total, L), Total),
+             prev => Prev, next => Next, last => Last, at_start => AtStart, at_end => AtEnd,
+             first_label => maps:get(first_page, L), prev_label => maps:get(prev_page, L),
+             next_label => maps:get(next_page, L), last_label => maps:get(last_page, L),
+             pages => [#{page => P, active => P =:= Page} || P <- lists:seq(Start, End), Pages > 0],
+             size_label => maps:get(page_size, L),
+             sizes => [#{size => S, text => subst(maps:get(per_page, L), S), selected => S =:= PageSize}
+                       || S <- lists:usort([PageSize | Sizes])]},
+    case Opts of
+        #{href := T} ->
+            Url = fun(true, _) -> <<>>;
+                     (false, P) -> binary:replace(T, <<"{page}">>, integer_to_binary(P), [global])
+                  end,
+            View#{link => true,
+                  first_href => Url(AtStart, 1), prev_href => Url(AtStart, Prev),
+                  next_href => Url(AtEnd, Next), last_href => Url(AtEnd, Last),
+                  pages => [M#{link => true, href => Url(false, P)}
+                            || #{page := P} = M <- maps:get(pages, View)]};
+        _ -> View
+    end.
+
+%% The grid's `href' with the view filled in but `{page}': `{size}', `{sort}'
+%% (`field:dir,...') and `{search}', URL-encoded as encodeURIComponent
+%% does (datagrid.js linkTemplate/1 builds the same).
+link_template(#{href := T}, PageSize, Sort, Search) ->
+    SortText = lists:join(<<",">>, [[uri(F), <<":">>, atom_to_binary(D)] || {F, D} <- Sort]),
+    lists:foldl(fun({K, V}, Acc) -> binary:replace(Acc, K, iolist_to_binary(V), [global]) end, T,
+                [{<<"{size}">>, integer_to_binary(PageSize)}, {<<"{sort}">>, SortText},
+                 {<<"{search}">>, uri(Search)}]);
+link_template(_, _, _, _) -> undefined.
+
+%% encodeURIComponent: UTF-8 bytes, all but A-Z a-z 0-9 - _ . ! ~ * ' ( )
+%% as %XX.
+uri(B) ->
+    << <<(case C of
+              _ when C >= $a, C =< $z; C >= $A, C =< $Z; C >= $0, C =< $9 -> <<C>>;
+              _ -> case lists:member(C, "-_.!~*'()") of
+                       true -> <<C>>;
+                       false -> iolist_to_binary(io_lib:format("%~2.16.0B", [C]))
+                   end
+          end)/binary>> || <<C>> <= text(B) >>.
 
 align_class(left) -> <<"ah-dg-align-left">>;
 align_class(center) -> <<"ah-dg-align-center">>;
@@ -1164,7 +1238,8 @@ datagrid_query(#{data := Data}) ->
 -spec datagrid_rows(aihtml_action:ctx(), aihtml_action:event(), [row()], non_neg_integer()) -> ok.
 datagrid_rows(Ctx, #{data := Data} = Ev, Rows, Total) when is_integer(Total), Total >= 0 ->
     #{id := Id, labels := L, pageable := Pageable} = Cfg = cfg(Data),
-    #{page := Page, page_size := PageSize, export := Export} = datagrid_query(Ev),
+    #{page := Page, page_size := PageSize, export := Export, sort := Sort,
+      search := Search} = datagrid_query(Ev),
     Recs = [rec(Row, Cfg) || Row <- Rows],
     case Export of
         undefined ->
@@ -1179,7 +1254,11 @@ datagrid_rows(Ctx, #{data := Data} = Ev, Rows, Total) when is_integer(Total), To
                                 empty_message(L, Recs =:= [])], morph_inner),
             case Pageable of
                 true -> aihtml_action:html(Ctx, {id, sub_id(Id, <<"pager">>)},
-                                           pager(Page, PageSize, Total, Cfg), morph_inner);
+                                           pager(Page, PageSize, Total, Cfg,
+                                                 link_template(Cfg, PageSize,
+                                                               [{text(K), D} || {K, D} <- Sort],
+                                                               Search)),
+                                           morph_inner);
                 false -> ok
             end,
             aihtml_action:call(Ctx, {id, Id}, rowsLoaded, [Total, Page]);
@@ -1279,7 +1358,7 @@ catalog() ->
                     filter_row => [], pageable => [], statusbar => []},
        options => [value, key_field, height, page, page_size, page_sizes, sort, filters,
                    group_by, edit_mode, column_menu, toolbar, export_name, labels,
-                   source, total],
+                   source, total, href],
        behavior => <<"datagrid">>,
        events => [<<"change">>, <<"ah:row-click">>, <<"ah:row-dblclick">>, <<"ah:edit">>,
                   <<"ah:command">>, <<"ah:toolbar">>, <<"ah:sort">>, <<"ah:filter">>,
@@ -1317,11 +1396,16 @@ catalog() ->
              export_name => <<"File name of exports, without the extension (default data).">>,
              labels => <<"Texts to replace, e.g. #{empty => <<\"暂无数据\">>, total => "
                          "<<\"共 {0} 条\">>}; see aihtml_datagrid:default_labels/0.">>,
-             source => <<"Action ref {Module, Action, Args}: remote mode. Each view change "
-                         "runs it; it reads datagrid_query(Event) and answers with "
+             source => <<"Action ref {Module, Action, Args}: remote mode. Rows are the first "
+                         "page, rendered here; each view change runs the action, which reads "
+                         "datagrid_query(Event) and answers with "
                          "datagrid_rows(Ctx, Event, Rows, Total).">>,
-             total => <<"Remote mode: the number of matching rows when Rows hold the first "
-                        "page; without it the grid loads its first page when it mounts.">>},
+             total => <<"Remote mode: the number of matching rows; Rows are the first page "
+                        "(default: their count). The server always renders that page; the grid "
+                        "does not load on mount (call refresh for that).">>,
+             href => <<"Link template for the pager: {page}, {size}, {sort} (field:asc,...) and "
+                       "{search} are filled in, so pages are crawlable links; with JavaScript a "
+                       "click stays in the page and pushes the URL.">>},
        methods =>
            [#{name => setValue, args => <<"(Keys)">>,
               doc => <<"Select the rows with these keys (a list or comma separated text, "

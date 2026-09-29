@@ -201,3 +201,33 @@ behaviours_are_defined_in_js_test() ->
                                        <<"register(\"", B/binary, "\"">>,
                                        <<"// ah-define: ", B/binary, "\n">>]) =:= nomatch],
     ?assertEqual([], Missing).
+
+page_seo_test() ->
+    H = iolist_to_binary(aihtml:page(p(<<"x">>), #{
+          title => <<"T">>,
+          description => <<"A <page> & more">>,
+          canonical => <<"https://ex.com/a">>,
+          robots => <<"index, follow">>,
+          alternates => [{<<"zh">>, <<"https://ex.com/zh/a">>}],
+          og => #{title => <<"T">>, image => [<<"https://ex.com/1.png">>, <<"https://ex.com/2.png">>],
+                  type => article},
+          meta => [{<<"twitter:card">>, <<"summary">>}],
+          json_ld => #{<<"@type">> => <<"Article">>, headline => <<"</script><b>">>}})),
+    Has = fun(B) -> ?assertMatch({_, _}, binary:match(H, B)) end,
+    Has(<<"<meta name=\"description\" content=\"A &lt;page&gt; &amp; more\">">>),
+    Has(<<"<meta name=\"robots\" content=\"index, follow\">">>),
+    Has(<<"<link rel=\"canonical\" href=\"https://ex.com/a\">">>),
+    Has(<<"<link rel=\"alternate\" hreflang=\"zh\" href=\"https://ex.com/zh/a\">">>),
+    %% og keys sorted, one tag per image
+    Has(<<"<meta property=\"og:image\" content=\"https://ex.com/1.png\">"
+          "<meta property=\"og:image\" content=\"https://ex.com/2.png\">"
+          "<meta property=\"og:title\" content=\"T\">"
+          "<meta property=\"og:type\" content=\"article\">">>),
+    Has(<<"<meta name=\"twitter:card\" content=\"summary\">">>),
+    %% JSON-LD cannot close its script element
+    Has(<<"<script type=\"application/ld+json\">{\"@type\":\"Article\","
+          "\"headline\":\"\\u003c/script>\\u003cb>\"}</script>">>),
+    ?assertEqual(nomatch, binary:match(H, <<"</script><b>">>)),
+    %% none of it without the options
+    P = iolist_to_binary(aihtml:page(p(<<"x">>), #{})),
+    ?assertEqual(nomatch, binary:match(P, [<<"og:">>, <<"canonical">>, <<"ld+json">>, <<"description">>])).

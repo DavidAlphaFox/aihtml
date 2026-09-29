@@ -3,3 +3,20 @@
 
 /* The option's data island never shows. */
 .ah-chart > script.ah-chart-data { display: none; }
+
+/* The chart's data as a table in a div, or a caption in a p
+   (aihtml_lib_chart:data_text/2), for screen readers and search engines:
+   hidden visually only. Not display:none or
+   visibility:hidden, which would hide it from assistive technology too. */
+.ah-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}

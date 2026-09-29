@@ -36,6 +36,21 @@
 %%% into the page. `datatable_page(Columns, Rows, Query)' applies a query
 %%% to rows in memory.
 %%%
+%%% The first page is always rendered here: in remote mode the table
+%%% shows the Rows it is given (`total' defaults to their number; none
+%%% shows the empty text) and never loads on mount, so the HTML a crawler
+%%% gets already holds the data.
+%%%
+%%% == Links (href) ==
+%%%
+%%% With `href' (a URL template with {page}, {size}, {sort} and {search})
+%%% prev, next and the page numbers are `<a href>' links, so the pages
+%%% can be crawled and opened without script: the page behind that URL
+%%% reads the parameters and renders the table in that state (`page',
+%%% `page_size', `sort', `search'). With the script a plain click is
+%%% handled in place as before (local paging or the source action) and
+%%% the link's URL is pushed to the history; back and forward reload it.
+%%%
 %%% == Edits ==
 %%%
 %%% With `editable', a double click (or Enter / F2 on a row) edits a cell.
@@ -61,7 +76,7 @@
 -export([datatable/4, datatable_rows/3, datatable_row/4, datatable_query/1,
          render/1, fields/1, catalog/0, facade_extras/0]).
 %% In-memory queries and the pager model, for pages and tests.
--export([datatable_page/3, pager_view/5]).
+-export([datatable_page/3, pager_view/5, pager_view/6]).
 
 -export_type([element/0, column/0, row/0, query/0, condition/0, filter/0]).
 
@@ -111,7 +126,7 @@
 %% remote mode, the current page). Css: `disabled'. Options: `value',
 %% `selection_mode', `key_field', `sortable', `sort', `filter' (none | row
 %% | search | advanced), `filters', `search', `page_size', `page',
-%% `page_sizes', `total', `source', `editable', `edit', `row_details',
+%% `page_sizes', `total', `source', `href', `editable', `edit', `row_details',
 %% `expanded', `resizable', `column_chooser', `alt_rows', `hover',
 %% `show_header', `height', `empty_text', `texts'.
 -spec datatable([column()], [row()], css(), attrs()) -> #ah_datatable{}.
@@ -143,7 +158,8 @@ render_datatable(#ah_datatable{columns = Columns, rows = Rows0, value = Value, n
                                row_details = Details, expanded = Expanded0,
                                resizable = Resizable, column_chooser = Chooser,
                                alt_rows = AltRows, hover = Hover, show_header = ShowHeader,
-                               height = Height, empty_text = Empty, texts = Texts0} = R0) ->
+                               height = Height, empty_text = Empty, texts = Texts0,
+                               href = Href0} = R0) ->
     one_of(selection_mode, Mode, [none, single, multiple, checkbox]),
     one_of(filter, FilterMode, [none, row, search, advanced]),
     field_name(key_field, KF),
@@ -164,6 +180,11 @@ render_datatable(#ah_datatable{columns = Columns, rows = Rows0, value = Value, n
     is_list(Expanded0) orelse error({aihtml, {bad_option, expanded, Expanded0}}),
     is_list(Rows0) orelse error({aihtml, {bad_option, rows, Rows0}}),
     Texts = texts(Texts0),
+    Href = case Href0 of
+               undefined -> undefined;
+               _ when is_binary(Href0); is_list(Href0) -> text(Href0);
+               _ -> error({aihtml, {bad_option, href, Href0}})
+           end,
     Sort = sort_opt(Sort0),
     Filters = filters(Filters0),
     Search = text(Search0),
@@ -279,12 +300,14 @@ render_datatable(#ah_datatable{columns = Columns, rows = Rows0, value = Value, n
                 _ ->
                     ?H:el('div',
                           aihtml_tpl:safe(tpl_datatable_pager(
-                                            pager_view(Page, PageSize, Total, Sizes, Texts))),
+                                            pager_view(Page, PageSize, Total, Sizes, Texts,
+                                                       link_base(Href, Sort, Search)))),
                           [<<"ah-dt-pager-container">>],
                           [{data_info, maps:get(info, Texts)}, {data_prev, maps:get(prev, Texts)},
                            {data_next, maps:get(next, Texts)},
                            {data_size, maps:get(page_size, Texts)},
-                           {data_sizes, join([integer_to_binary(S) || S <- Sizes])}])
+                           {data_sizes, join([integer_to_binary(S) || S <- Sizes])},
+                           {data_href, Href}])
             end,
     Panel = case Chooser of
                 false -> [];
@@ -435,10 +458,19 @@ label_text(Title, F) ->
 
 %% @doc The view data of templates/datatable_pager.mustache: the range
 %% text, prev / next and the page buttons (1-based; the first and last
-%% page, the current one and its neighbours, gaps between).
+%% page, the current one and its neighbours, gaps between). No links.
 -spec pager_view(pos_integer(), pos_integer(), non_neg_integer(), [pos_integer()],
                  #{atom() => unicode:chardata()}) -> map().
 pager_view(Page, PageSize, Total, Sizes, Texts) ->
+    pager_view(Page, PageSize, Total, Sizes, Texts, undefined).
+
+%% @doc Like pager_view/5; with `Href' (the `href' template, its {sort}
+%% and {search} already filled in, see link_base/3) prev, next and the
+%% other pages are links, {page} and {size} filled in per link.
+%% datatable.js builds the same (pagerView).
+-spec pager_view(pos_integer(), pos_integer(), non_neg_integer(), [pos_integer()],
+                 #{atom() => unicode:chardata()}, undefined | binary()) -> map().
+pager_view(Page, PageSize, Total, Sizes, Texts, Href) ->
     Pages = pages(Total, PageSize),
     Start = case Total of 0 -> 0; _ -> (Page - 1) * PageSize + 1 end,
     End = min(Page * PageSize, Total),
@@ -446,16 +478,49 @@ pager_view(Page, PageSize, Total, Sizes, Texts) ->
                        text(maps:get(info, Texts)),
                        [{<<"{start}">>, Start}, {<<"{end}">>, End}, {<<"{total}">>, Total},
                         {<<"{page}">>, Page}, {<<"{pages}">>, Pages}]),
+    Link = Href =/= undefined,
+    Url = fun(P) when Link -> page_url(Href, P, PageSize);
+             (_) -> <<>>
+          end,
     #{info => Info,
       prev_label => text(maps:get(prev, Texts)), next_label => text(maps:get(next, Texts)),
       size_label => text(maps:get(page_size, Texts)),
       prev_disabled => Page =< 1, next_disabled => Page >= Pages,
+      prev_link => Link andalso Page > 1, prev_href => Url(Page - 1),
+      next_link => Link andalso Page < Pages, next_href => Url(Page + 1),
       buttons => [case B of
-                      gap -> #{gap => true, page => 0, active => false};
-                      N -> #{gap => false, page => N, active => N =:= Page}
+                      gap -> #{gap => true, page => 0, active => false, link => false,
+                               href => <<>>};
+                      N -> #{gap => false, page => N, active => N =:= Page,
+                             link => Link andalso N =/= Page, href => Url(N)}
                   end || B <- page_buttons(Page, Pages)],
       has_sizes => Sizes =/= [],
       sizes => [#{size => S, selected => S =:= PageSize} || S <- lists:usort([PageSize | Sizes])]}.
+
+%% The `href' template with {sort} (field:asc | field:desc, or empty)
+%% and {search} filled in, URL-encoded as encodeURIComponent does.
+link_base(undefined, _, _) -> undefined;
+link_base(Href, Sort, Search) ->
+    SortText = case Sort of
+                   undefined -> <<>>;
+                   {F, D} -> <<(text(F))/binary, ":", (atom_to_binary(D))/binary>>
+               end,
+    B1 = binary:replace(text(Href), <<"{sort}">>, uri_encode(SortText), [global]),
+    binary:replace(B1, <<"{search}">>, uri_encode(Search), [global]).
+
+page_url(Base, Page, Size) ->
+    B1 = binary:replace(Base, <<"{page}">>, integer_to_binary(Page), [global]),
+    binary:replace(B1, <<"{size}">>, integer_to_binary(Size), [global]).
+
+%% encodeURIComponent: UTF-8 bytes, all but A-Z a-z 0-9 - _ . ! ~ * ' ( )
+%% as %XX.
+uri_encode(B) ->
+    << <<(case C of
+              _ when C >= $a, C =< $z; C >= $A, C =< $Z; C >= $0, C =< $9 -> <<C>>;
+              _ when C =:= $-; C =:= $_; C =:= $.; C =:= $!; C =:= $~; C =:= $*;
+                     C =:= $'; C =:= $(; C =:= $) -> <<C>>;
+              _ -> iolist_to_binary(io_lib:format("%~2.16.0B", [C]))
+          end)/binary>> || <<C>> <= B >>.
 
 page_buttons(_, Pages) when Pages =< 7 -> lists:seq(1, Pages);
 page_buttons(Page, Pages) ->
@@ -687,7 +752,7 @@ catalog() ->
        signature => <<"datatable(Columns, Rows, Css, Attrs)">>,
        root => <<"ah-dt">>, flags => [disabled],
        options => [value, selection_mode, key_field, sortable, sort, filter, filters, search,
-                   page_size, page, page_sizes, total, source, editable, edit, row_details,
+                   page_size, page, page_sizes, total, source, href, editable, edit, row_details,
                    expanded, resizable, column_chooser, alt_rows, hover, show_header, height,
                    empty_text, texts],
        behavior => <<"datatable">>,
@@ -709,7 +774,14 @@ catalog() ->
                         page => <<"The current page, 1-based (default 1).">>,
                         page_sizes => <<"Choices of the page size select (default [5, 10, 25, 50]; "
                                         "[] hides it).">>,
-                        total => <<"Remote mode: the number of rows of the whole result.">>,
+                        total => <<"Remote mode: the number of rows of the whole result (default: "
+                                   "the number of Rows). The server always renders the page it "
+                                   "is given; the table never loads on mount.">>,
+                        href => <<"URL template of the pager's links, with {page}, {size}, {sort} "
+                                  "(field:asc or field:desc) and {search}: prev, next and the page "
+                                  "numbers become <a href> links a crawler can follow. A plain "
+                                  "click still pages in place (or asks the source) and pushes "
+                                  "the link's URL; the page at that URL must render that state.">>,
                         source => <<"Action ref {Module, Action, Args}: remote mode. Every view "
                                     "change runs it ('ah:query'); it answers with "
                                     "datatable_rows/3.">>,

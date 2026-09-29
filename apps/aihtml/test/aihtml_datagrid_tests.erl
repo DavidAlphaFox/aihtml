@@ -336,9 +336,71 @@ remote_render_test() ->
     ?assertEqual({ok, {?MODULE, people, #{}}}, aihtml_action:verify(Q)),
     ?assert(has(<<"Total 5">>, H)),
     ?assertNot(has_quiet(<<"data-i=">>, H)),
-    %% without a total the grid loads its first page itself
-    H2 = r(?M:datagrid(cols(), [], [], [{source, {?MODULE, people, #{}}}])),
-    ?assertNot(has_quiet(<<"data-ah-loaded">>, H2)).
+    %% without a total the rows given are the whole count; no rows is the
+    %% empty state, rendered here (the grid does not load on mount)
+    H2 = r(?M:datagrid(cols(), [], [pageable], [{source, {?MODULE, people, #{}}}])),
+    ?assert(has(<<"data-ah-loaded=\"true\"">>, H2)),
+    ?assert(has(<<"ah-dg-body ah-dg-body-empty">>, H2)),
+    ?assert(has(<<"<div class=\"ah-dg-empty-message\">No data</div>">>, H2)),
+    ?assert(has(<<"Total 0">>, H2)),
+    H3 = r(?M:datagrid(cols(), lists:sublist(rows(), 3), [pageable],
+                       [{source, {?MODULE, people, #{}}}])),
+    ?assertEqual([<<"1">>, <<"2">>, <<"3">>], shown(H3)),
+    ?assert(has(<<"Total 3">>, H3)).
+
+%%%===================================================================
+%%% Pager links (href)
+%%%===================================================================
+
+linked_html() ->
+    r(?M:datagrid(cols(), lists:sublist(rows(), 2), [pageable],
+                  [{id, lg}, {page_size, 2}, {page_sizes, [2, 4]}, {total, 5}, {page, 2},
+                   {sort, [{name, asc}, {age, desc}]}, {source, {?MODULE, people, #{}}},
+                   {href, <<"/p?page={page}&size={size}&sort={sort}&q={search}">>}])).
+
+pager_links_test() ->
+    H = linked_html(),
+    ?assert(has(<<"data-ah-href=\"/p?page={page}&amp;size={size}&amp;sort={sort}&amp;q={search}\"">>, H)),
+    ?assert(has(<<"<a class=\"ah-dg-pager-button\" href=\"/p?page=1&amp;size=2&amp;sort=name:asc,age:desc&amp;q=\" "
+                  "data-page=\"1\" aria-label=\"First page\">|&lt;</a>">>, H)),
+    ?assert(has(<<"<a class=\"ah-dg-pager-button ah-dg-pager-button-active\" "
+                  "href=\"/p?page=2&amp;size=2&amp;sort=name:asc,age:desc&amp;q=\" data-page=\"2\" "
+                  "aria-current=\"page\">2</a>">>, H)),
+    ?assert(has(<<"<a class=\"ah-dg-pager-button\" href=\"/p?page=3&amp;size=2&amp;sort=name:asc,age:desc&amp;q=\" "
+                  "data-page=\"3\" aria-label=\"Last page\">&gt;|</a>">>, H)),
+    ?assertNot(has_quiet(<<"<button type=\"button\" class=\"ah-dg-pager-button">>, H)),
+    %% on the first page first / prev stay disabled buttons
+    H1 = r(?M:datagrid(cols(), rows(), [pageable], [{page_size, 2}, {href, <<"?p={page}">>}])),
+    ?assert(has(<<"<button type=\"button\" class=\"ah-dg-pager-button\" data-page=\"1\" "
+                  "aria-label=\"First page\" disabled>|&lt;</button>">>, H1)),
+    ?assert(has(<<"<a class=\"ah-dg-pager-button\" href=\"?p=2\" data-page=\"2\" "
+                  "aria-label=\"Next page\">&gt;</a>">>, H1)),
+    %% without href the pager has no links and the root no data-ah-href
+    H0 = r(?M:datagrid(cols(), rows(), [pageable], [{page_size, 2}])),
+    ?assertNot(has_quiet(<<"<a class=\"ah-dg-pager-button">>, H0)),
+    ?assertNot(has_quiet(<<"data-ah-href">>, H0)),
+    ?assertError({aihtml, {bad_option, href, 7}},
+                 r(?M:datagrid(cols(), rows(), [], [{href, 7}]))).
+
+pager_view_links_test() ->
+    L = ?M:default_labels(),
+    V = ?M:pager_view(1, 10, 25, #{sizes => [10], labels => L, href => <<"/x/{page}">>}),
+    ?assertMatch(#{link := true, first_href := <<>>, prev_href := <<>>,
+                   next_href := <<"/x/2">>, last_href := <<"/x/3">>}, V),
+    ?assertEqual([<<"/x/1">>, <<"/x/2">>, <<"/x/3">>], [U || #{href := U} <- maps:get(pages, V)]),
+    ?assertNot(maps:is_key(link, ?M:pager_view(1, 10, 25, #{sizes => [10], labels => L}))).
+
+link_rows_test() ->
+    %% datagrid_rows/4 renders the links with the view of the query,
+    %% the search and sort URL-encoded like encodeURIComponent
+    Tok = token(linked_html(), <<"data-render">>),
+    Ev = #{type => <<"ah:query">>, id => <<"lg-q">>, value => null,
+           data => #{<<"render">> => Tok, <<"page">> => <<"1">>, <<"pageSize">> => <<"4">>,
+                     <<"sort">> => <<"[[\"age\",\"desc\"]]">>,
+                     <<"search">> => <<"a b&é/"/utf8>>}},
+    Ops = aihtml_action:render_ops(fun(Ctx) -> ?M:datagrid_rows(Ctx, Ev, rows(), 5) end),
+    [#{id := <<"lg-pager">>, html := P}] = [O || #{id := <<"lg-pager">>} = O <- Ops],
+    ?assert(has(<<"href=\"/p?page=2&amp;size=4&amp;sort=age:desc&amp;q=a%20b%26%C3%A9%2F\"">>, P)).
 
 query_event(Data) ->
     #{type => <<"ah:query">>, id => <<"rg-q">>, value => null, checked => null, key => null,

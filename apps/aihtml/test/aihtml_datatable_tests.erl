@@ -257,6 +257,77 @@ remote_round_trip_test() ->
                                                   ?M:datatable_rows(Ctx, Event, ?M:datatable(pcols(), [], [], []))
                                           end)).
 
+%%%===================================================================
+%%% Links (href)
+%%%===================================================================
+
+-define(HREF, <<"/t?p={page}&s={size}&o={sort}&q={search}">>).
+
+href_local_test() ->
+    H = r(?M:datatable(pcols(), people(), [],
+                       [{id, hl}, {page_size, 2}, {page, 2}, {sort, {age, desc}},
+                        {search, <<"a & b">>}, {filter, search}, {href, ?HREF}])),
+    %% nothing matches "a & b": one empty page, prev/next disabled buttons
+    ?assert(has(<<"data-href=\"/t?p={page}&amp;s={size}&amp;o={sort}&amp;q={search}\"">>, H)),
+    H2 = r(?M:datatable(pcols(), people(), [],
+                        [{id, hl}, {page_size, 2}, {page, 2}, {sort, {age, desc}},
+                         {href, ?HREF}])),
+    U = fun(P) -> <<"/t?p=", P/binary, "&amp;s=2&amp;o=age%3Adesc&amp;q=">> end,
+    ?assert(has(<<"<a class=\"ah-dt-pager-btn ah-dt-pager-btn-prev\" href=\"", (U(<<"1">>))/binary,
+                  "\" aria-label=\"Previous page\">">>, H2)),
+    ?assert(has(<<"<a class=\"ah-dt-pager-btn ah-dt-pager-btn-num\" href=\"", (U(<<"3">>))/binary,
+                  "\" data-page=\"3\">3</a>">>, H2)),
+    ?assert(has(<<"<a class=\"ah-dt-pager-btn ah-dt-pager-btn-next\" href=\"", (U(<<"3">>))/binary, "\"">>, H2)),
+    %% the current page stays a button
+    ?assert(has(<<"<button class=\"ah-dt-pager-btn ah-dt-pager-btn-num ah-dt-pager-btn-active\" "
+                  "type=\"button\" data-page=\"2\" aria-current=\"page\">2</button>">>, H2)),
+    %% the first page: prev is a disabled button, not a link
+    H3 = r(?M:datatable(pcols(), people(), [], [{id, hl}, {page_size, 2}, {href, ?HREF}])),
+    ?assert(has(<<"<button class=\"ah-dt-pager-btn ah-dt-pager-btn-prev\" type=\"button\" "
+                  "aria-label=\"Previous page\" disabled>">>, H3)),
+    ?assert(has(<<"href=\"/t?p=2&amp;s=2&amp;o=&amp;q=\"">>, H3)).
+
+href_encoding_test() ->
+    V = ?M:pager_view(1, 10, 25, [], #{info => <<>>, prev => <<>>, next => <<>>, page_size => <<>>},
+                      <<"/x?n={page}&s={size}">>),
+    ?assertMatch(#{prev_link := false, next_link := true, next_href := <<"/x?n=2&s=10">>}, V),
+    Odd = <<"Ö &'()*!~ /"/utf8>>,
+    Rows = [#{id => I, name => Odd, age => I, city => <<>>} || I <- [1, 2, 3]],
+    H = r(?M:datatable(pcols(), Rows, [],
+                       [{id, he}, {page_size, 1}, {filter, search}, {search, Odd},
+                        {href, <<"/y?q={search}&p={page}">>}])),
+    %% as encodeURIComponent: ' ( ) * ! ~ stay, the rest %XX (UTF-8)
+    ?assert(has(<<"href=\"/y?q=%C3%96%20%26&#39;()*!~%20%2F&amp;p=2\"">>, H)).
+
+href_absent_test() ->
+    %% without href: no links, no data-href
+    H = r(?M:datatable(pcols(), people(), [], [{id, hn}, {page_size, 2}, {page, 2}])),
+    ?assertNot(has_quiet(<<"<a ">>, H)),
+    ?assertNot(has_quiet(<<"data-href">>, H)),
+    ?assertEqual(?M:pager_view(2, 2, 5, [5], #{info => <<>>, prev => <<>>, next => <<>>, page_size => <<>>}),
+                 ?M:pager_view(2, 2, 5, [5], #{info => <<>>, prev => <<>>, next => <<>>, page_size => <<>>},
+                               undefined)).
+
+href_round_trip_test() ->
+    %% datatable_rows re-renders the table the action passes, links included,
+    %% with the event's sort and page
+    Event = query_event(#{<<"sortField">> => <<"name">>, <<"sortDir">> => <<"desc">>,
+                          <<"page">> => <<"2">>, <<"pageSize">> => <<"2">>}),
+    Table = ?M:datatable(pcols(), lists:sublist(people(), 2), [],
+                         [{source, {?MODULE, query, #{}}}, {total, 5}, {page_size, 2},
+                          {href, ?HREF}]),
+    [#{op := html, html := H}] =
+        aihtml_action:render_ops(fun(Ctx) -> ?M:datatable_rows(Ctx, Event, Table) end),
+    ?assert(has(<<"href=\"/t?p=3&amp;s=2&amp;o=name%3Adesc&amp;q=\"">>, H)),
+    ?assert(has(<<"href=\"/t?p=1&amp;s=2&amp;o=name%3Adesc&amp;q=\"">>, H)).
+
+remote_no_total_test() ->
+    %% remote mode renders what it is given: total defaults to the rows,
+    %% none shows the empty text (the table never loads on mount)
+    H = r(?M:datatable(pcols(), [], [], [{id, re}, {source, {?MODULE, query, #{}}}, {page_size, 2}])),
+    ?assert(has(<<"data-total=\"0\"">>, H)),
+    ?assert(has(<<"<tr class=\"ah-dt-row-empty\"><td class=\"ah-dt-cell-empty\"">>, H)).
+
 edit_round_trip_test() ->
     Event = #{type => <<"ah:cell-edit">>, id => <<"ah-e1">>, value => null,
               data => #{<<"key">> => <<"2">>, <<"field">> => <<"name">>, <<"value">> => <<"Bo">>,

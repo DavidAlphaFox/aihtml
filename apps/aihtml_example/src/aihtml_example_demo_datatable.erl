@@ -89,14 +89,22 @@ dt_columns() ->
               [{resizable, true}, {column_chooser, true}]).
 
 %% Each sort, filter or page change runs action(orders, ...) below, which
-%% queries the rows and answers with datatable_rows.
+%% queries the rows and answers with datatable_rows. The pager's links
+%% (href) lead to /components/datatable/state?dt_page=..., where this
+%% function renders that page from the query: crawlable without script.
 -spec dt_remote() -> aihtml:html().
 dt_remote() ->
-    {Rows, Total} = aihtml_datatable:datatable_page(order_columns(), orders(),
-                                                    #{sort => undefined, search => <<>>,
-                                                      filters => #{}, page => 1, page_size => 10,
-                                                      offset => 0, limit => 10}),
-    orders_table(Rows, Total).
+    Page = max(1, aihtml_example_state:int(<<"dt_page">>, 1)),
+    Size = min(50, max(1, aihtml_example_state:int(<<"dt_size">>, 10))),
+    Sort = case binary:split(aihtml_example_state:param(<<"dt_sort">>, <<>>), <<":">>) of
+               [F, <<"asc">>] -> {F, asc};
+               [F, <<"desc">>] -> {F, desc};
+               _ -> undefined
+           end,
+    Query = #{sort => Sort, search => <<>>, filters => #{}, page => Page, page_size => Size,
+              offset => (Page - 1) * Size, limit => Size},
+    {Rows, Total} = aihtml_datatable:datatable_page(order_columns(), orders(), Query),
+    orders_table(Rows, Total, Query).
 
 -spec dt_texts() -> aihtml:html().
 dt_texts() ->
@@ -161,10 +169,11 @@ orders() ->
        amount => 200 + (I * 7919) rem 50000, status => lists:nth(I rem 4 + 1, States)}
      || I <- lists:seq(1, 137)].
 
-orders_table(Rows, Total) ->
+orders_table(Rows, Total, #{page := Page, page_size := Size, sort := Sort}) ->
     datatable(order_columns(), Rows, [],
-              [{source, {?MODULE, orders, #{}}}, {total, Total}, {page_size, 10},
-               {filter, row}, {height, 470}]).
+              [{source, {?MODULE, orders, #{}}}, {total, Total}, {page, Page},
+               {page_size, Size}, {sort, Sort}, {filter, row}, {height, 470},
+               {href, <<"/components/datatable/state?dt_page={page}&dt_size={size}&dt_sort={sort}">>}]).
 
 thousands(N) when is_integer(N) ->
     S = integer_to_list(N),
@@ -192,6 +201,6 @@ action(employee_edited, _Args,
           end,
     datatable_row(Ctx, Event, editable_table(), Row#{F => New});
 action(orders, _Args, Event, Ctx) ->
-    {Rows, Total} = aihtml_datatable:datatable_page(order_columns(), orders(),
-                                                    datatable_query(Event)),
-    datatable_rows(Ctx, Event, orders_table(Rows, Total)).
+    Query = datatable_query(Event),
+    {Rows, Total} = aihtml_datatable:datatable_page(order_columns(), orders(), Query),
+    datatable_rows(Ctx, Event, orders_table(Rows, Total, Query)).

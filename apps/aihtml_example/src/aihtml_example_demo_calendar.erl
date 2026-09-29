@@ -30,10 +30,16 @@ demos() ->
 %%% Calendar
 %%%===================================================================
 
+%% The toolbar entries are also links (href): opened directly,
+%% /components/calendar/state renders the date and view of its query.
 -spec cal_month() -> aihtml:html().
 cal_month() ->
-    calendar(<<"2026-09-15">>, [],
+    View = aihtml_example_state:param(<<"cal_view">>, <<"month">>),
+    calendar(aihtml_example_state:param(<<"cal_date">>, <<"2026-09-15">>), [],
              [{height, 560},
+              {view, hd([V || V <- [month, week, day, list], atom_to_binary(V) =:= View]
+                        ++ [month])},
+              {href, <<"/components/calendar/state?cal_date={date}&cal_view={view}">>},
               {events, [#{title => <<"Kick-off">>, start => <<"2026-09-01T10:00">>,
                           'end' => <<"2026-09-01T11:30">>},
                         #{title => <<"Design review">>, start => <<"2026-09-15T14:00">>,

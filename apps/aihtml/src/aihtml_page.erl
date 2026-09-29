@@ -5,6 +5,24 @@
 %%%
 %%%   title        page title
 %%%   lang         `<html lang>', default <<"en">>
+%%%
+%%% What search engines and link previews read (all written into `<head>'):
+%%%
+%%%   description  `<meta name="description">'
+%%%   canonical    the page's canonical URL, `<link rel="canonical">'
+%%%   robots       `<meta name="robots">', e.g. <<"noindex, follow">>
+%%%   og           Open Graph properties, #{title, description, url, image,
+%%%                type, site_name, locale, ...} -> `<meta property="og:K">';
+%%%                a list value writes the property once per element
+%%%   meta         other `<meta name>' tags, #{Name => Content} or a list
+%%%                of pairs (e.g. twitter:card)
+%%%   alternates   language versions, [{Lang, Url}] ->
+%%%                `<link rel="alternate" hreflang=Lang href=Url>'
+%%%   json_ld      structured data (a map or a list of maps, schema.org),
+%%%                written as `<script type="application/ld+json">'
+%%%
+%%% Presentation and runtime:
+%%%
 %%%   theme        `aihtml_theme:theme()', written onto `<html>'
 %%%   persist      restore the viewer's saved theme before first paint,
 %%%                default true (the runtime saves it)
@@ -37,6 +55,13 @@
 -export_type([opts/0]).
 
 -type opts() :: #{title => aihtml_html:html(),
+                  description => iodata(),
+                  canonical => iodata(),
+                  robots => iodata(),
+                  og => #{atom() | binary() => iodata() | [iodata()]},
+                  meta => #{atom() | binary() => iodata()} | [{atom() | binary(), iodata()}],
+                  alternates => [{iodata() | atom(), iodata()}],
+                  json_ld => map() | [map()],
                   lang => binary(),
                   theme => aihtml_theme:theme(),
                   persist => boolean(),
@@ -77,6 +102,7 @@ render(Body, Opts) ->
                void(meta, [], [{name, viewport},
                                {content, <<"width=device-width, initial-scale=1">>}]),
                el(title, maps:get(title, Opts, <<>>), [], []),
+               seo(Opts),
                [el(script, {safe, ?BOOT}, [], []) || maps:get(persist, Opts, true)],
                [void(link, [], [{rel, modulepreload}, {href, U}]) || U <- Preload],
                [void(link, [], [{rel, stylesheet}, {href, iolist_to_binary(U)}])
@@ -100,3 +126,40 @@ runtime(Assets, default) ->
     #{file := File, imports := Imports} = aihtml_assets:entry(),
     {<<Assets/binary, "js/", File/binary>>, [<<Assets/binary, "js/", I/binary>> || I <- Imports]};
 runtime(_Assets, Url) -> {iolist_to_binary(Url), []}.
+
+%% The tags search engines and link previews read, in a stable order.
+seo(Opts) ->
+    Name = fun(N, V) -> void(meta, [], [{name, N}, {content, text(V)}]) end,
+    [[Name(description, V) || V <- opt(description, Opts)],
+     [Name(robots, V) || V <- opt(robots, Opts)],
+     [void(link, [], [{rel, canonical}, {href, text(V)}]) || V <- opt(canonical, Opts)],
+     [void(link, [], [{rel, alternate}, {hreflang, text(L)}, {href, text(U)}])
+      || {L, U} <- maps:get(alternates, Opts, [])],
+     [void(meta, [], [{property, <<"og:", (text(K))/binary>>}, {content, text(V)}])
+      || {K, Vs} <- pairs(maps:get(og, Opts, #{})), V <- values(Vs)],
+     [Name(text(K), V) || {K, V} <- pairs(maps:get(meta, Opts, []))],
+     [el(script, {safe, json_ld(D)}, [], [{type, <<"application/ld+json">>}])
+      || D <- opt(json_ld, Opts)]].
+
+opt(K, Opts) ->
+    case maps:get(K, Opts, undefined) of
+        undefined -> [];
+        V -> [V]
+    end.
+
+%% A map's pairs sorted by key (so the head is the same on every node), a
+%% list as given.
+pairs(M) when is_map(M) -> lists:sort([{text(K), V} || K := V <- M]);
+pairs(L) when is_list(L) -> L.
+
+%% A list of values (og:image several times) or one value.
+values([V | _] = L) when is_binary(V); is_list(V) -> L;
+values(V) -> [V].
+
+text(A) when is_atom(A) -> atom_to_binary(A, utf8);
+text(V) -> unicode:characters_to_binary(V).
+
+%% JSON inside <script>: `<' written as \u003c so the data cannot end the
+%% element (or open a comment).
+json_ld(Data) ->
+    binary:replace(iolist_to_binary(aihtml_json:encode(Data)), <<"<">>, <<"\\u003c">>, [global]).

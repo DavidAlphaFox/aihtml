@@ -267,3 +267,41 @@ records_match_catalog_test() ->
      end || #{name := N} = E <- ?M:catalog()].
 
 default(ah_calendar) -> #ah_calendar{}.
+
+%%%===================================================================
+%%% href: the toolbar entries become links
+%%%===================================================================
+
+href_of(Class, Html) ->
+    {match, [U]} = re:run(Html, <<"<a class=\"", Class/binary, "\" href=\"([^\"]*)\"">>,
+                          [{capture, all_but_first, binary}]),
+    U.
+
+cal_links(View, Date, Extra) ->
+    H = r(?M:calendar(Date, [], [{view, View}, {href, <<"/c/{view}/{date}">>} | Extra])),
+    {href_of(<<"ah-calendar-btn ah-calendar-btn-prev">>, H),
+     href_of(<<"ah-calendar-btn ah-calendar-btn-next">>, H), H}.
+
+href_links_test() ->
+    ?assertMatch({<<"/c/month/2030-02-28">>, <<"/c/month/2030-04-30">>, _},
+                 cal_links(month, <<"2030-03-31">>, [])),
+    ?assertMatch({<<"/c/week/2030-03-04">>, <<"/c/week/2030-03-18">>, _},
+                 cal_links(week, <<"2030-03-11">>, [])),
+    ?assertMatch({<<"/c/day/2030-03-10">>, <<"/c/day/2030-03-12">>, _},
+                 cal_links(day, <<"2030-03-11">>, [])),
+    ?assertMatch({<<"/c/list/2030-03-04">>, <<"/c/list/2030-03-18">>, _},
+                 cal_links(list, <<"2030-03-11">>, [{agenda_days, 7}])),
+    {_, _, H} = cal_links(week, <<"2030-03-11">>, []),
+    Today = aihtml_lib_date:iso_date(calendar:date_to_gregorian_days(date())),
+    ?assertEqual(<<"/c/week/", Today/binary>>, href_of(<<"ah-calendar-btn ah-calendar-btn-today">>, H)),
+    [?assert(has(<<"href=\"/c/", V/binary, "/2030-03-11\" data-view=\"", V/binary, "\"">>, H))
+     || V <- [<<"month">>, <<"week">>, <<"day">>, <<"list">>]],
+    ?assert(has(<<"data-view=\"week\" aria-current=\"true\"">>, H)),
+    ?assert(has(<<"data-ah-href=\"/c/{view}/{date}\"">>, H)),
+    ?assertEqual(0, count(<<"<button">>, H)).
+
+no_href_unchanged_test() ->
+    H = r(?M:calendar(<<"2030-03-11">>, [], [{events, events()}])),
+    ?assertEqual(0, count(<<"<a ">>, H)),
+    ?assertEqual(0, count(<<"data-ah-href">>, H)),
+    ?assert(has(<<"<button class=\"ah-calendar-btn ah-calendar-btn-prev\" type=\"button\"">>, H)).

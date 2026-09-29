@@ -222,6 +222,62 @@ postback_test() ->
     %% a postback on change is enough for the navigation buttons
     ?assert(has(<<"ah-scheduler-btn-next">>, r(#ah_scheduler{postback = shown}))).
 
+%% href: the toolbar entries become links to the state they lead to.
+-define(HREF, <<"/s?d={date}&v={view}">>).
+
+href_of(Class, Html) ->
+    {match, [U]} = re:run(Html, <<"<a class=\"", Class/binary, "\" href=\"([^\"]*)\"">>,
+                          [{capture, all_but_first, binary}]),
+    U.
+
+view_link(V, Html) ->
+    {match, [U]} = re:run(Html, <<"<a class=\"ah-scheduler-view-btn[^\"]*\" href=\"([^\"]*)\" "
+                                  "data-view=\"", V/binary, "\"">>,
+                          [{capture, all_but_first, binary}]),
+    U.
+
+nav_links(View, Date, Extra) ->
+    H = r(?M:scheduler([], Date, [], [{view, View}, {today, <<"2026-09-29">>},
+                                      {href, ?HREF} | Extra])),
+    {href_of(<<"ah-scheduler-btn ah-scheduler-btn-prev">>, H),
+     href_of(<<"ah-scheduler-btn ah-scheduler-btn-today">>, H),
+     href_of(<<"ah-scheduler-btn ah-scheduler-btn-next">>, H)}.
+
+scheduler_href_links_test() ->
+    V = fun(D, W) -> <<"/s?d=", D/binary, "&amp;v=", W/binary>> end,
+    ?assertEqual({V(<<"2026-09-22">>, <<"week">>), V(<<"2026-09-29">>, <<"week">>),
+                  V(<<"2026-10-06">>, <<"week">>)}, nav_links(week, <<"2026-09-29">>, [])),
+    ?assertEqual({V(<<"2026-09-28">>, <<"day">>), V(<<"2026-09-29">>, <<"day">>),
+                  V(<<"2026-09-30">>, <<"day">>)}, nav_links(day, <<"2026-09-29">>, [])),
+    %% months clamp the day (Jan 31 -> Feb 28)
+    ?assertEqual({V(<<"2025-12-31">>, <<"month">>), V(<<"2026-09-29">>, <<"month">>),
+                  V(<<"2026-02-28">>, <<"month">>)}, nav_links(month, <<"2026-01-31">>, [])),
+    ?assertEqual({V(<<"2026-08-29">>, <<"timeline_month">>), V(<<"2026-09-29">>, <<"timeline_month">>),
+                  V(<<"2026-10-29">>, <<"timeline_month">>)},
+                 nav_links(timeline_month, <<"2026-09-29">>, [])),
+    ?assertEqual({V(<<"2026-09-22">>, <<"timeline_week">>), V(<<"2026-09-29">>, <<"timeline_week">>),
+                  V(<<"2026-10-06">>, <<"timeline_week">>)},
+                 nav_links(timeline_week, <<"2026-09-29">>, [])),
+    ?assertEqual({V(<<"2026-09-19">>, <<"agenda">>), V(<<"2026-09-29">>, <<"agenda">>),
+                  V(<<"2026-10-09">>, <<"agenda">>)},
+                 nav_links(agenda, <<"2026-09-29">>, [{agenda_days, 10}])),
+    %% view links: the shown date in each view; the active one is aria-current
+    H = r(?M:scheduler([], <<"2026-09-10">>, [], [{view, week}, {href, ?HREF}])),
+    ?assertEqual(V(<<"2026-09-10">>, <<"month">>), view_link(<<"month">>, H)),
+    ?assertEqual(V(<<"2026-09-10">>, <<"day">>), view_link(<<"day">>, H)),
+    ?assert(has(<<"data-view=\"week\" aria-current=\"true\"">>, H)),
+    ?assertNot(has_quiet(<<"<button">>, H)),
+    %% the template goes to the root for the behaviour; href alone makes the
+    %% toolbar navigable
+    ?assert(has(<<"data-href=\"/s?d={date}&amp;v={view}\"">>, H)),
+    ?assert(has(<<"ah-scheduler-btn-next">>, H)).
+
+scheduler_no_href_unchanged_test() ->
+    H = sch(week, [{source, {?MODULE, load, #{}}}]),
+    ?assertNot(has_quiet(<<"<a ">>, H)),
+    ?assertNot(has_quiet(<<"data-href">>, H)),
+    ?assert(has(<<"<button class=\"ah-scheduler-btn ah-scheduler-btn-prev\" type=\"button\"">>, H)).
+
 field_validation_test() ->
     ?assertError({aihtml, {bad_option, first_day, 7}}, r(#ah_scheduler{first_day = 7})),
     ?assertError({aihtml, {bad_option, day_end, 3}}, r(#ah_scheduler{day_start = 5, day_end = 3})),

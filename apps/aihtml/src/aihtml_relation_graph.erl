@@ -5,6 +5,10 @@
 %%% toolbar, a detail card and loading / error / empty states. The graph
 %%% is drawn by a nested chart (see aihtml_chart and aihtml_lib_chart);
 %%% the panel's behaviour is assets/js/components/relation_graph.js.
+%%% Beside the canvas (which is aria-hidden) a visually hidden table lists
+%%% the nodes, their category and the nodes they link to, for screen
+%%% readers and search engines (aihtml_lib_chart:data_text/2); the root
+%%% names it with aria-describedby.
 %%%
 %%% relation_graph fires 'ah:select' with the selected node id in
 %%% `data-ah-value', and 'ah:refresh' when its refresh button is pressed
@@ -287,6 +291,7 @@ render(#ah_relation_graph{layout = Layout, loading = Loading, selected = Sel0,
     Classes = ?E:classes(?MODULE, R),
     [bool(K, V) || {K, V} <- [{loading, Loading}, {toolbar, Toolbar}]],
     Option = option(R),
+    {Text, TextId} = aihtml_lib_chart:data_text(R, Option),
     {Nodes, _, _} = graph_data(R#ah_relation_graph.graph),
     Sel = opt_text(Sel0),
     Focus = opt_text(Focus0),
@@ -310,6 +315,7 @@ render(#ah_relation_graph{layout = Layout, loading = Loading, selected = Sel0,
           [?H:el('div', island(Option), [<<"ah-relation-graph__canvas">>, <<"ah-chart">>],
                  [{data_ah, <<"chart">>}, {data_ah_renderer, renderer(Renderer)},
                   {aria_hidden, <<"true">>}, {style, <<"height:100%;">>}]),
+           Text,
            case Toolbar of
                false -> [];
                true ->
@@ -332,7 +338,8 @@ render(#ah_relation_graph{layout = Layout, loading = Loading, selected = Sel0,
            ?H:el('div', [], [<<"ah-relation-graph__live">>],
                  [{aria_live, polite}, {aria_atomic, <<"true">>}])],
           Classes,
-          [[{role, group}, {aria_roledescription, <<"relation graph">>}, {tabindex, 0},
+          [[{role, group}, {aria_roledescription, <<"relation graph">>},
+            {aria_describedby, TextId}, {tabindex, 0},
             {data_ah, <<"relation-graph">>}, {data_ah_value, Sel},
             {data_layout, Layout},
             {data_ah_focus, case Focus of <<>> -> undefined; _ -> Focus end},

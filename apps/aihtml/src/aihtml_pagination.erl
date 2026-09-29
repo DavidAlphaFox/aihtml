@@ -4,6 +4,20 @@
 %%% The page list is rendered with the shared template pagination_items,
 %%% which the behaviour (pagination.js) re-renders in the browser.
 %%%
+%%%
+%%% == Links ==
+%%%
+%%% With `href' (a URL template with {page} and {size}) every page is a
+%%% real `<a href>' link, so the page of each state has a URL: the server
+%%% renders it from the query, crawlers follow it, it opens in a new tab
+%%% and works without script. Without a server binding the link simply
+%%% loads. With `on(change, Action)' a plain click is handled in place:
+%%% the value changes, the action renders the new content (html/4 with
+%%% morph) and the browser pushes the link's URL to the history (like
+%%% aihtml_action:push_url/2, so the action need not), so back, forward
+%%% and reload load that URL from the server. The page handler reads the
+%%% page from the query and renders the same component with it.
+%%%
 %%% pagination/4 builds an element record (#ah_pagination{}, defined in
 %%% include/aihtml_pagination.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
@@ -35,8 +49,9 @@
 %% Options: page_size (10), page_sizes ([10,20,50,100]),
 %% show_size_selector (true), show_jumper, show_first_last, show_total,
 %% max_visible (7 slots) or siblings (pages on each side of the current
-%% one), href (a template with {page} and {size}: pages become links and
-%% no script is needed), labels (#{prev, next, first, last, per_page,
+%% one), href (a template with {page} and {size}: pages become links the
+%% server renders; with on(change, ...) a click updates in place and pushes
+%% the URL, see the module doc), labels (#{prev, next, first, last, per_page,
 %% total, goto, goto_suffix, goto_confirm, page_info, aria_label,
 %% per_page_aria}), name. Value: the current page.
 -spec pagination(non_neg_integer(), pos_integer(), css(), attrs()) -> #ah_pagination{}.
@@ -201,7 +216,10 @@ catalog() ->
                         show_total => <<"Show the item count.">>,
                         max_visible => <<"Slots for page numbers and gaps (default 7).">>,
                         siblings => <<"Pages on each side of the current one (instead of max_visible).">>,
-                        href => <<"Link template with {page} and {size}: pages become links, no script needed.">>,
+                        href => <<"Link template with {page} and {size}: pages become <a href> links the server "
+                                  "renders (crawlable, no script needed). With on(change, Action) a "
+                                  "plain click updates in place (the action renders the new content) "
+                                  "and pushes the link's URL; without a binding the link loads.">>,
                         labels => <<"Map overriding prev, next, first, last, per_page, total, goto, goto_suffix, goto_confirm, page_info, aria_label, per_page_aria.">>,
                         name => <<"Submit the page as a hidden input.">>,
                         simple => <<"Previous, Page x / y, Next only.">>,

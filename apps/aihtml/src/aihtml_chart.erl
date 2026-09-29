@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% @doc The echarts chart, ported from sigil (data/chart). It draws any
-%%% echarts option; the browser loads echarts on demand
-%%% (AH.vendor("echarts")) when the first chart mounts. The convenience
+%%% echarts option; the browser loads echarts on demand (a lazily loaded
+%%% chunk) when the first chart mounts. The convenience
 %%% charts (aihtml_area_chart, aihtml_bar_chart, aihtml_donut_chart,
 %%% aihtml_radar_chart, aihtml_relation_graph) build their option from
 %%% simple data and draw it the same way; what they share is in
@@ -17,9 +17,20 @@
 %%% build it from their simple data, as sigil's helpers do) and writes it
 %%% as JSON into a data island inside the chart's root:
 %%%
-%%%   <div class="ah-chart" data-ah="chart" role="img">
+%%%   <div class="ah-chart" data-ah="chart" role="figure" aria-describedby="c-data">
 %%%     <script type="application/json" class="ah-chart-data">{...}</script>
+%%%     <div class="ah-chart-text ah-sr-only" id="c-data"><table>...</table></div>
 %%%   </div>
+%%%
+%%% The table is the chart's data as text, for search engines and screen
+%%% readers (echarts draws on a canvas): the title as caption and the
+%%% rows and columns of simple option shapes (a dataset, series on a
+%%% category axis, pie / funnel, radar); for other shapes just the
+%%% caption. It is hidden visually only (ah-sr-only), and kept in step
+%%% with the data: chart_update/3 with a record sends the server's new
+%%% table, other updates (a map, setOption and setData in the browser)
+%%% have the browser rebuild it from echarts' merged option by the same
+%%% rules (see aihtml_lib_chart:data_text/2).
 %%%
 %%% The behaviour (assets/js/components/_lib_chart.js) loads echarts,
 %%% themes it from the --ah-* custom properties (palette, text, border,
@@ -109,15 +120,19 @@ chart_option(Other) -> error({aihtml, {not_a_chart, Other}}).
 %% @doc In an action: redraw the chart `Target' (usually `{id, Id}') in
 %% place. With a chart record the chart gets that record's option, merged
 %% into the current one so that series animate to their new data (a
-%% relation graph is replaced, since nodes may have gone); with a map the
-%% map is merged like echarts' setOption. Other fields of the record
-%% (size, css, attrs) are not applied: re-render the chart for those.
+%% relation graph is replaced, since nodes may have gone), and the
+%% server's readable data table of that record replaces the chart's
+%% (aihtml_lib_chart:data_text/2); with a map the map is merged like
+%% echarts' setOption and the browser rebuilds the table from the merged
+%% option. Other fields of the record (size, css, attrs) are not applied:
+%% re-render the chart for those.
 -spec chart_update(aihtml_action:ctx(), aihtml_action:target(), chart()) -> ok.
 chart_update(Ctx, Target, Option) when is_map(Option) ->
     aihtml_action:call(Ctx, Target, setOption, [?L:check_option(Option), false]);
 chart_update(Ctx, Target, R) ->
     Opt = chart_option(R),
-    aihtml_action:call(Ctx, Target, setOption, [Opt, element(1, R) =:= ah_relation_graph]).
+    aihtml_action:call(Ctx, Target, setOption, [Opt, element(1, R) =:= ah_relation_graph,
+                                                ?L:data_text_update(R, Opt)]).
 
 %%%===================================================================
 %%% Rendering

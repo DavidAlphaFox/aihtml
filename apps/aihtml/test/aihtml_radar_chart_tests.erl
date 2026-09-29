@@ -30,6 +30,17 @@ radar_option_test() ->
     ?assertMatch(#{<<"radar">> := #{<<"shape">> := <<"polygon">>}},
                  island(?M:radar_chart([], [], []))).
 
+%% Indicators x series as a visually hidden table.
+radar_text_test() ->
+    H = aihtml_html:render_binary(
+          ?M:radar_chart([{a, [1, 2]}, {b, [3, 4]}], [], [{id, r}, {indicators, [{x, 5}, {y, 5}]}])),
+    ?assertMatch({_, _}, binary:match(H, <<
+        "<div class=\"ah-chart-text ah-sr-only\" id=\"r-data\"><table>"
+        "<thead><tr><th scope=\"col\">Indicator</th><th scope=\"col\">a</th>"
+        "<th scope=\"col\">b</th></tr></thead><tbody>"
+        "<tr><th scope=\"row\">x</th><td>1</td><td>3</td></tr>"
+        "<tr><th scope=\"row\">y</th><td>2</td><td>4</td></tr></tbody></table></div>">>)).
+
 %%%===================================================================
 %%% Catalog
 %%%===================================================================
@@ -56,8 +67,9 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:radar_chart([{a, [1]}], [circle], [{indicators, [{x, 2}]}])),
-                 r(#ah_radar_chart{series = [{a, [1]}], shape = circle, indicators = [{x, 2}]})).
+    ?assertEqual(r(?M:radar_chart([{a, [1]}], [circle], [{id, c}, {indicators, [{x, 2}]}])),
+                 r(#ah_radar_chart{series = [{a, [1]}], shape = circle, indicators = [{x, 2}],
+                                   id = c})).
 
 field_validation_test() ->
     ?assertError({aihtml, {bad_indicator, {x, y}}}, r(#ah_radar_chart{indicators = [{x, y}]})),

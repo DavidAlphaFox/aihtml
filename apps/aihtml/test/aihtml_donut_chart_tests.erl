@@ -34,6 +34,17 @@ donut_option_test() ->
                          <<"label">> := #{<<"show">> := false}}],
       <<"legend">> := #{<<"bottom">> := 0}} = O2.
 
+%% The slices as a visually hidden table, the title as its caption.
+donut_text_test() ->
+    H = r(?M:donut_chart([{a, 1}, {b, 2}], [], [{id, d}, {title, <<"Share">>}])),
+    ?assertMatch({_, _}, binary:match(H, <<"aria-describedby=\"d-data\"">>)),
+    ?assertMatch({_, _}, binary:match(H, <<
+        "<div class=\"ah-chart-text ah-sr-only\" id=\"d-data\"><table><caption>Share</caption>"
+        "<thead><tr><th scope=\"col\">Name</th><th scope=\"col\">Value</th>"
+        "<th scope=\"col\">Share</th></tr></thead><tbody>"
+        "<tr><th scope=\"row\">a</th><td>1</td><td>33.3%</td></tr>"
+        "<tr><th scope=\"row\">b</th><td>2</td><td>66.7%</td></tr></tbody></table></div>">>)).
+
 %%%===================================================================
 %%% Catalog
 %%%===================================================================
@@ -60,8 +71,8 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:donut_chart([{a, 1}], [pie], [{labels, false}])),
-                 r(#ah_donut_chart{items = [{a, 1}], pie = true, labels = false})).
+    ?assertEqual(r(?M:donut_chart([{a, 1}], [pie], [{id, c}, {labels, false}])),
+                 r(#ah_donut_chart{items = [{a, 1}], pie = true, labels = false, id = c})).
 
 field_validation_test() ->
     ?assertError({aihtml, {bad_item, {a, b}}}, r(#ah_donut_chart{items = [{a, b}]})),

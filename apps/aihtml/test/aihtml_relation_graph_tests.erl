@@ -34,11 +34,19 @@ graph_markup_test() ->
                             [{id, g}, {selected, a}, {focus, b},
                              {details, #{a => <<"<Ann>">>, b => <<"Bob">>}}])),
     ?assert(has(<<"<div class=\"ah-relation-graph\" role=\"group\" "
-                  "aria-roledescription=\"relation graph\" tabindex=\"0\" "
+                  "aria-roledescription=\"relation graph\" aria-describedby=\"g-data\" tabindex=\"0\" "
                   "data-ah=\"relation-graph\" data-ah-value=\"a\" data-layout=\"force\" "
                   "data-ah-focus=\"b\" style=\"height:420px;\" id=\"g\">">>, H)),
     ?assert(has(<<"<div class=\"ah-relation-graph__canvas ah-chart\" data-ah=\"chart\" "
                   "aria-hidden=\"true\" style=\"height:100%;\">">>, H)),
+    %% the nodes as a visually hidden table, right after the canvas
+    ?assert(has(<<"</script></div><div class=\"ah-chart-text ah-sr-only\" id=\"g-data\"><table>"
+                  "<thead><tr><th scope=\"col\">Node</th><th scope=\"col\">Category</th>"
+                  "<th scope=\"col\">Links to</th></tr></thead><tbody>"
+                  "<tr><th scope=\"row\">Ann</th><td>people</td><td>Bob, t (leads)</td></tr>"
+                  "<tr><th scope=\"row\">Bob</th><td></td><td></td></tr>"
+                  "<tr><th scope=\"row\">t</th><td>teams</td><td></td></tr></tbody></table></div>"
+                  "<div class=\"ah-relation-graph__toolbar\"">>, H)),
     ?assert(has(<<"data-act=\"fit\" title=\"Fit view\" aria-label=\"Fit view\"">>, H)),
     ?assert(has(<<"data-act=\"refresh\"">>, H)),
     ?assert(has(<<"<div class=\"ah-relation-graph__detail\" data-visible=\"true\">">>, H)),
@@ -142,9 +150,9 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:relation_graph({[a], []}, [tree, rl, directed], [{selected, a}])),
+    ?assertEqual(r(?M:relation_graph({[a], []}, [tree, rl, directed], [{id, g}, {selected, a}])),
                  r(#ah_relation_graph{graph = {[a], []}, layout = tree, orient = rl,
-                                      directed = true, selected = a})).
+                                      directed = true, selected = a, id = g})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_relation_graph{layout = circular, node_shape = square, height = 300},

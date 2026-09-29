@@ -30,11 +30,15 @@ demos() ->
 %%% Scheduler
 %%%===================================================================
 
-%% Navigating calls action(load_range, ...) below, which renders the
-%% range the event asks for from appointments/2.
+%% Navigating calls action(load_rooms, ...) below, which renders the
+%% range the event asks for from appointments/2. The toolbar entries are
+%% also links (href): opened directly, /components/scheduler/state renders
+%% the date and view of its query.
 -spec sched_week() -> aihtml:html().
 sched_week() ->
-    'div'([rooms(week, appointments(<<"2026-09-28">>, <<"2026-10-05">>)),
+    Date = aihtml_example_state:param(<<"sc_date">>, <<"2026-09-29">>),
+    View = aihtml_example_state:param(<<"sc_view">>, <<"week">>),
+    'div'([rooms(Date, View, appointments(<<"2026-01-01">>, <<"2027-01-01">>)),
            p(<<"拖动预约换时间或会议室，在空白处拖动选择时段；右键打开菜单。"/utf8>>,
              [<<"text-sm text-muted mt-2">>], [{id, <<"rooms-log">>}])], [], []).
 
@@ -81,11 +85,13 @@ sched_record() ->
            p(<<"切换日期或视图时，服务端会收到 change 事件。"/utf8>>,
              [<<"text-sm text-muted mt-2">>], [{id, <<"sched-log">>}])], [], []).
 
-rooms(View, Events) ->
-    scheduler(Events, <<"2026-09-29">>, [editable],
-              [{view, View}, {views, [day, week, month, timeline_day, agenda]},
-               {resources, resources()}, {height, 560},
+rooms(Date, View, Events) ->
+    Views = [day, week, month, timeline_day, agenda],
+    scheduler(Events, Date, [editable],
+              [{view, hd([V || V <- Views, atom_to_binary(V) =:= View] ++ [week])},
+               {views, Views}, {resources, resources()}, {height, 560},
                {source, {?MODULE, load_rooms, #{}}},
+               {href, <<"/components/scheduler/state?sc_date={date}&sc_view={view}">>},
                on('ah:event-change', {?MODULE, appointment_changed, #{}})]).
 
 %%%===================================================================
@@ -95,7 +101,7 @@ rooms(View, Events) ->
 -spec action(atom(), term(), aihtml_action:event(), aihtml_action:ctx()) -> ok.
 action(load_rooms, _Args, Event, Ctx) ->
     #{start := S, 'end' := E} = scheduler_range(Event),
-    scheduler_update(Ctx, Event, rooms(week, appointments(S, E)));
+    scheduler_update(Ctx, Event, rooms(undefined, <<"week">>, appointments(S, E)));
 action(load_timeline, _Args, Event, Ctx) ->
     #{start := S, 'end' := E} = scheduler_range(Event),
     scheduler_update(Ctx, Event, sched_with(sched_timeline(), appointments(S, E)));

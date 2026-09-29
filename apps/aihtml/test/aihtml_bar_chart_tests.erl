@@ -60,8 +60,8 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:bar_chart([{a, [1]}], [horizontal], [{bar_width, 9}])),
-                 r(#ah_bar_chart{series = [{a, [1]}], horizontal = true, bar_width = 9})).
+    ?assertEqual(r(?M:bar_chart([{a, [1]}], [horizontal], [{id, c}, {bar_width, 9}])),
+                 r(#ah_bar_chart{series = [{a, [1]}], horizontal = true, bar_width = 9, id = c})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_bar_chart{series = [], stack = true, horizontal = false, title = <<"t">>,

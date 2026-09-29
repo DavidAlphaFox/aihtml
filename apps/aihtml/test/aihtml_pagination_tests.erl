@@ -71,6 +71,25 @@ pagination_simple_and_links_test() ->
     ?assert(has(L, <<"<a class=\"ah-pagination-nav\" href=\"?p=2&amp;s=10\" data-type=\"next\"">>)),
     ?assert(has(L, <<"ah-pagination-nav ah-pagination-nav-disabled\" data-type=\"prev\"">>)).
 
+%% Crawlable navigation: every enabled entry is a real link with the URL of
+%% its page; a server binding keeps the links (the browser intercepts
+%% them) and carries the template on the root for the pushed URL.
+links_for_every_state_test() ->
+    H = r(?M:pagination(95, 3, [], [{href, <<"/list?page={page}&size={size}">>},
+                                    {page_size, 20}, {show_first_last, true},
+                                    aihtml:on(change, {?MODULE, page, #{}})])),
+    Hrefs = [U || [U] <- element(2, re:run(H, <<"<a [^>]*href=\"([^\"]*)\"">>,
+                                              [global, {capture, all_but_first, binary}]))],
+    Url = fun(P) -> <<"/list?page=", (integer_to_binary(P))/binary, "&amp;size=20">> end,
+    ?assertEqual([Url(P) || P <- [1, 2, 1, 2, 3, 4, 5, 4, 5]], Hrefs),
+    ?assert(has(H, <<"aria-current=\"page\">3</a>">>)),
+    ?assert(has(H, <<"data-href=\"/list?page={page}&amp;size={size}\"">>)),
+    ?assert(has(H, <<"data-ah-on=\"change:">>)),
+    %% the last page: next and last are not links
+    Last = r(?M:pagination(95, 5, [], [{href, <<"?p={page}">>}, {page_size, 20}])),
+    ?assert(has(Last, <<"ah-pagination-nav ah-pagination-nav-disabled\" data-type=\"next\"">>)),
+    ?assertNot(has(Last, <<"data-type=\"next\" aria-label">>)).
+
 %%% CSS: every sigil class the module writes exists in the stylesheets
 
 classes_are_styled_test() ->

@@ -70,9 +70,9 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:area_chart([{a, [1]}], [line], [{categories, [x]}, {legend, top}])),
+    ?assertEqual(r(?M:area_chart([{a, [1]}], [line], [{id, c}, {categories, [x]}, {legend, top}])),
                  r(#ah_area_chart{series = [{a, [1]}], line = true, categories = [x],
-                                  legend = top})).
+                                  legend = top, id = c})).
 
 field_validation_test() ->
     ?assertError({aihtml, {bad_series, {a, [x]}}}, r(#ah_area_chart{series = [{a, [x]}]})),

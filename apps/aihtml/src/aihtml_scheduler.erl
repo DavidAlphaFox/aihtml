@@ -35,7 +35,22 @@
 %%% the date and view come from the event, the new view is rendered here
 %%% and morphed into the page. The browser never renders a range itself,
 %%% so the page holds only what is visible. Without `source' (or a change
-%%% postback) the toolbar shows only the title.
+%%% postback, or `href') the toolbar shows only the title.
+%%%
+%%% == Links (href) ==
+%%%
+%%% With `{href, <<"/agenda?date={date}&view={view}">>}' the toolbar's
+%%% prev, today, next and view buttons are links (`<a href>') to the date
+%%% and view they lead to, so every state has a URL the server can render
+%%% by itself: crawlers and pages opened without script follow them, and
+%%% the page reads `date' and `view' from its query to render that state.
+%%% When the scheduler is bound (a `source' or a change postback), the
+%%% behaviour intercepts a plain click: it navigates in the page as the
+%%% buttons do (change, the action morphs the new range in) and pushes the
+%%% link's URL, so back, forward and bookmarks work (going back reloads
+%%% that URL). Modified clicks (new tab) and unbound schedulers follow the
+%%% link. The behaviour keeps the links pointing at the neighbours of the
+%%% shown date.
 %%%
 %%% scheduler/4 builds an #ah_scheduler{} (include/aihtml_scheduler.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
@@ -121,7 +136,8 @@
 %% more", 3), `hour_format' (12 or 24), `today' (the date highlighted,
 %% default the server's date), `toolbar' (default true), `source' (the
 %% action that loads another range, see the module doc), `labels',
-%% `name' (a hidden input with the shown date).
+%% `href' (a URL template with {date} and {view}: the toolbar becomes
+%% links, see the module doc), `name' (a hidden input with the shown date).
 -spec scheduler([event()], aihtml_lib_date:date(), aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_scheduler{}.
 scheduler(Events, Value, Css, Attrs) ->
@@ -195,10 +211,12 @@ render(#ah_scheduler{view = View, views = Views, editable = Editable} = R0) ->
            end,
     #{postback := Postback} = ?E:base(R),
     Source = R#ah_scheduler.source,
-    Navigable = Source =/= undefined orelse Postback =/= undefined,
+    Href = R#ah_scheduler.href,
+    Navigable = Source =/= undefined orelse Postback =/= undefined orelse Href =/= undefined,
     Iso = ?D:iso_date(Cur),
+    Nav = #{href => Href, cur => Cur, today => Today, view => View, agenda => Agenda},
     ?H:el('div',
-          [[sch_toolbar(Title, Navigable, Views, View, L) || R#ah_scheduler.toolbar],
+          [[sch_toolbar(Title, Navigable, Views, Nav, L) || R#ah_scheduler.toolbar],
            hidden(R#ah_scheduler.name, Iso),
            ?H:el('div', Body, [<<"ah-scheduler-view-container">>], []),
            [sch_menus(L) || Editable],
@@ -215,6 +233,7 @@ render(#ah_scheduler{view = View, views = Views, editable = Editable} = R0) ->
             {data_day_start, DS}, {data_day_end, DE},
             {data_hour_format, HF}, {data_am, maps:get(am, L)}, {data_pm, maps:get(pm, L)},
             {data_editable, Editable},
+            {data_href, case Href of undefined -> undefined; _ -> text(Href) end},
             {role, region}, {aria_label, Title}],
            case Source of
                undefined -> [];
@@ -239,30 +258,66 @@ sch_title(_, _, S, E, L) ->
     [fmt(S * ?DAY, maps:get(range_start, L), L), <<" – "/utf8>>,
      fmt((E - 1) * ?DAY, maps:get(range_end, L), L)].
 
-sch_toolbar(Title, Navigable, Views, View, L) ->
+sch_toolbar(Title, Navigable, Views, #{view := View} = Nav, L) ->
     ?H:el('div',
           ?H:el('div',
                 [?H:el('div',
-                       [[?H:el(button, <<"‹"/utf8>>, [<<"ah-scheduler-btn ah-scheduler-btn-prev">>],
-                               [{type, button}, {aria_label, maps:get(prev, L)}]),
-                         ?H:el(button, maps:get(today, L), [<<"ah-scheduler-btn ah-scheduler-btn-today">>],
-                               [{type, button}]),
-                         ?H:el(button, <<"›"/utf8>>, [<<"ah-scheduler-btn ah-scheduler-btn-next">>],
-                               [{type, button}, {aria_label, maps:get(next, L)}])]
+                       [[nav_btn(<<"‹"/utf8>>, <<"ah-scheduler-btn ah-scheduler-btn-prev">>,
+                                 [{aria_label, maps:get(prev, L)}], nav_url(Nav, prev, View)),
+                         nav_btn(maps:get(today, L), <<"ah-scheduler-btn ah-scheduler-btn-today">>,
+                                 [], nav_url(Nav, today, View)),
+                         nav_btn(<<"›"/utf8>>, <<"ah-scheduler-btn ah-scheduler-btn-next">>,
+                                 [{aria_label, maps:get(next, L)}], nav_url(Nav, next, View))]
                         || Navigable],
                        [<<"ah-scheduler-toolbar-left">>], []),
                  ?H:el('div', ?H:el(h2, Title, [<<"ah-scheduler-title">>], [{aria_live, polite}]),
                        [<<"ah-scheduler-toolbar-center">>], []),
                  ?H:el('div',
-                       [[?H:el(button, maps:get(V, L),
-                               [<<"ah-scheduler-view-btn">>,
-                                [<<" ah-scheduler-view-btn-active">> || V =:= View]],
-                               [{type, button}, {data_view, V},
-                                {aria_pressed, atom_to_binary(V =:= View)}])
+                       [[view_btn(V, View, maps:get(V, L), nav_url(Nav, current, V))
                          || V <- Views] || Navigable],
                        [<<"ah-scheduler-toolbar-right">>], [{role, group}])],
                 [<<"ah-scheduler-toolbar-inner">>], []),
           [<<"ah-scheduler-toolbar">>], [{role, toolbar}]).
+
+%% A toolbar button, or with the `href' option a link to the same state
+%% (the behaviour follows it in the page when the scheduler is bound to
+%% an action; without script the server renders the linked page).
+nav_btn(Content, Class, Attrs, undefined) ->
+    ?H:el(button, Content, [Class], [{type, button} | Attrs]);
+nav_btn(Content, Class, Attrs, Url) ->
+    ?H:el(a, Content, [Class], [{href, Url} | Attrs]).
+
+view_btn(V, View, Label, undefined) ->
+    ?H:el(button, Label,
+          [<<"ah-scheduler-view-btn">>, [<<" ah-scheduler-view-btn-active">> || V =:= View]],
+          [{type, button}, {data_view, V}, {aria_pressed, atom_to_binary(V =:= View)}]);
+view_btn(V, View, Label, Url) ->
+    ?H:el(a, Label,
+          [<<"ah-scheduler-view-btn">>, [<<" ah-scheduler-view-btn-active">> || V =:= View]],
+          [{href, Url}, {data_view, V}, {aria_current, V =:= View andalso <<"true">>}]).
+
+%% The link of a toolbar entry: the date prev / next / today moves to in
+%% view `V', or the current date (a view button), put in the template.
+nav_url(#{href := undefined}, _, _) -> undefined;
+nav_url(#{href := Href, cur := Cur, today := Today, view := View, agenda := Agenda}, Which, V) ->
+    D = case Which of
+            prev -> step(View, Cur, -1, Agenda);
+            next -> step(View, Cur, 1, Agenda);
+            today -> Today;
+            current -> Cur
+        end,
+    fill_href(Href, D, V).
+
+-spec fill_href(unicode:chardata(), aihtml_lib_date:days(), view()) -> binary().
+fill_href(Href, D, V) ->
+    B = binary:replace(text(Href), <<"{date}">>, ?D:iso_date(D), [global]),
+    binary:replace(B, <<"{view}">>, atom_to_binary(V), [global]).
+
+%% The day prev (-1) or next (1) shows (the twin of step() in scheduler.js).
+step(View, D, Dir, _) when View =:= day; View =:= timeline_day -> D + Dir;
+step(View, D, Dir, _) when View =:= week; View =:= timeline_week -> D + 7 * Dir;
+step(View, D, Dir, _) when View =:= month; View =:= timeline_month -> ?D:add_months(D, Dir);
+step(agenda, D, Dir, Agenda) -> D + Agenda * Dir.
 
 %% Context menus as inert templates, cloned by the behaviour.
 sch_menus(L) ->
@@ -940,7 +995,7 @@ catalog() ->
        classes => #{editable => [], no_all_day => []},
        options => [view, views, resources, first_day, slot_duration, slot_height,
                    day_start, day_end, height, agenda_days, day_max_events, hour_format,
-                   today, toolbar, source, labels],
+                   today, toolbar, source, href, labels],
        behavior => <<"scheduler">>,
        events => [<<"change">>, <<"ah:event-click">>, <<"ah:event-change">>,
                   <<"ah:event-edit">>, <<"ah:event-delete">>, <<"ah:event-copy">>,
@@ -970,7 +1025,12 @@ catalog() ->
              hour_format => <<"12 (default) or 24.">>,
              today => <<"The date highlighted as today (default the server's date).">>,
              toolbar => <<"Show the toolbar (default true). Its navigation buttons appear only "
-                          "with a source or a change postback.">>,
+                          "with a source, a change postback or href.">>,
+             href => <<"URL template with {date} (ISO) and {view}: prev, today, next and the "
+                       "view buttons become links to that state, which the server renders "
+                       "when a link is opened directly (crawlers, new tabs, bookmarks). With a "
+                       "source or change postback a plain click navigates in the page and "
+                       "pushes the link's URL; without one it follows the link.">>,
              source => <<"Action ref {Module, Action, Args} bound to change: it loads the range "
                          "the event names (scheduler_range/1) and answers with "
                          "scheduler_update/3.">>,

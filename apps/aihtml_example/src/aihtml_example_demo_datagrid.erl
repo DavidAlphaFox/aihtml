@@ -137,17 +137,22 @@ grid_toolbar() ->
              [<<"text-sm text-muted mt-2">>], [{id, <<"dg-tool-log">>}])],
           [], []).
 
-%% Only the first page is rendered; sorting, the filter row, the pager and
-%% the export ask action(people, ...) below, which answers with
-%% datagrid_rows/4.
+%% Only one page is rendered here: the first, or the one a pager link
+%% names (href: /components/datagrid/state?dg_page=...). With JavaScript,
+%% sorting, the filter row, the pager and the export ask action(people, ...)
+%% below, which answers with datagrid_rows/4; a pager click also pushes
+%% the link's URL.
 -spec grid_remote() -> aihtml:html().
 grid_remote() ->
-    Query = #{sort => [], filters => [], search => <<>>, page => 1, page_size => 5,
-              offset => 0, limit => 5, export => undefined},
+    {Page, Size, Sort} = remote_view(),
+    Query = #{sort => Sort, filters => [], search => <<>>, page => Page, page_size => Size,
+              offset => (Page - 1) * Size, limit => Size, export => undefined},
     {Rows, Total} = datagrid_select(Query, employees()),
     datagrid(columns(), Rows, [filter_row, pageable, checkbox],
-             [{source, {?MODULE, people, #{}}}, {total, Total}, {page_size, 5},
-              {page_sizes, [5, 10, 20]}, {toolbar, [search, spacer, export_csv]}]).
+             [{source, {?MODULE, people, #{}}}, {total, Total}, {page, Page},
+              {page_size, Size}, {sort, Sort}, {page_sizes, [5, 10, 20]},
+              {toolbar, [search, spacer, export_csv]},
+              {href, <<"/components/datagrid/state?dg_page={page}&dg_size={size}&dg_sort={sort}">>}]).
 
 -spec grid_change() -> aihtml:html().
 grid_change() ->
@@ -196,6 +201,22 @@ action(command, _Args, #{data := #{<<"key">> := Key, <<"name">> := Name}}, Ctx) 
 action(tool, _Args, #{value := Keys, data := #{<<"name">> := Name}}, Ctx) ->
     aihtml_action:html(Ctx, {id, <<"dg-tool-log">>},
                        [<<"工具栏 "/utf8>>, Name, <<"，选中行："/utf8>>, Keys]).
+
+%% The remote grid's view from the state page's query (dg_page, dg_size,
+%% dg_sort = field:asc,field:desc), only known sizes and columns.
+remote_view() ->
+    Size = case aihtml_example_state:int(<<"dg_size">>, 5) of
+               N when N =:= 10; N =:= 20 -> N;
+               _ -> 5
+           end,
+    Pages = (length(employees()) + Size - 1) div Size,
+    Page = max(1, min(aihtml_example_state:int(<<"dg_page">>, 1), Pages)),
+    Sort = [{K, D} || Part <- binary:split(aihtml_example_state:param(<<"dg_sort">>, <<>>),
+                                           <<",">>, [global]),
+                      [F, Dir] <- [binary:split(Part, <<":">>)],
+                      #{key := K} <- columns(), atom_to_binary(K) =:= F,
+                      D <- [asc, desc], atom_to_binary(D) =:= Dir],
+    {Page, Size, Sort}.
 
 parse(active, V) -> V =:= <<"true">>;
 parse(F, V) when F =:= age; F =:= salary ->

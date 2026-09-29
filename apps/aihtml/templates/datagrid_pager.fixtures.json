@@ -6,5 +6,16 @@
    "sizes": [{"size": 10, "text": "10 / page", "selected": true}, {"size": 20, "text": "20 / page", "selected": false}]},
   {"label": "<p>", "info": "共 0 条", "prev": 1, "next": 1, "last": 1, "at_start": true, "at_end": true,
    "first_label": "a\"b", "prev_label": "&", "next_label": "n", "last_label": "l",
-   "pages": [], "size_label": "s", "sizes": [{"size": 5, "text": "5 条/页", "selected": true}]}
+   "pages": [], "size_label": "s", "sizes": [{"size": 5, "text": "5 条/页", "selected": true}]},
+  {"label": "Pages", "info": "Total 57", "prev": 2, "next": 4, "last": 6, "at_start": false, "at_end": false,
+   "first_label": "First page", "prev_label": "Previous page", "next_label": "Next page", "last_label": "Last page",
+   "link": true, "first_href": "/p?page=1&s=a%20b", "prev_href": "/p?page=2&s=a%20b",
+   "next_href": "/p?page=4&s=a%20b", "last_href": "/p?page=6&s=\"x\"",
+   "pages": [{"page": 2, "active": false, "link": true, "href": "/p?page=2"}, {"page": 3, "active": true, "link": true, "href": "/p?page=3&a=<b>"}],
+   "size_label": "Rows per page", "sizes": [{"size": 10, "text": "10 / page", "selected": true}]},
+  {"label": "Pages", "info": "Total 3", "prev": 1, "next": 1, "last": 1, "at_start": true, "at_end": true,
+   "first_label": "f", "prev_label": "p", "next_label": "n", "last_label": "l",
+   "link": true, "first_href": "", "prev_href": "", "next_href": "", "last_href": "",
+   "pages": [{"page": 1, "active": true, "link": true, "href": "/p?page=1"}],
+   "size_label": "s", "sizes": [{"size": 5, "text": "5", "selected": true}]}
 ]

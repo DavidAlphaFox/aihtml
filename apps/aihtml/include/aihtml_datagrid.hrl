@@ -12,9 +12,11 @@
 %% grouping with aggregates and CSV / Excel / PDF export. Postback fires
 %% on change (the selection; Event.value is the selected keys, comma
 %% separated). Local mode: the rows are rendered here and the browser
-%% sorts, filters, pages and groups them. Remote mode (`source' set): every
-%% view change runs that action, which answers with
-%% aihtml_datagrid:datagrid_rows/4. Without an `id' one is generated.
+%% sorts, filters, pages and groups them. Remote mode (`source' set): the
+%% rows given are the first page (rendered here, `total' defaults to their
+%% count) and every view change runs that action, which answers with
+%% aihtml_datagrid:datagrid_rows/4. `href' makes the pager buttons links.
+%% Without an `id' one is generated.
 -record(ah_datagrid, {?AH_BASE(aihtml_datagrid),
                       columns = [] :: [aihtml_datagrid:column()],
                       rows = [] :: [aihtml_datagrid:row()],
@@ -39,6 +41,7 @@
                       labels = #{} :: #{atom() => unicode:chardata()},
                       source = undefined :: undefined | aihtml_action:ref(),
                       total = undefined :: undefined | non_neg_integer(),
+                      href = undefined :: undefined | unicode:chardata(),
                       name = undefined :: undefined | atom() | iodata()}).
 
 -endif.
