@@ -1,0 +1,10 @@
+[
+  {"items": [
+    {"role": "menuitemradio", "action": "sort-asc", "field": "name", "checkable": true, "checked": "true", "mark": "✓", "label": "Sort ascending"},
+    {"role": "menuitem", "action": "sort-clear", "field": "name", "checkable": false, "checked": "false", "mark": "", "label": "Clear sort"},
+    {"sep": true},
+    {"heading": "Columns <all>"},
+    {"role": "menuitemcheckbox", "action": "toggle-column", "field": "a\"b", "checkable": true, "checked": "false", "mark": "", "label": "<i>Age</i>"}
+  ]},
+  {"items": []}
+]

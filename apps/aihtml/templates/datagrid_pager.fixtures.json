@@ -1,0 +1,10 @@
+[
+  {"label": "Pages", "info": "Total 57", "prev": 2, "next": 4, "last": 6, "at_start": false, "at_end": false,
+   "first_label": "First page", "prev_label": "Previous page", "next_label": "Next page", "last_label": "Last page",
+   "pages": [{"page": 1, "active": false}, {"page": 2, "active": false}, {"page": 3, "active": true}],
+   "size_label": "Rows per page",
+   "sizes": [{"size": 10, "text": "10 / page", "selected": true}, {"size": 20, "text": "20 / page", "selected": false}]},
+  {"label": "<p>", "info": "共 0 条", "prev": 1, "next": 1, "last": 1, "at_start": true, "at_end": true,
+   "first_label": "a\"b", "prev_label": "&", "next_label": "n", "last_label": "l",
+   "pages": [], "size_label": "s", "sizes": [{"size": 5, "text": "5 条/页", "selected": true}]}
+]

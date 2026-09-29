@@ -1,0 +1,7 @@
+[
+  {"id": "dept:Eng", "level": 0, "aria_level": 1, "expanded": "true", "indent": 0, "open": true,
+   "colspan": 5, "title": "Engineering", "count": 3, "has_aggs": true,
+   "aggs": [{"label": "Salary", "text": "sum=36000, avg=12000"}, {"label": "Age", "text": "max=41"}]},
+  {"id": "dept:<x>|role:\"a\"", "level": 1, "aria_level": 2, "expanded": "false", "indent": 20, "open": false,
+   "colspan": 2, "title": "<b>&", "count": 0, "has_aggs": false, "aggs": []}
+]
