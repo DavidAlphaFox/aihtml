@@ -1,9 +1,12 @@
 %%%-------------------------------------------------------------------
 %%% @doc The element tree and its renderer.
 %%%
-%%% Every builder in aihtml returns an `element()'. Classes and attributes
-%%% are normalised when the element is built, so a bad attribute name fails
-%%% at the call site that wrote it, and `render/1' only concatenates.
+%%% Plain tags build an `element()', the record `#ah_el{tag, body}'
+%%% (include/aihtml_element.hrl), components build their own element
+%%% records (aihtml_element). The builders check the tag (a void element
+%%% cannot have children); classes and attributes are normalised when the
+%%% element is rendered, so an element stays plain data until then and can
+%%% be inspected or changed like any record.
 %%%
 %%% Children are rendered by these rules:
 %%%
@@ -24,18 +27,14 @@
 %%%-------------------------------------------------------------------
 -module(aihtml_html).
 
+-include("aihtml_element.hrl").
+
 -export([el/4, void/3, render/1, render_binary/1,
          classes/1, attrs/1, merge_attrs/2]).
 
 -export_type([html/0, element/0, css/0, attrs/0, attr/0, action/0]).
 
--record(el, {tag :: binary(),
-             attrs :: [attr()],
-             children :: html() | void}).
-
-%% Transparent: element records (aihtml_element) share html() with it, and
-%% dialyzer rejects an opaque type in a union with tuple().
--type element() :: #el{}.
+-type element() :: #ah_el{}.
 -type html() :: element() | aihtml_element:element() | binary() | number() | atom()
               | {safe, iodata()} | [html()] | string().
 -type css() :: [binary() | atom() | string() | css()].
@@ -66,8 +65,7 @@ el(Tag, Children, Css, Attrs) ->
     T = tag(Tag),
     case ?IS_VOID(T) of
         true  -> error({aihtml, {void_element_with_children, T}});
-        false -> #el{tag = T, attrs = with_class(Css, Attrs),
-                     children = Children}
+        false -> #ah_el{tag = T, body = Children, css = Css, attrs = Attrs}
     end.
 
 %% @doc Build a void element such as `input' or `img'.
@@ -75,7 +73,7 @@ el(Tag, Children, Css, Attrs) ->
 void(Tag, Css, Attrs) ->
     T = tag(Tag),
     case ?IS_VOID(T) of
-        true  -> #el{tag = T, attrs = with_class(Css, Attrs), children = void};
+        true  -> #ah_el{tag = T, body = void, css = Css, attrs = Attrs};
         false -> error({aihtml, {not_a_void_element, T}})
     end.
 
@@ -105,10 +103,16 @@ merge_attrs(Base, Over) ->
 %%%===================================================================
 
 -spec render(html()) -> iodata().
-render(#el{tag = T, attrs = A, children = void}) ->
-    [$<, T, render_attrs(A), $>];
-render(#el{tag = T, attrs = A, children = C}) ->
-    [$<, T, render_attrs(A), $>, render(C), "</", T, $>];
+render(#ah_el{module = aihtml_html, tag = Tag, body = Body, css = Css} = E) ->
+    T = tag(Tag),
+    Void = ?IS_VOID(T),
+    A = render_attrs(with_class(Css, aihtml_element:root_attrs(E, event_of(T)))),
+    if
+        Void, Body =:= void; Void, Body =:= [] -> [$<, T, A, $>];
+        Void -> error({aihtml, {void_element_with_children, T}});
+        Body =:= void -> error({aihtml, {not_a_void_element, T}});
+        true -> [$<, T, A, $>, render(Body), "</", T, $>]
+    end;
 render({safe, IoData}) ->
     IoData;
 render(B) when is_binary(B) ->
@@ -138,6 +142,11 @@ render_binary(Html) ->
 %%%===================================================================
 %%% Internal
 %%%===================================================================
+
+%% The event a plain element's postback is bound to.
+event_of(<<"form">>) -> submit;
+event_of(T) when T =:= <<"input">>; T =:= <<"select">>; T =:= <<"textarea">> -> change;
+event_of(_) -> click.
 
 render_attrs(Attrs) ->
     [render_attr(A) || A <- Attrs].

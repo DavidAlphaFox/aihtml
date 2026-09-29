@@ -4,7 +4,7 @@
 
 ## 动机
 
-原来的组件函数一调用就生成 `#el{}` 元素树，选项和 HTML 属性混在同一个 Attrs 列表里：
+原来的组件函数一调用就生成元素树，选项和 HTML 属性混在同一个 Attrs 列表里：
 
 - 选项名写错不报错。`split_options` 只取出目录登记过的键，`{fisrt_day, 1}` 会原样输出成 `fisrt-day="1"`。
 - 修饰符的取值只在运行时校验，dialyzer 帮不上忙。
@@ -64,7 +64,7 @@ button(<<"Save">>, save, [primary, <<"mt-2">>], [{disabled, true}])
 
 ## 渲染
 
-`aihtml_html:render/1` 遇到第 1 位是原子、第 2 位也是原子、至少 7 个元素的元组，就调用 `Module:render(R)`，再渲染它的返回值。返回值可以是 `#el{}`、iodata，也可以是另一个组件的 record，所以组件之间能直接组合。`{safe, IoData}` 的第 2 位不是原子，不会被误判。
+`aihtml_html:render/1` 遇到第 1 位是原子、第 2 位也是原子、至少 7 个元素的元组，就调用 `Module:render(R)`，再渲染它的返回值。返回值可以是普通标签的 `#ah_el{}`、iodata，也可以是另一个组件的 record，所以组件之间能直接组合。`{safe, IoData}` 的第 2 位不是原子，不会被误判。
 
 每个组件模块实现 `aihtml_element` 行为，导出 `render/1` 渲染自己的 record：
 
@@ -136,14 +136,28 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 ## 普通标签
 
-`'div'` 等普通标签目前仍然直接生成 `#el{}`。计划是改为一个公共 record `#ah_el{tag, body}`（同样以 `?AH_BASE` 开头），让所有元素都是同一种数据。这一步要把属性校验从构建时移到渲染时，影响面大，放在组件迁移完成之后单独做。
+`'div'`、`p`、`img`、`aihtml:el/4` 等普通标签生成公共 record `#ah_el{tag, body}`（`include/aihtml_element.hrl`，同样以 `?AH_BASE` 开头），所以所有元素都是同一种数据：
+
+```erlang
+'div'([<<"x">>], [<<"p-2">>], [{title, t}])
+%% 等于
+#ah_el{tag = 'div', body = [<<"x">>], css = [<<"p-2">>], attrs = [{title, t}]}
+
+#ah_el{tag = img, attrs = [{src, Url}, {alt, <<>>}]}          %% 空元素，body 可以不写
+#ah_el{tag = form, body = Fields, postback = {save, #{}}}      %% 公共字段照常可用
+```
+
+- **postback** 绑定在 `click` 上；`form` 是 `submit`，`input`、`select`、`textarea` 是 `change`。
+- **校验时机**：构建函数只检查标签名和空元素有没有子节点；class 与属性在渲染时归一化和校验，写错的属性名在渲染时报错。
+- **`module`** 默认是 `aihtml_html`，由它直接渲染；改成别的模块时，与组件一样交给那个模块的 `render/1`。
+- 渲染输出与原来的 `#el{}` 完全相同（449 个演示逐字节比对）。
 
 ## 迁移步骤
 
 1. **基础设施与按钮组（已完成）**：`aihtml_element`（行为、`build/5`、辅助函数）、`aihtml_html` 的渲染分发、`aihtml_catalog:parse_css/2`、按钮组的头文件与 `render/1`、字段与目录一致的测试。
 2. **其余 9 组（已完成）**：每组照按钮组的样板改，演示和测试的 HTML 输出不变。每组都在演示站加了一个"record 写法"示例。
 3. **一个组件一个模块（已完成）**：原来的 26 个组模块拆成 110 个组件模块和若干 `aihtml_lib_*` 共享模块，头文件、JS、CSS、测试、演示都按组件一一对应；449 个演示的 HTML 与拆分前一致。
-4. **普通标签**：`#ah_el{}`。
+4. **普通标签（已完成）**：`#ah_el{}`。
 5. **文档（已完成）**：演示站 API 页加上 record 写法和字段表（`aihtml_example_records` 从 debug_info 读字段，从头文件读注释），README 的调用约定加上 record 写法。
 
 ## 样板：按钮组

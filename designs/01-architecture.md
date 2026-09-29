@@ -23,14 +23,20 @@ aihtml_element    元素 record：行为、构建、渲染分发
 beamai_render     beamai_html_escape：转义与值格式化
 ```
 
-`aihtml_html` 在构建元素时就完成归一化与校验，错误出现在写错的调用点。渲染阶段只做拼接。
+构建函数只做便宜的检查（标签名是否合法、空元素有没有子节点），错误出现在写错的调用点；class 与属性的归一化和校验在渲染时进行，所以元素在渲染前一直是普通数据。
 
 ## 元素树
 
-普通标签生成记录 `#el{tag, attrs, children}`，属性已归一化为 `[{binary(), binary() | true}]`。组件则生成带 `ah_` 前缀的元素 record（如 `#ah_button{}`），渲染时交给所属模块的 `render/1`，详见 [05-records.md](05-records.md)。选择元素树而不是直接输出 iodata，有两个原因：
+所有元素都是 record，都以同一组公共字段（module、id、css、attrs、postback、delegate）开头，详见 [05-records.md](05-records.md)：
+
+- **普通标签**生成公共 record `#ah_el{tag, body}`，由 `aihtml_html` 渲染；`body` 为 `void` 表示空元素。
+- **组件**生成带 `ah_` 前缀的 record（如 `#ah_button{}`），渲染时交给组件模块的 `render/1`。
+
+选择元素树而不是直接输出 iodata，有三个原因：
 
 - 预制件可以合并使用者传入的属性，并按规则覆盖。
 - 测试可以断言结构，预制件内部也可以安全地嵌套。
+- 元素在渲染前可以模式匹配、修改字段、组合。
 
 `{safe, iodata()}` 与 beamai_jinja 的安全标记同形，渲染结果可以直接放进 Jinja 模板。
 

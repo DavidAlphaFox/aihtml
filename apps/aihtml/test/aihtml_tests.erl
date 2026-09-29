@@ -3,6 +3,9 @@
 -include_lib("eunit/include/eunit.hrl").
 -include_lib("aihtml/include/aihtml.hrl").
 
+%% renders #ah_el{module = ?MODULE} in plain_element_record_test
+-export([render/1]).
+
 r(Html) -> aihtml:render_binary(Html).
 
 %%%===================================================================
@@ -49,8 +52,41 @@ css_whitespace_is_normalised_test() ->
     ?assertEqual(<<"<p class=\"a b c\"></p>">>, r(p([], [<<"  a\n b ">>, ["c"]], []))).
 
 bad_attribute_name_test() ->
+    %% attributes are checked when rendering; the tag when building
     ?assertError({aihtml, {bad_attribute_name, <<"on\"x">>}},
-                 span([], [], [{<<"on\"x">>, 1}])).
+                 r(span([], [], [{<<"on\"x">>, 1}]))),
+    ?assertError({aihtml, {bad_tag, <<"no tag">>}}, aihtml:el(<<"no tag">>, [], [], [])).
+
+%% Plain tags are #ah_el{} records: data until rendered, and they can be
+%% written directly, with an id and a postback like components.
+plain_element_record_test() ->
+    E = 'div'([<<"x">>], [<<"p-2">>], [{title, t}]),
+    ?assertMatch(#ah_el{tag = <<"div">>, body = [<<"x">>], css = [<<"p-2">>]}, E),
+    ?assertEqual(r(E), r(#ah_el{tag = 'div', body = [<<"x">>], css = [<<"p-2">>],
+                                attrs = [{title, t}]})),
+    ?assertEqual(<<"<section class=\"card\" id=\"s\" title=\"t\">hi</section>">>,
+                 r(#ah_el{tag = section, body = <<"hi">>, css = [<<"card">>], id = s,
+                          attrs = [{title, t}]})),
+    %% a void tag may leave body at its default
+    ?assertEqual(<<"<img src=\"a.png\" alt=\"\">">>,
+                 r(#ah_el{tag = img, attrs = [{src, <<"a.png">>}, {alt, <<>>}]})),
+    ?assertEqual(r(img([], [{src, <<"a.png">>}, {alt, <<>>}])),
+                 r(#ah_el{tag = img, body = void, attrs = [{src, <<"a.png">>}, {alt, <<>>}]})),
+    ?assertError({aihtml, {void_element_with_children, <<"img">>}},
+                 r(#ah_el{tag = img, body = <<"x">>})),
+    ?assertError({aihtml, {not_a_void_element, <<"p">>}}, r(#ah_el{tag = p, body = void})),
+    %% postback: click, submit for a form, change for inputs
+    Ev = fun(E1) -> {match, [V]} = re:run(r(E1), <<"data-ah-on=\"([a-z]+):">>,
+                                          [{capture, all_but_first, binary}]),
+                    V end,
+    ?assertEqual(<<"click">>, Ev(#ah_el{tag = 'div', postback = go})),
+    ?assertEqual(<<"submit">>, Ev(#ah_el{tag = form, postback = save})),
+    ?assertEqual(<<"change">>, Ev(#ah_el{tag = select, postback = pick})),
+    %% another module can render a plain element
+    ?assertEqual(<<"<b>wrapped</b>">>, r(#ah_el{module = ?MODULE, tag = p})).
+
+-spec render(tuple()) -> aihtml:html().
+render(#ah_el{}) -> aihtml:el(b, <<"wrapped">>, [], []).
 
 void_with_children_test() ->
     ?assertError({aihtml, {void_element_with_children, <<"input">>}},
@@ -131,3 +167,10 @@ page_test() ->
     ?assertMatch({_, _}, binary:match(H, <<"<body class=\"ah-body\" data-ah-action=\"/aihtml/action\" data-ah-events=\"/aihtml/events\"><p>x</p>"
                                            "<script src=\"/aihtml/vendor/jquery.min.js\"></script>"
                                            "<script src=\"/aihtml/aihtml.js\"></script></body>">>)).
+
+%% data-ah behaviour names are lower-case words joined by hyphens
+behaviour_names_test() ->
+    Bad = [{N, B} || #{name := N, behavior := B} <- aihtml_catalog:prefabs(),
+                     B =/= none,
+                     re:run(B, <<"^[a-z]+(-[a-z]+)*$">>) =:= nomatch],
+    ?assertEqual([], Bad).
