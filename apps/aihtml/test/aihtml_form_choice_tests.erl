@@ -160,7 +160,7 @@ rating_defaults_test() ->
                  ?M:rating_group(5, 1, [], [{precision, 0.25}])),
     ?assertError({aihtml, {bad_max, rating_group, 0}}, ?M:rating_group(0, 1, [], [])).
 
-%% --- catalog and examples -----------------------------------------
+%% --- catalog --------------------------------------------------------
 
 catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
@@ -171,8 +171,22 @@ catalog_test() ->
          ?assertMatch(#{category := form, behavior := B} when is_binary(B), E)
      end || #{name := N} = E <- ?M:catalog()].
 
-examples_test() ->
-    Ex = ?M:examples(),
-    Names = lists:usort([N || {N, _, _} <- Ex]),
-    ?assertEqual(lists:usort([N || #{name := N} <- ?M:catalog()]), Names),
-    [?assert(is_binary(r(H))) || {_, _, H} <- Ex].
+api_docs_test() ->
+    [begin
+         Documented = maps:keys(maps:get(option_docs, E)),
+         Mods = lists:append([Ms || {Ms, _} <- maps:values(maps:get(groups, E, #{}))]),
+         Keys = maps:get(options, E, []) ++ maps:get(flags, E, []) ++ Mods,
+         ?assertEqual({N, []}, {N, Keys -- Documented}),
+         ?assertMatch([_ | _], maps:get(methods, E))
+     end || #{name := N} = E <- ?M:catalog()].
+
+render_all_test() ->
+    %% every component renders with a plain call
+    Items = [{a, <<"A">>}, {b, <<"B">>}],
+    [?assert(is_binary(r(H))) || H <- [?M:checkbox(<<"x">>, undefined, [], []),
+                                       ?M:radiobutton(<<"x">>, a, [], []),
+                                       ?M:switch_button(<<"x">>, undefined, [], []),
+                                       ?M:checkbox_group(Items, [a], [], []),
+                                       ?M:radiobutton_group(Items, a, [], []),
+                                       ?M:radio_cards(Items, a, [], []),
+                                       ?M:rating_group(5, 3, [], [])]].

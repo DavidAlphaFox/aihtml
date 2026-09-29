@@ -27,7 +27,7 @@
 -export([checkbox/4, radiobutton/4, switch_button/4,
          checkbox_group/4, radiobutton_group/4, radio_cards/4,
          rating_group/4,
-         catalog/0, examples/0]).
+         catalog/0]).
 
 -export_type([item/0, value/0]).
 
@@ -243,6 +243,9 @@ rating_group(Max, _Value, _Css, _Attrs) ->
 
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
+    [maps:merge(E, api(N)) || #{name := N} = E <- entries()].
+
+entries() ->
     Size = {[sm, md, lg], none},
     [#{name => checkbox, category => form,
        signature => <<"checkbox(Content, Value, Css, Attrs)">>,
@@ -308,82 +311,84 @@ catalog() ->
                 "arrow keys. Value in data-ah-value, hidden input when name is given, "
                 "change on the root.">>}].
 
-%%%===================================================================
-%%% Examples
-%%%===================================================================
 
--spec examples() -> [{atom(), binary(), aihtml_html:html()}].
-examples() ->
-    Row = fun(Children) -> aihtml_html:el('div', Children, [<<"flex flex-wrap items-center gap-6">>], []) end,
-    Col = fun(Children) -> aihtml_html:el('div', Children, [<<"flex flex-col gap-4">>], []) end,
-    Fruits = [{apple, <<"Apple">>}, {pear, <<"Pear">>},
-              {plum, <<"Plum <b>">>}, {fig, <<"Fig">>, #{disabled => true}}],
-    [{checkbox, <<"States and sizes">>,
-      Col([Row([checkbox(<<"Unchecked">>, undefined, [], [{name, cb1}]),
-                checkbox(<<"Checked">>, undefined, [], [{name, cb2}, {checked, true}]),
-                checkbox(<<"Indeterminate">>, undefined, [], [{indeterminate, true}]),
-                checkbox(<<"Three states">>, undefined, [], [{three_states, true}, {checked, true}]),
-                checkbox(<<"Locked">>, undefined, [], [{locked, true}, {checked, true}]),
-                checkbox(<<"Disabled">>, undefined, [], [{disabled, true}]),
-                checkbox(<<"Disabled on">>, undefined, [], [{disabled, true}, {checked, true}])]),
-           Row([checkbox(<<"Small">>, undefined, [sm], [{checked, true}]),
-                checkbox(<<"Medium">>, undefined, [md], [{checked, true}]),
-                checkbox(<<"Large">>, undefined, [lg], [{checked, true}]),
-                checkbox(<<"box_size 24">>, undefined, [], [{box_size, 24}, {checked, true}])])])},
-     {radiobutton, <<"Shared name, sizes, disabled">>,
-      Col([Row([radiobutton(<<"Email">>, email, [], [{name, contact}, {checked, true}]),
-                radiobutton(<<"Phone">>, phone, [], [{name, contact}]),
-                radiobutton(<<"Post">>, post, [], [{name, contact}]),
-                radiobutton(<<"Locked">>, x, [], [{name, other}, {locked, true}]),
-                radiobutton(<<"Disabled">>, y, [], [{disabled, true}, {checked, true}])]),
-           Row([radiobutton(<<"Small">>, s, [sm], [{name, size}, {checked, true}]),
-                radiobutton(<<"Medium">>, m, [md], [{name, size}]),
-                radiobutton(<<"Large">>, l, [lg], [{name, size}])])])},
-     {switch_button, <<"Labels, sizes, disabled">>,
-      Col([Row([switch_button(<<"Wi-Fi">>, undefined, [], [{name, wifi}, {checked, true}]),
-                switch_button(<<"Bluetooth">>, undefined, [], [{name, bt}]),
-                switch_button(<<"On/Off labels">>, undefined, [],
-                              [{on_label, <<"On">>}, {off_label, <<"Off">>}, {checked, true}]),
-                switch_button(<<"Locked">>, undefined, [], [{locked, true}])]),
-           Row([switch_button(<<"Small">>, undefined, [sm], [{checked, true}]),
-                switch_button(<<"Medium">>, undefined, [md], [{checked, true}]),
-                switch_button(<<"Large">>, undefined, [lg], [{checked, true}]),
-                switch_button(<<"80 x 32">>, undefined, [],
-                              [{width, 80}, {height, 32}, {on_label, <<"是"/utf8>>},
-                               {off_label, <<"否"/utf8>>}]),
-                switch_button(<<"Disabled">>, undefined, [], [{disabled, true}]),
-                switch_button(<<"Disabled on">>, undefined, [], [{disabled, true}, {checked, true}])])])},
-     {checkbox_group, <<"Vertical, horizontal, label before, disabled">>,
-      Row([checkbox_group(Fruits, [apple, plum], [], [{name, fruit}, {id, <<"cbg1">>}]),
-           checkbox_group(Fruits, [pear], [horizontal, sm], [{name, fruit2}]),
-           checkbox_group(Fruits, [], [label_before, lg], [{name, fruit3}]),
-           checkbox_group(Fruits, [apple], [], [{name, fruit4}, {disabled, true}])])},
-     {radiobutton_group, <<"Vertical, horizontal, label before, disabled">>,
-      Row([radiobutton_group(Fruits, pear, [], [{name, pick}, {id, <<"rbg1">>}]),
-           radiobutton_group(Fruits, undefined, [horizontal, sm], [{name, pick2}]),
-           radiobutton_group(Fruits, apple, [label_before, lg], []),
-           radiobutton_group(Fruits, apple, [], [{name, pick4}, {disabled, true}])])},
-     {radio_cards, <<"Plans, columns and alignment">>,
-      Col([radio_cards([{free, <<"Free">>, #{description => <<"Personal trial, limited features">>}},
-                        {pro, <<"Pro">>, #{description => <<"All features + priority support">>}},
-                        {team, <<"Team">>, #{description => <<"Collaboration and permissions">>}},
-                        {ent, <<"Enterprise">>, #{description => <<"Contact sales">>, disabled => true}}],
-                       pro, [], [{name, plan}, {id, <<"rc1">>}, {columns, 2}, {align, start}]),
-           radio_cards([{s, <<"Small">>, #{icon => <<"S"/utf8>>}},
-                        {m, <<"Medium">>, #{icon => <<"M"/utf8>>}},
-                        {l, <<"Large">>, #{icon => <<"L"/utf8>>}}],
-                       undefined, [], [{name, tshirt}, {columns, 3}]),
-           radio_cards([{a, <<"Disabled group">>}, {b, <<"B">>}], a, [],
-                       [{columns, 1}, {disabled, true}])])},
-     {rating_group, <<"Sizes, colours, half stars, read-only">>,
-      Col([Row([rating_group(5, 3, [], [{name, stars}, {id, <<"rt1">>}]),
-                rating_group(5, 2.5, [], [{precision, 0.5}, {id, <<"rt2">>}]),
-                rating_group(10, 7, [sm, primary], [])]),
-           Row([rating_group(5, 4, [sm], []),
-                rating_group(5, 4, [md, success], []),
-                rating_group(5, 4, [lg, error], []),
-                rating_group(5, 3.5, [], [{readonly, true}, {precision, 0.5}]),
-                rating_group(5, 2, [], [{disabled, true}])])])}].
+%% API docs (option_docs, methods) for the docs page, per component.
+api(checkbox) ->
+    #{option_docs =>
+          #{sm => <<"Small box (14px) and text.">>,
+            md => <<"Default box (16px).">>,
+            lg => <<"Large box (20px) and text.">>,
+            indeterminate => <<"true: start in the mixed state (input.indeterminate).">>,
+            three_states => <<"true: a click cycles checked, mixed, unchecked.">>,
+            locked => <<"true: focusable but the user cannot toggle it.">>,
+            box_size => <<"Box size in px, overrides the size modifier.">>},
+      methods => [set_checked(<<"true | false | \"mixed\"">>), get_value(<<"true | false | \"mixed\"">>),
+                  set_disabled()]};
+api(radiobutton) ->
+    #{option_docs =>
+          #{sm => <<"Small circle and text.">>, md => <<"Default size.">>,
+            lg => <<"Large circle and text.">>,
+            locked => <<"true: focusable but the user cannot select it.">>,
+            box_size => <<"Circle size in px.">>},
+      methods => [set_checked(<<"true | false">>), get_value(<<"true | false">>), set_disabled()]};
+api(switch_button) ->
+    #{option_docs =>
+          #{sm => <<"36 x 20 track.">>, md => <<"50 x 24 track (default).">>,
+            lg => <<"60 x 30 track.">>,
+            on_label => <<"Text in the track while on.">>,
+            off_label => <<"Text in the track while off.">>,
+            locked => <<"true: focusable but the user cannot toggle it.">>,
+            width => <<"Track width in px (default 50).">>,
+            height => <<"Track height in px (default 24).">>,
+            thumb_size => <<"Thumb size in px (default height - 4).">>},
+      methods => [set_checked(<<"true | false">>), get_value(<<"true | false">>), set_disabled()]};
+api(Group) when Group =:= checkbox_group; Group =:= radiobutton_group ->
+    Multi = Group =:= checkbox_group,
+    #{option_docs =>
+          #{vertical => <<"One item per line (default).">>,
+            horizontal => <<"Items in a wrapping row.">>,
+            sm => <<"Small controls.">>, md => <<"Default size.">>, lg => <<"Large controls.">>,
+            label_before => <<"Put each label before its control.">>},
+      methods => [set_value(Multi), group_get_value(Multi), group_set_disabled()]};
+api(radio_cards) ->
+    #{option_docs =>
+          #{columns => <<"1 | 2 | 3 | auto (default: as many 200px columns as fit).">>,
+            align => <<"center (default) | start: top-align cards with long descriptions.">>},
+      methods => [set_value(false), group_get_value(false), group_set_disabled()]};
+api(rating_group) ->
+    #{option_docs =>
+          #{sm => <<"16px stars.">>, md => <<"22px stars (default).">>, lg => <<"30px stars.">>,
+            warning => <<"Gold stars (default).">>, primary => <<"Stars in the primary colour.">>,
+            success => <<"Green stars.">>, error => <<"Red stars.">>,
+            name => <<"Name of the hidden input that submits the value.">>,
+            precision => <<"1 (default) or 0.5 for half stars.">>,
+            allow_clear => <<"Clicking the current value resets to 0 (default true).">>,
+            readonly => <<"true: shows the value, no interaction.">>,
+            disabled => <<"true: dimmed, no interaction.">>},
+      methods => [#{name => setValue, args => <<"(value)">>,
+                    doc => <<"Set the rating (snapped to the precision); no change event.">>},
+                  #{name => getValue, args => <<"()">>, doc => <<"The current rating.">>}]}.
+
+set_checked(Args) ->
+    #{name => setChecked, args => <<"(", Args/binary, ")">>,
+      doc => <<"Set the state; no change event.">>}.
+get_value(Ret) ->
+    #{name => getValue, args => <<"()">>, doc => <<"The current state: ", Ret/binary, ".">>}.
+set_disabled() ->
+    #{name => setDisabled, args => <<"(bool)">>, doc => <<"Disable or enable the input.">>}.
+set_value(true) ->
+    #{name => setValue, args => <<"(values | \"a,b\")">>,
+      doc => <<"Check exactly these values; no change event.">>};
+set_value(false) ->
+    #{name => setValue, args => <<"(value)">>,
+      doc => <<"Select this value (\"\" for none); no change event.">>}.
+group_get_value(true) ->
+    #{name => getValue, args => <<"()">>, doc => <<"The checked values, an array.">>};
+group_get_value(false) ->
+    #{name => getValue, args => <<"()">>, doc => <<"The selected value, \"\" if none.">>}.
+group_set_disabled() ->
+    #{name => setDisabled, args => <<"(bool)">>,
+      doc => <<"Disable or enable the whole group; items disabled on their own stay disabled.">>}.
 
 %%%===================================================================
 %%% Internal: shared markup
