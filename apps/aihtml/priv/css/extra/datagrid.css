@@ -1,0 +1,106 @@
+/* aihtml additions for the datagrid component (aihtml_datagrid). */
+
+/* Rows the view does not show (filtered out, other pages, collapsed
+   groups) and hidden columns: the sigil rules give them display:flex. */
+.ah-dg .ah-dg-row-off,
+.ah-dg .ah-dg-col-hidden {
+  display: none !important;
+}
+
+.ah-dg .ah-dg-empty-message[hidden] {
+  display: none;
+}
+
+/* The loading veil follows the theme (sigil's default is white). */
+.ah-dg {
+  --ah-dg-loading-overlay-bg: color-mix(in srgb, var(--ah-color-bg) 75%, transparent);
+}
+
+/* Keyboard focus: the active cell shows .ah-dg-cell-focused; no second
+   ring from :focus. */
+.ah-dg .ah-dg-cell:focus,
+.ah-dg .ah-dg-header-cell:focus,
+.ah-dg .ah-dg-group-title:focus {
+  outline: none;
+}
+
+.ah-dg .ah-dg-header-cell.ah-dg-cell-focused,
+.ah-dg .ah-dg-group-title.ah-dg-cell-focused {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+
+.ah-dg .ah-dg-group-title {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+}
+
+/* Pinned filter cells stay with their column. */
+.ah-dg-filter-cell[style*="position: sticky"],
+.ah-dg-filter-cell[style*="position:sticky"] {
+  background-color: var(--ah-color-bg);
+  z-index: 3;
+}
+
+/* The hidden element that carries remote queries. */
+.ah-dg-query {
+  display: none;
+}
+
+/* Column menu: a check column, a heading over the column list, keyboard
+   focus. */
+.ah-dg-column-menu-mark {
+  display: inline-block;
+  width: 1em;
+  flex-shrink: 0;
+  color: var(--ah-dg-sort-active-color);
+}
+
+.ah-dg-column-menu-heading {
+  padding: 4px 16px 2px;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ah-dg-column-menu-item:focus {
+  outline: none;
+  background: var(--ah-dg-row-hover-bg);
+}
+
+.ah-dg-column-menu-item:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--ah-color-primary);
+}
+
+/* Toolbar: a flexible spacer, the search box. */
+.ah-dg-toolbar-spacer {
+  flex: 1;
+}
+
+.ah-dg-toolbar .ah-dg-search-input {
+  height: 26px;
+  box-sizing: border-box;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  min-width: 10rem;
+}
+
+/* Form controls inside the grid follow the theme. */
+.ah-dg .ah-dg-filter-input,
+.ah-dg .ah-dg-pager-size-select,
+.ah-dg .ah-dg-editor {
+  color: var(--ah-color-text);
+  background-color: var(--ah-color-bg);
+}
+
+.ah-dg .ah-dg-cell-editing .ah-dg-editor {
+  min-height: calc(var(--ah-dg-row-height, 36px) - 2px);
+}
+
+/* An editable cell shows a text cursor (sigil: .ah-dg-cell-editable). */
+.ah-dg .ah-dg-cell-editable {
+  cursor: text;
+}
