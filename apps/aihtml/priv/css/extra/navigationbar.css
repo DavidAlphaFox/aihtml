@@ -1,0 +1,7 @@
+/* aihtml additions for navigationbar (aihtml_navigationbar). */
+
+/* navigationbar with a fixed height (single_fit_height): the open body is
+   sized to fill the rest, so its content scrolls instead of being cut. */
+.ah-navigationbar[data-fit] > .ah-navigationbar-item > .ah-navigationbar-body {
+  overflow-y: auto;
+}
