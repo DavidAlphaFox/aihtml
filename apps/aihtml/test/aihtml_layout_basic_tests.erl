@@ -21,11 +21,13 @@ catalog_matches_exports_test() ->
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
-examples_render_test() ->
-    Ex = ?M:examples(),
-    ?assertEqual(lists:sort([N || #{name := N} <- ?M:catalog()]),
-                 lists:usort([N || {N, _, _} <- Ex])),
-    [?assert(is_binary(r(H))) || {_, _, H} <- Ex].
+catalog_documents_every_option_test() ->
+    [begin
+         Docs = maps:get(option_docs, E),
+         ?assertEqual({N, []}, {N, [K || K <- maps:get(options, E, []) ++ maps:get(flags, E, []),
+                                         not maps:is_key(K, Docs)]}),
+         ?assert(is_list(maps:get(methods, E)))
+     end || #{name := N} = E <- ?M:catalog()].
 
 unknown_modifier_test() ->
     ?assertError({aihtml, {unknown_modifier, card, bogus, _}}, ?M:card(<<"x">>, [bogus], [])),
@@ -246,7 +248,7 @@ classes_are_styled_test() ->
           end,
     Css = iolist_to_binary([element(2, file:read_file(F))
                             || F <- filelib:wildcard(filename:join([Dir, "**", "*.css"]))]),
-    Html = iolist_to_binary([r(H) || {_, _, H} <- ?M:examples()]),
+    Html = iolist_to_binary([r(H) || H <- samples()]),
     {ok, Re} = re:compile(<<"class=\"([^\"]*)\"">>),
     {match, Ms} = re:run(Html, Re, [global, {capture, [1], binary}]),
     Classes = lists:usort([C || [Cs] <- Ms, C <- binary:split(Cs, <<" ">>, [global, trim_all]),
@@ -255,3 +257,31 @@ classes_are_styled_test() ->
     Markers = [<<"ah-expander-top">>, <<"ah-pagination-links">>],
     Missing = [C || C <- Classes -- Markers, not has(Css, <<".", C/binary>>)],
     ?assertEqual([], Missing).
+
+%% One render of each component in its main variants and states.
+samples() ->
+    Tabs = [{a, <<"A">>, <<"a">>}, {b, <<"B">>, <<"b">>, #{disabled => true}}],
+    [?M:card(<<"b">>, [hover, flush], [{title, <<"t">>}, {subtitle, <<"s">>}, {extra, <<"x">>},
+                                       {media, <<"m">>}, {footer, <<"f">>}]),
+     ?M:panel(<<"c">>, [bordered], [{title, <<"t">>}, {actions, <<"a">>}, {collapsible, true},
+                                    {collapsed, true}]),
+     ?M:expander(<<"c">>, [bottom, square, no_gutters, disabled],
+                 [{header, #{title => <<"t">>, subheader => <<"s">>, extra => <<"x">>}},
+                  {actions, <<"a">>}, {arrow_position, left}, {toggle_mode, none},
+                  {expand_icon, <<"+">>}, {collapse_icon, <<"-">>}]),
+     ?M:expander(<<"c">>, [], []),
+     [?M:tabs(Tabs, a, [P, disabled], [{scrollable, true}]) || P <- [top, bottom, left, right]],
+     ?M:tab_bar([{a, <<"A">>, #{dirty => true, icon => <<"i">>}}, {b, <<"B">>}], a, [], []),
+     ?M:breadcrumbs([#{label => <<"H">>, href => <<"/">>, icon => <<"i">>}, {<<"A">>, <<"#">>},
+                     {<<"B">>, <<"#">>}, {<<"C">>, <<"#">>}, <<"D">>], [], [{max_items, 3}]),
+     ?M:pagination(500, 12, [disabled], [{show_first_last, true}, {show_total, true},
+                                         {show_jumper, true}]),
+     ?M:pagination(95, 3, [simple], []),
+     ?M:pagination(95, 3, [], [{href, <<"?p={page}">>}]),
+     ?M:steps([<<"A">>, #{title => <<"B">>, status => error, description => <<"d">>,
+                          content => <<"c">>}, #{title => <<"C">>, disabled => true}, <<"D">>],
+              1, [vertical, disabled], []),
+     [?M:skeleton([V, static], []) || V <- [text, circle, rect]],
+     ?M:skeleton([done], []),
+     [?M:loader([P, hidden, inline, center, disabled], []) || P <- [top, bottom, left, right]],
+     ?M:empty(<<"a">>, [compact], [{icon, <<"i">>}, {title, <<"t">>}, {description, <<"d">>}])].
