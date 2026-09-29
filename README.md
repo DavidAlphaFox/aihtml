@@ -2,6 +2,8 @@
 
 用 Erlang 函数直接编写 HTML 页面。页面由"预制件"拼装而成，服务端输出完整的静态 HTML，浏览器端由 Stimulus 控制器增强，样式用 TailwindCSS。
 
+![aihtml 示例站首页](docs/screenshots/home.png)
+
 按钮的点击直接由 Erlang 函数响应，每个事件一次无状态请求，响应是要应用的 DOM 操作：
 
 ```erlang
@@ -27,8 +29,27 @@ login() ->
 ```
 
 - 渲染依赖 [beamai_render](https://github.com/TTalkPro/beamai_render)：转义使用 `beamai_html_escape`，`{safe, iodata()}` 与 beamai_jinja 的安全标记一致，渲染结果可直接放进 Jinja 模板。
-- 前端基础：Stimulus 3 与 Tailwind CSS v4，浏览器端代码用 Vite 打包（见 `designs/06-bundling.md`）。组件行为是原生 DOM 写的 Stimulus 控制器，库不依赖 jQuery。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
+- 前端基础：Stimulus 3 与 Tailwind CSS v4，浏览器端代码是严格类型的 TypeScript，用 Vite 打包（见 `designs/06-bundling.md`）。组件行为是原生 DOM 写的 Stimulus 控制器类，库不依赖 jQuery。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
 - 组件与主题移植自 [sigil](../sigil)（MIT）：111 个组件，另有服务端渲染的 markdown_view，共 112 个；以及四轴主题（外观、配色、排版、外形）。
+
+## 截图
+
+以下截图都来自仓库里的示例站（`rebar3 shell` 后打开 http://localhost:8080/）。每个组件文档页上方是渲染效果，下方是生成它的 Erlang 代码；右上角的四个下拉框切换外观、配色、排版、外形四个主题轴，下面几张用了不同的组合。
+
+<table>
+  <tr>
+    <td width="50%"><img src="docs/screenshots/datagrid.png" alt="DataGrid 文档页"><br><b>DataGrid</b>：排序、筛选、分页、编辑、导出，远程模式首页由服务端渲染</td>
+    <td width="50%"><img src="docs/screenshots/node-graph-dark.png" alt="NodeGraph，暗色外观"><br><b>NodeGraph</b>：节点编辑器，连线、分组、撤销重做（暗色外观）</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/calendar-arctic.png" alt="Calendar，arctic 配色"><br><b>Calendar</b>：月、周、日、日程视图，可拖动（arctic 配色）</td>
+    <td><img src="docs/screenshots/bar-chart-editorial.png" alt="BarChart，editorial 配色"><br><b>BarChart</b>：echarts 按需加载，颜色取自主题（editorial 配色）</td>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/markdown-editor-island.png" alt="MarkdownEditor，island 配色与外形"><br><b>MarkdownEditor</b>：ProseMirror 所见即所得（island 配色与外形）</td>
+    <td><img src="docs/screenshots/live-demo.png" alt="实时演示页"><br><b>实时演示</b>：点击由 Erlang 处理，计数与待办存在数据层，并推送到所有打开的页面</td>
+  </tr>
+</table>
 
 ## 仓库结构
 
@@ -45,6 +66,7 @@ login() ->
 | `apps/aihtml_example` | cowboy 示例站：`/` 首页，`/components/:name` 组件文档（演示、代码、API），`/demo` 实时演示，`/fetch` URL 片段模式。组件示例 `aihtml_example_demo_*` 也在这里，不在库里 |
 | `scripts/` | 构建与测试脚本：样式移植、JS 构建、模板编译器、门面生成、预览 |
 | `designs/` | 设计文档 |
+| `docs/screenshots/` | README 用的示例站截图 |
 
 ## 调用约定
 
