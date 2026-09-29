@@ -1,0 +1,4 @@
+[
+  {"selected": true, "dom_id": "tl-tab-a", "id": "a", "modifiers": "drag,close", "panel_id": "tl-panel-a", "aria_selected": "true", "tabindex": "0", "label": "Explorer", "close": true},
+  {"selected": false, "dom_id": "tl-tab-b", "id": "b", "modifiers": "", "panel_id": "tl-panel-b", "aria_selected": "false", "tabindex": "-1", "label": "<b>&\"'", "close": false}
+]
