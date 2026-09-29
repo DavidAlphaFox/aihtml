@@ -1,0 +1,6 @@
+<div class="ah-calendar-list">
+{{#empty}}<div class="ah-calendar-list-empty"><div class="ah-calendar-list-empty-icon">📅</div><div>{{no_events}}</div><div class="ah-calendar-list-empty-hint">{{no_events_hint}}</div></div>{{/empty}}
+{{#groups}}
+<div class="ah-calendar-list-day-group"><div class="ah-calendar-list-day-header"><span class="ah-calendar-list-day-name">{{name}}</span><span class="ah-calendar-list-day-date">{{date}}</span></div><div class="ah-calendar-list-day-events">{{#events}}<div class="ah-calendar-list-event" data-eventid="{{id}}" role="button" tabindex="0">{{#has_status}}<div class="ah-calendar-list-event-status" style="background:{{status_color}};"></div>{{/has_status}}<div class="ah-calendar-list-event-dot" style="background:{{color}};"></div><div class="ah-calendar-list-event-time">{{time}}</div><div class="ah-calendar-list-event-title">{{#recurring}}<span class="ah-calendar-event-recurring-icon">↻ </span>{{/recurring}}{{title}}</div></div>{{/events}}</div></div>
+{{/groups}}
+</div>

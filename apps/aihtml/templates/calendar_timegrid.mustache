@@ -1,0 +1,9 @@
+<div class="ah-calendar-timegrid">
+<div class="ah-calendar-timegrid-header"><div class="ah-calendar-timegrid-gutter-header"></div>{{#days}}<div class="{{head_cls}}"><span class="ah-calendar-timegrid-header-day">{{dow}}</span><span class="ah-calendar-timegrid-header-date">{{num}}</span></div>{{/days}}</div>
+<div class="ah-calendar-timegrid-allday-row"><div class="ah-calendar-timegrid-gutter">{{all_day}}</div><div class="ah-calendar-timegrid-allday">{{#days}}<div class="ah-calendar-timegrid-allday-cell" data-date="{{date}}">{{#allday}}<div class="ah-calendar-event ah-calendar-allday-event" data-eventid="{{id}}" style="background:{{color}};" title="{{title}}" role="button" tabindex="0"><span class="ah-calendar-event-title">{{title}}</span></div>{{/allday}}</div>{{/days}}</div></div>
+<div class="ah-calendar-timegrid-scroll"><div class="ah-calendar-timegrid-body">
+<div class="ah-calendar-timegrid-gutter">{{#slots}}<div class="ah-calendar-timegrid-slot" style="height:{{slot_height}}px;"><div class="ah-calendar-timegrid-slot-label">{{label}}</div><div class="ah-calendar-timegrid-slot-line"></div></div>{{/slots}}</div>
+<div class="ah-calendar-timegrid-cols">{{#days}}<div class="{{col_cls}}" data-date="{{date}}" style="position:relative;height:{{col_height}}px;">{{#timed}}<div class="ah-calendar-event ah-calendar-timegrid-event" data-eventid="{{id}}" style="position:absolute;top:{{top}}px;height:{{height}}px;left:{{left}};width:{{width}};background:{{color}};" title="{{title}}" role="button" tabindex="0"><div class="ah-calendar-event-title">{{title}}</div><div class="ah-calendar-event-time">{{time}}</div>{{#resizable}}<div class="ah-calendar-timegrid-resize-handle"></div>{{/resizable}}</div>{{/timed}}</div>{{/days}}</div>
+<div class="ah-calendar-timegrid-now-indicator" style="display:none;"></div>
+</div></div>
+</div>

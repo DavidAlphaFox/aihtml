@@ -1,0 +1,8 @@
+<div class="ah-calendar-daygrid">
+<div class="ah-calendar-daygrid-header">{{#headers}}<div class="ah-calendar-daygrid-header-cell">{{label}}</div>{{/headers}}</div>
+<div class="ah-calendar-daygrid-body">
+{{#weeks}}
+<div class="ah-calendar-week-row"><div class="ah-calendar-week-bg">{{#days}}<div class="{{bg_cls}}" data-date="{{date}}"></div>{{/days}}</div><div class="ah-calendar-week-content">{{#days}}<div class="{{num_cls}}" style="grid-column:{{col}};grid-row:1;">{{num}}</div>{{/days}}{{#events}}<div class="{{cls}}" data-eventid="{{id}}" style="grid-column:{{sc}}/{{ec}};grid-row:{{row}};background:{{color}};" title="{{title}}" role="button" tabindex="0">{{#has_time}}<span class="ah-calendar-event-time">{{time}}</span>{{/has_time}}<span class="ah-calendar-event-title">{{title}}</span></div>{{/events}}{{#more}}<div class="ah-calendar-day-more" data-date="{{date}}" style="grid-column:{{col}};grid-row:{{row}};" role="button" tabindex="0">{{label}}</div>{{/more}}</div></div>
+{{/weeks}}
+</div>
+</div>

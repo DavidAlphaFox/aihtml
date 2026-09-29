@@ -1,0 +1,159 @@
+[
+  {
+    "empty": false,
+    "groups": [
+      {
+        "date": "March 8, 2030",
+        "events": [
+          {
+            "color": "#e11d48",
+            "has_status": false,
+            "id": "b",
+            "recurring": false,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "All day",
+            "title": "Trip & \"fun\""
+          },
+          {
+            "color": "var(--ah-color-primary)",
+            "has_status": false,
+            "id": "a_20300308T090000",
+            "recurring": true,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "9:00 AM – 9:15 AM",
+            "title": "Standup <daily>"
+          }
+        ],
+        "name": "Friday"
+      },
+      {
+        "date": "March 9, 2030",
+        "events": [
+          {
+            "color": "#e11d48",
+            "has_status": false,
+            "id": "b",
+            "recurring": false,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "All day",
+            "title": "Trip & \"fun\""
+          }
+        ],
+        "name": "Saturday"
+      },
+      {
+        "date": "March 10, 2030",
+        "events": [
+          {
+            "color": "#e11d48",
+            "has_status": false,
+            "id": "b",
+            "recurring": false,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "All day",
+            "title": "Trip & \"fun\""
+          }
+        ],
+        "name": "Sunday"
+      },
+      {
+        "date": "March 11, 2030",
+        "events": [
+          {
+            "color": "#e11d48",
+            "has_status": false,
+            "id": "b",
+            "recurring": false,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "All day",
+            "title": "Trip & \"fun\""
+          },
+          {
+            "color": "var(--ah-color-primary)",
+            "has_status": false,
+            "id": "e",
+            "recurring": false,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "All day",
+            "title": "Party"
+          },
+          {
+            "color": "var(--ah-color-primary)",
+            "has_status": false,
+            "id": "a_20300311T090000",
+            "recurring": true,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "9:00 AM – 9:15 AM",
+            "title": "Standup <daily>"
+          },
+          {
+            "color": "var(--ah-color-primary)",
+            "has_status": true,
+            "id": "d",
+            "recurring": false,
+            "status_color": "var(--ah-color-warning)",
+            "time": "11:30 AM – 1:00 PM",
+            "title": "Review"
+          },
+          {
+            "color": "var(--ah-color-primary)",
+            "has_status": true,
+            "id": "c",
+            "recurring": false,
+            "status_color": "var(--ah-color-success)",
+            "time": "12:00 PM – 1:00 PM",
+            "title": "Lunch"
+          },
+          {
+            "color": "var(--ah-color-primary)",
+            "has_status": false,
+            "id": "f",
+            "recurring": false,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "6:00 PM – 7:00 PM",
+            "title": "Late"
+          }
+        ],
+        "name": "Monday"
+      },
+      {
+        "date": "March 12, 2030",
+        "events": [
+          {
+            "color": "#e11d48",
+            "has_status": false,
+            "id": "b",
+            "recurring": false,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "All day",
+            "title": "Trip & \"fun\""
+          }
+        ],
+        "name": "Tuesday"
+      },
+      {
+        "date": "March 13, 2030",
+        "events": [
+          {
+            "color": "var(--ah-color-primary)",
+            "has_status": false,
+            "id": "a_20300313T090000",
+            "recurring": true,
+            "status_color": "var(--ah-color-grey-300)",
+            "time": "9:00 AM – 9:15 AM",
+            "title": "Standup <daily>"
+          }
+        ],
+        "name": "Wednesday"
+      }
+    ],
+    "no_events": "No events in this period",
+    "no_events_hint": "Try navigating to a different date range"
+  },
+  {
+    "empty": true,
+    "groups": [],
+    "no_events": "No events in this period",
+    "no_events_hint": "Try navigating to a different date range"
+  }
+]
