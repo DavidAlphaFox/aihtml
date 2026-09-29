@@ -71,9 +71,18 @@ apps/aihtml/test/aihtml_<group>_tests.erl   EUnit
 - `events` 是组件触发的 DOM 事件。
 - 组内调用写 `aihtml_catalog:classes(aihtml_catalog:entry(?MODULE, Name), Css)`，不要依赖全局查找。
 
-**Examples**：`examples() -> [{Name, Title, Html}]`，供预览页和总览页使用。
-- 每个组件至少一个示例，覆盖主要变体、尺寸和状态。
-- 示例里只用本组函数和 `aihtml_html`。
+**示例**：放在 `apps/aihtml_example/src/aihtml_example_demo_<group>.erl`，不放在库里。这些是演示站的内容，由 `/components/<name>` 展示，参照 `aihtml_example_demo_form_buttons.erl`：
+- **包含头文件**：模块 `-include_lib("aihtml/include/aihtml.hrl")`，写法和应用代码一样。示例模块可以 include，因为它不定义组件函数。
+- **`demos/0` 的格式**：返回 `[#{component, title, summary, demos}]`。
+  - `title`：站点上显示的名字，例如 `<<"RadioButton">>`。
+  - `summary`：一句中文简介，用在首页卡片上。
+  - `demos`：`[{中文小标题, 函数名}]`。
+- **每个示例一个函数**：导出的无参函数，带 `-spec`，返回 `aihtml:html()`。文档页会在示例下方显示这个函数的源码（取自 debug_info），所以函数要短小、自成一体、像真实用法。注释不会出现在页面上，示例的意图靠小标题和函数名说明。
+- **覆盖面**：主要变体、尺寸和状态分成几个示例，不要一个函数塞下所有情况。
+
+**API 说明**：catalog 条目可以带两个可选键，文档页的 API 标签页会展示它们：
+- `option_docs`：`#{选项或标志 => 说明}`。
+- `methods`：`[#{name, args, doc}]`，列出 `aihtml_action:call/4` 和 `AH.invoke` 能调用的方法。
 
 **转义**：文本一律按子节点渲染，`aihtml_html` 会转义。只有确定可信的 HTML 才用 `{safe, _}`。
 
@@ -129,7 +138,7 @@ erl -noshell -pa $OUT/ebin -pz _build/default/lib/*/ebin \
 node --check apps/aihtml/assets/js/components/<group>.js
 
 # 预览：渲染 examples/0，构建 CSS/JS，截图并收集控制台错误
-escript scripts/preview-group.escript aihtml_<group> $OUT/page $OUT/ebin
+escript scripts/preview-group.escript aihtml_example_demo_<group> $OUT/page $OUT/ebin
 node scripts/preview.mjs $OUT/page/index.html $OUT/shot.png --width=1200
 node scripts/preview.mjs $OUT/page/index.html $OUT/dark.png --theme=dark
 node scripts/preview.mjs $OUT/page/index.html $OUT/x.png --script=$OUT/interact.js  # 交互测试
