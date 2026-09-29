@@ -79,6 +79,23 @@
          set_items/4,
          timepicker/3,
          colorpicker/3,
+         calendar/3,
+         set_events/3,
+         add_event/3,
+         datetime_input/3,
+         cascader/4,
+         cascader_children/3,
+         cascader_children/4,
+         listbox/4,
+         listbox_items/3,
+         listbox_items/4,
+         transfer/4,
+         masked_input/3,
+         formatted_input/3,
+         range_selector/4,
+         repeat_button/4,
+         upload/3,
+         uploaded_files/1,
          card/3,
          panel/3,
          expander/3,
@@ -97,6 +114,17 @@
          splitter/3,
          listmenu/4,
          status_bar/3,
+         scrollview/3,
+         scrollbar/3,
+         responsive_panel/3,
+         activity_bar/4,
+         navigationbar/4,
+         command/3,
+         set_command_items/3,
+         sortable/4,
+         dragdrop/3,
+         draggable_attrs/2,
+         drop_zone_attrs/2,
          tooltip/4,
          tooltip_attrs/2,
          popover/3,
@@ -126,7 +154,12 @@
          kpi_card/3,
          timeline/3,
          ranking_list/3,
-         tag_cloud/3]).
+         tag_cloud/3,
+         tree/4,
+         nav_tree/4,
+         diff/4,
+         heatmap_calendar/3,
+         set_children/3]).
 %% END GENERATED EXPORTS
 
 -export_type([html/0, element/0, css/0, attrs/0]).
@@ -672,6 +705,108 @@ timepicker(A1, A2, A3) -> aihtml_form_time_color:timepicker(A1, A2, A3).
                      #ah_colorpicker{}.
 colorpicker(A1, A2, A3) -> aihtml_form_time_color:colorpicker(A1, A2, A3).
 
+%% aihtml_form_calendar
+-spec calendar(binary() | string() | calendar:date() | undefined,
+               aihtml_html:css(),
+               aihtml_html:attrs()) ->
+                  #ah_calendar{}.
+calendar(A1, A2, A3) -> aihtml_form_calendar:calendar(A1, A2, A3).
+-spec set_events(aihtml_action:ctx(),
+                 {id, iodata() | atom()} | aihtml_action:event(),
+                 [aihtml_form_calendar:event()]) ->
+                    ok.
+set_events(A1, A2, A3) -> aihtml_form_calendar:set_events(A1, A2, A3).
+-spec add_event(aihtml_action:ctx(),
+                {id, iodata() | atom()} | aihtml_action:event(),
+                aihtml_form_calendar:event()) ->
+                   ok.
+add_event(A1, A2, A3) -> aihtml_form_calendar:add_event(A1, A2, A3).
+-spec datetime_input(binary() |
+                     string() |
+                     calendar:date() |
+                     calendar:datetime() |
+                     undefined,
+                     aihtml_html:css(),
+                     aihtml_html:attrs()) ->
+                        #ah_datetime_input{}.
+datetime_input(A1, A2, A3) -> aihtml_form_calendar:datetime_input(A1, A2, A3).
+
+%% aihtml_form_lists
+-spec cascader([aihtml_form_lists:cascader_node()],
+               [term()] | undefined,
+               aihtml_html:css(),
+               aihtml_html:attrs()) ->
+                  #ah_cascader{}.
+cascader(A1, A2, A3, A4) -> aihtml_form_lists:cascader(A1, A2, A3, A4).
+-spec cascader_children(aihtml_action:ctx(),
+                        aihtml_action:event(),
+                        [aihtml_form_lists:cascader_node()]) ->
+                           ok.
+cascader_children(A1, A2, A3) -> aihtml_form_lists:cascader_children(A1, A2, A3).
+-spec cascader_children(aihtml_action:ctx(),
+                        {id, iodata() | atom()},
+                        [term()],
+                        [aihtml_form_lists:cascader_node()]) ->
+                           ok.
+cascader_children(A1, A2, A3, A4) -> aihtml_form_lists:cascader_children(A1, A2, A3, A4).
+-spec listbox([aihtml_form_lists:item()],
+              term() | [term()] | undefined,
+              aihtml_html:css(),
+              aihtml_html:attrs()) ->
+                 #ah_listbox{}.
+listbox(A1, A2, A3, A4) -> aihtml_form_lists:listbox(A1, A2, A3, A4).
+-spec listbox_items(aihtml_action:ctx(),
+                    aihtml_action:event() | {id, iodata() | atom()},
+                    [aihtml_form_lists:item()]) ->
+                       ok.
+listbox_items(A1, A2, A3) -> aihtml_form_lists:listbox_items(A1, A2, A3).
+-spec listbox_items(aihtml_action:ctx(),
+                    {id, iodata() | atom()},
+                    [aihtml_form_lists:item()],
+                    #{checkboxes => boolean(), selected => [term()]}) ->
+                       ok.
+listbox_items(A1, A2, A3, A4) -> aihtml_form_lists:listbox_items(A1, A2, A3, A4).
+-spec transfer([aihtml_form_lists:item()],
+               [term()],
+               aihtml_html:css(),
+               aihtml_html:attrs()) ->
+                  #ah_transfer{}.
+transfer(A1, A2, A3, A4) -> aihtml_form_lists:transfer(A1, A2, A3, A4).
+
+%% aihtml_form_entry
+-spec masked_input(unicode:chardata() | undefined,
+                   aihtml_html:css(),
+                   aihtml_html:attrs()) ->
+                      #ah_masked_input{}.
+masked_input(A1, A2, A3) -> aihtml_form_entry:masked_input(A1, A2, A3).
+-spec formatted_input(integer() | binary() | string(),
+                      aihtml_html:css(),
+                      aihtml_html:attrs()) ->
+                         #ah_formatted_input{}.
+formatted_input(A1, A2, A3) -> aihtml_form_entry:formatted_input(A1, A2, A3).
+-spec range_selector({number(), number()} |
+                     {number(), number(), number()},
+                     {number(), number()} | undefined,
+                     aihtml_html:css(),
+                     aihtml_html:attrs()) ->
+                        #ah_range_selector{}.
+range_selector(A1, A2, A3, A4) -> aihtml_form_entry:range_selector(A1, A2, A3, A4).
+-spec repeat_button(aihtml_html:html(),
+                    term(),
+                    aihtml_html:css(),
+                    aihtml_html:attrs()) ->
+                       #ah_repeat_button{}.
+repeat_button(A1, A2, A3, A4) -> aihtml_form_entry:repeat_button(A1, A2, A3, A4).
+
+%% aihtml_form_upload
+-spec upload([aihtml_form_upload:file()],
+             aihtml_html:css(),
+             aihtml_html:attrs()) ->
+                #ah_upload{}.
+upload(A1, A2, A3) -> aihtml_form_upload:upload(A1, A2, A3).
+-spec uploaded_files(aihtml_action:event() | binary()) -> [term()].
+uploaded_files(A1) -> aihtml_form_upload:uploaded_files(A1).
+
 %% aihtml_layout_basic
 -spec card(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
               #ah_card{}.
@@ -774,6 +909,136 @@ listmenu(A1, A2, A3, A4) -> aihtml_layout_nav:listmenu(A1, A2, A3, A4).
                  aihtml_html:attrs()) ->
                     #ah_status_bar{}.
 status_bar(A1, A2, A3) -> aihtml_layout_nav:status_bar(A1, A2, A3).
+
+%% aihtml_layout_scroll
+-spec scrollview([aihtml_html:html()],
+                 aihtml_html:css(),
+                 aihtml_html:attrs()) ->
+                    #ah_scrollview{}.
+scrollview(A1, A2, A3) -> aihtml_layout_scroll:scrollview(A1, A2, A3).
+-spec scrollbar(aihtml_html:html(),
+                aihtml_html:css(),
+                aihtml_html:attrs()) ->
+                   #ah_scrollbar{}.
+scrollbar(A1, A2, A3) -> aihtml_layout_scroll:scrollbar(A1, A2, A3).
+-spec responsive_panel(aihtml_html:html(),
+                       aihtml_html:css(),
+                       aihtml_html:attrs()) ->
+                          #ah_responsive_panel{}.
+responsive_panel(A1, A2, A3) -> aihtml_layout_scroll:responsive_panel(A1, A2, A3).
+
+%% aihtml_layout_bars
+-spec activity_bar([{term(), aihtml_html:html(), iodata()} |
+                    {term(),
+                     aihtml_html:html(),
+                     iodata(),
+                     aihtml_html:attrs()} |
+                    divider],
+                   term(),
+                   aihtml_html:css(),
+                   aihtml_html:attrs()) ->
+                      #ah_activity_bar{}.
+activity_bar(A1, A2, A3, A4) -> aihtml_layout_bars:activity_bar(A1, A2, A3, A4).
+-spec navigationbar([{aihtml_html:html() |
+                      #{title := aihtml_html:html(),
+                        subheader => aihtml_html:html(),
+                        extra => aihtml_html:html()},
+                      aihtml_html:html()} |
+                     {aihtml_html:html() |
+                      #{title := aihtml_html:html(),
+                        subheader => aihtml_html:html(),
+                        extra => aihtml_html:html()},
+                      aihtml_html:html(),
+                      aihtml_html:attrs()} |
+                     #{header :=
+                           aihtml_html:html() |
+                           #{title := aihtml_html:html(),
+                             subheader => aihtml_html:html(),
+                             extra => aihtml_html:html()},
+                       content => aihtml_html:html(),
+                       actions => aihtml_html:html(),
+                       disabled => boolean()}],
+                    undefined |
+                    non_neg_integer() |
+                    [non_neg_integer()] |
+                    binary(),
+                    aihtml_html:css(),
+                    aihtml_html:attrs()) ->
+                       #ah_navigationbar{}.
+navigationbar(A1, A2, A3, A4) -> aihtml_layout_bars:navigationbar(A1, A2, A3, A4).
+-spec command([iodata() |
+               atom() |
+               integer() |
+               {term(), aihtml_html:html()} |
+               #{value := term(),
+                 label => aihtml_html:html(),
+                 description => aihtml_html:html(),
+                 icon => aihtml_html:html(),
+                 shortcut => aihtml_html:html(),
+                 href => iodata(),
+                 disabled => boolean()} |
+               #{heading => aihtml_html:html(),
+                 items :=
+                     [iodata() |
+                      atom() |
+                      integer() |
+                      {term(), aihtml_html:html()} |
+                      #{value := term(),
+                        label => aihtml_html:html(),
+                        description => aihtml_html:html(),
+                        icon => aihtml_html:html(),
+                        shortcut => aihtml_html:html(),
+                        href => iodata(),
+                        disabled => boolean()}]}],
+              aihtml_html:css(),
+              aihtml_html:attrs()) ->
+                 #ah_command{}.
+command(A1, A2, A3) -> aihtml_layout_bars:command(A1, A2, A3).
+-spec set_command_items(aihtml_action:ctx(),
+                        {id, iodata() | atom()} | aihtml_action:event(),
+                        [iodata() |
+                         atom() |
+                         integer() |
+                         {term(), aihtml_html:html()} |
+                         #{value := term(),
+                           label => aihtml_html:html(),
+                           description => aihtml_html:html(),
+                           icon => aihtml_html:html(),
+                           shortcut => aihtml_html:html(),
+                           href => iodata(),
+                           disabled => boolean()} |
+                         #{heading => aihtml_html:html(),
+                           items :=
+                               [iodata() |
+                                atom() |
+                                integer() |
+                                {term(), aihtml_html:html()} |
+                                #{value := term(),
+                                  label => aihtml_html:html(),
+                                  description => aihtml_html:html(),
+                                  icon => aihtml_html:html(),
+                                  shortcut => aihtml_html:html(),
+                                  href => iodata(),
+                                  disabled => boolean()}]}]) ->
+                           ok.
+set_command_items(A1, A2, A3) -> aihtml_layout_bars:set_command_items(A1, A2, A3).
+
+%% aihtml_layout_dnd
+-spec sortable([aihtml_layout_dnd:item()],
+               undefined | [term()] | iodata(),
+               aihtml_html:css(),
+               aihtml_html:attrs()) ->
+                  #ah_sortable{}.
+sortable(A1, A2, A3, A4) -> aihtml_layout_dnd:sortable(A1, A2, A3, A4).
+-spec dragdrop(aihtml_html:html(),
+               aihtml_html:css(),
+               aihtml_html:attrs()) ->
+                  #ah_dragdrop{}.
+dragdrop(A1, A2, A3) -> aihtml_layout_dnd:dragdrop(A1, A2, A3).
+-spec draggable_attrs(term(), map()) -> aihtml_html:attrs().
+draggable_attrs(A1, A2) -> aihtml_layout_dnd:draggable_attrs(A1, A2).
+-spec drop_zone_attrs(term(), map()) -> aihtml_html:attrs().
+drop_zone_attrs(A1, A2) -> aihtml_layout_dnd:drop_zone_attrs(A1, A2).
 
 %% aihtml_overlay
 -spec tooltip(aihtml_html:html(),
@@ -886,5 +1151,38 @@ ranking_list(A1, A2, A3) -> aihtml_display:ranking_list(A1, A2, A3).
                 aihtml_html:attrs()) ->
                    #ah_tag_cloud{}.
 tag_cloud(A1, A2, A3) -> aihtml_display:tag_cloud(A1, A2, A3).
+
+%% aihtml_data_tree
+-spec tree([aihtml_data_tree:tree_item()],
+           term(),
+           aihtml_html:css(),
+           aihtml_html:attrs()) ->
+              #ah_tree{}.
+tree(A1, A2, A3, A4) -> aihtml_data_tree:tree(A1, A2, A3, A4).
+-spec nav_tree([aihtml_data_tree:nav_item()],
+               iodata() | atom() | undefined,
+               aihtml_html:css(),
+               aihtml_html:attrs()) ->
+                  #ah_nav_tree{}.
+nav_tree(A1, A2, A3, A4) -> aihtml_data_tree:nav_tree(A1, A2, A3, A4).
+-spec diff(unicode:chardata(),
+           unicode:chardata(),
+           aihtml_html:css(),
+           aihtml_html:attrs()) ->
+              #ah_diff{}.
+diff(A1, A2, A3, A4) -> aihtml_data_tree:diff(A1, A2, A3, A4).
+-spec heatmap_calendar(#{binary() | string() | calendar:date() =>
+                             number()} |
+                       [{binary() | string() | calendar:date(),
+                         number()}],
+                       aihtml_html:css(),
+                       aihtml_html:attrs()) ->
+                          #ah_heatmap_calendar{}.
+heatmap_calendar(A1, A2, A3) -> aihtml_data_tree:heatmap_calendar(A1, A2, A3).
+-spec set_children(aihtml_action:ctx(),
+                   aihtml_action:event(),
+                   [aihtml_data_tree:tree_item()]) ->
+                      ok.
+set_children(A1, A2, A3) -> aihtml_data_tree:set_children(A1, A2, A3).
 
 %% END GENERATED COMPONENTS

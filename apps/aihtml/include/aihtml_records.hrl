@@ -13,5 +13,13 @@
 -include("aihtml_layout_nav.hrl").
 -include("aihtml_overlay.hrl").
 -include("aihtml_display.hrl").
+-include("aihtml_form_calendar.hrl").
+-include("aihtml_form_lists.hrl").
+-include("aihtml_form_entry.hrl").
+-include("aihtml_form_upload.hrl").
+-include("aihtml_data_tree.hrl").
+-include("aihtml_layout_scroll.hrl").
+-include("aihtml_layout_bars.hrl").
+-include("aihtml_layout_dnd.hrl").
 
 -endif.
