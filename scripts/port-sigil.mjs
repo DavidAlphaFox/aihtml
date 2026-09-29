@@ -9,7 +9,7 @@
 //
 // sigil is MIT licensed, (c) 2026 通九（大连）互联科技有限公司; the notice is
 // kept in priv/css/sigil/LICENSE and at the top of every imported file.
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -59,7 +59,15 @@ export const COMPONENTS = [
   "masked_input", "formatted_input", "range_selector", "upload", "tree",
   "diff", "heatmap_calendar", "scrollview", "scrollbar", "responsive_panel",
   "activity_bar", "navigationbar", "command", "sortable", "dragdrop",
+  // third batch: grids, schedules, charts (echarts), graphs, docking
+  "datagrid", "datagrid_charting", "pivotgrid", "treegrid", "datatable",
+  "gantt", "scheduler", "swimlane", "chart", "area_chart", "bar_chart",
+  "donut_chart", "node_graph", "relation_graph", "docking", "dock_layout",
+  "ribbon", "tile_layout",
 ];
+
+// Stylesheets that @import every file of a directory next to them.
+export const COMPONENT_DIRS = ["datagrid", "scheduler"];
 
 const NOTICE =
   "/* Ported from sigil, MIT License,\n" +
@@ -90,6 +98,9 @@ function copy(rel, to = rel) {
 
 FOUNDATION.forEach((f) => copy(f));
 COMPONENTS.forEach((c) => copy(`components/${c}.css`));
+COMPONENT_DIRS.forEach((d) =>
+  readdirSync(join(src, "components", d)).filter((f) => f.endsWith(".css"))
+    .forEach((f) => copy(`components/${d}/${f}`)));
 const license = join(dest, "LICENSE");
 if (!existsSync(license) || force) {
   writeFileSync(license, readFileSync(join(sigil, "LICENSE"), "utf8"));
