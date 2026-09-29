@@ -5,7 +5,8 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "npm run vendor && npm run js && npm run css",
-    "js": "node scripts/build-js.mjs",
+    "js": "vite build",
+    "js:dev": "vite build --mode development --watch",
     "test": "node scripts/test-js.mjs",
     "vendor": "node scripts/vendor.mjs",
     "css": "npm run css:index && npm run css:lib && npm run css:example",
@@ -15,6 +16,7 @@
     "watch:example": "tailwindcss -i apps/aihtml_example/assets/example.css -o apps/aihtml_example/priv/static/example.css --watch"
   },
   "devDependencies": {
+    "@hotwired/stimulus": "^3.2.2",
     "@tailwindcss/cli": "^4.3.3",
     "echarts": "^6.1.0",
     "esbuild": "^0.28.2",
@@ -36,6 +38,7 @@
     "prosemirror-transform": "^1.12.2",
     "prosemirror-view": "^1.42.6",
     "tailwindcss": "^4.3.3",
+    "vite": "^8.3.1",
     "xlsx": "^0.18.5"
   }
 }
