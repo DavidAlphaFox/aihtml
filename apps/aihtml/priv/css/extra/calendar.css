@@ -1,0 +1,7 @@
+/* aihtml additions for the calendar (aihtml_calendar). */
+
+/* Event rows keep their height instead of sharing the week row's spare
+   space (the grid would stretch its auto rows otherwise). */
+.ah-calendar-week-content {
+  align-content: start;
+}
