@@ -1,0 +1,109 @@
+/* aihtml additions for select (aihtml_select); sigil styles live in
+   ../sigil/components. */
+
+.ah-select {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  vertical-align: middle;
+  min-width: 8rem;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  font-family: var(--ah-font-family);
+  overflow: hidden;
+  transition: border-color var(--ah-transition-fast);
+  box-sizing: border-box;
+}
+
+.ah-select:hover {
+  border-color: var(--ah-color-grey-400);
+}
+
+.ah-select:focus-within {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-select-control {
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 calc(32px + var(--ah-spacing-sm)) 0 var(--ah-spacing-sm);
+  border: 0;
+  background: transparent;
+  color: var(--ah-color-text);
+  font: inherit;
+  font-size: var(--ah-font-size-sm);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.ah-select-control option,
+.ah-select-control optgroup {
+  background: var(--ah-color-bg-paper);
+  color: var(--ah-color-text);
+}
+
+.ah-select-arrow {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+  background: var(--ah-color-grey-50);
+  color: var(--ah-color-text-secondary);
+  pointer-events: none;
+}
+
+.ah-select-arrow .ah-dropdownlist-arrow-icon {
+  font-size: 10px;
+}
+
+/* multiple / size > 1: a list, no arrow */
+.ah-select:has(.ah-select-control[multiple]) .ah-select-arrow,
+.ah-select:has(.ah-select-control[size]:not([size="1"])) .ah-select-arrow {
+  display: none;
+}
+
+.ah-select-control[multiple],
+.ah-select-control[size]:not([size="1"]) {
+  padding: 4px;
+  overflow-y: auto;
+}
+
+.ah-select-control[multiple] option {
+  padding: 4px 6px;
+  border-radius: 2px;
+}
+
+.ah-select:has(.ah-select-control:disabled) {
+  opacity: var(--ah-state-disabled-opacity);
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-select-control:disabled {
+  cursor: not-allowed;
+}
+
+.ah-select-sm .ah-select-control { min-height: 28px; font-size: var(--ah-font-size-xs); }
+.ah-select-lg .ah-select-control { min-height: 42px; font-size: var(--ah-font-size-base); }
+.ah-select-block { display: flex; width: 100%; }
+
+.ah-select-primary { border-color: var(--ah-color-primary); }
+.ah-select-success { border-color: var(--ah-color-success); }
+.ah-select-warning { border-color: var(--ah-color-warning); }
+.ah-select-danger { border-color: var(--ah-color-error); }
+
+.ah-select:has(.ah-validator-error-element),
+.ah-form-row-invalid .ah-select {
+  border-color: var(--ah-color-danger);
+}
