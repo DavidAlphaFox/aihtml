@@ -1,0 +1,43 @@
+/* aihtml additions for the input component (designs/04-components.md);
+   textarea shares its classes. sigil styles live in ../sigil/components. */
+
+/* sm size: the right padding (the other sizes are in lib_input.css); the
+   clearable rule below overrides it */
+.ah-input-sm .ah-input { padding-right: var(--ah-spacing-sm); }
+
+/* ---- clear button (clearable) ---- */
+.ah-input-clearable .ah-input { padding-right: 2rem; }
+.ah-input-clear {
+  flex: none;
+  align-self: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: -1.75rem;
+  margin-right: 0.25rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ah-radius-full);
+  background: none;
+  color: var(--ah-color-text-secondary);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  visibility: hidden;
+  transition: color var(--ah-transition-fast), background-color var(--ah-transition-fast);
+}
+.ah-input-clear:hover { color: var(--ah-color-text); background: var(--ah-color-grey-100); }
+.ah-input-has-value .ah-input-clear { visibility: visible; }
+.ah-input-disabled .ah-input-clear { display: none; }
+/* the input is not :last-child when the clear button follows it */
+.ah-input-row .ah-input:has(+ .ah-input-clear:last-child) {
+  border-top-right-radius: var(--ah-radius-md);
+  border-bottom-right-radius: var(--ah-radius-md);
+}
+.ah-input-no-rounded .ah-input-row .ah-input:has(+ .ah-input-clear:last-child) { border-radius: 0; }
+
+/* focus colours the addons without JS as well */
+.ah-input-group:focus-within .ah-input-addon { border-color: var(--ah-color-primary); }
