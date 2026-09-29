@@ -57,14 +57,17 @@ popover_defaults_test() ->
     has(H, <<"ah-popover ah-popover-bottom">>),
     lacks(H, <<"ah-popover-title">>).
 
-%% The declarative triggers are re-exported here for the facade.
-triggers_reexported_test() ->
-    ?assertEqual(aihtml_lib_overlay:opens({id, d}), ?M:opens({id, d})),
-    ?assertEqual(aihtml_lib_overlay:toggles(<<".x">>), ?M:toggles(<<".x">>)),
-    ?assertEqual(aihtml_lib_overlay:closes(), ?M:closes()),
-    ?assertEqual(aihtml_lib_overlay:closes({id, w}), ?M:closes({id, w})),
-    ?assertEqual(aihtml_lib_overlay:closes(closest, ok), ?M:closes(closest, ok)),
-    [?assert(erlang:function_exported(?M, F, A)) || {F, A} <- ?M:facade_extras()].
+%% The declarative triggers live in aihtml_lib_overlay, whose
+%% facade_extras/0 the facade re-exports; the aihtml facade has them.
+triggers_in_lib_test() ->
+    ?assertNot(erlang:function_exported(?M, facade_extras, 0)),
+    Extras = aihtml_lib_overlay:facade_extras(),
+    ?assertEqual([{opens, 1}, {closes, 0}, {closes, 1}, {closes, 2}, {toggles, 1}], Extras),
+    [?assert(erlang:function_exported(aihtml_lib_overlay, F, A)) || {F, A} <- Extras],
+    {module, aihtml} = code:ensure_loaded(aihtml),
+    [?assert(erlang:function_exported(aihtml, F, A)) || {F, A} <- Extras],
+    ?assertEqual(aihtml_lib_overlay:opens({id, d}), aihtml:opens({id, d})),
+    ?assertEqual(aihtml_lib_overlay:closes(closest, ok), aihtml:closes(closest, ok)).
 
 %%%===================================================================
 %%% element records (designs/05-records.md)

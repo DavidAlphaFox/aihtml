@@ -15,10 +15,6 @@
 %%% assets/js/components/popover.js. popover/3 builds an #ah_popover{}
 %%% (include/aihtml_popover.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
-%%%
-%%% The declarative triggers of every overlay (opens/1, toggles/1,
-%%% closes/0,1,2, defined in aihtml_lib_overlay) are exported here too, so
-%%% that the aihtml facade, which reads component modules, re-exports them.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_popover).
@@ -26,8 +22,7 @@
 
 -include("aihtml_popover.hrl").
 
--export([popover/3, render/1, fields/1, catalog/0, facade_extras/0,
-         opens/1, closes/0, closes/1, closes/2, toggles/1]).
+-export([popover/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -50,39 +45,6 @@ popover(Children, Css, Attrs) ->
 %% @doc The field names of #ah_popover{}.
 -spec fields(atom()) -> [atom()].
 fields(ah_popover) -> record_info(fields, ah_popover).
-
-%%%===================================================================
-%%% Declarative triggers
-%%%===================================================================
-
-%% @doc Attrs: a click opens `Target' (drawer, sheet, window, popover,
-%% tooltip or notification template). A popover anchors to the element.
-%% See aihtml_lib_overlay:opens/1.
--spec opens(aihtml_lib_overlay:target()) -> aihtml_html:attrs().
-opens(Target) -> ?L:opens(Target).
-
-%% @doc Attrs: a click toggles `Target'. See aihtml_lib_overlay:toggles/1.
--spec toggles(aihtml_lib_overlay:target()) -> aihtml_html:attrs().
-toggles(Target) -> ?L:toggles(Target).
-
-%% @doc Attrs: a click closes the overlay the element is in.
--spec closes() -> aihtml_html:attrs().
-closes() -> ?L:closes().
-
-%% @doc Attrs: a click closes `Target'.
--spec closes(aihtml_lib_overlay:target()) -> aihtml_html:attrs().
-closes(Target) -> ?L:closes(Target).
-
-%% @doc Attrs: a click closes `Target' (`closest' for the enclosing
-%% overlay) and reports `Result' in the `ah:close' event, like sigil's
-%% window ok/cancel buttons.
--spec closes(aihtml_lib_overlay:target() | closest, atom() | iodata()) -> aihtml_html:attrs().
-closes(Target, Result) -> ?L:closes(Target, Result).
-
-%% @doc The declarative triggers, re-exported by the aihtml facade.
--spec facade_extras() -> [{atom(), arity()}].
-facade_extras() ->
-    [{opens, 1}, {closes, 0}, {closes, 1}, {closes, 2}, {toggles, 1}].
 
 %%%===================================================================
 %%% Rendering
