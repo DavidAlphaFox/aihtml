@@ -5,6 +5,8 @@
 
 -spec start(application:start_type(), term()) -> {ok, pid()} | {error, term()}.
 start(_Type, _Args) ->
+    %% The data layer first: Mnesia with the demo's tables on this node.
+    ok = aihtml_example_store:init(),
     {ok, Sup} = aihtml_example_sup:start_link(),
     Port = application:get_env(aihtml_example, port, 8080),
     %% "/" is the action demo: each event is one stateless request.

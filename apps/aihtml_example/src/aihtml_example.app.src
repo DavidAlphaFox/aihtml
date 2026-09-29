@@ -4,6 +4,9 @@
   {registered, [aihtml_example_sup]},
   {mod, {aihtml_example_app, []}},
   {applications, [kernel, stdlib, cowboy, aihtml, aihtml_cowboy]},
-  {env, [{port, 8080}]},
+  %% mnesia is started by aihtml_example_store:init/0, after it has had a
+  %% chance to create the disc schema, so it is not listed above.
+  {env, [{port, 8080},
+         {db_storage, disc_copies}]},
   {modules, []},
   {licenses, ["Apache-2.0"]}]}.
