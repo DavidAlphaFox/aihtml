@@ -9,7 +9,7 @@
 %%% -export([action/4]).
 %%%
 %%% item(#{id := Id, text := Text}) ->
-%%%     li([Text, button(<<"Delete">>, Id, [ghost],
+%%%     li([Text, button(<<"Delete">>, Id, [borderless],
 %%%                      [on(click, {?MODULE, delete, #{id => Id}})])],
 %%%        [], [{id, [<<"todo-">>, integer_to_binary(Id)]}]).
 %%%
