@@ -30,31 +30,37 @@
 %%%
 %%% The browser only builds HTML from shared templates
 %%% (templates/datepicker_month.mustache, templates/combobox_tag.mustache).
+%%%
+%%% Each component function builds an element record (#ah_datepicker{},
+%%% #ah_combobox{}, defined in include/aihtml_form_pickers.hrl) and
+%%% render/1 turns it into HTML, so pages may also write the records
+%%% directly (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_form_pickers).
+-behaviour(aihtml_element).
+
+-include("aihtml_form_pickers.hrl").
 
 -export([datepicker/3, combobox/4, set_items/3, set_items/4,
-         catalog/0, facade_extras/0]).
+         render/1, fields/1, catalog/0, facade_extras/0]).
 
--export_type([date_value/0, item/0]).
+-export_type([date_value/0, item/0, element/0]).
 
 -define(H, aihtml_html).
+-define(E, aihtml_element).
 
 %% Shared templates (see aihtml_tpl): also compiled to AH.tpl.* for the browser.
 -compile({parse_transform, beamai_mustache_transform}).
 -mustache_template({tpl_datepicker_month, "../templates/datepicker_month.mustache"}).
 -mustache_template({tpl_combobox_tag, "../templates/combobox_tag.mustache"}).
 
--type date_value() :: binary() | calendar:date() | undefined
-                    | {binary() | calendar:date() | undefined,
-                       binary() | calendar:date() | undefined}.
+-type date_value() :: ah_picker_date_value().
 %% A combobox item: a text that is both value and label, `{Value, Label}',
 %% or a map with `value' and optionally `label', `description', `group'
 %% and `disabled'.
--type item() :: binary() | atom() | integer() | {term(), term()}
-              | #{value := term(), label => term(), description => term(),
-                  group => term(), disabled => boolean()}.
+-type item() :: ah_picker_item().
+-type element() :: #ah_datepicker{} | #ah_combobox{}.
 
 -define(MONTHS, [<<"January">>, <<"February">>, <<"March">>, <<"April">>, <<"May">>,
                  <<"June">>, <<"July">>, <<"August">>, <<"September">>, <<"October">>,
@@ -84,26 +90,27 @@
 %% `months', `months_short', `weekdays' (7, from Sunday), `title' (a
 %% format, default "MMMM yyyy"), `today', `clear', `prev_month',
 %% `next_month', `prev_year', `next_year').
--spec datepicker(date_value(), aihtml_html:css(), aihtml_html:attrs()) ->
-          aihtml_html:element().
-datepicker(Value0, Css, Attrs0) ->
-    Entry = aihtml_catalog:entry(?MODULE, datepicker),
-    {Opts, Attrs1} = aihtml_catalog:split_options(Entry, Attrs0),
-    {Name, Id, Attrs} = take_name_id(Attrs1),
-    Flags = aihtml_catalog:flags(Entry, Css),
-    Range = lists:member(range, Flags) orelse is_range(Value0),
-    Disabled = lists:member(disabled, Flags),
-    Readonly = lists:member(readonly, Flags),
-    Inline = lists:member(inline, Flags),
+-spec datepicker(date_value(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_datepicker{}.
+datepicker(Value, Css, Attrs) ->
+    build(#ah_datepicker{value = Value}, Css, Attrs).
+
+render_datepicker(#ah_datepicker{value = Value0, name = Name, disabled = Disabled,
+                                 readonly = Readonly, inline = Inline,
+                                 first_day = FirstDay, min = Min0, max = Max0} = R0) ->
+    {Id, R} = ensure_id(R0),
+    Classes = classes(R),                       % checks the flag fields first
+    Range = R#ah_datepicker.range orelse is_range(Value0),
     Value = case Range of
                 true -> range_value(Value0);
                 false -> iso(Value0)
             end,
-    Labels = labels(maps:get(labels, Opts, #{})),
-    Format = text(maps:get(format, Opts, <<"yyyy-MM-dd">>)),
-    FirstDay = maps:get(first_day, Opts, 0),
+    Labels = labels(R#ah_datepicker.labels),
+    Format = text(R#ah_datepicker.format),
     (is_integer(FirstDay) andalso FirstDay >= 0 andalso FirstDay =< 6)
         orelse error({aihtml, {bad_first_day, FirstDay}}),
+    Min = iso_opt(Min0),
+    Max = iso_opt(Max0),
+    Off = [iso(D) || D <- R#ah_datepicker.disabled_dates],
     {Iso, Display} = case Value of
                          undefined -> {<<>>, <<>>};
                          {F, T} -> {<<(nz(F))/binary, ",", (nz(T))/binary>>,
@@ -113,11 +120,11 @@ datepicker(Value0, Css, Attrs0) ->
     Clear = [?H:el(button, {safe, <<"&times;">>}, [<<"ah-datepicker-clear">>],
                    [{type, button}, {tabindex, <<"-1">>},
                     {aria_label, maps:get(<<"clear">>, Labels)}])
-             || lists:member(clearable, Flags), not Disabled, not Readonly],
+             || R#ah_datepicker.clearable, not Disabled, not Readonly],
     Input = ?H:void(input, [<<"ah-datepicker-input">>],
                     [{type, text}, {id, sub_id(Id, <<"input">>)},
                      {autocomplete, off}, {spellcheck, <<"false">>}, {readonly, true},
-                     {placeholder, maps:get(placeholder, Opts, <<"Select date...">>)},
+                     {placeholder, R#ah_datepicker.placeholder},
                      {value, Display}, {disabled, Disabled},
                      {role, combobox}, {aria_haspopup, dialog},
                      {aria_expanded, <<"false">>}]),
@@ -132,42 +139,41 @@ datepicker(Value0, Css, Attrs0) ->
                  case Inline of
                      false -> [];
                      true ->
-                         Off = [iso(D) || D <- maps:get(disabled_dates, Opts, [])],
                          aihtml_tpl:safe(tpl_datepicker_month(
                            month_view(#{id => Id, value => Value, first_day => FirstDay,
-                                        week_numbers => maps:get(week_numbers, Opts, false),
-                                        weekends => maps:get(weekends, Opts, false),
-                                        other_month => maps:get(other_month_days, Opts, true),
-                                        min => iso_opt(maps:get(min, Opts, undefined)),
-                                        max => iso_opt(maps:get(max, Opts, undefined)),
+                                        week_numbers => R#ah_datepicker.week_numbers,
+                                        weekends => R#ah_datepicker.weekends,
+                                        other_month => R#ah_datepicker.other_month_days,
+                                        min => Min, max => Max,
                                         off => Off, labels => Labels})))
                  end,
                  [<<"ah-datepicker-popup">>],
                  [{role, case Inline of true -> group; false -> dialog end},
                   {aria_label, <<"Choose date">>}])],
-          [aihtml_catalog:classes(Entry, Css),
-           [<<"ah-datepicker-range">> || Range, not lists:member(range, Flags)]],
+          [Classes,
+           [<<"ah-datepicker-range">> || Range, not R#ah_datepicker.range]],
+          %% the id comes first, as before; root_attrs repeats it in place
           [[{id, Id}, {data_ah, <<"datepicker">>}, {data_ah_value, Iso},
             {data_ah_range, Range},
             {data_ah_format, Format},
-            {data_ah_min, iso_opt(maps:get(min, Opts, undefined))},
-            {data_ah_max, iso_opt(maps:get(max, Opts, undefined))},
+            {data_ah_min, Min},
+            {data_ah_max, Max},
             {data_ah_disabled_dates,
-             case [iso(D) || D <- maps:get(disabled_dates, Opts, [])] of
+             case Off of
                  [] -> undefined;
                  Ds -> iolist_to_binary(lists:join(<<",">>, Ds))
              end},
             {data_ah_first_day, FirstDay},
-            {data_ah_week_numbers, maps:get(week_numbers, Opts, false)},
-            {data_ah_weekends, maps:get(weekends, Opts, false)},
+            {data_ah_week_numbers, R#ah_datepicker.week_numbers},
+            {data_ah_weekends, R#ah_datepicker.weekends},
             {data_ah_other_month_days,
-             case maps:get(other_month_days, Opts, true) of
+             case R#ah_datepicker.other_month_days of
                  true -> undefined;
                  false -> <<"false">>
              end},
             {data_ah_labels, iolist_to_binary(json:encode(Labels))},
             {aria_disabled, Disabled andalso <<"true">>}],
-           Attrs]).
+           ?E:root_attrs(R, change)]).
 
 is_range({A, B}) when not is_integer(A); not is_integer(B) -> true;
 is_range({undefined, undefined}) -> true;
@@ -361,15 +367,16 @@ pad(N) -> integer_to_binary(N).
 %% found"), `dropdown_height' (px, default 240), `search' (an action ref,
 %% see the module doc).
 -spec combobox([item()], term() | [term()] | undefined, aihtml_html:css(),
-               aihtml_html:attrs()) -> aihtml_html:element().
-combobox(Items0, Value, Css, Attrs0) ->
-    Entry = aihtml_catalog:entry(?MODULE, combobox),
-    {Opts, Attrs1} = aihtml_catalog:split_options(Entry, Attrs0),
-    {Name, Id, Attrs} = take_name_id(Attrs1),
-    Flags = aihtml_catalog:flags(Entry, Css),
-    Multi = lists:member(multiple, Flags) orelse lists:member(checkboxes, Flags),
-    Checkboxes = lists:member(checkboxes, Flags),
-    Disabled = lists:member(disabled, Flags),
+               aihtml_html:attrs()) -> #ah_combobox{}.
+combobox(Items, Value, Css, Attrs) ->
+    build(#ah_combobox{items = Items, value = Value}, Css, Attrs).
+
+render_combobox(#ah_combobox{items = Items0, value = Value, name = Name,
+                             checkboxes = Checkboxes, disabled = Disabled,
+                             placeholder = Placeholder, search_mode = Mode} = R0) ->
+    {Id, R} = ensure_id(R0),
+    Classes = classes(R),                       % checks the flag fields first
+    Multi = R#ah_combobox.multiple orelse Checkboxes,
     Items = [item(I) || I <- Items0],
     Selected = case {Multi, Value} of
                    {_, undefined} -> [];
@@ -377,12 +384,10 @@ combobox(Items0, Value, Css, Attrs0) ->
                    {true, [V1 | _] = Vs} when not is_integer(V1) -> [text(V) || V <- Vs];
                    {_, V} -> [text(V)]
                end,
-    Placeholder = maps:get(placeholder, Opts, <<>>),
-    Mode = maps:get(search_mode, Opts, contains_ignore_case),
     lists:member(Mode, [contains_ignore_case, contains, starts_with_ignore_case,
                         starts_with, equals_ignore_case, equals, none])
         orelse error({aihtml, {bad_search_mode, Mode}}),
-    Search = case maps:get(search, Opts, undefined) of
+    Search = case R#ah_combobox.search of
                  undefined -> [];
                  Ref -> aihtml:on(input, Ref, #{debounce => 250})
              end,
@@ -415,7 +420,7 @@ combobox(Items0, Value, Css, Attrs0) ->
             end,
     Arrow = ?H:el(span, ?H:el(span, <<"▼"/utf8>>, [<<"ah-combobox-arrow-icon">>], []),
                   [<<"ah-combobox-arrow">>], [{aria_hidden, <<"true">>}]),
-    Height = maps:get(dropdown_height, Opts, undefined),
+    Height = R#ah_combobox.dropdown_height,
     Popup = ?H:el('div',
                   ?H:el(ul, render_items(Items, Selected, Checkboxes, Id),
                         [<<"ah-combobox-list">>],
@@ -428,15 +433,16 @@ combobox(Items0, Value, Css, Attrs0) ->
           [?H:el('div', [Field, Arrow], [<<"ah-combobox-input-area">>], []),
            hidden(Name, join(Selected)),
            Popup],
-          aihtml_catalog:classes(Entry, Css),
+          Classes,
+          %% the id comes first, as before; root_attrs repeats it in place
           [[{id, Id}, {data_ah, <<"combobox">>}, {data_ah_value, join(Selected)},
             {data_ah_search_mode, Mode},
-            {data_ah_min_length, maps:get(min_length, Opts, undefined)},
-            {data_ah_empty, maps:get(empty_text, Opts, undefined)},
+            {data_ah_min_length, R#ah_combobox.min_length},
+            {data_ah_empty, R#ah_combobox.empty_text},
             {data_ah_remote, Search =/= []},
             {data_ah_placeholder, Multi andalso Placeholder},
             {aria_disabled, Disabled andalso <<"true">>}],
-           Attrs]).
+           ?E:root_attrs(R, change)]).
 
 item(#{value := V} = M) ->
     maps:merge(#{label => text(maps:get(label, M, V))},
@@ -541,20 +547,39 @@ facade_extras() -> [{set_items, 3}, {set_items, 4}].
 %%% Shared
 %%%===================================================================
 
+%%%===================================================================
+%%% Records
+%%%===================================================================
+
+build(R, Css, Attrs) ->
+    Tag = element(1, R),
+    ?E:build(R, fields(Tag), entry(?E:component_name(Tag)), Css, Attrs).
+
+%% @doc The field names of one of this group's records.
+-spec fields(atom()) -> [atom()].
+fields(ah_datepicker) -> record_info(fields, ah_datepicker);
+fields(ah_combobox) -> record_info(fields, ah_combobox).
+
+-spec render(element()) -> aihtml_html:html().
+render(#ah_datepicker{} = R) -> render_datepicker(R);
+render(#ah_combobox{} = R) -> render_combobox(R).
+
+classes(R) ->
+    Tag = element(1, R),
+    ?E:classes(R, fields(Tag), entry(?E:component_name(Tag))).
+
+entry(Name) -> aihtml_catalog:entry(?MODULE, Name).
+
 %% `name' goes to the hidden input, `id' stays on the root (and derives the
 %% ids of the parts). A root without an id gets one: the parts refer to
-%% each other by id (aria-controls, the search event's data).
-take_name_id(Attrs0) ->
-    Attrs = ?H:attrs(Attrs0),
-    Name = case lists:keyfind(<<"name">>, 1, Attrs) of
-               {_, N} -> N;
-               false -> undefined
-           end,
-    Id = case lists:keyfind(<<"id">>, 1, Attrs) of
-             {_, I} -> I;
-             false -> new_id()
+%% each other by id (aria-controls, the search event's data). Returns the
+%% id and the record holding it, for root_attrs/2.
+ensure_id(R) ->
+    Id = case element(3, R) of
+             undefined -> new_id();
+             Id0 -> text(Id0)
          end,
-    {Name, Id, [A || {K, _} = A <- Attrs, K =/= <<"name">>, K =/= <<"id">>]}.
+    {Id, setelement(3, R, Id)}.
 
 new_id() ->
     <<"ah-p", (integer_to_binary(erlang:unique_integer([positive])))/binary>>.

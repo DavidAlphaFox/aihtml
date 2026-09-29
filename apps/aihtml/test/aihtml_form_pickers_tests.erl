@@ -4,6 +4,7 @@
 -behaviour(aihtml_action).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("aihtml/include/aihtml_form_pickers.hrl").
 
 -export([action/4]).
 
@@ -46,8 +47,8 @@ datepicker_value_forms_test() ->
     ?assert(has(<<"data-ah-value=\"\"">>, E)),
     ?assert(has(<<"id=\"ah-p">>, E)),          % an id is generated
     ?assertError({aihtml, {bad_date, <<"2026-02-30">>}},
-                 ?M:datepicker(<<"2026-02-30">>, [], [])),
-    ?assertError({aihtml, {bad_date, _}}, ?M:datepicker(<<"29/09/2026">>, [], [])).
+                 r(?M:datepicker(<<"2026-02-30">>, [], []))),
+    ?assertError({aihtml, {bad_date, _}}, r(?M:datepicker(<<"29/09/2026">>, [], []))).
 
 datepicker_range_test() ->
     H = r(?M:datepicker({<<"2026-09-18">>, {2026, 9, 10}}, [], [{name, p}])),
@@ -83,9 +84,9 @@ datepicker_options_test() ->
     ?assertNot(has_quiet(<<"ah-datepicker-clear\"">>, H)),
     %% labels travel as JSON, escaped in the attribute
     ?assert(has(<<"&quot;today&quot;:&quot;"/utf8>>, H)),
-    ?assertError({aihtml, {bad_first_day, 7}}, ?M:datepicker(undefined, [], [{first_day, 7}])),
+    ?assertError({aihtml, {bad_first_day, 7}}, r(?M:datepicker(undefined, [], [{first_day, 7}]))),
     ?assertError({aihtml, {bad_datepicker_label, months}},
-                 ?M:datepicker(undefined, [], [{labels, #{months => [<<"x">>]}}])),
+                 r(?M:datepicker(undefined, [], [{labels, #{months => [<<"x">>]}}]))),
     ?assertError({aihtml, {unknown_modifier, datepicker, big, _}},
                  ?M:datepicker(undefined, [big], [])).
 
@@ -201,8 +202,9 @@ combobox_flags_options_test() ->
     ?assert(has(<<"data-ah-empty=\"Nothing\"">>, H)),
     ?assert(has(<<"style=\"max-height:120px\"">>, H)),
     ?assertError({aihtml, {bad_search_mode, fuzzy}},
-                 ?M:combobox([], undefined, [], [{search_mode, fuzzy}])),
-    ?assertError({aihtml, {bad_combobox_item, _}}, ?M:combobox([{1, 2, 3}], undefined, [], [])).
+                 r(?M:combobox([], undefined, [], [{search_mode, fuzzy}]))),
+    ?assertError({aihtml, {bad_combobox_item, _}},
+                 r(?M:combobox([{1, 2, 3}], undefined, [], []))).
 
 %%%===================================================================
 %%% Server-side search: render, verify the token, run the action
@@ -304,3 +306,106 @@ catalog_test() ->
          ?assert(lists:member(setValue, [Name || #{name := Name} <- Ms]))
      end || N <- [datepicker, combobox]],
     [?assert(erlang:function_exported(?M, F, A)) || {F, A} <- ?M:facade_extras()].
+
+%%%===================================================================
+%%% element records (designs/05-records.md)
+%%%===================================================================
+
+record_equals_builder_test() ->
+    Labels = #{today => <<"Now">>},
+    ?assertEqual(r(?M:datepicker(<<"2026-09-15">>, [inline, clearable, <<"w-64">>],
+                                 [{id, dp}, {name, due}, {first_day, 1}, {min, {2026, 9, 5}},
+                                  {week_numbers, true}, {labels, Labels}, {title, <<"t">>}])),
+                 r(#ah_datepicker{value = <<"2026-09-15">>, inline = true, clearable = true,
+                                  css = [<<"w-64">>], id = dp, name = due, first_day = 1,
+                                  min = {2026, 9, 5}, week_numbers = true, labels = Labels,
+                                  attrs = [{title, <<"t">>}]})),
+    Items = [<<"a">>, {b, <<"B">>}, #{value => c, group => <<"G">>}],
+    ?assertEqual(r(?M:combobox(Items, [a, c], [checkboxes, no_arrow],
+                               [{id, <<"cb">>}, {name, n}, {placeholder, <<"P">>},
+                                {search_mode, starts_with}, {dropdown_height, 100},
+                                {search, {?MODULE, search, #{}}}])),
+                 r(#ah_combobox{items = Items, value = [a, c], checkboxes = true,
+                                no_arrow = true, id = <<"cb">>, name = n, placeholder = <<"P">>,
+                                search_mode = starts_with, dropdown_height = 100,
+                                search = {?MODULE, search, #{}}})).
+
+builder_fills_fields_test() ->
+    D = ?M:datepicker({<<"2026-01-01">>, undefined}, [range, disabled, <<"x">>],
+                      [{id, d}, {format, <<"d MMM">>}, {max, <<"2026-12-31">>},
+                       {disabled_dates, [{2026, 5, 1}]}, {other_month_days, false},
+                       {title, <<"t">>}]),
+    ?assertMatch(#ah_datepicker{value = {<<"2026-01-01">>, undefined}, range = true,
+                                disabled = true, readonly = false, id = d,
+                                format = <<"d MMM">>, max = <<"2026-12-31">>,
+                                disabled_dates = [{2026, 5, 1}], other_month_days = false,
+                                css = [<<"x">>], attrs = [{title, <<"t">>}]}, D),
+    C = ?M:combobox([<<"a">>], <<"a">>, [free_text], [{min_length, 2}, {empty_text, <<"-">>}]),
+    ?assertMatch(#ah_combobox{items = [<<"a">>], value = <<"a">>, free_text = true,
+                              min_length = 2, empty_text = <<"-">>, id = undefined,
+                              attrs = []}, C),
+    ?assertError({aihtml, {record_only_field, ah_combobox, postback}},
+                 ?M:combobox([], undefined, [], [{postback, pick}])).
+
+generated_id_test() ->
+    %% no id: one is generated at render, and the parts refer to it
+    H = r(#ah_combobox{items = [<<"a">>], postback = pick}),
+    {match, [Id]} = re:run(H, <<"^<div class=\"ah-combobox\" id=\"(ah-p[0-9]+)\"">>,
+                           [{capture, all_but_first, binary}]),
+    ?assert(has(<<"aria-controls=\"", Id/binary, "-list\"">>, H)),
+    ?assertEqual(1, length(binary:matches(H, <<" id=\"", Id/binary, "\"">>))),
+    %% each render gets its own id
+    R = #ah_datepicker{},
+    ?assertNotEqual(r(R), r(R)).
+
+postback_test() ->
+    Token = fun(Html) ->
+                    {match, [T]} = re:run(r(Html), <<"data-ah-on=\"([a-z]+:[^\"]+)\"">>,
+                                          [{capture, all_but_first, binary}]),
+                    [Ev, Tok] = binary:split(T, <<":">>),
+                    {ok, Ref} = aihtml_action:unsign(Tok),
+                    {Ev, Ref}
+            end,
+    ?assertEqual({<<"change">>, {?MODULE, picked, #{id => 7}}},
+                 Token(#ah_datepicker{postback = {picked, #{id => 7}}})),
+    ?assertEqual({<<"change">>, {other_mod, pick, #{}}},
+                 Token(#ah_combobox{items = [<<"a">>], postback = pick,
+                                    delegate = other_mod})),
+    %% the id stays first on the root, the postback follows its own attributes
+    H = r(#ah_combobox{id = c, postback = pick}),
+    ?assertMatch({match, _}, re:run(H, <<"^<div class=\"ah-combobox\" id=\"c\" "
+                                         "data-ah=\"combobox\"[^>]* data-ah-on=\"change:">>)).
+
+field_validation_test() ->
+    ?assertError({aihtml, {bad_first_day, 9}}, r(#ah_datepicker{first_day = 9})),
+    ?assertError({aihtml, {bad_date, <<"soon">>}}, r(#ah_datepicker{min = <<"soon">>})),
+    ?assertError({aihtml, {bad_datepicker_label, today_}},
+                 r(#ah_datepicker{labels = #{today_ => <<"x">>}})),
+    ?assertError({aihtml, {bad_flag, datepicker, inline, yes}},
+                 r(#ah_datepicker{inline = yes})),
+    ?assertError({aihtml, {bad_search_mode, fuzzy}}, r(#ah_combobox{search_mode = fuzzy})),
+    ?assertError({aihtml, {bad_combobox_item, _}}, r(#ah_combobox{items = [{1, 2, 3}]})),
+    ?assertError({aihtml, {modifier_in_css, combobox, multiple}},
+                 r(#ah_combobox{css = [multiple]})),
+    %% modifier names still fail in the builder
+    ?assertError({aihtml, {unknown_modifier, combobox, big, _}},
+                 ?M:combobox([], undefined, [big], [])).
+
+records_match_catalog_test() ->
+    Base = [module, id, css, attrs, postback, delegate],
+    [begin
+         Tag = list_to_atom("ah_" ++ atom_to_list(N)),
+         Fields = ?M:fields(Tag),
+         ?assertEqual(Base, lists:sublist(Fields, 6)),
+         Defaults = maps:from_list(lists:zip(Fields, tl(tuple_to_list(default(Tag))))),
+         [?assertEqual({N, G, case D of none -> undefined; _ -> D end},
+                       {N, G, maps:get(G, Defaults)})
+          || {G, {_, D}} <- maps:to_list(maps:get(groups, E, #{}))],
+         [?assertEqual({N, F, false}, {N, F, maps:get(F, Defaults)})
+          || F <- maps:get(flags, E, [])],
+         [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
+         ?assertEqual(?M, maps:get(module, Defaults))
+     end || #{name := N} = E <- ?M:catalog()].
+
+default(ah_datepicker) -> #ah_datepicker{};
+default(ah_combobox) -> #ah_combobox{}.
