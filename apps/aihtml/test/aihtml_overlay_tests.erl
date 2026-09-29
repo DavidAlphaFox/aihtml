@@ -1,6 +1,7 @@
 -module(aihtml_overlay_tests).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("aihtml/include/aihtml_overlay.hrl").
 
 -define(O, aihtml_overlay).
 
@@ -138,7 +139,8 @@ sheet_test() ->
     has(H, <<"aria-label=\"S\"">>),
     lacks(H, <<"handle">>),
     ?assertError({aihtml, {unknown_modifier, sheet, middle, _}}, ?O:sheet(<<"x">>, [middle], [])),
-    ?assertError(_, ?O:sheet(<<"x">>, [], [{handle, true}, {bogus, 1}, {"bad attr", 1}])).
+    %% attributes are checked when the record is rendered
+    ?assertError(_, r(?O:sheet(<<"x">>, [], [{handle, true}, {bogus, 1}, {"bad attr", 1}]))).
 
 %%%===================================================================
 %%% Window
@@ -267,3 +269,127 @@ card_matches_template_test() ->
                                     warning => false, error => false, clickable => true,
                                     closable => true, width => null, content => <<"x">>})),
     has(?O:notification(<<"x">>, [], []), B).
+
+%%%===================================================================
+%%% element records (designs/05-records.md)
+%%%===================================================================
+
+record_equals_builder_test() ->
+    ?assertEqual(r(?O:tooltip(<<"Hint">>, <<"B">>, [left, no_arrow, <<"max-w-xs">>],
+                              [{id, t}, {trigger, click}, {width, 200}, {title, <<"x">>}])),
+                 r(#ah_tooltip{body = <<"Hint">>, anchor = <<"B">>, position = left,
+                               no_arrow = true, css = [<<"max-w-xs">>], id = t,
+                               trigger = click, width = 200, attrs = [{title, <<"x">>}]})),
+    ?assertEqual(r(?O:popover(<<"P">>, [top], [{id, <<"p">>}, {title, <<"T">>},
+                                               {closable, true}, {modal, false}])),
+                 r(#ah_popover{body = <<"P">>, position = top, id = <<"p">>, title = <<"T">>,
+                               closable = true, modal = false})),
+    ?assertEqual(r(?O:drawer(<<"D">>, [right, <<"bg-white">>],
+                             [{id, <<"d">>}, {title, <<"T">>}, {size, 280},
+                              {handle, false}, {close_on_esc, false}])),
+                 r(#ah_drawer{body = <<"D">>, side = right, css = [<<"bg-white">>],
+                              id = <<"d">>, title = <<"T">>, size = 280, handle = false,
+                              close_on_esc = false})),
+    ?assertEqual(r(?O:sheet(<<"S">>, [top], [{id, s}, {footer, <<"F">>}, {open, true}])),
+                 r(#ah_sheet{body = <<"S">>, side = top, id = s, footer = <<"F">>,
+                             open = true})),
+    ?assertEqual(r(?O:notification(<<"N">>, [error, bottom_left],
+                                   [{id, <<"n">>}, {auto_close, false}, {width, 320}])),
+                 r(#ah_notification{body = <<"N">>, variant = error, position = bottom_left,
+                                    id = <<"n">>, auto_close = false, width = 320})),
+    ?assertEqual(r(?O:window(<<"W">>, [<<"shadow">>],
+                             [{id, <<"w">>}, {title, <<"T">>}, {modal, true},
+                              {height, 200}, {collapsed, true}])),
+                 r(#ah_window{body = <<"W">>, css = [<<"shadow">>], id = <<"w">>,
+                              title = <<"T">>, modal = true, height = 200,
+                              collapsed = true})).
+
+builder_fills_fields_test() ->
+    W = ?O:window(<<"x">>, [<<"c">>], [{id, <<"w">>}, {width, 400}, {draggable, false},
+                                        {close_on_esc, false}, {data_x, 1}]),
+    ?assertMatch(#ah_window{id = <<"w">>, css = [<<"c">>], width = 400, draggable = false,
+                            close_on_esc = false, closable = true, attrs = [{data_x, 1}]}, W),
+    %% an option of the drawer is an HTML attribute of the sheet
+    ?assertMatch(#ah_sheet{attrs = [{handle, false}]}, ?O:sheet(<<"x">>, [], [{handle, false}])),
+    ?assertMatch(#ah_tooltip{body = <<"b">>, anchor = <<"a">>, position = mouse},
+                 ?O:tooltip(<<"b">>, <<"a">>, [mouse], [])),
+    ?assertError({aihtml, {record_only_field, ah_drawer, postback}},
+                 ?O:drawer(<<"x">>, [], [{postback, save}])).
+
+ids_test() ->
+    %% the title id follows the id field, also for an atom id
+    has(#ah_drawer{id = cart, title = <<"Cart">>},
+        <<"aria-labelledby=\"cart-title\"">>),
+    has(#ah_window{id = <<"w">>}, <<"<div class=\"ah-window-title\" id=\"w-title\">">>),
+    %% without an id a window still gets a unique title id
+    ?assertMatch({match, _}, re:run(r(#ah_window{}),
+                                    <<"aria-labelledby=\"ah-window-[0-9]+-title\"">>)),
+    lacks(#ah_drawer{title = <<"T">>}, <<"aria-labelledby">>).
+
+postback_test() ->
+    Token = fun(Html) ->
+                    {match, [T]} = re:run(r(Html), <<"data-ah-on=\"(ah:[a-z]+:[^\"]+)\"">>,
+                                          [{capture, all_but_first, binary}]),
+                    [Ah, Ev, Tok] = binary:split(T, <<":">>, [global]),
+                    {ok, Ref} = aihtml_action:unsign(Tok),
+                    {<<Ah/binary, ":", Ev/binary>>, Ref}
+            end,
+    Close = <<"ah:close">>,
+    ?assertEqual({Close, {?MODULE, closed, #{id => 1}}},
+                 Token(#ah_drawer{id = <<"d">>, postback = {closed, #{id => 1}}})),
+    ?assertEqual({Close, {?MODULE, closed, #{}}}, Token(#ah_sheet{postback = closed})),
+    ?assertEqual({Close, {other_mod, closed, #{}}},
+                 Token(#ah_window{postback = closed, delegate = other_mod})),
+    ?assertEqual({Close, {?MODULE, gone, 2}},
+                 Token(#ah_notification{postback = {gone, 2}})),
+    ?assertEqual({Close, {?MODULE, closed, #{}}}, Token(#ah_popover{postback = closed})),
+    ?assertError({aihtml, {no_postback_event, ah_tooltip}},
+                 r(#ah_tooltip{body = <<"x">>, postback = closed})).
+
+field_validation_test() ->
+    ?assertError({aihtml, {bad_modifier, tooltip, position, middle, _}},
+                 r(#ah_tooltip{position = middle})),
+    ?assertError({aihtml, {bad_flag, popover, no_arrow, yes}},
+                 r(#ah_popover{no_arrow = yes})),
+    ?assertError({aihtml, {bad_modifier, drawer, side, center, _}},
+                 r(#ah_drawer{side = center})),
+    ?assertError({aihtml, {bad_modifier, notification, variant, danger, _}},
+                 r(#ah_notification{variant = danger})),
+    ?assertError({aihtml, {bad_option, trigger, hovering}},
+                 r(#ah_tooltip{trigger = hovering})),
+    ?assertError({aihtml, {bad_option, modal, <<"true">>}},
+                 r(#ah_window{modal = <<"true">>})),
+    ?assertError({aihtml, {bad_option, delay, -1}},
+                 r(#ah_notification{delay = -1})),
+    ?assertError({aihtml, {bad_option, close_on_esc, 1}},
+                 r(#ah_sheet{close_on_esc = 1})),
+    ?assertError({aihtml, {modifier_in_css, window, large}},
+                 r(#ah_window{css = [large]})),
+    %% modifier names still fail in the builder
+    ?assertError({aihtml, {unknown_modifier, drawer, center, _}},
+                 ?O:drawer(<<"x">>, [center], [])).
+
+records_match_catalog_test() ->
+    Base = [module, id, css, attrs, postback, delegate],
+    [begin
+         Tag = list_to_atom("ah_" ++ atom_to_list(N)),
+         Fields = ?O:fields(Tag),
+         ?assertEqual(Base, lists:sublist(Fields, 6)),
+         Defaults = maps:from_list(lists:zip(Fields, tl(tuple_to_list(default(Tag))))),
+         [?assertEqual({N, G, case D of none -> undefined; _ -> D end},
+                       {N, G, maps:get(G, Defaults)})
+          || {G, {_, D}} <- maps:to_list(maps:get(groups, E, #{}))],
+         [?assertEqual({N, F, false}, {N, F, maps:get(F, Defaults)})
+          || F <- maps:get(flags, E, [])],
+         [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
+         ?assertEqual(?O, maps:get(module, Defaults))
+     end || #{name := N} = E <- ?O:catalog(),
+            %% toast is an action (toast/3), not an element: no record
+            N =/= toast].
+
+default(ah_tooltip) -> #ah_tooltip{};
+default(ah_popover) -> #ah_popover{};
+default(ah_drawer) -> #ah_drawer{};
+default(ah_sheet) -> #ah_sheet{};
+default(ah_notification) -> #ah_notification{};
+default(ah_window) -> #ah_window{}.
