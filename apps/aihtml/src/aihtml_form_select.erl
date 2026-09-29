@@ -60,7 +60,7 @@
 -module(aihtml_form_select).
 
 -export([dropdownlist/4, select/4, slider/4, field/4, form_layout/4,
-         validate/1, catalog/0, examples/0, facade_extras/0]).
+         validate/1, catalog/0, facade_extras/0]).
 
 -export_type([item/0, field_spec/0, rule/0]).
 
@@ -568,6 +568,24 @@ catalog() ->
        options => [name, placeholder, filterable, filter_placeholder, dropdown_height],
        behavior => <<"dropdownlist">>,
        events => [<<"change">>, <<"ah:open">>, <<"ah:close">>],
+       option_docs => #{primary => <<"Primary-coloured border.">>,
+                        success => <<"Success-coloured border.">>,
+                        warning => <<"Warning-coloured border.">>,
+                        danger => <<"Danger-coloured border.">>,
+                        simple => <<"No arrow segment.">>,
+                        disabled => <<"Greyed out, not focusable, does not open.">>,
+                        block => <<"Fill the container width.">>,
+                        name => <<"Name of the hidden input that submits the value.">>,
+                        placeholder => <<"Text shown while nothing is selected (default \"Select…\").">>,
+                        filterable => <<"true: a filter box at the top of the popup.">>,
+                        filter_placeholder => <<"Placeholder of the filter box.">>,
+                        dropdown_height => <<"Maximum list height, px or CSS length (default 200).">>},
+       methods => [#{name => open, args => <<"()">>, doc => <<"Open the popup.">>},
+                   #{name => close, args => <<"()">>, doc => <<"Close the popup.">>},
+                   #{name => getValue, args => <<"()">>, doc => <<"Return data-ah-value.">>},
+                   #{name => setValue, args => <<"(Value, Silent)">>, doc => <<"Select the item with this value (\"\" clears); fires change unless Silent is true.">>},
+                   #{name => disable, args => <<"()">>, doc => <<"Disable the control.">>},
+                   #{name => enable, args => <<"()">>, doc => <<"Enable the control.">>}],
        doc => <<"Single-choice popup list with keyboard navigation, type-ahead and optional "
                 "filtering. Items: Value | {Value, Label} | {Value, Label, #{disabled => true}} "
                 "| {group, Label, Items}. `simple' hides the arrow; `block' fills the width.">>},
@@ -578,6 +596,15 @@ catalog() ->
        flags => [block],
        options => [placeholder],
        events => [<<"change">>],
+       option_docs => #{sm => <<"Compact height (28px).">>,
+                        lg => <<"Large height (42px).">>,
+                        primary => <<"Primary-coloured border.">>,
+                        success => <<"Success-coloured border.">>,
+                        warning => <<"Warning-coloured border.">>,
+                        danger => <<"Danger-coloured border.">>,
+                        block => <<"Fill the container width.">>,
+                        placeholder => <<"An empty first option with this label, selected when Value is undefined.">>},
+       methods => [],
        doc => <<"Native <select> styled like the dropdownlist; Attrs go to the select. "
                 "Options as for dropdownlist, groups become optgroups; Value may be a list "
                 "with `multiple'. Option `placeholder' adds an empty first option.">>},
@@ -591,6 +618,25 @@ catalog() ->
        options => [name, ticks, minor_ticks, labels, ticks_position, min_range],
        behavior => <<"slider">>,
        events => [<<"input">>, <<"change">>],
+       option_docs => #{horizontal => <<"Left to right (default).">>,
+                        vertical => <<"Bottom to top; give it a height (default 160px).">>,
+                        primary => <<"Primary colour (the default look).">>,
+                        success => <<"Success colour.">>,
+                        warning => <<"Warning colour.">>,
+                        danger => <<"Danger colour.">>,
+                        info => <<"Info colour.">>,
+                        secondary => <<"Secondary colour.">>,
+                        disabled => <<"Greyed out and inert.">>,
+                        buttons => <<"Decrease / increase buttons at both ends.">>,
+                        tooltip => <<"Value bubble over the thumb while dragging or focused.">>,
+                        name => <<"Name of the hidden input (\"V\" or \"Lo,Hi\").">>,
+                        ticks => <<"Interval between major ticks; off by default.">>,
+                        minor_ticks => <<"Interval between minor ticks.">>,
+                        labels => <<"false hides the major tick labels.">>,
+                        ticks_position => <<"top | bottom (default) | both.">>,
+                        min_range => <<"Smallest gap between the two thumbs of a range slider.">>},
+       methods => [#{name => getValue, args => <<"()">>, doc => <<"Return data-ah-value (\"V\" or \"Lo,Hi\").">>},
+                   #{name => setValue, args => <<"(Value, Silent)">>, doc => <<"Set a number, [Lo, Hi] or \"Lo,Hi\" (snapped and clamped); fires change unless Silent is true.">>}],
        doc => <<"Pointer and keyboard slider; {Lo, Hi} gives two thumbs. Options: ticks "
                 "(major interval), minor_ticks, labels (default true), ticks_position "
                 "(top | bottom | both), min_range. Flags: buttons (step buttons), tooltip "
@@ -601,124 +647,40 @@ catalog() ->
        groups => #{label_position => {[left, top, right, bottom], left}},
        classes => #{left => []},
        options => [for, help, error, required, info, label_width],
+       option_docs => #{left => <<"Label left of the control (default).">>,
+                        top => <<"Label above the control.">>,
+                        right => <<"Label right of the control (checkboxes).">>,
+                        bottom => <<"Label under the control.">>,
+                        for => <<"Id of the control the label points to.">>,
+                        help => <<"Help line under the control.">>,
+                        error => <<"Error line under the control; marks the row invalid.">>,
+                        required => <<"true: a red asterisk after the label.">>,
+                        info => <<"Tooltip text of an info icon after the control.">>,
+                        label_width => <<"Label width, px or CSS length.">>},
+       methods => [],
        doc => <<"A labelled form row: label (with `for', `required', `label_width'), the "
-                "control, and a `help' or `error' line under it; `info' adds a hint icon.">>},
+                "control, and a `help' or `error' line under it; `info' adds a hint icon. "
+                "Controls given validate(Rules) show their errors in this row; page "
+                "functions AH.fn validate(Target) and clearValidation(Target).">>},
      #{name => form_layout, category => form,
        signature => <<"form_layout(Fields, Values, Css, Attrs)">>,
        root => <<"ah-form">>,
        flags => [bordered, bg, disabled],
        options => [label_position, label_width, padding, tag],
+       option_docs => #{bordered => <<"A border round the form.">>,
+                        bg => <<"Paper background.">>,
+                        disabled => <<"Dim the form and ignore the pointer.">>,
+                        label_position => <<"Default label position of every field: left | top | right | bottom.">>,
+                        label_width => <<"Default label width, px or CSS length.">>,
+                        padding => <<"Inner padding in px, or {Top, Right, Bottom, Left} (default 10).">>,
+                        tag => <<"form (default) or div.">>},
+       methods => [],
        doc => <<"sigil's declarative form, rendered on the server. Fields: {Label, Control} "
                 "| #{label, control, key, for, help, error, required, info, label_position, "
                 "label_width, hidden} | {columns, [Field]} | {text, Text} | blank | "
                 "{blank, Px}. A control may be fun(Value) -> html(), called with "
                 "maps:get(Key, Values, undefined). Options: label_position (left | top | "
                 "right | bottom), label_width, padding (px or {T,R,B,L}), tag (form | div).">>}].
-
-%%%===================================================================
-%%% Examples
-%%%===================================================================
-
--spec examples() -> [{atom(), binary(), aihtml_html:html()}].
-examples() ->
-    Fruits = [{apple, <<"Apple">>}, {banana, <<"Banana">>}, {cherry, <<"Cherry">>},
-              {grape, <<"Grape">>}, {lemon, <<"Lemon">>}, {mango, <<"Mango">>},
-              {orange, <<"Orange">>}, {peach, <<"Peach">>}],
-    Row = fun(Children) -> el('div', Children, [<<"flex flex-wrap items-start gap-4">>], []) end,
-    Input = fun(Name, Extra) ->
-                    aihtml_html:void(input, [<<"ah-input">>],
-                                     [[{name, Name}, {id, <<"v-", (bin(Name))/binary>>}], Extra])
-            end,
-    [{dropdownlist, <<"Popup list, placeholder, templates, groups, filter, disabled">>,
-      Row([dropdownlist(Fruits, banana, [<<"w-48">>], [{name, fruit}, {id, <<"dd-fruit">>}]),
-           dropdownlist(Fruits, undefined, [primary, <<"w-48">>],
-                        [{placeholder, <<"Pick a fruit">>}, {id, <<"dd-empty">>}]),
-           dropdownlist([{group, <<"Citrus">>, [{lemon, <<"Lemon">>}, {orange, <<"Orange">>}]},
-                         {group, <<"Berries">>, [{straw, <<"Strawberry">>},
-                                                 {blue, <<"Blueberry">>, #{disabled => true}},
-                                                 {rasp, <<"Raspberry">>}]}],
-                        rasp, [success, <<"w-48">>], [{filterable, true}, {id, <<"dd-groups">>}]),
-           dropdownlist(Fruits, cherry, [simple, <<"w-40">>], []),
-           dropdownlist(Fruits, apple, [disabled, <<"w-40">>], [])])},
-     {select, <<"Native select: sizes, templates, placeholder, optgroups, multiple">>,
-      Row([select(Fruits, grape, [], [{name, s1}, {id, <<"sel-1">>}]),
-           select(Fruits, undefined, [sm, primary], [{placeholder, <<"Choose…"/utf8>>}]),
-           select([{group, <<"Warm">>, [red, orange]}, {group, <<"Cool">>, [blue, green]}],
-                  blue, [lg], []),
-           select(Fruits, lemon, [danger], [{disabled, true}]),
-           select(Fruits, [apple, mango], [], [{multiple, true}, {size, 4}])])},
-     {slider, <<"Single, range, ticks, buttons, tooltip, templates, vertical">>,
-      el('div', [el('div', slider({0, 100}, 40, [tooltip], [{name, volume}, {id, <<"sl-1">>},
-                                                              {aria_label, <<"Volume">>}]),
-                    [<<"w-80">>], []),
-                 el('div', slider({0, 100, 5}, {20, 70}, [success, tooltip],
-                                  [{name, price}, {id, <<"sl-range">>}, {min_range, 10},
-                                   {ticks, 20}, {minor_ticks, 5}]),
-                    [<<"w-80 pb-6">>], []),
-                 el('div', slider({0, 10}, 3, [buttons, warning],
-                                  [{ticks, 1}, {ticks_position, both}, {id, <<"sl-buttons">>}]),
-                    [<<"w-80 py-6">>], []),
-                 el('div', slider({0, 1, 0.1}, 0.5, [danger, disabled], [{ticks, 0.25}]),
-                    [<<"w-80 pb-6">>], []),
-                 el('div', slider({0, 100}, 60, [vertical, info, <<"h-40">>], [{ticks, 25}]),
-                    [<<"h-44">>], [])],
-         [<<"flex flex-col gap-6">>], [])},
-     {field, <<"Label positions, required, help, error, info">>,
-      el('div',
-         [field(<<"Name">>, Input(name, [{placeholder, <<"Ada Lovelace">>}]), [],
-                [{for, <<"v-name">>}, {required, true}, {label_width, 100},
-                 {help, <<"As printed on your card.">>}]),
-          field(<<"Email">>, Input(email2, [{value, <<"not-an-email">>}]), [],
-                [{for, <<"v-email2">>}, {label_width, 100},
-                 {error, <<"Please enter a valid email address.">>}]),
-          field(<<"Country">>, dropdownlist([{cn, <<"China">>}, {jp, <<"Japan">>}, {us, <<"USA">>}],
-                                            cn, [block], []),
-                [top], [{info, <<"Used for tax purposes">>}]),
-          field(<<"Remember me">>, aihtml_html:void(input, [], [{type, checkbox}, {id, <<"v-rem">>}]),
-                [right], [{for, <<"v-rem">>}]),
-          el(form, [el('div', [Input(code, [{placeholder, <<"Postcode (tooltip hint)">>},
-                                            {style, <<"width:16rem">>},
-                                            validate([{required, <<"Enter a ZIP code">>},
-                                                      zip_code, {hint, tooltip}])]),
-                               Input(nick, [{placeholder, <<"Nickname (label hint)">>},
-                                            {style, <<"width:16rem">>},
-                                            validate([{min_length, 3}, {hint, label}])]),
-                               el(button, <<"Check">>, [<<"ah-btn">>],
-                                  [{type, submit}, {id, <<"v-check">>}])],
-                         [<<"flex flex-col items-start gap-3 pt-4">>], [])],
-             [], [{id, <<"v-plain">>}, {action, <<"#checked">>}])],
-         [<<"max-w-md">>], [])},
-     {form_layout, <<"Declarative form with values, columns, text, blank rows and validation">>,
-      form_layout(
-        [{text, <<"Account details">>},
-         #{label => <<"User name">>, key => user, required => true, for => <<"f-user">>,
-           control => fun(V) -> Input(user, [{value, V}, {id, <<"f-user">>},
-                                             validate([required, {min_length, 3},
-                                                       {starts_with_letter,
-                                                        <<"Must start with a letter">>}])])
-                      end},
-         #{label => <<"Email">>, key => email, required => true, for => <<"f-email">>,
-           help => <<"We never share it.">>,
-           control => fun(V) -> Input(email, [{value, V}, {id, <<"f-email">>},
-                                              validate([required, email])])
-                      end},
-         {columns, [#{label => <<"Age">>, key => age, for => <<"f-age">>,
-                      control => fun(V) -> Input(age, [{value, V}, {id, <<"f-age">>},
-                                                       validate([{range, 18, 120}])])
-                                 end},
-                    #{label => <<"Plan">>, key => plan,
-                      control => fun(V) -> dropdownlist([free, pro, team], V, [block],
-                                                        [{name, plan}, {id, <<"f-plan">>},
-                                                         validate([required])])
-                                 end}]},
-         #{label => <<"Budget">>, key => budget,
-           control => fun(V) -> slider({0, 1000, 50}, V, [], [{name, budget}]) end},
-         blank,
-         {<<>>, el(button, <<"Save">>, [<<"ah-btn ah-btn-primary">>],
-                   [{type, submit}, {id, <<"f-submit">>}])}],
-        #{user => <<"x">>, age => 12, plan => undefined, budget => {200, 600}},
-        [bordered, bg, <<"max-w-xl">>],
-        [{id, <<"f-demo">>}, {label_width, 100}, {action, <<"#saved">>}])}].
 
 %%%===================================================================
 %%% Internal

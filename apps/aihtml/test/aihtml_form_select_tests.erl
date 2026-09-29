@@ -190,7 +190,7 @@ validate_on_native_input_test() ->
     H = r(aihtml_html:void(input, [], [{name, e}, ?M:validate([required])])),
     ?assert(has(H, <<"data-ah-validate=\"[{&quot;rule&quot;:&quot;required&quot;}]\"">>)).
 
-%%% catalog / examples
+%%% catalog
 
 catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
@@ -200,8 +200,9 @@ catalog_test() ->
          ?assert(erlang:function_exported(?M, N, 4))
      end || #{name := N} = E <- ?M:catalog()].
 
-examples_render_test() ->
-    Ex = ?M:examples(),
-    Covered = lists:usort([N || {N, _, _} <- Ex]),
-    ?assertEqual(lists:usort([N || #{name := N} <- ?M:catalog()]), Covered),
-    [?assert(byte_size(r(H)) > 0) || {_, _, H} <- Ex].
+catalog_docs_test() ->
+    [begin
+         Docs = maps:get(option_docs, E),
+         [?assert(maps:is_key(O, Docs)) || O <- maps:get(options, E, [])],
+         ?assert(is_list(maps:get(methods, E)))
+     end || E <- ?M:catalog()].
