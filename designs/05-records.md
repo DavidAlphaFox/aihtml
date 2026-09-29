@@ -1,6 +1,6 @@
 # 05 元素 record
 
-组件的数据模型改为带统一前缀 `ah_` 的 record，`button/4` 这类函数只是构建 record 的简写。本文定下 record 的格式、渲染分发、构建函数的兼容方式和迁移步骤。按钮组（`aihtml_form_buttons`）是第一个样板。
+组件的数据模型改为带统一前缀 `ah_` 的 record，`button/4` 这类函数只是构建 record 的简写。本文定下 record 的格式、渲染分发、构建函数的兼容方式和迁移步骤。按钮组（`aihtml_form_buttons`）是第一个样板，其余 9 组已按同一样板迁移完毕。
 
 ## 动机
 
@@ -114,7 +114,13 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 ## 兼容性
 
-- **输出的 HTML 不变。** 现有页面、JS 行为和 CSS 都不受影响，按钮组的测试逐字节比对原有输出。
+- **输出的 HTML 不变。** 现有页面、JS 行为和 CSS 都不受影响。迁移时 10 组共 214 个演示逐一与迁移前的输出比对（自动生成的 id 归一化后），全部一致。
+- **属性顺序的细微变化。** 演示和测试都没有遇到，但使用方可能碰到：
+  - `id` 由 `root_attrs/2` 写出，排在使用方其它属性的最前面，不再保持它在 Attrs 里的位置。
+  - Attrs 里与字段同名的原子键（如 `{disabled, true}`、`{hidden, true}`）会进入字段，由组件按自己的规则输出，而不是原样作为 HTML 属性输出。
+  - 只识别原子键：`{<<"id">>, _}`、`{<<"name">>, _}` 这类 binary 键留在 `attrs` 里。
+  - 值为 `undefined` 的键会被忽略，字段保持默认值。
+- **HTML 属性与字段同名。** 例如 select 的修饰符组 `size` 与 HTML 的 `size` 属性同名：构建函数 `select/4` 会把 `{size, N}` 留作 HTML 属性；写 record 时 HTML 的 size 放进 `attrs`。
 - **action、推送、形变替换不变。** `aihtml_action:html/3` 等函数本来就调用 `aihtml_html:render/1`，record 可以直接传入。
 - **头文件带来编译期耦合。** 给组件加字段会改变元组大小，用旧头文件编译的模块在渲染时会报 `badrecord`。rebar3 升级依赖时会整体重新编译，一般没有问题；分开部署的 beam 或热升级会受影响。所以增删、调整字段都算作不兼容的改动。
 - **错误出现的时机。** 修饰符名的错误仍在构建时报出；字段取值的错误从构建时移到了渲染时。
@@ -125,10 +131,10 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 ## 迁移步骤
 
-1. **基础设施与按钮组（本次）**：`aihtml_element`（行为、`build/5`、辅助函数）、`aihtml_html` 的渲染分发、`aihtml_catalog:parse_css/2`、按钮组的头文件与 `render/1`、字段与目录一致的测试。
-2. **其余 9 组**：每组照按钮组的样板改，一组一个头文件，测试的 HTML 输出不变。
+1. **基础设施与按钮组（已完成）**：`aihtml_element`（行为、`build/5`、辅助函数）、`aihtml_html` 的渲染分发、`aihtml_catalog:parse_css/2`、按钮组的头文件与 `render/1`、字段与目录一致的测试。
+2. **其余 9 组（已完成）**：每组照按钮组的样板改，一组一个头文件，演示和测试的 HTML 输出不变。每组都在演示站加了一个"record 写法"示例。
 3. **普通标签**：`#ah_el{}`。
-4. **文档**：演示站 API 页加上 record 写法和字段表，README 的调用约定加上 record 写法。
+4. **文档（已完成）**：演示站 API 页加上 record 写法和字段表（`aihtml_example_records` 从 debug_info 读字段，从头文件读注释），README 的调用约定加上 record 写法。
 
 ## 样板：按钮组
 

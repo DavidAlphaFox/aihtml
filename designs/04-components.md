@@ -47,7 +47,7 @@ apps/aihtml/test/aihtml_<group>_tests.erl   EUnit
 
 ## Erlang 约定
 
-**record**：已迁移的组（目前是 form_buttons）按 [05-records.md](05-records.md) 定义 `ah_` 前缀的 record，组件函数只负责构建 record，HTML 由 `render/1` 生成。
+**record**：每组按 [05-records.md](05-records.md) 在 `include/aihtml_<group>.hrl` 里定义 `ah_` 前缀的 record（头文件里的类型名要带本组前缀，如 `ah_nav_item()`），组件函数只负责构建 record，HTML 由 `render/1` 生成。
 
 **签名**：最后两个参数固定为 `Css, Attrs`。
 
