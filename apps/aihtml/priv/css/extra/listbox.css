@@ -1,0 +1,122 @@
+/* aihtml additions for listbox (aihtml_listbox); sigil styles live in
+   ../sigil/components. The dropdownlist popup is a listbox
+   too, so these rules style it as well. */
+
+/* from sigil listbox.css */
+
+.ah-listbox {
+  display: inline-flex;
+  flex-direction: column;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  font-family: var(--ah-font-family);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  user-select: none;
+  outline: none;
+  overflow: hidden;
+}
+
+.ah-listbox-filter {
+  padding: 6px 8px;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  flex: none;
+}
+
+.ah-listbox-filter-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  font: inherit;
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  transition: border-color var(--ah-transition-fast);
+  box-sizing: border-box;
+}
+
+.ah-listbox-filter-input:focus {
+  border-color: var(--ah-color-primary);
+}
+
+.ah-listbox-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.ah-listbox-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ah-listbox-group {
+  padding: 6px 10px 4px;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--ah-color-grey-50);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  cursor: default;
+}
+
+.ah-listbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ah-transition-fast);
+  border-bottom: var(--ah-border-width) solid transparent;
+}
+
+.ah-listbox-item:hover {
+  background: var(--ah-color-grey-50);
+}
+
+.ah-listbox-item-selected {
+  background: var(--ah-color-primary-light, rgba(33, 150, 243, 0.08));
+  color: var(--ah-color-primary);
+}
+
+.ah-listbox-item-selected:hover {
+  background: var(--ah-color-primary-light, rgba(33, 150, 243, 0.12));
+}
+
+.ah-listbox-item-focused {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+
+.ah-listbox-item-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-listbox-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ah-listbox-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* Listbox: the focus ring of the root is the border colour (sigil); the
+   keyboard cursor is visible only while the list has the focus. */
+.ah-listbox:not(:focus-within) .ah-listbox-item-focused {
+  outline: none;
+}
