@@ -4,7 +4,9 @@
   "description": "Asset build for aihtml: Tailwind CSS v4 and vendored jQuery",
   "license": "Apache-2.0",
   "scripts": {
-    "build": "npm run vendor && npm run css",
+    "build": "npm run vendor && npm run js && npm run css",
+    "js": "node scripts/build-js.mjs",
+    "test": "node scripts/test-js.mjs",
     "vendor": "node scripts/vendor.mjs",
     "css": "npm run css:lib && npm run css:example",
     "css:lib": "tailwindcss -i apps/aihtml/assets/aihtml.build.css -o apps/aihtml/priv/static/aihtml.css --minify",
