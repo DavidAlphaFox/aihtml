@@ -1,0 +1,10 @@
+/* aihtml additions shared by docking and dock_layout (aihtml_docking,
+   aihtml_dock_layout). */
+
+/* ---- while dragging ---------------------------------------------------- */
+
+.ah-dock-dragging,
+.ah-dock-dragging * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
