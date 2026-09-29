@@ -430,7 +430,7 @@
 
   function dtiSpinStop(st) { clearTimeout(st.spin); st.spin = null; }
 
-  AH.define("datetime_input", {
+  AH.define("datetime-input", {
     init: function (el, $el) {
       ensureId(el, "ah-dti");
       var segs = dtiSegments(el.getAttribute("data-ah-format") || "yyyy-MM-dd");

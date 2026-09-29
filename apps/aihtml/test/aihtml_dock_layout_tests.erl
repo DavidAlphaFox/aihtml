@@ -43,7 +43,7 @@ ide() ->
 
 dock_layout_structure_test() ->
     H = r(?M:dock_layout(ide(), [<<"x">>], [{id, dl}, {panels, dl_panels()}, {name, lay}])),
-    ?assert(has(<<"<div class=\"ah-dl x\" id=\"dl\" data-ah=\"dock_layout\"">>, H)),
+    ?assert(has(<<"<div class=\"ah-dl x\" id=\"dl\" data-ah=\"dock-layout\"">>, H)),
     ?assert(has(<<"<div class=\"ah-dl-inner\"><div class=\"ah-dl-group ah-dl-horizontal\" "
                   "style=\"flex:100 1 0px\">">>, H)),
     ?assert(has(<<"data-group-id=\"left\" data-allow-pin=\"true\" data-allow-close=\"true\" "

@@ -23,24 +23,14 @@
   var COL_SEL = ".ah-scheduler-dayview-col, .ah-scheduler-dayview-res-col";
 
   var D = AH.lib.date;
-  var pad = D.pad, dnum = D.dnum, ymd = D.ymd, sow = D.sow,
+  var pad = D.pad, sow = D.sow,
       firstOfMonth = D.firstOfMonth, lastOfMonth = D.lastOfMonth, addMonths = D.addMonths,
       todayNum = D.todayNum;
-  // (the year is not padded to four digits here, unlike D.isoDate)
-  function isoDate(n) { var p = ymd(n); return p[0] + "-" + pad(p[1]) + "-" + pad(p[2]); }
-  function parseDay(s) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s || "");
-    return m ? dnum(+m[1], +m[2], +m[3]) : null;
-  }
-  function parseT(s) {
-    var m = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/.exec(String(s || ""));
-    if (!m) { return null; }
-    return dnum(+m[1], +m[2], +m[3]) * DAY + (m[4] === undefined ? 0 : (+m[4]) * 60 + (+m[5]));
-  }
-  function isoTime(t, allDay) {
-    var s = isoDate(Math.floor(t / DAY));
-    return allDay && t % DAY === 0 ? s : s + "T" + pad(Math.floor((t % DAY) / 60)) + ":" + pad(t % 60);
-  }
+  var isoDate = D.isoDate, isoTime = D.isoTime;
+  // The day or the minute of an ISO date or date-time (the server writes
+  // them with aihtml_lib_date); null when it is not a valid one.
+  function parseT(s) { var r = D.parseTime(s); return r ? r.t : null; }
+  function parseDay(s) { var t = parseT(s); return t === null ? null : Math.floor(t / DAY); }
   function num(x) { return Math.round(x * 1000) / 1000; }
 
   function conf(el) {

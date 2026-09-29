@@ -24,7 +24,7 @@ has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 
 datetime_input_date_test() ->
     H = r(?M:datetime_input(<<"2026-09-29">>, [<<"w-48">>], [{id, d}, {name, due}, {title, <<"t">>}])),
-    ?assert(has(<<"<div class=\"ah-dti-group w-48\" id=\"d\" data-ah=\"datetime_input\" "
+    ?assert(has(<<"<div class=\"ah-dti-group w-48\" id=\"d\" data-ah=\"datetime-input\" "
                   "data-ah-value=\"2026-09-29\" data-ah-format=\"yyyy-MM-dd\"">>, H)),
     ?assert(has(<<"<input class=\"ah-dti-input\" type=\"text\" id=\"d-input\" readonly">>, H)),
     ?assert(has(<<"value=\"2026-09-29\"">>, H)),
