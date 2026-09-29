@@ -1,0 +1,121 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* =============================================================================
+ * DataGrid 根容器样式
+ * 定义组件级主题变量和整体布局结构
+ * ============================================================================= */
+
+/* ---- 根容器 ---- */
+.ah-dg {
+  /* 布局 */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  font-family: var(--ah-font-family);
+  font-size: var(--ah-font-size-base);
+  line-height: 1.5;
+  color: var(--ah-color-text);
+  background-color: var(--ah-color-bg);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-md);
+  overflow: hidden;
+  width: var(--ah-dg-width, 100%);
+  min-height: var(--ah-dg-min-height, 200px);
+}
+
+/* ---- 内部容器 ---- */
+.ah-dg-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ---- 区域容器 ---- */
+/* 表头区域（固定列模式下由 body-wrap 滚动驱动） */
+.ah-dg-header-wrap {
+  flex-shrink: 0;
+  overflow-x: hidden;
+  overflow-y: hidden;
+}
+
+/* 表体区域 */
+.ah-dg-body-wrap {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+/* 分页器区域 */
+.ah-dg-pager-wrap {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* ---- 加载状态 ---- */
+/* 加载遮罩 */
+.ah-dg-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--ah-dg-loading-overlay-bg, color-mix(in srgb, var(--ah-color-bg-paper) 80%, transparent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.ah-dg-loading-message {
+  padding: var(--ah-spacing-md) var(--ah-spacing-lg);
+  background-color: var(--ah-color-bg);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+}
+
+/* ---- 对齐方式 ---- */
+.ah-dg-align-left {
+  text-align: left;
+  justify-content: flex-start;
+}
+
+.ah-dg-align-center {
+  text-align: center;
+  justify-content: center;
+}
+
+.ah-dg-align-right {
+  text-align: right;
+  justify-content: flex-end;
+}
+
+/* =============================================================================
+ * 主题变量定义 - 使用设计令牌
+ * ============================================================================= */
+:root {
+  /* DataGrid 专用颜色变量 */
+  --ah-dg-border-color: var(--ah-color-grey-300);
+  --ah-dg-header-bg: var(--ah-color-grey-200);
+  --ah-dg-header-border: var(--ah-color-grey-300);
+  --ah-dg-cell-border: var(--ah-color-grey-300);
+  --ah-dg-row-hover-bg: var(--ah-color-grey-200);
+  --ah-dg-row-selected-bg: var(--ah-color-primary-lighter);
+  --ah-dg-row-alt-bg: var(--ah-color-grey-100);
+  --ah-dg-sort-active-color: var(--ah-color-primary);
+  --ah-dg-filter-active-color: var(--ah-color-success);
+  --ah-dg-filter-active-bg: var(--ah-color-success-lighter);
+  --ah-dg-focus-shadow: 0 0 0 2px var(--ah-color-primary-lighter);
+  --ah-dg-loading-overlay-bg: rgba(255, 255, 255, 0.8);
+  /* 工具栏 */
+  --ah-dg-toolbar-height: 36px;
+  /* 状态栏 */
+  --ah-dg-statusbar-height: 28px;
+  /* 固定列 */
+  --ah-dg-pinned-bg: var(--ah-color-bg);
+  --ah-dg-pinned-alt-bg: var(--ah-dg-row-alt-bg);
+  --ah-dg-pinned-header-bg: var(--ah-dg-header-bg);
+}

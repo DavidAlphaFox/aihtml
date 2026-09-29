@@ -1,0 +1,79 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 选择
+   行选择功能：支持单选、多选、行选中、单元格选中，复选框列和全选功能
+   ============================================================================ */
+
+/* 已选行 - 使用 body.css 中的定义 */
+.ah-dg-row-selected {
+  background-color: var(--ah-dg-row-selected-bg) !important;
+}
+
+.ah-dg-row-selected:hover {
+  background-color: var(--ah-color-primary-light) !important;
+}
+
+/* 单元格选择 */
+.ah-dg-cell-selected {
+  outline: 2px solid var(--ah-dg-sort-active-color);
+  outline-offset: -2px;
+}
+
+/* 复选框选中状态 - 使用 accent-color */
+.ah-dg-cell-checkbox input[type="checkbox"]:checked {
+  accent-color: var(--ah-dg-sort-active-color);
+}
+
+/* 全选复选框 */
+.ah-dg-header-checkbox:checked {
+  accent-color: var(--ah-dg-sort-active-color);
+}
+
+/* 选择行高亮动画 */
+@keyframes ah-dg-row-select {
+  from {
+    background-color: var(--ah-dg-row-selected-bg);
+  }
+  to {
+    background-color: var(--ah-dg-row-selected-bg);
+  }
+}
+
+.ah-dg-row-selecting {
+  animation: ah-dg-row-select 0.3s ease;
+}
+
+/* 多选模式提示 */
+.ah-dg-multi-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  background-color: var(--ah-color-common-black);
+  opacity: 0.8;
+  color: var(--ah-color-common-white);
+  font-size: var(--ah-font-size-xs);
+  border-radius: var(--ah-radius-sm);
+  z-index: 50;
+  pointer-events: none;
+}
+
+/* 选择计数 */
+.ah-dg-selection-info {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+  background-color: var(--ah-color-grey-100);
+  border-radius: var(--ah-radius-full);
+}
+
+/* 焦点行 */
+.ah-dg-row-focus {
+  outline: 2px solid var(--ah-dg-sort-active-color);
+  outline-offset: -2px;
+}

@@ -1,0 +1,33 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 列宽调整
+   列宽调整功能：通过拖拽列边缘调整列宽度，支持双击自动调整最优宽度
+   ============================================================================ */
+
+/* 拖拽手柄 */
+.ah-dg-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 1;
+}
+
+.ah-dg-resize-handle:hover {
+  background: var(--ah-color-primary-light);
+}
+
+/* 拖拽参考线 */
+.ah-dg-resize-line {
+  display: none;
+  position: absolute;
+  top: 0;
+  width: 2px;
+  background: var(--ah-color-primary);
+  z-index: 10;
+  pointer-events: none;
+}

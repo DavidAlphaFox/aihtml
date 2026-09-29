@@ -1,0 +1,101 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 排序
+   排序功能：支持单列和多列排序，升序/降序切换，显示排序图标和排序顺序指示器
+   ============================================================================ */
+
+/* 排序激活状态 */
+.ah-dg-header-cell-sorted {
+  color: var(--ah-dg-sort-active-color);
+  background-color: var(--ah-color-primary-lighter);
+}
+
+.ah-dg-header-cell-sorted:hover {
+  background-color: var(--ah-color-primary-light);
+}
+
+/* 排序图标 */
+.ah-dg-header-sort-icon {
+  display: inline-block;
+  width: 12px;
+  text-align: center;
+  font-size: 10px;
+  color: var(--ah-color-text-secondary);
+  transition: transform var(--ah-transition-fast), color var(--ah-transition-fast);
+}
+
+/* 升序 */
+.ah-dg-header-cell-sorted-asc .ah-dg-header-sort-icon {
+  color: var(--ah-dg-sort-active-color);
+  transform: rotate(0deg);
+}
+
+/* 降序 */
+.ah-dg-header-cell-sorted-desc .ah-dg-header-sort-icon {
+  color: var(--ah-dg-sort-active-color);
+  transform: rotate(180deg);
+}
+
+/* 多列排序指示器 */
+.ah-dg-header-cell-multi-sorted {
+  position: relative;
+}
+
+.ah-dg-sort-order {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: var(--ah-spacing-xs);
+  font-size: 10px;
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-common-white);
+  background-color: var(--ah-dg-sort-active-color);
+  border-radius: 50%;
+}
+
+/* 排序提示 */
+.ah-dg-sort-hint {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-size: 11px;
+  color: var(--ah-color-common-white);
+  background-color: var(--ah-color-common-black);
+  opacity: 0.8;
+  border-radius: var(--ah-radius-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--ah-transition-fast);
+  z-index: 10;
+}
+
+.ah-dg-header-cell:hover .ah-dg-sort-hint {
+  opacity: 1;
+}
+
+/* 排序中指示器 */
+.ah-dg-sorting-indicator {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--ah-dg-sort-active-color), transparent);
+  animation: ah-dg-sorting 1.5s ease-in-out infinite;
+}
+
+@keyframes ah-dg-sorting {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}

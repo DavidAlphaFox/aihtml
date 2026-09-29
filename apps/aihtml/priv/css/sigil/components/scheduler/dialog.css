@@ -1,0 +1,171 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Scheduler 日程安排器
+   编辑对话框 (Edit Dialog) - 创建和编辑事件的弹出窗口
+   ============================================================================ */
+
+/* 对话框遮罩层 */
+.ah-scheduler-dialog-overlay {
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity), transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+/* 对话框主体 */
+.ah-scheduler-dialog {
+  background: var(--ah-color-bg-paper);
+  border-radius: var(--ah-radius-lg, var(--ah-radius-md));
+  box-shadow: var(--ah-shadow-lg);
+  min-width: min(360px, calc(100vw - 32px));
+  max-width: 480px;
+  width: 90%;
+  max-height: 90%;
+  overflow-y: auto;
+}
+
+/* 对话框头部 */
+.ah-scheduler-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ah-spacing-md);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+}
+
+/* 对话框标题 */
+.ah-scheduler-dialog-header h3 {
+  margin: 0;
+  font-size: var(--ah-font-size-base, 1rem);
+  font-weight: var(--ah-font-weight-semibold);
+}
+
+/* 关闭按钮 */
+.ah-scheduler-dialog-close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--ah-color-grey-500);
+  padding: 2px 6px;
+  border-radius: var(--ah-radius-sm);
+}
+
+.ah-scheduler-dialog-close:hover {
+  background: var(--ah-color-grey-100);
+}
+
+/* 对话框主体内容 */
+.ah-scheduler-dialog-body {
+  padding: var(--ah-spacing-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ah-spacing-sm);
+}
+
+/* 表单字段容器 */
+.ah-scheduler-dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 表单字段标签 */
+.ah-scheduler-dialog-field label {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-grey-600);
+}
+
+/* 行内字段容器 */
+.ah-scheduler-dialog-field-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+}
+
+/* 对话框输入框、选择框、文本域 */
+.ah-scheduler-dialog-input,
+.ah-scheduler-dialog-select,
+.ah-scheduler-dialog-textarea {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-hairline-width) solid var(--ah-color-grey-300);
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-sm);
+  font-family: inherit;
+  background: var(--ah-color-bg-paper);
+  color: var(--ah-color-grey-800);
+}
+
+/* 输入框焦点状态 */
+.ah-scheduler-dialog-input:focus,
+.ah-scheduler-dialog-select:focus,
+.ah-scheduler-dialog-textarea:focus {
+  outline: none;
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 2px var(--ah-color-primary-lighter);
+}
+
+/* 文本域 - 可调整大小 */
+.ah-scheduler-dialog-textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* 复选框 */
+.ah-scheduler-dialog-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+/* 对话框底部按钮区域 */
+.ah-scheduler-dialog-footer {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border-top: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+}
+
+/* 对话框按钮 - 通用样式 */
+.ah-scheduler-dialog-btn {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-md);
+  border: var(--ah-hairline-width) solid var(--ah-color-grey-300);
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-sm);
+  cursor: pointer;
+  background: var(--ah-color-bg-paper);
+  transition: all var(--ah-transition-fast);
+}
+
+.ah-scheduler-dialog-btn:hover {
+  background: var(--ah-color-grey-50);
+}
+
+/* 保存按钮 */
+.ah-scheduler-dialog-btn-save {
+  background: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+  border-color: var(--ah-color-primary);
+}
+
+.ah-scheduler-dialog-btn-save:hover {
+  background: var(--ah-color-primary-dark);
+}
+
+/* 删除按钮 */
+.ah-scheduler-dialog-btn-delete {
+  color: var(--ah-color-error);
+  border-color: var(--ah-color-error);
+}
+
+.ah-scheduler-dialog-btn-delete:hover {
+  background: var(--ah-color-error);
+  color: var(--ah-color-common-white);
+}

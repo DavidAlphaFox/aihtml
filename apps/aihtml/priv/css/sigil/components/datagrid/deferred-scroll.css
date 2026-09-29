@@ -1,0 +1,29 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 延迟滚动
+   大数据量时的滚动优化，通过虚拟滚动技术提升滚动流畅度
+   ============================================================================ */
+
+/* 滚动位置提示工具提示 */
+.ah-dg-scroll-tooltip {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--ah-color-grey-800);
+  color: var(--ah-color-common-white);
+  padding: 6px 12px;
+  border-radius: var(--ah-radius-sm);
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 10;
+  display: none;
+  white-space: nowrap;
+}
+
+/* 工具提示显示状态 */
+.ah-dg-scroll-tooltip-visible {
+  display: block;
+}

@@ -1,0 +1,66 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 工具栏
+   工具栏功能：提供操作按钮、搜索框、自定义操作区，位于表格顶部
+   ============================================================================ */
+
+/* 工具栏外层容器 */
+.ah-dg-toolbar-wrap {
+  flex-shrink: 0;
+}
+
+.ah-dg-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  padding: 0 var(--ah-spacing-md);
+  height: var(--ah-dg-toolbar-height, 36px);
+  background: var(--ah-dg-header-bg);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  flex-shrink: 0;
+}
+
+/* 工具栏按钮 */
+.ah-dg-toolbar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text);
+  font-size: var(--ah-font-size-sm);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.ah-dg-toolbar-btn:hover {
+  background: var(--ah-color-grey-200);
+  border-color: var(--ah-color-grey-400);
+}
+
+.ah-dg-toolbar-btn:active {
+  background: var(--ah-color-grey-300);
+}
+
+.ah-dg-toolbar-btn:disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.ah-dg-toolbar-btn-icon {
+  font-size: 14px;
+}
+
+/* 工具栏分隔符 */
+.ah-dg-toolbar-separator {
+  width: 1px;
+  height: 18px;
+  background: var(--ah-dg-border-color);
+  flex-shrink: 0;
+}

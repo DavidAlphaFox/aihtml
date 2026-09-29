@@ -1,0 +1,191 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 格式化与列类型
+   定义各种数据类型的显示样式，包括进度条、星级评分、缩略图、链接、按钮、徽章等
+   ============================================================================ */
+
+/* ============================================================================
+   进度条
+   用于展示百分比或进度数据
+   ============================================================================ */
+
+/* 进度条容器 */
+.ah-dg-progress {
+  width: 100%;
+  height: 16px;
+  background: var(--ah-color-bg-subtle);
+  border-radius: var(--ah-radius-md);
+  overflow: hidden;
+}
+
+/* 进度条填充部分 */
+.ah-dg-progress-bar {
+  height: 100%;
+  background: var(--ah-color-primary, #1677ff);
+  border-radius: var(--ah-radius-md);
+  transition: width 0.3s ease;
+  min-width: 0;
+}
+
+/* ============================================================================
+   星级评分
+   用于展示1-5星评分数据
+   ============================================================================ */
+
+/* 星级评分容器 */
+.ah-dg-rating {
+  color: var(--ah-color-warning);
+  font-size: 14px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   缩略图
+   用于展示图片缩略图
+   ============================================================================ */
+
+/* 单元格内图片 */
+.ah-dg-cell-image {
+  object-fit: cover;
+  border-radius: var(--ah-radius-sm);
+  vertical-align: middle;
+}
+
+/* ============================================================================
+   链接
+   用于展示可点击的链接
+   ============================================================================ */
+
+/* 单元格链接 */
+.ah-dg-cell-link {
+  color: var(--ah-color-primary, #1677ff);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/* 单元格链接悬停状态 */
+.ah-dg-cell-link:hover {
+  text-decoration: underline;
+}
+
+/* ============================================================================
+   操作按钮
+   单元格内的操作按钮组，如编辑、删除等
+   ============================================================================ */
+
+/* 操作按钮组容器 */
+.ah-dg-command-group {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+}
+
+/* 操作按钮 */
+.ah-dg-command-btn {
+  padding: 2px 8px;
+  font-size: var(--ah-font-size-xs, 12px);
+  line-height: 1.5;
+  border: var(--ah-hairline-width) solid var(--ah-color-border, #d9d9d9);
+  border-radius: var(--ah-radius-sm, 4px);
+  background: var(--ah-color-bg, #fff);
+  color: var(--ah-color-text, #333);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+/* 操作按钮悬停状态 */
+.ah-dg-command-btn:hover {
+  color: var(--ah-color-primary, #1677ff);
+  border-color: var(--ah-color-primary, #1677ff);
+}
+
+/* 操作按钮按下状态 */
+.ah-dg-command-btn:active {
+  opacity: 0.8;
+}
+
+/* ============================================================================
+   徽章
+   用于展示状态标签或计数徽章
+   ============================================================================ */
+
+/* 徽章基础样式 */
+.ah-dg-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  font-size: var(--ah-font-size-xs, 12px);
+  line-height: 1.6;
+  border-radius: var(--ah-radius-lg);
+  white-space: nowrap;
+}
+
+/* 默认徽章 */
+.ah-dg-badge-default {
+  background: var(--ah-color-grey-50, #f0f0f0);
+  color: var(--ah-color-text-secondary, #666);
+}
+
+/* 成功状态徽章 */
+.ah-dg-badge-success {
+  background: var(--ah-color-success-lighter);
+  color: var(--ah-color-success, #52c41a);
+}
+
+/* 警告状态徽章 */
+.ah-dg-badge-warning {
+  background: var(--ah-color-warning-lighter);
+  color: var(--ah-color-warning, #faad14);
+}
+
+/* 危险状态徽章 */
+.ah-dg-badge-danger {
+  background: var(--ah-color-error-lighter);
+  color: var(--ah-color-error, #ff4d4f);
+}
+
+/* 信息状态徽章 */
+.ah-dg-badge-info {
+  background: var(--ah-color-info-lighter);
+  color: var(--ah-color-info, #1677ff);
+}
+
+/* ============================================================================
+   多行表头 — 分组行
+   用于实现复杂表头结构的分组行
+   ============================================================================ */
+
+/* 分组表头行 */
+.ah-dg-header-group-row {
+  display: flex;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border, #d9d9d9);
+  background: var(--ah-color-bg-subtle);
+}
+
+/* 分组表头单元格 */
+.ah-dg-header-group-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  height: 36px;
+  font-weight: 600;
+  font-size: var(--ah-font-size-sm, 13px);
+  color: var(--ah-color-text, #333);
+  border-right: var(--ah-hairline-width) solid var(--ah-color-border-subtle, #e8e8e8);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* 最后一个分组单元格无右边框 */
+.ah-dg-header-group-cell:last-child {
+  border-right: none;
+}
+
+/* 跨行列 — 无组的列在组头行中高度加倍 */
+.ah-dg-header-group-span {
+  visibility: hidden;
+}

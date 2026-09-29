@@ -1,0 +1,121 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* =============================================================================
+ * DataGrid 表体样式
+ * 定义数据行、悬停效果、加载状态等
+ * ============================================================================= */
+
+/* ---- 表体容器 ---- */
+.ah-dg-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 100%;
+}
+
+/* ---- 行样式 ---- */
+.ah-dg-row {
+  display: flex;
+  flex-wrap: nowrap;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-dg-cell-border);
+  background-color: var(--ah-color-bg);
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
+
+.ah-dg-row:hover {
+  background-color: var(--ah-dg-row-hover-bg);
+}
+
+/* ---- 选中状态 ---- */
+/* 已选行 */
+.ah-dg-row-selected {
+  background-color: var(--ah-dg-row-selected-bg) !important;
+}
+
+.ah-dg-row-selected:hover {
+  background-color: var(--ah-color-primary-light) !important;
+}
+
+/* ---- 奇偶行 ---- */
+.ah-dg-row-even {
+  background-color: var(--ah-color-bg);
+}
+
+.ah-dg-row-odd {
+  background-color: var(--ah-dg-row-alt-bg);
+}
+
+.ah-dg-row-odd.ah-dg-row-selected {
+  background-color: var(--ah-dg-row-selected-bg) !important;
+}
+
+/* ---- 悬停效果 ---- */
+.ah-dg-row-hover {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* ---- 空数据提示 ---- */
+.ah-dg-body-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-dg-empty-message {
+  padding: var(--ah-spacing-lg);
+  text-align: center;
+}
+
+/* ---- 加载状态 ---- */
+/* 加载中 */
+.ah-dg-body-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 150px;
+}
+
+.ah-dg-loading-message {
+  color: var(--ah-color-text-secondary);
+}
+
+/* ---- 虚拟滚动容器 ---- */
+.ah-dg-body-inner {
+  min-width: 100%;
+}
+
+/* ---- 滚动条美化 ---- */
+.ah-dg-body-wrap::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ah-dg-body-wrap::-webkit-scrollbar-track {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-dg-body-wrap::-webkit-scrollbar-thumb {
+  background: var(--ah-color-grey-300);
+  border-radius: var(--ah-radius-sm);
+}
+
+.ah-dg-body-wrap::-webkit-scrollbar-thumb:hover {
+  background: var(--ah-color-grey-400);
+}
+
+/* ---- 虚拟滚动占位符 ---- */
+/* 虚拟滚动 spacer */
+.ah-dg-body-spacer-top,
+.ah-dg-body-spacer-bottom {
+  width: 100%;
+  pointer-events: none;
+}

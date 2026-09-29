@@ -1,0 +1,144 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 过滤
+   支持列筛选、行筛选、搜索框等数据过滤功能
+   ============================================================================ */
+
+/* 过滤激活状态 */
+.ah-dg-filter-cell-active {
+  background-color: var(--ah-dg-filter-active-bg);
+}
+
+/* 过滤输入框 - 使用 header.css 中定义的样式 */
+
+/* 过滤图标 */
+.ah-dg-filter-icon {
+  color: var(--ah-dg-filter-active-color);
+  font-size: var(--ah-font-size-xs);
+}
+
+/* 过滤下拉面板 */
+.ah-dg-filter-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 200px;
+  max-width: 300px;
+  padding: var(--ah-spacing-sm);
+  background-color: var(--ah-color-bg);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  z-index: 100;
+}
+
+/* 过滤面板头部 */
+.ah-dg-filter-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--ah-spacing-sm);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  margin-bottom: var(--ah-spacing-sm);
+}
+
+/* 过滤面板标题 */
+.ah-dg-filter-panel-title {
+  font-weight: var(--ah-font-weight-semibold);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* 过滤面板操作按钮区域 */
+.ah-dg-filter-panel-actions {
+  display: flex;
+  gap: var(--ah-spacing-xs);
+}
+
+/* 过滤操作符选择 */
+.ah-dg-filter-operator {
+  margin-bottom: var(--ah-spacing-sm);
+}
+
+/* 过滤操作符下拉框 */
+.ah-dg-filter-operator-select {
+  width: 100%;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-xs);
+  outline: none;
+  cursor: pointer;
+  background-color: var(--ah-color-bg);
+}
+
+/* 过滤值输入 */
+.ah-dg-filter-value {
+  margin-bottom: var(--ah-spacing-sm);
+}
+
+/* 过滤值输入框 */
+.ah-dg-filter-value-input {
+  width: 100%;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-xs);
+  outline: none;
+  background-color: var(--ah-color-bg);
+}
+
+/* 过滤按钮 */
+.ah-dg-filter-btn {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-xs);
+  border: none;
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  transition: background-color var(--ah-transition-fast);
+}
+
+/* 应用过滤按钮 */
+.ah-dg-filter-btn-apply {
+  background-color: var(--ah-dg-filter-active-color);
+  color: var(--ah-color-common-white);
+}
+
+/* 应用过滤按钮悬停状态 */
+.ah-dg-filter-btn-apply:hover {
+  background-color: var(--ah-color-success-dark);
+}
+
+/* 清除过滤按钮 */
+.ah-dg-filter-btn-clear {
+  background-color: var(--ah-color-grey-100);
+  color: var(--ah-color-text);
+}
+
+/* 清除过滤按钮悬停状态 */
+.ah-dg-filter-btn-clear:hover {
+  background-color: var(--ah-color-grey-200);
+}
+
+/* 过滤行高亮 */
+.ah-dg-filter-row-active {
+  background-color: var(--ah-dg-filter-active-bg);
+}
+
+/* 搜索框 */
+.ah-dg-search-input {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-md);
+  font-size: var(--ah-font-size-base);
+  outline: none;
+  transition: border-color var(--ah-transition-fast), box-shadow var(--ah-transition-fast);
+  background-color: var(--ah-color-bg);
+}
+
+/* 搜索框聚焦状态 */
+.ah-dg-search-input:focus {
+  border-color: var(--ah-dg-sort-active-color);
+  box-shadow: var(--ah-dg-focus-shadow);
+}

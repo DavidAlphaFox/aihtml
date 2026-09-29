@@ -1,0 +1,139 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   RelationGraph · 关系图（借鉴 happy relation-graph + graph-overlays）
+   画布交给 ECharts；本文件只管外壳：浮动工具栏 / 详情卡 / 状态层。
+   ============================================================================ */
+
+.ah-relation-graph {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-lg);
+  background: var(--ah-color-bg);
+}
+
+.ah-relation-graph__canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- 浮动工具栏 ---- */
+.ah-relation-graph__toolbar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 3;
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: var(--ah-radius-md);
+  background: color-mix(in srgb, var(--ah-color-bg) 88%, transparent);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  backdrop-filter: blur(6px);
+}
+
+.ah-relation-graph__tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ah-radius-md);
+  background: transparent;
+  color: var(--ah-color-text-muted);
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.ah-relation-graph__tool svg { width: 16px; height: 16px; }
+.ah-relation-graph__tool:hover {
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text);
+}
+
+/* ---- 详情卡 ---- */
+.ah-relation-graph__detail {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  z-index: 3;
+  max-width: 260px;
+  padding: 12px 30px 12px 12px;
+  border-radius: var(--ah-radius-md);
+  background: color-mix(in srgb, var(--ah-color-bg) 92%, transparent);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  box-shadow: 0 6px 20px rgb(0 0 0 / .14);
+  backdrop-filter: blur(6px);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ah-color-text);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity .14s ease, transform .14s ease, visibility .14s;
+}
+.ah-relation-graph__detail[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.ah-relation-graph__detail-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text-muted);
+  cursor: pointer;
+}
+.ah-relation-graph__detail-close svg { width: 13px; height: 13px; }
+.ah-relation-graph__detail-close:hover {
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text);
+}
+
+/* ---- 状态层（loading / error / empty，互斥）---- */
+.ah-relation-graph__state {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ah-color-text-muted);
+  background: color-mix(in srgb, var(--ah-color-bg) 82%, transparent);
+}
+.ah-relation-graph__state[data-kind="error"] { color: var(--ah-color-error); }
+
+.ah-relation-graph__spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--ah-color-border);
+  border-top-color: var(--ah-color-primary);
+  border-radius: 50%;
+  animation: ah-relation-graph-spin .8s linear infinite;
+}
+
+@keyframes ah-relation-graph-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-relation-graph__spinner { animation: none; }
+  .ah-relation-graph__detail { transition: none; }
+}

@@ -1,0 +1,281 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   瓦片布局 (Tile Layout)
+   基于 CSS Grid 的可调整大小瓦片布局，支持分割条和标签页
+   ============================================================================ */
+
+/* ---- 根容器 ---- */
+
+.ah-tl {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  font-family: var(--ah-font-family);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* ---- 布局分组：CSS Grid 容器 ---- */
+
+.ah-tl-group {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ---- 方向：垂直 = 列并排，水平 = 行堆叠 ---- */
+
+.ah-tl-vertical {
+  grid-auto-flow: column;
+}
+
+.ah-tl-horizontal {
+  grid-auto-flow: row;
+}
+
+/* ---- 分割条 ---- */
+
+.ah-tl-splitbar {
+  background: var(--ah-color-border);
+  z-index: 1;
+  flex-shrink: 0;
+  position: relative;
+  transition: background-color var(--ah-transition-fast);
+}
+
+.ah-tl-splitbar-v {
+  cursor: col-resize;
+  min-width: 4px;
+  width: 4px;
+}
+
+.ah-tl-splitbar-h {
+  cursor: row-resize;
+  min-height: 4px;
+  height: 4px;
+}
+
+.ah-tl-splitbar:hover,
+.ah-tl-splitbar-active {
+  background: var(--ah-color-primary);
+}
+
+/* ---- 标签页分组 ---- */
+
+.ah-tl-tab-group {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 标签条位置 */
+.ah-tl-tab-group-bottom {
+  flex-direction: column-reverse;
+}
+
+.ah-tl-tab-group-left {
+  flex-direction: row;
+}
+
+.ah-tl-tab-group-right {
+  flex-direction: row-reverse;
+}
+
+/* ---- 标签条 ---- */
+
+.ah-tl-tab-strip {
+  display: flex;
+  flex-shrink: 0;
+  background: var(--ah-color-grey-50);
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 0;
+}
+
+.ah-tl-tab-strip::-webkit-scrollbar {
+  display: none;
+}
+
+/* 顶部/底部标签条边框 */
+.ah-tl-tab-group-top > .ah-tl-tab-strip,
+.ah-tl-tab-group:not([class*="ah-tl-tab-group-"]) > .ah-tl-tab-strip {
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+
+.ah-tl-tab-group-bottom > .ah-tl-tab-strip {
+  border-top: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+
+/* 左侧/右侧标签条：垂直标签 */
+.ah-tl-tab-group-left > .ah-tl-tab-strip,
+.ah-tl-tab-group-right > .ah-tl-tab-strip {
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.ah-tl-tab-group-left > .ah-tl-tab-strip {
+  border-right: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+
+.ah-tl-tab-group-right > .ah-tl-tab-strip {
+  border-left: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+
+/* ---- 单个标签 ---- */
+
+.ah-tl-tab {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  color: var(--ah-color-text-secondary, #637381);
+  user-select: none;
+  transition: color var(--ah-transition-fast),
+              border-color var(--ah-transition-fast),
+              background-color var(--ah-transition-fast);
+}
+
+.ah-tl-tab:hover {
+  color: var(--ah-color-text, #212b36);
+  background: var(--ah-color-grey-100);
+}
+
+.ah-tl-tab-selected {
+  color: var(--ah-color-primary);
+  background: var(--ah-color-bg, #fff);
+  border-bottom-color: var(--ah-color-primary);
+}
+
+/* 底部位置：顶部边框 */
+.ah-tl-tab-group-bottom .ah-tl-tab {
+  border-bottom: none;
+  border-top: 2px solid transparent;
+}
+
+.ah-tl-tab-group-bottom .ah-tl-tab-selected {
+  border-top-color: var(--ah-color-primary);
+}
+
+/* 左侧/右侧位置：侧边边框 */
+.ah-tl-tab-group-left .ah-tl-tab {
+  border-bottom: none;
+  border-right: 2px solid transparent;
+}
+
+.ah-tl-tab-group-left .ah-tl-tab-selected {
+  border-right-color: var(--ah-color-primary);
+}
+
+.ah-tl-tab-group-right .ah-tl-tab {
+  border-bottom: none;
+  border-left: 2px solid transparent;
+}
+
+.ah-tl-tab-group-right .ah-tl-tab-selected {
+  border-left-color: var(--ah-color-primary);
+}
+
+/* ---- 标签关闭按钮 ---- */
+
+.ah-tl-tab-close {
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ah-radius-sm);
+  font-size: 12px;
+  line-height: 1;
+  transition: opacity var(--ah-transition-fast),
+              background-color var(--ah-transition-fast);
+}
+
+.ah-tl-tab:hover .ah-tl-tab-close {
+  opacity: 0.5;
+}
+
+.ah-tl-tab-close:hover {
+  opacity: 1 !important;
+  background: var(--ah-color-grey-200);
+}
+
+/* ---- 标签内容 ---- */
+
+.ah-tl-tab-content {
+  flex: 1;
+  overflow: auto;
+  display: none;
+  min-width: 0;
+  min-height: 0;
+}
+
+.ah-tl-tab-content-active {
+  display: block;
+}
+
+/* ---- 布局项（叶子面板）---- */
+
+.ah-tl-item {
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ---- 选中高亮 ---- */
+
+[data-tl-selected] {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: -2px;
+}
+
+/* ---- 拖放反馈 ---- */
+
+.ah-tl-drop-area {
+  position: absolute;
+  background: color-mix(in srgb, var(--ah-color-primary) 15%, transparent);
+  border: 2px dashed var(--ah-color-primary);
+  pointer-events: none;
+  z-index: 100;
+  transition: all 0.15s ease;
+}
+
+.ah-tl-feedback {
+  position: fixed;
+  pointer-events: none;
+  z-index: 99999;
+  opacity: 0.8;
+  box-shadow: var(--ah-shadow-md);
+  background: var(--ah-color-bg, #fff);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  padding: var(--ah-spacing-xs) var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+  white-space: nowrap;
+}
+
+.ah-tl-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99998;
+  cursor: grabbing;
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-tl-disabled {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}

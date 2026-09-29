@@ -1,0 +1,220 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 单元格编辑
+   支持单元格编辑、行编辑、弹窗编辑等多种编辑模式
+   ============================================================================ */
+
+/* 正在编辑的单元格 */
+.ah-dg-cell-editing {
+  padding: 0;
+  overflow: visible;
+}
+
+/* 编辑器基础样式 */
+.ah-dg-editor {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: 2px solid var(--ah-color-primary);
+  border-radius: var(--ah-radius-sm);
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  color: var(--ah-color-text);
+  background-color: var(--ah-color-bg);
+  outline: none;
+}
+
+/* 编辑器聚焦状态 */
+.ah-dg-editor:focus {
+  box-shadow: var(--ah-dg-focus-shadow);
+}
+
+/* 文本编辑器 */
+.ah-dg-editor-text {
+  text-align: inherit;
+}
+
+/* 数字编辑器 */
+.ah-dg-editor-number {
+  text-align: right;
+}
+
+/* 数字编辑器去除步进箭头 */
+.ah-dg-editor-number::-webkit-inner-spin-button,
+.ah-dg-editor-number::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.ah-dg-editor-number {
+  -moz-appearance: textfield;
+}
+
+/* 下拉选择编辑器 */
+.ah-dg-editor-select {
+  cursor: pointer;
+}
+
+/* 日期编辑器 */
+.ah-dg-editor-date {
+  cursor: text;
+}
+
+/* 多行文本编辑器 */
+.ah-dg-editor-textarea {
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.4;
+}
+
+/* 可编辑单元格悬停提示 */
+.ah-dg-cell-editable-hint {
+  cursor: text;
+}
+
+.ah-dg-cell-editable-hint:hover {
+  background-color: var(--ah-color-grey-50);
+  outline: 1px dashed var(--ah-color-grey-300);
+  outline-offset: -1px;
+}
+
+/* --- 行编辑模式 --- */
+
+/* 行编辑状态 */
+.ah-dg-row-editing {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: -1px;
+}
+
+/* 行编辑操作按钮容器 */
+.ah-dg-row-edit-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+/* 行编辑保存和取消按钮 */
+.ah-dg-row-save-btn,
+.ah-dg-row-cancel-btn {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-size: 16px;
+  padding: 2px 6px;
+  border-radius: var(--ah-radius-sm);
+}
+
+/* 保存按钮 */
+.ah-dg-row-save-btn {
+  color: var(--ah-color-success, #4caf50);
+}
+
+/* 保存按钮悬停状态 */
+.ah-dg-row-save-btn:hover {
+  background-color: color-mix(in srgb, var(--ah-color-success) 10%, transparent);
+}
+
+/* 取消按钮 */
+.ah-dg-row-cancel-btn {
+  color: var(--ah-color-danger, #f44336);
+}
+
+/* 取消按钮悬停状态 */
+.ah-dg-row-cancel-btn:hover {
+  background-color: color-mix(in srgb, var(--ah-color-error) 10%, transparent);
+}
+
+/* --- 弹窗编辑模式 --- */
+
+/* 弹窗表单容器 */
+.ah-dg-popup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+/* 弹窗表单项 */
+.ah-dg-popup-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 弹窗字段标签 */
+.ah-dg-popup-label {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ah-color-text);
+}
+
+/* 弹窗输入框 */
+.ah-dg-popup-input {
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: var(--ah-hairline-width) solid var(--ah-color-border, #ddd);
+  border-radius: var(--ah-radius-sm);
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--ah-color-text);
+  background-color: var(--ah-color-bg);
+  outline: none;
+}
+
+/* 弹窗输入框聚焦状态 */
+.ah-dg-popup-input:focus {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--ah-color-primary) 20%, transparent);
+}
+
+/* 弹窗按钮区域 */
+.ah-dg-popup-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: var(--ah-hairline-width) solid var(--ah-color-border, #eee);
+}
+
+/* 弹窗保存按钮 */
+.ah-dg-popup-save-btn {
+  padding: 6px 16px;
+  border: none;
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-primary);
+  color: var(--ah-color-common-white);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* 弹窗保存按钮悬停状态 */
+.ah-dg-popup-save-btn:hover {
+  opacity: 0.9;
+}
+
+/* 弹窗取消按钮 */
+.ah-dg-popup-cancel-btn {
+  padding: 6px 16px;
+  border: var(--ah-hairline-width) solid var(--ah-color-border, #ddd);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text);
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* 弹窗取消按钮悬停状态 */
+.ah-dg-popup-cancel-btn:hover {
+  background-color: var(--ah-color-grey-50);
+}
+
+/* 弹窗字段错误提示 */
+.ah-dg-popup-field-error {
+  color: var(--ah-color-danger, #f44336);
+  font-size: 12px;
+}

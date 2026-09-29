@@ -1,0 +1,336 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   数据透视表 (PivotGrid)
+   四象限布局的表格组件，支持行列维度展开折叠、排序和小计
+   ============================================================================ */
+
+/* ---- 主容器 ---- */
+.ah-pg {
+  position: relative;
+  overflow: hidden;
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* 四象限 CSS Grid 布局：左上角 + 列头 + 行头 + 数据区 */
+.ah-pg-content {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "corner  col-headers"
+    "row-headers  body";
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- 左上角区域（行头和列头的交汇处）---- */
+.ah-pg-corner {
+  grid-area: corner;
+  position: sticky;  /* 滚动时固定在左上角 */
+  left: 0;
+  top: 0;
+  z-index: 3;
+  background: var(--ah-color-bg-subtle);
+  border-right: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+
+/* ---- 列头区域（随垂直滚动固定在顶部）---- */
+.ah-pg-col-headers {
+  grid-area: col-headers;
+  overflow: hidden;
+  position: sticky;  /* 垂直滚动时固定在顶部 */
+  top: 0;
+  z-index: 2;
+  background: var(--ah-color-bg-subtle);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+
+/* ---- 行头区域（随水平滚动固定在左侧）---- */
+.ah-pg-row-headers {
+  grid-area: row-headers;
+  overflow: hidden;
+  position: sticky;  /* 水平滚动时固定在左侧 */
+  left: 0;
+  z-index: 1;
+  background: var(--ah-color-bg-paper);
+  border-right: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+
+/* ---- 数据主体区域（可滚动）---- */
+.ah-pg-body {
+  grid-area: body;
+  overflow: auto;
+}
+
+/* ---- 表格通用样式 ---- */
+.ah-pg-table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: max-content;
+}
+
+/* ---- 左上角区域表格 ---- */
+.ah-pg-corner-table {
+  height: 100%;
+}
+
+.ah-pg-corner-th {
+  padding: 8px 12px;
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text-secondary);
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* ---- 列头表格区域 ---- */
+.ah-pg-col-table {
+  min-width: 100%;
+}
+
+.ah-pg-col-header-row {
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+
+.ah-pg-col-th {
+  padding: 6px 12px;
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text);
+  text-align: center;
+  white-space: nowrap;
+  border-right: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+  background: var(--ah-color-bg-subtle);
+  min-width: 80px;
+}
+
+.ah-pg-col-th:last-child {
+  border-right: none;
+}
+
+/* ---- 行头单元格 ---- */
+.ah-pg-row-header {
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border-subtle, var(--ah-color-border));
+}
+
+.ah-pg-row-th {
+  padding: 4px 12px;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--ah-color-text);
+  min-width: 100px;
+  height: var(--ah-pg-row-height, 30px);  /* 可配置的 行高 */
+  box-sizing: border-box;
+}
+
+/* 行头缩进容器（用于对齐树形结构） */
+.ah-pg-row-indent {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 行标签文本（超出显示省略号） */
+.ah-pg-row-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- 展开/折叠按钮 ---- */
+/* 展开状态：旋转90度显示为向右箭头 */
+.ah-pg-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  font-size: 10px;
+  color: var(--ah-color-text-secondary);
+  transition: transform var(--ah-transition-fast);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* 已展开状态 */
+.ah-pg-toggle-open {
+  transform: rotate(90deg);
+}
+
+/* 已折叠状态 */
+.ah-pg-toggle-closed {
+  transform: rotate(0deg);
+}
+
+/* 叶子节点（无子节点）：隐藏切换按钮 */
+.ah-pg-toggle-leaf {
+  visibility: hidden;
+  cursor: default;
+}
+
+/* ---- 数据区域表格 ---- */
+.ah-pg-body-table {
+  min-width: 100%;
+}
+
+.ah-pg-body-row {
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border-subtle, var(--ah-color-border));
+}
+
+.ah-pg-body-row:hover {
+  background: var(--ah-color-bg-hover, rgba(0, 0, 0, 0.02));
+}
+
+/* ---- 数据单元格 ---- */
+.ah-pg-cell {
+  padding: 4px 12px;
+  text-align: right;  /* 数值默认右对齐 */
+  white-space: nowrap;
+  color: var(--ah-color-text);
+  border-right: var(--ah-hairline-width) solid var(--ah-color-border-subtle, var(--ah-color-border));
+  min-width: 80px;
+  height: var(--ah-pg-row-height, 30px);
+  box-sizing: border-box;
+}
+
+.ah-pg-cell:last-child {
+  border-right: none;
+}
+
+/* ---- 小计/合计高亮样式 ---- */
+/* 小计行：中等加粗 + 浅色背景 */
+.ah-pg-total {
+  font-weight: var(--ah-font-weight-semibold);
+  background: var(--ah-color-bg-subtle);
+}
+
+/* 总计行（grand total）：更粗 + 主色调背景 */
+.ah-pg-grand-total {
+  font-weight: var(--ah-font-weight-bold);
+  background: var(--ah-color-primary-lighter, var(--ah-color-bg-subtle));
+  color: var(--ah-color-primary, var(--ah-color-text));
+}
+
+/* ---- 排序图标 ---- */
+.ah-pg-sort-icon {
+  color: var(--ah-color-text-secondary);
+  font-size: 10px;
+  margin-left: 2px;
+}
+
+/* ---- 单元格选中状态 ---- */
+.ah-pg-cell-selected {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: -2px;
+  background: var(--ah-color-primary-lightest, rgba(59, 130, 246, 0.08));
+}
+
+/* ---- 列宽调整手柄 ---- */
+.ah-pg-col-th {
+  position: relative;  /* 为调整手柄提供定位参考 */
+}
+
+/* 调整手柄：悬停在列头右侧时显示 */
+.ah-pg-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: col-resize;
+  z-index: 1;
+}
+
+.ah-pg-resize-handle:hover {
+  background: var(--ah-color-primary-lighter, rgba(59, 130, 246, 0.3));
+}
+
+/* 调整时的垂直参考线 */
+.ah-pg-resize-line {
+  display: none;
+  position: absolute;
+  top: 0;
+  width: 2px;
+  background: var(--ah-color-primary);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* ---- 右键上下文菜单 ---- */
+/* 上下文菜单默认隐藏 */
+.ah-pg-context-menu {
+  display: none;
+  position: fixed;  /* 固定定位，附加到 body */
+  z-index: 300;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-lg, 0 4px 12px rgba(0, 0, 0, 0.15));
+  padding: 4px 0;
+  min-width: 140px;
+}
+
+/* 显示菜单 */
+.ah-pg-context-menu-open {
+  display: block;
+}
+
+/* 菜单项 */
+.ah-pg-context-menu-item {
+  padding: 6px 16px;
+  cursor: pointer;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  white-space: nowrap;
+}
+
+.ah-pg-context-menu-item:hover {
+  background: var(--ah-color-bg-hover, rgba(0, 0, 0, 0.04));
+}
+
+/* ---- 键盘焦点状态 ---- */
+/* 组件容器：移除默认 focus 轮廓 */
+.ah-pg:focus {
+  outline: none;
+}
+
+/* 单元格焦点：显示主色轮廓 */
+.ah-pg-cell-focused {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+
+/* ---- values-on-rows 行头值标签 ---- */
+/* 当维度值显示在行头时的标签样式 */
+.ah-pg-value-label-cell {
+  font-size: var(--ah-font-size-xs, 11px);
+  color: var(--ah-color-text-secondary);
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* ---- 虚拟滚动占位行 ---- */
+/* 虚拟滚动时用于撑开空间的空行 */
+.ah-pg-virtual-spacer td {
+  padding: 0 !important;
+  border: none !important;
+  line-height: 0;
+}
+
+/* ---- 空状态显示 ---- */
+/* 无数据时显示的占位内容 */
+.ah-pg-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ah-spacing-xl);
+  color: var(--ah-color-text-disabled);
+  font-size: var(--ah-font-size-base);
+  grid-column: 1 / -1;  /* 占满所有列 */
+  grid-row: 1 / -1;     /* 占满所有行 */
+}

@@ -1,0 +1,40 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 数据验证
+   数据验证功能：单元格数据验证，验证失败时显示错误样式和提示信息
+   ============================================================================ */
+
+/* 无效单元格 */
+.ah-dg-cell-invalid {
+  position: relative;
+  border: var(--ah-hairline-width) solid var(--ah-color-danger, #dc3545) !important;
+  background-color: color-mix(in srgb, var(--ah-color-error) 5%, transparent);
+}
+
+/* 验证错误提示 */
+.ah-dg-validation-tooltip {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  z-index: 200;
+  padding: 4px 8px;
+  background: var(--ah-color-danger);
+  color: var(--ah-color-error-contrast);
+  font-size: var(--ah-font-size-xs, 12px);
+  border-radius: var(--ah-radius-sm, 4px);
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: var(--ah-shadow-md, 0 2px 8px rgba(0,0,0,0.15));
+  margin-top: 2px;
+}
+
+.ah-dg-validation-tooltip::before {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 8px;
+  border: 4px solid transparent;
+  border-bottom-color: var(--ah-color-danger, #dc3545);
+}

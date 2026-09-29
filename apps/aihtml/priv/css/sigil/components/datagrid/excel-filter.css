@@ -1,0 +1,95 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid Excel 风格过滤
+   提供类似 Excel 的列头筛选体验，支持多选、搜索等高级筛选功能
+   ============================================================================ */
+
+/* Excel 风格过滤外层容器 */
+.ah-dg-excel-filter-wrap {
+  position: relative;
+}
+
+/* Excel 风格过滤面板 */
+.ah-dg-excel-filter-panel {
+  position: fixed;
+  z-index: 1000;
+  background: #fff;
+  border: var(--ah-hairline-width) solid #ddd;
+  border-radius: var(--ah-radius-sm);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  width: 220px;
+  display: none;
+}
+
+/* 搜索框区域 */
+.ah-dg-excel-filter-search {
+  padding: 8px;
+  border-bottom: var(--ah-hairline-width) solid #eee;
+}
+
+/* 搜索输入框 */
+.ah-dg-excel-filter-search input {
+  width: 100%;
+  border: var(--ah-hairline-width) solid #ddd;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 13px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+/* 搜索输入框聚焦状态 */
+.ah-dg-excel-filter-search input:focus {
+  border-color: var(--ah-color-primary, #4285F4);
+}
+
+/* 过滤选项列表 */
+.ah-dg-excel-filter-list {
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+/* 过滤选项项 */
+.ah-dg-excel-filter-item {
+  padding: 3px 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+/* 过滤选项项悬停状态 */
+.ah-dg-excel-filter-item:hover {
+  background: #f5f5f5;
+}
+
+/* 操作按钮区域 */
+.ah-dg-excel-filter-actions {
+  padding: 8px;
+  border-top: var(--ah-hairline-width) solid #eee;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* 操作按钮（如全选、清除） */
+.ah-dg-excel-filter-btn {
+  color: var(--ah-color-text-disabled, #999);
+  cursor: pointer;
+  font-size: 11px;
+  margin-left: 2px;
+}
+
+/* 操作按钮悬停状态 */
+.ah-dg-excel-filter-btn:hover {
+  color: var(--ah-color-text-secondary, #666);
+}
+
+/* 激活状态的按钮 */
+.ah-dg-excel-filter-btn-active {
+  color: var(--ah-color-primary, #4285F4);
+}

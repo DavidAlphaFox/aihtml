@@ -1,0 +1,95 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 分组面板
+   Outlook 风格拖拽分组功能，支持将列拖入此区域进行数据分组
+   ============================================================================ */
+
+/* DataGrid 分组面板样式 — Outlook 风格拖拽分组 */
+
+.ah-dg-group-panel {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  background-color: var(--ah-color-grey-50);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-dg-cell-border);
+  box-sizing: border-box;
+  transition: background-color 0.15s ease;
+}
+
+.ah-dg-group-panel-dragover {
+  background-color: var(--ah-color-primary-lighter);
+  border-bottom-color: var(--ah-color-primary, #1677ff);
+}
+
+/* 提示文字 */
+.ah-dg-group-panel-hint {
+  color: var(--ah-color-text-disabled);
+  font-size: var(--ah-font-size-sm);
+  font-style: italic;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 标签容器 */
+.ah-dg-group-panel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* 分组标签 */
+.ah-dg-group-panel-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px 2px 10px;
+  background-color: var(--ah-color-grey-100);
+  border: var(--ah-hairline-width) solid var(--ah-color-grey-300);
+  border-radius: var(--ah-radius-sm, 4px);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  cursor: grab;
+  user-select: none;
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ah-dg-group-panel-tag:hover {
+  background-color: var(--ah-color-grey-200);
+}
+
+.ah-dg-group-panel-tag-dragging {
+  opacity: 0.4;
+}
+
+.ah-dg-group-panel-tag-text {
+  white-space: nowrap;
+}
+
+/* × 移除按钮 */
+.ah-dg-group-panel-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ah-color-text-secondary);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.ah-dg-group-panel-tag-remove:hover {
+  color: var(--ah-color-danger, #ff4d4f);
+  background-color: var(--ah-color-error-lighter);
+}
+
+/* 列头拖拽中样式 */
+.ah-dg-header-cell.ah-dg-header-dragging {
+  opacity: 0.5;
+}

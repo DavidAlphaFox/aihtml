@@ -1,0 +1,45 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 行详情展开
+   支持展开行以显示更多详细信息，常用于主从表或复杂数据展示场景
+   ============================================================================ */
+
+/* 展开图标单元格 */
+.ah-dg-expand-cell {
+  width: 36px;
+  text-align: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* 展开/折叠图标 */
+.ah-dg-expand-icon {
+  display: inline-block;
+  transition: transform 0.15s;
+  user-select: none;
+  font-size: 10px;
+  color: var(--ah-color-text-secondary);
+}
+
+/* 展开图标悬停状态 */
+.ah-dg-expand-icon:hover {
+  color: var(--ah-color-text);
+}
+
+/* 展开状态（展开时旋转箭头） */
+.ah-dg-expand-icon-open {
+  transform: rotate(90deg);
+}
+
+/* 详情行容器 */
+.ah-dg-detail-row {
+  border-bottom: var(--ah-hairline-width) solid var(--ah-dg-cell-border);
+  background: var(--ah-color-grey-100);
+}
+
+/* 详情行内容区域 */
+.ah-dg-detail-content {
+  padding: 12px 16px;
+}

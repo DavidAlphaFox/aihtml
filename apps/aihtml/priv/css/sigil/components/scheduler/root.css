@@ -1,0 +1,97 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Scheduler 日程安排器
+   根容器样式，包含全局CSS变量和共享的事件样式
+   ============================================================================ */
+
+/* Scheduler 根容器 - 主容器样式 */
+.ah-scheduler {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--ah-font-family);
+  color: var(--ah-color-grey-800);
+  background: var(--ah-color-bg-paper);
+  border-radius: var(--ah-radius-md);
+}
+
+/* Scheduler 视图容器 - 包含各视图的主要内容区域 */
+.ah-scheduler-view-container {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+/* --- 状态边框颜色 --- */
+/* 空闲状态 - 绿色 */
+.ah-scheduler-status-free {
+  --ah-scheduler-status-color: var(--ah-color-success);
+}
+
+/* 忙碌状态 - 红色 */
+.ah-scheduler-status-busy {
+  --ah-scheduler-status-color: var(--ah-color-error);
+}
+
+/* 暂定状态 - 黄色 */
+.ah-scheduler-status-tentative {
+  --ah-scheduler-status-color: var(--ah-color-warning);
+}
+
+/* 外出状态 - 蓝色 */
+.ah-scheduler-status-out-of-office {
+  --ah-scheduler-status-color: var(--ah-color-info, #6366f1);
+}
+
+/* --- 共享的事件块样式 --- */
+/* 事件基础样式 - 用于所有视图中的事件显示 */
+.ah-scheduler-event {
+  border-radius: var(--ah-radius-sm);
+  color: var(--ah-color-common-white);
+  font-size: var(--ah-font-size-xs);
+  cursor: pointer;
+  transition: opacity var(--ah-transition-fast);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-scheduler-event:hover {
+  opacity: 0.85;
+}
+
+/* 幽灵事件 - 拖拽时显示的半透明事件，不响应鼠标事件 */
+.ah-scheduler-event-ghost {
+  pointer-events: none;
+}
+
+/* 事件时间 - 显示事件的开始/结束时间 */
+.ah-scheduler-event-time {
+  opacity: 0.85;
+  margin-right: 4px;
+}
+
+/* 事件标题 */
+.ah-scheduler-event-title {
+  font-weight: var(--ah-font-weight-medium);
+}
+
+/* 重复事件图标 */
+.ah-scheduler-event-recurring-icon {
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
+/* --- 创建占位符 --- */
+/* 拖拽创建新事件时显示的预览区域 */
+.ah-scheduler-create-placeholder {
+  position: absolute;
+  background: var(--ah-color-primary-lighter);
+  border: 2px dashed var(--ah-color-primary);
+  border-radius: var(--ah-radius-sm);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 2;
+}

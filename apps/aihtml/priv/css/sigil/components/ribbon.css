@@ -1,0 +1,566 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/**
+ * Ribbon 组件样式
+ * 功能区/选项卡式工具栏，类似 Microsoft Office Ribbon
+ *
+ * 使用主题变量定义颜色和尺寸
+ */
+
+/* ============================================================================
+   基础样式
+   ============================================================================ */
+
+.ah-ribbon {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 200px;
+  font-family: var(--ah-font-family, sans-serif);
+  font-size: var(--ah-font-size-sm, 14px);
+  box-sizing: border-box;
+  background: var(--ah-color-bg-paper, #ffffff);
+  border: var(--ah-border-width) solid var(--ah-color-border, #e5e7eb);
+  border-radius: var(--ah-radius-sm, 4px);
+}
+
+/* ============================================================================
+   位置变体
+   ============================================================================ */
+
+/* 顶部位置（默认） */
+.ah-ribbon-position-top {
+  flex-direction: column;
+}
+
+.ah-ribbon-position-top .ah-ribbon-tabs {
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border, #e5e7eb);
+}
+
+.ah-ribbon-position-top .ah-ribbon-tabs-content {
+  border-top: none;
+}
+
+/* 底部位置 */
+.ah-ribbon-position-bottom {
+  flex-direction: column-reverse;
+}
+
+.ah-ribbon-position-bottom .ah-ribbon-tabs {
+  border-top: var(--ah-border-width) solid var(--ah-color-border, #e5e7eb);
+  border-bottom: none;
+}
+
+.ah-ribbon-position-bottom .ah-ribbon-tabs-content {
+  border-bottom: none;
+}
+
+/* 左侧位置 */
+.ah-ribbon-position-left {
+  flex-direction: row;
+}
+
+.ah-ribbon-position-left .ah-ribbon-tabs {
+  flex-direction: column;
+  width: var(--ribbon-tabs-width, 100px);
+  min-width: 60px;
+  border-right: var(--ah-border-width) solid var(--ah-color-border, #e5e7eb);
+  border-bottom: none;
+}
+
+.ah-ribbon-position-left .ah-ribbon-tabs-content {
+  border-left: none;
+}
+
+/* 右侧位置 */
+.ah-ribbon-position-right {
+  flex-direction: row-reverse;
+}
+
+.ah-ribbon-position-right .ah-ribbon-tabs {
+  flex-direction: column;
+  width: var(--ribbon-tabs-width, 100px);
+  min-width: 60px;
+  border-left: var(--ah-border-width) solid var(--ah-color-border, #e5e7eb);
+  border-bottom: none;
+}
+
+.ah-ribbon-position-right .ah-ribbon-tabs-content {
+  border-right: none;
+}
+
+/* ============================================================================
+   Tabs 容器
+   ============================================================================ */
+
+.ah-ribbon-tabs {
+  display: flex;
+  flex-direction: row;
+  background: var(--ah-color-grey-50, #f9fafb);
+  min-height: var(--ribbon-tabs-height, 36px);
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ah-ribbon-tabs-inner {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+  flex: 1;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.ah-ribbon-tabs-inner::-webkit-scrollbar {
+  display: none;
+}
+
+/* ============================================================================
+   Tab 项目
+   ============================================================================ */
+
+.ah-ribbon-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ah-spacing-xs, 4px) var(--ah-spacing-md, 12px);
+  min-width: var(--ribbon-tab-min-width, 60px);
+  height: var(--ribbon-tabs-height, 36px);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  border: none;
+  background: transparent;
+  color: var(--ah-color-text, #1f2937);
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: var(--ah-font-weight-medium, 500);
+  white-space: nowrap;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.ah-ribbon-tab:hover:not(.ah-ribbon-tab-disabled):not(.ah-ribbon-tab-selected) {
+  background: var(--ah-color-grey-100, #f3f4f6);
+}
+
+.ah-ribbon-tab:focus {
+  outline: 2px solid var(--ah-color-primary, #3b82f6);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+/* Tab 图标 */
+.ah-ribbon-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: var(--ah-spacing-xs, 4px);
+  font-size: var(--ah-font-size-base, 16px);
+  width: 16px;
+  height: 16px;
+}
+
+.ah-ribbon-tab-icon:only-child {
+  margin-right: 0;
+}
+
+/* Tab 文本 */
+.ah-ribbon-tab-text {
+  display: inline-block;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ============================================================================
+   Tab 选中状态
+   ============================================================================ */
+
+.ah-ribbon-tab-selected {
+  background: var(--ah-color-bg-paper, #ffffff);
+  color: var(--ah-color-primary, #3b82f6);
+}
+
+/* 选中指示条 - 顶部 */
+.ah-ribbon-position-top .ah-ribbon-tab-selected::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ah-color-primary, #3b82f6);
+}
+
+/* 选中指示条 - 底部 */
+.ah-ribbon-position-bottom .ah-ribbon-tab-selected::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ah-color-primary, #3b82f6);
+}
+
+/* 选中指示条 - 左侧 */
+.ah-ribbon-position-left .ah-ribbon-tab-selected::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--ah-color-primary, #3b82f6);
+}
+
+/* 选中指示条 - 右侧 */
+.ah-ribbon-position-right .ah-ribbon-tab-selected::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--ah-color-primary, #3b82f6);
+}
+
+/* ============================================================================
+   Tab 禁用状态
+   ============================================================================ */
+
+.ah-ribbon-tab-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ============================================================================
+   滚动按钮
+   ============================================================================ */
+
+.ah-ribbon-scroll-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 100%;
+  background: var(--ah-color-grey-50, #f9fafb);
+  border: none;
+  cursor: pointer;
+  color: var(--ah-color-text-secondary, #6b7280);
+  font-size: 10px;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.ah-ribbon-scroll-btn:hover {
+  background: var(--ah-color-grey-100, #f3f4f6);
+  color: var(--ah-color-text, #1f2937);
+}
+
+.ah-ribbon-scroll-btn:active {
+  background: var(--ah-color-grey-200, #e5e7eb);
+}
+
+.ah-ribbon-scroll-visible {
+  display: flex;
+}
+
+/* ============================================================================
+   内容区域
+   ============================================================================ */
+
+.ah-ribbon-tabs-content {
+  display: block;
+  flex: 1;
+  background: var(--ah-color-bg-paper, #ffffff);
+  overflow: auto;
+  min-height: 60px;
+}
+
+.ah-ribbon-tab-content {
+  display: none;
+  padding: var(--ah-spacing-md, 12px);
+  overflow: auto;
+}
+
+.ah-ribbon-tab-content-active {
+  display: block;
+}
+
+/* ============================================================================
+   模式变体
+   ============================================================================ */
+
+/* 默认模式 */
+.ah-ribbon-mode-default {
+  /* 默认样式 */
+}
+
+/* 弹出模式 */
+.ah-ribbon-mode-popup .ah-ribbon-tabs-content {
+  position: absolute;
+  z-index: 1000;
+  box-shadow: var(--ah-shadow-md, 0 8px 16px rgba(0, 0, 0, 0.16));
+}
+
+/* 顶部弹出 */
+.ah-ribbon-mode-popup.ah-ribbon-position-top .ah-ribbon-tabs-content {
+  top: 100%;
+  left: 0;
+  right: 0;
+}
+
+/* 底部弹出 */
+.ah-ribbon-mode-popup.ah-ribbon-position-bottom .ah-ribbon-tabs-content {
+  bottom: 100%;
+  left: 0;
+  right: 0;
+}
+
+/* 左侧弹出 */
+.ah-ribbon-mode-popup.ah-ribbon-position-left .ah-ribbon-tabs-content {
+  left: 100%;
+  top: 0;
+  bottom: 0;
+  width: auto;
+  min-width: 200px;
+}
+
+/* 右侧弹出 */
+.ah-ribbon-mode-popup.ah-ribbon-position-right .ah-ribbon-tabs-content {
+  right: 100%;
+  top: 0;
+  bottom: 0;
+  width: auto;
+  min-width: 200px;
+}
+
+/* ============================================================================
+   选中标记（Selection Token）
+   ============================================================================ */
+
+.ah-ribbon-selection-token {
+  position: absolute;
+  background: var(--ah-color-primary, #3b82f6);
+  opacity: 0.15;
+  pointer-events: none;
+  transition: all 0.2s ease;
+  z-index: 0;
+}
+
+/* ============================================================================
+   动画效果
+   ============================================================================ */
+
+.ah-ribbon-animation-slide .ah-ribbon-tab-content-active {
+  animation: ah-ribbon-slide-in 0.2s ease-out;
+}
+
+@keyframes ah-ribbon-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ah-ribbon-animation-fade .ah-ribbon-tab-content-active {
+  animation: ah-ribbon-fade-in 0.2s ease-out;
+}
+
+@keyframes ah-ribbon-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ============================================================================
+   功能区分组（Office 风格）
+   ============================================================================ */
+
+.ah-ribbon-group {
+  display: inline-flex;
+  flex-direction: column;
+  margin-right: var(--ah-spacing-lg, 16px);
+  margin-bottom: var(--ah-spacing-sm, 8px);
+  vertical-align: top;
+  padding: var(--ah-spacing-xs, 4px);
+}
+
+.ah-ribbon-group:last-child {
+  margin-right: 0;
+}
+
+.ah-ribbon-group-label {
+  font-size: var(--ah-font-size-xs, 12px);
+  color: var(--ah-color-text-secondary, #6b7280);
+  text-align: center;
+  padding-top: var(--ah-spacing-xs, 4px);
+  white-space: nowrap;
+  border-top: var(--ah-border-width) solid var(--ah-color-border, #e5e7eb);
+  margin-top: var(--ah-spacing-xs, 4px);
+}
+
+.ah-ribbon-group-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ah-spacing-xs, 4px);
+  align-items: center;
+}
+
+/* 分组分隔线 */
+.ah-ribbon-separator {
+  display: inline-block;
+  width: 1px;
+  height: 40px;
+  background: var(--ah-color-border, #e5e7eb);
+  margin: 0 var(--ah-spacing-sm, 8px);
+  vertical-align: middle;
+  align-self: center;
+}
+
+/* 大按钮 */
+.ah-ribbon-button-large {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ah-spacing-sm, 8px);
+  min-width: 50px;
+  background: transparent;
+  border: var(--ah-border-width) solid transparent;
+  border-radius: var(--ah-radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.ah-ribbon-button-large:hover {
+  background: var(--ah-color-grey-100, #f3f4f6);
+  border-color: var(--ah-color-border, #e5e7eb);
+}
+
+.ah-ribbon-button-large-icon {
+  font-size: 24px;
+  margin-bottom: 2px;
+  color: var(--ah-color-text-secondary, #6b7280);
+}
+
+.ah-ribbon-button-large-text {
+  font-size: var(--ah-font-size-xs, 12px);
+  color: var(--ah-color-text, #1f2937);
+}
+
+/* 小按钮 */
+.ah-ribbon-button {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ah-spacing-xs, 4px) var(--ah-spacing-sm, 8px);
+  background: transparent;
+  border: var(--ah-border-width) solid transparent;
+  border-radius: var(--ah-radius-sm, 4px);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: var(--ah-font-size-sm, 14px);
+  color: var(--ah-color-text, #1f2937);
+}
+
+.ah-ribbon-button:hover {
+  background: var(--ah-color-grey-100, #f3f4f6);
+  border-color: var(--ah-color-border, #e5e7eb);
+}
+
+.ah-ribbon-button-icon {
+  margin-right: var(--ah-spacing-xs, 4px);
+  font-size: 16px;
+}
+
+/* ============================================================================
+   颜色模板
+   ============================================================================ */
+
+.ah-ribbon-primary .ah-ribbon-tab-selected {
+  color: var(--ah-color-primary, #3b82f6);
+}
+
+.ah-ribbon-primary .ah-ribbon-tab-selected::after,
+.ah-ribbon-primary .ah-ribbon-selection-token {
+  background: var(--ah-color-primary, #3b82f6);
+}
+
+.ah-ribbon-success .ah-ribbon-tab-selected {
+  color: var(--ah-color-success, #22c55e);
+}
+
+.ah-ribbon-success .ah-ribbon-tab-selected::after,
+.ah-ribbon-success .ah-ribbon-selection-token {
+  background: var(--ah-color-success, #22c55e);
+}
+
+.ah-ribbon-warning .ah-ribbon-tab-selected {
+  color: var(--ah-color-warning, #f59e0b);
+}
+
+.ah-ribbon-warning .ah-ribbon-tab-selected::after,
+.ah-ribbon-warning .ah-ribbon-selection-token {
+  background: var(--ah-color-warning, #f59e0b);
+}
+
+.ah-ribbon-danger .ah-ribbon-tab-selected {
+  color: var(--ah-color-error, #ef4444);
+}
+
+.ah-ribbon-danger .ah-ribbon-tab-selected::after,
+.ah-ribbon-danger .ah-ribbon-selection-token {
+  background: var(--ah-color-error, #ef4444);
+}
+
+/* ============================================================================
+   禁用状态
+   ============================================================================ */
+
+.ah-ribbon-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-ribbon-disabled .ah-ribbon-tabs,
+.ah-ribbon-disabled .ah-ribbon-tabs-content {
+  pointer-events: none;
+}
+
+/* ============================================================================
+   响应式
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .ah-ribbon-tabs-inner {
+    flex-wrap: nowrap;
+  }
+
+  .ah-ribbon-tab {
+    min-width: auto;
+    padding: var(--ah-spacing-xs, 4px) var(--ah-spacing-sm, 8px);
+  }
+
+  .ah-ribbon-tab-text {
+    max-width: 80px;
+  }
+
+  .ah-ribbon-position-left,
+  .ah-ribbon-position-right {
+    flex-direction: column;
+  }
+
+  .ah-ribbon-position-left .ah-ribbon-tabs,
+  .ah-ribbon-position-right .ah-ribbon-tabs {
+    width: 100%;
+    flex-direction: row;
+  }
+}

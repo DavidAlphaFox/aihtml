@@ -1,0 +1,54 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   数据网格组件 (DataGrid)
+   功能强大的数据表格，支持排序、筛选、分页、列调整、行展开、单元格编辑等功能
+   ============================================================================ */
+
+/*
+ * 使用模块化 CSS 结构:
+ * - root.css: 根容器和布局样式
+ * - header.css: 表头和过滤行样式
+ * - body.css: 表体和行样式
+ * - cell.css: 单元格样式
+ * - selection.css: 选择状态样式
+ * - sort.css: 排序样式
+ * - filter.css: 过滤样式
+ * - pager.css: 分页器样式
+ *
+ * 主题变量: 所有样式使用 CSS 自定义属性(主题变量)
+ */
+
+/* 模块化导入 - 顺序重要 */
+@import "./datagrid/root.css";
+@import "./datagrid/header.css";
+@import "./datagrid/body.css";
+@import "./datagrid/cell.css";
+@import "./datagrid/selection.css";
+@import "./datagrid/sort.css";
+@import "./datagrid/filter.css";
+@import "./datagrid/pager.css";
+@import "./datagrid/resize.css";
+@import "./datagrid/edit.css";
+@import "./datagrid/keyboard.css";
+@import "./datagrid/toolbar.css";
+@import "./datagrid/statusbar.css";
+@import "./datagrid/pinned.css";
+@import "./datagrid/reorder.css";
+@import "./datagrid/detail.css";
+@import "./datagrid/contextmenu.css";
+@import "./datagrid/validation.css";
+@import "./datagrid/columnmenu.css";
+@import "./datagrid/grouping.css";
+@import "./datagrid/group-panel.css";
+@import "./datagrid/batch.css";
+@import "./datagrid/format.css";
+@import "./datagrid/row-drag.css";
+@import "./datagrid/ever-present.css";
+@import "./datagrid/excel-filter.css";
+@import "./datagrid/deferred-scroll.css";
+@import "./datagrid/column-chooser.css";
+@import "./datagrid/responsive.css";
+@import "./datagrid/autoheight.css";
+@import "./datagrid/merge.css";

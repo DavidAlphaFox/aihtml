@@ -1,0 +1,370 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Scheduler 日程安排器
+   日/周视图 (Day/Week View) - 支持资源列的时间网格视图
+   ============================================================================ */
+
+/* 日/周视图主容器 */
+.ah-scheduler-dayview {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* --- 外层水平滚动容器 --- */
+
+.ah-scheduler-dayview-hscroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow-x: auto;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* --- 头部区域 --- */
+
+.ah-scheduler-dayview-header {
+  display: flex;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  background: var(--ah-color-bg-paper);
+  z-index: 4;
+}
+
+/* 时间 gutter 头部 - 显示"全天"标签 */
+.ah-scheduler-dayview-gutter-header {
+  width: 60px;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  background: var(--ah-color-bg-paper);
+  z-index: 3;
+}
+
+/* 日期列容器 */
+.ah-scheduler-dayview-header-cols {
+  display: flex;
+  flex: 1;
+}
+
+/* 单个日期头部单元格 */
+.ah-scheduler-dayview-header-cell {
+  flex: 1;
+  text-align: center;
+  padding: var(--ah-spacing-xs) 0;
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+/* 日期分组 - 多日视图时使用 */
+.ah-scheduler-dayview-header-day-group {
+  flex: 1;
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+.ah-scheduler-dayview-header-day-group > .ah-scheduler-dayview-header-cell {
+  border-left: none;
+}
+
+/* 星期几显示 */
+.ah-scheduler-dayview-header-day {
+  display: block;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-grey-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* 具体日期数字 */
+.ah-scheduler-dayview-header-date {
+  display: block;
+  font-size: var(--ah-font-size-lg);
+  font-weight: var(--ah-font-weight-bold);
+  color: var(--ah-color-grey-800);
+}
+
+/* 今天的日期高亮 */
+.ah-scheduler-dayview-header-today .ah-scheduler-dayview-header-date {
+  color: var(--ah-color-primary);
+}
+
+/* --- 资源头部行 --- */
+
+.ah-scheduler-dayview-resource-header {
+  display: flex;
+  border-top: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+.ah-scheduler-dayview-resource-label {
+  flex: 1;
+  text-align: center;
+  padding: 2px 4px;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-grey-600);
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  min-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-scheduler-dayview-resource-label:first-child {
+  border-left: none;
+}
+
+/* --- 全天事件行 --- */
+
+.ah-scheduler-dayview-allday-row {
+  display: flex;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  flex-shrink: 0;
+  min-height: 28px;
+  position: sticky;
+  background: var(--ah-color-bg-paper);
+  z-index: 4;
+}
+
+.ah-scheduler-dayview-allday-row > .ah-scheduler-dayview-gutter {
+  width: 60px;
+  flex-shrink: 0;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-400);
+  padding: 4px 8px;
+  text-align: right;
+  position: sticky;
+  left: 0;
+  background: var(--ah-color-bg-paper);
+  z-index: 3;
+}
+
+/* 全天事件容器 */
+.ah-scheduler-dayview-allday {
+  display: flex;
+  flex: 1;
+}
+
+/* 全天事件单元格 */
+.ah-scheduler-dayview-allday-cell {
+  flex: 1;
+  padding: 2px;
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 80px;
+}
+
+/* 全天事件样式 */
+.ah-scheduler-allday-event {
+  padding: 1px 4px;
+  line-height: 1.4;
+}
+
+/* --- 可滚动的时间区域 --- */
+
+.ah-scheduler-dayview-scroll {
+  position: relative;
+}
+
+.ah-scheduler-dayview-body {
+  display: flex;
+  position: relative;
+}
+
+/* --- 时间刻度 gutter --- */
+
+.ah-scheduler-dayview-gutter {
+  width: 60px;
+  flex-shrink: 0;
+  position: sticky;
+  left: 0;
+  background: var(--ah-color-bg-paper);
+  z-index: 2;
+}
+
+/* 时间网格槽位 - 每个小时一个槽位 */
+.ah-scheduler-timegrid-slot {
+  position: relative;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+/* 时间标签 - 显示小时数 */
+.ah-scheduler-timegrid-slot-label {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  font-size: 10px;
+  color: var(--ah-color-grey-400);
+  line-height: 1;
+}
+
+/* 时间网格线 */
+.ah-scheduler-timegrid-slot-line {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  right: 0;
+  height: 0;
+  border-top: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+/* --- 日期列 --- */
+
+/* 日期列容器 */
+.ah-scheduler-dayview-cols {
+  display: flex;
+  flex: 1;
+}
+
+/* 单个日期列 */
+.ah-scheduler-dayview-col {
+  flex: 1;
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  position: relative;
+}
+
+/* 今天的列背景色 */
+.ah-scheduler-dayview-col-today {
+  background: color-mix(in srgb, var(--ah-color-primary) 3%, transparent);
+}
+
+/* --- 资源子列 --- */
+
+/* 资源子列 - 当有多个资源时使用 */
+.ah-scheduler-dayview-res-col {
+  flex: 1;
+  position: relative;
+  min-width: 80px;
+}
+
+/* 有资源时日期之间的边框加粗 */
+.ah-scheduler-dayview-res-col:first-child {
+  border-left: 2px solid var(--ah-color-grey-200);
+}
+
+/* --- 定时事件 --- */
+
+.ah-scheduler-timegrid-event {
+  padding: 2px 4px;
+  border-radius: var(--ah-radius-sm);
+  overflow: hidden;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.ah-scheduler-timegrid-event .ah-scheduler-event-title {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  line-height: 1.3;
+  color: var(--ah-color-common-white);
+}
+
+.ah-scheduler-timegrid-event .ah-scheduler-event-time {
+  font-size: 10px;
+  opacity: 0.85;
+  margin: 0;
+  color: var(--ah-color-common-white);
+}
+
+/* --- 调整大小手柄 --- */
+
+.ah-scheduler-timegrid-resize-handle {
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 12px;
+  cursor: s-resize;
+  background: transparent;
+  z-index: 1;
+}
+
+.ah-scheduler-timegrid-resize-handle:hover {
+  background: color-mix(in srgb, var(--ah-color-text) 12%, transparent);
+}
+
+/* --- 当前时间指示器 --- */
+
+.ah-scheduler-dayview-now-indicator {
+  position: absolute;
+  left: 60px;
+  right: 0;
+  height: 2px;
+  background: var(--ah-color-error);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ah-scheduler-dayview-now-indicator::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ah-color-error);
+}
+
+/* --- 响应式 --- */
+@media (max-width: 640px) {
+  .ah-scheduler-dayview-gutter,
+  .ah-scheduler-dayview-gutter-header {
+    width: 42px;
+  }
+  .ah-scheduler-dayview-gutter .ah-scheduler-timegrid-slot-label {
+    font-size: 9px;
+    right: 4px;
+  }
+  .ah-scheduler-dayview-header-day {
+    font-size: 10px;
+  }
+  .ah-scheduler-dayview-header-date {
+    font-size: var(--ah-font-size-base);
+  }
+  .ah-scheduler-dayview-resource-label {
+    min-width: 60px;
+    font-size: 10px;
+  }
+  .ah-scheduler-dayview-now-indicator {
+    left: 42px;
+  }
+  .ah-scheduler-dayview-res-col {
+    min-width: 60px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ah-scheduler-dayview-gutter,
+  .ah-scheduler-dayview-gutter-header {
+    width: 34px;
+  }
+  .ah-scheduler-dayview-header-cell {
+    padding: 2px 0;
+  }
+  .ah-scheduler-dayview-header-day {
+    display: none;
+  }
+  .ah-scheduler-dayview-header-date {
+    font-size: var(--ah-font-size-sm);
+  }
+  .ah-scheduler-dayview-now-indicator {
+    left: 34px;
+  }
+  .ah-scheduler-timegrid-event .ah-scheduler-event-title {
+    font-size: 10px;
+  }
+  .ah-scheduler-timegrid-event .ah-scheduler-event-time {
+    display: none;
+  }
+}

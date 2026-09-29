@@ -1,0 +1,57 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 状态栏
+   状态栏功能：显示分页信息、选中计数、汇总数据等，位于表格底部
+   ============================================================================ */
+
+/* 状态栏外层容器 */
+.ah-dg-statusbar-wrap {
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+/* 状态栏主体 - 水平 flex 布局 */
+.ah-dg-statusbar {
+  display: flex;
+  flex-shrink: 0;
+  border-top: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  background: var(--ah-dg-header-bg);
+  min-height: var(--ah-dg-statusbar-height, 28px);
+}
+
+/* 状态栏行容器 */
+.ah-dg-statusbar-row {
+  display: flex;
+  width: 100%;
+}
+
+/* 状态栏单元格 */
+.ah-dg-statusbar-cell {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  border-right: var(--ah-hairline-width) solid var(--ah-dg-cell-border);
+  overflow: hidden;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.ah-dg-statusbar-item {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.ah-dg-statusbar-label {
+  font-weight: 600;
+}
+
+.ah-dg-statusbar-value {
+  color: var(--ah-color-text);
+}

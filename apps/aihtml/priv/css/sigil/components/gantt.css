@@ -1,0 +1,326 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   甘特图 (Gantt Chart)
+   项目管理甘特图组件，包含侧边栏、时间线、任务条和依赖关系线
+   ============================================================================ */
+
+/* ---- 布局容器 ---- */
+
+.ah-gantt {
+  display: flex;
+  overflow: hidden;
+  font-family: var(--ah-font-family);
+  color: var(--ah-color-grey-800);
+  background: var(--ah-color-bg-paper);
+  border-radius: var(--ah-radius-md);
+  border: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+}
+
+/* ---- 侧边栏 ---- */
+
+.ah-gantt-sidebar {
+  flex-shrink: 0;
+  border-right: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.ah-gantt-sidebar-header {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-grey-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  flex-shrink: 0;
+  /* 两行头部占位 */
+  min-height: 52px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.ah-gantt-sidebar-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.ah-gantt-sidebar-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  font-size: var(--ah-font-size-sm);
+  cursor: default;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ah-gantt-sidebar-row:hover {
+  background: var(--ah-color-grey-50);
+}
+
+.ah-gantt-sidebar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- 展开/折叠图标 ---- */
+
+.ah-gantt-expand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  font-size: 8px;
+  color: var(--ah-color-grey-400);
+  cursor: pointer;
+  transition: transform var(--ah-transition-fast);
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.ah-gantt-expand-icon-expanded {
+  transform: rotate(90deg);
+}
+
+.ah-gantt-expand-icon:hover {
+  color: var(--ah-color-grey-700);
+}
+
+/* ---- 主时间线区域 ---- */
+
+.ah-gantt-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---- 时间线头部 ---- */
+
+.ah-gantt-timeline-header {
+  flex-shrink: 0;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  overflow: hidden;  /* 隐藏滚动条但通过 JS 控制 scrollLeft */
+}
+
+.ah-gantt-header-months {
+  display: flex;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+.ah-gantt-month-cell {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-grey-600);
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border-right: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.ah-gantt-header-days {
+  display: flex;
+}
+
+.ah-gantt-day-cell {
+  font-size: 10px;
+  color: var(--ah-color-grey-400);
+  text-align: center;
+  border-right: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  padding: 2px 0;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.ah-gantt-day-today {
+  background: var(--ah-color-primary-lighter);
+  color: var(--ah-color-primary);
+  font-weight: var(--ah-font-weight-bold);
+}
+
+.ah-gantt-day-weekend {
+  background: var(--ah-color-grey-50);
+}
+
+/* ---- 时间线主体 ---- */
+
+.ah-gantt-timeline-body {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.ah-gantt-tasks-layer {
+  position: relative;
+}
+
+/* 网格行 */
+
+.ah-gantt-grid-row {
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  box-sizing: border-box;
+}
+
+.ah-gantt-grid-row:nth-child(even) {
+  background: var(--ah-color-grey-50);
+}
+
+/* ---- 汇总条（折叠的父级行）---- */
+
+.ah-gantt-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  cursor: default;
+  background: var(--ah-color-grey-600);
+  border-radius: var(--ah-radius-sm);
+}
+
+/* 左端下三角 */
+.ah-gantt-summary-cap {
+  position: absolute;
+  bottom: -6px;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+.ah-gantt-summary-cap-left {
+  left: 0;
+  border-width: 6px 5px 0 5px;
+  border-color: var(--ah-color-grey-600) transparent transparent transparent;
+}
+
+.ah-gantt-summary-cap-right {
+  right: 0;
+  border-width: 6px 5px 0 5px;
+  border-color: var(--ah-color-grey-600) transparent transparent transparent;
+}
+
+.ah-gantt-summary-label {
+  position: relative;
+  z-index: 1;
+  padding: 0 var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-common-white);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
+}
+
+/* ---- 任务条 ---- */
+
+.ah-gantt-task-bar {
+  border-radius: var(--ah-radius-sm);
+  color: var(--ah-color-common-white);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  transition: box-shadow var(--ah-transition-fast);
+  z-index: 2;
+}
+
+.ah-gantt-task-bar:hover {
+  box-shadow: var(--ah-shadow-md);
+  z-index: 3;
+}
+
+.ah-gantt-task-ghost {
+  pointer-events: none;
+}
+
+.ah-gantt-task-progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: var(--ah-radius-sm) 0 0 var(--ah-radius-sm);
+}
+
+.ah-gantt-task-label {
+  padding: 0 var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: relative;
+  z-index: 1;
+}
+
+/* 调整大小手柄 */
+
+.ah-gantt-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 6px;
+  cursor: ew-resize;
+  z-index: 4;
+}
+
+.ah-gantt-resize-left {
+  left: 0;
+}
+
+.ah-gantt-resize-right {
+  right: 0;
+}
+
+.ah-gantt-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ---- 依赖关系线 ---- */
+
+.ah-gantt-deps-layer {
+  z-index: 4;
+}
+
+.ah-gantt-dep-line {
+  transition: stroke var(--ah-transition-fast);
+}
+
+.ah-gantt-dep-line:hover {
+  stroke: var(--ah-color-primary) !important;
+  stroke-width: 2.5 !important;
+}
+
+/* ---- 今日标记 ---- */
+
+.ah-gantt-today-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--ah-color-error);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ah-gantt-today-marker::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 10px;
+  height: 10px;
+  background: var(--ah-color-error);
+  border-radius: 0 0 50% 50%;
+}

@@ -1,0 +1,175 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* =============================================================================
+ * DataGrid 分页器样式
+ * 定义分页控件、每页数量选择、跳转页码等
+ * ============================================================================= */
+
+/* ---- 分页器容器 ---- */
+.ah-dg-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ah-spacing-sm);
+  background-color: var(--ah-color-grey-50);
+  border-top: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  flex-wrap: wrap;
+  gap: var(--ah-spacing-sm);
+}
+
+/* ---- 分页信息 ---- */
+/* 分页信息 */
+.ah-dg-pager-info {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+}
+
+/* ---- 分页控件 ---- */
+/* 分页控件 */
+.ah-dg-pager-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+}
+
+/* ---- 分页按钮 ---- */
+.ah-dg-pager-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  background-color: var(--ah-color-bg);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  transition: all var(--ah-transition-fast);
+}
+
+.ah-dg-pager-button:hover:not(:disabled) {
+  background-color: var(--ah-color-grey-100);
+  border-color: var(--ah-color-grey-300);
+}
+
+.ah-dg-pager-button:active:not(:disabled) {
+  background-color: var(--ah-color-grey-200);
+}
+
+.ah-dg-pager-button:disabled {
+  color: var(--ah-color-text-secondary);
+  background-color: var(--ah-color-grey-50);
+  border-color: var(--ah-color-grey-100);
+  cursor: not-allowed;
+}
+
+.ah-dg-pager-button-active {
+  color: var(--ah-color-common-white);
+  background-color: var(--ah-dg-sort-active-color);
+  border-color: var(--ah-dg-sort-active-color);
+}
+
+.ah-dg-pager-button-active:hover:not(:disabled) {
+  background-color: var(--ah-color-primary-dark);
+  border-color: var(--ah-color-primary-dark);
+}
+
+/* ---- 每页数量选择 ---- */
+.ah-dg-pager-size {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-dg-pager-size-label {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-dg-pager-size-select {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-lg) var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  background-color: var(--ah-color-bg);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 8L2 4h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+}
+
+.ah-dg-pager-size-select:hover {
+  border-color: var(--ah-color-grey-300);
+}
+
+.ah-dg-pager-size-select:focus {
+  border-color: var(--ah-dg-sort-active-color);
+}
+
+/* ---- 简洁分页 ---- */
+.ah-dg-pager-simple {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ah-spacing-sm);
+  background-color: var(--ah-color-grey-50);
+  border-top: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+}
+
+/* ---- 分页信息位置 ---- */
+.ah-dg-pager-left {
+  justify-content: flex-start;
+}
+
+.ah-dg-pager-center {
+  justify-content: center;
+}
+
+.ah-dg-pager-right {
+  justify-content: flex-end;
+}
+
+/* ---- 跳转页码 ---- */
+.ah-dg-pager-goto {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+  margin-left: var(--ah-spacing-sm);
+}
+
+.ah-dg-pager-goto-input {
+  width: 48px;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-sm);
+  text-align: center;
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-sm);
+  outline: none;
+  background-color: var(--ah-color-bg);
+}
+
+.ah-dg-pager-goto-input:focus {
+  border-color: var(--ah-dg-sort-active-color);
+}
+
+/* 分页信息扩展 */
+.ah-dg-pager-info-extended {
+  display: flex;
+  gap: var(--ah-spacing-md);
+}
+
+.ah-dg-pager-info-item {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-dg-pager-info-value {
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text);
+}

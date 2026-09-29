@@ -1,0 +1,70 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 列选择器
+   列显隐控制面板，允许用户选择显示/隐藏哪些数据列
+   ============================================================================ */
+
+/* DataGrid 列选择器面板样式 */
+
+.ah-dg-column-chooser-wrap {
+  position: relative;
+}
+
+.ah-dg-column-chooser {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  z-index: 1000;
+  background: var(--ah-color-common-white, #fff);
+  border: var(--ah-hairline-width) solid #ddd;
+  border-radius: var(--ah-radius-sm);
+  box-shadow: 0 4px 12px rgba(0,0,0,.15);
+  width: 200px;
+  display: none;
+}
+
+.ah-dg-column-chooser-open {
+  display: block;
+}
+
+.ah-dg-column-chooser-header {
+  padding: 8px 12px;
+  font-weight: 600;
+  font-size: 13px;
+  border-bottom: var(--ah-hairline-width) solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ah-dg-column-chooser-close {
+  cursor: pointer;
+  color: var(--ah-color-text-disabled, #999);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.ah-dg-column-chooser-close:hover {
+  color: var(--ah-color-text, #333);
+}
+
+.ah-dg-column-chooser-list {
+  padding: 8px 0;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.ah-dg-column-chooser-item {
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.ah-dg-column-chooser-item:hover {
+  background: var(--ah-color-grey-50, #f5f5f5);
+}

@@ -1,0 +1,172 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Swimlane 泳道图 / 跨职能流程图（借鉴 happy swimlane.css）
+   「泳道 × 阶段」网格 + SVG 正交连线。坐标由 layout 纯函数算，绝对定位。
+   ============================================================================ */
+
+.ah-swimlane {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text);
+}
+.ah-swimlane-content { display: flex; flex: 1; overflow: hidden; }
+
+/* 左泳道面板 */
+.ah-swimlane-lanes { flex-shrink: 0; display: flex; flex-direction: column; border-right: var(--ah-hairline-width) solid var(--ah-color-border); }
+.ah-swimlane-lanes__corner {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--ah-color-text-muted);
+  background: color-mix(in srgb, var(--ah-color-grey-500) 4%, transparent);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+.ah-swimlane-lanes__body { flex: 1; overflow: hidden; }
+.ah-swimlane-lanes__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+  transition: background 0.12s ease;
+}
+.ah-swimlane-lanes__row[data-selected="true"] {
+  background: color-mix(in srgb, var(--ah-color-primary) 12%, transparent);
+}
+.ah-swimlane-lanes__accent { flex-shrink: 0; width: 4px; height: 32px; border-radius: 999px; }
+.ah-swimlane-lanes__name {
+  font-size: 13px; font-weight: 500;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* 右网格 */
+.ah-swimlane-grid { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.ah-swimlane-grid__header {
+  flex-shrink: 0;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--ah-color-grey-500) 4%, transparent);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+.ah-swimlane-grid__header-track { display: flex; height: 100%; }
+.ah-swimlane-grid__phase {
+  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 8px;
+  font-size: 0.7rem; font-weight: 600; text-transform: uppercase; text-align: center;
+  color: var(--ah-color-text-muted);
+  border-right: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+.ah-swimlane-grid__tick-label {
+  display: flex; align-items: center; justify-content: center; height: 100%;
+  font-size: 0.7rem; font-weight: 600; white-space: nowrap;
+  color: var(--ah-color-text-muted);
+}
+.ah-swimlane-grid__body { flex: 1; overflow: auto; position: relative; }
+.ah-swimlane-grid__canvas { position: relative; }
+
+.ah-swimlane-grid__lane-band {
+  position: absolute; left: 0; pointer-events: none;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+.ah-swimlane-grid__lane-band[data-odd="true"] {
+  background: color-mix(in srgb, var(--ah-color-grey-400) 5%, transparent);
+}
+.ah-swimlane-grid__phase-sep {
+  position: absolute; top: 0; width: 1px; pointer-events: none;
+  background: var(--ah-color-border);
+}
+
+/* SVG 连线层 */
+.ah-swimlane-flows { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 1; overflow: visible; }
+.ah-swimlane-flows__line {
+  stroke: var(--ah-color-grey-400); stroke-width: 1.75; fill: none;
+  transition: stroke 0.15s ease, stroke-width 0.15s ease;
+}
+.ah-swimlane-flows__line[data-dashed="true"] { stroke-dasharray: 5 4; }
+.ah-swimlane-flows__head { fill: var(--ah-color-grey-400); }
+.ah-swimlane-flows__head--active { fill: var(--ah-color-primary); }
+.ah-swimlane-flows g[data-active="true"] .ah-swimlane-flows__line {
+  stroke: var(--ah-color-primary); stroke-width: 2.5;
+}
+.ah-swimlane-flows g[data-dim="true"] { opacity: 0.28; }
+.ah-swimlane-flows__label-bg { fill: var(--ah-color-bg); stroke: var(--ah-color-border); stroke-width: 1; }
+.ah-swimlane-flows__label { fill: var(--ah-color-text-muted); font-size: 10px; font-weight: 600; }
+
+/* 节点 */
+.ah-swimlane-node {
+  position: absolute;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; user-select: none;
+  padding: 0 10px;
+  border-radius: var(--ah-radius-md);
+  color: #fff;
+  background-image: linear-gradient(to bottom, color-mix(in srgb, #fff 14%, transparent), transparent 55%);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 2;
+  touch-action: none;
+  transition: filter 0.12s ease, box-shadow 0.12s ease, outline 0.12s ease;
+}
+.ah-swimlane-node:hover { filter: brightness(1.05); box-shadow: 0 3px 10px rgba(0,0,0,0.25); }
+.ah-swimlane-node[data-type="start"],
+.ah-swimlane-node[data-type="end"] { border-radius: 999px; }
+.ah-swimlane-node[data-type="decision"] {
+  border-radius: 0;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+/* ⚠ P15.3：描边宽度原先是 cljs 里内联的 `border:1.5px solid <色>`，内联赢过一切层叠，
+   于是 data-skin 永远改不动它。现在只有**颜色**还内联（它是逐节点的数据），
+   形状回到这里；`currentColor` 承接那个内联色，视觉与原来逐像素一致。 */
+.ah-swimlane-node[data-variant="outline"] {
+  background-color: transparent;
+  background-image: none;
+  border: 1.5px solid currentColor;
+  box-shadow: none;
+}
+.ah-swimlane-node[data-dimmed="true"] { opacity: 0.5; }
+.ah-swimlane-node[data-state="selected"] {
+  outline: 2px solid var(--ah-color-primary); outline-offset: 2px;
+}
+.ah-swimlane-node[data-state="dragging"] {
+  outline: 2px dashed var(--ah-color-primary); box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+  opacity: 0.9; z-index: 4;
+}
+.ah-swimlane-node__label {
+  font-size: 0.75rem; font-weight: 500; line-height: 1.15;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  text-shadow: 0 1px 1px rgba(0,0,0,0.15);
+}
+
+/* 图例 */
+.ah-swimlane-legend {
+  flex-shrink: 0;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
+  padding: 10px 16px;
+  border-top: var(--ah-hairline-width) solid var(--ah-color-border);
+  background: color-mix(in srgb, var(--ah-color-grey-500) 3%, transparent);
+}
+.ah-swimlane-legend__item { display: flex; align-items: center; gap: 6px; }
+.ah-swimlane-legend__swatch {
+  flex-shrink: 0; display: inline-block; width: 22px; height: 14px; border-radius: var(--ah-radius-sm);
+  background: color-mix(in srgb, var(--ah-color-grey-500) 55%, transparent);
+}
+.ah-swimlane-legend__swatch[data-type="start"],
+.ah-swimlane-legend__swatch[data-type="end"] { border-radius: 999px; }
+.ah-swimlane-legend__swatch[data-type="decision"] {
+  width: 16px; height: 16px; border-radius: 0;
+  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+}
+.ah-swimlane-legend__label { font-size: 0.75rem; color: var(--ah-color-text-muted); }

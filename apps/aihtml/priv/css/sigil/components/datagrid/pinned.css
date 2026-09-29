@@ -1,0 +1,71 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 固定列
+   固定列功能：使用 sticky 定位实现列固定，支持左侧和右侧固定，固定列始终可见
+   ============================================================================ */
+
+/* 固定列单元格（通过 JS 动态添加 position:sticky 和 left） */
+.ah-dg-cell-pinned-last,
+.ah-dg-header-cell .ah-dg-cell-pinned-last {
+  box-shadow: 2px 0 4px color-mix(in srgb, var(--ah-color-text) 10%, transparent);
+}
+
+/* 表头固定列 z-index 更高（表头本身也可能 sticky） */
+.ah-dg-header-cell[style*="position: sticky"],
+.ah-dg-header-cell[style*="position:sticky"] {
+  z-index: 3 !important;
+  background-color: var(--ah-dg-pinned-header-bg, var(--ah-dg-header-bg));
+}
+
+/* 表体固定列背景 */
+.ah-dg-cell[style*="position: sticky"],
+.ah-dg-cell[style*="position:sticky"] {
+  background-color: var(--ah-dg-pinned-bg, var(--ah-color-bg));
+}
+
+/* 状态栏固定列背景 */
+.ah-dg-statusbar-cell[style*="position: sticky"],
+.ah-dg-statusbar-cell[style*="position:sticky"] {
+  background-color: var(--ah-dg-pinned-header-bg, var(--ah-dg-header-bg));
+  z-index: 2;
+}
+
+/* 行 hover 时固定列背景跟随 */
+.ah-dg-row:hover > .ah-dg-cell[style*="position: sticky"],
+.ah-dg-row:hover > .ah-dg-cell[style*="position:sticky"] {
+  background-color: var(--ah-dg-row-hover-bg);
+}
+
+/* 行选中时固定列背景跟随 */
+.ah-dg-row-selected > .ah-dg-cell[style*="position: sticky"],
+.ah-dg-row-selected > .ah-dg-cell[style*="position:sticky"] {
+  background-color: var(--ah-dg-row-selected-bg);
+}
+
+/* 交替行固定列背景 */
+.ah-dg-row-even > .ah-dg-cell[style*="position: sticky"],
+.ah-dg-row-even > .ah-dg-cell[style*="position:sticky"] {
+  background-color: var(--ah-dg-pinned-bg, var(--ah-color-bg));
+}
+
+.ah-dg-row-odd > .ah-dg-cell[style*="position: sticky"],
+.ah-dg-row-odd > .ah-dg-cell[style*="position:sticky"] {
+  background-color: var(--ah-dg-pinned-alt-bg, var(--ah-dg-row-alt-bg));
+}
+
+/* hover/selected 覆盖交替行 */
+.ah-dg-row-even:hover > .ah-dg-cell[style*="position:sticky"],
+.ah-dg-row-odd:hover > .ah-dg-cell[style*="position:sticky"],
+.ah-dg-row-even:hover > .ah-dg-cell[style*="position: sticky"],
+.ah-dg-row-odd:hover > .ah-dg-cell[style*="position: sticky"] {
+  background-color: var(--ah-dg-row-hover-bg);
+}
+
+.ah-dg-row-even.ah-dg-row-selected > .ah-dg-cell[style*="position:sticky"],
+.ah-dg-row-odd.ah-dg-row-selected > .ah-dg-cell[style*="position:sticky"],
+.ah-dg-row-even.ah-dg-row-selected > .ah-dg-cell[style*="position: sticky"],
+.ah-dg-row-odd.ah-dg-row-selected > .ah-dg-cell[style*="position: sticky"] {
+  background-color: var(--ah-dg-row-selected-bg);
+}

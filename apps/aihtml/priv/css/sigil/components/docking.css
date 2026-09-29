@@ -1,0 +1,164 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   停靠窗口 (Docking)
+   基于面板的窗口管理容器，支持停靠、浮动和折叠
+   ============================================================================ */
+
+/* ---- 容器 ---- */
+
+.ah-docking {
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+.ah-docking-horizontal {
+  flex-direction: row;
+}
+
+.ah-docking-vertical {
+  flex-direction: column;
+}
+
+/* ---- 面板 ---- */
+
+.ah-docking-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* ---- 窗口 ---- */
+
+.ah-docking-window {
+  display: flex;
+  flex-direction: column;
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  box-shadow: var(--ah-shadow-sm);
+  overflow: hidden;
+}
+
+.ah-docking-window-docked {
+  position: static;
+}
+
+.ah-docking-window-floating {
+  position: absolute;
+  z-index: 1050;
+  box-shadow: var(--ah-shadow-md);
+}
+
+/* ---- 窗口头部 ---- */
+
+.ah-docking-window-header {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  background: var(--ah-color-grey-100);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+  user-select: none;
+  cursor: move;
+  flex: none;
+}
+
+.ah-docking-window-title {
+  flex: 1;
+  font-weight: var(--ah-font-weight-medium);
+  font-size: var(--ah-font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-docking-window-buttons {
+  display: flex;
+  gap: var(--ah-spacing-xs);
+  flex: none;
+  margin-left: var(--ah-spacing-sm);
+}
+
+/* ---- 头部按钮 ---- */
+
+.ah-docking-window-collapse-btn,
+.ah-docking-window-close-btn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast), color var(--ah-transition-fast);
+}
+
+.ah-docking-window-collapse-btn:hover,
+.ah-docking-window-close-btn:hover {
+  background: var(--ah-color-grey-200);
+  color: var(--ah-color-text);
+}
+
+.ah-docking-window-close-btn::after {
+  content: "\00d7";
+  font-size: 16px;
+  line-height: 1;
+}
+
+.ah-docking-window-collapse-btn::after {
+  content: "\25b4";
+  font-size: 10px;
+  line-height: 1;
+}
+
+.ah-docking-window-collapsed .ah-docking-window-collapse-btn::after {
+  content: "\25be";
+}
+
+/* ---- 内容区域 ---- */
+
+.ah-docking-window-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--ah-spacing-md);
+}
+
+/* ---- 折叠状态 ---- */
+
+.ah-docking-window-collapsed .ah-docking-window-content {
+  display: none;
+}
+
+.ah-docking-window-collapsed {
+  height: auto !important;
+}
+
+/* ---- 放置指示器 ---- */
+
+.ah-docking-drop-indicator {
+  height: 4px;
+  background: var(--ah-color-primary);
+  border-radius: 2px;
+  transition: all 0.15s ease;
+  flex: none;
+}
+
+/* ---- 固定（不可拖拽）---- */
+
+.ah-docking-window-pinned .ah-docking-window-header {
+  cursor: default;
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-docking-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

@@ -1,0 +1,227 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Scheduler 日程安排器
+   时间线视图 (Timeline View) - 以水平时间轴方式显示事件
+   ============================================================================ */
+
+/* 时间线视图主容器 */
+.ah-scheduler-timeline {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* --- 头部 --- */
+
+.ah-scheduler-timeline-header {
+  display: flex;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  flex-shrink: 0;
+}
+
+/* 资源列头部 - 固定在左侧 */
+.ah-scheduler-timeline-resource-header {
+  width: 160px;
+  flex-shrink: 0;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-grey-500);
+  border-right: 2px solid var(--ah-color-grey-200);
+}
+
+/* 时间槽头部容器 */
+.ah-scheduler-timeline-slots-header {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 单个时间槽头部 */
+.ah-scheduler-timeline-slot-header {
+  flex-shrink: 0;
+  text-align: center;
+  padding: var(--ah-spacing-xs) 2px;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-500);
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  box-sizing: border-box;
+}
+
+/* 今天的时间槽头部高亮 */
+.ah-scheduler-timeline-slot-today {
+  background: color-mix(in srgb, var(--ah-color-primary) 6%, transparent);
+  color: var(--ah-color-primary);
+  font-weight: var(--ah-font-weight-semibold);
+}
+
+/* --- 主体区域 --- */
+
+.ah-scheduler-timeline-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* --- 资源面板 (固定在左侧) --- */
+
+/* 资源面板容器 */
+.ah-scheduler-timeline-resource-panel {
+  width: 160px;
+  flex-shrink: 0;
+  overflow-y: auto;
+  border-right: 2px solid var(--ah-color-grey-200);
+}
+
+/* 资源单元格 */
+.ah-scheduler-timeline-resource-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  height: 40px;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  box-sizing: border-box;
+}
+
+.ah-scheduler-timeline-resource-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ah-scheduler-timeline-resource-name {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-grey-700);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* --- 可滚动网格 --- */
+
+.ah-scheduler-timeline-scroll {
+  flex: 1;
+  overflow: auto;
+}
+
+.ah-scheduler-timeline-grid {
+  position: relative;
+}
+
+/* --- 资源行 --- */
+
+.ah-scheduler-timeline-row {
+  height: 40px;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  position: relative;
+}
+
+.ah-scheduler-timeline-row-events {
+  position: relative;
+  height: 100%;
+}
+
+/* --- 网格线 --- */
+
+.ah-scheduler-timeline-grid-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 0;
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+/* --- 事件条 --- */
+
+.ah-scheduler-timeline-event {
+  position: absolute;
+  top: 4px;
+  height: calc(100% - 8px);
+  min-width: 6px;
+  border-radius: var(--ah-radius-sm);
+  color: var(--ah-color-common-white);
+  font-size: var(--ah-font-size-xs);
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  cursor: pointer;
+  overflow: hidden;
+  box-sizing: border-box;
+  z-index: 1;
+  transition: opacity var(--ah-transition-fast);
+}
+
+.ah-scheduler-timeline-event:hover {
+  opacity: 0.85;
+}
+
+.ah-scheduler-timeline-event-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: var(--ah-font-weight-medium);
+}
+
+/* --- 调整大小手柄 (左右) --- */
+
+.ah-scheduler-timeline-resize-handle {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  cursor: ew-resize;
+  background: transparent;
+  z-index: 2;
+}
+
+.ah-scheduler-timeline-resize-handle:hover {
+  background: color-mix(in srgb, var(--ah-color-text) 12%, transparent);
+}
+
+.ah-scheduler-timeline-resize-left {
+  left: -4px;
+}
+
+.ah-scheduler-timeline-resize-right {
+  right: -4px;
+}
+
+/* --- 响应式 --- */
+@media (max-width: 640px) {
+  .ah-scheduler-timeline-resource-header,
+  .ah-scheduler-timeline-resource-panel {
+    width: 100px;
+  }
+  .ah-scheduler-timeline-resource-cell {
+    height: 36px;
+    padding: 2px 4px;
+  }
+  .ah-scheduler-timeline-resource-name {
+    font-size: var(--ah-font-size-xs);
+  }
+  .ah-scheduler-timeline-row {
+    height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .ah-scheduler-timeline-resource-header,
+  .ah-scheduler-timeline-resource-panel {
+    width: 70px;
+  }
+  .ah-scheduler-timeline-resource-name {
+    font-size: 10px;
+  }
+  .ah-scheduler-timeline-event {
+    padding: 0 3px;
+    font-size: 10px;
+  }
+  .ah-scheduler-timeline-resource-dot {
+    width: 6px;
+    height: 6px;
+  }
+}

@@ -1,0 +1,32 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 自动行高
+   开启后单元格内容可自动换行，行高根据内容自动扩展
+   ============================================================================ */
+
+/* DataGrid 自动行高 */
+
+.ah-dg-auto-height .ah-dg-row {
+  height: auto;
+  min-height: var(--ah-dg-row-height, 36px);
+}
+
+.ah-dg-auto-height .ah-dg-cell {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  min-height: var(--ah-dg-row-height, 36px);
+  height: auto;
+  align-items: flex-start;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.ah-dg-auto-height .ah-dg-cell-content {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  word-break: break-word;
+}

@@ -1,0 +1,157 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Scheduler 日程安排器
+   议程视图 (Agenda View) - 以列表形式显示日程安排
+   ============================================================================ */
+
+/* 议程视图容器 */
+.ah-scheduler-agenda {
+  padding: var(--ah-spacing-sm);
+}
+
+/* 议程视图空状态 - 当没有事件时显示 */
+.ah-scheduler-agenda-empty {
+  padding: var(--ah-spacing-xl);
+  text-align: center;
+  color: var(--ah-color-grey-400);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* 空状态图标 */
+.ah-scheduler-agenda-empty-icon {
+  font-size: var(--ah-font-size-2xl);
+  margin-bottom: var(--ah-spacing-xs);
+  opacity: 0.5;
+}
+
+/* 空状态提示文字 */
+.ah-scheduler-agenda-empty-hint {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-300);
+  margin-top: var(--ah-spacing-xs);
+}
+
+/* 按日期分组的容器 */
+.ah-scheduler-agenda-day-group {
+  margin-bottom: var(--ah-spacing-sm);
+}
+
+/* 日期分组头部 - 显示日期和星期 */
+.ah-scheduler-agenda-day-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  background: var(--ah-color-grey-50);
+  border-radius: var(--ah-radius-sm);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* 星期几名称 */
+.ah-scheduler-agenda-day-name {
+  font-weight: var(--ah-font-weight-semibold);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-grey-800);
+}
+
+/* 具体日期 */
+.ah-scheduler-agenda-day-date {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-500);
+}
+
+/* 事件列表容器 */
+.ah-scheduler-agenda-day-events {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 单个事件项 */
+.ah-scheduler-agenda-event {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  padding-left: var(--ah-spacing-md);
+  cursor: pointer;
+  border-radius: var(--ah-radius-sm);
+  transition: background var(--ah-transition-fast);
+}
+
+.ah-scheduler-agenda-event:hover {
+  background: var(--ah-color-grey-50);
+}
+
+/* 事件状态指示条 - 根据事件状态显示不同颜色 */
+.ah-scheduler-agenda-event-status {
+  width: 3px;
+  border-radius: 2px;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+/* 资源/人员指示点 */
+.ah-scheduler-agenda-event-resource-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* 事件时间显示 */
+.ah-scheduler-agenda-event-time {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-500);
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+/* 事件标题 */
+.ah-scheduler-agenda-event-title {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-grey-800);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 资源/人员名称 - 显示在右侧 */
+.ah-scheduler-agenda-event-resource-name {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-400);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* --- 响应式 --- */
+@media (max-width: 640px) {
+  .ah-scheduler-agenda-event-time {
+    min-width: 80px;
+    font-size: 10px;
+  }
+  .ah-scheduler-agenda-event-resource-name {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .ah-scheduler-agenda-event {
+    padding: var(--ah-spacing-xs) 4px;
+    padding-left: 8px;
+    gap: 4px;
+  }
+  .ah-scheduler-agenda-event-time {
+    min-width: 60px;
+    font-size: 9px;
+  }
+  .ah-scheduler-agenda-event-title {
+    font-size: var(--ah-font-size-xs);
+  }
+  .ah-scheduler-agenda-day-header {
+    padding: 2px 4px;
+  }
+}

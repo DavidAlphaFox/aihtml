@@ -1,0 +1,787 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   NodeGraph 工作流节点图（借鉴 happy node-graph.css，类名改扁平双类）
+   卡片 + 类型化插槽 + SVG 连线的无限画布。前缀：.ah-node-graph-
+   ============================================================================
+
+   两条不能动的几何约定（改之前先读）：
+
+   1. 卡片的边框用 `box-shadow: inset`，**不能换成 border**。
+      槽圆点的圆心要精确落在卡片外缘上（连线端点是 node_graph/geometry.cljs
+      算出来的），1px 的 border 会把内容盒挪进去 1px，全图连线一起脱靶。
+   2. 标题栏高 30px、body 上内边距 4px、每个槽行 20px —— 这三个数与
+      geometry.cljs 的 title-height / body-pad-top / slot-height 一一对应，
+      改一边就得改另一边，否则连线接不到圆点上。
+
+   ⚠ 本组件的布局是 **JS 按像素算**出来的（相机代数 + 槽坐标），故所有 chrome
+   描边一律走 `--ah-hairline-width`（外形轴不许翻），与 datagrid / gantt /
+   swimlane / drawn 同列。见 tokens.css 里两个描边 token 的判据。
+
+   ⚠ 数据类型色（--ah-datatype-*）**故意不跟 data-palette 走**，理由见
+   node_graph/colors.cljs：它编码的是「这根线里流的是什么数据」，属用户数据色。
+   除此之外所有颜色都走 --ah-* 语义 token，切 palette / skin 会跟着变。
+   ============================================================================ */
+
+/* ---------- 数据类型色板 ----------
+   缺省值取 ComfyUI dark 调色板的 node_slot。下游要整组换掉，
+   在自己的作用域里重定义这些变量即可，不必碰组件。 */
+.ah-node-graph {
+  --ah-datatype-default: var(--ah-color-grey-500);
+  --ah-datatype-MODEL: #b39ddb;
+  --ah-datatype-CLIP: #ffd500;
+  --ah-datatype-CLIP_VISION: #a8dadc;
+  --ah-datatype-CLIP_VISION_OUTPUT: #ad7452;
+  --ah-datatype-CONDITIONING: #ffa931;
+  --ah-datatype-CONTROL_NET: #6ee7b7;
+  --ah-datatype-IMAGE: #64b5f6;
+  --ah-datatype-LATENT: #ff9cf9;
+  --ah-datatype-MASK: #81c784;
+  --ah-datatype-STYLE_MODEL: #c2ffae;
+  --ah-datatype-VAE: #ff6e6e;
+  --ah-datatype-NOISE: #b0b0b0;
+  --ah-datatype-GUIDER: #66ffff;
+  --ah-datatype-SAMPLER: #ecb4b4;
+  --ah-datatype-SIGMAS: #cdffcd;
+  --ah-datatype-TAESD: #dcc274;
+
+  --ah-ng-link-width: 3px;
+  --ah-ng-dot-size: 9px;
+}
+
+/* ---------- 容器与视口 ---------- */
+.ah-node-graph {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text);
+}
+
+.ah-node-graph-viewport {
+  position: absolute;
+  inset: 0;
+  outline: none;
+  touch-action: none;
+  cursor: default;
+}
+.ah-node-graph-viewport:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+/* 抓手：工具条按下、或按住空格 —— 光标先给出「这里能拖」的提示，真拖起来再握紧 */
+.ah-node-graph-viewport[data-hand="true"] {
+  cursor: grab;
+}
+.ah-node-graph-viewport[data-panning="true"],
+.ah-node-graph-viewport[data-hand="true"][data-panning="true"] {
+  cursor: grabbing;
+}
+/* 抓手开着时卡片也不再暗示「可以单独拖」 */
+.ah-node-graph-viewport[data-hand="true"] .ah-node-graph-node,
+.ah-node-graph-viewport[data-hand="true"] .ah-node-graph-group-header {
+  cursor: inherit;
+}
+
+/* 网格画在视口上、不在 transform 容器里：缩放时格子是「疏密变化」，
+   跟着被放大的话很快就成马赛克了。 */
+.ah-node-graph-viewport[data-grid="true"] {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--ah-color-text) 16%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: var(--ah-ng-grid-size, 50px) var(--ah-ng-grid-size, 50px);
+  background-position: var(--ah-ng-grid-x, 0) var(--ah-ng-grid-y, 0);
+}
+
+/* 相机唯一的作用点。子元素全是绝对定位，这个盒子本身多大不影响布局，
+   但**不能给 0** —— 连线层的 `overflow: visible` 得挂在一个有尺寸的祖先上
+   才会绘制溢出内容（0×0 时 Chrome 直接什么都不画）。 */
+.ah-node-graph-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 0;
+}
+
+.ah-node-graph-nodes,
+.ah-node-graph-groups {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ---------- 连线层 ----------
+   不设 viewBox：path 里的坐标就是 graph 坐标。尺寸取满父盒 + overflow:visible，
+   画到框外的连线照样可见。⚠ 宽高给 0 会让 Chrome 一条线都不画（happy 侧实测）。 */
+.ah-node-graph-links {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.ah-node-graph-link-line {
+  fill: none;
+  stroke: var(--ah-datatype-default);
+  stroke-width: var(--ah-ng-link-width);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* 细线根本点不中：命中交给一条与它同形的透明宽 stroke */
+.ah-node-graph-link-hit {
+  fill: none;
+  stroke: transparent;
+  stroke-width: 14;
+  pointer-events: stroke;
+  cursor: pointer;
+}
+
+.ah-node-graph-link:hover .ah-node-graph-link-line {
+  stroke-width: calc(var(--ah-ng-link-width) + 1px);
+}
+
+.ah-node-graph-link[data-selected="true"] .ah-node-graph-link-line {
+  stroke: var(--ah-color-primary);
+  stroke-width: calc(var(--ah-ng-link-width) + 1px);
+}
+
+.ah-node-graph-drag-link .ah-node-graph-link-line {
+  stroke-dasharray: 6 5;
+}
+.ah-node-graph-drag-link[data-invalid="true"] .ah-node-graph-link-line {
+  stroke: var(--ah-color-error);
+}
+
+/* 连线中转点 */
+.ah-node-graph-waypoint {
+  pointer-events: all;
+  cursor: grab;
+  stroke: var(--ah-color-bg);
+  stroke-width: 2;
+}
+.ah-node-graph-waypoint:hover {
+  r: 7;
+}
+
+/* ---------- 框选 ---------- */
+.ah-node-graph-marquee {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  border: var(--ah-hairline-width) solid var(--ah-color-primary);
+  background: color-mix(in srgb, var(--ah-color-primary) 12%, transparent);
+}
+
+/* ---------- 节点卡 ---------- */
+.ah-node-graph-node {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  width: var(--ah-ng-node-width, 240px);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-paper);
+  color: var(--ah-color-text);
+  /* ⚠ inset 描边而非 border —— 见文件头第 1 条 */
+  box-shadow:
+    inset 0 0 0 var(--ah-hairline-width) var(--ah-color-border),
+    var(--ah-shadow-sm);
+  cursor: grab;
+  user-select: none;
+}
+.ah-node-graph-node[data-dragging="true"] {
+  cursor: grabbing;
+  box-shadow:
+    inset 0 0 0 var(--ah-hairline-width) var(--ah-color-border),
+    var(--ah-shadow-lg);
+}
+.ah-node-graph-node[data-selected="true"] {
+  box-shadow:
+    inset 0 0 0 var(--ah-hairline-width) var(--ah-color-primary),
+    0 0 0 2px color-mix(in srgb, var(--ah-color-primary) 45%, transparent),
+    var(--ah-shadow-md);
+}
+
+/* 卡片被拉过高度后就锁高，内容自己滚；没拉过的仍按内容自适应 */
+.ah-node-graph-node[data-sized="true"] {
+  height: var(--ah-ng-node-height, auto);
+}
+/* ⚠ 滚动条只能开在 widget / 自定义内容上，**不能开在 body 上**：
+   槽圆点是骑在卡片边缘上的（一半在盒子外），body 一旦 overflow != visible
+   就会把每个圆点裁掉半边。槽区因此永远不参与滚动 —— 改尺寸时的最小高度
+   也按「装得下所有槽行」来钳，见 node_graph.cljs。 */
+.ah-node-graph-node[data-sized="true"] .ah-node-graph-node-body {
+  flex: 1;
+  min-height: 0;
+}
+.ah-node-graph-node[data-sized="true"] .ah-node-graph-widgets,
+.ah-node-graph-node[data-sized="true"] .ah-node-graph-custom {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden auto;
+}
+
+/* 标题栏（高度锁死 30px，见文件头第 2 条） */
+.ah-node-graph-node-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  overflow: hidden;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: var(--ah-radius-sm) var(--ah-radius-sm) 0 0;
+  background: color-mix(
+    in srgb,
+    var(--ah-ng-node-accent, var(--ah-color-grey-500)) 12%,
+    var(--ah-color-bg-paper)
+  );
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+.ah-node-graph-node[data-collapsed="true"] .ah-node-graph-node-header {
+  border-bottom: 0;
+  border-radius: var(--ah-radius-sm);
+}
+
+.ah-node-graph-collapse {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ah-color-text-secondary);
+  cursor: pointer;
+}
+/* 折叠箭头用 CSS 画：为一个三角形拉一整包图标不划算 */
+.ah-node-graph-collapse::before {
+  content: "";
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  transition: transform 0.15s ease;
+}
+.ah-node-graph-node[data-collapsed="true"] .ah-node-graph-collapse::before {
+  transform: rotate(-90deg);
+}
+
+.ah-node-graph-node-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+}
+.ah-node-graph-node-title-input,
+.ah-node-graph-group-title-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+  background: transparent;
+  outline: none;
+  color: inherit;
+  border: 0;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-primary);
+}
+.ah-node-graph-node-type {
+  flex-shrink: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--ah-color-text-secondary);
+}
+
+/* 折叠态两侧的连接指示点 */
+.ah-node-graph-stub {
+  position: absolute;
+  display: block;
+  top: 15px;
+  width: var(--ah-ng-dot-size);
+  height: var(--ah-ng-dot-size);
+  border-radius: var(--ah-radius-full);
+  background: var(--ah-ng-dot-color, var(--ah-datatype-default));
+  box-shadow: 0 0 0 1px var(--ah-color-bg-paper);
+}
+.ah-node-graph-stub[data-side="in"] {
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+.ah-node-graph-stub[data-side="out"] {
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+/* ---------- 节点体 ---------- */
+.ah-node-graph-node-body {
+  display: flex;
+  flex-direction: column;
+  /* 这两个值与 geometry.cljs 的 body-pad-top / body-pad-bottom 一一对应 */
+  padding-top: 4px;
+  padding-bottom: 8px;
+}
+
+.ah-node-graph-slots {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+/* 两列都不能有横向内边距：列的外缘就是卡片外缘，圆点要贴着它 */
+.ah-node-graph-slot-col {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.ah-node-graph-slot-col[data-side="out"] {
+  margin-left: auto;
+  align-items: flex-end;
+}
+
+/* ---------- 槽 ---------- */
+.ah-node-graph-slot {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  height: 20px; /* = geometry/slot-height */
+  transition: opacity 0.12s ease;
+}
+.ah-node-graph-slot[data-kind="output"] {
+  justify-content: flex-end;
+}
+
+.ah-node-graph-slot-hit {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  cursor: crosshair;
+  touch-action: none;
+}
+.ah-node-graph-slot[data-kind="input"] .ah-node-graph-slot-hit {
+  left: 0;
+  transform: translateX(-50%);
+}
+.ah-node-graph-slot[data-kind="output"] .ah-node-graph-slot-hit {
+  right: 0;
+  transform: translateX(50%);
+}
+
+.ah-node-graph-slot-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--ah-color-text-secondary);
+}
+/* 14px = 圆点半径 + 留白：标签不能压在骑在卡片边缘上的圆点身上 */
+.ah-node-graph-slot[data-kind="input"] .ah-node-graph-slot-label {
+  padding-left: 14px;
+}
+.ah-node-graph-slot[data-kind="output"] .ah-node-graph-slot-label {
+  padding-right: 14px;
+}
+.ah-node-graph-slot[data-optional="true"] .ah-node-graph-slot-label {
+  font-style: italic;
+  opacity: 0.75;
+}
+
+/* 拖线时：不兼容的槽整体压暗，候选落点放大高亮 */
+.ah-node-graph-slot[data-drag-state="dimmed"] {
+  opacity: 0.35;
+}
+.ah-node-graph-slot[data-drag-state="candidate"] .ah-node-graph-dot {
+  transform: scale(1.5);
+}
+
+/* ---------- 连接圆点 ---------- */
+.ah-node-graph-dot {
+  display: block;
+  width: var(--ah-ng-dot-size);
+  height: var(--ah-ng-dot-size);
+  background: var(--ah-ng-dot-color, var(--ah-datatype-default));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--ah-color-text) 30%, transparent);
+  transition: transform 0.12s ease;
+}
+.ah-node-graph-dot[data-multi="true"] {
+  background: transparent;
+}
+.ah-node-graph-dot[data-shape="circle"] {
+  border-radius: var(--ah-radius-full);
+}
+.ah-node-graph-dot[data-shape="square"] {
+  border-radius: 2px;
+}
+.ah-node-graph-dot[data-shape="grid"] {
+  border-radius: 1px;
+}
+/* 空心点：上游用来表示「可选 / 未定型」的槽 */
+.ah-node-graph-dot[data-shape="hollow"] {
+  border-radius: var(--ah-radius-full);
+  background: var(--ah-color-bg-paper);
+  box-shadow: inset 0 0 0 2px var(--ah-ng-dot-color, var(--ah-datatype-default));
+}
+.ah-node-graph-slot-hit:hover .ah-node-graph-dot {
+  transform: scale(1.3);
+}
+
+/* ---------- widget 区 ---------- */
+.ah-node-graph-widgets {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 4px 8px 0;
+}
+.ah-node-graph-widget {
+  cursor: auto;
+}
+.ah-node-graph-custom {
+  padding: 8px 8px 0;
+  cursor: auto;
+}
+
+/* 右下角改尺寸手柄：平时隐形，悬停卡片才浮出来 */
+.ah-node-graph-node-resize {
+  position: absolute;
+  display: block;
+  right: 0;
+  bottom: 0;
+  width: 14px;
+  height: 14px;
+  opacity: 0;
+  cursor: nwse-resize;
+  touch-action: none;
+  background: linear-gradient(
+    135deg,
+    transparent 0 55%,
+    var(--ah-color-text-secondary) 55% 68%,
+    transparent 68% 78%,
+    var(--ah-color-text-secondary) 78% 91%,
+    transparent 91%
+  );
+  transition: opacity 0.12s ease;
+}
+.ah-node-graph-node:hover .ah-node-graph-node-resize {
+  opacity: 0.7;
+}
+
+/* 只读：光标退回默认，别再暗示「可以拖」 */
+.ah-node-graph[data-read-only="true"] .ah-node-graph-node,
+.ah-node-graph[data-read-only="true"] .ah-node-graph-slot-hit {
+  cursor: default;
+}
+
+/* ---------- 分组框 ---------- */
+.ah-node-graph-group {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--ah-radius-sm);
+  border: var(--ah-hairline-width) solid
+    color-mix(in srgb, var(--ah-ng-group-color, var(--ah-color-grey-500)) 45%, transparent);
+  background: color-mix(
+    in srgb,
+    var(--ah-ng-group-color, var(--ah-color-grey-500)) 8%,
+    transparent
+  );
+}
+
+.ah-node-graph-group-header {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: var(--ah-radius-sm) var(--ah-radius-sm) 0 0;
+  background: color-mix(
+    in srgb,
+    var(--ah-ng-group-color, var(--ah-color-grey-500)) 16%,
+    transparent
+  );
+  cursor: grab;
+  user-select: none;
+}
+.ah-node-graph-group-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-text);
+}
+
+/* 删除按钮直接摆在标题栏上：分组框没有别的可见入口，
+   只留右键/快捷键的话用户会以为它删不掉 */
+.ah-node-graph-group-delete {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ah-radius-sm);
+  background: none;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ah-color-text-secondary);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.12s ease;
+}
+.ah-node-graph-group:hover .ah-node-graph-group-delete {
+  opacity: 1;
+}
+.ah-node-graph-group-delete:hover {
+  color: var(--ah-color-error);
+  background: color-mix(in srgb, var(--ah-color-error) 12%, transparent);
+}
+
+.ah-node-graph-group-resize {
+  position: absolute;
+  display: block;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+  cursor: nwse-resize;
+  touch-action: none;
+  background: linear-gradient(
+    135deg,
+    transparent 0 58%,
+    var(--ah-color-text-secondary) 58% 72%,
+    transparent 72%
+  );
+  transition: opacity 0.12s ease;
+}
+.ah-node-graph-group:hover .ah-node-graph-group-resize {
+  opacity: 0.7;
+}
+
+/* ---------- 浮层：工具条 / 缩略图 ---------- */
+.ah-node-graph-toolbar {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  right: 12px;
+  bottom: 12px;
+  gap: 2px;
+  padding: 4px;
+  border-radius: var(--ah-radius-sm);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  background: var(--ah-color-bg-paper);
+  box-shadow: var(--ah-shadow-md);
+}
+
+.ah-node-graph-tool {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ah-radius-sm);
+  background: none;
+  color: var(--ah-color-text-secondary);
+  cursor: pointer;
+}
+.ah-node-graph-tool:hover:not(:disabled) {
+  background: var(--ah-color-bg-hover);
+  color: var(--ah-color-text);
+}
+.ah-node-graph-tool[data-active="true"] {
+  background: color-mix(in srgb, var(--ah-color-primary) 16%, transparent);
+  color: var(--ah-color-primary);
+}
+.ah-node-graph-tool:disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+}
+.ah-node-graph-tool svg {
+  width: 15px;
+  height: 15px;
+}
+
+.ah-node-graph-zoom {
+  min-width: 40px;
+  text-align: center;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-node-graph-minimap {
+  position: absolute;
+  overflow: hidden;
+  left: 12px;
+  bottom: 12px;
+  width: 176px;  /* = search/mini-w */
+  height: 120px; /* = search/mini-h */
+  border-radius: var(--ah-radius-sm);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  background: color-mix(in srgb, var(--ah-color-bg-paper) 88%, transparent);
+  box-shadow: var(--ah-shadow-md);
+  cursor: pointer;
+}
+.ah-node-graph-minimap-node {
+  position: absolute;
+  display: block;
+  border-radius: 1px;
+  background: color-mix(in srgb, var(--ah-color-text) 35%, transparent);
+}
+.ah-node-graph-minimap-node[data-selected="true"] {
+  background: var(--ah-color-primary);
+}
+.ah-node-graph-minimap-view {
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  border: var(--ah-hairline-width) solid var(--ah-color-primary);
+  background: color-mix(in srgb, var(--ah-color-primary) 10%, transparent);
+}
+
+/* ---------- 节点搜索菜单 ---------- */
+.ah-node-graph-search {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  width: 240px;
+  border-radius: var(--ah-radius-sm);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  background: var(--ah-color-bg-paper);
+  box-shadow: var(--ah-shadow-lg);
+}
+
+.ah-node-graph-search-input {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  font-size: var(--ah-font-size-xs);
+  background: transparent;
+  outline: none;
+  color: var(--ah-color-text);
+  border: 0;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+}
+
+.ah-node-graph-search-list {
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.ah-node-graph-search-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text);
+  cursor: pointer;
+}
+.ah-node-graph-search-item[data-active="true"],
+.ah-node-graph-search-item:hover {
+  background: var(--ah-color-bg-hover);
+}
+.ah-node-graph-search-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ah-node-graph-search-cat {
+  flex-shrink: 0;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-node-graph-search-empty {
+  padding: 12px;
+  text-align: center;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+}
+
+/* ---------- 右键菜单 ---------- */
+.ah-node-graph-ctxmenu {
+  position: absolute;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 150px;
+  border-radius: var(--ah-radius-sm);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  background: var(--ah-color-bg-paper);
+  box-shadow: var(--ah-shadow-lg);
+}
+
+.ah-node-graph-ctxmenu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  font-size: var(--ah-font-size-xs);
+  text-align: left;
+  color: var(--ah-color-text);
+  cursor: pointer;
+}
+.ah-node-graph-ctxmenu-item:hover:not(:disabled) {
+  background: var(--ah-color-bg-hover);
+}
+.ah-node-graph-ctxmenu-item:disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+}
+.ah-node-graph-ctxmenu-item[data-danger="true"] {
+  color: var(--ah-color-error);
+}
+.ah-node-graph-ctxmenu-hint {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ah-color-text-secondary);
+}

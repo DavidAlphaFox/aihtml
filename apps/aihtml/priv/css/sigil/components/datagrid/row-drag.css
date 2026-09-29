@@ -1,0 +1,37 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 行拖拽排序
+   行拖拽排序功能：通过拖拽行重新排列数据顺序，显示拖拽指示器和占位符
+   ============================================================================ */
+
+/* 拖拽手柄 - 行的拖拽按钮 */
+.ah-dg-drag-handle {
+  cursor: grab;
+  text-align: center;
+  user-select: none;
+  font-size: 14px;
+  color: var(--ah-color-text-disabled, #999);
+}
+
+.ah-dg-drag-handle:hover {
+  color: var(--ah-color-text-secondary, #666);
+}
+
+/* 拖拽中的行 - 半透明显示 */
+.ah-dg-row-dragging {
+  opacity: 0.4;
+}
+
+/* 放置位置指示器 - 显示行将要放置的位置 */
+.ah-dg-drop-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ah-color-primary, #4285F4);
+  pointer-events: none;
+  z-index: 10;
+  display: none;
+}

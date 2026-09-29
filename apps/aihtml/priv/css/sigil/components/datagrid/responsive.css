@@ -1,0 +1,58 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 响应式布局
+   响应式功能：支持卡片视图模式，将表格转换为移动端友好的卡片布局
+   ============================================================================ */
+
+/* 卡片视图 - 隐藏表头 */
+.ah-dg-card-view .ah-dg-header-wrap {
+  display: none;
+}
+
+/* 卡片视图 - 表体 flex 布局 */
+.ah-dg-card-view .ah-dg-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+}
+
+/* 卡片视图 - 行变为垂直卡片 */
+.ah-dg-card-view .ah-dg-row {
+  flex-direction: column;
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color, #e8e8e8);
+  border-radius: var(--ah-radius-sm);
+  padding: 8px;
+  width: 100%;
+  height: auto;
+}
+
+/* 卡片视图 - 单元格全宽 */
+.ah-dg-card-view .ah-dg-cell {
+  width: 100% !important;
+  white-space: normal;
+  overflow: visible;
+}
+
+/* 卡片视图 - 单元格前置标签 */
+.ah-dg-card-view .ah-dg-cell[data-label]::before {
+  content: attr(data-label);
+  font-weight: 600;
+  margin-right: 8px;
+  min-width: 80px;
+  display: inline-block;
+  color: var(--ah-color-text-secondary, #8c8c8c);
+}
+
+/* 卡片视图 - 隐藏复选框和拖拽手柄 */
+.ah-dg-card-view .ah-dg-cell-checkbox,
+.ah-dg-card-view .ah-dg-drag-handle {
+  display: none;
+}
+
+/* 卡片视图 - 隐藏分页器状态栏 */
+.ah-dg-card-view .ah-dg-statusbar-wrap {
+  display: none;
+}

@@ -1,0 +1,134 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* =============================================================================
+ * DataGrid 单元格样式
+ * 定义单元格布局、对齐方式、特殊类型等
+ * ============================================================================= */
+
+/* ---- 单元格基础 ---- */
+.ah-dg-cell {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm);
+  border-right: var(--ah-hairline-width) solid var(--ah-dg-cell-border);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  min-height: var(--ah-dg-row-height, 36px);
+}
+
+.ah-dg-cell:last-child {
+  border-right: none;
+}
+
+/* ---- 单元格内容 ---- */
+.ah-dg-cell-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 对齐方式 ---- */
+.ah-dg-cell.ah-dg-align-left {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.ah-dg-cell.ah-dg-align-center {
+  justify-content: center;
+  text-align: center;
+}
+
+.ah-dg-cell.ah-dg-align-right {
+  justify-content: flex-end;
+  text-align: right;
+}
+
+/* ---- 单元格交互状态 ---- */
+/* 单元格选择 */
+.ah-dg-cell-selected {
+  outline: 2px solid var(--ah-dg-sort-active-color);
+  outline-offset: -2px;
+}
+
+/* 单元格悬停 */
+.ah-dg-cell-hover {
+  background-color: var(--ah-color-grey-50);
+}
+
+/* ---- 复选框单元格 ---- */
+.ah-dg-cell-checkbox {
+  justify-content: center;
+}
+
+.ah-dg-cell-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--ah-dg-sort-active-color);
+}
+
+/* ---- 可编辑单元格 ---- */
+.ah-dg-cell-editable {
+  cursor: text;
+}
+
+.ah-dg-cell-editable:hover {
+  background-color: var(--ah-color-grey-50);
+}
+
+/* ---- 编辑器输入框 ---- */
+.ah-dg-cell-editor {
+  width: 100%;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-hairline-width) solid var(--ah-dg-sort-active-color);
+  border-radius: var(--ah-radius-sm);
+  font-size: inherit;
+  outline: none;
+  background-color: var(--ah-color-bg);
+}
+
+.ah-dg-cell-editor:focus {
+  box-shadow: var(--ah-dg-focus-shadow);
+}
+
+/* ---- 单元格渲染器 ---- */
+.ah-dg-cell-renderer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- 特殊类型样式 ---- */
+/* 链接样式 */
+.ah-dg-cell a {
+  color: var(--ah-dg-sort-active-color);
+  text-decoration: none;
+}
+
+.ah-dg-cell a:hover {
+  text-decoration: underline;
+}
+
+/* 数值 */
+.ah-dg-cell-number {
+  font-family: var(--ah-font-family);
+}
+
+/* 布尔值 */
+.ah-dg-cell-boolean {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 日期 */
+.ah-dg-cell-date {
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-xs);
+}

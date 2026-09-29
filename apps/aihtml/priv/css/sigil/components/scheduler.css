@@ -1,0 +1,17 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================
+   Scheduler — 日程调度器组件
+   用于管理和展示日程事件，支持多种视图（日视图、周视图、月视图、时间轴等）
+   ============================================================ */
+
+/* ---- 调度器导入样式 ---- */
+@import "./scheduler/root.css";
+@import "./scheduler/toolbar.css";
+@import "./scheduler/day.css";
+@import "./scheduler/month.css";
+@import "./scheduler/timeline.css";
+@import "./scheduler/agenda.css";
+@import "./scheduler/dialog.css";
+@import "./scheduler/contextmenu.css";

@@ -1,0 +1,49 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 列菜单
+   用于列操作的弹出菜单，支持列排序、筛选、固定列等功能的快捷入口
+   ============================================================================ */
+
+/* 列菜单容器 */
+.ah-dg-column-menu {
+  position: fixed;
+  z-index: 300;
+  display: none;
+  background: var(--ah-color-bg);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-lg);
+  padding: 4px 0;
+  min-width: 160px;
+}
+
+/* 列菜单显示状态 */
+.ah-dg-column-menu-open {
+  display: block;
+}
+
+/* 列菜单项 */
+.ah-dg-column-menu-item {
+  padding: 6px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 列菜单项悬停状态 */
+.ah-dg-column-menu-item:hover {
+  background: var(--ah-dg-row-hover-bg);
+}
+
+/* 列菜单分隔线 */
+.ah-dg-column-menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--ah-dg-border-color);
+}

@@ -1,0 +1,62 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 右键菜单
+   单元格/行级别的上下文菜单，提供复制、删除、编辑等操作的快捷入口
+   ============================================================================ */
+
+/* 右键菜单容器 */
+.ah-dg-context-menu {
+  position: fixed;
+  z-index: 300;
+  display: none;
+  background: var(--ah-color-bg);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-lg);
+  padding: 4px 0;
+  min-width: 150px;
+}
+
+/* 右键菜单显示状态 */
+.ah-dg-context-menu-open {
+  display: block;
+}
+
+/* 右键菜单项 */
+.ah-dg-context-menu-item {
+  padding: 6px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 右键菜单项悬停状态 */
+.ah-dg-context-menu-item:hover {
+  background: var(--ah-dg-row-hover-bg);
+}
+
+/* 右键菜单分隔线 */
+.ah-dg-context-menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--ah-dg-border-color);
+}
+
+/* 禁用状态菜单项 */
+.ah-dg-context-menu-item-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* 菜单项图标 */
+.ah-dg-context-menu-icon {
+  width: 16px;
+  text-align: center;
+  flex-shrink: 0;
+}

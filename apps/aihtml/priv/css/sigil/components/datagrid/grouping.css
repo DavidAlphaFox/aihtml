@@ -1,0 +1,77 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 分组
+   支持数据按指定列进行分组显示，可展开/折叠分组并显示聚合数据
+   ============================================================================ */
+
+/* 分组行 - 扩展 body.css 中的基础样式 */
+.ah-dg-group-row {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-weight: var(--ah-font-weight-semibold);
+  background-color: var(--ah-color-grey-100);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-dg-cell-border);
+  cursor: pointer;
+  user-select: none;
+  min-height: 36px;
+  box-sizing: border-box;
+}
+
+/* 分组行悬停状态 */
+.ah-dg-group-row:hover {
+  background-color: var(--ah-color-grey-200);
+}
+
+/* 缩进占位 */
+.ah-dg-group-indent {
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+/* 展开/折叠箭头 */
+.ah-dg-group-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  color: var(--ah-color-text-secondary);
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+}
+
+/* 展开状态（展开时旋转箭头） */
+.ah-dg-group-toggle-open {
+  transform: rotate(90deg);
+}
+
+/* 分组标题 */
+.ah-dg-group-title {
+  flex: 1;
+  padding: 0 var(--ah-spacing-xs);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 分组行内聚合 */
+.ah-dg-group-aggregates {
+  display: flex;
+  gap: var(--ah-spacing-md);
+  padding-left: var(--ah-spacing-md);
+  flex-shrink: 0;
+}
+
+/* 聚合数据项 */
+.ah-dg-group-agg-item {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-normal);
+  color: var(--ah-color-text-secondary);
+  white-space: nowrap;
+}

@@ -1,0 +1,55 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 常驻新增行
+   始终显示在表格底部的快速新增行，提供便捷的数据录入功能
+   ============================================================================ */
+
+/* 常驻新增行容器 */
+.ah-dg-ever-present-row {
+  display: flex;
+  border-bottom: 2px solid var(--ah-color-primary, #4285F4);
+  background: var(--ah-color-primary-lighter, #f0f0ff);
+  align-items: center;
+}
+
+/* 常驻新增行单元格 */
+.ah-dg-ever-present-cell {
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+/* 常驻新增行输入框 */
+.ah-dg-ever-present-input {
+  width: 100%;
+  border: var(--ah-hairline-width) solid #ddd;
+  padding: 4px 8px;
+  border-radius: 2px;
+  font-size: 13px;
+  outline: none;
+}
+
+/* 常驻新增行输入框聚焦状态 */
+.ah-dg-ever-present-input:focus {
+  border-color: var(--ah-color-primary, #4285F4);
+}
+
+/* 新增按钮（带加号的图标按钮） */
+.ah-dg-ever-present-add {
+  cursor: pointer;
+  color: var(--ah-color-primary, #4285F4);
+  font-weight: bold;
+  font-size: 18px;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  user-select: none;
+}
+
+/* 新增按钮悬停状态 */
+.ah-dg-ever-present-add:hover {
+  color: var(--ah-color-primary-dark, #1a73e8);
+}

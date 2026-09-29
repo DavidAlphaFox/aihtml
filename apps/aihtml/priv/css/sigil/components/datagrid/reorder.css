@@ -1,0 +1,28 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   DataGrid 列拖拽排序
+   列拖拽排序功能：通过拖拽表头重新排列列顺序，显示位置指示器帮助定位
+   ============================================================================ */
+
+/* 拖拽辅助元素 - 拖拽时显示的半透明列预览 */
+.ah-dg-reorder-helper {
+  position: absolute;
+  opacity: 0.7;
+  z-index: 200;
+  pointer-events: none;
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  background: var(--ah-dg-header-bg);
+  box-shadow: var(--ah-shadow-md);
+}
+
+/* 位置指示器 - 显示列将要放置的位置 */
+.ah-dg-reorder-indicator {
+  position: absolute;
+  width: 2px;
+  background: var(--ah-color-primary);
+  z-index: 201;
+  top: 0;
+  pointer-events: none;
+}

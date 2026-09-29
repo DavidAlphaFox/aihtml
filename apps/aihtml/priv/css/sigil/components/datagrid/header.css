@@ -1,0 +1,180 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* =============================================================================
+ * DataGrid 表头样式
+ * 定义表头单元格、排序、筛选等功能
+ * ============================================================================= */
+
+/* ---- 表头容器 ---- */
+.ah-dg-header {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--ah-dg-header-bg);
+  border-bottom: 2px solid var(--ah-dg-header-border);
+  user-select: none;
+}
+
+/* ---- 表头行 ---- */
+.ah-dg-header-row {
+  display: flex;
+  flex-wrap: nowrap;
+}
+
+/* ---- 表头单元格 ---- */
+.ah-dg-header-cell {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm);
+  font-weight: var(--ah-font-weight-semibold);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  background-color: var(--ah-dg-header-bg);
+  border-right: var(--ah-hairline-width) solid var(--ah-dg-header-border);
+  cursor: pointer;
+  transition: background-color var(--ah-transition-fast);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.ah-dg-header-cell:last-child {
+  border-right: none;
+}
+
+.ah-dg-header-cell:hover {
+  background-color: var(--ah-dg-row-hover-bg);
+}
+
+/* 表头单元格内容 */
+/* ---- 表头单元格内容 ---- */
+.ah-dg-header-cell-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 排序图标 ---- */
+.ah-dg-header-sort-icon {
+  margin-left: var(--ah-spacing-xs);
+  font-size: 10px;
+  color: var(--ah-color-text-secondary);
+  transition: color var(--ah-transition-fast);
+}
+
+.ah-dg-header-cell-sorted .ah-dg-header-sort-icon {
+  color: var(--ah-dg-sort-active-color);
+}
+
+/* ---- 列宽调整 ---- */
+.ah-dg-header-cell-resizable {
+  position: relative;
+  padding-right: var(--ah-spacing-md);
+}
+
+.ah-dg-header-cell-resizable::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+}
+
+.ah-dg-header-cell-resizable:hover::after {
+  background-color: var(--ah-dg-sort-active-color);
+}
+
+/* ---- 复选框列 ---- */
+.ah-dg-header-cell-checkbox {
+  justify-content: center;
+  cursor: default;
+}
+
+.ah-dg-header-checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--ah-dg-sort-active-color);
+}
+
+/* ---- 过滤行 ---- */
+.ah-dg-header-filter-row {
+  display: flex;
+  flex-wrap: nowrap;
+  border-top: var(--ah-hairline-width) solid var(--ah-dg-header-border);
+  background-color: var(--ah-color-bg);
+}
+
+.ah-dg-filter-cell {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border-right: var(--ah-hairline-width) solid var(--ah-dg-cell-border);
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.ah-dg-filter-cell:last-child {
+  border-right: none;
+}
+
+.ah-dg-filter-cell-active {
+  background-color: var(--ah-dg-filter-active-bg);
+}
+
+.ah-dg-filter-input {
+  width: 100%;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-hairline-width) solid var(--ah-dg-border-color);
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-xs);
+  outline: none;
+  transition: border-color var(--ah-transition-fast), box-shadow var(--ah-transition-fast);
+}
+
+.ah-dg-filter-input:focus {
+  border-color: var(--ah-dg-sort-active-color);
+  box-shadow: var(--ah-dg-focus-shadow);
+}
+
+/* ---- 多列排序优先级徽标 ---- */
+.ah-dg-header-sort-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: var(--ah-font-weight-bold, 700);
+  color: var(--ah-dg-sort-active-color);
+  margin-left: 1px;
+  vertical-align: super;
+  line-height: 1;
+}
+
+/* ---- 列菜单按钮 ---- */
+.ah-dg-column-menu-btn {
+  display: none;
+  margin-left: 4px;
+  padding: 0 4px;
+  cursor: pointer;
+  color: var(--ah-color-text-secondary);
+  font-size: 14px;
+  line-height: 1;
+  border-radius: var(--ah-radius-sm);
+  flex-shrink: 0;
+}
+
+.ah-dg-header-cell:hover .ah-dg-column-menu-btn {
+  display: inline-block;
+}
+
+.ah-dg-column-menu-btn:hover {
+  color: var(--ah-color-text);
+  background: var(--ah-dg-row-hover-bg);
+}
+
+/* ---- 过滤图标 ---- */
+.ah-dg-filter-icon {
+  margin-left: var(--ah-spacing-xs);
+  color: var(--ah-dg-filter-active-color);
+  font-size: var(--ah-font-size-xs);
+}
