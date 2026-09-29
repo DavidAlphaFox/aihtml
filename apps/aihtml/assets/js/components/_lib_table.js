@@ -13,20 +13,18 @@
   // A fresh id per table instance (namespaces its document handlers).
   function nextId() { return ++seq; }
 
+  // Keys are joined by AH.lib.values (a comma in a key is escaped).
   function keysOf(el) {
-    var v = el.getAttribute("data-ah-value") || "";
-    return v ? v.split(",") : [];
+    return AH.lib.values.split(el.getAttribute("data-ah-value") || "");
   }
 
   function toKeys(v) {
     if (v === null || v === undefined) { return []; }
-    if (Array.isArray(v)) { return v.map(String); }
-    v = String(v);
-    return v ? v.split(",") : [];
+    return AH.lib.values.split(Array.isArray(v) ? v : String(v));
   }
 
   function writeValue(el, keys) {
-    var v = keys.join(",");
+    var v = AH.lib.values.join(keys);
     el.setAttribute("data-ah-value", v);
     $(el).children("input[type=hidden][data-ah-input]").val(v);
   }

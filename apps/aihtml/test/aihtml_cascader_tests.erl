@@ -222,3 +222,22 @@ records_match_catalog_test() ->
      end || #{name := N} = E <- ?M:catalog()].
 
 default(ah_cascader) -> #ah_cascader{}.
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    Tree = [{<<"a,b">>, <<"AB">>, [{<<"c\\d">>, <<"CD">>}]}],
+    H = r(?M:cascader(Tree, [<<"a,b">>, <<"c\\d">>], [], [{id, <<"cc">>}, {name, p}])),
+    ?assert(vhas(<<"data-ah-value=\"a\\,b,c\\\\d\"">>, H)),
+    ?assert(vhas(<<"value=\"a\\,b,c\\\\d\"">>, H)),
+    ?assert(vhas(<<"data-parent=\"a\\,b\"">>, H)),
+    %% a lazy level's path comes back in the same form
+    Ops = aihtml_action:render_ops(
+            fun(Ctx) ->
+                    ?M:cascader_children(Ctx, #{data => #{<<"cascader">> => <<"cc">>},
+                                                value => <<"a\\,b,c\\\\d">>}, [<<"e">>])
+            end),
+    [#{op := html, html := Cols}, #{op := call, args := [Path]}] = Ops,
+    ?assertEqual(<<"a\\,b,c\\\\d">>, Path),
+    ?assert(vhas(<<"data-parent=\"a\\,b,c\\\\d\"">>, Cols)).

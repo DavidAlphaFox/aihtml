@@ -66,16 +66,19 @@
   }
 
   // kind: {radio, sync(input), item selector, disabled class}
-  function groupValue($el) {
-    return $el.find(INPUT).filter(":checked").map(function () {
+  // A radio group's value is the checked value itself; a checkbox group's
+  // is AH.lib.values text ("a,b", commas in values escaped).
+  function groupValue($el, kind) {
+    var vals = $el.find(INPUT).filter(":checked").map(function () {
       return this.value;
-    }).get().join(",");
+    }).get();
+    return kind.radio ? (vals.length ? vals[0] : "") : AH.lib.values.join(vals);
   }
 
   function syncGroup($el, kind) {
     var $inputs = $el.find(INPUT);
     $inputs.each(function () { kind.sync(this); });
-    $el.attr("data-ah-value", groupValue($el));
+    $el.attr("data-ah-value", groupValue($el, kind));
     if (kind.radio) {
       // roving tab stop: the checked radio, else the first enabled one
       var $enabled = $inputs.filter(":not(:disabled)");
@@ -88,7 +91,8 @@
 
   function setGroupValue($el, kind, v) {
     var vals = Array.isArray(v) ? v.map(String)
-      : (v === null || v === undefined || v === "") ? [] : String(v).split(",");
+      : (v === null || v === undefined || v === "") ? []
+      : kind.radio ? [String(v)] : AH.lib.values.split(v);
     if (kind.radio) { vals = vals.slice(0, 1); }
     $el.find(INPUT).each(function () {
       this.checked = vals.indexOf(this.value) >= 0;
@@ -144,11 +148,11 @@
         if (kind.radio) { arrowKeys(el, $el, kind); }
       },
       methods: {
-        // a value, an array or "a,b"; does not fire change
+        // a value, an array or "a,b" (AH.lib.values); does not fire change
         setValue: function (el, $el, v) { setGroupValue($el, kind, v); },
         getValue: function (el, $el) {
-          var v = groupValue($el);
-          return kind.radio ? v : (v ? v.split(",") : []);
+          var v = groupValue($el, kind);
+          return kind.radio ? v : AH.lib.values.split(v);
         },
         setDisabled: function (el, $el, on) { setGroupDisabled(el, $el, kind, on); }
       }

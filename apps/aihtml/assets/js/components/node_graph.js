@@ -810,13 +810,13 @@
   }
 
   function setSelection(st, nodes, links) {
-    var before = st.sel.join(",");
+    var before = AH.lib.values.join(st.sel);
     st.sel = nodes;
     st.lsel = links;
     applySelection(st);
     renderMinimap(st);
-    if (st.sel.join(",") !== before) {
-      st.el.setAttribute("data-selection", st.sel.join(","));
+    if (AH.lib.values.join(st.sel) !== before) {
+      st.el.setAttribute("data-selection", AH.lib.values.join(st.sel));
       $(st.el).trigger("ah:selection-change", [st.sel.slice()]);
     }
   }

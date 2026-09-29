@@ -6,7 +6,8 @@
 %%%   listbox_items(Ctx, Event, Items)      (in an action) new list rows
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
-%%% `data-ah-value' (values joined with commas) and fires `change'; `name'
+%%% `data-ah-value' (with `multiple' the values joined by aihtml_value:join/1)
+%%% and fires `change'; `name'
 %%% goes to a hidden input. The rows are rendered here; the behaviour
 %%% (assets/js/components/listbox.js) shows, hides and marks them.
 %%%
@@ -31,7 +32,7 @@
 -export([listbox/4, listbox_items/3, listbox_items/4,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
--import(aihtml_lib_list, [item/1, ensure_id/1, sub_id/2, hidden/2, text/1, join/1]).
+-import(aihtml_lib_list, [item/1, ensure_id/1, sub_id/2, hidden/2, text/1, value/2]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -89,9 +90,9 @@ render(#ah_listbox{items = Items0, value = Value, name = Name,
                   ?H:el('div', R#ah_listbox.empty_text, [<<"ah-listbox-empty">>],
                         [{hidden, Items =/= []}])],
                  [<<"ah-listbox-content">>], []),
-           hidden(Name, join(Selected))],
+           hidden(Name, value(Multi, Selected))],
           [Classes, [<<"ah-listbox-remote">> || Search =/= []]],
-          [[{id, Id}, {data_ah, <<"listbox">>}, {data_ah_value, join(Selected)},
+          [[{id, Id}, {data_ah, <<"listbox">>}, {data_ah_value, value(Multi, Selected)},
             {tabindex, case Disabled of true -> <<"-1">>; false -> <<"0">> end},
             {role, listbox}, {aria_multiselectable, atom_to_binary(Multi)},
             {aria_disabled, Disabled andalso <<"true">>}],
@@ -190,7 +191,8 @@ catalog() ->
        option_docs =>
            #{disabled => <<"Not focusable, no selection.">>,
              multiple => <<"Several values: Ctrl+click toggles, Shift+click and Shift+arrows "
-                           "select a range, Space toggles; value \"a,b,c\".">>,
+                           "select a range, Space toggles; value \"a,b,c\" (a comma inside a "
+                           "value is escaped as \\,; aihtml_value:split/1 reads it).">>,
              checkboxes => <<"Multiple, with a check box on every row; a click toggles it.">>,
              check_all => <<"With checkboxes: a row above the list that checks every visible "
                             "row.">>,

@@ -220,7 +220,7 @@ render(#ah_gantt{items = Items, editable = Editable} = R0) ->
             {data_origin, ?D:iso_date(From)},
             {data_column_width, CW}, {data_row_height, RH},
             {data_editable, Editable},
-            {data_collapsed, lists:join(<<",">>, Collapsed)}],
+            {data_collapsed, aihtml_value:join(Collapsed)}],
            ?E:root_attrs(R, 'ah:task-change')]).
 
 gantt_task(#{id := Id0, start := S0, 'end' := E0} = T) ->
@@ -366,8 +366,7 @@ dep_d(X1, Y1, X2, Y2, false) ->
 gantt_update(Ctx, #{id := Id, data := Data}, #ah_gantt{} = G) ->
     Collapsed = case maps:get(<<"collapsed">>, Data, undefined) of
                     undefined -> G#ah_gantt.collapsed;
-                    <<>> -> [];
-                    C -> binary:split(C, <<",">>, [global])
+                    C -> aihtml_value:split(C)
                 end,
     aihtml_action:html(Ctx, {id, Id}, G#ah_gantt{id = Id, collapsed = Collapsed}, morph).
 

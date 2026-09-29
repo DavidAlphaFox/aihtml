@@ -58,9 +58,18 @@ sortable_disabled_test() ->
     ?has(<<"aria-disabled=\"true\"">>, H),
     ?hasnt(<<"tabindex=\"0\"">>, H).
 
+sortable_comma_key_test() ->
+    Items = [{<<"a,b">>, <<"x">>}, {<<"c\\d">>, <<"y">>}, {e, <<"z">>}],
+    H = r(?M:sortable(Items, undefined, [], [{name, o}])),
+    ?has(<<"data-ah-value=\"a\\,b,c\\\\d,e\"">>, H),
+    ?has(<<"name=\"o\" value=\"a\\,b,c\\\\d,e\"">>, H),
+    ?has(<<"data-value=\"a,b\"">>, H),
+    %% a value in the same text puts them in order
+    H2 = r(?M:sortable(Items, <<"e,c\\\\d,a\\,b">>, [], [])),
+    ?has(<<"data-ah-value=\"e,c\\\\d,a\\,b\"">>, H2),
+    ?assertEqual(H2, r(?M:sortable(Items, [e, <<"c\\d">>, <<"a,b">>], [], []))).
+
 sortable_bad_items_test() ->
-    ?assertError({aihtml, {bad_item_key, <<"a,b">>}},
-                 r(?M:sortable([{<<"a,b">>, <<"x">>}], undefined, [], []))),
     ?assertError(function_clause, r(?M:sortable([<<"x">>], undefined, [], []))).
 
 %%% catalog

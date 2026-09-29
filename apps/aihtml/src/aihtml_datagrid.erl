@@ -10,7 +10,7 @@
 %%%   datagrid_select(Query, Rows)               apply a query to rows in memory
 %%%
 %%% The grid is value-bearing: the root carries `data-ah-value' (the
-%%% selected row keys, comma separated) and fires `change' when the user
+%%% selected row keys, comma separated by aihtml_value) and fires `change' when the user
 %%% changes the selection; a `name' in Attrs goes to a hidden input.
 %%%
 %%% == Events ==
@@ -1324,9 +1324,11 @@ catalog() ->
                         "page; without it the grid loads its first page when it mounts.">>},
        methods =>
            [#{name => setValue, args => <<"(Keys)">>,
-              doc => <<"Select the rows with these keys (a list or comma separated), "
-                       "without firing change.">>},
-            #{name => getValue, args => <<"()">>, doc => <<"Return the selected keys, comma separated.">>},
+              doc => <<"Select the rows with these keys (a list or comma separated text, "
+                       "see aihtml_value), without firing change.">>},
+            #{name => getValue, args => <<"()">>,
+              doc => <<"Return the selected keys, comma separated (a comma inside a key "
+                       "is escaped as \\,; aihtml_value:split/1 reads it).">>},
             #{name => sort, args => <<"(Field, Dir)">>,
               doc => <<"Sort by a column (\"asc\", \"desc\" or null to clear).">>},
             #{name => filter, args => <<"(Field, Text)">>, doc => <<"Set a column filter.">>},
@@ -1367,12 +1369,12 @@ hidden_input(undefined, _) -> [];
 hidden_input(Name, Value) ->
     ?H:void(input, [], [{type, hidden}, {name, Name}, {value, Value}, {data_ah_input, true}]).
 
-join(Vs) -> iolist_to_binary(lists:join(<<",">>, Vs)).
+join(Vs) -> aihtml_value:join(Vs).
 
 bool_int(true) -> 1;
 bool_int(false) -> 0.
 
-json(T) -> iolist_to_binary(json:encode(T)).
+json(T) -> iolist_to_binary(aihtml_json:encode(T)).
 
 num_text(V) when is_integer(V) -> integer_to_binary(V);
 num_text(V) when is_float(V) ->

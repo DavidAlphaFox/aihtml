@@ -180,3 +180,15 @@ default(ah_gantt) -> #ah_gantt{}.
 
 generated_id_test() ->
     ?assertNotEqual(r(#ah_gantt{}), r(#ah_gantt{})).
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_collapsed_test() ->
+    G = ?M:gantt(tasks(), [], []),
+    [#{op := html, html := H}] =
+        aihtml_action:render_ops(
+          fun(Ctx) ->
+                  ?M:gantt_update(Ctx, #{id => <<"g1">>, data => #{<<"collapsed">> => <<"a\\,b,c">>}}, G)
+          end),
+    ?assert(vhas(<<"data-collapsed=\"a\\,b,c\"">>, H)).

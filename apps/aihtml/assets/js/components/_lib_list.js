@@ -20,9 +20,17 @@
     if (fire && old !== value) { $el.trigger("change"); }
   }
 
-  function split(v) {
+  // A value text (AH.lib.values) or an array -> values. With `single`
+  // true a text is one value, commas and all.
+  function split(v, single) {
     if (v == null || v === "") { return []; }
-    return Array.isArray(v) ? v.map(String) : String(v).split(",");
+    if (Array.isArray(v)) { return v.map(String); }
+    return single ? [String(v)] : AH.lib.values.split(v);
+  }
+
+  // The value text of values: joined, or with `single` the one value.
+  function join(vals, single) {
+    return single ? (vals.length ? String(vals[0]) : "") : AH.lib.values.join(vals);
   }
 
   function shown(li) { return li.style.display !== "none"; }
@@ -43,6 +51,7 @@
     ensureId: ensureId,
     publish: publish,
     split: split,
+    join: join,
     shown: shown,
     enabled: enabled,
     scrollInto: scrollInto

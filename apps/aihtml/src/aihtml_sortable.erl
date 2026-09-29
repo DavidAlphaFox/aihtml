@@ -108,10 +108,7 @@ dedup([X | T], Seen) ->
 
 item({K, Content}) -> item({K, Content, []});
 item({K0, Content, IA}) ->
-    K = bin(K0),
-    %% the order is written as "a,b,c"
-    binary:match(K, <<",">>) =:= nomatch orelse error({aihtml, {bad_item_key, K0}}),
-    {K, Content, IA}.
+    {bin(K0), Content, IA}.
 
 %%%===================================================================
 %%% Catalog
@@ -136,9 +133,12 @@ catalog() ->
            #{handle => <<"Render a grip in front of each item; only the grip starts a drag.">>,
              group => <<"Lists with the same group exchange items by dragging.">>},
        methods =>
-           [#{name => getValue, args => <<"()">>, doc => <<"Return the order, \"a,b,c\".">>},
+           [#{name => getValue, args => <<"()">>,
+              doc => <<"Return the order, \"a,b,c\" (a comma inside a key is escaped as "
+                       "\\,; aihtml_value:split/1 reads it).">>},
             #{name => setValue, args => <<"(Order)">>,
-              doc => <<"Reorder the items (a list or \"a,b,c\") without firing change.">>},
+              doc => <<"Reorder the items (a list or \"a,b,c\" as by aihtml_value) without "
+                       "firing change.">>},
             #{name => enable, args => <<"()">>, doc => <<"Turn sorting on.">>},
             #{name => disable, args => <<"()">>, doc => <<"Turn sorting off.">>},
             #{name => cancel, args => <<"()">>,
@@ -157,7 +157,7 @@ opt_text(_, undefined) -> undefined;
 opt_text(K, V) ->
     try bin(V) catch error:_ -> error({aihtml, {bad_option, K, V}}) end.
 
-values(B) when is_binary(B) -> binary:split(B, <<",">>, [global, trim_all]);
+values(B) when is_binary(B) -> [V || V <- aihtml_value:split(B), V =/= <<>>];
 values(L) when is_list(L) ->
     case io_lib:printable_unicode_list(L) of
         true when L =/= [] -> values(bin(L));
@@ -165,7 +165,7 @@ values(L) when is_list(L) ->
     end;
 values(Other) -> error({aihtml, {bad_value, Other}}).
 
-join(Vs) -> iolist_to_binary(lists:join(<<",">>, Vs)).
+join(Vs) -> aihtml_value:join(Vs).
 
 bin(B) when is_binary(B) -> B;
 bin(A) when is_atom(A) -> atom_to_binary(A, utf8);

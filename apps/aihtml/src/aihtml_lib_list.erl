@@ -2,12 +2,12 @@
 %%% @doc Internal helpers shared by the list selection components
 %%% (cascader, listbox, transfer, ported from sigil): list items, the
 %%% generated root id and the ids of its parts, the hidden input and the
-%%% comma-joined value. Not part of the public API.
+%%% joined value (aihtml_value). Not part of the public API.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_lib_list).
 
--export([item/1, ensure_id/1, sub_id/2, hidden/2, text/1, join/1]).
+-export([item/1, ensure_id/1, sub_id/2, hidden/2, text/1, join/1, value/2]).
 
 -export_type([item/0, norm_item/0]).
 
@@ -65,6 +65,13 @@ text(B) when is_binary(B) -> B;
 text(L) when is_list(L) -> unicode:characters_to_binary(L);
 text(X) -> beamai_html_escape:to_binary(X, aihtml).
 
-%% @doc Values joined with commas (data-ah-value).
+%% @doc Values joined with commas (data-ah-value), a comma inside a
+%% value escaped (aihtml_value:join/1).
 -spec join([binary()]) -> binary().
-join(Vs) -> iolist_to_binary(lists:join(<<",">>, Vs)).
+join(Vs) -> aihtml_value:join(Vs).
+
+%% @doc The value text of a list: joined when it holds several values
+%% (`Multi'), the single value itself (or "") otherwise.
+-spec value(boolean(), [binary()]) -> binary().
+value(true, Vs) -> join(Vs);
+value(false, Vs) -> iolist_to_binary(Vs).

@@ -136,3 +136,17 @@ records_match_catalog_test() ->
      end || #{name := N} = E <- ?M:catalog()].
 
 default(ah_button_group) -> #ah_button_group{}.
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    Items = [{<<"a,b">>, <<"AB">>}, {c, <<"C">>}],
+    C = r(?M:button_group(Items, [<<"a,b">>, c], [checkbox], [{name, k}])),
+    ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, C)),
+    ?assert(vhas(<<"name=\"k\" value=\"a\\,b,c\"">>, C)),
+    %% the text form is read the same way
+    ?assertEqual(C, r(?M:button_group(Items, <<"a\\,b,c">>, [checkbox], [{name, k}]))),
+    %% radio mode: the value itself
+    R = r(?M:button_group(Items, <<"a,b">>, [radio], [])),
+    ?assert(vhas(<<"data-ah-value=\"a,b\"">>, R)).

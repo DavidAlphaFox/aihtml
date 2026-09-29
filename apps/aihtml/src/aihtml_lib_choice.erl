@@ -176,7 +176,7 @@ selected_value(Sel, Items) ->
     end.
 
 -spec join_values([binary()]) -> binary().
-join_values(Vs) -> iolist_to_binary(lists:join(<<",">>, Vs)).
+join_values(Vs) -> aihtml_value:join(Vs).
 
 -spec check_opt(atom(), atom(), binary(), [binary()]) -> binary().
 check_opt(Name, Key, V, Allowed) ->
@@ -252,7 +252,7 @@ set_disabled() ->
 -spec set_value(boolean()) -> method().
 set_value(true) ->
     #{name => setValue, args => <<"(values | \"a,b\")">>,
-      doc => <<"Check exactly these values; no change event.">>};
+      doc => <<"Check exactly these values (a list, or text split by aihtml_value); no change event.">>};
 set_value(false) ->
     #{name => setValue, args => <<"(value)">>,
       doc => <<"Select this value (\"\" for none); no change event.">>}.

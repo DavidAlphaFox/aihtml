@@ -24,6 +24,7 @@
 
   var NS = AH.NS;
   var L = AH.lib.table;
+  var V = AH.lib.values;
   var keysOf = L.keysOf;
   var toKeys = L.toKeys;
   var writeValue = L.writeValue;
@@ -263,9 +264,9 @@
     $(d).toggleClass("ah-dt-row-details-hidden", !open);
     $(tr).find("> td > .ah-dt-expand-btn").toggleClass("ah-dt-expand-btn-open", open)
       .attr("aria-expanded", String(open));
-    var list = (el.getAttribute("data-expanded") || "").split(",").filter(function (k) { return k && k !== key; });
+    var list = V.split(el.getAttribute("data-expanded")).filter(function (k) { return k && k !== key; });
     if (open) { list.push(key); }
-    if (list.length) { el.setAttribute("data-expanded", list.join(",")); } else { el.removeAttribute("data-expanded"); }
+    if (list.length) { el.setAttribute("data-expanded", V.join(list)); } else { el.removeAttribute("data-expanded"); }
     if (user) { dtEvent(el, open ? "ah:row-expand" : "ah:row-collapse", key); }
   }
 
@@ -286,7 +287,7 @@
     dtRows(el).each(function () { var c = dtCell(this, field); if (c) { c.hidden = hide; } });
     var hidden = $(row).children("th[data-field]").filter(function () { return this.hidden; })
       .map(function () { return this.getAttribute("data-field"); }).get();
-    if (hidden.length) { el.setAttribute("data-hidden", hidden.join(",")); } else { el.removeAttribute("data-hidden"); }
+    if (hidden.length) { el.setAttribute("data-hidden", V.join(hidden)); } else { el.removeAttribute("data-hidden"); }
     var span = $(row).children("th").filter(function () { return !this.hidden; }).length;
     $(dtBody(el)).find("> tr > td.ah-dt-cell-empty, > tr > td.ah-dt-row-details-cell").attr("colspan", span);
     $(el).children(".ah-dt-chooser-panel").find(".ah-dt-chooser-checkbox").each(function () {
@@ -596,10 +597,10 @@
       collapseRow: function (el, $el, key) { dtSetDetails(el, String(key), false, false); },
       refresh: function (el) {
         markRows(dtRows(el), "ah-dt", keysOf(el), el.getAttribute("data-selection"));
-        (el.getAttribute("data-hidden") || "").split(",").filter(Boolean).forEach(function (f) {
+        V.split(el.getAttribute("data-hidden")).filter(Boolean).forEach(function (f) {
           dtRows(el).each(function () { var c = dtCell(this, f); if (c) { c.hidden = true; } });
         });
-        (el.getAttribute("data-expanded") || "").split(",").filter(Boolean).forEach(function (k) {
+        V.split(el.getAttribute("data-expanded")).filter(Boolean).forEach(function (k) {
           var d = dtDetail(el, k);
           if (d && $(d).hasClass("ah-dt-row-details-hidden")) {
             $(d).removeClass("ah-dt-row-details-hidden");

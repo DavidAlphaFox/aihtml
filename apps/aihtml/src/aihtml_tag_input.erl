@@ -36,7 +36,8 @@
 %% new lines; duplicates are dropped. Options: `placeholder' (default
 %% "Add tag…"), `max_tags', `allow_duplicates' (default false),
 %% `chip_color' (default primary), `chip_variant' (default soft).
-%% `data-ah-value' is the tags joined with commas.
+%% `data-ah-value' is the tags joined with commas (aihtml_value:join/1: a
+%% comma inside a tag, from `Tags' or setTags, is escaped as `\,').
 -spec tag_input([binary()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_tag_input{}.
 tag_input(Tags, Css, Attrs) when is_list(Tags) ->
     aihtml_element:build(?MODULE, #ah_tag_input{value = Tags}, Css, Attrs).
@@ -60,7 +61,7 @@ render(#ah_tag_input{value = Tags0, name = Name, disabled = Disabled,
                      {placeholder, default(Placeholder, <<"Add tag…"/utf8>>)},
                      {aria_label, default(Placeholder, <<"Add tag">>)},
                      {disabled, Disabled}]),
-    Value = iolist_to_binary(lists:join(<<",">>, Tags)),
+    Value = aihtml_value:join(Tags),
     ?H:el('div', [Chips, Field, ?L:hidden(Name, Value, Disabled)],
           Classes,
           [[{data_ah, <<"tag-input">>}, {role, group},
@@ -94,7 +95,8 @@ catalog() ->
                                         "warning, error or info.">>,
                         chip_variant => <<"Chip style: soft (default), filled or outlined.">>,
                         name => <<"Name of the hidden input; its value is the tags joined "
-                                  "with commas.">>},
+                                  "with commas (a comma inside a tag is escaped as \\,; "
+                                  "aihtml_value:split/1 reads it).">>},
        methods => [?M(getTags, <<"()">>, <<"Return the tags as an array.">>),
                    ?M(setTags, <<"(Tags)">>, <<"Replace the tags, firing change.">>),
                    ?M(add, <<"(Tag)">>, <<"Add a tag (subject to max_tags and duplicates).">>),

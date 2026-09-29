@@ -30,7 +30,8 @@
     var vals = groupButtons($el).filter(".ah-btn-group-btn-selected").map(function () {
       return this.getAttribute("data-value");
     }).get();
-    L.setValue($el, vals.join(","), fire);
+    // radio: the value itself; checkbox: AH.lib.values text
+    L.setValue($el, groupMode($el) === "radio" ? (vals[0] || "") : AH.lib.values.join(vals), fire);
   }
 
   function groupSet($el, values) {
@@ -87,7 +88,10 @@
     },
     methods: {
       setValue: function (el, $el, v) {
-        groupSet($el, Array.isArray(v) ? v : String(v == null ? "" : v).split(",").filter(Boolean));
+        var vals = Array.isArray(v) ? v
+          : v == null || v === "" ? []
+          : groupMode($el) === "radio" ? [String(v)] : AH.lib.values.split(v);
+        groupSet($el, vals.filter(function (x) { return x !== ""; }));
       },
       getValue: function (el, $el) { return $el.attr("data-ah-value"); },
       clear: function (el, $el) { groupSet($el, []); }

@@ -261,3 +261,15 @@ records_match_catalog_test() ->
      end || #{name := N} = E <- ?M:catalog()].
 
 default(ah_combobox) -> #ah_combobox{}.
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    Items = [<<"a,b">>, <<"c">>, <<"d\\e">>],
+    M = r(?M:combobox(Items, [<<"a,b">>, <<"d\\e">>], [multiple], [{name, k}])),
+    ?assert(vhas(<<"data-ah-value=\"a\\,b,d\\\\e\"">>, M)),
+    ?assert(vhas(<<"name=\"k\" value=\"a\\,b,d\\\\e\"">>, M)),
+    %% a single value is written as it is
+    S = r(?M:combobox(Items, <<"a,b">>, [], [])),
+    ?assert(vhas(<<"data-ah-value=\"a,b\"">>, S)).

@@ -5,8 +5,8 @@
 %%%
 %%% A column is a field name, `{Field, Title}' or a map (see the type
 %%% `column()'). Rows are maps; a row's key is its `key_field' (default
-%%% `id'). Keys are written as text and joined with commas in the value,
-%%% so they should not contain commas.
+%%% `id'). Keys are written as text and joined with commas in the value
+%%% (aihtml_value: a comma inside a key is escaped as `\,').
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_lib_table).
@@ -172,12 +172,12 @@ key_text(K) ->
         T -> T
     end.
 
-%% Selected keys: a key, a list of keys or a comma separated text.
+%% Selected keys: a key, a list of keys or a text joined by aihtml_value.
 -spec sel_keys(term()) -> [binary()].
 sel_keys(undefined) -> [];
 sel_keys(null) -> [];
 sel_keys(<<>>) -> [];
-sel_keys(B) when is_binary(B) -> binary:split(B, <<",">>, [global, trim_all]);
+sel_keys(B) when is_binary(B) -> [K || K <- aihtml_value:split(B), K =/= <<>>];
 sel_keys(L) when is_list(L) ->
     case io_lib:printable_unicode_list(L) andalso L =/= [] of
         true -> sel_keys(unicode:characters_to_binary(L));
@@ -186,7 +186,7 @@ sel_keys(L) when is_list(L) ->
 sel_keys(K) -> [key_text(K)].
 
 -spec join([iodata()]) -> binary().
-join(Keys) -> iolist_to_binary(lists:join(<<",">>, Keys)).
+join(Keys) -> aihtml_value:join(Keys).
 
 -spec sort_opt(term()) -> sort().
 sort_opt(undefined) -> undefined;

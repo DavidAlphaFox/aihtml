@@ -56,7 +56,8 @@
 %%% An action that rejects an edit can answer with
 %%% `aihtml_action:call(Ctx, {id, Id}, undo, [])', or with
 %%% set_node_graph/3 to show the graph it stored. Selection changes fire
-%%% `ah:selection-change' (Event.data selection = "id,id"); a link dropped
+%%% `ah:selection-change' (Event.data selection = "id,id", read with
+%%% aihtml_value:split/1); a link dropped
 %%% on empty canvas without a `library' fires `ah:link-drop' (Event.data
 %%% origin = "node:output:0", point = "x,y").
 %%%
@@ -756,12 +757,12 @@ compact(M) -> maps:filter(fun(_, V) -> V =/= undefined andalso V =/= false end, 
 %% The graph in data-ah-value drops the widget HTML (the cards hold it);
 %% only nodes sent by set_node_graph/3 or library entries carry `html'.
 json_text(#{nodes := Nodes} = G) ->
-    iolist_to_binary(json:encode(G#{nodes => [maps:remove(html, N) || N <- Nodes]})).
+    iolist_to_binary(aihtml_json:encode(G#{nodes => [maps:remove(html, N) || N <- Nodes]})).
 
 %% JSON inside <script>: "</" is written "<\/" so the data cannot close
 %% the element.
 script_json(Term) ->
-    binary:replace(iolist_to_binary(json:encode(Term)), <<"</">>, <<"<\\/">>, [global]).
+    binary:replace(iolist_to_binary(aihtml_json:encode(Term)), <<"</">>, <<"<\\/">>, [global]).
 
 %%%===================================================================
 %%% Server-side updates

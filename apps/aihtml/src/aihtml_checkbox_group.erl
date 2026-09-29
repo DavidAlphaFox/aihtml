@@ -3,7 +3,7 @@
 %%% `Attrs' are split: `name', `disabled', `required' and `form' go to
 %%% every input, everything else (id, class, data, aria, `aihtml:on/2')
 %%% goes to the root. The root carries `data-ah-value' (the checked values,
-%%% comma separated); the behaviour keeps it in sync, stops the inputs' own
+%%% comma separated by aihtml_value:join/1); the behaviour keeps it in sync, stops the inputs' own
 %%% `change' at the root and fires one `change' on the root instead.
 %%%
 %%% checkbox_group/4 builds an #ah_checkbox_group{}
@@ -57,5 +57,6 @@ catalog() ->
          doc => <<"Checkboxes from Items [{Value, Label} | {Value, Label, Opts}] "
                   "(Opts: disabled, class). name, disabled, required, form go to every "
                   "input; other Attrs (id, on/2, ...) to the root, whose data-ah-value "
-                  "is the comma separated checked values and which fires one change.">>},
+                  "is the checked values, comma separated (a comma inside a value is "
+                  "written \\,, see aihtml_value), and which fires one change.">>},
        ?L:group_api(true))].

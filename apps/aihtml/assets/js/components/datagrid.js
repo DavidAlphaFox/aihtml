@@ -565,7 +565,7 @@
 
   function writeValue(el, s, user) {
     var before = el.getAttribute("data-ah-value") || "";
-    var v = s.sel.join(",");
+    var v = AH.lib.values.join(s.sel);
     el.setAttribute("data-ah-value", v);
     $(el).children("input[type=hidden][data-ah-input]").val(v);
     paintSelection(el, s);
@@ -1146,7 +1146,7 @@
         pageSize: parseInt(el.getAttribute("data-page-size") || "10", 10) || 10,
         search: "",
         collapsed: Object.create(null),
-        sel: (el.getAttribute("data-ah-value") || "").split(",").filter(Boolean),
+        sel: AH.lib.values.split(el.getAttribute("data-ah-value")).filter(Boolean),
         anchor: null, active: null, activeField: null, editing: null, timers: {},
         body: $el.find(".ah-dg-body").first()[0],
         headerRow: $el.find(".ah-dg-header-row").first()[0],
@@ -1313,7 +1313,7 @@
     methods: {
       setValue: function (el, $el, v) {
         var s = state(el);
-        s.sel = Array.isArray(v) ? v.map(String) : String(v === null || v === undefined ? "" : v).split(",").filter(Boolean);
+        s.sel = AH.lib.values.split(Array.isArray(v) ? v : v == null ? "" : String(v)).filter(Boolean);
         writeValue(el, s, false);
       },
       getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },

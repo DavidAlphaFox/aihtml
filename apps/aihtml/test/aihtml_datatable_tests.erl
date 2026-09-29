@@ -355,3 +355,28 @@ records_match_catalog_test() ->
      end || #{name := N} = E <- ?M:catalog()].
 
 default(ah_datatable) -> #ah_datatable{}.
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    Rows = [#{id => <<"a,b">>, name => <<"A">>}, #{id => <<"c">>, name => <<"C">>}],
+    H = r(?M:datatable([name], Rows, [], [{id, dt}, {selection_mode, multiple},
+                                          {name, sel}, {expanded, [<<"a,b">>]},
+                                          {value, [<<"a,b">>, <<"c">>]}])),
+    ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, H)),
+    ?assert(vhas(<<"data-expanded=\"a\\,b\"">>, H)),
+    %% the same selection as text
+    ?assertEqual(H, r(?M:datatable([name], Rows, [], [{id, dt}, {selection_mode, multiple},
+                                                      {name, sel}, {expanded, [<<"a,b">>]},
+                                                      {value, <<"a\\,b,c">>}]))).
+
+comma_remote_test() ->
+    Event = (query_event(#{<<"page">> => <<"1">>, <<"pageSize">> => <<"5">>,
+                           <<"expanded">> => <<"1\\,5">>}))#{value => <<"1\\,5,2">>},
+    Rows = [#{name => <<"x">>, age => 1, city => <<"c">>, id => <<"1,5">>},
+            #{name => <<"y">>, age => 2, city => <<"c">>, id => 2}],
+    [#{op := html, html := H}] =
+        aihtml_action:render_ops(fun(Ctx) -> ?M:datatable_rows(Ctx, Event, remote(Rows, 2)) end),
+    ?assert(vhas(<<"data-ah-value=\"1\\,5,2\"">>, H)),
+    ?assert(vhas(<<"data-expanded=\"1\\,5\"">>, H)).

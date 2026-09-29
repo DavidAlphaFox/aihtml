@@ -6,7 +6,7 @@
 %%%   treegrid_children(Ctx, Event, Table)    (in an action) rows of a lazy node
 %%%
 %%% The tree grid is value-bearing: the root carries `data-ah-value' (the
-%%% selected row keys, comma separated) and fires `change' when the user
+%%% selected row keys, comma separated by aihtml_value) and fires `change' when the user
 %%% changes the selection; a `name' in Attrs goes to a hidden input.
 %%%
 %%% Columns and rows are those of aihtml_datatable (the shared model is in
@@ -375,9 +375,9 @@ catalog() ->
                         load => <<"Action ref {Module, Action, Args} run when a lazy row is "
                                   "first expanded; it answers with treegrid_children/3.">>}),
        methods =>
-           [#{name => getValue, args => <<"()">>, doc => <<"Return the selected keys, comma separated.">>},
+           [#{name => getValue, args => <<"()">>, doc => <<"Return the selected keys, comma separated (a comma inside a key is escaped as \\,; aihtml_value:split/1 reads it).">>},
             #{name => setValue, args => <<"(Keys)">>,
-              doc => <<"Select these keys (an array or comma separated text) without firing change.">>},
+              doc => <<"Select these keys (an array or comma separated text, see aihtml_value) without firing change.">>},
             #{name => clearSelection, args => <<"()">>, doc => <<"Select nothing (fires no change).">>},
             #{name => expand, args => <<"(Key)">>, doc => <<"Expand the row with this key.">>},
             #{name => collapse, args => <<"(Key)">>, doc => <<"Collapse the row with this key.">>},

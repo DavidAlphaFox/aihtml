@@ -180,3 +180,15 @@ records_match_catalog_test() ->
      end || #{name := N} = E <- ?M:catalog()].
 
 default(ah_listbox) -> #ah_listbox{}.
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    Items = [<<"a,b">>, <<"c">>],
+    M = r(?M:listbox(Items, [<<"a,b">>, <<"c">>], [multiple], [{name, k}])),
+    ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, M)),
+    ?assert(vhas(<<"value=\"a\\,b,c\"">>, M)),
+    ?assertEqual([<<"a,b">>, <<"c">>], aihtml_value:split(<<"a\\,b,c">>)),
+    S = r(?M:listbox(Items, <<"a,b">>, [], [])),
+    ?assert(vhas(<<"data-ah-value=\"a,b\"">>, S)).

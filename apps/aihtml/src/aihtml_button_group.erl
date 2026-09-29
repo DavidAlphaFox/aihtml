@@ -22,7 +22,7 @@
 -define(L, aihtml_lib_button).
 
 %% @doc Joined buttons. In `radio' mode `Value' is the selected item's
-%% value; in `checkbox' mode a list of values (or "a,b"). In the default
+%% value; in `checkbox' mode a list of values (or "a,b", aihtml_value). In the default
 %% mode `Value' is ignored and each button is a plain button whose own
 %% `value' is the item value, so `ItemAttrs' can carry `on(click, ...)'.
 -spec button_group([aihtml_lib_button:item()], term(), aihtml_html:css(),
@@ -69,7 +69,11 @@ render(#ah_button_group{items = Items0, value = Value, name = Name, mode = Mode,
                     end,
                     IA])
          end || {Idx, {V, Label, IA}} <- lists:zip(lists:seq(1, N), Items)],
-    Joined = ?L:join(Selected),
+    %% radio: the value itself; checkbox: aihtml_value text
+    Joined = case Mode of
+                 radio -> iolist_to_binary(Selected);
+                 _ -> ?L:join(Selected)
+             end,
     ValueAttrs = case Mode of
                      default -> [];
                      _ -> [{data_ah_value, Joined}]
@@ -95,5 +99,5 @@ catalog() ->
        behavior => <<"button-group">>, events => [<<"change">>],
        doc => <<"Joined buttons; radio and checkbox modes keep a selection.">>,
        methods => [#{name => setValue, args => <<"(Value)">>, doc => <<"Select a value, or in checkbox mode a list or \"a,b\", without firing change.">>},
-                   #{name => getValue, args => <<"()">>, doc => <<"Return data-ah-value (comma separated in checkbox mode).">>},
+                   #{name => getValue, args => <<"()">>, doc => <<"Return data-ah-value (in checkbox mode the values joined with commas, a comma inside a value escaped as \\,).">>},
                    #{name => clear, args => <<"()">>, doc => <<"Clear the selection without firing change.">>}]}].

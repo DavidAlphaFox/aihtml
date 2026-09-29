@@ -68,7 +68,7 @@
       open[id] = vis && expanded !== "false";
       if (vis) { index[id] = n++; }
     });
-    el.setAttribute("data-collapsed", collapsed.join(","));
+    el.setAttribute("data-collapsed", AH.lib.values.join(collapsed));
     $(el).find(".ah-gantt-grid-row").each(function () {
       this.hidden = !(this.getAttribute("data-rowid") in index);
     });

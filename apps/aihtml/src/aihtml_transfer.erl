@@ -5,7 +5,8 @@
 %%%   transfer(Items, Value, Css, Attrs)
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
-%%% `data-ah-value' (the keys on the right joined with commas) and fires
+%%% `data-ah-value' (the keys on the right joined by aihtml_value:join/1)
+%%% and fires
 %%% `change'; `name' goes to a hidden input. Both lists are rendered here;
 %%% the behaviour (assets/js/components/transfer.js) moves an item by
 %%% moving its node.
@@ -29,7 +30,8 @@
 
 %% @doc Sigil's transfer: the items not chosen on the left, the chosen
 %% ones on the right. `Value' is the list of chosen values, in the order
-%% of the right list; `data-ah-value' joins them with commas. Click rows
+%% of the right list; `data-ah-value' joins them with commas (a comma inside a value is
+%% escaped as `\,', see aihtml_value). Click rows
 %% to select them (Space and arrows in a focused list), then move them
 %% with the buttons, Enter or a double click.
 %%
@@ -139,7 +141,8 @@ catalog() ->
        behavior => <<"transfer">>,
        events => [<<"change">>],
        doc => <<"Two lists with move buttons: the value is the list of keys on the right, "
-                "in order. Rows are selected by click or keyboard and moved by the buttons, "
+                "in order, joined with commas (a comma inside a key is escaped as \\,; "
+                "aihtml_value:split/1 reads it). Rows are selected by click or keyboard and moved by the buttons, "
                 "Enter or a double click.">>,
        option_docs =>
            #{disabled => <<"Nothing can be selected or moved.">>,

@@ -8,15 +8,15 @@
 %%%   datatable_query(Event)                  the view state of a remote query
 %%%
 %%% The table is value-bearing: the root carries `data-ah-value' (the
-%%% selected row keys, comma separated) and fires `change' when the user
+%%% selected row keys, comma separated by aihtml_value) and fires `change' when the user
 %%% changes the selection; a `name' in Attrs goes to a hidden input.
 %%%
 %%% == Columns and rows ==
 %%%
 %%% A column is a field name, `{Field, Title}' or a map (see the type
 %%% `column()'). Rows are maps; a row's key is its `key_field' (default
-%%% `id'). Keys are written as text and joined with commas in the value,
-%%% so they should not contain commas. The column model is shared with
+%%% `id'). Keys are written as text and joined with commas in the value
+%%% (aihtml_value: a comma inside a key is escaped as `\,'). The column model is shared with
 %%% aihtml_treegrid (aihtml_lib_table).
 %%%
 %%% == datatable: local and remote ==
@@ -641,7 +641,7 @@ datatable_rows(Ctx, #{id := Id} = Event, #ah_datatable{source = Source} = T) ->
     aihtml_action:html(Ctx, {id, Id}, T1, morph).
 
 split_list(null) -> [];
-split_list(B) -> binary:split(text(B), <<",">>, [global, trim_all]).
+split_list(B) -> [K || K <- aihtml_value:split(text(B)), K =/= <<>>].
 
 %% @doc Re-render one row of a datatable (after an edit, say): `Row' as
 %% `Table' (the page's datatable) renders it, morphed over the row with
@@ -725,9 +725,9 @@ catalog() ->
                                    "{total}\"), columns, prev, next, page_size, select_all, "
                                    "select_row, details and the condition names.">>}),
        methods =>
-           [#{name => getValue, args => <<"()">>, doc => <<"Return the selected keys, comma separated.">>},
+           [#{name => getValue, args => <<"()">>, doc => <<"Return the selected keys, comma separated (a comma inside a key is escaped as \\,; aihtml_value:split/1 reads it).">>},
             #{name => setValue, args => <<"(Keys)">>,
-              doc => <<"Select these keys (an array or comma separated text) without firing change.">>},
+              doc => <<"Select these keys (an array or comma separated text, see aihtml_value) without firing change.">>},
             #{name => clearSelection, args => <<"()">>, doc => <<"Select nothing (fires no change).">>},
             #{name => sort, args => <<"(Field, Dir)">>,
               doc => <<"Sort by a column: \"asc\", \"desc\" or null.">>},

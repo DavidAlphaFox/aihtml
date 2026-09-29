@@ -511,7 +511,7 @@
   // ------------------------------------------------------------------
 
   function closed(el, ids, user) {
-    if (user && ids.length) { fire(el, "ah:panel-close", "panels", ids.join(",")); }
+    if (user && ids.length) { fire(el, "ah:panel-close", "panels", AH.lib.values.join(ids)); }
   }
 
   function closeGroup(el, g, user) {
@@ -891,7 +891,7 @@
 
   var TAB = ".ah-dl-tabs > .ah-tabs-header > .ah-tabs-item";
 
-  AH.define("dock_layout", {
+  AH.define("dock-layout", {
     init: function (el, $el) {
       var st = dlState(el);
       var mine = function (node) { return $(node).closest(".ah-dl")[0] === el && !dlDisabled(el); };

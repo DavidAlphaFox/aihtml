@@ -122,3 +122,11 @@ default(ah_tag_input) -> #ah_tag_input{}.
 arity(Sig) ->
     [_, Args] = binary:split(Sig, <<"(">>),
     length(binary:split(Args, <<",">>, [global])).
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    H = r(?M:tag_input([<<"1,000">>, <<"x\\y">>, <<"z">>], [], [{name, t}])),
+    ?assert(vhas(<<"data-ah-value=\"1\\,000,x\\\\y,z\"">>, H)),
+    ?assert(vhas(<<"value=\"1\\,000,x\\\\y,z\"">>, H)).

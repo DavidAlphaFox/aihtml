@@ -116,3 +116,11 @@ token(Html) ->
 postback_change(E) ->
     ?assertEqual({element(1, E), {<<"change">>, {?MODULE, save, #{id => 1}}}},
                  {element(1, E), token(E)}).
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    H = r(?M:checkbox_group([{<<"a,b">>, <<"AB">>}, {c, <<"C">>}], [<<"a,b">>, c], [], [])),
+    ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, H)),
+    ?assert(vhas(<<"value=\"a,b\" checked">>, H)).

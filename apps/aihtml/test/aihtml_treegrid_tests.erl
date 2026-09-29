@@ -300,3 +300,13 @@ records_match_catalog_test() ->
      end || #{name := N} = E <- ?M:catalog()].
 
 default(ah_treegrid) -> #ah_treegrid{}.
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    Items = [#{id => <<"a,b">>, name => <<"A">>, size => 1}, #{id => c, name => <<"C">>, size => 2}],
+    H = r(?M:treegrid(cols(), Items, [], [{id, tg}, {selection_mode, multiple}, {value, [<<"a,b">>, c]}])),
+    ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, H)),
+    ?assertEqual(H, r(?M:treegrid(cols(), Items, [], [{id, tg}, {selection_mode, multiple},
+                                                     {value, <<"a\\,b,c">>}]))).

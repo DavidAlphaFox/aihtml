@@ -110,10 +110,11 @@ hidden_input(Name, Value) ->
 value_attr(undefined) -> undefined;
 value_attr(V) -> bin(V).
 
-%% @doc The selected values of a checkbox-mode group: a list or "a,b".
+%% @doc The selected values of a checkbox-mode group: a list or "a,b"
+%% (aihtml_value text).
 -spec values(term()) -> [binary()].
 values(undefined) -> [];
-values(B) when is_binary(B) -> binary:split(B, <<",">>, [global, trim_all]);
+values(B) when is_binary(B) -> [V || V <- aihtml_value:split(B), V =/= <<>>];
 values(L) when is_list(L) ->
     case io_lib:printable_unicode_list(L) of
         true -> values(bin(L));
@@ -122,7 +123,7 @@ values(L) when is_list(L) ->
 values(X) -> [bin(X)].
 
 -spec join([binary()]) -> binary().
-join(Vs) -> iolist_to_binary(lists:join(<<",">>, Vs)).
+join(Vs) -> aihtml_value:join(Vs).
 
 -spec bin(term()) -> binary().
 bin(B) when is_binary(B) -> B;

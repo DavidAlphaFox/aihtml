@@ -513,3 +513,13 @@ records_match_catalog_test() ->
          [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
          ?assertEqual(?M, maps:get(module, Defaults))
      end || #{name := N} = E <- ?M:catalog()].
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    Rows = [#{id => <<"1,5">>, name => <<"A">>}, #{id => 2, name => <<"B">>}],
+    H = r(?M:datagrid([#{key => name}], Rows, [multi],
+                      [{id, g}, {name, sel}, {value, [<<"1,5">>, 2]}])),
+    ?assert(vhas(<<"data-ah-value=\"1\\,5,2\"">>, H)),
+    ?assert(vhas(<<"value=\"1\\,5,2\"">>, H)).

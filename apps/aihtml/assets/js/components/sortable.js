@@ -36,7 +36,7 @@
   function soKey(item) { return item.getAttribute("data-value") || ""; }
 
   function soOrder(list) {
-    return soItems(list).map(soKey).join(",");
+    return AH.lib.values.join(soItems(list).map(soKey));
   }
 
   function soDisabled(list) {
@@ -261,7 +261,7 @@
       announce($live, label(item) + " dropped at position " + soPos(list, item) + ".");
       soPublish(list, true);
     } else {
-      soSetOrder(list, st.order.split(","));
+      soSetOrder(list, AH.lib.values.split(st.order));
       item.focus();
       announce($live, "Cancelled, " + label(item) + " is back at position " + soPos(list, item) + ".");
     }
@@ -367,8 +367,8 @@
     methods: {
       getValue: function (el) { return soOrder(el); },
       setValue: function (el, $el, order) {
-        var keys = Array.isArray(order) ? order.map(String)
-          : String(order || "").split(",").filter(Boolean);
+        var keys = AH.lib.values.split(Array.isArray(order) ? order : String(order || ""))
+          .filter(Boolean);
         soSetOrder(el, keys);
         soPublish(el, false);
       },

@@ -29,7 +29,7 @@
     $el.find(".ah-tag-input__chip").remove();
     var $field = tagField($el);
     $.each(tags, function (i, t) { chip($el, t, i).insertBefore($field); });
-    return L.commitValue($el, tags.join(","));
+    return L.commitValue($el, AH.lib.values.join(tags));
   }
 
   // sigil tag-input/add-tag: trim, skip blanks, max-tags and duplicates.

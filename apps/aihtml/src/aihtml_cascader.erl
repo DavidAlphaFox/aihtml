@@ -6,7 +6,8 @@
 %%%   cascader_children(Ctx, Event, Children)   (in an action) a lazy level
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
-%%% `data-ah-value' (the path joined with commas) and fires `change';
+%%% `data-ah-value' (the path joined with commas by aihtml_value, a comma
+%%% inside a value escaped as `\,') and fires `change';
 %%% `name' goes to a hidden input. The behaviour lives in
 %%% assets/js/components/cascader.js.
 %%%
@@ -63,7 +64,7 @@
 %% are the top-level nodes; `Value' is the path of values from the top to
 %% the chosen node (`[<<"zj">>, <<"hz">>, <<"xihu">>]') or `undefined'.
 %% The field shows the labels of the path joined by the separator;
-%% `data-ah-value' is the path joined with commas.
+%% `data-ah-value' is the path joined with commas (aihtml_value:join/1).
 %%
 %% Css: `sm' | `lg' (size), `disabled', `filterable' (typing searches all
 %% leaf paths), `change_on_select' (a branch can be the value too),
@@ -228,10 +229,7 @@ paths(Nodes, Vs, Ls, Dis0, AnyLevel) ->
 %% children, makes the node a leaf and picks it).
 -spec cascader_children(aihtml_action:ctx(), aihtml_action:event(), [cascader_node()]) -> ok.
 cascader_children(Ctx, #{data := #{<<"cascader">> := Id}, value := PathBin}, Children) ->
-    Path = case text(PathBin) of
-               <<>> -> [];
-               B -> binary:split(B, <<",">>, [global])
-           end,
+    Path = aihtml_value:split(text(PathBin)),
     cascader_children(Ctx, {id, Id}, Path, Children).
 
 %% @doc `cascader_children/3' for a cascader `{id, RootId}' and the path
@@ -289,11 +287,12 @@ catalog() ->
              popup_height => <<"Maximum height of the menus in px (default 240).">>,
              empty_text => <<"Shown when a search finds nothing (default \"No results found\").">>,
              load => <<"Action ref {Module, Action, Args} run when a node with children = lazy "
-                       "opens; Event.value is its path \"v1,v2\", the action answers with "
+                       "opens; Event.value is its path \"v1,v2\" (aihtml_value:split/1 reads it; "
+                       "a comma inside a value is written \\,), the action answers with "
                        "cascader_children/3.">>},
        methods =>
            [#{name => setValue, args => <<"(\"v1,v2,v3\" | [V1, V2, V3])">>,
-              doc => <<"Set the path without firing change.">>},
+              doc => <<"Set the path without firing change (text as by aihtml_value).">>},
             #{name => getValue, args => <<"()">>, doc => <<"Return data-ah-value.">>},
             #{name => getLabels, args => <<"()">>,
               doc => <<"Return the labels of the selected path.">>},

@@ -47,6 +47,7 @@
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
+-define(L, aihtml_lib_list).
 
 %% Shared template (see aihtml_tpl): also compiled to AH.tpl.* for the browser.
 -compile({parse_transform, beamai_mustache_transform}).
@@ -145,11 +146,11 @@ render(#ah_combobox{items = Items0, value = Value, name = Name,
                             || is_integer(Height)]}]),
     ?H:el('div',
           [?H:el('div', [Field, Arrow], [<<"ah-combobox-input-area">>], []),
-           hidden(Name, join(Selected)),
+           hidden(Name, ?L:value(Multi, Selected)),
            Popup],
           Classes,
           %% the id comes first, as before; root_attrs repeats it in place
-          [[{id, Id}, {data_ah, <<"combobox">>}, {data_ah_value, join(Selected)},
+          [[{id, Id}, {data_ah, <<"combobox">>}, {data_ah_value, ?L:value(Multi, Selected)},
             {data_ah_search_mode, Mode},
             {data_ah_min_length, R#ah_combobox.min_length},
             {data_ah_empty, R#ah_combobox.empty_text},
@@ -217,8 +218,6 @@ render_item(N, #{value := V, label := L} = I, Selected, Checkboxes, Id) ->
            {data_index, N}, {data_value, V}, {data_label, L},
            {data_desc, maps:get(description, I, undefined)},
            {data_group, maps:get(group, I, undefined)}]).
-
-join(Vs) -> iolist_to_binary(lists:join(<<",">>, Vs)).
 
 %%%===================================================================
 %%% Server-side search
@@ -299,7 +298,8 @@ catalog() ->
        option_docs =>
            #{disabled => <<"Not editable.">>,
              no_arrow => <<"Hide the dropdown arrow.">>,
-             multiple => <<"Several values, shown as tags; value \"a,b,c\".">>,
+             multiple => <<"Several values, shown as tags; value \"a,b,c\" (a comma inside a "
+                          "value is escaped as \\,; aihtml_value:split/1 reads it).">>,
              checkboxes => <<"Multiple, with a check box on every row.">>,
              free_text => <<"The typed text becomes the value on Enter or blur.">>,
              placeholder => <<"Text of the empty field.">>,

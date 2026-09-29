@@ -128,3 +128,12 @@ records_match_catalog_test() ->
      end || #{name := N} = E <- ?M:catalog()].
 
 default(ah_transfer) -> #ah_transfer{}.
+
+%% A value containing a comma is escaped in data-ah-value (aihtml_value).
+vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
+
+comma_values_test() ->
+    H = r(?M:transfer([<<"1,000">>, <<"2,000">>, <<"x">>], [<<"2,000">>, <<"1,000">>], [],
+                      [{name, k}])),
+    ?assert(vhas(<<"data-ah-value=\"2\\,000,1\\,000\"">>, H)),
+    ?assert(vhas(<<"name=\"k\" value=\"2\\,000,1\\,000\"">>, H)).
