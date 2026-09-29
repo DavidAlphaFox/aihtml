@@ -1,0 +1,62 @@
+/* aihtml additions for the treegrid component (aihtml_treegrid). */
+
+/* Header and body share their column widths. The behaviour pads the
+   header by the width of the body's scrollbar when there is one, instead
+   of sigil's scrollbar-gutter, which leaves an empty strip beside every
+   table that does not scroll. */
+.ah-tg-header,
+.ah-tg-body {
+  scrollbar-gutter: auto;
+}
+
+/* Rows take the focus (roving tabindex, the treegrid pattern); show it
+   for the keyboard only, as sigil's .ah-tg-row-focused does. */
+.ah-tg-row:focus {
+  outline: none;
+}
+.ah-tg-row:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+.ah-tg-th-sortable:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-primary);
+  outline-offset: -2px;
+}
+
+/* The select-all checkbox column. */
+.ah-tg-th-checkbox {
+  text-align: center;
+  padding: 0 4px;
+}
+.ah-tg-header-checkbox {
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+}
+
+/* The tree column keeps a little room before the arrows of the roots. */
+.ah-tg-tree-indent {
+  margin-left: 6px;
+}
+
+/* A lazy row waiting for its children. */
+.ah-tg-row-loading .ah-tg-toggle {
+  animation: ah-tg-loading 0.8s ease-in-out infinite alternate;
+}
+@keyframes ah-tg-loading {
+  from { opacity: 1; }
+  to { opacity: 0.25; }
+}
+
+/* Dark appearance: the palettes' *-light accent is a light tint meant for
+   a light background, which turns hovered and selected rows into cream
+   bars under light text. Use tints of the accent over the dark surface. */
+[data-theme="dark"] .ah-tg-row-hover:hover {
+  background: color-mix(in srgb, var(--ah-color-primary) 12%, var(--ah-color-bg-paper));
+}
+[data-theme="dark"] .ah-tg-row-selected {
+  background: var(--ah-color-primary-lighter) !important;
+}
+[data-theme="dark"] .ah-tg-row-selected:hover {
+  background: color-mix(in srgb, var(--ah-color-primary) 34%, var(--ah-color-bg-paper)) !important;
+}
