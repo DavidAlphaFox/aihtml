@@ -1,0 +1,194 @@
+/* aihtml additions for the colorpicker (aihtml_colorpicker).
+   Sigil styles live in ../sigil/components. sigil renders the picker
+   inline only; the popup field around it, the alpha bar and swatches and
+   keyboard focus rings are aihtml's. */
+
+/* ---- Popup field ----
+   Open popups are positioned by AH.float (position: fixed); the absolute
+   placement below is only the fallback before the script runs. */
+
+.ah-colorpicker-field {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  font-family: var(--ah-font-family);
+  vertical-align: top;
+}
+
+.ah-colorpicker-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1000;
+}
+
+.ah-colorpicker-popup[hidden] {
+  display: none;
+}
+
+/* ---- Colorpicker field ---- */
+
+.ah-colorpicker-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  min-height: 36px;
+  padding: 0 var(--ah-spacing-md) 0 var(--ah-spacing-xs);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  color: var(--ah-color-text);
+  font-family: var(--ah-font-mono);
+  font-size: var(--ah-font-size-sm);
+  cursor: pointer;
+  transition: border-color var(--ah-transition-fast), box-shadow var(--ah-transition-fast);
+}
+
+.ah-colorpicker-trigger:hover {
+  border-color: var(--ah-color-grey-400);
+}
+
+.ah-colorpicker-trigger:focus-visible,
+.ah-colorpicker-open .ah-colorpicker-trigger {
+  outline: none;
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 1px var(--ah-color-primary-lighter);
+}
+
+.ah-colorpicker-trigger:disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: default;
+  background: var(--ah-color-bg-subtle);
+}
+
+/* Colour over a checkerboard, so alpha shows. */
+.ah-colorpicker-trigger-swatch,
+.ah-colorpicker-swatch,
+.ah-colorpicker-alpha {
+  background-image: linear-gradient(45deg, #ccc 25%, transparent 25%),
+    linear-gradient(-45deg, #ccc 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #ccc 75%),
+    linear-gradient(-45deg, transparent 75%, #ccc 75%);
+  background-size: 8px 8px;
+  background-position: 0 0, 0 4px, 4px -4px, -4px 0;
+  background-color: #fff;
+}
+
+.ah-colorpicker-trigger-swatch {
+  position: relative;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--ah-radius-sm);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.ah-colorpicker-trigger-swatch::after,
+.ah-colorpicker-swatch::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--ah-cp-swatch, transparent);
+}
+
+/* Empty: a red slash on white. */
+.ah-colorpicker-trigger-empty {
+  background-image: none;
+}
+
+.ah-colorpicker-trigger-empty::after {
+  background: linear-gradient(to top right, transparent calc(50% - 1px),
+    var(--ah-color-error) calc(50% - 1px), var(--ah-color-error) calc(50% + 1px),
+    transparent calc(50% + 1px));
+}
+
+.ah-colorpicker-trigger-text {
+  white-space: nowrap;
+}
+
+.ah-colorpicker-popup .ah-colorpicker {
+  box-shadow: var(--ah-shadow-lg);
+}
+
+/* ---- Colorpicker panel additions ---- */
+
+.ah-colorpicker-map:focus-visible,
+.ah-colorpicker-bar:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 2px;
+}
+
+/* The map is focusable: keep sigil's crosshair but no default outline. */
+.ah-colorpicker-map:focus,
+.ah-colorpicker-bar:focus {
+  outline-color: var(--ah-color-primary);
+}
+
+.ah-colorpicker-alpha {
+  position: relative;
+}
+
+.ah-colorpicker-alpha::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(to bottom, var(--ah-cp-rgb, #000), transparent);
+}
+
+.ah-colorpicker-a-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 28px;
+  padding: 0 var(--ah-spacing-xs);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  font-family: var(--ah-font-mono);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  box-sizing: border-box;
+  -moz-appearance: textfield;
+}
+
+.ah-colorpicker-a-input::-webkit-inner-spin-button,
+.ah-colorpicker-a-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.ah-colorpicker-a-input:focus {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 1px var(--ah-color-primary-lighter);
+}
+
+.ah-colorpicker-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: var(--ah-spacing-sm);
+}
+
+.ah-colorpicker-swatch {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.ah-colorpicker-swatch:hover {
+  transform: scale(1.1);
+}
+
+.ah-colorpicker-swatch:focus-visible,
+.ah-colorpicker-swatch[aria-pressed="true"] {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 1px;
+}
