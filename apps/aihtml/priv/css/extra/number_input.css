@@ -1,0 +1,14 @@
+/* aihtml additions for the number_input component (designs/04-components.md).
+   sigil styles live in ../sigil/components. */
+
+/* sm size: the right padding (the other sizes are in lib_input.css) */
+.ah-numinput-sm input.ah-numinput-input { padding-right: var(--ah-spacing-sm); }
+
+/* ---- number input: spin buttons while disabled/readonly ---- */
+.ah-numinput-disabled .ah-numinput-spin { background: var(--ah-color-bg-subtle); }
+
+/* sigil gives the input a left radius when both a prefix and spin buttons
+   are present (its :not(:last-child) rule outranks the prefix rule). */
+.ah-numinput-row > .ah-numinput-prefix + input.ah-numinput-input:not(:last-child) {
+  border-radius: 0;
+}
