@@ -1,474 +1,74 @@
 /*
- * aihtml.css: source stylesheet for the aihtml prefabs.
- *
- * It needs Tailwind CSS v4. Import it after Tailwind and point Tailwind at
- * the Erlang sources that write utility classes:
+ * aihtml.css: source stylesheet (Tailwind CSS v4). The component styles
+ * and the four theme axes are ported from sigil (MIT, see sigil/LICENSE)
+ * with the prefix renamed to `ah-`.
  *
  *   @import "tailwindcss" source(none);
  *   @import "<deps>/aihtml/priv/css/aihtml.css";
  *   @source "<deps>/aihtml/src";
  *   @source "../src";                       your own .erl files
  *
- * Three layers, in this order:
+ * Four axes on <html>, each owning one slice of the --ah-* tokens:
+ *   data-theme       light | dark | paper                 neutrals
+ *   data-palette     default | green | luxury | ...       accent colours
+ *   data-typography  default | serif | grotesk            font families
+ *   data-skin        default | brutal | island | phoqus   shape only
  *
- *   1. Tokens: --ah-* custom properties on :root.
- *   2. Four axes: attributes on <html> that each rewrite one slice of the
- *      tokens. Axes never write each other's tokens:
- *        data-theme       neutrals (surfaces, text, borders, status colours)
- *        data-palette     accent colours only
- *        data-typography  font families only
- *        data-skin        shape only; it may READ colours through var()
- *                         but never assigns a colour value
- *   3. Prefabs: semantic classes (.ah-btn, ...) in @layer components. They
- *      only read tokens. Variants set component tokens inside :where(), so
- *      they add no specificity, and Tailwind utilities (a later layer)
- *      always win over prefab styles.
+ * Everything is in @layer components.ah, so Tailwind utilities (a later
+ * layer) always win over component styles. Skins are unlayered on purpose
+ * (see sigil/skins/brutal.css).
  */
 
-/* ------------------------------------------------------------------ */
-/* Tailwind bridge: utilities such as bg-primary follow the axes.      */
-/* ------------------------------------------------------------------ */
+/* default palette (@theme: also generates bg-primary, text-error-dark, ...) */
+@import "./sigil/themes/default/palette.css" layer(components.ah);
+@import "./sigil/tokens.css" layer(components.ah);
+
+/* appearance axis */
+@import "./sigil/appearance/light.css" layer(components.ah);
+@import "./sigil/appearance/dark.css" layer(components.ah);
+@import "./sigil/appearance/paper.css" layer(components.ah);
+
+@import "./sigil/base.css" layer(components.ah);
+@import "./components.css" layer(components.ah);
+
+/* palette and typography axes (each file declares its own layer) */
+@import "./sigil/palettes/green.css";
+@import "./sigil/palettes/luxury.css";
+@import "./sigil/palettes/retro.css";
+@import "./sigil/palettes/arctic.css";
+@import "./sigil/palettes/nature.css";
+@import "./sigil/palettes/editorial.css";
+@import "./sigil/palettes/ember.css";
+@import "./sigil/palettes/dracula.css";
+@import "./sigil/palettes/midnight.css";
+@import "./sigil/palettes/brutal.css";
+@import "./sigil/palettes/brutal-blue.css";
+@import "./sigil/palettes/island.css";
+@import "./sigil/palettes/phoqus.css";
+@import "./sigil/typography/serif.css";
+@import "./sigil/typography/grotesk.css";
+
+/* dark-appearance accent tints derived from the current palette */
+@import "./aihtml-dark.css" layer(components.ah);
+
+/* skin axis: last and unlayered */
+@import "./sigil/skins/brutal.css";
+@import "./sigil/skins/island.css";
+@import "./sigil/skins/phoqus.css";
+
+/* Neutral utilities that follow the axes. Accent colours (bg-primary,
+   text-error, ...) come from the palette's @theme above; only names it
+   does not define are bridged here, to avoid circular variables. */
 @theme inline {
   --color-bg: var(--ah-color-bg);
-  --color-surface: var(--ah-color-surface);
-  --color-surface-2: var(--ah-color-surface-2);
+  --color-surface: var(--ah-color-bg-paper);
+  --color-surface-2: var(--ah-color-bg-subtle);
   --color-fg: var(--ah-color-text);
-  --color-muted: var(--ah-color-muted);
+  --color-muted: var(--ah-color-text-secondary);
   --color-line: var(--ah-color-border);
-  --color-primary: var(--ah-color-primary);
-  --color-primary-soft: var(--ah-color-primary-soft);
-  --color-success: var(--ah-color-success);
-  --color-warning: var(--ah-color-warning);
-  --color-error: var(--ah-color-error);
-  --color-info: var(--ah-color-info);
-  --font-sans: var(--ah-font-body);
-  --font-heading: var(--ah-font-heading);
+  --font-sans: var(--ah-font-family);
+  --font-heading: var(--ah-font-family);
   --font-mono: var(--ah-font-mono);
-  --radius-control: var(--ah-radius-control);
-  --radius-surface: var(--ah-radius-surface);
-}
-
-@layer base {
-  /* ---------------------------------------------------------------- */
-  /* 1. Tokens (appearance=light, palette=indigo, typography=sans,    */
-  /*    skin=soft)                                                    */
-  /* ---------------------------------------------------------------- */
-  :root {
-    color-scheme: light;
-
-    /* appearance */
-    --ah-color-bg: #f6f7f9;
-    --ah-color-surface: #ffffff;
-    --ah-color-surface-2: #f0f1f4;
-    --ah-color-text: #18181b;
-    --ah-color-muted: #6b7280;
-    --ah-color-border: #e2e4e9;
-    --ah-color-success: #16a34a;
-    --ah-color-warning: #d97706;
-    --ah-color-error: #dc2626;
-    --ah-color-info: #2563eb;
-
-    /* palette */
-    --ah-color-primary: #6366f1;
-    --ah-color-primary-hover: #4f46e5;
-    --ah-color-primary-contrast: #ffffff;
-
-    /* derived; recomputed on <html>, so they follow every axis */
-    --ah-color-primary-soft: color-mix(in oklab, var(--ah-color-primary) 16%, var(--ah-color-surface));
-
-    /* typography */
-    --ah-font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-      "Helvetica Neue", Arial, "Noto Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
-    --ah-font-heading: var(--ah-font-body);
-    --ah-font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-
-    /* skin */
-    --ah-radius-control: 0.5rem;
-    --ah-radius-surface: 0.875rem;
-    --ah-radius-check: 0.3rem;
-    --ah-radius-round: 9999px;
-    --ah-border-width: 1px;
-    --ah-control-border-color: var(--ah-color-border);
-    --ah-surface-border-color: var(--ah-color-border);
-    --ah-shadow-control: 0 1px 2px rgb(0 0 0 / 0.06);
-    --ah-shadow-surface: 0 1px 3px rgb(0 0 0 / 0.08), 0 1px 2px rgb(0 0 0 / 0.04);
-  }
-
-  /* ---------------------------------------------------------------- */
-  /* 2. Axes                                                          */
-  /* ---------------------------------------------------------------- */
-
-  /* appearance: neutrals only */
-  :root[data-theme="dark"] {
-    color-scheme: dark;
-    --ah-color-bg: #0e1015;
-    --ah-color-surface: #171a21;
-    --ah-color-surface-2: #20242d;
-    --ah-color-text: #e7e9ee;
-    --ah-color-muted: #9aa3b2;
-    --ah-color-border: #2c313c;
-    --ah-color-success: #22c55e;
-    --ah-color-warning: #f59e0b;
-    --ah-color-error: #f87171;
-    --ah-color-info: #60a5fa;
-  }
-
-  /* palette: accent colours only */
-  :root[data-palette="emerald"] {
-    --ah-color-primary: #059669;
-    --ah-color-primary-hover: #047857;
-    --ah-color-primary-contrast: #ffffff;
-  }
-  :root[data-palette="rose"] {
-    --ah-color-primary: #e11d48;
-    --ah-color-primary-hover: #be123c;
-    --ah-color-primary-contrast: #ffffff;
-  }
-  :root[data-palette="amber"] {
-    --ah-color-primary: #d97706;
-    --ah-color-primary-hover: #b45309;
-    --ah-color-primary-contrast: #ffffff;
-  }
-
-  /* typography: font families only */
-  :root[data-typography="serif"] {
-    --ah-font-body: ui-serif, Georgia, Cambria, "Times New Roman", "Noto Serif SC", serif;
-  }
-  :root[data-typography="mono"] {
-    --ah-font-body: var(--ah-font-mono);
-  }
-
-  /* skin: shape only, never assigns a colour value */
-  :root[data-skin="sharp"] {
-    --ah-radius-control: 0;
-    --ah-radius-surface: 0;
-    --ah-radius-check: 0;
-    --ah-radius-round: 0;
-    --ah-shadow-control: none;
-    --ah-shadow-surface: none;
-  }
-  :root[data-skin="pill"] {
-    --ah-radius-control: 9999px;
-    --ah-radius-surface: 1.5rem;
-    --ah-radius-check: 9999px;
-  }
-  :root[data-skin="brutal"] {
-    --ah-radius-control: 0;
-    --ah-radius-surface: 0;
-    --ah-radius-check: 0;
-    --ah-radius-round: 0;
-    --ah-border-width: 2px;
-    --ah-control-border-color: var(--ah-color-text);
-    --ah-surface-border-color: var(--ah-color-text);
-    --ah-shadow-control: 3px 3px 0 0 var(--ah-color-text);
-    --ah-shadow-surface: 5px 5px 0 0 var(--ah-color-text);
-  }
-}
-
-/* -------------------------------------------------------------------- */
-/* 3. Prefabs                                                           */
-/* -------------------------------------------------------------------- */
-@layer components {
-  .ah-body {
-    background: var(--ah-color-bg);
-    color: var(--ah-color-text);
-    font-family: var(--ah-font-body);
-    -webkit-font-smoothing: antialiased;
-  }
-
-  [aria-busy="true"] { cursor: progress; }
-
-  /* button ------------------------------------------------------------ */
-  .ah-btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    height: var(--ah-btn-height, 2.5rem);
-    padding: 0 var(--ah-btn-px, 1rem);
-    font: inherit;
-    font-size: var(--ah-btn-font-size, 0.875rem);
-    font-weight: 600;
-    line-height: 1;
-    white-space: nowrap;
-    color: var(--ah-btn-fg, var(--ah-color-primary-contrast));
-    background: var(--ah-btn-bg, var(--ah-color-primary));
-    border: var(--ah-border-width) solid var(--ah-btn-border, transparent);
-    border-radius: var(--ah-radius-control);
-    box-shadow: var(--ah-btn-shadow, var(--ah-shadow-control));
-    cursor: pointer;
-    transition: background-color 0.15s, color 0.15s, box-shadow 0.15s, transform 0.05s;
-  }
-  .ah-btn:hover { background: var(--ah-btn-bg-hover, var(--ah-color-primary-hover)); }
-  .ah-btn:active { transform: translateY(1px); }
-  .ah-btn:focus-visible { outline: 2px solid var(--ah-color-primary); outline-offset: 2px; }
-  .ah-btn:disabled, .ah-btn[aria-busy="true"] { opacity: 0.55; cursor: not-allowed; }
-
-  :where(.ah-btn-secondary) {
-    --ah-btn-fg: var(--ah-color-text);
-    --ah-btn-bg: var(--ah-color-surface-2);
-    --ah-btn-bg-hover: color-mix(in oklab, var(--ah-color-surface-2) 88%, var(--ah-color-text));
-    --ah-btn-border: var(--ah-control-border-color);
-  }
-  :where(.ah-btn-outline) {
-    --ah-btn-fg: var(--ah-color-primary);
-    --ah-btn-bg: transparent;
-    --ah-btn-bg-hover: var(--ah-color-primary-soft);
-    --ah-btn-border: var(--ah-color-primary);
-  }
-  :where(.ah-btn-ghost) {
-    --ah-btn-fg: var(--ah-color-text);
-    --ah-btn-bg: transparent;
-    --ah-btn-bg-hover: var(--ah-color-surface-2);
-    --ah-btn-shadow: none;
-  }
-  :where(.ah-btn-danger) {
-    --ah-btn-fg: #ffffff;
-    --ah-btn-bg: var(--ah-color-error);
-    --ah-btn-bg-hover: color-mix(in oklab, var(--ah-color-error) 85%, #000000);
-  }
-  :where(.ah-btn-sm) { --ah-btn-height: 2rem; --ah-btn-px: 0.75rem; --ah-btn-font-size: 0.8125rem; }
-  :where(.ah-btn-lg) { --ah-btn-height: 3rem; --ah-btn-px: 1.25rem; --ah-btn-font-size: 1rem; }
-  .ah-btn-block { display: flex; width: 100%; }
-
-  /* checkbox / radio -------------------------------------------------- */
-  .ah-check, .ah-radio, .ah-switch {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-    cursor: pointer;
-    user-select: none;
-  }
-  .ah-check-input, .ah-radio-input {
-    appearance: none;
-    flex: none;
-    display: grid;
-    place-content: center;
-    width: 1.125rem;
-    height: 1.125rem;
-    margin: 0;
-    background: var(--ah-color-surface);
-    border: var(--ah-border-width) solid var(--ah-control-border-color);
-    border-radius: var(--ah-radius-check);
-    cursor: pointer;
-    transition: background-color 0.15s, border-color 0.15s;
-  }
-  .ah-radio-input { border-radius: var(--ah-radius-round); }
-  .ah-check-input::before, .ah-radio-input::before {
-    content: "";
-    width: 0.625rem;
-    height: 0.625rem;
-    background: var(--ah-color-primary-contrast);
-    transform: scale(0);
-    transition: transform 0.12s;
-  }
-  .ah-check-input::before {
-    clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
-  }
-  .ah-radio-input::before { width: 0.5rem; height: 0.5rem; border-radius: var(--ah-radius-round); }
-  .ah-check-input:checked, .ah-radio-input:checked {
-    background: var(--ah-color-primary);
-    border-color: var(--ah-color-primary);
-  }
-  .ah-check-input:checked::before, .ah-radio-input:checked::before { transform: scale(1); }
-  .ah-check-input:focus-visible, .ah-radio-input:focus-visible {
-    outline: 2px solid var(--ah-color-primary);
-    outline-offset: 2px;
-  }
-  .ah-check:has(:disabled), .ah-radio:has(:disabled), .ah-switch:has(:disabled) {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-
-  /* switch ------------------------------------------------------------ */
-  .ah-switch-input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    margin: 0;
-  }
-  .ah-switch-track {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    width: 2.25rem;
-    height: 1.25rem;
-    padding: 0 0.125rem;
-    background: var(--ah-color-surface-2);
-    border: var(--ah-border-width) solid var(--ah-control-border-color);
-    border-radius: var(--ah-radius-round);
-    transition: background-color 0.15s;
-  }
-  .ah-switch-thumb {
-    width: 0.875rem;
-    height: 0.875rem;
-    background: var(--ah-color-surface);
-    border-radius: var(--ah-radius-round);
-    box-shadow: 0 1px 2px rgb(0 0 0 / 0.25);
-    transition: transform 0.15s;
-  }
-  .ah-switch-input:checked + .ah-switch-track {
-    background: var(--ah-color-primary);
-    border-color: var(--ah-color-primary);
-  }
-  .ah-switch-input:checked + .ah-switch-track .ah-switch-thumb {
-    background: var(--ah-color-primary-contrast);
-    transform: translateX(0.95rem);
-  }
-  .ah-switch-input:focus-visible + .ah-switch-track {
-    outline: 2px solid var(--ah-color-primary);
-    outline-offset: 2px;
-  }
-
-  /* input / select / textarea ----------------------------------------- */
-  .ah-input, .ah-select, .ah-textarea {
-    display: block;
-    width: 100%;
-    height: var(--ah-input-height, 2.5rem);
-    padding: 0 0.75rem;
-    font: inherit;
-    font-size: var(--ah-input-font-size, 0.875rem);
-    color: var(--ah-color-text);
-    background-color: var(--ah-color-surface);
-    border: var(--ah-border-width) solid var(--ah-control-border-color);
-    border-radius: var(--ah-radius-control);
-    transition: border-color 0.15s, box-shadow 0.15s;
-  }
-  .ah-input::placeholder, .ah-textarea::placeholder { color: var(--ah-color-muted); }
-  .ah-input:focus, .ah-select:focus, .ah-textarea:focus {
-    outline: none;
-    border-color: var(--ah-color-primary);
-    box-shadow: 0 0 0 3px var(--ah-color-primary-soft);
-  }
-  .ah-input[aria-invalid="true"], .ah-select[aria-invalid="true"], .ah-textarea[aria-invalid="true"],
-  .ah-field-invalid .ah-input, .ah-field-invalid .ah-select, .ah-field-invalid .ah-textarea {
-    border-color: var(--ah-color-error);
-  }
-  .ah-input:disabled, .ah-select:disabled, .ah-textarea:disabled { opacity: 0.55; cursor: not-allowed; }
-  .ah-textarea {
-    height: auto;
-    min-height: 5.5rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: min(var(--ah-radius-control), 1rem);
-    resize: vertical;
-  }
-  .ah-select {
-    appearance: none;
-    padding-right: 2rem;
-    background-image:
-      linear-gradient(45deg, transparent 50%, currentColor 50%),
-      linear-gradient(135deg, currentColor 50%, transparent 50%);
-    background-position: calc(100% - 1.05rem) 52%, calc(100% - 0.75rem) 52%;
-    background-size: 0.3rem 0.3rem;
-    background-repeat: no-repeat;
-    cursor: pointer;
-  }
-  :where(.ah-input-sm, .ah-select-sm) { --ah-input-height: 2rem; --ah-input-font-size: 0.8125rem; }
-  :where(.ah-input-lg, .ah-select-lg) { --ah-input-height: 3rem; --ah-input-font-size: 1rem; }
-
-  /* field ------------------------------------------------------------- */
-  .ah-field { display: flex; flex-direction: column; gap: 0.375rem; }
-  .ah-field-label { font-size: 0.875rem; font-weight: 600; }
-  .ah-field-help { font-size: 0.8125rem; color: var(--ah-color-muted); }
-  .ah-field-error { font-size: 0.8125rem; color: var(--ah-color-error); }
-
-  /* card -------------------------------------------------------------- */
-  .ah-card {
-    background: var(--ah-color-surface);
-    border: var(--ah-border-width) solid var(--ah-surface-border-color);
-    border-radius: var(--ah-radius-surface);
-    box-shadow: var(--ah-shadow-surface);
-  }
-  .ah-card-flat { box-shadow: none; }
-  .ah-card-header { padding: 1rem 1.25rem 0; }
-  .ah-card-title { font-family: var(--ah-font-heading); font-size: 1rem; font-weight: 700; }
-  .ah-card-body { padding: 1.25rem; }
-
-  /* alert ------------------------------------------------------------- */
-  .ah-alert {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-    color: var(--ah-color-text);
-    background: color-mix(in oklab, var(--ah-alert-color, var(--ah-color-info)) 12%, var(--ah-color-surface));
-    border: var(--ah-border-width) solid
-      color-mix(in oklab, var(--ah-alert-color, var(--ah-color-info)) 40%, var(--ah-color-surface));
-    border-left-width: 4px;
-    border-left-color: var(--ah-alert-color, var(--ah-color-info));
-    border-radius: min(var(--ah-radius-control), 0.75rem);
-  }
-  .ah-alert-body { flex: 1; }
-  .ah-alert-close {
-    margin: -0.25rem -0.25rem 0 auto;
-    padding: 0 0.375rem;
-    font-size: 1.125rem;
-    line-height: 1.5rem;
-    color: var(--ah-color-muted);
-    background: none;
-    border: 0;
-    border-radius: var(--ah-radius-control);
-    cursor: pointer;
-  }
-  .ah-alert-close:hover { color: var(--ah-color-text); background: var(--ah-color-surface-2); }
-  :where(.ah-alert-success) { --ah-alert-color: var(--ah-color-success); }
-  :where(.ah-alert-warning) { --ah-alert-color: var(--ah-color-warning); }
-  :where(.ah-alert-error) { --ah-alert-color: var(--ah-color-error); }
-
-  /* badge ------------------------------------------------------------- */
-  .ah-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.125rem 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    line-height: 1.25rem;
-    color: color-mix(in oklab, var(--ah-badge-color, var(--ah-color-muted)) 75%, var(--ah-color-text));
-    background: color-mix(in oklab, var(--ah-badge-color, var(--ah-color-muted)) 16%, var(--ah-color-surface));
-    border-radius: var(--ah-radius-round);
-  }
-  :where(.ah-badge-primary) { --ah-badge-color: var(--ah-color-primary); }
-  :where(.ah-badge-success) { --ah-badge-color: var(--ah-color-success); }
-  :where(.ah-badge-warning) { --ah-badge-color: var(--ah-color-warning); }
-  :where(.ah-badge-error) { --ah-badge-color: var(--ah-color-error); }
-
-  /* tabs -------------------------------------------------------------- */
-  .ah-tabs-list {
-    display: flex;
-    gap: 0.25rem;
-    border-bottom: 1px solid var(--ah-color-border);
-    overflow-x: auto;
-  }
-  .ah-tab {
-    margin-bottom: -1px;
-    padding: 0.5rem 0.875rem;
-    font: inherit;
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--ah-color-muted);
-    background: none;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .ah-tab:hover { color: var(--ah-color-text); }
-  .ah-tab[aria-selected="true"] { color: var(--ah-color-text); border-bottom-color: var(--ah-color-primary); }
-  .ah-tab:focus-visible { outline: 2px solid var(--ah-color-primary); outline-offset: -2px; }
-  .ah-tab-panel { padding-top: 1rem; }
-
-  /* theme switcher ---------------------------------------------------- */
-  .ah-theme-switcher { display: flex; flex-wrap: wrap; gap: 0.75rem; }
-  .ah-theme-switcher-item { display: flex; flex-direction: column; gap: 0.25rem; min-width: 7rem; }
-  .ah-theme-switcher-label {
-    font-size: 0.6875rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--ah-color-muted);
-  }
+  --radius-control: var(--ah-radius-md);
+  --radius-surface: var(--ah-radius-lg);
 }

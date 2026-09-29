@@ -1,0 +1,28 @@
+/* aihtml's own pieces that have no sigil counterpart. */
+
+.ah-body {
+  -webkit-font-smoothing: antialiased;
+}
+
+/* an action or fetch in flight on this element */
+[aria-busy="true"] { cursor: progress; }
+
+/* theme switcher (aihtml:theme_switcher/2) */
+.ah-theme-switcher { display: flex; flex-wrap: wrap; gap: var(--ah-spacing-sm); }
+.ah-theme-switcher-item { display: flex; flex-direction: column; gap: var(--ah-spacing-xs); min-width: 7rem; }
+.ah-theme-switcher-label {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-bold);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ah-color-text-secondary);
+}
+.ah-theme-switcher-select {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font: inherit;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+}

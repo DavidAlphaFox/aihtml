@@ -1,0 +1,13 @@
+/* The palettes define the *-lighter accent tints for a light background;
+   on the dark appearance they turn into cream patches (selected days,
+   hovered menu items, chips...). Derive them from the current accent and
+   the dark surface instead, so every palette works in the dark.
+   Imported after the palettes, in the same layer, so it wins over them. */
+[data-theme="dark"] {
+  --ah-color-primary-lighter: color-mix(in srgb, var(--ah-color-primary) 26%, var(--ah-color-bg-paper));
+  --ah-color-secondary-lighter: color-mix(in srgb, var(--ah-color-secondary) 26%, var(--ah-color-bg-paper));
+  --ah-color-info-lighter: color-mix(in srgb, var(--ah-color-info) 26%, var(--ah-color-bg-paper));
+  --ah-color-success-lighter: color-mix(in srgb, var(--ah-color-success) 26%, var(--ah-color-bg-paper));
+  --ah-color-warning-lighter: color-mix(in srgb, var(--ah-color-warning) 26%, var(--ah-color-bg-paper));
+  --ah-color-error-lighter: color-mix(in srgb, var(--ah-color-error) 26%, var(--ah-color-bg-paper));
+}

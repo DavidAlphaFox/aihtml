@@ -1,0 +1,94 @@
+/* Component manifest: every component stylesheet, in one place. Imported
+   by aihtml.css inside @layer components.ah (nested imports inherit it). */
+
+@import "./sigil/primitives/state.css";
+@import "./sigil/primitives/layout.css";
+@import "./sigil/components/layout.css";
+
+/* form */
+@import "./sigil/components/button.css";
+@import "./sigil/components/link_button.css";
+@import "./sigil/components/button_group.css";
+@import "./sigil/components/dropdown_button.css";
+@import "./sigil/components/split_button.css";
+@import "./sigil/components/segmented-control.css";
+@import "./sigil/components/checkbox.css";
+@import "./sigil/components/checkbox_group.css";
+@import "./sigil/components/radiobutton.css";
+@import "./sigil/components/radiobutton_group.css";
+@import "./sigil/components/radio_cards.css";
+@import "./sigil/components/switch_button.css";
+@import "./sigil/components/rating_group.css";
+@import "./sigil/components/input.css";
+@import "./sigil/components/password_input.css";
+@import "./sigil/components/number_input.css";
+@import "./sigil/components/input_otp.css";
+@import "./sigil/components/tag_input.css";
+@import "./sigil/components/dropdownlist.css";
+@import "./sigil/components/slider.css";
+@import "./sigil/components/form.css";
+@import "./sigil/components/validator.css";
+@import "./sigil/components/datepicker.css";
+@import "./sigil/components/combobox.css";
+@import "./sigil/components/timepicker.css";
+@import "./sigil/components/colorpicker.css";
+
+/* layout */
+@import "./sigil/components/card.css";
+@import "./sigil/components/panel.css";
+@import "./sigil/components/expander.css";
+@import "./sigil/components/tabs.css";
+@import "./sigil/components/tab_bar.css";
+@import "./sigil/components/breadcrumbs.css";
+@import "./sigil/components/pagination.css";
+@import "./sigil/components/steps.css";
+@import "./sigil/components/skeleton.css";
+@import "./sigil/components/loader.css";
+@import "./sigil/components/empty.css";
+@import "./sigil/components/menu.css";
+@import "./sigil/components/navbar.css";
+@import "./sigil/components/nav_tree.css";
+@import "./sigil/components/sidenav.css";
+@import "./sigil/components/toolbar.css";
+@import "./sigil/components/splitter.css";
+@import "./sigil/components/listmenu.css";
+@import "./sigil/components/status_bar.css";
+
+/* overlay */
+@import "./sigil/components/tooltip.css";
+@import "./sigil/components/popover.css";
+@import "./sigil/components/drawer.css";
+@import "./sigil/components/sheet.css";
+@import "./sigil/components/toast.css";
+@import "./sigil/components/notification.css";
+@import "./sigil/components/window.css";
+
+/* media, text, data */
+@import "./sigil/components/avatar.css";
+@import "./sigil/components/badge.css";
+@import "./sigil/components/chip.css";
+@import "./sigil/components/aspect_ratio.css";
+@import "./sigil/components/kbd.css";
+@import "./sigil/components/time_ago.css";
+@import "./sigil/components/expandable_text.css";
+@import "./sigil/components/progressbar.css";
+@import "./sigil/components/progress_circle.css";
+@import "./sigil/components/meter.css";
+@import "./sigil/components/statistic.css";
+@import "./sigil/components/kpi_card.css";
+@import "./sigil/components/timeline.css";
+@import "./sigil/components/ranking_list.css";
+@import "./sigil/components/tag_cloud.css";
+
+/* aihtml additions per component group */
+@import "./extra/form_buttons.css";
+@import "./extra/form_choice.css";
+@import "./extra/form_text.css";
+@import "./extra/form_select.css";
+@import "./extra/form_pickers.css";
+@import "./extra/form_time_color.css";
+@import "./extra/layout_basic.css";
+@import "./extra/layout_nav.css";
+@import "./extra/overlay.css";
+@import "./extra/display.css";
+@import "./aihtml-base.css";
