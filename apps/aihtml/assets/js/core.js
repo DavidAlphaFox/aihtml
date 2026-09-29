@@ -1,5 +1,7 @@
 /*!
- * aihtml.js: client runtime for aihtml prefabs. Requires jQuery 3.5+ or 4.
+ * core.js: the client runtime for aihtml prefabs (an ES module; main.js is
+ * the bundle entry, see designs/06-bundling.md). Behaviours are Stimulus
+ * controllers on [data-ah="<name>"], loaded on demand.
  *
  * The server renders all HTML. This file only adds behaviour to it:
  *
@@ -26,51 +28,121 @@
  * data-ah-swap (inner | outer | append | prepend | none), and the new
  * content is mounted. Requests carry the header "X-Aihtml: 1".
  *
- * Component behaviours live in assets/js/components/*.js; scripts/build-js.mjs
- * concatenates them after this file into priv/static/aihtml.js.
+ * Component behaviours live in assets/js/components/*.js, one ES module per
+ * component; Vite bundles them into priv/static/js, one chunk per module,
+ * loaded when the page first needs them (see lazy loading below).
  *
  * Events, all namespaced so AH.destroy can remove them:
  *   ah:theme {axis, value}       on document, after a theme change
  *   ah:before-fetch / ah:after-fetch / ah:error   around a round trip
  */
-(function (root, factory) {
-  root.AH = factory(root.jQuery);
-})(typeof window !== "undefined" ? window : this, function ($) {
-  "use strict";
+import $ from "jquery";
+import { Application, Controller, defaultSchema } from "@hotwired/stimulus";
 
-  if (!$) {
-    throw new Error("aihtml.js needs jQuery; load it first");
-  }
+const AH = (function () {
+  "use strict";
 
   var NS = ".ah";
   var behaviors = {};
-  // this script's own URL, read while it runs (see vendor below)
-  var SELF = typeof document !== "undefined" && document.currentScript
-    ? document.currentScript.src : "";
+  // this module's own URL (see vendor below)
+  var SELF = import.meta.url;
 
   // ------------------------------------------------------------------
   // Behaviours
   // ------------------------------------------------------------------
 
+  // Behaviours are Stimulus controllers. Stimulus is configured to read
+  // data-ah (not data-controller), so the server's HTML stays the same,
+  // and data-ah-do for in-browser actions (data-action is used by the
+  // components themselves).
+  //
+  // AH.define(name, {init, destroy, methods}) is the adapter for the
+  // behaviours written before Stimulus: it registers a controller that
+  // runs init on connect and destroy on disconnect. Two things keep the
+  // old guarantees:
+  // - mount(root) initialises the loaded behaviours inside root at once, so
+  //   code that inserts a component and uses it right away (a server "call"
+  //   op after an "html" op, tests) works; Stimulus connects later and sees
+  //   the element is already initialised.
+  // - Stimulus disconnects an element that is moved (morph, preserve) and
+  //   connects it again; destroy therefore waits a microtask and only runs
+  //   if the element really left the page, so moved components keep state.
   // spec: {init(el, $el), destroy(el, $el), methods: {name(el, $el, ...args)}}
+  var app = null;
+  var SCHEMA = $.extend({}, defaultSchema, {
+    controllerAttribute: "data-ah",
+    actionAttribute: "data-ah-do"
+  });
+
   function define(name, spec) {
     behaviors[name] = spec;
+    if (app) { register(name); }
+    var cbs = pending[name] || [];
+    delete pending[name];
+    cbs.forEach(function (cb) { cb(); });
   }
 
-  // Run a method of the behaviour an element carries (mounting it first
-  // if needed). Used by the server's aihtml_action:call/4 and by pages.
+  function register(name) {
+    app.register(name, class extends Controller {
+      connect() {
+        listenFor(this.element);
+        initElement(this.element);
+      }
+      disconnect() {
+        var el = this.element;
+        queueMicrotask(function () {
+          if (!el.isConnected) { teardown(el); }
+        });
+      }
+    });
+  }
+
+  function initElement(el) {
+    var b = behaviors[el.getAttribute("data-ah")];
+    if (!b || el.hasAttribute("data-ah-mounted")) {
+      return;
+    }
+    el.setAttribute("data-ah-mounted", "");
+    if (b.init) {
+      b.init(el, $(el));
+    }
+  }
+
+  function teardown(el) {
+    if (!el.hasAttribute("data-ah-mounted")) {
+      return;
+    }
+    var b = behaviors[el.getAttribute("data-ah")];
+    if (b && b.destroy) {
+      b.destroy(el, $(el));
+    }
+    $(el).off(NS).removeAttr("data-ah-mounted");
+  }
+
+  // Run a method of the behaviour an element carries. Used by the server's
+  // aihtml_action:call/4 and by pages. A behaviour that is not loaded yet
+  // is loaded first, and the call runs once it is (the result is then
+  // undefined for the caller).
   function invoke(target, method) {
     var args = Array.prototype.slice.call(arguments, 2);
     var result;
     $(target).each(function () {
-      var name = this.getAttribute("data-ah");
-      var b = behaviors[name];
-      if (!b || !b.methods || !b.methods[method]) {
-        console.error("aihtml: no method " + method + " on", this);
-        return;
+      var el = this;
+      var name = el.getAttribute("data-ah");
+      var run = function () {
+        var b = behaviors[name];
+        if (!b || !b.methods || !b.methods[method]) {
+          console.error("aihtml: no method " + method + " on", el);
+          return undefined;
+        }
+        initElement(el);
+        return b.methods[method].apply(null, [el, $(el)].concat(args));
+      };
+      if (behaviors[name] || !lazy.behaviours[name]) {
+        result = run();
+      } else {
+        whenDefined(name, run);
       }
-      if (!this.hasAttribute("data-ah-mounted")) { mount(this); }
-      result = b.methods[method].apply(null, [this, $(this)].concat(args));
     });
     return result;
   }
@@ -79,33 +151,104 @@
   var fns = {};
   function fn(name, f) {
     fns[name] = f;
+    var cbs = pending["fn:" + name] || [];
+    delete pending["fn:" + name];
+    cbs.forEach(function (cb) { cb(); });
+  }
+
+  function callFn(name, args) {
+    if (fns[name]) {
+      fns[name].apply(null, args);
+    } else if (lazy.fns[name]) {
+      whenDefined("fn:" + name, function () { fns[name].apply(null, args); });
+      loadChunk(lazy.fns[name]);
+    } else {
+      throw new Error("no function " + name);
+    }
   }
 
   function mount(rootEl) {
     var $root = $(rootEl || document);
     listenFor($root);
     $root.find("[data-ah]").addBack("[data-ah]").each(function () {
-      var el = this;
-      var name = el.getAttribute("data-ah");
-      if (el.hasAttribute("data-ah-mounted") || !behaviors[name]) {
-        return;
-      }
-      el.setAttribute("data-ah-mounted", "");
-      if (behaviors[name].init) {
-        behaviors[name].init(el, $(el));
-      }
+      initElement(this);
     });
+    scan($root);
     return $root;
   }
 
   function destroy(rootEl) {
     $(rootEl).find("[data-ah-mounted]").addBack("[data-ah-mounted]").each(function () {
-      var name = this.getAttribute("data-ah");
-      if (behaviors[name] && behaviors[name].destroy) {
-        behaviors[name].destroy(this, $(this));
-      }
-      $(this).off(NS).removeAttr("data-ah-mounted");
+      teardown(this);
     });
+  }
+
+  // ------------------------------------------------------------------
+  // Lazy loading
+  // ------------------------------------------------------------------
+  //
+  // main.js hands over the registry built from components/*.js (see
+  // vite.config.mjs): behaviour name -> loader, page function -> loader,
+  // and [selector, loader] pairs for files that act on attributes rather
+  // than on a data-ah root (tooltips, overlay triggers, validation). A
+  // loader is () => import(chunk). scan(root) loads what root needs; it
+  // runs on start, after every mount, and for every DOM change.
+  var lazy = { behaviours: {}, fns: {}, triggers: [] };
+  var pending = {};
+  var loads = new Map();
+
+  function whenDefined(key, cb) {
+    (pending[key] = pending[key] || []).push(cb);
+    var name = key.indexOf("fn:") === 0 ? null : key;
+    if (name && lazy.behaviours[name]) { loadChunk(lazy.behaviours[name]); }
+  }
+
+  function loadChunk(loader) {
+    if (!loads.has(loader)) {
+      loads.set(loader, loader().catch(function (err) {
+        loads.delete(loader);
+        console.error("aihtml: cannot load a component", err);
+      }));
+    }
+    return loads.get(loader);
+  }
+
+  function scan(root) {
+    var node = $(root || document)[0];
+    if (!node || !node.querySelectorAll) { return; }
+    var els = node.matches && node.matches("[data-ah]") ? [node] : [];
+    Array.prototype.push.apply(els, node.querySelectorAll("[data-ah]"));
+    els.forEach(function (el) {
+      var name = el.getAttribute("data-ah");
+      if (!behaviors[name] && lazy.behaviours[name]) { loadChunk(lazy.behaviours[name]); }
+    });
+    lazy.triggers.forEach(function (t) {
+      if ((node.matches && node.matches(t[0])) || node.querySelector(t[0])) { loadChunk(t[1]); }
+    });
+  }
+
+  // Load every registered component (tests, pages that want no delay).
+  function loadAll() {
+    var all = new Set();
+    Object.keys(lazy.behaviours).forEach(function (k) { all.add(lazy.behaviours[k]); });
+    Object.keys(lazy.fns).forEach(function (k) { all.add(lazy.fns[k]); });
+    lazy.triggers.forEach(function (t) { all.add(t[1]); });
+    return Promise.all(Array.from(all).map(loadChunk));
+  }
+
+  // Start Stimulus with the registry; main.js calls this once.
+  function start(registry) {
+    lazy = registry || lazy;
+    app = Application.start(document.documentElement, SCHEMA);
+    Object.keys(behaviors).forEach(register);
+    new MutationObserver(function (records) {
+      records.forEach(function (r) {
+        if (r.type === "attributes") { scan(r.target); }
+        r.addedNodes.forEach(function (n) { if (n.nodeType === 1) { scan(n); } });
+      });
+    }).observe(document.documentElement,
+               { childList: true, subtree: true, attributes: true, attributeFilter: ["data-ah"] });
+    scan(document);
   }
 
   // ------------------------------------------------------------------
@@ -888,8 +1031,7 @@
     call: function (op, $t) {
       var args = op.args || [];
       if (op.id === undefined && op.sel === undefined) {
-        if (!fns[op.method]) { throw new Error("no function " + op.method); }
-        fns[op.method].apply(null, args);
+        callFn(op.method, args);
       } else {
         invoke.apply(null, [$t, op.method].concat(args));
       }
@@ -1151,7 +1293,7 @@
   // once per page and resolves with its global; a list loads in order and
   // resolves with the list of globals. A library already on the page (its
   // global is defined) is not loaded again. Files come from the body's
-  // data-ah-vendor directory, else from "vendor/" next to aihtml.js.
+  // data-ah-vendor directory, else from vendor/ beside the bundle's js/.
   var VENDOR = {
     echarts: { file: "echarts.min.js", global: "echarts" },
     xlsx: { file: "xlsx.full.min.js", global: "XLSX" },
@@ -1165,7 +1307,8 @@
   function vendorDir() {
     var dir = document.body && document.body.getAttribute("data-ah-vendor");
     if (dir) { return dir.replace(/\/?$/, "/"); }
-    return SELF ? SELF.replace(/[^\/]*$/, "") + "vendor/" : "/aihtml/vendor/";
+    // the bundle is in priv/static/js, the vendor files in priv/static/vendor
+    return SELF ? SELF.replace(/[^\/]*$/, "") + "../vendor/" : "/aihtml/vendor/";
   }
 
   function vendor(names) {
@@ -1211,6 +1354,9 @@
     theme: theme,
     fetch: fetchFor,
     vendor: vendor,
+    start: start,
+    loadAll: loadAll,
+    stimulus: function () { return app; },
     apply: applyOps,
     swap: swap,
     morph: function (target, html) { morph($(target)[0], html, true); },
@@ -1219,4 +1365,6 @@
     version: "0.3.0"
   };
   return api;
-});
+})();
+
+export default AH;
