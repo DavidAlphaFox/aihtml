@@ -1,0 +1,52 @@
+/* aihtml additions for slider (aihtml_slider); sigil styles live in
+   ../sigil/components. */
+
+.ah-slider-horizontal {
+  display: block;
+  width: 100%;
+}
+
+.ah-slider:focus-visible,
+.ah-slider-thumb:focus-visible {
+  outline: none;
+}
+
+.ah-slider-focused .ah-slider-track {
+  outline-color: var(--ah-color-primary-lighter);
+}
+
+.ah-slider-thumb:focus-visible {
+  box-shadow: 0 0 0 3px var(--ah-color-primary-lighter), var(--ah-shadow-sm);
+}
+
+.ah-slider-content {
+  touch-action: none;
+  cursor: pointer;
+}
+
+/* sigil places tick containers with descendant selectors that never
+   match its own markup; put them beside the track. */
+.ah-slider-horizontal .ah-slider-ticks-bottom { top: calc(50% + 7px); }
+.ah-slider-horizontal .ah-slider-ticks-top { bottom: calc(50% + 7px); }
+.ah-slider-horizontal .ah-slider-ticks-top .ah-slider-tick { top: auto; bottom: 0; }
+.ah-slider-horizontal .ah-slider-ticks-top .ah-slider-tick-label { top: auto; bottom: 12px; }
+.ah-slider-vertical .ah-slider-ticks-bottom { left: calc(50% + 7px); }
+.ah-slider-vertical .ah-slider-ticks-top { right: calc(50% + 7px); }
+.ah-slider-vertical .ah-slider-ticks-top .ah-slider-tick { left: auto; right: 0; }
+.ah-slider-vertical .ah-slider-ticks-top .ah-slider-tick-label { left: auto; right: 14px; }
+
+/* room for labels outside the 30px box */
+.ah-slider-horizontal.ah-slider-ticks-bottom,
+.ah-slider-horizontal.ah-slider-ticks-both { margin-bottom: 18px; }
+.ah-slider-horizontal.ah-slider-ticks-top,
+.ah-slider-horizontal.ah-slider-ticks-both { margin-top: 18px; }
+
+.ah-slider-vertical {
+  height: 160px;
+  min-width: 0;
+}
+
+.ah-slider-vertical .ah-slider-tooltip { transform: translateY(-50%); }
+
+/* the tooltip is placed by JS at the thumb centre */
+.ah-slider-horizontal .ah-slider-tooltip { transform: translateX(-50%); }
