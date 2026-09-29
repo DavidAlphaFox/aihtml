@@ -62,7 +62,10 @@
                  aihtml_layout_basic,
                  aihtml_layout_nav,
                  aihtml_layout_scroll, aihtml_layout_bars, aihtml_layout_dnd,
-                 aihtml_overlay, aihtml_display, aihtml_data_tree]).
+                 aihtml_layout_dock, aihtml_layout_tiles,
+                 aihtml_overlay, aihtml_display, aihtml_data_tree,
+                 aihtml_data_grid, aihtml_data_pivot, aihtml_data_tables,
+                 aihtml_data_schedule, aihtml_data_charts, aihtml_data_graph]).
 
 -spec groups() -> [module()].
 groups() -> ?GROUPS.
