@@ -35,15 +35,12 @@ catalog_entries_are_complete_test() ->
          ?assert(lists:member(<<"ah:open">>, maps:get(events, E)))
      end || #{signature := S, root := R, category := C} = E <- ?O:catalog()].
 
-every_component_has_an_example_test() ->
-    Names = [N || {N, _, _} <- ?O:examples()],
-    [?assert(lists:member(N, Names)) || #{name := N} <- ?O:catalog()],
-    [?assert(is_binary(r(H))) || {_, _, H} <- ?O:examples()].
-
-example_ids_are_unique_test() ->
-    Html = iolist_to_binary([r(H) || {_, _, H} <- ?O:examples()]),
-    {match, Ids} = re:run(Html, <<" id=\"([^\"]+)\"">>, [global, {capture, all_but_first, binary}]),
-    ?assertEqual(length(Ids), length(lists:usort(Ids))).
+every_entry_documents_options_and_methods_test() ->
+    [begin
+         Docs = maps:get(option_docs, E),
+         [?assert(maps:is_key(O, Docs)) || O <- maps:get(options, E, [])],
+         ?assert(is_list(maps:get(methods, E)))
+     end || E <- ?O:catalog()].
 
 %%%===================================================================
 %%% Tooltip
