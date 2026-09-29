@@ -9,7 +9,16 @@
 %% it exports one, and writes a delegating wrapper with the module's own
 %% -spec (local types become Module:type() when exported, term() if not).
 %%
-%%   escript scripts/gen-facade.escript [ExtraEbinDir]
+%%   escript scripts/gen-facade.escript [--out Dir] [ExtraEbinDir...]
+%%
+%% With --out the sources are left alone: Dir/aihtml.erl and
+%% Dir/aihtml/include/ (aihtml.hrl generated, the other headers symlinked)
+%% are written instead, for checking a group that is not integrated yet:
+%% compile Dir/aihtml.erl with `-I Dir/aihtml/include' and the modules
+%% that include aihtml.hrl with `-I Dir'.
+main(["--out", Out | Args]) ->
+    put(out, filename:absname(Out)),
+    main(Args);
 main(Args) ->
     Root = filename:dirname(filename:dirname(filename:absname(escript:script_name()))),
     [code:add_patha(D) || D <- filelib:wildcard(filename:join(Root, "_build/default/lib/*/ebin"))],
@@ -23,8 +32,7 @@ main(Args) ->
             || M <- Groups],
     Exports = [io_lib:format("~p/~b", [F, A]) || {_, F, A, _} <- Entries],
     ExportAttr = ["-export([", lists:join(",\n         ", chunk(Exports)), "]).\n"],
-    Erl = filename:join(Root, "apps/aihtml/src/aihtml.erl"),
-    Hrl = filename:join(Root, "apps/aihtml/include/aihtml.hrl"),
+    {Erl, Hrl} = targets(Root, get(out)),
     replace(Erl, "%% BEGIN GENERATED EXPORTS", "%% END GENERATED EXPORTS", ExportAttr),
     replace(Erl, "%% BEGIN GENERATED COMPONENTS", "%% END GENERATED COMPONENTS", Code),
     replace(Hrl, "%% BEGIN GENERATED COMPONENT IMPORTS", "%% END GENERATED COMPONENT IMPORTS",
@@ -120,6 +128,25 @@ source() ->
     filename:join(Root, "apps/aihtml/src/aihtml.erl").
 
 chunk(L) -> L.
+
+targets(Root, undefined) ->
+    {filename:join(Root, "apps/aihtml/src/aihtml.erl"),
+     filename:join(Root, "apps/aihtml/include/aihtml.hrl")};
+targets(Root, Out) ->
+    Inc = filename:join([Out, "aihtml", "include"]),
+    ok = filelib:ensure_path(Inc),
+    Src = filename:join(Root, "apps/aihtml/include"),
+    [begin
+         Link = filename:join(Inc, F),
+         _ = file:delete(Link),
+         case F of
+             "aihtml.hrl" -> {ok, _} = file:copy(filename:join(Src, F), Link);
+             _ -> ok = file:make_symlink(filename:join(Src, F), Link)
+         end
+     end || F <- filelib:wildcard("*.hrl", Src)],
+    Erl = filename:join(Out, "aihtml.erl"),
+    {ok, _} = file:copy(filename:join(Root, "apps/aihtml/src/aihtml.erl"), Erl),
+    {Erl, filename:join(Inc, "aihtml.hrl")}.
 
 replace(File, Begin, End, New) ->
     {ok, Bin} = file:read_file(File),
