@@ -1,0 +1,18 @@
+/* aihtml additions for the listmenu component (aihtml_listmenu).
+   Sigil styles live in ../sigil/components. */
+
+/* ==========================================================================
+   listmenu: selected value and keyboard focus
+   ========================================================================== */
+.ah-listmenu-item-selected {
+  color: var(--ah-color-primary);
+  font-weight: var(--ah-font-weight-semibold);
+  background: color-mix(in srgb, var(--ah-color-primary) 8%, transparent);
+}
+.ah-listmenu-item-focus {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+.ah-listmenu:not(:focus-within) .ah-listmenu-item-focus { outline: none; }
+.ah-listmenu-icon { width: 16px; height: 16px; flex: none; margin-right: 8px; }
+.ah-listmenu-filter-input { background: var(--ah-color-bg); color: var(--ah-color-text); }
