@@ -186,3 +186,23 @@
 }
 .ah-alert-close:hover { opacity: 1; background: oklch(from var(--ah-alert-accent) l c h / 0.15); }
 .ah-alert-close:focus-visible { opacity: 1; outline: 2px solid var(--ah-alert-accent); outline-offset: 1px; }
+
+/* ---- kpi_card on the dark appearance ------------------------------------
+   sigil's card is a gradient from the accent's -lighter to its -light tone
+   with -darker text: on a dark page that stays a bright pastel slab (the
+   -light tones are mid-bright colours, e.g. #FFCA66). On the dark
+   appearance the card is instead a deep tint of its accent over the paper
+   surface, and the text tone becomes a light tint of the accent. Only
+   colours change; the skins' borders, radius and shadows still apply.
+   The doubled class outweighs the colour variants (.ah-kpi-card--success,
+   ...), which set the same tokens. */
+[data-theme="dark"] .ah-kpi-card.ah-kpi-card {
+  --ah-kpi-color-darker: color-mix(in srgb, var(--ah-kpi-color) 30%, var(--ah-color-text));
+  color: var(--ah-kpi-color-darker);
+  background-image: linear-gradient(135deg,
+    color-mix(in srgb, var(--ah-kpi-color) 14%, var(--ah-color-bg-paper)) 0%,
+    color-mix(in srgb, var(--ah-kpi-color) 30%, var(--ah-color-bg-paper)) 100%);
+}
+[data-theme="dark"] .ah-kpi-card::before {
+  opacity: 0.22;
+}
