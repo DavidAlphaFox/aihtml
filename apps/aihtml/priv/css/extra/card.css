@@ -1,0 +1,35 @@
+/* aihtml additions for card; sigil styles live in ../sigil/components. */
+
+/* ---- card: media, subtitle, extra, flush ---------------------------- */
+
+.ah-card-media > img,
+.ah-card-media > video {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+}
+
+.ah-card-header:has(> .ah-card-extra) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--ah-spacing-md);
+}
+
+.ah-card-header > .ah-card-extra {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-card-subtitle {
+  margin: 2px 0 0;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-card.ah-card-flush > .ah-card-body {
+  padding: 0;
+}
