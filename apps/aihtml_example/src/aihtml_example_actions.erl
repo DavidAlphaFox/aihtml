@@ -43,7 +43,7 @@ top_bar() ->
 %% The count lives in the data layer, so every visitor shares it.
 counter_card() ->
     card([row([button(<<"+1">>, inc, [], [on(click, {?MODULE, bump, #{}})]),
-               button(<<"Reset">>, reset, [ghost], [on(click, {?MODULE, reset, #{}})]),
+               button(<<"Reset">>, reset, [borderless], [on(click, {?MODULE, reset, #{}})]),
                span([<<"Count: ">>,
                      strong(aihtml_example_store:counter(), [],
                             [{id, count},
@@ -58,15 +58,15 @@ greeting_card() ->
                        input(<<>>, [], [{id, name}, {placeholder, <<"Type a name">>},
                                         {autocomplete, off},
                                         on(input, {?MODULE, greet, #{}}, #{debounce => 150})]),
-                       [], [{for, name}]),
+                       [top], [{for, name}]),
                  p(<<"Hello, stranger.">>, [<<"text-muted">>], [{id, greeting}])],
                 [<<"flex flex-col gap-3">>], [])],
          [], [{title, <<"Input events">>}]).
 
 data_card() ->
-    card([row([button(<<"Load processes">>, load, [outline],
+    card([row([button(<<"Load processes">>, load, [outlined],
                       [on(click, {?MODULE, load_processes, #{}})]),
-               button(<<"Load system info">>, info, [ghost],
+               button(<<"Load system info">>, info, [borderless],
                       [on(click, {?MODULE, load_system, #{}})])]),
           'div'(p(<<"Nothing loaded yet.">>, [<<"text-muted text-sm">>], []),
                 [<<"mt-4">>], [{id, data}])],
@@ -80,8 +80,16 @@ include_card() ->
                button(<<"=">>, sum, [secondary, sm],
                       [on(click, {?MODULE, sum, #{}}, #{include => [{id, a}, {id, b}]})]),
                strong(<<"?">>, [], [{id, sum}])]),
-          row([button(<<"Dark mode from Erlang">>, dark, [ghost],
-                      [on(click, {?MODULE, dark, #{}})])])],
+          row([button(<<"Dark mode from Erlang">>, dark, [borderless],
+                      [on(click, {?MODULE, dark, #{}})])]),
+          %% Server-side search: each keystroke (debounced) runs `search'
+          %% below, which renders the matching rows in Erlang and morphs
+          %% them into the list; the input keeps its focus and caret.
+          field(<<"Registered process (server search)">>,
+                combobox([], undefined, [<<"w-72">>],
+                         [{id, <<"proc_search">>}, {placeholder, <<"Type a name, e.g. kernel">>},
+                          {search, {?MODULE, search, #{}}}]),
+                [top, <<"mt-4">>], [])],
          [], [{title, <<"Values and scripts">>}]).
 
 todos_card() ->
@@ -91,7 +99,7 @@ todos_card() ->
                                              {autocomplete, off}]),
                             button(<<"Add">>, add, [], [{type, submit}])],
                            [<<"flex gap-2">>], []),
-                     [], [{for, todo_text}]),
+                     [top], [{for, todo_text}]),
                [], [on(submit, {?MODULE, add_todo, #{}})]),
           ul([todo_item(T) || T <- aihtml_example_store:todos()],
              [<<"mt-3 divide-y divide-line">>],
@@ -102,7 +110,7 @@ todos_card() ->
 todo_item(#{id := Id, text := Text, done := Done}) ->
     li([checkbox(Text, Id, [<<"flex-1">>, [<<"line-through text-muted">> || Done]],
                  [{checked, Done}, on(change, {?MODULE, toggle_todo, #{id => Id}})]),
-        button(<<"Delete">>, Id, [ghost, sm],
+        button(<<"Delete">>, Id, [borderless, sm],
                [on(click, {?MODULE, delete_todo, #{id => Id}},
                    #{confirm => <<"Delete this todo?">>})])],
        [<<"flex items-center gap-3 py-2">>], [{id, todo_dom(Id)}]).
@@ -160,6 +168,11 @@ action(sum, _, #{values := Vs}, Ctx) ->
                error:_ -> <<"not a number">>
            end,
     aihtml_action:html(Ctx, {id, sum}, Html);
+action(search, _, #{value := Query} = Ev, Ctx) ->
+    Q = string:lowercase(Query),
+    Names = lists:sort([atom_to_binary(N) || N <- erlang:registered()]),
+    Hits = lists:sublist([N || N <- Names, string:find(N, Q) =/= nomatch], 20),
+    aihtml_form_pickers:set_items(Ctx, Ev, Hits);
 action(dark, _, _Ev, Ctx) ->
     aihtml_action:js(Ctx, <<"AH.theme.set('appearance', 'dark')">>);
 action(add_todo, _, #{form := Form}, Ctx) ->

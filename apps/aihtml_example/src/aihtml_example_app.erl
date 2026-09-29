@@ -11,7 +11,8 @@ start(_Type, _Args) ->
     Port = application:get_env(aihtml_example, port, 8080),
     %% "/" is the action demo: each event is one stateless request.
     %% aihtml_cowboy adds the action endpoint and the /aihtml/ assets.
-    Actions = [{"/", aihtml_example_actions, #{}} | aihtml_cowboy:routes(#{})],
+    Actions = [{"/", aihtml_example_actions, #{}},
+               {"/components", aihtml_example_gallery, #{}} | aihtml_cowboy:routes(#{})],
     %% "/fetch" is the lower-level variant: HTML fragments from plain URLs.
     Fetch = [{"/fetch", aihtml_example_page, #{}},
              {"/counter", aihtml_example_api, counter},

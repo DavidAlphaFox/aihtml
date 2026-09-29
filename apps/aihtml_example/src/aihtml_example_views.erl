@@ -39,33 +39,33 @@ intro() ->
 buttons_card() ->
     card([row([button(<<"Primary">>, primary, [], []),
                button(<<"Secondary">>, secondary, [secondary], []),
-               button(<<"Outline">>, outline, [outline], []),
-               button(<<"Ghost">>, ghost, [ghost], []),
-               button(<<"Danger">>, danger, [danger], [])]),
+               button(<<"Outline">>, outline, [outlined], []),
+               button(<<"Ghost">>, ghost, [borderless], []),
+               button(<<"Danger">>, danger, [error], [])]),
           row([button(<<"Small">>, s, [sm], []),
-               button(<<"Large">>, l, [lg, outline], []),
+               button(<<"Large">>, l, [lg, outlined], []),
                button(<<"Disabled">>, d, [], [{disabled, true}])],
               [<<"mt-4">>]),
-          button(<<"Block">>, b, [block, secondary], [{class, <<"mt-4">>}])],
+          button(<<"Block">>, b, [secondary, <<"w-full mt-4">>], [])],
          [], [{title, <<"Buttons">>}]).
 
 controls_card() ->
     card(['div'([field(<<"Name">>, input(<<>>, [], [{id, name}, {name, name},
                                                    {placeholder, <<"Ada">>}]),
-                       [], [{for, name}, {help, <<"Shown to other users.">>}]),
+                       [top], [{for, name}, {help, <<"Shown to other users.">>}]),
                  field(<<"Email">>, input(<<"not-an-email">>, [invalid], [{id, email},
                                                                           {type, email}]),
-                       [], [{for, email}, {error, <<"Enter a valid address.">>}]),
+                       [top], [{for, email}, {error, <<"Enter a valid address.">>}]),
                  field(<<"Role">>, select([{dev, <<"Developer">>}, {ops, <<"Operations">>},
                                            {pm, <<"Product">>}],
                                           ops, [], [{id, role}, {name, role}]),
-                       [], [{for, role}]),
+                       [top], [{for, role}]),
                  field(<<"Bio">>, textarea(<<>>, [], [{id, bio}, {rows, 3}]),
-                       [], [{for, bio}]),
+                       [top], [{for, bio}]),
                  row([checkbox(<<"Remember me">>, yes, [], [{name, remember}, {checked, true}]),
-                      radio(<<"Monthly">>, monthly, [], [{name, plan}, {checked, true}]),
-                      radio(<<"Yearly">>, yearly, [], [{name, plan}]),
-                      switch(<<"Notifications">>, on, [], [{name, notify}])])],
+                      radiobutton(<<"Monthly">>, monthly, [], [{name, plan}, {checked, true}]),
+                      radiobutton(<<"Yearly">>, yearly, [], [{name, plan}]),
+                      switch_button(<<"Notifications">>, on, [], [{name, notify}])])],
                 [<<"flex flex-col gap-4">>], [])],
          [], [{title, <<"Form controls">>}]).
 
@@ -74,9 +74,9 @@ feedback_card() ->
                  alert(<<"Saved successfully.">>, [success, dismissible], []),
                  alert(<<"Your trial ends in three days.">>, [warning], []),
                  alert(<<"Something went wrong.">>, [error, dismissible], []),
-                 row([badge(<<"neutral">>, [], []), badge(<<"primary">>, [primary], []),
-                      badge(<<"success">>, [success], []), badge(<<"warning">>, [warning], []),
-                      badge(<<"error">>, [error], [])])],
+                 row([chip(<<"neutral">>, [soft], []), chip(<<"primary">>, [primary, soft], []),
+                      chip(<<"success">>, [success, soft], []), chip(<<"warning">>, [warning, soft], []),
+                      chip(<<"error">>, [error, soft], [])])],
                 [<<"flex flex-col gap-3">>], [])],
          [], [{title, <<"Feedback">>}]).
 
@@ -97,7 +97,7 @@ tabs_card() ->
          [], [{title, <<"Tabs">>}]).
 
 round_trip_card() ->
-    card(['div'([row([button(<<"Count on the server">>, bump, [outline],
+    card(['div'([row([button(<<"Count on the server">>, bump, [outlined],
                              [fetch(post, <<"/counter">>, <<"#counter">>)]),
                       counter_value(aihtml_example_store:counter())]),
                  field(<<"Live greeting">>,
@@ -105,7 +105,7 @@ round_trip_card() ->
                                         {placeholder, <<"Type a name">>},
                                         fetch(get, <<"/greet">>, <<"#greeting">>,
                                               #{trigger => input})]),
-                       [], [{for, greet}]),
+                       [top], [{for, greet}]),
                  greeting(<<>>)],
                 [<<"flex flex-col gap-4">>], [])],
          [], [{title, <<"Server round trips">>}]).
@@ -139,9 +139,9 @@ todo_section(Error) ->
                                         {autocomplete, off}]),
                        button(<<"Add">>, add, [], [{type, submit}])],
                       [<<"flex gap-2">>], []),
-                [], [{for, todo_text}, {error, Error}]),
+                [top], [{for, todo_text}, {error, Error}]),
           [], [fetch(post, <<"/todos">>, <<"#todos">>)]),
-     p([badge([Done, <<" / ">>, length(Todos), <<" done">>], [primary], [])],
+     p([chip([Done, <<" / ">>, length(Todos), <<" done">>], [primary, soft], [])],
        [<<"mt-4">>], []),
      ul([todo_item(T) || T <- Todos], [<<"mt-3 divide-y divide-line">>], [])].
 
@@ -151,7 +151,7 @@ todo_item(#{id := Id, text := Text, done := Done}) ->
     li([checkbox(Text, IdB, [<<"flex-1">>, [<<"line-through text-muted">> || Done]],
                  [{checked, Done},
                   fetch(post, <<"/todos/", IdB/binary, "/toggle">>, <<"#todos">>)]),
-        button(<<"Delete">>, IdB, [ghost, sm],
+        button(<<"Delete">>, IdB, [borderless, sm],
                [fetch(delete, <<"/todos/", IdB/binary>>, <<"#todos">>,
                       #{confirm => <<"Delete this todo?">>})])],
        [<<"flex items-center gap-3 py-2">>], [{id, <<"todo-", IdB/binary>>}]).
