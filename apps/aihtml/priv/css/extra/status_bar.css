@@ -1,0 +1,13 @@
+/* aihtml additions for the status_bar component (aihtml_status_bar).
+   Sigil styles live in ../sigil/components. */
+
+/* ==========================================================================
+   status bar: left and right groups of segments
+   ========================================================================== */
+.ah-status-bar__side {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.ah-status-bar__side--right { margin-left: auto; }
