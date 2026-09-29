@@ -1,0 +1,21 @@
+/* aihtml additions for progress_circle (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- progress circle: indeterminate ---- */
+.ah-progress-circle--indeterminate .ah-progress-circle-ring svg {
+  animation: ah-progress-circle-spin 1.2s linear infinite;
+}
+.ah-progress-circle--indeterminate .ah-progress-circle-fill {
+  stroke-dasharray: 70 213;
+  stroke-dashoffset: 0;
+  transition: none;
+}
+@keyframes ah-progress-circle-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-progress-circle--indeterminate .ah-progress-circle-ring svg {
+    animation-duration: 3s;
+  }
+}
