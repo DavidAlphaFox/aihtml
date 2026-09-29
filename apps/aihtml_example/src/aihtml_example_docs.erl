@@ -75,10 +75,11 @@ header_bar(#{name := Name, signature := Sig, category := Cat} = E) ->
                   h1(?SITE:display_name(Name), [<<"mt-2 text-3xl font-bold">>], []),
                   p(maps:get(doc, E), [<<"mt-2 text-muted leading-relaxed">>], []),
                   code(Sig, [<<"mt-3 inline-block font-mono text-sm px-2 py-1 rounded-control bg-surface-2">>], [])],
-                 %% flex-1 + min-w-0: the title block takes the free width and
-                 %% the description wraps inside it, instead of pushing the
-                 %% switcher onto its own line
-                 [<<"flex-1 min-w-0">>], []),
+                 %% flex-1: the title block takes the free width and the
+                 %% description wraps inside it. Below lg it keeps at least
+                 %% 20rem, so on narrow screens the switcher moves under it
+                 %% instead of squeezing the text into a thin column.
+                 [<<"flex-1 min-w-[20rem] lg:min-w-0">>], []),
            %% a 2 x 2 grid is half as wide as the default row of four
            theme_switcher([<<"shrink-0 grid grid-cols-2 gap-x-3 gap-y-2">>], [])],
           %% side by side from lg up; on narrow screens the switcher goes below
