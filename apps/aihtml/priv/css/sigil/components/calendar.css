@@ -1,0 +1,640 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   日历 (Calendar)
+   完整的日历组件，包含月视图、周视图、日视图和列表视图
+   ============================================================================ */
+
+/* ---- 布局容器 ---- */
+
+.ah-calendar {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: var(--ah-font-family);
+  color: var(--ah-color-grey-800);
+  background: var(--ah-color-bg-paper);
+  border-radius: var(--ah-radius-md);
+}
+
+/* ---- 工具栏 ---- */
+
+.ah-calendar-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  flex-shrink: 0;
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-calendar-toolbar-left,
+.ah-calendar-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+}
+
+.ah-calendar-toolbar-center {
+  flex: 1;
+  text-align: center;
+}
+
+.ah-calendar-title {
+  margin: 0;
+  font-size: var(--ah-font-size-lg);
+  font-weight: var(--ah-font-weight-semibold);
+}
+
+/* ---- 日历按钮 ---- */
+
+.ah-calendar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-hairline-width) solid var(--ah-color-grey-300);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-paper);
+  font-size: var(--ah-font-size-sm);
+  cursor: pointer;
+  transition: all var(--ah-transition-fast);
+  min-width: 28px;
+  line-height: 1;
+}
+
+.ah-calendar-btn:hover {
+  background: var(--ah-color-grey-50);
+  border-color: var(--ah-color-grey-400);
+}
+
+.ah-calendar-btn-prev,
+.ah-calendar-btn-next {
+  font-size: var(--ah-font-size-lg);
+  font-weight: var(--ah-font-weight-bold);
+}
+
+/* ---- 视图切换按钮 ---- */
+
+.ah-calendar-view-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-hairline-width) solid var(--ah-color-grey-300);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-paper);
+  font-size: var(--ah-font-size-xs);
+  cursor: pointer;
+  transition: all var(--ah-transition-fast);
+}
+
+.ah-calendar-view-btn:hover {
+  background: var(--ah-color-grey-50);
+}
+
+.ah-calendar-view-btn-active {
+  background: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+  border-color: var(--ah-color-primary);
+}
+
+.ah-calendar-view-btn-active:hover {
+  background: var(--ah-color-primary-dark);
+}
+
+/* ---- 视图容器 ---- */
+
+.ah-calendar-view-container {
+  flex: 1;
+  overflow: auto;
+}
+
+/* ---- 共享事件标签 ---- */
+
+.ah-calendar-event {
+  border-radius: var(--ah-radius-sm);
+  color: var(--ah-color-common-white);
+  font-size: var(--ah-font-size-xs);
+  cursor: pointer;
+  transition: opacity var(--ah-transition-fast);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-calendar-event:hover {
+  opacity: 0.85;
+}
+
+.ah-calendar-event-ghost {
+  pointer-events: none;
+}
+
+.ah-calendar-event-time {
+  opacity: 0.85;
+  margin-right: 4px;
+}
+
+.ah-calendar-event-title {
+  font-weight: var(--ah-font-weight-medium);
+}
+
+/* ============================================================
+   日格视图（月视图）
+   ============================================================ */
+
+.ah-calendar-daygrid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.ah-calendar-daygrid-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  flex-shrink: 0;
+}
+
+.ah-calendar-daygrid-header-cell {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  text-align: center;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-grey-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ah-calendar-daygrid-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+/* 周行：分层结构，背景层提供边框和颜色，内容层显示数字和事件 */
+
+.ah-calendar-week-row {
+  position: relative;
+  flex: 1;
+  min-height: 80px;
+}
+
+/* 背景层：绝对定位，提供日期单元格边框和背景 */
+
+.ah-calendar-week-bg {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  position: absolute;
+  inset: 0;
+}
+
+.ah-calendar-day {
+  border-right: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  cursor: default;
+}
+
+.ah-calendar-day:last-child {
+  border-right: none;
+}
+
+.ah-calendar-day-today {
+  background: color-mix(in srgb, var(--ah-color-primary) 4%, transparent);
+}
+
+.ah-calendar-day-other {
+  background: var(--ah-color-grey-50);
+}
+
+.ah-calendar-day-selected {
+  background: var(--ah-color-primary-lighter) !important;
+}
+
+/* 内容层：相对定位，决定实际高度 */
+
+.ah-calendar-week-content {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  position: relative;
+  z-index: 1;
+  min-height: 80px;
+  gap: 1px 0;
+}
+
+/* 日期数字 */
+
+.ah-calendar-day-num {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-grey-600);
+  padding: 2px 4px;
+  text-align: right;
+  line-height: 24px;
+}
+
+/* 今天日期徽章：黄色圆形白字 */
+.ah-calendar-day-num-today {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 24px;
+  padding: 0;
+  margin: 2px 4px 2px auto;
+  border-radius: var(--ah-radius-full);
+  background: var(--ah-color-warning);
+  color: var(--ah-color-common-white);
+  font-weight: var(--ah-font-weight-bold);
+  line-height: 1;
+}
+
+.ah-calendar-day-num-other {
+  color: var(--ah-color-grey-300);
+}
+
+/* 内容网格中的事件片段 */
+
+.ah-calendar-daygrid-event {
+  padding: 1px 4px;
+  line-height: 1.4;
+  min-width: 0;
+  z-index: 1;
+}
+
+/* 跨日事件标签 */
+
+.ah-calendar-daygrid-event-multi {
+  border-radius: var(--ah-radius-sm);
+}
+
+/* 从上周延续：左边缘平直 */
+.ah-calendar-daygrid-event-start {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 6px;
+}
+
+/* 延续到下周：右边缘平直 */
+.ah-calendar-daygrid-event-end {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+/* 更多指示器 */
+
+.ah-calendar-day-more {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-500);
+  padding: 1px 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.ah-calendar-day-more:hover {
+  color: var(--ah-color-primary);
+}
+
+/* ============================================================
+   时间格视图（周/日视图）
+   ============================================================ */
+
+.ah-calendar-timegrid {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 头部 */
+
+.ah-calendar-timegrid-header {
+  display: flex;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  flex-shrink: 0;
+}
+
+.ah-calendar-timegrid-gutter-header {
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.ah-calendar-timegrid-header-cell {
+  flex: 1;
+  text-align: center;
+  padding: var(--ah-spacing-xs) 0;
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+.ah-calendar-timegrid-header-day {
+  display: block;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-grey-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ah-calendar-timegrid-header-date {
+  display: block;
+  font-size: var(--ah-font-size-lg);
+  font-weight: var(--ah-font-weight-bold);
+  color: var(--ah-color-grey-800);
+}
+
+.ah-calendar-timegrid-header-today .ah-calendar-timegrid-header-date {
+  color: var(--ah-color-primary);
+}
+
+/* 全天行 */
+
+.ah-calendar-timegrid-allday-row {
+  display: flex;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-200);
+  flex-shrink: 0;
+  min-height: 28px;
+}
+
+.ah-calendar-timegrid-allday-row > .ah-calendar-timegrid-gutter {
+  width: 60px;
+  flex-shrink: 0;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-400);
+  padding: 4px 8px;
+  text-align: right;
+}
+
+.ah-calendar-timegrid-allday {
+  display: flex;
+  flex: 1;
+}
+
+.ah-calendar-timegrid-allday-cell {
+  flex: 1;
+  padding: 2px;
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.ah-calendar-allday-event {
+  padding: 1px 4px;
+  line-height: 1.4;
+}
+
+/* 可滚动时间主体 */
+
+.ah-calendar-timegrid-scroll {
+  flex: 1;
+  overflow-y: auto;
+  position: relative;
+}
+
+.ah-calendar-timegrid-body {
+  display: flex;
+  position: relative;
+}
+
+/* 时间槽侧栏 */
+
+.ah-calendar-timegrid-gutter {
+  width: 60px;
+  flex-shrink: 0;
+}
+
+.ah-calendar-timegrid-slot {
+  position: relative;
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+.ah-calendar-timegrid-slot-label {
+  position: absolute;
+  top: -8px;
+  right: 8px;
+  font-size: 10px;
+  color: var(--ah-color-grey-400);
+  line-height: 1;
+}
+
+.ah-calendar-timegrid-slot-line {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  right: 0;
+  height: 0;
+  border-top: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+}
+
+/* 日期列 */
+
+.ah-calendar-timegrid-cols {
+  display: flex;
+  flex: 1;
+}
+
+.ah-calendar-timegrid-day-col {
+  flex: 1;
+  border-left: var(--ah-hairline-width) solid var(--ah-color-grey-100);
+  position: relative;
+}
+
+.ah-calendar-timegrid-day-today {
+  background: color-mix(in srgb, var(--ah-color-primary) 2%, transparent);
+}
+
+/* 时间事件 */
+
+.ah-calendar-timegrid-event {
+  padding: 2px 4px;
+  border-radius: var(--ah-radius-sm);
+  overflow: hidden;
+  box-sizing: border-box;
+  border-left: 3px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.ah-calendar-timegrid-event .ah-calendar-event-title {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  line-height: 1.3;
+}
+
+.ah-calendar-timegrid-event .ah-calendar-event-time {
+  font-size: 10px;
+  opacity: 0.8;
+  margin: 0;
+}
+
+/* 调整大小手柄 */
+
+.ah-calendar-timegrid-resize-handle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: s-resize;
+  background: transparent;
+}
+
+.ah-calendar-timegrid-resize-handle:hover {
+  background: color-mix(in srgb, var(--ah-color-text) 12%, transparent);
+}
+
+/* 当前时间指示器 */
+
+.ah-calendar-timegrid-now-indicator {
+  position: absolute;
+  left: 60px;
+  right: 0;
+  height: 2px;
+  background: var(--ah-color-error);
+  z-index: 5;
+  pointer-events: none;
+}
+
+.ah-calendar-timegrid-now-indicator::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ah-color-error);
+}
+
+/* ============================================================
+   列表视图
+   ============================================================ */
+
+.ah-calendar-list {
+  padding: var(--ah-spacing-sm);
+}
+
+.ah-calendar-list-empty {
+  padding: var(--ah-spacing-xl);
+  text-align: center;
+  color: var(--ah-color-grey-400);
+  font-size: var(--ah-font-size-sm);
+}
+
+.ah-calendar-list-day-group {
+  margin-bottom: var(--ah-spacing-sm);
+}
+
+.ah-calendar-list-day-header {
+  display: flex;
+  align-items: baseline;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  background: var(--ah-color-grey-50);
+  border-radius: var(--ah-radius-sm);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.ah-calendar-list-day-name {
+  font-weight: var(--ah-font-weight-semibold);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-grey-800);
+}
+
+.ah-calendar-list-day-date {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-500);
+}
+
+.ah-calendar-list-day-events {
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-calendar-list-event {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  padding-left: var(--ah-spacing-md);
+  cursor: pointer;
+  border-radius: var(--ah-radius-sm);
+  transition: background var(--ah-transition-fast);
+}
+
+.ah-calendar-list-event:hover {
+  background: var(--ah-color-grey-50);
+}
+
+.ah-calendar-list-event-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ah-calendar-list-event-time {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-500);
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.ah-calendar-list-event-title {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-grey-800);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   拖拽创建占位符（时间格视图）
+   ============================================================ */
+
+.ah-calendar-timegrid-create-placeholder {
+  position: absolute;
+  background: var(--ah-color-primary-lighter);
+  border: 2px dashed var(--ah-color-primary);
+  border-radius: var(--ah-radius-sm);
+  opacity: 0.6;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* ============================================================
+   重复事件图标
+   ============================================================ */
+
+.ah-calendar-event-recurring-icon {
+  opacity: 0.7;
+  font-size: 0.85em;
+}
+
+/* ============================================================
+   议程视图增强
+   ============================================================ */
+
+.ah-calendar-list-event-status {
+  width: 3px;
+  border-radius: 2px;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+.ah-calendar-list-empty-icon {
+  font-size: var(--ah-font-size-2xl);
+  margin-bottom: var(--ah-spacing-xs);
+  opacity: 0.5;
+}
+
+.ah-calendar-list-empty-hint {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-300);
+  margin-top: var(--ah-spacing-xs);
+}

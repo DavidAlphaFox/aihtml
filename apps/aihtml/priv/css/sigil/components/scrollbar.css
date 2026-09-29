@@ -1,0 +1,99 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   滚动条 (Scrollbar)
+   自定义滚动条组件，支持垂直和水平方向
+   ============================================================================ */
+
+/* ---- 滚动条容器 ---- */
+
+.ah-scrollbar {
+  position: absolute;
+  background: var(--ah-color-grey-100);
+  display: flex;
+  box-sizing: border-box;
+}
+
+/* ---- 垂直滚动条 ---- */
+
+.ah-scrollbar-vertical {
+  width: 14px;
+  flex-direction: column;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+/* ---- 水平滚动条 ---- */
+
+.ah-scrollbar-horizontal {
+  height: 14px;
+  flex-direction: row;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+/* ---- 滚动滑块 ---- */
+
+.ah-scrollbar-thumb {
+  background: var(--ah-color-grey-400);
+  border-radius: var(--ah-radius-md);
+  cursor: grab;
+  flex: 0 0 auto;
+  min-width: 10px;
+  min-height: 10px;
+  transition: background-color var(--ah-transition-fast);
+}
+
+.ah-scrollbar-thumb:hover {
+  background: var(--ah-color-grey-500);
+}
+
+.ah-scrollbar-thumb-pressed {
+  background: var(--ah-color-grey-600);
+  cursor: grabbing;
+}
+
+/* ---- 滚动按钮 ---- */
+
+.ah-scrollbar-btn-up,
+.ah-scrollbar-btn-down {
+  flex: 0 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: var(--ah-color-grey-200);
+  transition: background-color var(--ah-transition-fast);
+  font-size: 8px;
+  color: var(--ah-color-grey-600);
+  user-select: none;
+}
+
+.ah-scrollbar-btn-up:hover,
+.ah-scrollbar-btn-down:hover {
+  background: var(--ah-color-grey-300);
+}
+
+/* ---- 箭头指示器 ---- */
+
+.ah-scrollbar-vertical .ah-scrollbar-btn-up::after { content: "▲"; }
+.ah-scrollbar-vertical .ah-scrollbar-btn-down::after { content: "▼"; }
+.ah-scrollbar-horizontal .ah-scrollbar-btn-up::after { content: "◀"; }
+.ah-scrollbar-horizontal .ah-scrollbar-btn-down::after { content: "▶"; }
+
+/* ---- 滚动轨道 ---- */
+
+.ah-scrollbar-track-up,
+.ah-scrollbar-track-down {
+  flex: 0 0 auto;
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-scrollbar-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

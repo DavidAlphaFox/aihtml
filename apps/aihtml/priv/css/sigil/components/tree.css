@@ -1,0 +1,125 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   树形组件 (Tree)
+   层级树形结构展示组件，支持展开/折叠、选中和禁用
+   ============================================================================ */
+
+/* ---- 树形容器 ---- */
+
+.ah-tree {
+  outline: none;
+  font-size: var(--ah-font-size-sm);
+  user-select: none;
+}
+
+/* ---- 列表 ---- */
+
+.ah-tree-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---- 嵌套缩进 ---- */
+
+.ah-tree-list .ah-tree-list {
+  padding-left: 20px;
+}
+
+/* ---- 行 ---- */
+
+.ah-tree-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: var(--ah-radius-sm);
+  transition: background var(--ah-transition-fast);
+}
+
+.ah-tree-row:hover {
+  background: var(--ah-color-grey-100);
+}
+
+/* ---- 选中状态 ---- */
+
+.ah-tree-row-selected {
+  background: var(--ah-color-primary-lighter);
+  color: var(--ah-color-primary-dark);
+}
+
+.ah-tree-row-selected:hover {
+  background: var(--ah-color-primary-lighter);
+}
+
+/* ---- 键盘焦点 ---- */
+
+.ah-tree-row-focused {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+
+/* ---- 禁用行 ---- */
+
+.ah-tree-row-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 展开/折叠箭头 ---- */
+
+.ah-tree-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: none;
+  font-size: 10px;
+  color: var(--ah-color-text-secondary);
+  transition: transform var(--ah-transition-fast);
+}
+
+.ah-tree-toggle-open {
+  transform: rotate(90deg);
+}
+
+/* ---- 叶节点占位 ---- */
+
+.ah-tree-toggle-leaf {
+  visibility: hidden;
+}
+
+/* ---- 图标 ---- */
+
+.ah-tree-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 6px;
+  flex: none;
+}
+
+.ah-tree-icon > img,
+.ah-tree-icon > svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---- 文本标签 ---- */
+
+.ah-tree-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- 整棵树禁用 ---- */
+
+.ah-tree-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

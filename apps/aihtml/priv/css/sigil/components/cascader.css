@@ -1,0 +1,634 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Cascader — 级联选择器组件
+   支持多级数据选择，弹出面板以级联菜单列展示，支持多选、搜索、禁用等特性
+   ============================================================================ */
+
+/* ---- 主容器 ---- */
+.ah-cascader {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  font-family: var(--ah-font-family);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+/* ---- 输入区域 ---- */
+.ah-cascader-input-area {
+  display: flex;
+  align-items: center;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+  min-height: 36px;
+  overflow: hidden;
+}
+
+/* 悬停态 —— 加深边框 */
+.ah-cascader:hover .ah-cascader-input-area {
+  border-color: var(--ah-color-grey-400);
+}
+
+/* 聚焦态 —— 主色边框 + 发光环 */
+.ah-cascader-focused .ah-cascader-input-area {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* 禁用态 */
+.ah-cascader-disabled {
+  pointer-events: none;
+}
+
+.ah-cascader-disabled .ah-cascader-input-area {
+  opacity: var(--ah-state-disabled-opacity);
+  background: var(--ah-color-bg-subtle);
+}
+
+/* ---- 文本输入框 ---- */
+.ah-cascader-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+  font-family: inherit;
+  color: var(--ah-color-text);
+  background: transparent;
+  cursor: pointer;
+  min-width: 60px;
+  min-height: 34px;
+  box-sizing: border-box;
+}
+
+.ah-cascader-input::placeholder {
+  color: var(--ah-color-text-disabled);
+}
+
+/* 搜索模式下输入框可键入 */
+.ah-cascader-input:focus {
+  cursor: text;
+}
+
+/* 多选模式：输入框嵌在标签容器内，缩小内边距 */
+.ah-cascader-tags .ah-cascader-input {
+  padding: 2px 4px;
+  min-width: 40px;
+  min-height: auto;
+}
+
+/* ---- 已选标签（多选模式）---- */
+.ah-cascader-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px var(--ah-spacing-sm);
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}
+
+/* 单个标签 */
+.ah-cascader-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--ah-color-grey-100);
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text);
+  max-width: 180px;
+}
+
+/* 标签文本溢出省略 */
+.ah-cascader-tag-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 标签关闭按钮 */
+.ah-cascader-tag-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ah-color-grey-300);
+  color: var(--ah-color-common-white);
+  font-size: 10px;
+  cursor: pointer;
+  transition: background var(--ah-transition-fast);
+  flex-shrink: 0;
+}
+
+.ah-cascader-tag-close:hover {
+  background: var(--ah-color-error);
+}
+
+/* ---- 下拉箭头 ---- */
+.ah-cascader-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-height: 34px;
+  align-self: stretch;
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+  background: var(--ah-color-grey-50);
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ah-cascader-arrow:hover {
+  background: var(--ah-color-grey-100);
+}
+
+/* 箭头图标 —— 展开时旋转 180° */
+.ah-cascader-arrow-icon {
+  font-size: 10px;
+  transition: transform var(--ah-transition-fast);
+  line-height: 1;
+}
+
+.ah-cascader-open .ah-cascader-arrow-icon {
+  transform: rotate(180deg);
+}
+
+/* 禁用态箭头 */
+.ah-cascader-disabled .ah-cascader-arrow {
+  background: var(--ah-color-bg-subtle);
+}
+
+/* ---- 清除按钮 ---- */
+.ah-cascader-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  margin-right: var(--ah-spacing-xs);
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: var(--ah-color-grey-400);
+  font-size: 14px;
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--ah-transition-fast),
+              color var(--ah-transition-fast),
+              background var(--ah-transition-fast);
+  line-height: 1;
+}
+
+/* 悬停输入区域时显示清除按钮 */
+.ah-cascader:hover .ah-cascader-clear {
+  opacity: 1;
+}
+
+.ah-cascader-clear:hover {
+  color: var(--ah-color-error);
+  background: var(--ah-color-error-lighter);
+}
+
+/* ============================================================================
+   弹出面板
+   以 position:absolute 附加到 body，内部水平排列多列菜单
+   ============================================================================ */
+
+.ah-cascader-popup {
+  position: absolute;
+  z-index: 1000;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-lg);
+  display: none;
+  box-sizing: border-box;
+  width: max-content;
+
+  /* 弹出动画 */
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity var(--ah-transition-fast),
+              transform var(--ah-transition-fast);
+}
+
+/* 弹出面板可见 */
+.ah-cascader-popup-open {
+  display: flex;
+  flex-direction: row;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 向上弹出变体 */
+.ah-cascader-popup-above {
+  transform: translateY(4px);
+}
+
+.ah-cascader-popup-above.ah-cascader-popup-open {
+  transform: translateY(0);
+}
+
+/* ============================================================================
+   级联菜单容器与列
+   menus 容器水平排列所有 menu-column，每列包含一个 ul
+   ============================================================================ */
+
+.ah-cascader-menus {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+}
+
+.ah-cascader-menu-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  border-right: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+/* 最后一列无右边框 */
+.ah-cascader-menu-column:last-child {
+  border-right: none;
+}
+
+.ah-cascader-menu {
+  list-style: none;
+  margin: 0;
+  padding: var(--ah-spacing-xs) 0;
+  min-width: 120px;
+  max-height: 240px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+/* 列内滚动条优化（WebKit 浏览器）*/
+.ah-cascader-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ah-cascader-menu::-webkit-scrollbar-thumb {
+  background: var(--ah-color-grey-300);
+  border-radius: var(--ah-radius-full);
+}
+
+.ah-cascader-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ============================================================================
+   菜单项
+   每个 li 代表一个选项，支持选中、悬停、禁用、含子级等状态
+   ============================================================================ */
+
+/* 基础菜单项（通过 li[data-value] 选中） */
+.ah-cascader-menu li[data-value] {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  cursor: pointer;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  transition: background-color var(--ah-transition-fast),
+              color var(--ah-transition-fast);
+  gap: var(--ah-spacing-sm);
+  white-space: nowrap;
+  min-height: 32px;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+/* 悬停态 */
+.ah-cascader-menu li[data-value]:hover {
+  background-color: var(--ah-color-primary-lighter);
+}
+
+/* 当前选中/高亮态 */
+.ah-cascader-menu li[data-value].active {
+  background-color: var(--ah-color-primary-lighter);
+  color: var(--ah-color-primary-dark);
+  font-weight: var(--ah-font-weight-medium);
+}
+
+/* 禁用态 */
+.ah-cascader-menu li[data-value][aria-disabled="true"],
+.ah-cascader-menu li[data-value].disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* 含子级的菜单项 —— 右侧需要为箭头留出空间 */
+.ah-cascader-menu li[data-value].has-children {
+  padding-right: var(--ah-spacing-sm);
+}
+
+/* 也支持带 class 的菜单项 */
+.ah-cascader-menu-item {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  cursor: pointer;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  transition: background-color var(--ah-transition-fast),
+              color var(--ah-transition-fast);
+  gap: var(--ah-spacing-sm);
+  white-space: nowrap;
+  min-height: 32px;
+  box-sizing: border-box;
+  user-select: none;
+}
+
+.ah-cascader-menu-item:hover {
+  background-color: var(--ah-color-primary-lighter);
+}
+
+.ah-cascader-menu-item.active {
+  background-color: var(--ah-color-primary-lighter);
+  color: var(--ah-color-primary-dark);
+  font-weight: var(--ah-font-weight-medium);
+}
+
+/* ---- 菜单项标签文本 ---- */
+.ah-cascader-menu-item-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 子级箭头指示器（▶）---- */
+.ah-cascader-menu-item-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--ah-color-grey-400);
+  transition: color var(--ah-transition-fast);
+  width: 16px;
+  text-align: center;
+}
+
+/* 选中项的箭头跟随主色 */
+.ah-cascader-menu li[data-value].active .ah-cascader-menu-item-arrow,
+.ah-cascader-menu-item.active .ah-cascader-menu-item-arrow {
+  color: var(--ah-color-primary-dark);
+}
+
+/* ============================================================================
+   空状态 / 加载状态
+   ============================================================================ */
+
+.ah-cascader-empty {
+  padding: var(--ah-spacing-lg);
+  text-align: center;
+  color: var(--ah-color-text-disabled);
+  font-size: var(--ah-font-size-sm);
+  min-width: 120px;
+}
+
+.ah-cascader-loading {
+  padding: var(--ah-spacing-lg);
+  text-align: center;
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-sm);
+  min-width: 120px;
+}
+
+/* ============================================================================
+   搜索结果面板
+   搜索时以扁平列表替代级联列展示
+   ============================================================================ */
+
+.ah-cascader-search-panel {
+  list-style: none;
+  margin: 0;
+  padding: var(--ah-spacing-xs) 0;
+  min-width: 200px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.ah-cascader-search-item {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  cursor: pointer;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  transition: background-color var(--ah-transition-fast);
+  gap: var(--ah-spacing-sm);
+  min-height: 32px;
+}
+
+.ah-cascader-search-item:hover {
+  background-color: var(--ah-color-primary-lighter);
+}
+
+.ah-cascader-search-item.active {
+  background-color: var(--ah-color-primary-lighter);
+  color: var(--ah-color-primary-dark);
+}
+
+/* 搜索结果路径分隔符 */
+.ah-cascader-search-item-separator {
+  color: var(--ah-color-text-disabled);
+  margin: 0 2px;
+}
+
+/* 搜索匹配高亮 */
+.ah-cascader-search-item b {
+  font-weight: var(--ah-font-weight-bold);
+  color: var(--ah-color-primary-dark);
+}
+
+/* ============================================================================
+   多选复选框模式
+   菜单项前置复选框
+   ============================================================================ */
+
+.ah-cascader-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm, 2px);
+  background: var(--ah-color-bg-paper);
+  flex-shrink: 0;
+  transition: background var(--ah-transition-fast),
+              border-color var(--ah-transition-fast);
+}
+
+.ah-cascader-checkbox-checked {
+  background: var(--ah-color-primary);
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-common-white);
+}
+
+/* 半选状态（部分子级选中）*/
+.ah-cascader-checkbox-indeterminate {
+  background: var(--ah-color-primary);
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-common-white);
+}
+
+.ah-cascader-checkbox-icon {
+  font-size: 10px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+/* ============================================================================
+   无箭头变体
+   ============================================================================ */
+
+.ah-cascader-no-arrow .ah-cascader-arrow {
+  display: none;
+}
+
+.ah-cascader-no-arrow .ah-cascader-input-area {
+  border-radius: var(--ah-radius-md);
+}
+
+/* ============================================================================
+   尺寸变体
+   ============================================================================ */
+
+/* 小尺寸 */
+.ah-cascader-sm .ah-cascader-input-area {
+  min-height: 30px;
+}
+
+.ah-cascader-sm .ah-cascader-input {
+  padding: 2px var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-xs);
+  min-height: 28px;
+}
+
+.ah-cascader-sm .ah-cascader-arrow {
+  width: 28px;
+  min-height: 28px;
+}
+
+/* 大尺寸 */
+.ah-cascader-lg .ah-cascader-input-area {
+  min-height: 42px;
+}
+
+.ah-cascader-lg .ah-cascader-input {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  font-size: var(--ah-font-size-base);
+  min-height: 40px;
+}
+
+.ah-cascader-lg .ah-cascader-arrow {
+  width: 36px;
+  min-height: 40px;
+}
+
+/* ============================================================================
+   弹出动画
+   ============================================================================ */
+
+@keyframes cascader-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cascader-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ah-cascader-popup-animated {
+  animation: cascader-slide-down 0.2s ease-out;
+}
+
+.ah-cascader-popup-above.ah-cascader-popup-animated {
+  animation: cascader-slide-up 0.2s ease-out;
+}
+
+/* ============================================================================
+   响应式移动端适配
+   小屏幕下弹出面板改为纵向堆叠，避免水平溢出
+   ============================================================================ */
+
+@media (max-width: 640px) {
+  /* 弹出面板：纵向堆叠各级菜单 */
+  .ah-cascader-popup-open {
+    flex-direction: column;
+    max-width: 90vw;
+  }
+
+  /* 列改为横向全宽，去掉右边框，加底边框 */
+  .ah-cascader-menu {
+    border-right: none;
+    border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+    min-width: 0;
+    width: 100%;
+    max-height: 180px;
+  }
+
+  .ah-cascader-menu:last-child {
+    border-bottom: none;
+  }
+
+  /* 输入区域全宽 */
+  .ah-cascader {
+    width: 100%;
+  }
+
+  .ah-cascader-input-area {
+    width: 100%;
+  }
+}
+
+/* ============================================================================
+   无障碍：焦点指示器
+   当键盘导航时，为菜单项增加可见焦点环
+   ============================================================================ */
+
+.ah-cascader-menu li[data-value]:focus-visible,
+.ah-cascader-menu-item:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+
+/* 输入区域键盘焦点 */
+.ah-cascader-input:focus-visible {
+  /* 焦点环由父级 .ah-cascader-focused 控制 */
+  outline: none;
+}

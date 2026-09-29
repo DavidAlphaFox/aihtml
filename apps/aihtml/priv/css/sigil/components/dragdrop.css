@@ -1,0 +1,46 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   拖放 (Drag and Drop)
+   用于实现元素拖拽和放置功能的基础样式
+   ============================================================================ */
+
+/* ---- 可拖拽元素 ---- */
+
+.ah-draggable {
+  cursor: move;
+}
+
+/* ---- 拖拽中状态 ---- */
+
+.ah-dragging {
+  opacity: 0.4;
+}
+
+/* ---- 禁用拖拽 ---- */
+
+.ah-draggable-disabled {
+  cursor: not-allowed;
+  opacity: var(--ah-state-disabled-opacity);
+}
+
+/* ---- 放置目标激活状态 ---- */
+
+.ah-drop-target-active {
+  outline: 2px dashed var(--ah-color-primary);
+  outline-offset: 2px;
+}
+
+/* ---- 禁止选择 ---- */
+
+.ah-disableselect {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---- 拖拽反馈元素（浮起阴影）---- */
+
+.ah-drag-feedback {
+  box-shadow: var(--ah-shadow-md);
+}

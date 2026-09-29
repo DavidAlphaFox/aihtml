@@ -1,0 +1,71 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   响应式面板 (Responsive Panel)
+   响应式可折叠面板组件，在空间不足时自动折叠为按钮触发
+   ============================================================================ */
+
+/* ---- 外部容器 ---- */
+
+.ah-responsive-panel {
+  position: relative;
+}
+
+/* ---- 面板内容：展开时正常流布局 ---- */
+
+.ah-responsive-panel-content {
+  /* 继承容器布局 */
+}
+
+/* ---- 折叠状态：内容变为固定覆盖层 ---- */
+
+.ah-responsive-panel-collapsed .ah-responsive-panel-content {
+  position: fixed;
+  z-index: 1040;
+  display: none;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  box-shadow: var(--ah-shadow-md);
+  border-radius: var(--ah-radius-md);
+  overflow: auto;
+}
+
+/* ---- 折叠且打开：显示内容 ---- */
+
+.ah-responsive-panel-collapsed.ah-responsive-panel-open
+  .ah-responsive-panel-content {
+  display: block;
+}
+
+/* ---- 切换按钮：展开时隐藏，折叠时显示 ---- */
+
+.ah-responsive-panel-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-grey-50);
+  cursor: pointer;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast);
+  user-select: none;
+}
+
+.ah-responsive-panel-toggle:hover {
+  background: var(--ah-color-grey-200);
+}
+
+.ah-responsive-panel-collapsed .ah-responsive-panel-toggle {
+  display: flex;
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-responsive-panel-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

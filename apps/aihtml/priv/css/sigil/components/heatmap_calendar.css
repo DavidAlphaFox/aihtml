@@ -1,0 +1,112 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   HeatmapCalendar · 贡献热力图（借鉴 happy heatmap-calendar）
+   分档配色走 --ah-color-success，明暗与配色轴自动跟随。
+   ============================================================================ */
+
+.ah-heatmap-calendar {
+  --ah-hm-cell: 12px;
+  --ah-hm-gap: 3px;
+  --ah-hm-empty: var(--ah-color-bg-subtle);
+  --ah-hm-l1: color-mix(in srgb, var(--ah-color-success) 28%, transparent);
+  --ah-hm-l2: color-mix(in srgb, var(--ah-color-success) 52%, transparent);
+  --ah-hm-l3: color-mix(in srgb, var(--ah-color-success) 76%, transparent);
+  --ah-hm-l4: var(--ah-color-success);
+
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--ah-color-text-muted);
+}
+
+/* ---- 月份标签行（与网格左侧的星期列对齐） ---- */
+.ah-heatmap-calendar__months {
+  display: flex;
+  margin-left: calc(28px + var(--ah-hm-gap));
+}
+.ah-heatmap-calendar__month {
+  flex-shrink: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ah-heatmap-calendar__body { display: flex; gap: var(--ah-hm-gap); }
+
+/* ---- 星期标签列 ---- */
+.ah-heatmap-calendar__weekdays {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ah-hm-gap);
+  width: 28px;
+  flex-shrink: 0;
+}
+.ah-heatmap-calendar__weekday {
+  height: var(--ah-hm-cell);
+  line-height: var(--ah-hm-cell);
+  text-align: right;
+  padding-right: 4px;
+}
+
+/* ---- 网格：每列一周 ---- */
+.ah-heatmap-calendar__grid { display: flex; gap: var(--ah-hm-gap); }
+.ah-heatmap-calendar__week {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ah-hm-gap);
+}
+
+.ah-heatmap-calendar__cell,
+.ah-heatmap-calendar__legend-cell {
+  width: var(--ah-hm-cell);
+  height: var(--ah-hm-cell);
+  border-radius: 2px;
+  background: var(--ah-hm-empty);
+}
+.ah-heatmap-calendar__cell { cursor: pointer; }
+.ah-heatmap-calendar__cell:hover {
+  outline: 1px solid var(--ah-color-text-muted);
+  outline-offset: 1px;
+}
+
+.ah-heatmap-calendar__cell[data-level="1"],
+.ah-heatmap-calendar__legend-cell[data-level="1"] { background: var(--ah-hm-l1); }
+.ah-heatmap-calendar__cell[data-level="2"],
+.ah-heatmap-calendar__legend-cell[data-level="2"] { background: var(--ah-hm-l2); }
+.ah-heatmap-calendar__cell[data-level="3"],
+.ah-heatmap-calendar__legend-cell[data-level="3"] { background: var(--ah-hm-l3); }
+.ah-heatmap-calendar__cell[data-level="4"],
+.ah-heatmap-calendar__legend-cell[data-level="4"] { background: var(--ah-hm-l4); }
+
+/* ---- 图例 ---- */
+.ah-heatmap-calendar__legend {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  align-self: flex-end;
+  margin-top: 2px;
+}
+.ah-heatmap-calendar__legend span { margin: 0 2px; }
+
+/* ---- 浮动 tooltip ---- */
+.ah-heatmap-calendar__tooltip {
+  position: fixed;
+  z-index: 22000;
+  transform: translate(-50%, -100%);
+  padding: 4px 8px;
+  border-radius: var(--ah-radius-md);
+  font-size: 11px;
+  white-space: nowrap;
+  pointer-events: none;
+  color: var(--ah-color-bg);
+  background: var(--ah-color-text);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .1s ease, visibility .1s;
+}
+.ah-heatmap-calendar__tooltip[data-visible="true"] {
+  opacity: 1;
+  visibility: visible;
+}

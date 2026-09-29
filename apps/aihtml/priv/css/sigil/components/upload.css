@@ -1,0 +1,228 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   文件上传组件 (Upload)
+   拖拽上传区域 + 文件列表 + 进度条
+   ============================================================================ */
+
+.ah-upload {
+  width: 100%;
+}
+
+/* ---- 拖拽区域 ---- */
+.ah-upload-dragger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 32px 24px;
+  border: 2px dashed var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-grey-50);
+  cursor: pointer;
+  transition: border-color var(--ah-transition-fast),
+              background-color var(--ah-transition-fast);
+  text-align: center;
+  user-select: none;
+}
+
+.ah-upload-dragger:hover {
+  border-color: var(--ah-color-primary-light);
+  background: var(--ah-color-primary-lighter);
+}
+
+.ah-upload-dragger-active {
+  border-color: var(--ah-color-primary);
+  background: var(--ah-color-primary-lighter);
+  border-style: solid;
+}
+
+/* ---- 上传图标 ---- */
+.ah-upload-icon {
+  color: var(--ah-color-primary);
+  opacity: 0.7;
+}
+
+.ah-upload-dragger:hover .ah-upload-icon,
+.ah-upload-dragger-active .ah-upload-icon {
+  opacity: 1;
+}
+
+/* ---- 文字 ---- */
+.ah-upload-text {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-upload-browse {
+  color: var(--ah-color-primary);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ah-upload-browse:hover {
+  text-decoration: underline;
+}
+
+.ah-upload-hint {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-disabled);
+}
+
+/* ---- 文件列表 ---- */
+.ah-upload-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ---- 文件项 ---- */
+.ah-upload-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  transition: background-color var(--ah-transition-fast);
+}
+
+.ah-upload-item:hover {
+  background: var(--ah-color-grey-50);
+}
+
+.ah-upload-item-success {
+  border-color: var(--ah-color-success-light);
+}
+
+.ah-upload-item-error {
+  border-color: var(--ah-color-error-light);
+}
+
+/* ---- 文件图标 ---- */
+.ah-upload-item-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--ah-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: var(--ah-color-grey-100);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-upload-item-icon::before {
+  content: "📄";
+}
+
+.ah-upload-item-icon-image::before {
+  content: "🖼";
+}
+
+.ah-upload-item-icon-video::before {
+  content: "🎬";
+}
+
+.ah-upload-item-icon-audio::before {
+  content: "🎵";
+}
+
+/* ---- 文件信息 ---- */
+.ah-upload-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ah-upload-item-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ah-upload-item-name {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ah-upload-item-size {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-disabled);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ---- 进度条 ---- */
+.ah-upload-item-progress {
+  width: 100%;
+  height: 4px;
+  background: var(--ah-color-grey-100);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.ah-upload-item-progress-bar {
+  height: 100%;
+  background: var(--ah-color-primary);
+  border-radius: 2px;
+  transition: width 0.2s ease;
+  min-width: 0;
+}
+
+/* ---- 错误信息 ---- */
+.ah-upload-item .ah-upload-item-error {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-error);
+}
+
+/* ---- 操作按钮 ---- */
+.ah-upload-item-actions {
+  flex-shrink: 0;
+}
+
+.ah-upload-item-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ah-color-text-disabled);
+  cursor: pointer;
+  transition: color var(--ah-transition-fast),
+              background-color var(--ah-transition-fast);
+}
+
+.ah-upload-item-remove:hover {
+  color: var(--ah-color-error);
+  background: var(--ah-color-error-lighter);
+}
+
+/* ---- 成功状态标记 ---- */
+.ah-upload-item-success .ah-upload-item-name {
+  color: var(--ah-color-success-dark);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-upload-disabled .ah-upload-dragger {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-upload-disabled .ah-upload-item-remove {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}

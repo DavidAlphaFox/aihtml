@@ -1,0 +1,52 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   可排序列表 (Sortable)
+   支持拖拽排序的列表组件，支持占位符和拖拽辅助元素
+   ============================================================================ */
+
+/* ---- 容器 ---- */
+
+.ah-sortable { position: relative; }
+
+/* ---- 禁用状态 ---- */
+
+.ah-sortable-disabled { pointer-events: none; opacity: var(--ah-state-disabled-opacity); }
+
+/* ---- 列表项 ---- */
+
+.ah-sortable-item { position: relative; cursor: grab; }
+.ah-sortable-item.ah-sortable-handle-mode { cursor: default; }
+.ah-sortable-handle { cursor: grab; }
+
+/* ---- 占位符 ---- */
+
+.ah-sortable-placeholder {
+  box-sizing: border-box;
+  border: 2px dashed var(--ah-color-primary-light);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-primary-lighter, rgba(59,130,246,0.08));
+  opacity: 0.5;
+}
+
+/* ---- 拖拽辅助元素 ---- */
+
+.ah-sortable-helper {
+  position: absolute !important;
+  z-index: 999999;
+  pointer-events: none;
+  box-shadow: var(--ah-shadow-md);
+  will-change: left, top;
+}
+
+/* ---- 拖拽激活状态 ---- */
+
+.ah-sortable-active { min-height: 40px; }
+
+/* ---- 接收拖拽状态 ---- */
+
+.ah-sortable-receiving {
+  outline: 2px dashed var(--ah-color-primary);
+  outline-offset: 2px;
+}

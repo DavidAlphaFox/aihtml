@@ -1,0 +1,257 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   可折叠导航栏组件 (NavigationBar / Accordion)
+   垂直折叠式导航面板，支持展开/折叠动画和分组导航
+   ============================================================================ */
+
+.ah-navigationbar {
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  overflow: hidden;
+  width: 100%;
+  margin-bottom: var(--ah-spacing-sm);
+}
+
+.ah-navigationbar-item {
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-navigationbar-item:last-child {
+  border-bottom: none;
+}
+
+/* ---- 头部样式 ---- */
+.ah-navigationbar-header {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  background: var(--ah-color-grey-50);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--ah-transition-fast);
+  position: relative;
+}
+
+.ah-navigationbar-header:hover {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-navigationbar-header-expanded {
+  background: var(--ah-color-grey-200);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-navigationbar-header-expanded:hover {
+  background: var(--ah-color-grey-300);
+}
+
+/* 折叠时无底部边框 */
+.ah-navigationbar-header:not(.ah-navigationbar-header-expanded) {
+  border-bottom: none;
+}
+
+/* ---- 箭头样式 ---- */
+.ah-navigationbar-arrow {
+  flex: none;
+  font-size: 10px;
+  transition: transform var(--ah-transition-fast);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-navigationbar-arrow-left {
+  order: -1;
+  margin-right: var(--ah-spacing-sm);
+}
+
+.ah-navigationbar-arrow:not(.ah-navigationbar-arrow-left) {
+  margin-left: var(--ah-spacing-sm);
+}
+
+.ah-navigationbar-arrow-up {
+  transform: rotate(180deg);
+}
+
+/* ---- 头部文字 ---- */
+.ah-navigationbar-header-text {
+  flex: 1;
+  font-weight: var(--ah-font-weight-medium);
+  font-size: var(--ah-font-size-sm);
+  min-width: 0;
+}
+
+/* ---- 结构化头部（{:title :subheader :extra}）---- */
+.ah-navigationbar-header-text-structured {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-md);
+}
+
+.ah-navigationbar-header-title {
+  font-weight: var(--ah-font-weight-medium);
+  flex-shrink: 0;
+}
+
+.ah-navigationbar-header-subheader {
+  color: var(--ah-color-text-secondary);
+  font-weight: var(--ah-font-weight-normal);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-navigationbar-header-extra {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-xs);
+}
+
+/* ---- Body 包装层（动画目标，含 content + actions） ---- */
+.ah-navigationbar-body {
+  overflow: hidden;
+  background: var(--ah-color-bg-paper);
+}
+
+/* ---- 内容区域 ---- */
+.ah-navigationbar-content {
+  padding: var(--ah-spacing-md);
+}
+
+/* ---- 底部操作区 (actions) ---- */
+.ah-navigationbar-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-navigationbar-content-empty {
+  padding: 0;
+  height: 0;
+  display: none;
+}
+
+/* ---- 禁用状态 ---- */
+.ah-navigationbar-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-navigationbar-header.ah-navigationbar-disabled {
+  cursor: not-allowed;
+}
+
+/* toggle-mode 为 none 时 header 不可点击 */
+.ah-navigationbar-header-no-toggle {
+  cursor: default;
+}
+
+/* ---- 动画优化 ---- */
+.ah-navigationbar-body {
+  will-change: height;
+}
+
+/* ---- 焦点样式 ---- */
+.ah-navigationbar-header:focus {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+/* ---- 悬停高亮：禁用项不响应 ---- */
+.ah-navigationbar-header.ah-navigationbar-disabled:hover {
+  background: var(--ah-color-grey-50);
+}
+
+/* ---- 展开/折叠动画时禁用过渡 ---- */
+.ah-navigationbar-body.animating {
+  overflow: hidden;
+}
+
+/* ---- 移动端优化 ---- */
+@media (max-width: 768px) {
+  .ah-navigationbar-header {
+    padding: var(--ah-spacing-sm) var(--ah-spacing-sm);
+  }
+
+  .ah-navigationbar-content {
+    padding: var(--ah-spacing-sm);
+  }
+}
+
+/* ---- 紧凑形态：去外边框/圆角 ---- */
+.ah-navigationbar-no-gutters {
+  border: none;
+  border-radius: 0;
+}
+
+.ah-navigationbar-no-gutters > .ah-navigationbar-item {
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-navigationbar-no-gutters > .ah-navigationbar-item:last-child {
+  border-bottom: none;
+}
+
+.ah-navigationbar-no-gutters .ah-navigationbar-header {
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+}
+
+.ah-navigationbar-no-gutters .ah-navigationbar-content {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* ---- Square：去圆角 ---- */
+.ah-navigationbar-square {
+  border-radius: 0;
+}
+
+/* ---- 双图标模式（plus/minus 风格）---- */
+.ah-navigationbar-arrow-dual {
+  position: relative;
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: none !important;
+}
+
+.ah-navigationbar-arrow-dual .ah-navigationbar-icon {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--ah-transition-fast),
+              transform var(--ah-transition-fast);
+}
+
+.ah-navigationbar-arrow-dual .ah-navigationbar-icon-expand {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ah-navigationbar-arrow-dual .ah-navigationbar-icon-collapse {
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.ah-navigationbar-arrow-dual.ah-navigationbar-arrow-up .ah-navigationbar-icon-expand {
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.ah-navigationbar-arrow-dual.ah-navigationbar-arrow-up .ah-navigationbar-icon-collapse {
+  opacity: 1;
+  transform: scale(1);
+}

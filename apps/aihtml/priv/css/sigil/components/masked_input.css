@@ -1,0 +1,101 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   掩码输入框组件 (MaskedInput)
+   带格式掩码的输入框，用于电话、日期、信用卡等格式化输入
+   ============================================================================ */
+
+/* ---- 容器 ---- */
+.ah-masked-input-group {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+/* ---- 输入框 ---- */
+.ah-masked-input {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  font-size: var(--ah-font-size-sm);
+  font-family: var(--ah-font-family);
+  font-variant-numeric: tabular-nums;
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+  width: 100%;
+  box-sizing: border-box;
+  letter-spacing: 0.05em;
+}
+
+.ah-masked-input::placeholder {
+  color: var(--ah-color-text-disabled);
+}
+
+.ah-masked-input:focus {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-masked-input-focused .ah-masked-input {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-masked-input-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-masked-input-disabled .ah-masked-input {
+  background: var(--ah-color-bg-subtle);
+  cursor: not-allowed;
+}
+
+/* ---- 只读状态 ---- */
+.ah-masked-input-readonly .ah-masked-input {
+  background: var(--ah-color-bg-subtle);
+  cursor: default;
+}
+
+/* ---- 无圆角变体 ---- */
+.ah-masked-input-no-rounded .ah-masked-input {
+  border-radius: 0;
+}
+
+/* ---- 浮动标签 ---- */
+.ah-masked-input-label {
+  position: absolute;
+  left: var(--ah-spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-disabled);
+  pointer-events: none;
+  background-color: transparent;
+  padding: 0 4px;
+  margin-left: -4px;
+  transition: top var(--ah-transition-fast),
+              font-size var(--ah-transition-fast),
+              color var(--ah-transition-fast),
+              background-color var(--ah-transition-fast);
+  transform-origin: left center;
+}
+
+.ah-masked-input-label-float {
+  top: 0;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-primary);
+  background-color: var(--ah-color-bg-paper);
+}
+
+/* ---- 提示字符样式（可编辑位置的占位字符） ---- */
+.ah-masked-input.prompt-char {
+  color: var(--ah-color-text-disabled);
+}

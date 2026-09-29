@@ -1,0 +1,373 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================
+   DateTimeInput — 日期时间输入组件
+   日期和时间组合输入，支持日历弹出选择
+   ============================================================ */
+
+/* ---- 容器 ---- */
+.ah-dti-group {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.ah-dti-row {
+  display: flex;
+  align-items: stretch;
+}
+
+/* ---- 输入框 ---- */
+input.ah-dti-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md) 0 0 var(--ah-radius-md);
+  font-size: var(--ah-font-size-sm);
+  font-family: var(--ah-font-family);
+  font-variant-numeric: tabular-nums;
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+  box-sizing: border-box;
+  cursor: default;
+  caret-color: transparent;
+}
+
+input.ah-dti-input::placeholder {
+  color: var(--ah-color-text-disabled);
+}
+
+/* 无日历按钮时恢复完整圆角 */
+.ah-dti-row > input.ah-dti-input:last-child {
+  border-radius: var(--ah-radius-md);
+}
+
+/* ---- 日历按钮 ---- */
+.ah-dti-cal-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  cursor: pointer;
+  user-select: none;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-left: none;
+  background: var(--ah-color-bg-paper);
+  font-size: 14px;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast),
+              color var(--ah-transition-fast),
+              border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+}
+
+.ah-dti-cal-btn:hover {
+  background: var(--ah-color-grey-100);
+  color: var(--ah-color-text);
+}
+
+.ah-dti-cal-btn:active {
+  background: var(--ah-color-grey-200);
+}
+
+/* 日历按钮后若还跟着微调器则去掉右圆角（右圆角交给末元素微调器） */
+.ah-dti-cal-btn:not(:last-child) {
+  border-radius: 0;
+}
+
+/* ---- 上下微调按钮 ---- */
+.ah-dti-spinner {
+  display: flex;
+  flex-direction: column;
+  width: 22px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-left: none;
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+  overflow: hidden;
+  background: var(--ah-color-bg-paper);
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+}
+
+.ah-dti-spin {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--ah-color-text-secondary);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--ah-transition-fast),
+              color var(--ah-transition-fast);
+}
+
+.ah-dti-spin-up {
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-dti-spin:hover {
+  background: var(--ah-color-grey-100);
+  color: var(--ah-color-text);
+}
+
+.ah-dti-spin:active {
+  background: var(--ah-color-grey-200);
+}
+
+/* ---- 屏幕阅读器播报区（视觉隐藏，仅供 AT 读取段步进结果）---- */
+.ah-dti-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- 焦点状态 ---- */
+.ah-dti-focused input.ah-dti-input {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-dti-focused .ah-dti-cal-btn {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-dti-focused .ah-dti-spinner {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-dti-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-dti-disabled input.ah-dti-input {
+  background: var(--ah-color-bg-subtle);
+  cursor: not-allowed;
+}
+
+/* ---- 只读状态 ---- */
+.ah-dti-readonly input.ah-dti-input {
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-dti-readonly .ah-dti-cal-btn,
+.ah-dti-readonly .ah-dti-spinner {
+  pointer-events: none;
+  color: var(--ah-color-text-disabled);
+}
+
+/* ---- 浮动标签 ---- */
+.ah-dti-label {
+  position: absolute;
+  left: var(--ah-spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-disabled);
+  pointer-events: none;
+  background-color: transparent;
+  padding: 0 4px;
+  margin-left: -4px;
+  transition: top var(--ah-transition-fast),
+              font-size var(--ah-transition-fast),
+              color var(--ah-transition-fast),
+              background-color var(--ah-transition-fast);
+  transform-origin: left center;
+}
+
+.ah-dti-label-float {
+  top: 0;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-primary);
+  background-color: var(--ah-color-bg-paper);
+}
+
+/* ---- 无圆角变体 ---- */
+.ah-dti-no-rounded input.ah-dti-input,
+.ah-dti-no-rounded .ah-dti-cal-btn,
+.ah-dti-no-rounded .ah-dti-spinner {
+  border-radius: 0;
+}
+
+/* ============================================================
+   下拉弹窗
+   ============================================================ */
+.ah-dti-dropdown {
+  position: absolute;
+  z-index: 1000;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  padding: var(--ah-spacing-sm);
+  box-sizing: border-box;
+  width: min(260px, calc(100vw - 16px));
+}
+
+/* ---- 月导航 ---- */
+.ah-dti-cal-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ah-spacing-xs) 0;
+  margin-bottom: var(--ah-spacing-xs);
+}
+
+.ah-dti-cal-prev,
+.ah-dti-cal-next {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast),
+              color var(--ah-transition-fast);
+}
+
+.ah-dti-cal-prev:hover,
+.ah-dti-cal-next:hover {
+  background: var(--ah-color-grey-100);
+  color: var(--ah-color-text);
+}
+
+.ah-dti-cal-title {
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-text);
+  user-select: none;
+}
+
+/* ---- 星期标题 ---- */
+.ah-dti-cal-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+  font-weight: var(--ah-font-weight-medium);
+  margin-bottom: var(--ah-spacing-xs);
+}
+
+.ah-dti-cal-header span {
+  padding: 2px 0;
+}
+
+/* ---- 日期网格 ---- */
+.ah-dti-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.ah-dti-cal-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: var(--ah-font-size-sm);
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  user-select: none;
+  color: var(--ah-color-text);
+  transition: background var(--ah-transition-fast),
+              color var(--ah-transition-fast);
+}
+
+.ah-dti-cal-day:hover {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-dti-cal-day-today {
+  font-weight: var(--ah-font-weight-bold);
+  box-shadow: inset 0 0 0 1px var(--ah-color-primary);
+}
+
+.ah-dti-cal-day-selected {
+  background: var(--ah-color-primary);
+  color: var(--ah-color-common-white);
+}
+
+.ah-dti-cal-day-selected:hover {
+  background: var(--ah-color-primary-dark);
+}
+
+.ah-dti-cal-day-other {
+  color: var(--ah-color-text-disabled);
+}
+
+.ah-dti-cal-day-disabled {
+  color: var(--ah-color-text-disabled);
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}
+
+/* ---- 时间微调行 ---- */
+.ah-dti-time-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ah-spacing-xs);
+  padding-top: var(--ah-spacing-sm);
+  margin-top: var(--ah-spacing-sm);
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-dti-time-input {
+  width: 48px;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-sm);
+  font-family: var(--ah-font-family);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  transition: border-color var(--ah-transition-fast);
+  box-sizing: border-box;
+}
+
+.ah-dti-time-input:focus {
+  border-color: var(--ah-color-primary);
+}
+
+.ah-dti-time-sep {
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-bold);
+  color: var(--ah-color-text-secondary);
+  user-select: none;
+}
+
+.ah-dti-time-label {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+  margin-left: var(--ah-spacing-xs);
+}

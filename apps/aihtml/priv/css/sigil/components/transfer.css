@@ -1,0 +1,227 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   穿梭框 (Transfer)
+   用于在两个列表之间移动项目的组件
+   ============================================================================ */
+
+/* ---- 穿梭框容器 ---- */
+
+.ah-transfer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ah-spacing-md);
+  width: 100%;
+}
+
+/* ---- 面板容器 ---- */
+
+.ah-transfer-panels {
+  display: flex;
+  gap: var(--ah-spacing-md);
+  align-items: stretch;
+}
+
+/* ---- 面板 ---- */
+
+.ah-transfer-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg);
+  overflow: hidden;
+  min-width: 200px;
+}
+
+/* ---- 面板头部 ---- */
+
+.ah-transfer-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  background: var(--ah-color-grey-50);
+}
+
+.ah-transfer-panel-title {
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-text);
+}
+
+.ah-transfer-panel-count {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+  background: var(--ah-color-grey-200);
+  padding: 2px 8px;
+  border-radius: var(--ah-radius-lg);
+}
+
+/* ---- 搜索框 ---- */
+
+.ah-transfer-filter {
+  padding: var(--ah-spacing-sm);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-transfer-filter-input {
+  width: 100%;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-sm);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text);
+  outline: none;
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+}
+
+.ah-transfer-filter-input:focus {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 2px var(--ah-color-primary-lighter);
+}
+
+.ah-transfer-filter-input::placeholder {
+  color: var(--ah-color-text-muted);
+}
+
+/* ---- 面板内容区 ---- */
+
+.ah-transfer-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 200px;
+  max-height: 300px;
+}
+
+/* ---- 选项列表 ---- */
+
+.ah-transfer-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ah-transfer-list:empty::after {
+  content: attr(data-empty-text);
+  display: block;
+  padding: var(--ah-spacing-lg);
+  text-align: center;
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* ---- 选项项 ---- */
+
+.ah-transfer-item {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  cursor: pointer;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border-subtle);
+  transition: background-color var(--ah-transition-fast);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  user-select: none;
+}
+
+.ah-transfer-item:last-child {
+  border-bottom: none;
+}
+
+.ah-transfer-item:hover {
+  background: var(--ah-color-grey-100);
+}
+
+/* ⚠ P14.6c：这两处原先引用 `--ah-color-primary-light-3` / `-light-2`，
+   而库里没有这两个 token —— 两条 background 都失效，选中行一直是**透明**的。
+   映射时不能都落到 lighter/lightest：`--ah-color-primary-lightest` 在 tokens.css
+   里就是 `var(--ah-color-primary-lighter)` 的**别名（同值）**，那样选中行与它的
+   hover 会长得一模一样，hover 反馈等于没有。故 hover 取更浓的 `-light`。 */
+.ah-transfer-item-selected {
+  background: var(--ah-color-primary-lighter);
+}
+
+.ah-transfer-item-selected:hover {
+  background: var(--ah-color-primary-light);
+}
+
+.ah-transfer-item-disabled {
+  color: var(--ah-color-text-disabled);
+  pointer-events: none;
+}
+
+/* ---- 选项图标 ---- */
+
+.ah-transfer-item-icon {
+  margin-right: var(--ah-spacing-sm);
+  display: flex;
+  align-items: center;
+}
+
+/* ---- 选项标签 ---- */
+
+.ah-transfer-item-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 穿梭按钮容器 ---- */
+
+.ah-transfer-buttons {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-sm);
+}
+
+/* ---- 穿梭按钮 ---- */
+
+.ah-transfer-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text-secondary);
+  cursor: pointer;
+  font-size: var(--ah-font-size-lg);
+  transition: all var(--ah-transition-fast);
+}
+
+.ah-transfer-btn:hover:not(.ah-transfer-btn-disabled) {
+  background: var(--ah-color-primary);
+  border-color: var(--ah-color-primary);
+  color: white;
+}
+
+.ah-transfer-btn-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.ah-transfer-btn-to-target {
+  transform: rotate(0deg);
+}
+
+.ah-transfer-btn-to-source {
+  transform: rotate(180deg);
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-transfer-disabled {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}

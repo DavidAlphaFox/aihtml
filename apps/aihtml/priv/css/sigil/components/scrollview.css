@@ -1,0 +1,78 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   滚动视图 (ScrollView)
+   水平轮播/分页组件，支持滑动切换和页面指示器
+   ============================================================================ */
+
+/* ---- 滚动视图容器 ---- */
+
+.ah-scrollview {
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* ---- 页面包装器 ---- */
+
+.ah-scrollview-wrapper {
+  display: flex;
+  will-change: margin-left;
+}
+
+/* ---- 动画状态：启用 CSS 过渡 ---- */
+
+.ah-scrollview-animating .ah-scrollview-wrapper {
+  transition: margin-left 300ms ease;
+}
+
+/* ---- 单个页面 ---- */
+
+.ah-scrollview-page {
+  flex: none;
+  overflow: hidden;
+}
+
+/* ---- 页面指示器 ---- */
+
+.ah-scrollview-buttons {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+  z-index: 1;
+}
+
+.ah-scrollview-button {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--ah-color-grey-300);
+  cursor: pointer;
+  transition: background var(--ah-transition-fast);
+}
+
+.ah-scrollview-button:hover {
+  background: var(--ah-color-grey-400);
+}
+
+/* ---- 激活状态圆点 ---- */
+
+.ah-scrollview-button-active {
+  background: var(--ah-color-primary);
+}
+
+.ah-scrollview-button-active:hover {
+  background: var(--ah-color-primary-dark);
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-scrollview-disabled {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}

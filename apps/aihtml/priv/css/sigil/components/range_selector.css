@@ -1,0 +1,168 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   范围选择器组件 (RangeSelector)
+   滑杆风格的范围选择器，用于选择数值区间
+   ============================================================================ */
+
+.ah-range-selector {
+  position: relative;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  padding: 38px 10px 30px;
+  box-sizing: border-box;
+}
+
+.ah-range-selector-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 轨道 — 细条 ---- */
+.ah-range-selector-track {
+  position: relative;
+  height: 6px;
+  background: var(--ah-color-grey-200, #eee);
+  border-radius: var(--ah-radius-sm);
+  overflow: visible;
+}
+
+/* ---- 刻度容器 — 位于轨道下方 ---- */
+.ah-range-selector-ticks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* ---- 刻度线 ---- */
+.ah-range-selector-tick {
+  position: absolute;
+  top: 3px;
+  width: 1px;
+  background-color: var(--ah-color-border, #ccc);
+}
+
+.ah-range-selector-tick-major {
+  height: 10px;
+}
+
+.ah-range-selector-tick-minor {
+  height: 5px;
+  opacity: 0.6;
+}
+
+/* ---- 标签 — 位于刻度下方 ---- */
+.ah-range-selector-label {
+  position: absolute;
+  top: 16px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--ah-color-text-disabled, #999);
+  white-space: nowrap;
+}
+
+/* ---- 遮罩 — 滑杆模式下不需要视觉遮罩 ---- */
+.ah-range-selector-shutter-left,
+.ah-range-selector-shutter-right {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background-color: transparent;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.ah-range-selector-shutter-left {
+  left: 0;
+}
+
+/* ---- 滑块 — 选中区域高亮条 ---- */
+.ah-range-selector-slider {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--ah-color-primary, #FF9100);
+  border-radius: var(--ah-radius-sm);
+  cursor: grab;
+  z-index: 3;
+  box-sizing: border-box;
+}
+
+.ah-range-selector-slider:active {
+  cursor: grabbing;
+}
+
+.ah-range-selector-slider-inner {
+  display: none;
+}
+
+/* ---- 标记 — 圆形滑杆手柄 ---- */
+.ah-range-selector-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background-color: var(--ah-color-primary, #FF9100);
+  border: 2px solid var(--ah-color-bg-paper, #fff);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  cursor: ew-resize;
+  z-index: 10;
+}
+
+.ah-range-selector-marker::after,
+.ah-range-selector-marker::before {
+  display: none;
+}
+
+/* ---- 标记值 — 浮动在手柄上方 ---- */
+.ah-range-selector-marker-value {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ah-color-text, #333);
+  background-color: var(--ah-color-bg-paper, #fff);
+  padding: 1px 6px;
+  border: var(--ah-hairline-width) solid var(--ah-color-border, #ccc);
+  border-radius: 2px;
+  white-space: nowrap;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ---- 悬停状态 ---- */
+.ah-range-selector-marker:hover {
+  background-color: var(--ah-color-primary-dark, #B75800);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.ah-range-selector-marker:hover .ah-range-selector-marker-value {
+  border-color: var(--ah-color-primary, #FF9100);
+  color: var(--ah-color-primary-dark, #B75800);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-range-selector-disabled .ah-range-selector-marker {
+  cursor: not-allowed;
+  background-color: var(--ah-color-border, #ccc);
+}
+
+.ah-range-selector-disabled .ah-range-selector-slider {
+  cursor: not-allowed;
+  background: var(--ah-color-border, #ccc);
+}
+
+.ah-range-selector-disabled .ah-range-selector-marker-value {
+  background-color: var(--ah-color-grey-50, #f5f5f5);
+  color: var(--ah-color-text-disabled, #999);
+}

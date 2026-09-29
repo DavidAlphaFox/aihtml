@@ -1,0 +1,145 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Command · 命令面板（借鉴 happy command，cmdk 风格）
+   面板本体 + ⌘K 居中浮层。
+   ============================================================================ */
+
+.ah-command {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-lg);
+}
+
+/* ---- 输入区 ---- */
+.ah-command__input-wrap {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-command__input {
+  width: 100%;
+  border: 0;
+  outline: 0;
+  padding: 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--ah-color-text);
+  background: transparent;
+}
+.ah-command__input::placeholder { color: var(--ah-color-text-muted); }
+
+/* ---- 列表 ---- */
+.ah-command__list {
+  overflow-y: auto;
+  max-height: 340px;
+  padding: 6px;
+}
+
+.ah-command__group + .ah-command__group { margin-top: 4px; }
+
+.ah-command__group-heading {
+  padding: 6px 10px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ah-color-text-muted);
+}
+
+.ah-command__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--ah-radius-md);
+  cursor: pointer;
+  color: var(--ah-color-text);
+  transition: background .1s ease;
+}
+
+.ah-command__item[data-active="true"] {
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-command__item[data-disabled="true"] {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.ah-command__item-icon { display: inline-flex; flex-shrink: 0; color: var(--ah-color-text-muted); }
+.ah-command__item-icon svg { width: 16px; height: 16px; }
+
+.ah-command__item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.ah-command__item-label {
+  font-size: 14px;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ah-command__item-desc {
+  font-size: 12px;
+  color: var(--ah-color-text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-command__item-shortcut { flex-shrink: 0; }
+
+.ah-command__empty {
+  padding: 28px 12px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ah-color-text-muted);
+}
+
+/* ============================================================================
+   ⌘K 浮层
+   ============================================================================ */
+
+.ah-command-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 21000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 12vh;
+  background: color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity), transparent);
+  animation: ah-command-fade .12s ease;
+}
+
+.ah-command-panel {
+  width: min(560px, calc(100vw - 32px));
+  box-shadow: 0 16px 48px rgb(0 0 0 / .28);
+  border-radius: var(--ah-radius-lg);
+  animation: ah-command-pop .14s ease;
+}
+
+@keyframes ah-command-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ah-command-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(.985); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-command-overlay,
+  .ah-command-panel { animation: none; }
+}

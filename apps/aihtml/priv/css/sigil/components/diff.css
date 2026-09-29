@@ -1,0 +1,119 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Diff · 差异视图（借鉴 happy diff）
+   语义色走 token：success = 新增 / error = 删除，任意配色与明暗下都成立。
+   ============================================================================ */
+
+.ah-diff {
+  --ah-diff-add-bg: color-mix(in srgb, var(--ah-color-success) 14%, transparent);
+  --ah-diff-del-bg: color-mix(in srgb, var(--ah-color-error) 14%, transparent);
+  --ah-diff-add-fg: var(--ah-color-success-dark, var(--ah-color-success));
+  --ah-diff-del-fg: var(--ah-color-error-dark, var(--ah-color-error));
+
+  overflow: auto;
+  font-family: var(--ah-font-mono);
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+}
+
+/* ---- 统计条 ---- */
+.ah-diff__stats {
+  display: flex;
+  gap: 10px;
+  padding: 6px 12px;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  background: var(--ah-color-bg-subtle);
+  font-weight: 600;
+}
+.ah-diff__stat[data-type="add"] { color: var(--ah-diff-add-fg); }
+.ah-diff__stat[data-type="del"] { color: var(--ah-diff-del-fg); }
+
+/* ---- unified ---- */
+.ah-diff__body { display: flex; flex-direction: column; }
+
+.ah-diff__row {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 0 10px;
+  white-space: pre;
+}
+.ah-diff__row[data-type="add"] { background: var(--ah-diff-add-bg); }
+.ah-diff__row[data-type="del"] { background: var(--ah-diff-del-bg); }
+
+.ah-diff__marker {
+  flex-shrink: 0;
+  width: 1ch;
+  user-select: none;
+  color: var(--ah-color-text-muted);
+}
+.ah-diff__row[data-type="add"] .ah-diff__marker { color: var(--ah-diff-add-fg); }
+.ah-diff__row[data-type="del"] .ah-diff__marker { color: var(--ah-diff-del-fg); }
+
+.ah-diff__lineno {
+  flex-shrink: 0;
+  min-width: 3ch;
+  text-align: right;
+  user-select: none;
+  color: var(--ah-color-text-disabled, var(--ah-color-text-muted));
+}
+
+.ah-diff__text { white-space: pre-wrap; word-break: break-word; }
+
+/* ---- split ---- */
+.ah-diff__split { display: flex; flex-direction: column; }
+
+.ah-diff__pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+.ah-diff__side {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0 10px;
+  min-width: 0;
+  white-space: pre;
+}
+.ah-diff__side[data-side="old"] { border-right: var(--ah-border-width) solid var(--ah-color-border); }
+.ah-diff__side[data-type="del"]   { background: var(--ah-diff-del-bg); }
+.ah-diff__side[data-type="add"]   { background: var(--ah-diff-add-bg); }
+/* 空占位行：给一点底纹，表明该侧此处无内容 */
+.ah-diff__side[data-type="empty"] { background: var(--ah-color-bg-subtle); }
+
+/* 窄屏：split 退回单栏堆叠 */
+@media (max-width: 640px) {
+  .ah-diff__pair { grid-template-columns: 1fr; }
+  .ah-diff__side[data-side="old"] {
+    border-right: 0;
+    border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  }
+}
+
+/* ---- word ---- */
+.ah-diff__words {
+  padding: 10px 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.8;
+}
+
+.ah-diff__word[data-type="add"] {
+  background: var(--ah-diff-add-bg);
+  color: var(--ah-diff-add-fg);
+  border-radius: var(--ah-radius-sm);
+}
+.ah-diff__word[data-type="del"] {
+  background: var(--ah-diff-del-bg);
+  color: var(--ah-diff-del-fg);
+  border-radius: var(--ah-radius-sm);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
