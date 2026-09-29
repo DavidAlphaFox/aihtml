@@ -12,6 +12,8 @@
 %%%   other list                        a sequence of children
 %%%   {safe, iodata()}                  written verbatim (already HTML)
 %%%   element()                         rendered recursively
+%%%   element record (#ah_button{} ...) its module's render/1, rendered
+%%%                                     recursively (aihtml_element)
 %%%   undefined / null                  nothing
 %%%
 %%% Escaping is `beamai_html_escape:escape/1', the same five-character set
@@ -31,8 +33,10 @@
              attrs :: [attr()],
              children :: html() | void}).
 
--opaque element() :: #el{}.
--type html() :: element() | binary() | number() | atom()
+%% Transparent: element records (aihtml_element) share html() with it, and
+%% dialyzer rejects an opaque type in a union with tuple().
+-type element() :: #el{}.
+-type html() :: element() | aihtml_element:element() | binary() | number() | atom()
               | {safe, iodata()} | [html()] | string().
 -type css() :: [binary() | atom() | string() | css()].
 %% Attributes are a proplist or a map. Nested lists are flattened, which
@@ -118,6 +122,11 @@ render(L) when is_list(L) ->
     case io_lib:printable_unicode_list(L) of
         true  -> beamai_html_escape:escape(unicode:characters_to_binary(L));
         false -> [render(C) || C <- L]
+    end;
+render(T) when is_tuple(T) ->
+    case aihtml_element:is_element(T) of
+        true  -> render(aihtml_element:render(T));
+        false -> error({aihtml, {not_renderable, T}})
     end;
 render(Other) ->
     error({aihtml, {not_renderable, Other}}).
