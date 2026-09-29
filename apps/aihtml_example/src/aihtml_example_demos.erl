@@ -1,5 +1,5 @@
-%% @doc Registry of the component demos. Each aihtml_example_demo_<group>
-%% module exports demos() -> [#{component, title, summary, demos}]:
+%% @doc Registry of the component demos. Each aihtml_example_demo_<name>
+%% module (one per component module aihtml_<name>) exports demos() -> [#{component, title, summary, demos}]:
 %%   component  the catalog name (button)
 %%   title      the name shown on the site (<<"RadioButton">>), optional
 %%   summary    one line for the home page cards, in Chinese
@@ -19,7 +19,7 @@
 
 -spec modules() -> [module()].
 modules() ->
-    [M || G <- aihtml_catalog:groups(), G =/= aihtml_theme,
+    [M || G <- aihtml_catalog:modules(), G =/= aihtml_theme,
           <<"aihtml_", Rest/binary>> <- [atom_to_binary(G)],
           M <- [binary_to_atom(<<"aihtml_example_demo_", Rest/binary>>)],
           code:ensure_loaded(M) =:= {module, M}].

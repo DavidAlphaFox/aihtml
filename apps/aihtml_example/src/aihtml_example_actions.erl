@@ -161,7 +161,7 @@ action(search, _, #{value := Query} = Ev, Ctx) ->
     Q = string:lowercase(Query),
     Names = lists:sort([atom_to_binary(N) || N <- erlang:registered()]),
     Hits = lists:sublist([N || N <- Names, string:find(N, Q) =/= nomatch], 20),
-    aihtml_form_pickers:set_items(Ctx, Ev, Hits);
+    aihtml_combobox:set_items(Ctx, Ev, Hits);
 action(dark, _, _Ev, Ctx) ->
     aihtml_action:js(Ctx, <<"AH.theme.set('appearance', 'dark')">>);
 action(add_todo, _, #{form := Form}, Ctx) ->

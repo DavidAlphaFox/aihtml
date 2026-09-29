@@ -30,7 +30,7 @@ handle(Req0, Max) ->
                 {too_large, Name, Req} ->
                     reply(413, #{error => iolist_to_binary(
                                             [<<"File too large (max ">>,
-                                             aihtml_form_upload:format_size(Max), <<")">>]),
+                                             aihtml_upload:format_size(Max), <<")">>]),
                                  name => Name}, Req)
             end;
         _ ->

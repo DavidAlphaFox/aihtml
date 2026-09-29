@@ -26,7 +26,7 @@ base_fields() -> ?BASE.
 -spec record(atom()) -> info() | undefined.
 record(Name) ->
     Tag = list_to_atom("ah_" ++ atom_to_list(Name)),
-    find(Tag, aihtml_catalog:groups()).
+    find(Tag, aihtml_catalog:modules()).
 
 find(_Tag, []) -> undefined;
 find(Tag, [M | Ms]) ->
