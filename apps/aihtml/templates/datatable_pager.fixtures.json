@@ -1,0 +1,208 @@
+[
+  {
+    "buttons": [
+      {
+        "active": true,
+        "gap": false,
+        "page": 1
+      },
+      {
+        "active": false,
+        "gap": false,
+        "page": 2
+      },
+      {
+        "active": false,
+        "gap": false,
+        "page": 3
+      }
+    ],
+    "has_sizes": true,
+    "info": "1-10 of 25",
+    "next_disabled": false,
+    "next_label": "Next page",
+    "prev_disabled": true,
+    "prev_label": "Previous page",
+    "size_label": "Rows per page",
+    "sizes": [
+      {
+        "selected": false,
+        "size": 5
+      },
+      {
+        "selected": true,
+        "size": 10
+      },
+      {
+        "selected": false,
+        "size": 25
+      },
+      {
+        "selected": false,
+        "size": 50
+      }
+    ]
+  },
+  {
+    "buttons": [
+      {
+        "active": false,
+        "gap": false,
+        "page": 1
+      },
+      {
+        "active": false,
+        "gap": true,
+        "page": 0
+      },
+      {
+        "active": false,
+        "gap": false,
+        "page": 9
+      },
+      {
+        "active": true,
+        "gap": false,
+        "page": 10
+      },
+      {
+        "active": false,
+        "gap": false,
+        "page": 11
+      },
+      {
+        "active": false,
+        "gap": true,
+        "page": 0
+      },
+      {
+        "active": false,
+        "gap": false,
+        "page": 20
+      }
+    ],
+    "has_sizes": true,
+    "info": "46-50 of 100",
+    "next_disabled": false,
+    "next_label": "Next page",
+    "prev_disabled": false,
+    "prev_label": "Previous page",
+    "size_label": "Rows per page",
+    "sizes": [
+      {
+        "selected": true,
+        "size": 5
+      },
+      {
+        "selected": false,
+        "size": 10
+      }
+    ]
+  },
+  {
+    "buttons": [
+      {
+        "active": true,
+        "gap": false,
+        "page": 1
+      }
+    ],
+    "has_sizes": false,
+    "info": "0-0 of 0",
+    "next_disabled": true,
+    "next_label": "Next page",
+    "prev_disabled": true,
+    "prev_label": "Previous page",
+    "size_label": "Rows per page",
+    "sizes": [
+      {
+        "selected": true,
+        "size": 10
+      }
+    ]
+  },
+  {
+    "buttons": [
+      {
+        "active": false,
+        "gap": false,
+        "page": 1
+      },
+      {
+        "active": false,
+        "gap": false,
+        "page": 2
+      },
+      {
+        "active": true,
+        "gap": false,
+        "page": 3
+      },
+      {
+        "active": false,
+        "gap": false,
+        "page": 4
+      },
+      {
+        "active": false,
+        "gap": false,
+        "page": 5
+      }
+    ],
+    "has_sizes": false,
+    "info": "第 15-21 条，共 30 条 · 3/5",
+    "next_disabled": false,
+    "next_label": "Next page",
+    "prev_disabled": false,
+    "prev_label": "<Prev & \"back\">",
+    "size_label": "Rows per page",
+    "sizes": [
+      {
+        "selected": true,
+        "size": 7
+      }
+    ]
+  },
+  {
+    "buttons": [
+      {
+        "active": false,
+        "gap": false,
+        "page": 1
+      },
+      {
+        "active": false,
+        "gap": true,
+        "page": 0
+      },
+      {
+        "active": false,
+        "gap": false,
+        "page": 19
+      },
+      {
+        "active": true,
+        "gap": false,
+        "page": 20
+      }
+    ],
+    "has_sizes": true,
+    "info": "96-100 of 100",
+    "next_disabled": true,
+    "next_label": "Next page",
+    "prev_disabled": false,
+    "prev_label": "Previous page",
+    "size_label": "Rows per page",
+    "sizes": [
+      {
+        "selected": true,
+        "size": 5
+      },
+      {
+        "selected": false,
+        "size": 20
+      }
+    ]
+  }
+]
+
