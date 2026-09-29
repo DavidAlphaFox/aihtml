@@ -43,7 +43,7 @@ login() ->
 
 ## 调用约定
 
-所有构建函数都返回元素树，最后由 `aihtml:render/1` 输出 iodata。
+普通标签函数返回元素树，组件函数返回元素 record（见下文「record 写法」），两者可以任意嵌套，最后由 `aihtml:render/1` 输出 iodata。
 
 | 形式 | 例子 |
 |---|---|
@@ -62,9 +62,71 @@ login() ->
 预制件清单、修饰符、选项、事件和方法都在 `aihtml_catalog:prefabs/0` 中。示例站的 `/components/:name` 为每个组件提供文档页，参照 sigil 的样式，分三个标签：
 - **演示**：实时示例，下方附渲染它的 Erlang 函数源码。
 - **代码**：该组件的全部示例函数。
-- **API**：签名、修饰符、选项、事件、方法、CSS 类名。
+- **API**：签名、record 字段、修饰符、选项、事件、方法、CSS 类名。
 
 示例写在 `apps/aihtml_example/src/aihtml_example_demo_<group>.erl`，写法见 `designs/04-components.md`。
+
+### record 写法
+
+每个组件都有一个带 `ah_` 前缀的 record，`button/4` 这类函数只是构建它的简写。页面模块 include `aihtml.hrl` 后，两种写法可以混用：
+
+```erlang
+-include_lib("aihtml/include/aihtml.hrl").
+
+%% 函数写法
+button(<<"Save">>, save, [success, lg], [{disabled, true}])
+
+%% record 写法：同一个元素
+#ah_button{body = <<"Save">>, value = save, variant = success, size = lg,
+           disabled = true}
+```
+
+record 写法适合选项多的组件，也便于在渲染前查看和修改元素：
+
+- **编译期检查字段名**：`#ah_datepicker{fisrt_day = 1}` 编译失败。函数写法里写错的选项会被当成 HTML 属性输出，不报错。
+- **修饰符是带类型的字段**：修饰符组（variant、size……）和标志（round、disabled……）是同名字段，dialyzer 能查出 `variant = primery`，渲染时也会校验取值。
+- **没写的字段取默认值**，默认值与函数写法一致。
+
+所有 record 都以同一组公共字段开头：
+
+| 字段 | 说明 |
+|---|---|
+| `id` | 根元素的 id |
+| `css` | 字面类名（binary），通常是 Tailwind 类；修饰符写在字段里，不写在这里 |
+| `attrs` | HTML 属性，写法与函数写法的 Attrs 相同，可以放 `on/3`、`fetch/3` 的结果 |
+| `postback` | `Action`、`{Action, Args}` 或 `{Action, Args, OnOpts}`，绑定在组件的主事件上 |
+| `delegate` | postback 调用的 action 模块，默认是写这个 record 的模块 |
+| `module` | 负责渲染的模块，默认是组件所在的组模块 |
+
+`postback` 是 `on/3` 的简写。下面两种写法等价：
+
+```erlang
+#ah_button{body = <<"Save">>, postback = {save, #{id => Id}}}
+button(<<"Save">>, undefined, [], [on(click, {?MODULE, save, #{id => Id}})])
+```
+
+主事件由组件决定：按钮是 `click`，取值控件是 `change`，drawer、window 等是 `'ah:close'`，没有主事件的组件（card、badge……）设置 postback 会报 `no_postback_event`。每个组件的字段、类型、默认值和主事件，见演示站文档页的 API 标签。
+
+**自定义组件**：使用方的库可以用同样的方式定义组件，不需要注册。record 以 `?AH_BASE(渲染模块)` 开头，渲染模块实现 `aihtml_element` 行为：
+
+```erlang
+-include_lib("aihtml/include/aihtml_element.hrl").
+-record(myapp_card, {?AH_BASE(myapp_card), title, body = []}).
+
+-behaviour(aihtml_element).
+render(#myapp_card{title = T, body = B} = R) ->
+    aihtml:'div'([aihtml:h3(T), B], [<<"card">> | R#myapp_card.css],
+                 aihtml_element:root_attrs(R, click)).
+```
+
+把 `module` 改成别的模块，还可以替换单个元素的渲染方式，例如 `#ah_button{module = myapp_fancy_button}`。
+
+**注意**：
+- 头文件定义了 record 的元组结构，组件增删字段后，使用方要重新编译。
+- 字段取值的错误在渲染时报出；修饰符名写错在调用函数时报出，字段名写错在编译时报出。
+- 函数写法里，Attrs 中与字段同名的原子键（如 `{disabled, true}`、`{name, x}`）会填进字段；`postback`、`delegate`、`module` 只能在 record 里写。
+
+设计细节见 `designs/05-records.md`。
 
 ## 组件
 
@@ -390,7 +452,7 @@ Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字�
 |---|---|---|
 | 演示 | 逐个实时渲染示例，每个示例下方附渲染它的 Erlang 函数 | 示例模块的 `demos/0`；函数源码由 `aihtml_example_source` 从 debug_info 取出、用 `erl_pp` 格式化并做语法高亮 |
 | 代码 | 这个组件的全部示例函数 | 同上 |
-| API | 签名、修饰符、选项说明、事件及绑定写法、方法、CSS 根类名、行为名 | 库的组件目录 `aihtml_catalog`（`option_docs`、`methods` 等字段） |
+| API | 签名、record 字段（类型、默认值、说明）、修饰符、选项说明、事件及绑定写法、方法、CSS 根类名、行为名 | 库的组件目录 `aihtml_catalog`（`option_docs`、`methods` 等字段）；record 的字段由 `aihtml_example_records` 从组模块的 debug_info 取出，说明取自头文件里 record 上方的注释 |
 
 页面上的代码就是实际运行的代码，不需要另外维护一份文本。注释不在 debug_info 里，示例的意图靠小标题和函数名说明。
 
@@ -403,6 +465,7 @@ Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字�
 | `aihtml_example_home` | 首页 |
 | `aihtml_example_docs` | 组件文档页 |
 | `aihtml_example_source` | 示例函数的源码提取和语法高亮 |
+| `aihtml_example_records` | 组件 record 的字段、类型、默认值和说明，供 API 标签使用 |
 | `aihtml_example_demos` | 示例注册表：按组件组找到 `aihtml_example_demo_<group>` 模块 |
 | `aihtml_example_demo_<group>` | 10 个示例模块，每组组件一个 |
 | `aihtml_example_actions` | `/demo` 页面及其 action |
