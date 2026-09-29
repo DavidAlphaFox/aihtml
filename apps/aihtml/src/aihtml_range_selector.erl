@@ -136,7 +136,7 @@ render(#ah_range_selector{range = {Min, Max, Step}, value = Value, name = Name,
             {data_ah_min, num(Min)}, {data_ah_max, num(Max)}, {data_ah_step, num(Step)},
             {data_ah_page, num(case Major > 0 of true -> Major; false -> Step * 10 end)},
             {data_ah_min_span, num(Span)},
-            {data_ah_format, iolist_to_binary(json:encode(format_json(MFmt)))},
+            {data_ah_format, iolist_to_binary(aihtml_json:encode(format_json(MFmt)))},
             {aria_disabled, Disabled andalso <<"true">>}],
            ?E:root_attrs(R, change)]);
 render(#ah_range_selector{range = Range}) ->

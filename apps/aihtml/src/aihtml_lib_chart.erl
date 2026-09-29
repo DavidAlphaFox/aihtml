@@ -71,7 +71,7 @@ chart_root(R, Classes, Option, Loading, Disabled, W, H, Renderer) ->
 %% data can neither close the script element nor open a comment in it.
 -spec island(option()) -> html().
 island(Option) ->
-    Json = try iolist_to_binary(json:encode(Option))
+    Json = try iolist_to_binary(aihtml_json:encode(Option))
            catch error:_ -> error({aihtml, {bad_option, option, Option}})
            end,
     ?H:el(script, {safe, binary:replace(Json, <<"<">>, <<"\\u003c">>, [global])},

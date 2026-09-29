@@ -214,7 +214,7 @@ render_dock_layout(#ah_dock_layout{} = R0) ->
     Hidden = [N || #{kind := autohide} = N <- Nodes],
     Resizable = R#ah_dock_layout.resizable,
     Env = #{root => Id, labels => Labels, resizable => Resizable},
-    Value = iolist_to_binary(json:encode(dl_value(Nodes))),
+    Value = iolist_to_binary(aihtml_json:encode(dl_value(Nodes))),
     Strip = fun(Edge) ->
                     ?H:el('div',
                           [?H:el('div', first_title(G), [<<"ah-dl-autohide-tab">>],
@@ -245,13 +245,13 @@ render_dock_layout(#ah_dock_layout{} = R0) ->
            dock_overlay(),
            ?L:hidden(R#ah_dock_layout.name, Value)],
           Classes,
-          [[{id, Id}, {data_ah, <<"dock_layout">>}, {data_ah_value, Value},
+          [[{id, Id}, {data_ah, <<"dock-layout">>}, {data_ah_value, Value},
             {data_ah_resizable, not Resizable andalso <<"false">>},
             {data_ah_resize_mode, Mode =:= feedback andalso <<"feedback">>},
             {data_ah_allow_float, not R#ah_dock_layout.allow_float andalso <<"false">>},
             {data_ah_allow_dock, not R#ah_dock_layout.allow_dock andalso <<"false">>},
             {data_ah_min_size, MinSize},
-            {data_ah_labels, iolist_to_binary(json:encode(Labels))},
+            {data_ah_labels, iolist_to_binary(aihtml_json:encode(Labels))},
             {aria_disabled, R#ah_dock_layout.disabled andalso <<"true">>}],
            ?E:root_attrs(R, change)]).
 
@@ -582,7 +582,7 @@ catalog() ->
        root => <<"ah-dl">>,
        flags => [disabled],
        options => [panels, resizable, resize_mode, allow_float, allow_dock, min_size, labels],
-       behavior => <<"dock_layout">>,
+       behavior => <<"dock-layout">>,
        events => [<<"change">>, <<"ah:panel-close">>],
        doc => <<"An IDE-style layout of splits, tab groups and documents: drag tabs to dock or "
                 "float them, auto hide groups at an edge, resize with splitbars; the layout "

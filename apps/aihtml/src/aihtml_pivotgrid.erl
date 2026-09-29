@@ -476,7 +476,7 @@ layout_json(M) ->
 
 view_json(V) -> V.
 
-json(T) -> iolist_to_binary(json:encode(T)).
+json(T) -> iolist_to_binary(aihtml_json:encode(T)).
 
 %%%===================================================================
 %%% Data

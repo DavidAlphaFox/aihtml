@@ -71,7 +71,7 @@ render(#ah_pagination{total = Total, value = Page, href = Href} = R) ->
             href => case Href of undefined -> null; _ -> bin(Href) end},
     List = el(ul, aihtml_tpl:safe(tpl_pagination_items(pagination_view(Cur, Pages, Max, Size, Cfg))),
               [<<"ah-pagination-pages">>],
-              [{data_view, iolist_to_binary(json:encode(Cfg))}]),
+              [{data_view, iolist_to_binary(aihtml_json:encode(Cfg))}]),
     Total_ = [el(span, fmt(maps:get(total, L), [Total]), [<<"ah-pagination-total">>], [])
               || bool(show_total, R#ah_pagination.show_total)],
     SizeSel = [el('div',

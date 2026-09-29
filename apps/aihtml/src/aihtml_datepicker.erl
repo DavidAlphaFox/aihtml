@@ -154,7 +154,7 @@ render(#ah_datepicker{value = Value0, name = Name, disabled = Disabled,
                  true -> undefined;
                  false -> <<"false">>
              end},
-            {data_ah_labels, iolist_to_binary(json:encode(Labels))},
+            {data_ah_labels, iolist_to_binary(aihtml_json:encode(Labels))},
             {aria_disabled, Disabled andalso <<"true">>}],
            ?E:root_attrs(R, change)]).
 

@@ -106,7 +106,7 @@ render_tile_layout(#ah_tile_layout{layout = Layout, value = Value, name = Name,
     Tree0 = norm_node(Layout, []),
     _ = check_unique(Tree0),
     {Tree, Closed} = apply_value(Tree0, Value),
-    Json = iolist_to_binary(json:encode(#{<<"root">> => node_value(Tree),
+    Json = iolist_to_binary(aihtml_json:encode(#{<<"root">> => node_value(Tree),
                                           <<"closed">> => Closed})),
     Style = [[<<"height:">>, ?L:css_size(Hh), $;]
              || Hh <- [R#ah_tile_layout.height], Hh =/= undefined],

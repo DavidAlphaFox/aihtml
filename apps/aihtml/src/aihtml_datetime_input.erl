@@ -131,7 +131,7 @@ render(#ah_datetime_input{value = Value0, format = Format0, name = Name,
                    {aria_label, <<"Choose date">>}, {hidden, true}])
             || Cal]],
           Classes,
-          [[{id, Id}, {data_ah, <<"datetime_input">>}, {data_ah_value, Iso},
+          [[{id, Id}, {data_ah, <<"datetime-input">>}, {data_ah_value, Iso},
             {data_ah_format, Format},
             {data_ah_min, opt_iso(R#ah_datetime_input.min, Kind)},
             {data_ah_max, opt_iso(R#ah_datetime_input.max, Kind)},
@@ -139,7 +139,7 @@ render(#ah_datetime_input{value = Value0, format = Format0, name = Name,
             {data_ah_show_time, R#ah_datetime_input.show_time},
             {data_ah_labels, case R#ah_datetime_input.labels of
                                  M when map_size(M) =:= 0 -> undefined;
-                                 _ -> iolist_to_binary(json:encode(Labels))
+                                 _ -> iolist_to_binary(aihtml_json:encode(Labels))
                              end},
             {aria_disabled, Disabled andalso <<"true">>}],
            ?E:root_attrs(R, change)]).
@@ -291,7 +291,7 @@ catalog() ->
                     floating_label => [],
                     no_rounded => [<<"ah-dti-no-rounded">>]},
        options => [placeholder, format, min, max, first_day, labels],
-       behavior => <<"datetime_input">>,
+       behavior => <<"datetime-input">>,
        events => [<<"change">>, <<"input">>, <<"ah:open">>, <<"ah:close">>],
        doc => <<"A segmented date/time field edited part by part with digits and arrow "
                 "keys, with a drop-down calendar; value in data-ah-value as ISO.">>,

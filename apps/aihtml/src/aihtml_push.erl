@@ -61,7 +61,7 @@ publish(Topic, Fun, Opts) ->
     case aihtml_action:render_ops(Fun) of
         [] -> ok;
         Ops ->
-            Event = iolist_to_binary(json:encode(event(Ops))),
+            Event = iolist_to_binary(aihtml_json:encode(event(Ops))),
             _ = [P ! {aihtml_push, Except, Event} || P <- members(Topic)],
             ok
     end.

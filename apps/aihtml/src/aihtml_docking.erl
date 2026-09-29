@@ -148,7 +148,7 @@ render_docking(#ah_docking{items = Panels0} = R0) ->
     {Placed, Floating, Closed} = apply_docking(Panels, Saved),
     Close = R#ah_docking.close_buttons,
     Collapse = R#ah_docking.collapse_buttons,
-    Value = iolist_to_binary(json:encode(docking_value(Placed, Floating, Closed))),
+    Value = iolist_to_binary(aihtml_json:encode(docking_value(Placed, Floating, Closed))),
     ?H:el('div',
           [[?H:el('div', [render_window(Id, W, Close, Collapse, Labels) || W <- Ws],
                   [<<"ah-docking-panel">>], [{data_panel_id, P}])

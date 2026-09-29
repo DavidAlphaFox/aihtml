@@ -168,7 +168,7 @@ render(#ah_calendar{view = View, views = Views, first_day = First,
           Classes,
           [[{id, Id}, {data_ah, <<"calendar">>}, {data_ah_value, Value},
             {data_ah_view, View},
-            {data_ah_events, iolist_to_binary(json:encode(Events))},
+            {data_ah_events, iolist_to_binary(aihtml_json:encode(Events))},
             {data_ah_first_day, First},
             {data_ah_agenda_days, R#ah_calendar.agenda_days},
             {data_ah_day_max_events, R#ah_calendar.day_max_events},
@@ -177,7 +177,7 @@ render(#ah_calendar{view = View, views = Views, first_day = First,
             {data_ah_hour_format, R#ah_calendar.hour_format},
             {data_ah_labels, case R#ah_calendar.labels of
                                  M when map_size(M) =:= 0 -> undefined;
-                                 _ -> iolist_to_binary(json:encode(L))
+                                 _ -> iolist_to_binary(aihtml_json:encode(L))
                              end},
             {data_view, View}, {data_start, ?D:iso_date(RS)}, {data_end, ?D:iso_date(RE)},
             {style, [[<<"height:">>, integer_to_binary(Height), <<"px">>]

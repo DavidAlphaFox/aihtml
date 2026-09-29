@@ -278,7 +278,7 @@ json_attr(_, M) when map_size(M) =:= 0 -> undefined;
 json_attr(K, M) -> encode(K, M).
 
 encode(K, Term) ->
-    try iolist_to_binary(json:encode(Term))
+    try iolist_to_binary(aihtml_json:encode(Term))
     catch _:_ -> error({aihtml, {bad_option, K, Term}})
     end.
 

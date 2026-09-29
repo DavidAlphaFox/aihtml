@@ -96,7 +96,7 @@ validate(Rules) ->
              L when is_list(L) -> iolist_to_binary(lists:join(<<" ">>, [?F:bin(X) || X <- L]));
              X -> ?F:bin(X)
          end,
-    [{data_ah_validate, iolist_to_binary(json:encode(Json))},
+    [{data_ah_validate, iolist_to_binary(aihtml_json:encode(Json))},
      {data_ah_validate_on, On},
      {data_ah_validate_hint, atom_opt(hint, Opts, [auto, tooltip, label])},
      {data_ah_validate_position, atom_opt(position, Opts, [right, left, top, bottom])},
