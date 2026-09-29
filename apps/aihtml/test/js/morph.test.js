@@ -35,11 +35,13 @@
          ["y:Y", "z:z", "w:w"]);
   });
 
-  T.test("morph_inner patches the children and drops removed ones", function (fx) {
+  T.test("morph_inner patches the children and drops removed ones", async function (fx) {
     html(fx, '<div id="box"><span>a</span><b>b</b><i>c</i></div>');
     var span = fx.querySelector("span");
     AH.swap($("#box"), "<span>A</span><em>e</em>", "morph_inner");
     T.ok(fx.querySelector("span") === span, "span kept");
+    T.ok(fx.querySelector("em").classList.contains("ah-added"), "new node is settling");
+    await new Promise(function (r) { setTimeout(r, AH.settleDelay + 20); });
     T.eq(document.getElementById("box").innerHTML, "<span>A</span><em>e</em>");
   });
 
@@ -87,13 +89,14 @@
     T.ok(threw);
   });
 
-  T.test("server ops can morph", function (fx) {
+  T.test("server ops can morph", async function (fx) {
     html(fx, '<div id="box"><input id="k" value="v"></div>');
     var k = document.getElementById("k");
     k.focus();
     AH.apply([{ op: "html", id: "box", swap: "morph", html: '<div id="box" class="done"><input id="k" value="v"></div>' }]);
     T.ok(document.getElementById("k") === k);
     T.eq(document.activeElement, k);
+    await new Promise(function (r) { setTimeout(r, AH.settleDelay + 20); });
     T.eq(document.getElementById("box").className, "done");
   });
 })(window.AHTest, window.jQuery, window.AH);

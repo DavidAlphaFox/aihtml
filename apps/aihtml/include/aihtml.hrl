@@ -17,7 +17,7 @@
          pre/1, pre/3, blockquote/1, blockquote/3,
          table/1, table/3, thead/1, thead/3, tbody/1, tbody/3,
          tr/1, tr/3, th/1, th/3, td/1, td/3,
-         br/0, hr/2, img/2, text/1, safe/1, fetch/3, fetch/4, on/2, on/3, subscribe/1, subscribe/2,
+         br/0, hr/2, img/2, text/1, safe/1, fetch/3, fetch/4, on/2, on/3, preserve/0, subscribe/1, subscribe/2,
          theme_switcher/2]).
 %% BEGIN GENERATED COMPONENT IMPORTS
 -import(aihtml,

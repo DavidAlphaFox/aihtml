@@ -51,7 +51,8 @@
 -export([sign/1, unsign/1, render_ops/1, stream_id/1, plain/1, check_secret/0]).
 %% Operations inside an action.
 -export([html/3, html/4, remove/2, attr/4, add_class/3, remove_class/3,
-         set_value/3, focus/2, title/2, redirect/2, js/2, call/4, flush/1, meta/1]).
+         set_value/3, focus/2, title/2, redirect/2, js/2, call/4,
+         trigger/4, push_url/2, replace_url/2, flush/1, meta/1]).
 
 -export_type([ref/0, event/0, ctx/0, target/0, run_opts/0]).
 
@@ -235,6 +236,27 @@ call(Ctx, global, Method, Args) when is_list(Args) ->
     push(Ctx, #{op => call, method => text(Method), args => Args});
 call(Ctx, Target, Method, Args) when is_list(Args) ->
     push(Ctx, target(Target, #{op => call, method => text(Method), args => Args})).
+
+%% @doc Fire a DOM event in the browser (it bubbles, like jQuery's
+%% trigger): on `Target', or on the document with `document'. Page
+%% scripts can listen for it, and elements can bind actions to it with
+%% aihtml:on/2 (`on('ah:saved', ...)'); `Detail' is passed as JSON.
+-spec trigger(ctx(), target() | document, atom() | binary(), term()) -> ok.
+trigger(Ctx, document, Event, Detail) ->
+    push(Ctx, #{op => trigger, event => text(Event), detail => Detail});
+trigger(Ctx, Target, Event, Detail) ->
+    push(Ctx, target(Target, #{op => trigger, event => text(Event), detail => Detail})).
+
+%% @doc Add `Url' to the browser history without loading it, so the
+%% address bar and bookmarks match what the action just showed (a page of
+%% results, an open tab). Going back or forward to it reloads that URL,
+%% which the server renders like any other page.
+-spec push_url(ctx(), iodata()) -> ok.
+push_url(Ctx, Url) -> push(Ctx, #{op => url, mode => push, value => text(Url)}).
+
+%% @doc Like push_url/2 but replaces the current history entry.
+-spec replace_url(ctx(), iodata()) -> ok.
+replace_url(Ctx, Url) -> push(Ctx, #{op => url, mode => replace, value => text(Url)}).
 
 %% @doc Send the operations buffered so far, before the action returns.
 -spec flush(ctx()) -> ok.

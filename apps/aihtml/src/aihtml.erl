@@ -37,7 +37,7 @@
 %% Server round trips for the jQuery runtime.
 -export([fetch/3, fetch/4]).
 %% Browser events that call Erlang actions (see aihtml_action).
--export([on/2, on/3]).
+-export([on/2, on/3, preserve/0]).
 %% Server push (see aihtml_push).
 -export([subscribe/1, subscribe/2]).
 %% Theme switcher; the component exports are generated below.
@@ -363,10 +363,12 @@ fetch(Method, Url, Target) -> fetch(Method, Url, Target, #{}).
 
 %% @doc Options: `swap' (inner | outer | append | prepend | none | morph |
 %% morph_inner, default inner; see aihtml_action:html/4), `trigger' (a DOM event name; default submit for forms, change
-%% for inputs, click otherwise), `confirm' (a question asked first).
+%% for inputs, click otherwise), `confirm' (a question asked first),
+%% `indicator' and `disable' (as for on/3).
 -spec fetch(get | post | put | patch | delete, iodata(), iodata() | this,
             #{swap => inner | outer | append | prepend | none | morph | morph_inner,
-              trigger => atom() | binary(), confirm => iodata()}) -> attrs().
+              trigger => atom() | binary(), confirm => iodata(),
+              indicator => iodata() | this, disable => iodata() | this}) -> attrs().
 fetch(Method, Url, Target, Opts) ->
     lists:member(Method, [get, post, put, patch, delete])
         orelse error({aihtml, {bad_fetch_method, Method}}),
@@ -378,7 +380,8 @@ fetch(Method, Url, Target, Opts) ->
      {data_ah_target, target(Target)},
      {data_ah_swap, Swap},
      {data_ah_trigger, maps:get(trigger, Opts, undefined)},
-     {data_ah_confirm, maps:get(confirm, Opts, undefined)}].
+     {data_ah_confirm, maps:get(confirm, Opts, undefined)},
+     request_attrs(Opts)].
 
 %% @doc Bind an event to an action, spliced into Attrs like `fetch/3':
 %% `button(<<"Save">>, save, [], [on(click, {?MODULE, save, #{id => 7}})])'.
@@ -394,20 +397,54 @@ on(Event, Action) -> on(Event, Action, #{}).
 %% one, for `input' and `keyup';
 %% `include' is a list of selectors (or `{id, Id}') whose controls' values
 %% are sent along in the event's `values';
-%% `confirm' asks the user first.
+%% `confirm' asks the user first;
+%% `sync' decides what happens when a request of the same element (or
+%% scope) is still running: drop the new one (default for click, submit),
+%% replace the running one (default for input, change, key events) or
+%% queue the new one until the running one ends;
+%% `sync_scope' is a selector of an ancestor whose elements share one
+%% queue (e.g. <<"form">>);
+%% `indicator' is a selector (or `this', or <<"closest ...">>) whose
+%% elements get the class ah-request while the request runs (style
+%% .ah-indicator elements appear then);
+%% `disable' names elements disabled while the request runs.
+%% sync, sync_scope, indicator and disable are attributes of the element,
+%% so they apply to every action bound on it.
 -spec on(atom() | binary(), aihtml_action:ref(),
          #{debounce => pos_integer(), include => [iodata() | {id, iodata() | atom()}],
-           confirm => iodata()}) -> attrs().
+           confirm => iodata(), sync => drop | replace | queue, sync_scope => iodata(),
+           indicator => iodata() | this, disable => iodata() | this}) -> attrs().
 on(Event, Action, Opts) when is_map(Opts) ->
     E = beamai_html_escape:to_binary(Event, aihtml),
     %% DOM events (click, change, ...) or component events (ah:close, ...)
     re:run(E, <<"^(ah:)?[a-z][a-z-]*$">>) =/= nomatch
         orelse error({aihtml, {bad_event_name, Event}}),
     is_function(Action) andalso error({aihtml, {action_must_be_mfa, Action}}),
+    lists:member(maps:get(sync, Opts, drop), [drop, replace, queue])
+        orelse error({aihtml, {bad_sync, maps:get(sync, Opts)}}),
     [{<<"data-ah-on">>, {actions, [{E, aihtml_action:token(Action), maps:with([debounce], Opts)}]}},
      [{<<"data-ah-include">>, {selectors, [include_sel(S) || S <- Sels]}}
       || #{include := Sels} <- [Opts], Sels =/= []],
-     {data_ah_confirm, maps:get(confirm, Opts, undefined)}].
+     {data_ah_confirm, maps:get(confirm, Opts, undefined)},
+     {data_ah_sync, maps:get(sync, Opts, undefined)},
+     {data_ah_sync_scope, maps:get(sync_scope, Opts, undefined)},
+     request_attrs(Opts)].
+
+%% indicator and disable, shared with fetch/4
+request_attrs(Opts) ->
+    [{data_ah_indicator, sel_opt(maps:get(indicator, Opts, undefined))},
+     {data_ah_disable, sel_opt(maps:get(disable, Opts, undefined))}].
+
+sel_opt(undefined) -> undefined;
+sel_opt(this) -> <<"this">>;
+sel_opt(S) -> text(S).
+
+%% @doc Keep this element (it needs an id) as it is when new content from
+%% a swap brings an element with the same id: the existing node is moved
+%% into place, with its state (a playing video, typed text, a mounted
+%% component). Splice into Attrs: `'div'(Player, [], [{id, player}, preserve()])'.
+-spec preserve() -> attrs().
+preserve() -> [{data_ah_preserve, true}].
 
 %% @doc Follow a push topic, spliced into the Attrs of the element whose
 %% content the topic updates: `ul(Items, [], [{id, list}, subscribe(todos)])'.

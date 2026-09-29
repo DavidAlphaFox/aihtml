@@ -7,6 +7,17 @@
 /* an action or fetch in flight on this element */
 [aria-busy="true"] { cursor: progress; }
 
+/* Loading indicators: hidden until the element they belong to (or an
+   ancestor named by the indicator option) has a request running. */
+.ah-indicator {
+  opacity: 0;
+  transition: opacity 200ms ease-in;
+}
+.ah-request .ah-indicator,
+.ah-request.ah-indicator {
+  opacity: 1;
+}
+
 /* theme switcher (aihtml:theme_switcher/2) */
 .ah-theme-switcher { display: flex; flex-wrap: wrap; gap: var(--ah-spacing-sm); }
 .ah-theme-switcher-item { display: flex; flex-direction: column; gap: var(--ah-spacing-xs); min-width: 7rem; }

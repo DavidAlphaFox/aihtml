@@ -54,6 +54,40 @@ args_must_be_data_test() ->
                  aihtml_action:token({?M, inc, #{pid => self()}})),
     ?assertError({aihtml, {action_must_be_mfa, _}}, on(click, fun() -> ok end)).
 
+request_options_render_as_attributes_test() ->
+    Html = aihtml:render_binary(
+             span([], [], [on(click, {?M, inc, #{n => 1}},
+                              #{sync => queue, sync_scope => <<"form">>,
+                                indicator => <<"#spin">>, disable => this}),
+                           preserve()])),
+    [?assertMatch({match, _}, re:run(Html, P))
+     || P <- [<<"data-ah-sync=\"queue\"">>, <<"data-ah-sync-scope=\"form\"">>,
+              <<"data-ah-indicator=\"#spin\"">>, <<"data-ah-disable=\"this\"">>,
+              <<" data-ah-preserve[ >]">>]],
+    ?assertError({aihtml, {bad_sync, later}}, on(click, {?M, inc, #{}}, #{sync => later})),
+    F = aihtml:render_binary(span([], [], [fetch(get, <<"/x">>, this, #{indicator => this})])),
+    ?assertMatch({match, _}, re:run(F, <<"data-ah-indicator=\"this\"">>)).
+
+trigger_and_history_ops_test() ->
+    {ok, Events} = run_fun(fun(Ctx) ->
+                               aihtml_action:trigger(Ctx, document, 'ah:saved', #{id => 7}),
+                               aihtml_action:trigger(Ctx, {id, list}, refresh, null),
+                               aihtml_action:push_url(Ctx, <<"/items?page=3">>),
+                               aihtml_action:replace_url(Ctx, "/items")
+                           end),
+    ?assertEqual([[#{<<"op">> => <<"trigger">>, <<"event">> => <<"ah:saved">>,
+                     <<"detail">> => #{<<"id">> => 7}},
+                   #{<<"op">> => <<"trigger">>, <<"id">> => <<"list">>, <<"event">> => <<"refresh">>,
+                     <<"detail">> => null},
+                   #{<<"op">> => <<"url">>, <<"mode">> => <<"push">>, <<"value">> => <<"/items?page=3">>},
+                   #{<<"op">> => <<"url">>, <<"mode">> => <<"replace">>, <<"value">> => <<"/items">>}]],
+                 ops(Events)).
+
+%% Ops produced by a fun, through the same path pushes use.
+run_fun(Fun) ->
+    Ops = aihtml_action:render_ops(Fun),
+    {ok, [json:decode(iolist_to_binary(json:encode(aihtml_push:event(Ops))))]}.
+
 component_event_names_test() ->
     Html = aihtml:render_binary(span([], [], [on('ah:close', {?M, inc, #{n => 1}})])),
     ?assertMatch({match, _}, re:run(Html, <<"data-ah-on=\"ah:close:[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\"">>)),
