@@ -1,0 +1,41 @@
+/* aihtml additions for the overlay components (designs/04-components.md).
+   Owned by that group; sigil styles live in ../sigil/components. */
+
+/* tooltip/4 wraps its trigger in a host span, measured for positioning */
+.ah-tooltip-host {
+  display: inline-block;
+}
+
+/* the bubble is positioned by overlay.js with position: fixed */
+.ah-tooltip-content {
+  display: block;
+}
+
+/* window/3 `footer' option (sigil's window has none; same look as the
+   sheet footer) */
+.ah-window-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+  flex: none;
+}
+
+/* header buttons are <button>s: drop the UA chrome */
+.ah-window-collapse-btn,
+.ah-window-close-btn {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
+
+/* Dark appearance: sigil's notification cards use the *-lighter tokens,
+   which the default palette keeps light, so light text on a pale card.
+   Tint the paper colour with the accent instead. */
+[data-theme="dark"] .ah-notify {
+  background: color-mix(in srgb, var(--ah-notify-accent, var(--ah-color-grey-500)) 16%,
+                        var(--ah-color-bg-paper));
+}
