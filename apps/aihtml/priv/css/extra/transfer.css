@@ -1,0 +1,16 @@
+/* aihtml additions for transfer (aihtml_transfer); sigil styles live in
+   ../sigil/components. */
+
+/* Transfer: the lists take the focus for the keyboard. */
+.ah-transfer-list {
+  outline: none;
+}
+
+.ah-transfer-panel:focus-within {
+  border-color: var(--ah-color-primary);
+}
+
+.ah-transfer-list:focus .ah-transfer-item-focused {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
