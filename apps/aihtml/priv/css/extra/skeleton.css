@@ -1,0 +1,9 @@
+/* aihtml additions for skeleton; sigil styles live in ../sigil/components. */
+
+/* ---- skeleton: a rect defaults to the full width of its container
+        (sigil's inline-flex/auto width collapsed a 100% shape to 0) --- */
+
+.ah-skeleton[data-variant="rect"] {
+  display: flex;
+  width: 100%;
+}
