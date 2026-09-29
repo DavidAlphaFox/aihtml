@@ -53,6 +53,12 @@ export const COMPONENTS = [
   "avatar", "badge", "chip", "aspect_ratio", "kbd", "time_ago",
   "expandable_text", "progressbar", "progress_circle", "meter", "statistic",
   "kpi_card", "timeline", "ranking_list", "tag_cloud",
+  // second batch: calendar, lists, entry, upload, trees, scrolling, bars,
+  // drag and drop (repeat_button has no stylesheet of its own)
+  "calendar", "datetime_input", "cascader", "listbox", "transfer",
+  "masked_input", "formatted_input", "range_selector", "upload", "tree",
+  "diff", "heatmap_calendar", "scrollview", "scrollbar", "responsive_panel",
+  "activity_bar", "navigationbar", "command", "sortable", "dragdrop",
 ];
 
 const NOTICE =
