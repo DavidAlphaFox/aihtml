@@ -63,3 +63,15 @@
 - 用 `global:register_name/3` 注册全局名，冲突解析函数用 `global:random_notify_name/3`。
 - 注册失败的节点每 5 秒重试一次，持有者消失后接管。
 - 两个集群合并时，输掉名字的一方会收到通知，自行退回等待状态，而不是被直接杀掉。
+
+## 示例的数据层
+
+示例用 Mnesia 作为数据层（`aihtml_example_store`），用来验证"业务层无状态、状态全在数据层"这一前提：
+
+- **表**：计数表 `aihtml_example_counter`（页面计数和待办 id 序列），以及按 id 排序的 `aihtml_example_todo`（ordered_set）。
+- **写入**：一律使用事务，读改写时加写锁。测试中 50 个并发写入者结果精确，id 不重复。
+- **存储**：默认 `disc_copies`。设置 `db_join` 的节点会加入已有集群，把 schema 转为 disc 并复制两张表。
+- **已验证的行为**：
+  - 节点 b 写入的数据，在节点 a 新打开的页面上能读到。
+  - 节点 a 停机期间，b 照常读写。
+  - a 重启后从 b 同步数据。a 上已经打开的页面重连后，通过 refresh action 拿到停机期间新增的数据。

@@ -195,6 +195,58 @@ npm run build          # 复制 jQuery，构建 aihtml.css 与 example.css
 rebar3 shell           # 启动示例：http://localhost:8080/ 与 /fetch
 ```
 
+### 示例的数据层
+
+示例用 Mnesia 保存计数器和待办，数据目录默认是 `_build/mnesia/<节点名>`。配置项在 `aihtml_example` 应用环境中：
+
+| 配置 | 含义 |
+|---|---|
+| `db_storage` | `disc_copies`（默认，重启后保留）或 `ram_copies` |
+| `db_join` | 已在运行的节点名；设置后本节点加入它的 Mnesia 集群并复制表 |
+
+两节点集群，任意一个节点都能处理任意请求，数据与推送全集群共享：
+
+```sh
+S='<<"0123456789abcdef0123456789abcdef">>'   # 仅作示例，生产环境请用随机密钥
+EBIN="-pa _build/default/lib/*/ebin"
+
+erl -sname a -setcookie demo $EBIN -aihtml secret "$S" -aihtml_example port 8080 \
+    -eval 'application:ensure_all_started(aihtml_example).'
+
+erl -sname b -setcookie demo $EBIN -aihtml secret "$S" -aihtml_example port 8081 \
+    -aihtml_example db_join "'a@$(hostname -s)'" \
+    -eval 'application:ensure_all_started(aihtml_example).'
+```
+
+之后节点 a 重启时不需要 `db_join`，它的磁盘 schema 已经记录了集群成员，启动时会从 b 同步最新数据。
+
+### 发布
+
+`rebar.config` 里的 relx 配置把示例打成 release。mnesia 在 release 中是 `{mnesia, load}`：只加载、不自动启动。数据层会先创建磁盘 schema，再自己启动 mnesia，因为 Mnesia 运行时无法创建磁盘 schema。
+
+```sh
+rebar3 release          # 开发用，_build/default/rel/aihtml_example
+rebar3 as prod tar      # 含 ERTS 的独立包，_build/prod/rel/aihtml_example/*.tar.gz
+```
+
+启动时由环境变量配置，替换规则见 `config/sys.config.src` 与 `config/vm.args.src`：
+
+| 变量 | 含义 |
+|---|---|
+| `AIHTML_SECRET` | 必填，至少 32 字节，所有节点相同。缺失或过短时 aihtml 应用拒绝启动 |
+| `PORT` | HTTP 端口，默认 8080 |
+| `NODE_NAME` | 短节点名，默认 `aihtml_example` |
+| `DB_STORAGE` | `disc_copies`（默认）或 `ram_copies` |
+| `DB_JOIN` | 要加入的节点，例如 `aihtml_example@host1`；第一个节点留空 |
+| `MNESIA_DIR` | Mnesia 目录，默认为 release 根目录下的 `data/mnesia` |
+
+```sh
+AIHTML_SECRET=... PORT=8080 bin/aihtml_example daemon
+AIHTML_SECRET=... PORT=8081 NODE_NAME=web2 DB_JOIN=aihtml_example@host1 bin/aihtml_example daemon
+```
+
+vm.args 里没有写 cookie，VM 和启动脚本都使用 `~/.erlang.cookie`。组成集群的节点需要使用相同的 cookie 文件。
+
 ## 许可证
 
 Apache-2.0
