@@ -1,0 +1,8 @@
+/* aihtml additions for ranking_list (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- keyboard focus for clickable rows ---- */
+.ah-ranking-list__item--clickable:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 2px;
+}
