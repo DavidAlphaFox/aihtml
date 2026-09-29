@@ -1,0 +1,406 @@
+/* aihtml additions for the form_select components (designs/04-components.md).
+   Owned by that group; sigil styles live in ../sigil/components. */
+
+/* ---- dropdownlist ------------------------------------------------------ */
+
+.ah-dropdownlist {
+  box-sizing: border-box;
+  outline: none;
+  min-width: 8rem;
+}
+
+.ah-dropdownlist:focus-visible .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-dropdownlist-block {
+  display: flex;
+  width: 100%;
+}
+
+.ah-dropdownlist-content {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-height: 34px;
+}
+
+.ah-dropdownlist-disabled {
+  cursor: not-allowed;
+}
+
+/* The popup lives inside the root (position: fixed), so it inherits the
+   root's text; reset what the combobox sets. */
+.ah-dropdownlist-popup {
+  cursor: default;
+  text-align: left;
+}
+
+.ah-validator-error-element.ah-dropdownlist .ah-dropdownlist-input-area,
+.ah-form-row-invalid .ah-dropdownlist .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-danger);
+}
+
+/* ---- listbox (the dropdownlist popup), from sigil listbox.css ---------- */
+
+.ah-listbox {
+  display: inline-flex;
+  flex-direction: column;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  font-family: var(--ah-font-family);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  user-select: none;
+  outline: none;
+  overflow: hidden;
+}
+
+.ah-listbox-filter {
+  padding: 6px 8px;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  flex: none;
+}
+
+.ah-listbox-filter-input {
+  width: 100%;
+  padding: 4px 8px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  font: inherit;
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  transition: border-color var(--ah-transition-fast);
+  box-sizing: border-box;
+}
+
+.ah-listbox-filter-input:focus {
+  border-color: var(--ah-color-primary);
+}
+
+.ah-listbox-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+.ah-listbox-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ah-listbox-group {
+  padding: 6px 10px 4px;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background: var(--ah-color-grey-50);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  cursor: default;
+}
+
+.ah-listbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background var(--ah-transition-fast);
+  border-bottom: var(--ah-border-width) solid transparent;
+}
+
+.ah-listbox-item:hover {
+  background: var(--ah-color-grey-50);
+}
+
+.ah-listbox-item-selected {
+  background: var(--ah-color-primary-light, rgba(33, 150, 243, 0.08));
+  color: var(--ah-color-primary);
+}
+
+.ah-listbox-item-selected:hover {
+  background: var(--ah-color-primary-light, rgba(33, 150, 243, 0.12));
+}
+
+.ah-listbox-item-focused {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+
+.ah-listbox-item-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-listbox-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ah-listbox-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* ---- select (native, dropdownlist look) --------------------------------- */
+
+.ah-select {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  vertical-align: middle;
+  min-width: 8rem;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  font-family: var(--ah-font-family);
+  overflow: hidden;
+  transition: border-color var(--ah-transition-fast);
+  box-sizing: border-box;
+}
+
+.ah-select:hover {
+  border-color: var(--ah-color-grey-400);
+}
+
+.ah-select:focus-within {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-select-control {
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 calc(32px + var(--ah-spacing-sm)) 0 var(--ah-spacing-sm);
+  border: 0;
+  background: transparent;
+  color: var(--ah-color-text);
+  font: inherit;
+  font-size: var(--ah-font-size-sm);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.ah-select-control option,
+.ah-select-control optgroup {
+  background: var(--ah-color-bg-paper);
+  color: var(--ah-color-text);
+}
+
+.ah-select-arrow {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+  background: var(--ah-color-grey-50);
+  color: var(--ah-color-text-secondary);
+  pointer-events: none;
+}
+
+.ah-select-arrow .ah-dropdownlist-arrow-icon {
+  font-size: 10px;
+}
+
+/* multiple / size > 1: a list, no arrow */
+.ah-select:has(.ah-select-control[multiple]) .ah-select-arrow,
+.ah-select:has(.ah-select-control[size]:not([size="1"])) .ah-select-arrow {
+  display: none;
+}
+
+.ah-select-control[multiple],
+.ah-select-control[size]:not([size="1"]) {
+  padding: 4px;
+  overflow-y: auto;
+}
+
+.ah-select-control[multiple] option {
+  padding: 4px 6px;
+  border-radius: 2px;
+}
+
+.ah-select:has(.ah-select-control:disabled) {
+  opacity: var(--ah-state-disabled-opacity);
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-select-control:disabled {
+  cursor: not-allowed;
+}
+
+.ah-select-sm .ah-select-control { min-height: 28px; font-size: var(--ah-font-size-xs); }
+.ah-select-lg .ah-select-control { min-height: 42px; font-size: var(--ah-font-size-base); }
+.ah-select-block { display: flex; width: 100%; }
+
+.ah-select-primary { border-color: var(--ah-color-primary); }
+.ah-select-success { border-color: var(--ah-color-success); }
+.ah-select-warning { border-color: var(--ah-color-warning); }
+.ah-select-danger { border-color: var(--ah-color-error); }
+
+.ah-select:has(.ah-validator-error-element),
+.ah-form-row-invalid .ah-select {
+  border-color: var(--ah-color-danger);
+}
+
+/* ---- slider ------------------------------------------------------------- */
+
+.ah-slider-horizontal {
+  display: block;
+  width: 100%;
+}
+
+.ah-slider:focus-visible,
+.ah-slider-thumb:focus-visible {
+  outline: none;
+}
+
+.ah-slider-focused .ah-slider-track {
+  outline-color: var(--ah-color-primary-lighter);
+}
+
+.ah-slider-thumb:focus-visible {
+  box-shadow: 0 0 0 3px var(--ah-color-primary-lighter), var(--ah-shadow-sm);
+}
+
+.ah-slider-content {
+  touch-action: none;
+  cursor: pointer;
+}
+
+/* sigil places tick containers with descendant selectors that never
+   match its own markup; put them beside the track. */
+.ah-slider-horizontal .ah-slider-ticks-bottom { top: calc(50% + 7px); }
+.ah-slider-horizontal .ah-slider-ticks-top { bottom: calc(50% + 7px); }
+.ah-slider-horizontal .ah-slider-ticks-top .ah-slider-tick { top: auto; bottom: 0; }
+.ah-slider-horizontal .ah-slider-ticks-top .ah-slider-tick-label { top: auto; bottom: 12px; }
+.ah-slider-vertical .ah-slider-ticks-bottom { left: calc(50% + 7px); }
+.ah-slider-vertical .ah-slider-ticks-top { right: calc(50% + 7px); }
+.ah-slider-vertical .ah-slider-ticks-top .ah-slider-tick { left: auto; right: 0; }
+.ah-slider-vertical .ah-slider-ticks-top .ah-slider-tick-label { left: auto; right: 14px; }
+
+/* room for labels outside the 30px box */
+.ah-slider-horizontal.ah-slider-ticks-bottom,
+.ah-slider-horizontal.ah-slider-ticks-both { margin-bottom: 18px; }
+.ah-slider-horizontal.ah-slider-ticks-top,
+.ah-slider-horizontal.ah-slider-ticks-both { margin-top: 18px; }
+
+.ah-slider-vertical {
+  height: 160px;
+  min-width: 0;
+}
+
+.ah-slider-vertical .ah-slider-tooltip { transform: translateY(-50%); }
+
+/* the tooltip is placed by JS at the thumb centre */
+.ah-slider-horizontal .ah-slider-tooltip { transform: translateX(-50%); }
+
+/* ---- field / form_layout ----------------------------------------------- */
+
+.ah-form-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-form-row-top > .ah-form-body,
+.ah-form-row-bottom > .ah-form-body {
+  width: 100%;
+}
+
+/* Left/right labels line up with the first line of a 36px control even
+   when help or error text follows it. */
+.ah-form-row:not(.ah-form-row-top):not(.ah-form-row-bottom):not(.ah-form-columns),
+.ah-form-col:not(.ah-form-row-top):not(.ah-form-row-bottom) {
+  align-items: flex-start;
+}
+
+.ah-form-row:not(.ah-form-row-top):not(.ah-form-row-bottom) > .ah-form-label,
+.ah-form-col:not(.ah-form-row-top):not(.ah-form-row-bottom) > .ah-form-label {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+}
+
+.ah-form-field {
+  min-height: 36px;
+}
+
+.ah-form-columns {
+  align-items: flex-start;
+}
+
+.ah-form-col {
+  min-width: 0;
+}
+
+.ah-form-help {
+  margin-top: 4px;
+  padding: 0 2px;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-form-row-invalid .ah-form-help {
+  display: none;
+}
+
+.ah-form-row-invalid .ah-input,
+.ah-form-row-invalid textarea {
+  border-color: var(--ah-color-danger);
+}
+
+.ah-form-row[hidden] {
+  display: none;
+}
+
+
+/* label on the right: keep label and control together on the left */
+.ah-form-row-right {
+  justify-content: flex-end;
+}
+
+.ah-form-row-right > .ah-form-body {
+  flex: 0 1 auto;
+}
+
+/* validator bubble placed by AH.float: the arrow faces the control from
+   whichever side was used (sigil's .ah-validator-arrow-* geometry) */
+.ah-validator-hint[data-ah-placement="right"] .ah-validator-arrow {
+  left: -12px; top: 50%; transform: translateY(-50%);
+  border-right-color: var(--ah-color-danger, #e53935);
+}
+.ah-validator-hint[data-ah-placement="left"] .ah-validator-arrow {
+  right: -12px; top: 50%; transform: translateY(-50%);
+  border-left-color: var(--ah-color-danger, #e53935);
+}
+.ah-validator-hint[data-ah-placement="top"] .ah-validator-arrow {
+  bottom: -12px; left: 50%; transform: translateX(-50%);
+  border-top-color: var(--ah-color-danger, #e53935);
+}
+.ah-validator-hint[data-ah-placement="bottom"] .ah-validator-arrow {
+  top: -12px; left: 50%; transform: translateX(-50%);
+  border-bottom-color: var(--ah-color-danger, #e53935);
+}
