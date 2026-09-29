@@ -1,0 +1,23 @@
+/* aihtml additions for the window (aihtml_window); sigil styles live in
+   ../sigil/components. */
+
+/* window/3 `footer' option (sigil's window has none; same look as the
+   sheet footer) */
+.ah-window-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+  flex: none;
+}
+
+/* header buttons are <button>s: drop the UA chrome */
+.ah-window-collapse-btn,
+.ah-window-close-btn {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+}
