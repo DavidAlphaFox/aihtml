@@ -25,11 +25,14 @@ catalog_entries_are_valid_test() ->
          ?assert(is_list(aihtml_catalog:classes(E, [])))
      end || #{name := N} <- ?M:catalog()].
 
-examples_render_test() ->
-    Ex = ?M:examples(),
-    Names = lists:usort([N || {N, _, _} <- Ex]),
-    ?assertEqual(lists:sort([N || #{name := N} <- ?M:catalog()]), Names),
-    [?assert(byte_size(r(H)) > 0) || {_, _, H} <- Ex].
+catalog_docs_test() ->
+    [begin
+         ?assertMatch(#{option_docs := #{}, methods := _}, E),
+         Documented = maps:keys(maps:get(option_docs, E)),
+         Opts = maps:get(options, E, []) ++ maps:get(flags, E, []) ++
+             lists:append([Ms || {Ms, _} <- maps:values(maps:get(groups, E, #{}))]),
+         ?assertEqual([], Opts -- Documented)
+     end || E <- ?M:catalog()].
 
 unknown_modifier_fails_test() ->
     ?assertError({aihtml, {unknown_modifier, menu, bogus, _}},
