@@ -1,0 +1,30 @@
+[
+  {"id": "ks", "title": "KSampler", "has_type": true, "type": "KSampler",
+   "style": "transform:translate3d(660px,110px,0);--ah-ng-node-width:240px;--ah-ng-node-accent:#3aa675;",
+   "collapsed": false, "sized": false, "expanded": "true", "toggle_label": "Collapse node",
+   "stub_in": [], "stub_out": [],
+   "inputs": [
+     {"kind": "input", "key": "ks:i0", "index": "0", "connected": true, "optional": false, "tip": "MODEL",
+      "shape": "circle", "multi": false, "color": "var(--ah-datatype-MODEL, var(--ah-datatype-default, #aaa))",
+      "slices": [], "has_label": true, "label": "model"},
+     {"kind": "input", "key": "ks:i1", "index": "1", "connected": false, "optional": true, "tip": "IMAGE,MASK",
+      "shape": "hollow", "multi": true, "color": "var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))",
+      "slices": [{"d": "M0 50 A 50 50 0 0 1 100 50", "fill": "var(--ah-datatype-IMAGE, var(--ah-datatype-default, #aaa))"},
+                 {"d": "M100 50 A 50 50 0 0 1 0 50", "fill": "var(--ah-datatype-MASK, var(--ah-datatype-default, #aaa))"}],
+      "has_label": true, "label": "<mask> & \"more\""}],
+   "outputs": [
+     {"kind": "output", "key": "ks:o0", "index": "0", "connected": false, "optional": false, "tip": "*",
+      "shape": "circle", "multi": false, "color": "var(--ah-datatype-default, #aaa)",
+      "slices": [], "has_label": false, "label": ""}],
+   "has_widgets": true, "widgets": [{"html": "<b>steps</b> 25"}, {"html": ""}],
+   "has_body": true, "body": "<p class=\"x\">free</p>", "resizable": true},
+  {"id": "c'1", "title": "Collapsed <node>", "has_type": false, "type": "",
+   "style": "transform:translate3d(-10.5px,0px,0);--ah-ng-node-width:300px;--ah-ng-node-height:120px;",
+   "collapsed": true, "sized": false, "expanded": "false", "toggle_label": "Expand node",
+   "stub_in": [{"color": "var(--ah-datatype-LATENT, var(--ah-datatype-default, #aaa))"}], "stub_out": [],
+   "inputs": [
+     {"kind": "input", "key": "c'1:i0", "index": "0", "connected": false, "optional": false, "tip": "LATENT",
+      "shape": "square", "multi": false, "color": "var(--ah-datatype-LATENT, var(--ah-datatype-default, #aaa))",
+      "slices": [], "has_label": true, "label": "samples"}],
+   "outputs": [], "has_widgets": false, "widgets": [], "has_body": false, "body": "", "resizable": false}
+]

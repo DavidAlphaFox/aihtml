@@ -1,0 +1,6 @@
+[
+  {"id": "l1", "selected": false, "d": "M280,150 C340,150 300,70 360,70", "color": "var(--ah-datatype-MODEL, var(--ah-datatype-default, #aaa))", "points": []},
+  {"id": "l\"2", "selected": true, "d": "M0,0 L15,0 L85,40 L100,40", "color": "var(--ah-datatype-default, #aaa)",
+   "points": [{"index": "0", "x": "50", "y": "20.5", "color": "var(--ah-datatype-default, #aaa)"},
+              {"index": "1", "x": "-3", "y": "7", "color": "var(--ah-datatype-default, #aaa)"}]}
+]

@@ -1,0 +1,6 @@
+[
+  {"items": [{"index": "0", "label": "Collapse", "danger": false, "has_hint": false, "hint": ""},
+             {"index": "1", "label": "Duplicate 2 nodes", "danger": false, "has_hint": true, "hint": "Ctrl+D"},
+             {"index": "2", "label": "Delete <node>", "danger": true, "has_hint": true, "hint": "Del"}]},
+  {"items": []}
+]

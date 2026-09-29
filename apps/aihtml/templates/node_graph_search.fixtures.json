@@ -1,0 +1,6 @@
+[
+  {"list_id": "g-search-1", "empty": false, "empty_text": "No matching node",
+   "items": [{"index": "0", "label": "New group frame", "active": true, "has_category": true, "category": "Canvas"},
+             {"index": "1", "label": "VAE <Decode>", "active": false, "has_category": false, "category": ""}]},
+  {"list_id": "g-search-2", "empty": true, "empty_text": "No matching node", "items": []}
+]
