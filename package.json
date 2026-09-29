@@ -1,0 +1,19 @@
+{
+  "name": "aihtml-assets",
+  "private": true,
+  "description": "Asset build for aihtml: Tailwind CSS v4 and vendored jQuery",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "npm run vendor && npm run css",
+    "vendor": "node scripts/vendor.mjs",
+    "css": "npm run css:lib && npm run css:example",
+    "css:lib": "tailwindcss -i apps/aihtml/assets/aihtml.build.css -o apps/aihtml/priv/static/aihtml.css --minify",
+    "css:example": "tailwindcss -i apps/aihtml_example/assets/example.css -o apps/aihtml_example/priv/static/example.css --minify",
+    "watch:example": "tailwindcss -i apps/aihtml_example/assets/example.css -o apps/aihtml_example/priv/static/example.css --watch"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.3",
+    "jquery": "^4.0.0",
+    "tailwindcss": "^4.3.3"
+  }
+}
