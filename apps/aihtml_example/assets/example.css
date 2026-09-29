@@ -4,3 +4,35 @@
 @import "../../aihtml/priv/css/aihtml.css";
 @source "../../aihtml/src";
 @source "../src";
+
+/* ---- demo site ---------------------------------------------------- */
+.hero {
+  background:
+    radial-gradient(900px 400px at 85% 0%, color-mix(in srgb, var(--ah-color-primary) 28%, transparent), transparent 70%),
+    radial-gradient(700px 400px at 10% 100%, color-mix(in srgb, var(--ah-color-secondary) 20%, transparent), transparent 70%),
+    #111827;
+}
+.component-card { transition: transform .15s, box-shadow .15s, border-color .15s; }
+.component-card:hover { transform: translateY(-2px); box-shadow: var(--ah-shadow-md); border-color: var(--ah-color-primary); }
+
+.source-block { position: relative; border: 1px solid var(--ah-color-border); border-radius: var(--ah-radius-md); background: var(--ah-color-bg-subtle); }
+.source-lang { position: absolute; top: .4rem; right: .75rem; font-size: var(--ah-font-size-xs); color: var(--ah-color-text-secondary); }
+.source-code { margin: 0; padding: 1rem 1.25rem; overflow-x: auto; font-family: var(--ah-font-mono); font-variant-ligatures: none; font-size: .8125rem; line-height: 1.6; max-height: 28rem; }
+.tok-kw { color: var(--ah-color-secondary); font-weight: 600; }
+.tok-atom { color: var(--ah-color-info-dark); }
+.tok-str { color: var(--ah-color-success-dark); }
+.tok-num { color: var(--ah-color-warning-dark); }
+.tok-var { color: var(--ah-color-primary-dark); }
+.tok-comment { color: var(--ah-color-text-secondary); font-style: italic; }
+[data-theme="dark"] .tok-atom { color: var(--ah-color-info-light); }
+[data-theme="dark"] .tok-str { color: var(--ah-color-success-light); }
+[data-theme="dark"] .tok-num { color: var(--ah-color-warning-light); }
+[data-theme="dark"] .tok-var { color: var(--ah-color-primary-light); }
+
+.api-h { font-size: 1.125rem; font-weight: 700; margin-bottom: .75rem; }
+.api-table { width: 100%; font-size: var(--ah-font-size-sm); border-collapse: collapse; }
+.api-table th { text-align: left; padding: .4rem .75rem; font-size: var(--ah-font-size-xs); font-weight: 600; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--ah-color-text-secondary); border-bottom: 2px solid var(--ah-color-border); }
+.api-table td { padding: .5rem .75rem; border-bottom: 1px solid var(--ah-color-border); vertical-align: top; }
+.api-name { font-family: var(--ah-font-mono); color: var(--ah-color-primary-dark); }
+[data-theme="dark"] .api-name { color: var(--ah-color-primary-light); }
