@@ -1,6 +1,9 @@
 -module(aihtml_form_select_tests).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("aihtml/include/aihtml_form_select.hrl").
+
+-export([action/4]).
 
 -define(M, aihtml_form_select).
 
@@ -155,7 +158,7 @@ form_layout_div_padding_test() ->
     ?assert(has(H, <<"<div class=\"ah-form\" style=\"padding:1px 2px 3px 4px\">">>)).
 
 form_layout_bad_field_test() ->
-    ?assertError({aihtml, {bad_form_field, 42}}, ?M:form_layout([42], #{}, [], [])).
+    ?assertError({aihtml, {bad_form_field, 42}}, r(?M:form_layout([42], #{}, [], []))).
 
 %%% validate
 
@@ -206,3 +209,138 @@ catalog_docs_test() ->
          [?assert(maps:is_key(O, Docs)) || O <- maps:get(options, E, [])],
          ?assert(is_list(maps:get(methods, E)))
      end || E <- ?M:catalog()].
+
+%%% element records (designs/05-records.md)
+
+-define(FRUITS, [{apple, <<"Apple">>}, {group, <<"G">>, [b, {c, <<"C">>, #{disabled => true}}]}]).
+
+-spec action(atom(), term(), map(), term()) -> ok.
+action(_, _, _, _) -> ok.
+
+record_equals_builder_test() ->
+    ?assertEqual(r(?M:dropdownlist(?FRUITS, b, [success, simple, <<"w-40">>],
+                                   [{name, pick}, {id, dd}, {filterable, true},
+                                    {title, <<"t">>}])),
+                 r(#ah_dropdownlist{items = ?FRUITS, value = b, template = success,
+                                    simple = true, css = [<<"w-40">>], name = pick, id = dd,
+                                    filterable = true, attrs = [{title, <<"t">>}]})),
+    ?assertEqual(r(?M:select(?FRUITS, [apple, b], [lg, block],
+                             [{multiple, true}, {size, 4}, {name, s}, {id, sel}])),
+                 r(#ah_select{items = ?FRUITS, value = [apple, b], size = lg, block = true,
+                              id = sel, attrs = [{multiple, true}, {size, 4}, {name, s}]})),
+    ?assertEqual(r(?M:slider({0, 10, 2}, {2, 8}, [vertical, buttons],
+                             [{ticks, 2}, {min_range, 2}, {name, r}])),
+                 r(#ah_slider{range = {0, 10, 2}, value = {2, 8}, orientation = vertical,
+                              buttons = true, ticks = 2, min_range = 2, name = r})),
+    ?assertEqual(r(?M:slider({0, 10}, 3, [], [])), r(#ah_slider{range = {0, 10}, value = 3})),
+    ?assertEqual(r(?M:field(<<"L">>, <<"ctl">>, [top],
+                            [{for, x}, {error, <<"E">>}, {required, true}, {id, row}])),
+                 r(#ah_field{label = <<"L">>, body = <<"ctl">>, label_position = top, for = x,
+                             error = <<"E">>, required = true, id = row})),
+    Fields = [{<<"A">>, <<"a">>}, #{label => <<"B">>, key => b, control => fun(V) -> V end}],
+    ?assertEqual(r(?M:form_layout(Fields, #{b => <<"bee">>}, [bordered],
+                                  [{label_width, 80}, {padding, 4}, {action, <<"#x">>}])),
+                 r(#ah_form_layout{fields = Fields, values = #{b => <<"bee">>}, bordered = true,
+                                   label_width = 80, padding = 4,
+                                   attrs = [{action, <<"#x">>}]})).
+
+builder_fills_fields_test() ->
+    D = ?M:dropdownlist([a], a, [danger, disabled, <<"x">>],
+                        [{name, n}, {placeholder, <<"P">>}, {dropdown_height, 90},
+                         {id, i}, {title, <<"t">>}]),
+    ?assertMatch(#ah_dropdownlist{template = danger, disabled = true, simple = false,
+                                  name = n, placeholder = <<"P">>, dropdown_height = 90,
+                                  id = i, css = [<<"x">>], attrs = [{title, <<"t">>}]}, D),
+    %% {size, N} stays an HTML attribute of the select
+    S = ?M:select([a], a, [sm], [{size, 3}, {name, s}]),
+    ?assertMatch(#ah_select{size = sm, attrs = [{<<"size">>, 3}, {name, s}]}, S),
+    ?assert(has(r(S), <<"<select class=\"ah-select-control\" size=\"3\" name=\"s\">">>)),
+    ?assertMatch(#ah_slider{range = {0, 5, 1}, value = 2, template = info, tooltip = true,
+                            ticks = 1, ticks_position = both},
+                 ?M:slider({0, 5}, 2, [info, tooltip], [{ticks, 1}, {ticks_position, both}])),
+    ?assertMatch(#ah_field{label = <<"L">>, body = <<"c">>, help = <<"h">>, label_width = 60},
+                 ?M:field(<<"L">>, <<"c">>, [], [{help, <<"h">>}, {label_width, 60}])),
+    ?assertMatch(#ah_form_layout{fields = [], tag = 'div', label_position = top, bg = true},
+                 ?M:form_layout([], #{}, [bg], [{tag, 'div'}, {label_position, top}])),
+    ?assertError({aihtml, {record_only_field, ah_slider, postback}},
+                 ?M:slider({0, 1}, 0, [], [{postback, x}])).
+
+field_can_wrap_records_test() ->
+    %% a control given as a record is rendered in place
+    Dd = #ah_dropdownlist{items = [a, b], value = a, id = pick},
+    H = r(#ah_field{label = <<"Pick">>, body = Dd, for = pick}),
+    ?assert(has(H, <<"<label class=\"ah-form-label\" for=\"pick\">">>)),
+    ?assert(has(H, <<"<div><div class=\"ah-dropdownlist\" role=\"combobox\"">>)),
+    H2 = r(?M:form_layout([#{label => <<"S">>, key => s,
+                             control => fun(V) -> #ah_slider{value = V} end}],
+                          #{s => 30}, [], [])),
+    ?assert(has(H2, <<"data-ah-value=\"30\"">>)).
+
+postback_test() ->
+    Token = fun(Html) ->
+                    {match, [T]} = re:run(r(Html), <<"data-ah-on=\"([a-z]+:[^\"]+)\"">>,
+                                          [{capture, all_but_first, binary}]),
+                    [Ev, Tok] = binary:split(T, <<":">>),
+                    {ok, Ref} = aihtml_action:unsign(Tok),
+                    {Ev, Ref}
+            end,
+    ?assertEqual({<<"change">>, {?MODULE, pick, #{}}},
+                 Token(#ah_dropdownlist{items = [a], postback = pick})),
+    ?assertEqual({<<"change">>, {?MODULE, pick, 1}},
+                 Token(#ah_select{items = [a], postback = {pick, 1}})),
+    ?assertEqual({<<"change">>, {other_mod, vol, #{}}},
+                 Token(#ah_slider{value = 3, postback = vol, delegate = other_mod})),
+    ?assertEqual({<<"submit">>, {?MODULE, save, #{id => 7}}},
+                 Token(#ah_form_layout{postback = {save, #{id => 7}}})),
+    %% select binds its postback on the <select>, not the wrapper
+    ?assert(has(r(#ah_select{items = [a], postback = pick}),
+                <<"<select class=\"ah-select-control\" data-ah-on=">>)),
+    ?assertError({aihtml, {no_postback_event, ah_field}},
+                 r(#ah_field{postback = x})),
+    ?assertError({aihtml, {no_postback_event, ah_form_layout}},
+                 r(#ah_form_layout{tag = 'div', postback = x})).
+
+field_validation_test() ->
+    ?assertError({aihtml, {bad_modifier, dropdownlist, template, info, _}},
+                 r(#ah_dropdownlist{template = info})),
+    ?assertError({aihtml, {bad_flag, dropdownlist, simple, yes}},
+                 r(#ah_dropdownlist{simple = yes})),
+    ?assertError({aihtml, {bad_modifier, select, size, md, _}}, r(#ah_select{size = md})),
+    ?assertError({aihtml, {bad_modifier, slider, orientation, up, _}},
+                 r(#ah_slider{orientation = up})),
+    ?assertError({aihtml, {bad_slider_range, {5, 1, 1}}}, r(#ah_slider{range = {5, 1}})),
+    ?assertError({aihtml, {bad_slider_range, {0, 1, 0}}}, r(#ah_slider{range = {0, 1, 0}})),
+    ?assertError({aihtml, {bad_option, ticks_position, left}},
+                 r(#ah_slider{ticks = 1, ticks_position = left})),
+    ?assertError({aihtml, {bad_modifier, field, label_position, middle, _}},
+                 r(#ah_field{label_position = middle})),
+    ?assertError({aihtml, {bad_flag, form_layout, bordered, 1}},
+                 r(#ah_form_layout{bordered = 1})),
+    ?assertError({aihtml, {modifier_in_css, select, lg}}, r(#ah_select{css = [lg]})),
+    ?assertError({aihtml, {bad_item, {1, 2, 3, 4}}},
+                 r(#ah_dropdownlist{items = [{1, 2, 3, 4}]})),
+    %% groups without a default may stay undefined
+    ?assert(has(r(#ah_select{}), <<"<span class=\"ah-select\">">>)),
+    ?assert(has(r(#ah_dropdownlist{}), <<"class=\"ah-dropdownlist\"">>)).
+
+records_match_catalog_test() ->
+    Base = [module, id, css, attrs, postback, delegate],
+    [begin
+         Tag = list_to_atom("ah_" ++ atom_to_list(N)),
+         Fields = ?M:fields(Tag),
+         ?assertEqual(Base, lists:sublist(Fields, 6)),
+         Defaults = maps:from_list(lists:zip(Fields, tl(tuple_to_list(default(Tag))))),
+         [?assertEqual({N, G, case D of none -> undefined; _ -> D end},
+                       {N, G, maps:get(G, Defaults)})
+          || {G, {_, D}} <- maps:to_list(maps:get(groups, E, #{}))],
+         [?assertEqual({N, F, false}, {N, F, maps:get(F, Defaults)})
+          || F <- maps:get(flags, E, [])],
+         [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
+         ?assertEqual(?M, maps:get(module, Defaults))
+     end || #{name := N} = E <- ?M:catalog()].
+
+default(ah_dropdownlist) -> #ah_dropdownlist{};
+default(ah_select) -> #ah_select{};
+default(ah_slider) -> #ah_slider{};
+default(ah_field) -> #ah_field{};
+default(ah_form_layout) -> #ah_form_layout{}.

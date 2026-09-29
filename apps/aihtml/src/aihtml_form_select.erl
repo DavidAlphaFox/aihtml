@@ -55,28 +55,34 @@
 %%%                                    sigil's tooltip bubble elsewhere
 %%%   {position, right | left | top | bottom}   tooltip side (right)
 %%%   {on, blur | input | change | [Event]}     when to check (blur)
+%%%
+%%% == Records ==
+%%%
+%%% Each component function builds an element record (#ah_dropdownlist{}
+%%% ..., defined in include/aihtml_form_select.hrl) and render/1 turns it
+%%% into HTML, so pages may also write the records directly
+%%% (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_form_select).
+-behaviour(aihtml_element).
+
+-include("aihtml_form_select.hrl").
 
 -export([dropdownlist/4, select/4, slider/4, field/4, form_layout/4,
-         validate/1, catalog/0, facade_extras/0]).
+         validate/1, render/1, fields/1, catalog/0, facade_extras/0]).
 
--export_type([item/0, field_spec/0, rule/0]).
+-export_type([item/0, field_spec/0, rule/0, element/0]).
 
--type value() :: binary() | atom() | number().
--type item() :: value() | {value(), aihtml_html:html()}
-              | {value(), aihtml_html:html(), #{disabled => boolean()}}
-              | {group, aihtml_html:html(), [item()]}.
--type control() :: aihtml_html:html() | fun((term()) -> aihtml_html:html()).
--type field_spec() :: {aihtml_html:html(), control()}
-                    | #{label => aihtml_html:html(), control := control(),
-                        atom() => term()}
-                    | {columns, [field_spec()]}
-                    | {text, aihtml_html:html()}
-                    | blank | {blank, pos_integer()}.
+-define(E, aihtml_element).
+
+-type value() :: ah_select_value().
+-type item() :: ah_select_item().
+-type field_spec() :: ah_select_field_spec().
 -type base_rule() :: atom() | {atom(), term()} | {atom(), term(), term()}.
 -type rule() :: base_rule() | {base_rule(), binary()}.
+-type element() :: #ah_dropdownlist{} | #ah_select{} | #ah_slider{} | #ah_field{}
+                 | #ah_form_layout{}.
 
 -define(SIMPLE_RULES, [required, email, number, integer, phone, zip_code, ssn,
                        not_number, starts_with_letter]).
@@ -90,36 +96,35 @@
 %% a popup listbox. Value-bearing: data-ah-value on the root, a hidden
 %% input when the `name' option is given, `change' on the root.
 -spec dropdownlist([item()], value() | undefined, aihtml_html:css(),
-                   aihtml_html:attrs()) -> aihtml_html:element().
+                   aihtml_html:attrs()) -> #ah_dropdownlist{}.
 dropdownlist(Items, Value, Css, Attrs) ->
-    E = entry(dropdownlist),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
-    Flags = aihtml_catalog:flags(E, Css),
-    Disabled = lists:member(disabled, Flags),
+    build(#ah_dropdownlist{items = Items, value = Value}, Css, Attrs).
+
+render_dropdownlist(#ah_dropdownlist{items = Items, value = Value, disabled = Disabled,
+                                     placeholder = Placeholder} = R) ->
+    Classes = classes(R),             % checks the modifier and flag fields first
     Norm = norm_items(Items),
     Val = opt_bin(Value),
-    Placeholder = maps:get(placeholder, Opts, <<"Select…"/utf8>>),
     Content = case find_label(Val, Norm) of
                   none -> el(span, Placeholder, [<<"ah-dropdownlist-content">>,
                                                  <<"ah-dropdownlist-content-placeholder">>], []);
                   {ok, L} -> el(span, L, [<<"ah-dropdownlist-content">>], [])
               end,
-    Arrow = case lists:member(simple, Flags) of
+    Arrow = case R#ah_dropdownlist.simple of
                 true -> [];
                 false -> el(span, el(span, <<"▼"/utf8>>, [<<"ah-dropdownlist-arrow-icon">>], []),
                             [<<"ah-dropdownlist-arrow">>], [{aria_hidden, <<"true">>}])
             end,
-    Filter = case maps:get(filterable, Opts, false) of
+    Filter = case R#ah_dropdownlist.filterable of
                  true ->
                      el('div', aihtml_html:void(input, [<<"ah-listbox-filter-input">>],
                                                 [{type, text}, {autocomplete, off},
                                                  {aria_label, <<"Filter">>},
-                                                 {placeholder, maps:get(filter_placeholder, Opts,
-                                                                        <<"Search…"/utf8>>)}]),
+                                                 {placeholder, R#ah_dropdownlist.filter_placeholder}]),
                         [<<"ah-listbox-filter">>], []);
                  false -> []
              end,
-    Height = maps:get(dropdown_height, Opts, 200),
+    Height = R#ah_dropdownlist.dropdown_height,
     List = case Norm of
                [] -> el('div', <<"No data">>, [<<"ah-listbox-empty">>], []);
                _ -> el(ul, list_items(Norm, Val), [<<"ah-listbox-list">>], [{role, listbox}])
@@ -130,16 +135,16 @@ dropdownlist(Items, Value, Css, Attrs) ->
                              [{style, [<<"max-height:">>, css_size(Height)]}])],
                   [<<"ah-listbox">>], []),
                [<<"ah-dropdownlist-popup">>], []),
-    Hidden = hidden(Opts, Val),
+    Hidden = hidden(R#ah_dropdownlist.name, Val),
     el('div', [el('div', [Content, Arrow], [<<"ah-dropdownlist-input-area">>], []),
                Popup, Hidden],
-       cls(E, Css),
+       Classes,
        [[{role, combobox}, {tabindex, case Disabled of true -> -1; false -> 0 end},
          {aria_haspopup, listbox}, {aria_expanded, <<"false">>},
          {aria_disabled, aria(Disabled)},
          {data_ah, <<"dropdownlist">>}, {data_ah_value, Val},
          {data_ah_placeholder, Placeholder}],
-        Rest]).
+        ?E:root_attrs(R, change)]).
 
 list_items(Norm, Val) ->
     {Html, _} = lists:mapfoldl(
@@ -189,24 +194,30 @@ norm_item(Other) -> error({aihtml, {bad_item, Other}}).
 %% the wrapper; Attrs (name, id, multiple, disabled, on/2 ...) go to the
 %% select itself. Value may be a list when the select is `multiple'.
 -spec select([item()], value() | [value()] | undefined, aihtml_html:css(),
-             aihtml_html:attrs()) -> aihtml_html:element().
+             aihtml_html:attrs()) -> #ah_select{}.
 select(Options, Value, Css, Attrs) ->
-    E = entry(select),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
+    %% {size, N} is the select's HTML attribute, not the size modifier;
+    %% a binary key keeps it (in place) among the HTML attributes
+    Html = [case A of {size, N} -> {<<"size">>, N}; _ -> A end || A <- flat_attrs(Attrs)],
+    build(#ah_select{items = Options, value = Value}, Css, Html).
+
+render_select(#ah_select{items = Options, value = Value, placeholder = P0} = R) ->
+    Classes = classes(R),
     Vals = case Value of
                undefined -> [];
                L when is_list(L), not is_integer(hd(L)) -> [bin(V) || V <- L];
                V -> [bin(V)]
            end,
-    Placeholder = case maps:find(placeholder, Opts) of
-                      {ok, P} -> el(option, P, [], [{value, <<>>}, {selected, Vals =:= []}]);
-                      error -> []
+    Placeholder = case P0 of
+                      undefined -> [];
+                      P -> el(option, P, [], [{value, <<>>}, {selected, Vals =:= []}])
                   end,
     OptionEls = [select_option(I, Vals) || I <- norm_items(Options)],
-    el(span, [el(select, [Placeholder, OptionEls], [<<"ah-select-control">>], Rest),
+    el(span, [el(select, [Placeholder, OptionEls], [<<"ah-select-control">>],
+                 ?E:root_attrs(R, change)),
               el(span, el(span, <<"▼"/utf8>>, [<<"ah-dropdownlist-arrow-icon">>], []),
                  [<<"ah-select-arrow">>], [{aria_hidden, <<"true">>}])],
-       cls(E, Css), []).
+       Classes, []).
 
 select_option({group, Label, Sub}, Vals) ->
     el(optgroup, [select_option(I, Vals) || I <- Sub], [], [{label, text(Label)}]);
@@ -225,16 +236,23 @@ select_option({item, V, L, Dis}, Vals) ->
 %% on each keyboard or button step.
 -spec slider({number(), number()} | {number(), number(), number()},
              number() | {number(), number()} | undefined,
-             aihtml_html:css(), aihtml_html:attrs()) -> aihtml_html:element().
+             aihtml_html:css(), aihtml_html:attrs()) -> #ah_slider{}.
 slider({Min, Max}, Value, Css, Attrs) ->
     slider({Min, Max, 1}, Value, Css, Attrs);
-slider({Min, Max, Step}, Value, Css, Attrs) when Max > Min, Step > 0 ->
-    E = entry(slider),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
-    Flags = aihtml_catalog:flags(E, Css),
-    Vertical = lists:member(vertical, lists:flatten([Css])),
-    Disabled = lists:member(disabled, Flags),
-    Buttons = lists:member(buttons, Flags),
+slider({Min, Max, Step} = Range, Value, Css, Attrs) when Max > Min, Step > 0 ->
+    build(#ah_slider{range = Range, value = Value}, Css, Attrs);
+slider(Range, _Value, _Css, _Attrs) ->
+    error({aihtml, {bad_slider_range, Range}}).
+
+render_slider(#ah_slider{range = {Min, Max}} = S) ->
+    render_slider(S#ah_slider{range = {Min, Max, 1}});
+render_slider(#ah_slider{range = {Min, Max, Step}, value = Value, disabled = Disabled,
+                         buttons = Buttons, ticks = Ticks, ticks_position = TicksPos} = S)
+  when is_number(Min), is_number(Max), is_number(Step), Max > Min, Step > 0 ->
+    Classes = classes(S),
+    Vertical = S#ah_slider.orientation =:= vertical,
+    lists:member(TicksPos, [top, bottom, both])
+        orelse error({aihtml, {bad_option, ticks_position, TicksPos}}),
     Clamp = fun(V) -> max(Min, min(Max, V)) end,
     Ratio = fun(V) -> (V - Min) / (Max - Min) end,
     {Range, Values} = case Value of
@@ -267,11 +285,9 @@ slider({Min, Max, Step}, Value, Css, Attrs) when Max > Min, Step > 0 ->
                  [{role, slider}, {tabindex, tab(Disabled)},
                   {aria_valuenow, num(A)}, {aria_valuetext, num(A)} | Base]}
         end,
-    Ticks = maps:get(ticks, Opts, false),
-    TicksPos = maps:get(ticks_position, Opts, bottom),
     TickHtml = fun(Where) ->
                        case Ticks =/= false andalso (TicksPos =:= Where orelse TicksPos =:= both) of
-                           true -> ticks(Where, {Min, Max}, Ticks, Opts, Vertical);
+                           true -> ticks(Where, {Min, Max}, Ticks, S, Vertical);
                            false -> []
                        end
                end,
@@ -287,7 +303,7 @@ slider({Min, Max, Step}, Value, Css, Attrs) when Max > Min, Step > 0 ->
                       {true, false} -> [Btn(<<"prev">>, <<"◀"/utf8>>), Btn(<<"next">>, <<"▶"/utf8>>)];
                       {true, true} -> [Btn(<<"prev">>, <<"▲"/utf8>>), Btn(<<"next">>, <<"▼"/utf8>>)]
                   end,
-    Tooltip = case lists:member(tooltip, Flags) of
+    Tooltip = case S#ah_slider.tooltip of
                   true -> el('div', [], [<<"ah-slider-tooltip">>], [{aria_hidden, <<"true">>}]);
                   false -> []
               end,
@@ -305,18 +321,18 @@ slider({Min, Max, Step}, Value, Css, Attrs) when Max > Min, Step > 0 ->
                    TickHtml(bottom)],
            [<<"ah-slider-content">>], []),
         Tooltip,
-        hidden(Opts, Val)],
-       [cls(E, Css), Extra],
+        hidden(S#ah_slider.name, Val)],
+       [Classes, Extra],
        [RootAria,
         [{aria_disabled, aria(Disabled)},
          {data_ah, <<"slider">>}, {data_ah_value, Val},
          {data_ah_min, num(Min)}, {data_ah_max, num(Max)}, {data_ah_step, num(Step)},
-         {data_ah_min_range, case maps:find(min_range, Opts) of
-                                 {ok, MR} -> num(MR);
-                                 error -> undefined
+         {data_ah_min_range, case S#ah_slider.min_range of
+                                 undefined -> undefined;
+                                 MR -> num(MR)
                              end}],
-        Rest]);
-slider(Range, _Value, _Css, _Attrs) ->
+        ?E:root_attrs(S, change)]);
+render_slider(#ah_slider{range = Range}) ->
     error({aihtml, {bad_slider_range, Range}}).
 
 tab(true) -> -1;
@@ -345,13 +361,13 @@ range_style(true, A, B) ->
 
 ratio(R) -> float_to_binary(float(R), [{decimals, 4}, compact]).
 
-ticks(Where, {Min, Max}, Interval, Opts, Vertical) ->
+ticks(Where, {Min, Max}, Interval, S, Vertical) ->
     Major = tick_values(Min, Max, Interval),
-    Minor = case maps:get(minor_ticks, Opts, false) of
+    Minor = case S#ah_slider.minor_ticks of
                 false -> [];
                 MI -> tick_values(Min, Max, MI) -- Major
             end,
-    Labels = maps:get(labels, Opts, true),
+    Labels = S#ah_slider.labels,
     Dir = orientation(Vertical),
     Prop = case Vertical of true -> <<"top:">>; false -> <<"left:">> end,
     At = fun(V) ->
@@ -389,13 +405,22 @@ tidy(V) -> V.
 %% @doc One form row in sigil's form markup: a label, the control, and an
 %% optional help or error line under the control.
 -spec field(aihtml_html:html(), aihtml_html:html(), aihtml_html:css(),
-            aihtml_html:attrs()) -> aihtml_html:element().
+            aihtml_html:attrs()) -> #ah_field{}.
 field(Label, Control, Css, Attrs) ->
-    E = entry(field),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
+    build(#ah_field{label = Label, body = Control}, Css, Attrs).
+
+render_field(#ah_field{label = Label, body = Control, error = Error} = R) ->
+    %% the row options that row_body/3 and form_layout rows share
+    Opts = maps:from_list([{K, V} || {K, V} <- [{for, R#ah_field.for},
+                                                  {help, R#ah_field.help},
+                                                  {error, Error},
+                                                  {required, R#ah_field.required},
+                                                  {info, R#ah_field.info},
+                                                  {label_width, R#ah_field.label_width}],
+                                     V =/= undefined]),
     el('div', row_body(Label, Control, Opts),
-       [cls(E, Css), [<<"ah-form-row-invalid">> || maps:is_key(error, Opts)]],
-       Rest).
+       [classes(R), [<<"ah-form-row-invalid">> || Error =/= undefined]],
+       ?E:root_attrs(R, none)).
 
 row_body(Label, Control, Opts) ->
     [label(Label, Opts),
@@ -441,18 +466,22 @@ label(Label, Opts) ->
 %% controls (see the module doc for the field shapes). The root is a
 %% `<form>' (option `tag => div' for a plain container); Attrs go to it.
 -spec form_layout([field_spec()], #{term() => term()}, aihtml_html:css(),
-                  aihtml_html:attrs()) -> aihtml_html:element().
+                  aihtml_html:attrs()) -> #ah_form_layout{}.
 form_layout(Fields, Values, Css, Attrs) ->
-    E = entry(form_layout),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
-    Global = maps:with([label_position, label_width], Opts),
+    build(#ah_form_layout{fields = Fields, values = Values}, Css, Attrs).
+
+render_form_layout(#ah_form_layout{fields = Fields, values = Values, tag = Tag} = R) ->
+    Global = maps:from_list([{K, V} || {K, V} <- [{label_position, R#ah_form_layout.label_position},
+                                                  {label_width, R#ah_form_layout.label_width}],
+                                       V =/= undefined]),
     Rows = [form_row(F, Values, Global) || F <- Fields],
-    Pad = case maps:get(padding, Opts, 10) of
-              {T, R, B, L} -> [px(T), $\s, px(R), $\s, px(B), $\s, px(L)];
+    Pad = case R#ah_form_layout.padding of
+              {T, Rt, B, L} -> [px(T), $\s, px(Rt), $\s, px(B), $\s, px(L)];
               P -> px(P)
           end,
-    el(maps:get(tag, Opts, form), Rows, cls(E, Css),
-       [[{style, iolist_to_binary([<<"padding:">>, Pad])}], Rest]).
+    el(Tag, Rows, classes(R),
+       [[{style, iolist_to_binary([<<"padding:">>, Pad])}],
+        ?E:root_attrs(R, case Tag of form -> submit; _ -> none end)]).
 
 form_row(blank, _Values, _G) -> form_row({blank, 16}, _Values, _G);
 form_row({blank, H}, _Values, _G) ->
@@ -488,6 +517,25 @@ form_cell(Class, #{control := Control0} = F, Values, G) ->
         {hidden, maps:get(hidden, F, false)}]);
 form_cell(_Class, Other, _Values, _G) ->
     error({aihtml, {bad_form_field, Other}}).
+
+%%%===================================================================
+%%% Records
+%%%===================================================================
+
+%% @doc The field names of one of this group's records.
+-spec fields(atom()) -> [atom()].
+fields(ah_dropdownlist) -> record_info(fields, ah_dropdownlist);
+fields(ah_select) -> record_info(fields, ah_select);
+fields(ah_slider) -> record_info(fields, ah_slider);
+fields(ah_field) -> record_info(fields, ah_field);
+fields(ah_form_layout) -> record_info(fields, ah_form_layout).
+
+-spec render(element()) -> aihtml_html:html().
+render(#ah_dropdownlist{} = R) -> render_dropdownlist(R);
+render(#ah_select{} = R) -> render_select(R);
+render(#ah_slider{} = R) -> render_slider(R);
+render(#ah_field{} = R) -> render_field(R);
+render(#ah_form_layout{} = R) -> render_form_layout(R).
 
 %%%===================================================================
 %%% validate
@@ -688,15 +736,24 @@ catalog() ->
 
 entry(Name) -> aihtml_catalog:entry(?MODULE, Name).
 
-cls(Entry, Css) -> aihtml_catalog:classes(Entry, Css).
+build(R, Css, Attrs) ->
+    Tag = element(1, R),
+    ?E:build(R, fields(Tag), entry(?E:component_name(Tag)), Css, Attrs).
+
+classes(R) ->
+    Tag = element(1, R),
+    ?E:classes(R, fields(Tag), entry(?E:component_name(Tag))).
+
+flat_attrs(M) when is_map(M) -> lists:sort(maps:to_list(M));
+flat_attrs(L) when is_list(L) ->
+    lists:flatmap(fun(X) when is_list(X); is_map(X) -> flat_attrs(X);
+                     (X) -> [X]
+                  end, L).
 
 el(Tag, Children, Css, Attrs) -> aihtml_html:el(Tag, Children, Css, Attrs).
 
-hidden(Opts, Val) ->
-    case maps:find(name, Opts) of
-        {ok, Name} -> aihtml_html:void(input, [], [{type, hidden}, {name, Name}, {value, Val}]);
-        error -> []
-    end.
+hidden(undefined, _Val) -> [];
+hidden(Name, Val) -> aihtml_html:void(input, [], [{type, hidden}, {name, Name}, {value, Val}]).
 
 aria(true) -> <<"true">>;
 aria(false) -> undefined.
