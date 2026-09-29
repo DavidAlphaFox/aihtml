@@ -22,9 +22,10 @@
  * elements or a jQuery-like object (runtime/dom.ts, Targets).
  *
  * Actions (runtime/actions.ts): elements with data-ah-on="event:token"
- * call Erlang; each event is one POST, the reply an AG-UI event stream of
- * DOM operations. Push (runtime/push.ts): data-ah-subscribe="token" opens
- * one EventSource per page. Round trips (runtime/fetch.ts): data-ah-fetch.
+ * call Erlang; each event is one POST, the reply the DOM operations to
+ * apply (JSON, or NDJSON for progressive updates). Push
+ * (runtime/push.ts): data-ah-subscribe="token" opens one EventSource per
+ * page. Round trips (runtime/fetch.ts): data-ah-fetch.
  *
  * Component behaviours live in assets/js/components/*.ts, one ES module
  * per component, one chunk each, loaded when the page first needs them.
@@ -35,8 +36,8 @@
  *   ah:theme {axis, value}                    on document, after a change
  *   ah:before-fetch {url, method}             on the element; cancelable
  *   ah:after-fetch {url}                      on the element
- *   ah:error {url, status, body} (fetch), {status} or {message, code}
- *            (action), {stream: true} (push, on document)
+ *   ah:error {url, status, body} (fetch), {status, error} (action),
+ *            {stream: true} (push, on document)
  *   the server's trigger op: {event} with detail = its Detail
  */
 import { Actions } from "./runtime/actions.ts";
@@ -56,7 +57,7 @@ import { Theme } from "./runtime/theme.ts";
 import { vendor } from "./runtime/vendor.ts";
 import type { Application } from "@hotwired/stimulus";
 
-export type { Op, AguiEvent, EventPayload, ActionError } from "./runtime/actions.ts";
+export type { Op, Reply, EventPayload, ActionError } from "./runtime/actions.ts";
 export type { BehaviourName, ControllerClass, Loader, PageFunction, Registry } from "./runtime/behaviours.ts";
 export type { Root, Targets } from "./runtime/dom.ts";
 export type { FetchError, FetchEvent } from "./runtime/fetch.ts";

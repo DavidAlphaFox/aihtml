@@ -424,10 +424,8 @@ query_test() ->
 remote_round_trip_test() ->
     Ev = query_event(#{<<"sort">> => <<"[[\"age\",\"desc\"]]">>, <<"page">> => <<"2">>,
                        <<"pageSize">> => <<"2">>, <<"headerRows">> => <<"2">>}),
-    Self = self(),
-    ok = aihtml_action:execute({?MODULE, people, #{}}, json_event(Ev),
-                               #{emit => fun(E) -> Self ! {ev, E} end}),
-    [#{<<"value">> := [Body, Pager, Call]}] = [E || #{<<"type">> := <<"CUSTOM">>} = E <- collect()],
+    {ok, [Body, Pager, Call]} = aihtml_action:execute({?MODULE, people, #{}}, json_event(Ev),
+                                                      #{send => fun(_) -> error(unexpected_flush) end}),
     #{op := html, swap := morph_inner, id := <<"rg-body">>, html := Rows} = Body,
     %% ages desc: 41 35 30 28 25; page 2 is Ann (30), Eve (28)
     ?assertEqual([<<"1">>, <<"5">>], shown(Rows)),
@@ -481,10 +479,6 @@ select_test() ->
 json_event(Ev) ->
     maps:from_list([{atom_to_binary(K), V} || K := V <- Ev]).
 
-collect() ->
-    receive {ev, E} -> [E | collect()]
-    after 0 -> []
-    end.
 
 %%%===================================================================
 %%% Validation

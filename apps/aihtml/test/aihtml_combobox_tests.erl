@@ -109,14 +109,9 @@ search_round_trip_test() ->
     {match, [Token]} = re:run(H, <<"data-ah-on=\"input:([^:\"]+):250\"">>,
                               [{capture, all_but_first, binary}]),
     {ok, Ref} = aihtml_action:verify(Token),
-    Self = self(),
     Event = #{<<"type">> => <<"input">>, <<"id">> => <<"cb-s-input">>,
               <<"value">> => <<"AP">>, <<"data">> => #{<<"combobox">> => <<"cb-s">>}},
-    ok = aihtml_action:execute(Ref, Event, #{emit => fun(E) -> Self ! {ev, E} end}),
-    Evs = collect(),
-    ?assertEqual([<<"RUN_STARTED">>, <<"CUSTOM">>, <<"RUN_FINISHED">>],
-                 [maps:get(<<"type">>, E) || E <- Evs]),
-    [#{<<"value">> := [Html, Call]}] = [E || #{<<"type">> := <<"CUSTOM">>} = E <- Evs],
+    {ok, [Html, Call]} = aihtml_action:execute(Ref, Event, #{send => fun(_) -> error(unexpected_flush) end}),
     %% the items, rendered like the first render, morphed into the list
     #{op := html, swap := morph_inner, id := <<"cb-s-list">>, html := Items} = Html,
     ?assertEqual(extract_list(r(?M:combobox([<<"Apple">>, <<"Apricot">>], undefined, [],
@@ -146,10 +141,6 @@ search_checkboxes_test() ->
     ?assert(has(<<"data-checkboxes=\"true\"">>,
                 r(?M:combobox([], undefined, [checkboxes], [{search, {?MODULE, search, #{}}}])))).
 
-collect() ->
-    receive {ev, E} -> [E | collect()]
-    after 0 -> []
-    end.
 
 set_items_targets_test() ->
     Ops = aihtml_action:render_ops(

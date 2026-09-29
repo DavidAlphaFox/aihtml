@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @doc Actions: Erlang functions that browser events call, one HTTP
-%%% request per event, with the reply streamed as AG-UI events.
+%%% request per event, answered with a list of DOM operations.
 %%%
 %%% ```
 %%% -module(todo_page).
@@ -31,11 +31,11 @@
 %%% Authorisation still belongs in the action (who is this user, may they
 %%% delete this item), usually from the request in `meta(Ctx)'.
 %%%
-%%% The reply is a stream. Operations are buffered and sent when the action
-%%% returns; `flush/1' sends what is buffered so far, for progressive
-%%% updates (a loading state first, the data after). Events follow AG-UI:
-%%% RUN_STARTED, CUSTOM "aihtml.ui" (a list of DOM operations),
-%%% RUN_FINISHED, or RUN_ERROR when the action crashes.
+%%% Operations are buffered and returned when the action returns (the
+%%% transport sends them as one reply); `flush/1' sends what is buffered so
+%%% far through the transport's `send' callback, for progressive updates (a
+%%% loading state first, the data after), which turns the reply into a
+%%% stream. The wire format is the transport's (designs/02-actions.md).
 %%%
 %%% The secret comes from the `secret' environment key of the aihtml
 %%% application (at least 32 bytes, the same on every node). Without one a
@@ -54,7 +54,7 @@
          set_value/3, focus/2, title/2, redirect/2, js/2, call/4,
          trigger/4, push_url/2, replace_url/2, flush/1, meta/1]).
 
--export_type([ref/0, event/0, ctx/0, target/0, run_opts/0]).
+-export_type([ref/0, event/0, ctx/0, target/0, run_opts/0, op/0]).
 
 -callback action(Name :: atom(), Args :: term(), event(), ctx()) -> any().
 
@@ -69,15 +69,16 @@
                    checked := boolean() | null, key := binary() | null,
                    form := #{binary() => binary()}, values := #{binary() => term()},
                    data := #{binary() => binary()}}.
--opaque ctx() :: {aihtml_ctx, pid(), fun((map()) -> any()), map(), binary() | undefined}.
-%% `emit' writes one AG-UI event to the response. `meta' is handed to the
-%% action untouched (the cowboy transport puts the request there).
-%% `stream_id' names the page's push stream, so a publish can skip the page
-%% that caused it (see aihtml_push:publish/3).
--type run_opts() :: #{emit := fun((map()) -> any()),
+-opaque ctx() :: {aihtml_ctx, pid(), fun(([op()]) -> any()), map(), binary() | undefined}.
+%% A DOM operation, as sent to the browser (JSON object).
+-type op() :: #{atom() => term()}.
+%% `send' gets the operations `flush/1' sends before the action returns
+%% (the transport then streams its reply). `meta' is handed to the action
+%% untouched (the cowboy transport puts the request there). `stream_id'
+%% names the page's push stream, so a publish can skip the page that caused
+%% it (see aihtml_push:publish/3).
+-type run_opts() :: #{send := fun(([op()]) -> any()),
                       meta => map(),
-                      thread_id => binary(),
-                      run_id => binary(),
                       stream_id => binary()}.
 
 -define(BUF, aihtml_action_buf).
@@ -137,27 +138,20 @@ unsign(_) ->
 %%% Running an action
 %%%===================================================================
 
-%% @doc Run a verified action in the calling process and stream the reply
-%% through `emit'. Returns `ok', or `error' when the action crashed (the
-%% stream then ends with RUN_ERROR; the crash is logged, not sent).
--spec execute(ref(), map(), run_opts()) -> ok | error.
-execute({Mod, Name, Args}, EventJson, #{emit := Emit} = Opts) ->
-    Ids = #{<<"threadId">> => maps:get(thread_id, Opts, <<>>),
-            <<"runId">> => maps:get(run_id, Opts, new_id())},
-    Ctx = {aihtml_ctx, self(), Emit, maps:get(meta, Opts, #{}), maps:get(stream_id, Opts, undefined)},
+%% @doc Run a verified action in the calling process. Returns the
+%% operations still buffered when it returned (all of them unless it called
+%% `flush/1', whose batches went to `send'), or `error' when the action
+%% crashed (the crash is logged, not sent).
+-spec execute(ref(), map(), run_opts()) -> {ok, [op()]} | error.
+execute({Mod, Name, Args}, EventJson, #{send := Send} = Opts) ->
+    Ctx = {aihtml_ctx, self(), Send, maps:get(meta, Opts, #{}), maps:get(stream_id, Opts, undefined)},
     put(?BUF, []),
-    Emit(Ids#{<<"type">> => <<"RUN_STARTED">>}),
     try
         _ = Mod:action(Name, Args, event(EventJson), Ctx),
-        flush(Ctx),
-        Emit(Ids#{<<"type">> => <<"RUN_FINISHED">>}),
-        ok
+        {ok, lists:reverse(get(?BUF))}
     catch
         C:R:St ->
-            erase(?BUF),
             logger:error("aihtml action ~p:~p crashed: ~p:~p~n~p", [Mod, Name, C, R, St]),
-            Emit(#{<<"type">> => <<"RUN_ERROR">>, <<"message">> => <<"action failed">>,
-                   <<"code">> => <<"action_error">>}),
             error
     after
         erase(?BUF)
@@ -261,13 +255,12 @@ replace_url(Ctx, Url) -> push(Ctx, #{op => url, mode => replace, value => text(U
 
 %% @doc Send the operations buffered so far, before the action returns.
 -spec flush(ctx()) -> ok.
-flush({aihtml_ctx, _, Emit, _, _} = Ctx) ->
+flush({aihtml_ctx, _, Send, _, _} = Ctx) ->
     owner(Ctx),
     case put(?BUF, []) of
         [] -> ok;
         Ops ->
-            _ = Emit(#{<<"type">> => <<"CUSTOM">>, <<"name">> => <<"aihtml.ui">>,
-                       <<"value">> => lists:reverse(Ops)}),
+            _ = Send(lists:reverse(Ops)),
             ok
     end.
 
@@ -284,12 +277,11 @@ stream_id({aihtml_ctx, _, _, _, Id}) -> Id.
 %% @doc Run `Fun(Ctx)' and return the operations it produced instead of
 %% sending them: the same operation functions, rendered once, for
 %% aihtml_push to fan out. Safe to call inside an action.
--spec render_ops(fun((ctx()) -> any())) -> [map()].
+-spec render_ops(fun((ctx()) -> any())) -> [op()].
 render_ops(Fun) ->
     Saved = put(?BUF, []),
     put(?COLLECT, []),
-    Ctx = {aihtml_ctx, self(),
-           fun(#{<<"value">> := Ops}) -> put(?COLLECT, get(?COLLECT) ++ Ops) end,
+    Ctx = {aihtml_ctx, self(), fun(Ops) -> put(?COLLECT, get(?COLLECT) ++ Ops) end,
            #{}, undefined},
     try
         _ = Fun(Ctx),
@@ -392,8 +384,6 @@ secret() ->
 
 b64(B) -> base64:encode(B, #{mode => urlsafe, padding => false}).
 unb64(B) -> base64:decode(B, #{mode => urlsafe, padding => false}).
-
-new_id() -> b64(crypto:strong_rand_bytes(12)).
 
 text(V) when is_binary(V) -> V;
 text(V) when is_list(V) -> unicode:characters_to_binary(V);

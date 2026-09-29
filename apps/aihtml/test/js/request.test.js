@@ -10,7 +10,7 @@
     pending.push(req);
     return new Promise(function (resolve, reject) {
       req.finish = function () {
-        resolve(new Response('data: {"type":"RUN_STARTED"}\n\ndata: {"type":"RUN_FINISHED"}\n\n'));
+        resolve(new Response('{"ops":[]}'));
       };
       opts.signal.addEventListener("abort", function () {
         req.aborted = true;
@@ -229,12 +229,11 @@
     T.eq($id("p").getAttribute("x"), "1");
   });
 
-  T.test("RUN_ERROR and refused actions fire ah:error on the element", async function (fx) {
+  T.test("failed and refused actions fire ah:error on the element", async function (fx) {
     var real = window.fetch, err = console.error;
-    var replies = ['data: {"type":"RUN_ERROR","message":"boom","code":"x"}\n\n'];
+    var replies = [new Response('{"error":"action_failed"}', { status: 500 })];
     window.fetch = function () {
-      var body = replies.shift();
-      return Promise.resolve(body ? new Response(body) : new Response("no", { status: 403 }));
+      return Promise.resolve(replies.shift() || new Response("no", { status: 403 }));
     };
     console.error = function () {};
     fx.innerHTML = '<button id="b" data-ah-on="click:' + TOK + '">b</button>';
@@ -245,6 +244,34 @@
     click("b"); await tick();
     window.fetch = real;
     console.error = err;
-    T.eq(got, [{ message: "boom", code: "x" }, { status: 403 }]);
+    T.eq(got, [{ status: 500, error: "action_failed" }, { status: 403 }]);
+  });
+
+  T.test("a streamed reply applies each batch as it arrives", async function (fx) {
+    var real = window.fetch, err = console.error, more;
+    window.fetch = function () {
+      var enc = new TextEncoder();
+      var body = new ReadableStream({ start: function (c) {
+        c.enqueue(enc.encode('{"ops":[{"op":"attr","id":"s","name":"data-step","value":"1"}]}\n'));
+        more = function () {
+          c.enqueue(enc.encode('{"ops":[{"op":"attr","id":"s","name":"data-step","value":"2"}]}\n{"err'));
+          c.enqueue(enc.encode('or":"action_failed"}\n'));
+          c.close();
+        };
+      } });
+      return Promise.resolve(new Response(body, { headers: { "Content-Type": "application/x-ndjson" } }));
+    };
+    console.error = function () {};
+    fx.innerHTML = '<button id="s" data-ah-on="click:' + TOK + '">s</button>';
+    AH.mount(fx);
+    var got = [];
+    $id("s").addEventListener("ah:error", function (e) { got.push(e.detail); });
+    click("s"); await tick();
+    T.eq($id("s").getAttribute("data-step"), "1", "first batch before the rest");
+    more(); await tick();
+    window.fetch = real;
+    console.error = err;
+    T.eq($id("s").getAttribute("data-step"), "2");
+    T.eq(got, [{ status: 200, error: "action_failed" }]);
   });
 })(window.AHTest, window.AH);

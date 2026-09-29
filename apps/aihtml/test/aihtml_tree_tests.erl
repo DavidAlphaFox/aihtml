@@ -117,9 +117,7 @@ lazy_round_trip_test() ->
               <<"data">> => #{<<"value">> => <<"remote">>, <<"tree">> => <<"tr">>,
                               <<"treeId">> => <<"2">>, <<"level">> => <<"1">>,
                               <<"lazy">> => <<"true">>}},
-    Self = self(),
-    ok = aihtml_action:execute(Ref, Event, #{emit => fun(E) -> Self ! {ev, E} end}),
-    [#{<<"value">> := [Html, Call]}] = [E || #{<<"type">> := <<"CUSTOM">>} = E <- collect()],
+    {ok, [Html, Call]} = aihtml_action:execute(Ref, Event, #{send => fun(_) -> error(unexpected_flush) end}),
     #{op := html, swap := morph_inner, id := <<"tr-2-g">>, html := Kids} = Html,
     ?assert(has(<<"<li class=\"ah-tree-item ah-tree-item-leaf\" id=\"tr-2-0\" role=\"treeitem\" "
                   "aria-level=\"2\" data-tree-id=\"2-0\" data-value=\"r1\" tabindex=\"-1\">">>, Kids)),
@@ -148,10 +146,6 @@ set_children_empty_test() ->
     ?assertMatch([#{op := html, id := <<"t-0-3-g">>, html := <<>>},
                   #{op := call, method := <<"childrenLoaded">>, args := [<<"t-0-3">>]}], Ops).
 
-collect() ->
-    receive {ev, E} -> [E | collect()]
-    after 0 -> []
-    end.
 
 has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 

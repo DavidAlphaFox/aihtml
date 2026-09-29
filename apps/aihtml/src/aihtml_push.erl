@@ -24,6 +24,14 @@
 %%% reconnecting are lost; the subscription's `refresh' action runs after
 %%% each reconnect to bring the page up to date from the data layer.
 %%%
+%%% `call/4,5' and `trigger/4,5' publish data rather than HTML: a component
+%%% method call (a chart gets new points) or a DOM event with a detail.
+%%%
+%%% When the topics on a page change (new content subscribes, removed
+%%% content unsubscribes), the page sends the new set for its stream id
+%%% (`set_topics/2'); the stream process, wherever it runs, joins and leaves
+%%% groups without reconnecting.
+%%%
 %%% Topics are any plain term: `todos', `{room, 42}', `<<"user:7">>'. The
 %%% token is signed, so a page can only follow topics the server rendered
 %%% for it; decide per user which topics to render.
@@ -33,15 +41,20 @@
 %%%-------------------------------------------------------------------
 -module(aihtml_push).
 
--export([publish/2, publish/3, subscribers/1]).
+-export([publish/2, publish/3, call/4, call/5, trigger/4, trigger/5, subscribers/1]).
 %% For templates and transports.
--export([token/1, verify/1, join/1, event/1, new_stream_id/0]).
+-export([token/1, verify/1, join/1, leave/1, new_stream_id/0, register_stream/1, set_topics/2,
+         max_topics/0]).
 
 -export_type([topic/0]).
 
 -type topic() :: term().
 
 -define(SCOPE, aihtml_push).
+%% Topics one stream may follow.
+-define(MAX_TOPICS, 32).
+
+-type publish_opts() :: #{except => aihtml_action:ctx() | binary()}.
 
 %% @doc Publish to everyone subscribed to `Topic'. `Fun' receives a ctx
 %% and uses the aihtml_action operations; the HTML is rendered once.
@@ -51,8 +64,7 @@ publish(Topic, Fun) -> publish(Topic, Fun, #{}).
 %% @doc Options: `except' is an action ctx (or a stream id): the page that
 %% sent that request is skipped, because the action's own response already
 %% updated it.
--spec publish(topic(), fun((aihtml_action:ctx()) -> any()),
-              #{except => aihtml_action:ctx() | binary()}) -> ok.
+-spec publish(topic(), fun((aihtml_action:ctx()) -> any()), publish_opts()) -> ok.
 publish(Topic, Fun, Opts) ->
     Except = case maps:get(except, Opts, undefined) of
                  Id when is_binary(Id); Id =:= undefined -> Id;
@@ -61,10 +73,30 @@ publish(Topic, Fun, Opts) ->
     case aihtml_action:render_ops(Fun) of
         [] -> ok;
         Ops ->
-            Event = iolist_to_binary(aihtml_json:encode(event(Ops))),
-            _ = [P ! {aihtml_push, Except, Event} || P <- members(Topic)],
+            Json = iolist_to_binary(aihtml_json:encode(Ops)),
+            _ = [P ! {aihtml_push, Except, Json} || P <- members(Topic)],
             ok
     end.
+
+%% @doc Call a component method on every page following `Topic' (see
+%% aihtml_action:call/4): data for a component, no HTML.
+-spec call(topic(), aihtml_action:target() | global, atom() | binary(), [term()]) -> ok.
+call(Topic, Target, Method, Args) -> call(Topic, Target, Method, Args, #{}).
+
+-spec call(topic(), aihtml_action:target() | global, atom() | binary(), [term()],
+           publish_opts()) -> ok.
+call(Topic, Target, Method, Args, Opts) ->
+    publish(Topic, fun(Ctx) -> aihtml_action:call(Ctx, Target, Method, Args) end, Opts).
+
+%% @doc Fire a DOM event with `Detail' on every page following `Topic' (see
+%% aihtml_action:trigger/4).
+-spec trigger(topic(), aihtml_action:target() | document, atom() | binary(), term()) -> ok.
+trigger(Topic, Target, Event, Detail) -> trigger(Topic, Target, Event, Detail, #{}).
+
+-spec trigger(topic(), aihtml_action:target() | document, atom() | binary(), term(),
+              publish_opts()) -> ok.
+trigger(Topic, Target, Event, Detail, Opts) ->
+    publish(Topic, fun(Ctx) -> aihtml_action:trigger(Ctx, Target, Event, Detail) end, Opts).
 
 %% @doc Number of streams following `Topic', cluster-wide.
 -spec subscribers(topic()) -> non_neg_integer().
@@ -78,6 +110,8 @@ token(Topic) ->
 
 %% @doc Check topic tokens from the browser; all must be valid.
 -spec verify([binary()]) -> {ok, [topic()]} | {error, invalid_topic}.
+verify(Tokens) when is_list(Tokens), length(Tokens) > ?MAX_TOPICS ->
+    {error, invalid_topic};
 verify(Tokens) when is_list(Tokens) ->
     Topics = [case aihtml_action:unsign(T) of
                   {ok, {aihtml_topic, Topic}} -> {ok, Topic};
@@ -101,10 +135,37 @@ join(Topics) ->
         error:badarg -> error({aihtml, push_not_started})
     end.
 
-%% @doc The AG-UI event that carries a list of operations.
--spec event([map()]) -> map().
-event(Ops) ->
-    #{<<"type">> => <<"CUSTOM">>, <<"name">> => <<"aihtml.ui">>, <<"value">> => Ops}.
+%% @doc Stop following topics (the calling process).
+-spec leave([topic()]) -> ok.
+leave(Topics) ->
+    _ = [pg:leave(?SCOPE, {topic, T}, self()) || T <- Topics],
+    ok.
+
+%% @doc Topics one stream may follow.
+-spec max_topics() -> pos_integer().
+max_topics() -> ?MAX_TOPICS.
+
+%% @doc Make the calling stream process findable by its id, cluster-wide
+%% (set_topics/2).
+-spec register_stream(binary()) -> ok.
+register_stream(Id) ->
+    ok = pg:join(?SCOPE, {stream, Id}, self()).
+
+%% @doc Change the topics of the stream `Id' to those of `Tokens': the
+%% stream process receives `{aihtml_push_topics, Topics}' and joins and
+%% leaves groups itself. `no_stream' when no process holds that id (the
+%% page then reopens its stream).
+-spec set_topics(binary(), [binary()]) -> ok | {error, invalid_topic | no_stream}.
+set_topics(Id, Tokens) ->
+    case verify(Tokens) of
+        {ok, Topics} ->
+            case pg:get_members(?SCOPE, {stream, Id}) of
+                [] -> {error, no_stream};
+                Pids -> _ = [P ! {aihtml_push_topics, Topics} || P <- Pids], ok
+            end;
+        {error, _} = E ->
+            E
+    end.
 
 -spec new_stream_id() -> binary().
 new_stream_id() ->

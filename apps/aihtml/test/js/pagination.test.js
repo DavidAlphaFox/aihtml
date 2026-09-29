@@ -127,7 +127,7 @@
   var sent = [];
   window.fetch = function (url, opts) {
     sent.push(JSON.parse(opts.body));
-    return Promise.resolve(new Response('data: {"type":"RUN_STARTED"}\n\ndata: {"type":"RUN_FINISHED"}\n\n',
+    return Promise.resolve(new Response('{"ops":[]}',
                                         { status: 200 }));
   };
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }

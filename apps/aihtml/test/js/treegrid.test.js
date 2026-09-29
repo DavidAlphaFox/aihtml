@@ -45,16 +45,14 @@
 
   function focusedKey() { return document.activeElement && document.activeElement.getAttribute("data-key"); }
 
-  // Answers the next actions with the given operations, as an AG-UI stream.
+  // Answers the next actions with the given operations.
   function stubFetch(queue, calls) {
     var orig = window.fetch;
     window.fetch = function (url, opts) {
       calls.push(JSON.parse(opts.body));
       var ops = queue.shift() || [];
-      var ev = function (o) { return "data: " + JSON.stringify(o) + "\n\n"; };
-      var body = ev({ type: "RUN_STARTED" }) + ev({ type: "CUSTOM", name: "aihtml.ui", value: ops }) +
-        ev({ type: "RUN_FINISHED" });
-      return Promise.resolve(new Response(body, { status: 200, headers: { "Content-Type": "text/event-stream" } }));
+      return Promise.resolve(new Response(JSON.stringify({ ops: ops }),
+                                          { status: 200, headers: { "Content-Type": "application/json" } }));
     };
     return function () { window.fetch = orig; };
   }

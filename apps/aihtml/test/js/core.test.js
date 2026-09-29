@@ -14,7 +14,7 @@
       return Promise.resolve(new Response(p.body, { status: p.status }));
     }
     sent.push(JSON.parse(opts.body));
-    var body = 'data: {"type":"RUN_STARTED"}\n\ndata: {"type":"RUN_FINISHED"}\n\n';
+    var body = '{"ops":[]}';
     return Promise.resolve(new Response(body, { status: 200 }));
   };
   function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }

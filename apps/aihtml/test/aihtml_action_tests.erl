@@ -5,21 +5,25 @@
 
 -define(M, aihtml_action_test_mod).
 
-%% Run an action the way a transport does and collect the AG-UI events.
+%% Run an action the way a transport does: the batches of operations it
+%% sends (each flush, then what is left when it returns), as JSON.
 run(Token, Ev) ->
     {ok, Ref} = aihtml_action:verify(Token),
     Self = self(),
-    Result = aihtml_action:execute(Ref, Ev, #{emit => fun(E) -> Self ! {ev, E} end,
-                                              thread_id => <<"t1">>, run_id => <<"r1">>}),
-    {Result, collect()}.
+    Result = aihtml_action:execute(Ref, Ev, #{send => fun(Ops) -> Self ! {batch, Ops} end}),
+    Flushed = collect(),
+    case Result of
+        {ok, []} -> {ok, Flushed};
+        {ok, Rest} -> {ok, Flushed ++ [json(Rest)]};
+        error -> {error, Flushed}
+    end.
 
 collect() ->
-    receive {ev, E} -> [json:decode(iolist_to_binary(json:encode(E))) | collect()]
+    receive {batch, Ops} -> [json(Ops) | collect()]
     after 0 -> []
     end.
 
-ops(Events) ->
-    [Ops || #{<<"type">> := <<"CUSTOM">>, <<"name">> := <<"aihtml.ui">>, <<"value">> := Ops} <- Events].
+json(Ops) -> json:decode(iolist_to_binary(aihtml_json:encode(Ops))).
 
 %% The token of the first action in a rendered element.
 token_of(Html) ->
@@ -69,7 +73,7 @@ request_options_render_as_attributes_test() ->
     ?assertMatch({match, _}, re:run(F, <<"data-ah-indicator=\"this\"">>)).
 
 trigger_and_history_ops_test() ->
-    {ok, Events} = run_fun(fun(Ctx) ->
+    {ok, Batches} = run_fun(fun(Ctx) ->
                                aihtml_action:trigger(Ctx, document, 'ah:saved', #{id => 7}),
                                aihtml_action:trigger(Ctx, {id, list}, refresh, null),
                                aihtml_action:push_url(Ctx, <<"/items?page=3">>),
@@ -81,12 +85,12 @@ trigger_and_history_ops_test() ->
                      <<"detail">> => null},
                    #{<<"op">> => <<"url">>, <<"mode">> => <<"push">>, <<"value">> => <<"/items?page=3">>},
                    #{<<"op">> => <<"url">>, <<"mode">> => <<"replace">>, <<"value">> => <<"/items">>}]],
-                 ops(Events)).
+                 Batches).
 
 %% Ops produced by a fun, through the same path pushes use.
 run_fun(Fun) ->
     Ops = aihtml_action:render_ops(Fun),
-    {ok, [json:decode(iolist_to_binary(json:encode(aihtml_push:event(Ops))))]}.
+    {ok, [json(Ops)]}.
 
 component_event_names_test() ->
     Html = aihtml:render_binary(span([], [], [on('ah:close', {?M, inc, #{n => 1}})])),
@@ -117,41 +121,34 @@ page_points_at_the_action_endpoint_test() ->
 %%% Running
 %%%===================================================================
 
-run_streams_agui_events_test() ->
+run_returns_the_operations_test() ->
     Tok = token_of(span(<<"+">>, [], [on(click, {?M, inc, #{n => 41}})])),
-    {ok, Events} = run(Tok, #{<<"type">> => <<"click">>}),
-    ?assertEqual([#{<<"type">> => <<"RUN_STARTED">>, <<"threadId">> => <<"t1">>, <<"runId">> => <<"r1">>},
-                  #{<<"type">> => <<"CUSTOM">>, <<"name">> => <<"aihtml.ui">>,
-                    <<"value">> => [#{<<"op">> => <<"html">>, <<"id">> => <<"n">>,
-                                      <<"swap">> => <<"inner">>, <<"html">> => <<"42">>}]},
-                  #{<<"type">> => <<"RUN_FINISHED">>, <<"threadId">> => <<"t1">>, <<"runId">> => <<"r1">>}],
-                 Events).
+    ?assertEqual({ok, [[#{<<"op">> => <<"html">>, <<"id">> => <<"n">>,
+                          <<"swap">> => <<"inner">>, <<"html">> => <<"42">>}]]},
+                 run(Tok, #{<<"type">> => <<"click">>})).
 
 event_fields_reach_the_action_test() ->
     Tok = aihtml_action:token({?M, echo, #{}}),
-    {ok, Events} = run(Tok, #{<<"value">> => <<"<i>">>, <<"values">> => #{<<"a">> => <<"7">>}}),
-    ?assertMatch([[#{<<"sel">> := <<"#out">>, <<"html">> := <<"&lt;i&gt;|7">>}]], ops(Events)).
+    {ok, Batches} = run(Tok, #{<<"value">> => <<"<i>">>, <<"values">> => #{<<"a">> => <<"7">>}}),
+    ?assertMatch([[#{<<"sel">> := <<"#out">>, <<"html">> := <<"&lt;i&gt;|7">>}]], Batches).
 
 flush_streams_progressively_test() ->
-    {ok, Events} = run(aihtml_action:token({?M, steps, #{}}), #{}),
+    {ok, Batches} = run(aihtml_action:token({?M, steps, #{}}), #{}),
     ?assertMatch([[#{<<"html">> := <<"loading">>}],
                   [#{<<"html">> := <<"done">>}, #{<<"op">> := <<"class">>, <<"add">> := <<"ready">>}]],
-                 ops(Events)).
+                 Batches).
 
 actions_inside_action_responses_test() ->
-    {ok, Events} = run(aihtml_action:token({?M, nested, #{}}), #{}),
-    [[#{<<"html">> := Html, <<"swap">> := <<"append">>}]] = ops(Events),
+    {ok, Batches} = run(aihtml_action:token({?M, nested, #{}}), #{}),
+    [[#{<<"html">> := Html, <<"swap">> := <<"append">>}]] = Batches,
     {match, [Tok]} = re:run(Html, <<"click:([^\"]+)\"">>, [{capture, all_but_first, binary}]),
     ?assertEqual({ok, {?M, inc, #{n => 1}}}, aihtml_action:verify(Tok)).
 
-crash_ends_with_run_error_without_details_test() ->
+crash_returns_error_without_details_test() ->
     logger:set_primary_config(level, none),
     try
-        {error, Events} = run(aihtml_action:token({?M, boom, #{}}), #{}),
-        ?assertMatch([#{<<"type">> := <<"RUN_STARTED">>},
-                      #{<<"type">> := <<"RUN_ERROR">>, <<"message">> := <<"action failed">>}],
-                     Events),
-        ?assertEqual(nomatch, binary:match(iolist_to_binary(json:encode(Events)), <<"secret_detail">>))
+        %% nothing of the crash reaches the transport
+        ?assertEqual({error, []}, run(aihtml_action:token({?M, boom, #{}}), #{}))
     after
         logger:set_primary_config(level, notice)
     end.
@@ -159,9 +156,8 @@ crash_ends_with_run_error_without_details_test() ->
 ctx_is_bound_to_its_request_test() ->
     Self = self(),
     {ok, Ref} = aihtml_action:verify(aihtml_action:token({?M, inc, #{n => 0}})),
-    %% smuggle the ctx out through the emit fun is not possible; build one
-    %% via a run and check operations from another process fail
-    _ = aihtml_action:execute(Ref, #{}, #{emit => fun(_) -> ok end}),
+    %% a ctx used from another process than its request's fails
+    _ = aihtml_action:execute(Ref, #{}, #{send => fun(_) -> ok end}),
     Ctx = {aihtml_ctx, Self, fun(_) -> ok end, #{}, undefined},
     {_, R} = spawn_monitor(fun() -> aihtml_action:html(Ctx, {id, x}, <<"y">>) end),
     ?assertEqual(ok, receive {'DOWN', R, process, _, {{aihtml, action_ctx_used_outside_its_request}, _}} -> ok

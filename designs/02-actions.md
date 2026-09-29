@@ -12,7 +12,7 @@
 - **可靠性**：服务器重启或节点宕机，会话随之丢失。要恢复，就得把状态和闭包持久化，代价过高。
 - **状态分散**：状态散落在各个进程里，而不是集中在数据层。
 
-AG-UI 的做法是每次交互一个请求，状态由数据层负责。本模式采用同样的思路。
+本模式改为每次交互一个请求，状态由数据层负责（思路来自 AG-UI，但格式是 aihtml 自己的精简协议，见下文"与 AG-UI 的关系"）。
 
 ## 流程
 
@@ -22,14 +22,19 @@ AG-UI 的做法是每次交互一个请求，状态由数据层负责。本模�
      写入 data-ah-on="click:TOKEN[:debounce]"
 
 点击
-  └─ POST /aihtml/action  {"action": TOKEN, "event": {...}, "threadId", "runId"}
-       ├─ Origin 不同源               → 403
-       ├─ 签名不符或模块未声明 behaviour → 403 invalid_action
-       └─ 200 text/event-stream
-            data: {"type":"RUN_STARTED", ...}
-            data: {"type":"CUSTOM","name":"aihtml.ui","value":[操作...]}   (flush 一次一条)
-            data: {"type":"RUN_FINISHED", ...}   或 RUN_ERROR
+  └─ POST /aihtml/action  {"action": TOKEN, "event": {...}, "stream": 推送流 id（可省）}
+       ├─ Origin 不同源               → 403 {"error":"forbidden_origin"}
+       ├─ 请求体不对                   → 400 {"error":"bad_request"}
+       ├─ 签名不符或模块未声明 behaviour → 403 {"error":"invalid_action"}
+       ├─ action 崩溃（未 flush 过）    → 500 {"error":"action_failed"}
+       ├─ 200 application/json        {"ops": [操作...]}
+       └─ 200 application/x-ndjson    （action 调用过 flush/1）
+            {"ops": [操作...]}         每次 flush 一行
+            {"ops": [操作...]}         返回时剩下的
+            {"done": true}             或 {"error": "action_failed"}（flush 之后崩溃）
 ```
+
+绝大多数 action 一次返回，响应就是一个 JSON；只有调用了 `flush/1` 的 action（先显示加载状态、再显示数据）才变成逐行的 NDJSON 流。操作的格式在两种响应里、以及服务端推送里都相同。
 
 ## 安全
 
@@ -48,16 +53,17 @@ AG-UI 的做法是每次交互一个请求，状态由数据层负责。本模�
 ## 执行与流式输出
 
 - **执行位置**：action 在 HTTP 请求进程中运行。操作写入进程字典中的缓冲，所以 Ctx 只能在本请求进程中使用，在其它进程使用会报错。
-- **发送时机**：`flush/1` 立即以一条 CUSTOM 事件发出已缓冲的操作。action 返回时自动 flush。
-- **崩溃处理**：action 崩溃时写日志，并发送 `RUN_ERROR`，消息固定为 "action failed"，不暴露异常细节。
+- **发送时机**：action 返回时，`aihtml_action:execute/3` 把缓冲的操作交给传输层，作为整个响应。`flush/1` 立即通过传输层的 `send` 回调发出已缓冲的操作，传输层从这时起改为流式响应。
+- **传输层决定格式**：核心库只产出操作列表（`execute/3` 返回 `{ok, Ops}` 或 `error`），JSON、NDJSON 和状态码由 `aihtml_cowboy_action` 决定。
+- **崩溃处理**：action 崩溃时写日志，响应只有错误码 `action_failed`，不暴露异常细节：还没发出任何内容时是 HTTP 500，已经 flush 过则是流的最后一行。
 
 ## 客户端
 
 - **事件委托**：对 click、dblclick、change、input、submit、keydown、keyup、focusin、focusout、mouseenter、mouseleave 统一委托处理。
 - **收集事件数据**：元素没有 id 时先补一个，然后收集 value、checked、key、所在表单字段、`data-ah-include` 选中控件的值和 `data-*` 属性。
-- **读取响应**：用 `fetch` 发送请求，从 `ReadableStream` 解析 SSE。`EventSource` 不能发 POST，所以没有用它。
+- **读取响应**：用 `fetch` 发送请求。`application/json` 直接解析；`application/x-ndjson` 从 `ReadableStream` 逐行读取，每行一到就应用。
 - **并发**：click、submit 在请求进行中忽略重复触发。input、change、keyup、keydown 以最新为准，用 `AbortController` 取消旧请求。
-- **错误**：请求被拒或出错时，在元素上触发 `ah:error`。
+- **错误**：请求被拒或出错时，在元素上触发 `ah:error`，detail 是 `{status, error}`（HTTP 状态和服务端的错误码）。
 
 ## 取舍
 
@@ -70,7 +76,14 @@ AG-UI 的做法是每次交互一个请求，状态由数据层负责。本模�
 - **无需粘性**：任意节点、任意负载均衡都能处理请求。
 - **重启无感**：服务器重启后，已打开的页面继续可用。
 - **页面可直接渲染**：整页由普通 HTTP handler 渲染，不需要启动页和连接，搜索引擎和首屏都能直接拿到内容。
-- **兼容 AG-UI**：事件格式与 AG-UI 一致，可以与 beamai_agui 这类 AG-UI 服务共存。
+- **轻量**：一次点击的响应就是 `{"ops":[...]}`，可以正常压缩；错误用 HTTP 状态表达，日志和监控看得到。
+
+## 与 AG-UI 的关系
+
+action 响应不是 AG-UI 事件流：按钮点击不是"一次 agent 运行"，套用 `RUN_STARTED`/`RUN_FINISHED` 既重又会和真正的 AG-UI 应用混淆。以后做 AG-UI 应用（聊天、工具调用）时：
+- AG-UI 走它自己的端点和客户端组件，完整使用 AG-UI 的事件。
+- agent 要更新页面时，在 AG-UI 流里发 `CUSTOM` 事件，名字为 `aihtml.ops`，值就是这里的操作列表，客户端组件收到后调用 `AH.apply(ops)`；要更新其它页面，直接调用 `aihtml_push:publish`。
+这是两者唯一的交汇点，其余格式互不相干。
 
 ## 借鉴 htmx 的补充能力
 

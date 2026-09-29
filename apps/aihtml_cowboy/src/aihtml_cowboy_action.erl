@@ -1,10 +1,17 @@
-%% @doc POST endpoint for aihtml actions.
+%% @doc POST endpoint for aihtml actions (designs/02-actions.md).
 %%
-%% The body is JSON: `{"action": Token, "event": {...}, "threadId": T,
-%% "runId": R, "streamId": S}' (streamId: the page's push stream, if any). A bad origin, a bad body or an invalid token is refused
-%% with a plain status (403 / 400 / 405) before anything runs; otherwise the
-%% action runs in this request process and its AG-UI events are streamed
-%% back as server-sent events.
+%% The body is JSON: `{"action": Token, "event": {...}, "stream": S}'
+%% (stream: the page's push stream id, if any). A bad origin, a bad body or
+%% an invalid token is refused with a plain status (403 / 400 / 405) before
+%% anything runs. Otherwise the action runs in this request process and the
+%% reply is its operations:
+%%
+%%   200 application/json      {"ops": [...]}
+%%   200 application/x-ndjson  one {"ops": [...]} line per flush/1, then
+%%                             {"done": true} (or {"error": "action_failed"}
+%%                             when the action crashes after a flush)
+%%   500 application/json      {"error": "action_failed"}, a crash before
+%%                             any flush (logged, not sent)
 -module(aihtml_cowboy_action).
 
 -export([init/2, origin_ok/2]).
@@ -38,20 +45,49 @@ handle(Req0) ->
     end.
 
 stream(Ref, In, Req0) ->
-    Req = cowboy_req:stream_reply(200, #{<<"content-type">> => <<"text/event-stream">>,
-                                         <<"cache-control">> => <<"no-store">>,
-                                         <<"x-accel-buffering">> => <<"no">>}, Req0),
-    Emit = fun(Event) ->
-               cowboy_req:stream_body([<<"data: ">>, json:encode(Event), <<"\n\n">>], nofin, Req)
-           end,
-    _ = aihtml_action:execute(Ref, maps:get(<<"event">>, In, #{}),
-                              #{emit => Emit,
-                                meta => #{req => Req0},
-                                thread_id => bin(maps:get(<<"threadId">>, In, <<>>)),
-                                run_id => bin(maps:get(<<"runId">>, In, <<>>)),
-                                stream_id => stream_id(maps:get(<<"streamId">>, In, null))}),
-    ok = cowboy_req:stream_body(<<>>, fin, Req),
+    %% flush/1 turns the reply into an NDJSON stream; the streaming Req is
+    %% kept here (this process runs the action).
+    Send = fun(Ops) -> line(started(Req0), #{ops => Ops}) end,
+    Result = aihtml_action:execute(Ref, maps:get(<<"event">>, In, #{}),
+                                   #{send => Send,
+                                     meta => #{req => Req0},
+                                     stream_id => stream_id(maps:get(<<"stream">>, In, null))}),
+    case {erase(aihtml_cowboy_stream), Result} of
+        {undefined, {ok, Ops}} ->
+            json(200, #{ops => Ops}, Req0);
+        {undefined, error} ->
+            json(500, #{error => action_failed}, Req0);
+        {Req, {ok, Ops}} ->
+            _ = [line(Req, #{ops => Ops}) || Ops =/= []],
+            finish(Req, #{done => true});
+        {Req, error} ->
+            finish(Req, #{error => action_failed})
+    end.
+
+%% The streaming reply, started on the first flush.
+started(Req0) ->
+    case get(aihtml_cowboy_stream) of
+        undefined ->
+            Req = cowboy_req:stream_reply(200, #{<<"content-type">> => <<"application/x-ndjson">>,
+                                                 <<"cache-control">> => <<"no-store">>,
+                                                 <<"x-accel-buffering">> => <<"no">>}, Req0),
+            put(aihtml_cowboy_stream, Req),
+            Req;
+        Req ->
+            Req
+    end.
+
+line(Req, Term) ->
+    cowboy_req:stream_body([aihtml_json:encode(Term), <<"\n">>], nofin, Req).
+
+finish(Req, Term) ->
+    ok = cowboy_req:stream_body([aihtml_json:encode(Term), <<"\n">>], fin, Req),
     Req.
+
+json(Status, Term, Req) ->
+    cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>,
+                               <<"cache-control">> => <<"no-store">>},
+                     aihtml_json:encode(Term), Req).
 
 read_json(Req0) ->
     case cowboy_req:read_body(Req0, #{length => ?MAX_BODY}) of
@@ -67,11 +103,7 @@ read_json(Req0) ->
     end.
 
 refuse(Status, Code, Req) ->
-    cowboy_req:reply(Status, #{<<"content-type">> => <<"application/json">>},
-                     json:encode(#{error => Code}), Req).
-
-bin(B) when is_binary(B) -> B;
-bin(_) -> <<>>.
+    json(Status, #{error => Code}, Req).
 
 stream_id(B) when is_binary(B) -> B;
 stream_id(_) -> undefined.

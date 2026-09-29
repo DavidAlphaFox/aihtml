@@ -155,7 +155,7 @@
   var posted = [];
   window.fetch = function (url, opts) {
     posted.push(JSON.parse(opts.body));
-    return Promise.resolve(new Response('data: {"type":"RUN_STARTED"}\n\ndata: {"type":"RUN_FINISHED"}\n\n',
+    return Promise.resolve(new Response('{"ops":[]}',
                                         { status: 200 }));
   };
   function linkWait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }

@@ -1,11 +1,12 @@
 // Actions (aihtml_action, designs/02-actions.md): one POST per event, the
-// reply is an AG-UI event stream.
+// reply is the DOM operations to apply.
 //
 // Elements carry data-ah-on="click:TOKEN input:TOKEN:300" (event:signed
-// action[:debounce ms]). The event POSTs {action, event, threadId, runId}
-// to <body data-ah-action>, and the response streams RUN_STARTED, CUSTOM
-// "aihtml.ui" (DOM operations), RUN_FINISHED or RUN_ERROR. Nothing is kept
-// on the server between requests.
+// action[:debounce ms]). The event POSTs {action, event, stream} to <body
+// data-ah-action>. The reply is JSON {"ops": [...]}, or, when the action
+// sends progressive updates, NDJSON: one {"ops": [...]} per line, then
+// {"done": true} or {"error": ...}. Errors are HTTP statuses with
+// {"error": code}. Nothing is kept on the server between requests.
 import type { Behaviours } from "./behaviours.ts";
 import { delegateDocument, fire, withSelf } from "./dom.ts";
 import type { Root } from "./dom.ts";
@@ -36,13 +37,11 @@ export type Op = OpTarget & (
 type OpName = Op["op"];
 type OpHandlers = { [K in OpName]: (op: Extract<Op, { op: K }>, targets: Element[]) => void };
 
-/** An AG-UI event of an action's reply or the push stream. */
-export interface AguiEvent {
-  type: string;
-  name?: string;
-  value?: unknown;
-  message?: string;
-  code?: string;
+/** One reply of an action: the whole JSON body, or one NDJSON line. */
+export interface Reply {
+  ops?: Op[];
+  done?: boolean;
+  error?: string;
 }
 
 /** What an action sends as Event (aihtml_action's Event map). */
@@ -60,20 +59,14 @@ export interface EventPayload {
 /** One binding of data-ah-on. */
 export interface ActionSpec { event: string; token: string; debounce: number; }
 
-/** Detail of ah:error from an action. */
-export type ActionError = { status: number } | { message?: string; code?: string };
+/** Detail of ah:error from an action: the HTTP status and the server's
+ *  error code (invalid_action, action_failed, ...), when it sent one. */
+export interface ActionError { status: number; error?: string; }
 
 const ACTION_EVENTS = ["click", "dblclick", "change", "input", "submit", "keydown",
                        "keyup", "focusin", "focusout", "mouseenter", "mouseleave"];
 // Latest-wins events: a new one cancels the request still in flight.
 const LATEST_WINS: Record<string, boolean> = { input: true, change: true, keyup: true, keydown: true };
-
-function newId(): string {
-  if (window.crypto && typeof window.crypto.randomUUID === "function") {
-    return window.crypto.randomUUID();
-  }
-  return Date.now().toString(36) + Math.random().toString(36).slice(2);
-}
 
 function classList(s: string | undefined): string[] {
   return String(s || "").split(/\s+/).filter(Boolean);
@@ -87,7 +80,6 @@ export class Actions {
   readonly #swapper: Swapper;
   readonly #api: () => unknown;
   readonly push: PushStream;
-  readonly #threadId = newId();
   #seq = 0;
   readonly #timers = new Map<string, ReturnType<typeof setTimeout>>();
   readonly #syncs = new Map<string, Running>();
@@ -249,40 +241,33 @@ export class Actions {
     });
   }
 
-  /** Handle one AG-UI event of a reply (el: the element that sent it). */
-  onAgui(el: EventTarget, ev: AguiEvent): void {
-    switch (ev.type) {
-      case "CUSTOM":
-        if (ev.name === "aihtml.ui") {
-          this.apply(ev.value as Op[]);
-          this.push.sync();          // new content may follow other topics
-        }
-        break;
-      case "RUN_ERROR":
-        fire<ActionError>(el, "ah:error", { message: ev.message, code: ev.code });
-        console.error("aihtml: action failed:", ev.message);
-        break;
-      default:
-        break;
+  /** Apply operations that arrived from the server (an action's reply or
+   *  a push); new content may follow other topics. */
+  receive(ops: Op[]): void {
+    this.apply(ops);
+    this.push.sync();
+  }
+
+  // One reply (el: the element that sent the action).
+  #onReply(el: Element, reply: Reply, status: number): void {
+    if (reply.ops) { this.receive(reply.ops); }
+    if (reply.error) {
+      fire<ActionError>(el, "ah:error", { status, error: reply.error });
+      console.error("aihtml: action failed:", reply.error);
     }
   }
 
-  // Server-sent events over a fetch() body: blocks separated by a blank
-  // line, the payload on "data:" lines.
-  static #readStream(body: ReadableStream<Uint8Array>, onEvent: (ev: AguiEvent) => void): Promise<void> {
+  // NDJSON over a fetch() body: one JSON reply per line.
+  static #readLines(body: ReadableStream<Uint8Array>, onLine: (reply: Reply) => void): Promise<void> {
     const reader = body.getReader();
     const decoder = new TextDecoder();
     let buf = "";
     const pump = (): Promise<void> => reader.read().then((r) => {
       buf += decoder.decode(r.value || new Uint8Array(), { stream: !r.done });
-      const blocks = buf.split(/\r?\n\r?\n/);
-      buf = r.done ? "" : blocks.pop() || "";
-      blocks.forEach((block) => {
-        const data = block.split(/\r?\n/)
-          .filter((l) => l.indexOf("data:") === 0)
-          .map((l) => l.slice(5).replace(/^ /, ""))
-          .join("\n");
-        if (data) { onEvent(JSON.parse(data) as AguiEvent); }
+      const lines = buf.split("\n");
+      buf = r.done ? "" : lines.pop() || "";
+      lines.forEach((line) => {
+        if (line.trim()) { onLine(JSON.parse(line) as Reply); }
       });
       return r.done ? undefined : pump();
     });
@@ -337,18 +322,27 @@ export class Actions {
     return window.fetch(url, {
       method: "POST",
       credentials: "same-origin",
-      headers: { "Content-Type": "application/json", "Accept": "text/event-stream" },
-      body: JSON.stringify({ threadId: this.#threadId, runId: newId(), action: spec.token,
-                             event: body, streamId: this.push.id }),
+      headers: { "Content-Type": "application/json", "Accept": "application/json, application/x-ndjson" },
+      body: JSON.stringify({ action: spec.token, event: body, stream: this.push.id }),
       signal: ctrl.signal
     }).then((resp) => {
-      if (!resp.ok || !resp.body) {
-        // 403 invalid_action: the page was rendered with a secret this
-        // server does not know (development restart, rotated secret).
-        fire<ActionError>(el, "ah:error", { status: resp.status });
-        throw new Error("aihtml: action refused with HTTP " + resp.status);
+      const type = resp.headers.get("Content-Type") || "";
+      if (resp.ok && resp.body && type.indexOf("application/x-ndjson") === 0) {
+        return Actions.#readLines(resp.body, (reply) => { this.#onReply(el, reply, resp.status); });
       }
-      return Actions.#readStream(resp.body, (ev) => { this.onAgui(el, ev); });
+      return resp.text().then((text) => {
+        let reply: Reply = {};
+        try { reply = text ? JSON.parse(text) as Reply : {}; } catch { /* not JSON */ }
+        if (resp.ok) {
+          this.#onReply(el, reply, resp.status);
+        } else {
+          // 403 invalid_action: the page was rendered with a secret this
+          // server does not know (development restart, rotated secret);
+          // 500 action_failed: the action crashed (logged on the server).
+          fire<ActionError>(el, "ah:error", { status: resp.status, error: reply.error });
+          console.error("aihtml: action failed with HTTP " + resp.status, reply.error || "");
+        }
+      });
     }).catch((err: unknown) => {
       if (!(err instanceof Error && err.name === "AbortError")) { console.error(err); }
     }).then(done, done);

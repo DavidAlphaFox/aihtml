@@ -178,10 +178,8 @@ treegrid_lazy_round_trip_test() ->
               <<"data">> => #{<<"key">> => <<"5">>, <<"parent">> => <<>>, <<"level">> => <<"0">>,
                               <<"i">> => <<"1">>, <<"treegrid">> => <<"lz">>,
                               <<"value">> => <<"51">>}},
-    Self = self(),
-    ok = aihtml_action:execute(element(2, aihtml_action:verify(Token)), Event,
-                               #{emit => fun(E) -> Self ! {ev, E} end}),
-    [Ops] = [V || #{<<"type">> := <<"CUSTOM">>, <<"value">> := V} <- collect()],
+    {ok, Ops} = aihtml_action:execute(element(2, aihtml_action:verify(Token)), Event,
+                                      #{send => fun(_) -> error(unexpected_flush) end}),
     [#{op := html, id := <<"lz-rows">>, swap := append, html := Rows},
      #{op := call, id := <<"lz">>, method := <<"childrenLoaded">>, args := [<<"lz-1">>]}] = Ops,
     ?assertEqual([<<"50">>, <<"51">>], keys(Rows)),
@@ -202,10 +200,6 @@ treegrid_lazy_round_trip_test() ->
              end),
     ?assertMatch([#{op := html, html := <<>>}, #{op := call, method := <<"childrenLoaded">>}], Ops2).
 
-collect() ->
-    receive {ev, E} -> [E | collect()]
-    after 0 -> []
-    end.
 
 %% The action of the round trip: the lazy tree grid's load.
 action(kids, #{children := Kids}, Event, Ctx) ->

@@ -20,19 +20,45 @@
 - **SSE 进程只做转发。** 它校验令牌、加入主题、发送流 id、转发消息，并每 25 秒发一次心跳。进程退出时，`pg` 会自动把它从组里移除。
 - **`publish/3` 在发布者进程里只渲染一次。** 它用 `aihtml_action:render_ops/1` 执行 `Fun`，得到操作列表，编码成 JSON 后发给组内所有成员。在 action 里调用时，不会影响该 action 自己的响应缓冲。
 
+## 事件格式
+
+推送流是 SSE，用具名事件，不套 AG-UI 格式：
+
+```
+retry: 2000
+event: hello
+data: {"id":"<流 id>"}
+
+event: ops
+data: [{"op":"html","id":"todo-list","html":"..."}]
+
+: ping
+```
+
+`ops` 的内容与 action 响应里的操作列表相同，浏览器同样交给 `AH.apply`。
+
+## 推送数据
+
+推送能做 action 能做的所有操作，不只是 HTML。`aihtml_push:call/4,5` 调用组件方法（图表 `setData`、表格更新一行），`aihtml_push:trigger/4,5` 触发带数据的 DOM 事件，页面脚本或组件自己处理：
+
+```erlang
+aihtml_push:call(prices, {id, <<"chart">>}, setData, [Points]),
+aihtml_push:trigger(orders, document, 'order:new', #{id => 42}, #{except => Ctx}).
+```
+
 ## 主题令牌
 
 - **签名**：`aihtml_push:token(Topic)` 对 `{aihtml_topic, Topic}` 签名，使用与 action 相同的密钥和格式。
 - **互不通用**：action 令牌是 3 元组，主题令牌是 2 元组，二者不能互相冒充。
 - **权限**：页面只能订阅服务端为它渲染过的主题，权限在渲染时决定。令牌只签名不加密，主题名对页面可见。
-- **上限**：每条流最多 32 个主题。
+- **上限**：每条流最多 32 个主题（`aihtml_push:max_topics/0`）。
 
 ## 发起者去重
 
 发起修改的页面已经通过 action 响应更新过自己，推送给它会造成重复，比如 append 两次。处理方式：
 
-1. SSE 进程生成随机流 id，作为第一条事件 `CUSTOM "aihtml.stream"` 发给页面。
-2. 页面发起 action 时，在请求体里带上 `streamId`，action 的 ctx 保存它。
+1. SSE 进程生成随机流 id，作为第一条事件 `hello` 发给页面。
+2. 页面发起 action 时，在请求体里带上 `stream`，action 的 ctx 保存它。
 3. `publish(T, Fun, #{except => Ctx})` 把这个 id 随消息一起发出，SSE 进程发现与自己的 id 相同就跳过。
 
 流 id 是 16 字节随机数，只有该页面知道。
@@ -48,9 +74,14 @@
 
 ## 客户端
 
-- **自动同步订阅。** `syncStream()` 在页面加载和每次应用操作之后运行。它收集页面上的 `data-ah-subscribe`，集合变化时关闭旧流、打开新流。新内容里的订阅会自动生效，被移除内容的订阅会自动退订。
-- **推送与 action 共用处理逻辑。** 推送来的事件和 action 响应一样，都由 `onAgui` 处理。
+- **自动同步订阅，不断流。** `PushStream.sync()` 在页面加载和每次应用操作之后运行，收集页面上的 `data-ah-subscribe`。集合变化时，页面向推送端点 `POST {"stream": 流 id, "topics": [令牌...]}`，流进程（不论在哪个节点上，按流 id 通过 `pg` 找到）直接加入和退出主题，连接不断、流 id 不变。只有流已经不在（404）时才重新打开。新内容里的订阅自动生效，被移除内容的订阅自动退订。
+- **重连后以页面为准。** EventSource 自动重连时用的是最初的 URL，所以收到新的 `hello` 后，如果页面当前的主题和 URL 里的不同，再 POST 一次。
+- **推送与 action 共用处理逻辑。** 推送来的操作和 action 响应一样，都由 `Actions.receive` 应用。
 - **被拒绝时触发错误。** 服务端拒绝时 EventSource 进入 CLOSED 状态，页面在 document 上触发 `ah:error`。
+
+## 慢客户端
+
+`publish` 只管发送，不等对方读取。某个浏览器读得太慢时，它的流进程邮箱会不断增长：积压超过 1000 条时流进程主动断开，浏览器自动重连，再由 refresh action 补齐，服务端内存不会失控。
 
 ## 超时
 

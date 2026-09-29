@@ -133,11 +133,9 @@ lazy_round_trip_test() ->
                                    "data-ah-sync=\"queue\"></span>">>,
                               [{capture, all_but_first, binary}]),
     {ok, Ref} = aihtml_action:verify(Token),
-    Self = self(),
     Event = #{<<"type">> => <<"ah:load">>, <<"id">> => <<"x">>, <<"value">> => <<"js">>,
               <<"data">> => #{<<"cascader">> => <<"cz">>}},
-    ok = aihtml_action:execute(Ref, Event, #{emit => fun(E) -> Self ! {ev, E} end}),
-    [#{<<"value">> := [Html, Call]}] = [E || #{<<"type">> := <<"CUSTOM">>} = E <- collect()],
+    {ok, [Html, Call]} = aihtml_action:execute(Ref, Event, #{send => fun(_) -> error(unexpected_flush) end}),
     #{op := html, swap := append, id := <<"cz-menus">>, html := Cols} = Html,
     ?assertEqual(2, count(<<"class=\"ah-cascader-menu-column\"">>, Cols)),
     ?assert(has(<<"data-level=\"1\" data-parent=\"js\" hidden><ul">>, Cols)),
@@ -152,10 +150,6 @@ lazy_round_trip_test() ->
                     args => [<<"js,sz">>]}], Ops),
     _ = iolist_to_binary(json:encode([Html, Call])).
 
-collect() ->
-    receive {ev, E} -> [E | collect()]
-    after 0 -> []
-    end.
 
 %%%===================================================================
 %%% Catalog

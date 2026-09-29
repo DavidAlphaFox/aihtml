@@ -2,7 +2,7 @@
 
 用 Erlang 函数直接编写 HTML 页面。页面由"预制件"拼装而成，服务端输出完整的静态 HTML，浏览器端由 Stimulus 控制器增强，样式用 TailwindCSS。
 
-按钮的点击直接由 Erlang 函数响应，每个事件一次无状态请求，响应按 [AG-UI](https://docs.ag-ui.com) 事件流返回：
+按钮的点击直接由 Erlang 函数响应，每个事件一次无状态请求，响应是要应用的 DOM 操作：
 
 ```erlang
 button(<<"删除">>, Id, [borderless], [on(click, {?MODULE, delete, #{id => Id}})])
@@ -219,14 +219,14 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 ### action 模式
 
-参照 AG-UI：每个事件发一次 POST，响应是 SSE 事件流。服务端在请求之间不保存任何东西，状态全部在数据层。请求可以落到任意节点，负载均衡不需要粘性，服务器重启后已打开的页面照常可用。
+每个事件发一次 POST，响应是要应用的 DOM 操作。服务端在请求之间不保存任何东西，状态全部在数据层。请求可以落到任意节点，负载均衡不需要粘性，服务器重启后已打开的页面照常可用。
 
 - **绑定**：`on(Event, {Module, Action, Args})`，可加选项 `#{debounce => Ms, include => [选择器], confirm => 提问}`，以及下面"请求协调与加载指示"一节的 `sync`、`sync_scope`、`indicator`、`disable`。
 - **签名**：`{Module, Action, Args}` 用应用密钥做 HMAC 签名后写进 HTML。浏览器无法伪造 action，也改不了参数。Args 只签名不加密，页面能看到内容，所以只放 id 这类数据。
 - **执行**：`Module:action(Action, Args, Event, Ctx)` 在请求进程中运行。只有声明了 `-behaviour(aihtml_action)` 的模块才能被调用。
 - **Event**：包含元素 `id`、`value`、`checked`、`key`、所在表单的全部字段 `form`、`include` 指定的其它控件值 `values`、`data-*` 属性 `data`。
 - **页面操作**：`aihtml_action:html/3,4`、`remove/2`、`attr/4`、`add_class/3`、`remove_class/3`、`set_value/3`、`focus/2`、`title/2`、`redirect/2`、`js/2`、`call/4`、`trigger/4`、`push_url/2`、`replace_url/2`。操作先缓冲，action 返回时一起发送。`flush/1` 可以提前发送，用来先显示加载状态、再显示数据。
-- **事件流**：依次是 `RUN_STARTED`、若干 `CUSTOM "aihtml.ui"`（值为 DOM 操作列表）、`RUN_FINISHED`。action 崩溃时以 `RUN_ERROR` 结束，只记日志，不向浏览器泄露细节。
+- **响应**：一般是 `application/json` 的 `{"ops": [操作...]}`。调用过 `flush/1` 的 action 回 `application/x-ndjson`，每次 flush 一行 `{"ops": [...]}`，最后一行 `{"done": true}`。出错用 HTTP 状态和 `{"error": 错误码}`：403 `invalid_action`、400 `bad_request`、500 `action_failed`（action 崩溃，只记日志，不向浏览器泄露细节）；浏览器在元素上触发 `ah:error`，detail 为 `{status, error}`。格式见 `designs/02-actions.md`，它不是 AG-UI 事件流，和 AG-UI 的关系也在那里。
 - **并发**：同一元素的 click、submit 在请求进行中会忽略重复触发。input、change 等事件以最新一次为准，旧请求会被取消。
 - **授权**：认证与授权在 action 里做，请求可以从 `aihtml_action:meta(Ctx)` 取得，cowboy 下是 `#{req => Req}`。
 
@@ -268,7 +268,9 @@ aihtml_push:publish(todos, fun(C) ->
 end, #{except => Ctx})     %% 跳过发起者，它已经通过 action 响应更新过了
 ```
 
-- **一条流**：每个页面只开一个 EventSource，访问 `GET /aihtml/events?t=...`，带上页面上所有主题的签名令牌。页面内容变化导致订阅集合改变时，自动重开。
+- **推数据**：推送能做 action 能做的所有操作。`aihtml_push:call(Topic, Target, Method, Args)` 调用组件方法（比如给图表 `setData`），`aihtml_push:trigger(Topic, Target, Event, Detail)` 触发带数据的 DOM 事件；两者都有带 `#{except => Ctx}` 的 5 参数版本。
+- **一条流**：每个页面只开一个 EventSource，访问 `GET /aihtml/events?t=...`，带上页面上所有主题的签名令牌。流是 SSE 的具名事件：先是 `hello`（流 id），之后每次推送一个 `ops`（操作列表）。页面内容变化导致订阅集合改变时，页面把新的主题集合 POST 给同一路径，流进程直接加入和退出主题，不断开连接。
+- **慢客户端**：读得太慢、积压超过 1000 条的流会被服务端断开，浏览器重连后由 `refresh` 补齐。
 - **跨节点分发**：连接进程加入 OTP `pg` 进程组，只负责转发，不保存业务状态。`pg` 覆盖所有已连接的节点，任意节点发布，全集群的订阅者都会收到。
 - **至多一次送达**：断线期间的推送会丢失。EventSource 会自动重连，重连后运行订阅上的 `refresh` action，从数据层补齐。
 - **主题**可以是任意纯数据，比如 `todos`、`{room, 42}`。主题同样签名，页面只能订阅服务端为它渲染的主题，所以按用户决定渲染哪些主题即可实现权限控制。主题名对页面可见。
@@ -537,12 +539,13 @@ $list.append(AH.tpl.my_badge({ color: "primary", label: name, count: n }));
 核心库不依赖 cowboy。其它服务器需要实现两个端点：
 - **action 端点（POST）**
   1. 用 `aihtml_action:verify/1` 校验请求体里的 `action`。
-  2. 用 `aihtml_action:execute/3` 执行，`emit` 函数把每个事件写成一行 `data: JSON` 的 SSE。
+  2. 用 `aihtml_action:execute/3` 执行：它返回 `{ok, Ops}` 或 `error`；`send` 回调收到 `flush/1` 提前发出的操作。没有 flush 就回一个 JSON `{"ops": Ops}`，有 flush 就改为 NDJSON 流（格式见 `designs/02-actions.md`）。
 - **推送端点（GET，长连接）**
   1. 用 `aihtml_push:verify/1` 校验令牌。
   2. 用 `aihtml_push:join/1` 加入主题。
-  3. 第一条事件发送 `aihtml.stream` 流 id。
-  4. 之后把收到的 `{aihtml_push, Except, Json}` 写出，但 `Except` 等于自己的流 id 时跳过。
+  3. 用 `aihtml_push:register_stream/1` 登记流 id，第一条事件是 `event: hello`，数据 `{"id": 流 id}`。
+  4. 之后把收到的 `{aihtml_push, Except, Json}` 写成 `event: ops`，但 `Except` 等于自己的流 id 时跳过；收到 `{aihtml_push_topics, Topics}` 时加入和退出主题。
+  5. 同一路径接受 `POST {"stream", "topics"}`，用 `aihtml_push:set_topics/2` 转给流进程。
 
 **静态资源**：不用 `aihtml_cowboy` 时，把 aihtml 的 `priv/static` 挂到 `/aihtml/`，cowboy 写法如下：
 

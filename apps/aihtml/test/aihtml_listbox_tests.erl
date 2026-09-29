@@ -22,10 +22,6 @@ has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 
 count(Needle, Hay) -> length(binary:matches(Hay, Needle)).
 
-collect() ->
-    receive {ev, E} -> [E | collect()]
-    after 0 -> []
-    end.
 
 %%%===================================================================
 %%% listbox
@@ -95,11 +91,9 @@ listbox_search_round_trip_test() ->
     {match, [Token]} = re:run(H, <<"data-ah-on=\"input:([^:\"]+):250\"">>,
                               [{capture, all_but_first, binary}]),
     {ok, Ref} = aihtml_action:verify(Token),
-    Self = self(),
     Event = #{<<"type">> => <<"input">>, <<"id">> => <<"ls-filter">>, <<"value">> => <<"ap">>,
               <<"data">> => #{<<"listbox">> => <<"ls">>, <<"checkboxes">> => <<"true">>}},
-    ok = aihtml_action:execute(Ref, Event, #{emit => fun(E) -> Self ! {ev, E} end}),
-    [#{<<"value">> := [Html, Call]}] = [E || #{<<"type">> := <<"CUSTOM">>} = E <- collect()],
+    {ok, [Html, Call]} = aihtml_action:execute(Ref, Event, #{send => fun(_) -> error(unexpected_flush) end}),
     #{op := html, swap := morph_inner, id := <<"ls-list">>, html := Rows} = Html,
     ?assertEqual(extract_list(r(?M:listbox([<<"Apple">>, <<"Grape">>], undefined, [checkboxes],
                                            [{id, <<"ls">>}]))), Rows),
