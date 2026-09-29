@@ -83,15 +83,12 @@ function packageOf(id) {
   return m ? [m[1], m[2]] : null;
 }
 
-// Chunk names: vendor-<package> for a library AH.vendor imports (its
-// facade module is a package's entry, or assets/vendor/<name>.entry.js),
-// else Vite's default.
+// Chunk names: vendor-<package> for a library imported dynamically (its
+// facade module is a package's entry), else Vite's default.
 function chunkFileNames(chunk) {
   const id = chunk.facadeModuleId || "";
   const pkg = packageOf(id);
-  const entry = /\/assets\/vendor\/([a-z0-9_-]+)\.entry\.js$/.exec(id);
   if (pkg) { return `vendor-${pkg[1].replace(/^@/, "").replace("/", "-")}-[hash].js`; }
-  if (entry) { return `vendor-${entry[1]}-[hash].js`; }
   return "[name]-[hash].js";
 }
 

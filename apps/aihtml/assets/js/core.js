@@ -1572,14 +1572,13 @@ const AH = (function () {
   // once per page and resolves with it; a list resolves with the list of
   // libraries, in the same order. Each library is its own chunk of the
   // bundle (vite.config.mjs), fetched by a dynamic import() the first time
-  // it is asked for: a page without charts, exports or the Markdown editor
-  // downloads none of them. Their licences are in js/THIRD-PARTY-LICENSES.txt.
+  // it is asked for: a page without charts or exports downloads
+  // none of them. Their licences are in js/THIRD-PARTY-LICENSES.txt.
   //
   //   echarts          the echarts namespace (init, graphic, ...)
   //   xlsx             the SheetJS namespace (utils, write, writeFile, ...)
   //   jspdf            the jsPDF namespace ({jsPDF, ...})
   //   jspdf-autotable  the autoTable(doc, options) function
-  //   prosemirror      ProseMirror + markdown-it (assets/vendor/prosemirror.entry.js)
   //
   // A namespace resolves as a plain object copy of the module namespace
   // (which is frozen), so that, as with the globals of the old script
@@ -1592,13 +1591,6 @@ const AH = (function () {
     jspdf: function () { return import("jspdf").then(plain); },
     "jspdf-autotable": function () {
       return import("jspdf-autotable").then(function (m) { return m.autoTable; });
-    },
-    prosemirror: function () {
-      return import("../vendor/prosemirror.entry.js").then(function (m) {
-        // also the global of the old script bundle, still read by page
-        // scripts (and tests) written against it
-        return (window.AHProseMirror = plain(m));
-      });
     }
   };
   var vendorLoads = {};

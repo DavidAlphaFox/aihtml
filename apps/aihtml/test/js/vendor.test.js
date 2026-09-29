@@ -10,7 +10,7 @@ function vendorChunks() {
 // no component has asked for a library yet.
 AHTest.test("vendor: component chunks load no library by themselves", async function () {
   AHTest.eq(vendorChunks(), []);
-  AHTest.ok(!window.echarts && !window.XLSX && !window.jspdf && !window.AHProseMirror, "no globals");
+  AHTest.ok(!window.echarts && !window.XLSX && !window.jspdf, "no globals");
 });
 
 AHTest.test("vendor loads a library once, as its own chunk, and resolves with it", async function () {
@@ -38,16 +38,6 @@ AHTest.test("vendor loads a list and resolves with the libraries in order", asyn
   AHTest.ok(libs[0].write(wb, { bookType: "xlsx", type: "array" }).byteLength > 0, "xlsx written");
   // jspdf's optional html() helpers (html2canvas, canvg, dompurify) stay unloaded
   AHTest.eq(vendorChunks().filter(function (n) { return /^vendor-(html2canvas|canvg|dompurify)-/.test(n); }), []);
-});
-
-AHTest.test("vendor loads ProseMirror and markdown-it (markdown_editor)", async function () {
-  var P = await AH.vendor("prosemirror");
-  AHTest.ok(P && typeof P.view.EditorView === "function", "EditorView");
-  AHTest.ok(typeof P.state.EditorState.create === "function", "EditorState");
-  AHTest.ok(typeof P.markdown.MarkdownParser === "function", "MarkdownParser");
-  AHTest.ok(typeof P.tables.tableEditing === "function", "tableEditing");
-  AHTest.eq(P.markdownit().render("**x**").trim(), "<p><strong>x</strong></p>");
-  AHTest.eq(window.AHProseMirror === P, true, "the old global, kept for page scripts");
 });
 
 AHTest.test("vendor rejects an unknown library", async function () {

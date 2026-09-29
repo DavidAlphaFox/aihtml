@@ -5,10 +5,9 @@
 %%%
 %%%   markdown_editor(Value, Css, Attrs)      Value is the Markdown text
 %%%
-%%% The editor is ProseMirror with markdown-it, a chunk of the bundle
-%%% (assets/vendor/prosemirror.entry.js) that the `markdown-editor'
-%%% behaviour (assets/js/components/markdown_editor.js) imports on demand
-%%% through AH.vendor("prosemirror"). Typing Markdown formats in place
+%%% The editor is ProseMirror with markdown-it, imported by the
+%%% `markdown-editor' behaviour (assets/js/components/markdown_editor.js)
+%%% and so part of its lazily loaded chunk. Typing Markdown formats in place
 %%% (`# ' a heading, `**bold**', `- ' a list, `> ' a quote, ``` a code
 %%% block, `[text](url)' a link ...); `/' on an empty line opens the block
 %%% menu; the handle left of a block adds a block or drags it elsewhere.
@@ -24,7 +23,8 @@
 %%% in a <textarea> inside the root, which is what the page shows until
 %%% the editor has loaded (and all it shows without JavaScript): the
 %%% plain Markdown, editable, with the component's `name', so a form
-%%% submits the Markdown either way. Once the editor is up the textarea is
+%%% submits the Markdown either way. The editor starts from what the
+%%% textarea holds (text typed before it loaded is kept); then the textarea is
 %%% hidden and kept in sync with the document.
 %%%
 %%% markdown_editor/3 builds an #ah_markdown_editor{}
@@ -363,4 +363,4 @@ catalog() ->
             #{name => stats, args => <<"()">>,
               doc => <<"Return {chars, words, paragraphs}.">>},
             #{name => view, args => <<"()">>,
-              doc => <<"The ProseMirror EditorView (browser side), once loaded.">>}]}].
+              doc => <<"The ProseMirror EditorView (browser side).">>}]}].

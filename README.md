@@ -38,7 +38,7 @@ login() ->
 | `apps/aihtml/src` | 核心模块（`aihtml`、`aihtml_html`、`aihtml_action`……），每个组件一个模块 `aihtml_<组件名>`，以及组件共用的 `aihtml_lib_*` |
 | `apps/aihtml/include` | `aihtml.hrl`（导入全部构建函数和 record）、每个组件一个 record 头文件 `aihtml_<组件名>.hrl`、自定义组件用的 `aihtml_element.hrl` |
 | `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
-| `apps/aihtml/priv/static` | 预构建产物（只派发这些）：`aihtml.css`、`js/`（Vite 打包的运行时：入口 + 每个组件一个代码块 + `manifest.json`），echarts、xlsx、jspdf、ProseMirror 也是按需加载的代码块（见「第三方库」）；`vendor/` 只放给页面脚本用的 jQuery |
+| `apps/aihtml/priv/static` | 预构建产物（只派发这些）：`aihtml.css`、`js/`（Vite 打包的运行时：入口 + 每个组件一个代码块 + `manifest.json`），echarts、xlsx、jspdf 是按需加载的代码块，ProseMirror 在 markdown_editor 的代码块里（见「第三方库」）；`vendor/` 只放给页面脚本用的 jQuery |
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
 | `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
 | `apps/aihtml/assets/js` | 浏览器端源码（不派发）：入口 `main.js`、运行时 `core.js`、各组件行为 `components/<组件名>.js`（ES 模块，共用部分在 `_lib_*.js`），由 Vite（`vite.config.mjs`）打包到 `priv/static/js` |
@@ -452,16 +452,16 @@ h.stop();
 | echarts | chart、各类图表、relation_graph | `vendor-echarts`，1.1 MB / 360 KB | Apache-2.0 |
 | xlsx（SheetJS） | datagrid、pivotgrid 导出 Excel | `vendor-xlsx`，415 KB / 135 KB | Apache-2.0 |
 | jspdf、jspdf-autotable | datagrid 导出 PDF | `vendor-jspdf` 392 KB / 125 KB，`vendor-jspdf-autotable` 29 KB / 9 KB | MIT |
-| ProseMirror、markdown-it | markdown_editor（入口 `assets/vendor/prosemirror.entry.js`） | `vendor-prosemirror`，376 KB / 128 KB | MIT |
+| ProseMirror、markdown-it | markdown_editor | 由 `markdown_editor.js` 直接 import，和组件代码同在 `markdown_editor` 代码块，共 390 KB / 131 KB | MIT |
 
 - **位置**：代码块和运行时的其他代码块一起在 `priv/static/js`（文件名带内容哈希），版本见 `package.json`。纯 Erlang 的使用方不需要运行 npm，也不需要额外配置路径。jsPDF 自己还会按需引入 html2canvas、canvg、dompurify（`vendor-html2canvas` 等），只在调用它的 `html()` 时才加载，表格导出用不到。
 - **许可证**：代码块里不保留许可证注释；每次构建由 `vite.config.mjs` 生成 `priv/static/js/THIRD-PARTY-LICENSES.txt`，列出打包进去的每个 npm 包（名称、版本、许可证、所在代码块、许可证全文和 NOTICE），包括入口里的 Stimulus。
-- **按需加载**：组件在第一次需要时用动态 `import()` 加载库：图表在挂载时加载 echarts，导出在点击时加载 xlsx 或 jspdf，Markdown 编辑器在挂载时加载 ProseMirror。没用到这些组件的页面不会下载它们。页面脚本用 `AH.vendor(name)` 取得同一份库，返回 Promise，每个页面只加载一次；传列表时按顺序返回列表：
+- **按需加载**：组件在第一次需要时用动态 `import()` 加载库：图表在挂载时加载 echarts，导出在点击时加载 xlsx 或 jspdf。ProseMirror 只有 markdown_editor 用，由它直接 `import`，页面上出现编辑器时随组件的代码块一起下载。没用到这些组件的页面不会下载它们。页面脚本用 `AH.vendor(name)` 取得同一份库，返回 Promise，每个页面只加载一次；传列表时按顺序返回列表：
   ```js
   AH.vendor("echarts").then(function (echarts) { ... });
   AH.vendor(["jspdf", "jspdf-autotable"]).then(function (libs) { ... });   // [{jsPDF, ...}, autoTable]
   ```
-  可用的名字：`echarts`、`xlsx`、`jspdf`、`jspdf-autotable`（解析为 `autoTable(doc, options)` 函数）、`prosemirror`（`{model, state, view, ..., markdownit}`，同时设置旧的全局变量 `window.AHProseMirror`）。库不再作为全局变量出现（`window.echarts` 等），页面上自己引入的同名全局变量也不会被使用。
+  可用的名字：`echarts`、`xlsx`、`jspdf`、`jspdf-autotable`（解析为 `autoTable(doc, options)` 函数）。库不再作为全局变量出现（`window.echarts` 等），页面上自己引入的同名全局变量也不会被使用。
 - **jQuery**：运行时不用 jQuery。`npm run vendor` 只把 `jquery.min.js` 和它的许可证复制到 `priv/static/vendor`，供 `aihtml_page` 的 `jquery` 选项使用。
 - **PDF 中的中文**：jsPDF 的默认字体不含中文，导出的 PDF 里中文显示不出来，和 sigil 相同。
 

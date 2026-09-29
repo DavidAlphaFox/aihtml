@@ -20,7 +20,6 @@ vite.config.mjs           构建配置，含两个插件：
                           - virtual:ah-tpl/<name>  把 templates/<name>.mustache 编译成模块
                           - virtual:ah-registry    行为名、页面函数、触发选择器 → 代码块
                           - 第三方库代码块命名 vendor-<库>，生成 THIRD-PARTY-LICENSES.txt
-apps/aihtml/assets/vendor/prosemirror.entry.js   ProseMirror + markdown-it 的入口
 apps/aihtml/priv/static/js/
   main-<hash>.js, <chunk>-<hash>.js, vendor-<库>-<hash>.js, .vite/manifest.json,
   THIRD-PARTY-LICENSES.txt
@@ -46,7 +45,7 @@ apps/aihtml/priv/static/js/
 | 服务端调用页面函数 | `call(Ctx, global, toast, ...)` | 文件里的 `AH.fn("<name>", ...)` |
 | 页面上出现某个属性 | `[data-ah-tooltip]`、`[data-ah-open]`、`[data-ah-validate]` | 文件头的注释 `// ah-load: <选择器>` |
 
-运行时在启动时、以及每次 DOM 变化后检查这些条件，加载缺的代码块，再注册控制器。共用代码 `_lib_*.js` 由组件 `import`，打包工具会自动拆出共享代码块。第三方库（echarts、xlsx、jspdf、jspdf-autotable、ProseMirror）是组件动态 `import()` 的代码块，文件名 `vendor-<库>-<hash>.js`，用到时才下载；`AH.vendor(name)` 给页面脚本取得同一份库。
+运行时在启动时、以及每次 DOM 变化后检查这些条件，加载缺的代码块，再注册控制器。共用代码 `_lib_*.js` 由组件 `import`，打包工具会自动拆出共享代码块。第三方库由组件直接 import：echarts、xlsx、jspdf、jspdf-autotable 用动态 `import()`，各成一个代码块 `vendor-<库>-<hash>.js`，用到时才下载，`AH.vendor(name)` 给页面脚本取得同一份库；ProseMirror 和 markdown-it 只有 markdown_editor 用、挂载就要用，所以静态 import，打进 markdown_editor 的代码块（少一次请求，也不需要单独的入口文件和全局变量）。
 
 ## 迁移步骤
 
@@ -72,5 +71,5 @@ apps/aihtml/priv/static/js/
    - 图表：画布旁输出视觉隐藏的数据表，容器角色 `figure`。
    - 导航的真实链接：pagination、datagrid、datatable、calendar、scheduler 的 `href` 选项（URL 模板）；配合 `on(change, ...)` 时页面内处理并推入 URL。
    - datagrid 远程模式首页总在服务端渲染，挂载时不再请求。
-   - 第三方库从 `priv/static/vendor` 的预构建文件改为 Vite 代码块（动态 `import()`），构建时生成许可证清单。
+   - 第三方库从 `priv/static/vendor` 的预构建文件改为 Vite 代码块（动态 `import()`），构建时生成许可证清单。之后 ProseMirror 去掉了单独的入口 `prosemirror.entry.js`、`AH.vendor("prosemirror")` 和全局变量 `window.AHProseMirror`，改由 markdown_editor 按需静态 import。
    - **验收**：460 个演示比对，变化只在图表（数据表、角色）和带 `href` 的导航演示；1423 个 EUnit、445 个浏览器测试通过；演示站 112 个组件页无脚本错误。

@@ -30,7 +30,7 @@
 
 所有组件都按 [05-records.md](05-records.md) 的 record 方式实现。重型组件另有两条约定：
 - **数据留在服务端**：大数据量组件支持本地和远程两种模式，远程模式下每次视图变化发一个 action，由服务端渲染新的一页（见 README「组件」一节）。
-- **第三方库按需加载**：echarts、xlsx、jspdf 放在 `priv/static/vendor`，组件用 `AH.vendor(name)` 在需要时加载，不打包进 `aihtml.js`。
+- **第三方库按需加载**：组件用 ES `import` 引入第三方库，不进入口。只有一个组件用、且挂载就要用的库（markdown_editor 的 ProseMirror）直接静态 import，和组件同一个代码块；用得晚或几个组件共用的库（图表的 echarts，导出时的 xlsx、jspdf）用动态 `import()`，成为单独的 `vendor-<库>` 代码块。见 [06-bundling.md](06-bundling.md)。
 
 **暂不移植**：
 - drawn：2.5 万行的手绘风白板引擎（含流程图、思维导图、插件体系），以后单独评估。

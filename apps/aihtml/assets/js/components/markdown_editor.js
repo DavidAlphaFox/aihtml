@@ -4,11 +4,11 @@
  * keys, task list, clipboard, placeholder, slash menu, block handle, drag,
  * stats footer).
  *
- * ProseMirror and markdown-it are a chunk of their own
- * (assets/vendor/prosemirror.entry.js), loaded on demand with
- * AH.vendor("prosemirror"). Until it has loaded the root shows
- * the server's <textarea> with the Markdown source, which then stays in the
- * DOM, hidden, as the form field.
+ * ProseMirror and markdown-it are imported here, so they are part of this
+ * component's lazily loaded chunk: a page without a markdown editor never
+ * downloads them. Until the chunk has loaded the root shows the server's
+ * <textarea> with the Markdown source; the editor starts from what it
+ * holds, and it then stays in the DOM, hidden, as the form field.
  *
  * The server renders every piece of UI besides ProseMirror's own document:
  * the slash menu, the block handle, the drag indicator and the stats footer
@@ -24,6 +24,26 @@
  * editor has no focus (a drag, a task checkbox, exec from the server).
  * setValue changes the value silently. */
 import AH from "../core.js";
+import { Schema, Slice, DOMSerializer } from "prosemirror-model";
+import { EditorState, Plugin, Selection, TextSelection } from "prosemirror-state";
+import { EditorView, Decoration, DecorationSet } from "prosemirror-view";
+import { findWrapping } from "prosemirror-transform";
+import {
+  baseKeymap, chainCommands, createParagraphNear, deleteSelection, exitCode, joinBackward,
+  joinForward, liftEmptyBlock, newlineInCode, selectNodeBackward, selectNodeForward,
+  setBlockType, splitBlock, toggleMark, wrapIn
+} from "prosemirror-commands";
+import { keymap } from "prosemirror-keymap";
+import { history, undo, redo } from "prosemirror-history";
+import {
+  InputRule, inputRules, textblockTypeInputRule, undoInputRule, wrappingInputRule
+} from "prosemirror-inputrules";
+import { wrapInList, liftListItem, sinkListItem, splitListItem } from "prosemirror-schema-list";
+import { dropCursor } from "prosemirror-dropcursor";
+import { gapCursor } from "prosemirror-gapcursor";
+import { addRowAfter, goToNextCell, isInTable, tableEditing } from "prosemirror-tables";
+import { MarkdownParser, MarkdownSerializer, defaultMarkdownSerializer } from "prosemirror-markdown";
+import markdownit from "markdown-it";
 
 var uid = 0;
 var KIT = null;          // schema, parser, serializer: one per page
@@ -40,8 +60,7 @@ function swallow(e) { e.stopPropagation(); }
 // prose_editor/markdown.cljs), limited to what Markdown can express
 // ==================================================================
 
-function buildKit(P) {
-  var S = P.model;
+function buildKit() {
   var nodes = {
     doc: { content: "block+" },
     paragraph: { content: "inline*", group: "block",
@@ -157,15 +176,14 @@ function buildKit(P) {
                                 } }],
                      toDOM: function () { return ["s", 0]; } }
   };
-  var schema = new S.Schema({ nodes: nodes, marks: marks });
+  var schema = new Schema({ nodes: nodes, marks: marks });
 
   // markdown-it, GFM tables and strikethrough, no raw HTML, plus sigil's
   // rule turning "- [ ] x" lists into task lists.
-  var md = P.markdownit("default", { html: false });
+  var md = markdownit("default", { html: false });
   md.core.ruler.push("task_lists", taskListRule);
 
-  var M = P.markdown;
-  var parser = new M.MarkdownParser(schema, md, {
+  var parser = new MarkdownParser(schema, md, {
     blockquote: { block: "blockquote" },
     paragraph: { block: "paragraph" },
     list_item: { block: "list_item" },
@@ -217,8 +235,8 @@ function buildKit(P) {
     return false;
   }
 
-  var dm = M.defaultMarkdownSerializer;
-  var serializer = new M.MarkdownSerializer({
+  var dm = defaultMarkdownSerializer;
+  var serializer = new MarkdownSerializer({
     doc: function (s, n) { s.renderContent(n); },
     paragraph: function (s, n) { s.renderInline(n); s.closeBlock(n); },
     blockquote: function (s, n) { s.wrapBlock("> ", null, n, function () { s.renderContent(n); }); },
@@ -289,7 +307,7 @@ function buildKit(P) {
   }
 
   return {
-    P: P, schema: schema, parser: parser, serializer: serializer,
+    schema: schema, parser: parser, serializer: serializer,
     parse: function (text) {
       var doc = text ? parser.parse(text) : null;
       return doc && doc.childCount ? doc
@@ -354,7 +372,6 @@ function mark(K, n) { return K.schema.marks[n]; }
 
 // Arrow keys leave a code block at its first / last line.
 function codeExit(K, dir) {
-  var P = K.P, Selection = P.state.Selection;
   return function (state, dispatch, view) {
     var sel = state.selection, $head = sel.$head;
     if (!sel.empty || !$head.parent.type.spec.code || !view ||
@@ -367,7 +384,7 @@ function codeExit(K, dir) {
       }
       return true;
     }
-    if (dir > 0) { return P.commands.exitCode(state, dispatch); }
+    if (dir > 0) { return exitCode(state, dispatch); }
     if (dispatch) {
       var tr = state.tr.insert(pos, node(K, "paragraph").createAndFill());
       dispatch(tr.setSelection(Selection.near(tr.doc.resolve(pos), 1)).scrollIntoView());
@@ -393,29 +410,28 @@ function moveBlockKey(dir) {
       if (dir < 0) {
         var to = from - other.nodeSize;
         tr.delete(from, from + block.nodeSize).insert(to, block);
-        tr.setSelection(state.selection instanceof K0.TextSelection
-          ? K0.TextSelection.create(tr.doc, to + offset) : K0.Selection.near(tr.doc.resolve(to + 1)));
+        tr.setSelection(state.selection instanceof TextSelection
+          ? TextSelection.create(tr.doc, to + offset) : Selection.near(tr.doc.resolve(to + 1)));
       } else {
         var dest = from + other.nodeSize;
         tr.delete(from, from + block.nodeSize).insert(dest, block);
-        tr.setSelection(state.selection instanceof K0.TextSelection
-          ? K0.TextSelection.create(tr.doc, dest + offset) : K0.Selection.near(tr.doc.resolve(dest + 1)));
+        tr.setSelection(state.selection instanceof TextSelection
+          ? TextSelection.create(tr.doc, dest + offset) : Selection.near(tr.doc.resolve(dest + 1)));
       }
       dispatch(tr.scrollIntoView());
     }
     return true;
   };
 }
-var K0 = null;                 // prosemirror-state, for moveBlockKey
 
 function linkPrompt(K, labels) {
   return function (state, dispatch, view) {
     var type = mark(K, "link");
     if (state.selection.empty && !markActive(state, type)) { return false; }
-    if (markActive(state, type)) { return K.P.commands.toggleMark(type)(state, dispatch, view); }
+    if (markActive(state, type)) { return toggleMark(type)(state, dispatch, view); }
     var href = window.prompt(labels.enter_url || "Enter URL:");
     if (!href) { return true; }
-    return K.P.commands.toggleMark(type, { href: href })(state, dispatch, view);
+    return toggleMark(type, { href: href })(state, dispatch, view);
   };
 }
 
@@ -426,7 +442,6 @@ function markActive(state, type) {
 }
 
 function coreKeymap(K, labels) {
-  var C = K.P.commands, H = K.P.history, IR = K.P.inputrules;
   var hardBreak = function (state, dispatch) {
     if (state.selection.$from.parent.type.spec.code) { return false; }
     if (dispatch) {
@@ -435,18 +450,18 @@ function coreKeymap(K, labels) {
     return true;
   };
   return {
-    "Backspace": C.chainCommands(IR.undoInputRule, C.deleteSelection, C.joinBackward,
-                                 C.selectNodeBackward),
-    "Mod-z": H.undo, "Mod-y": H.redo, "Mod-Shift-z": H.redo,
-    "Mod-b": C.toggleMark(mark(K, "strong")),
-    "Mod-i": C.toggleMark(mark(K, "em")),
-    "Mod-`": C.toggleMark(mark(K, "code")),
-    "Mod-Shift-x": C.toggleMark(mark(K, "strikethrough")),
+    "Backspace": chainCommands(undoInputRule, deleteSelection, joinBackward,
+                                 selectNodeBackward),
+    "Mod-z": undo, "Mod-y": redo, "Mod-Shift-z": redo,
+    "Mod-b": toggleMark(mark(K, "strong")),
+    "Mod-i": toggleMark(mark(K, "em")),
+    "Mod-`": toggleMark(mark(K, "code")),
+    "Mod-Shift-x": toggleMark(mark(K, "strikethrough")),
     "Mod-k": linkPrompt(K, labels),
     "Shift-Enter": hardBreak,
-    "Enter": C.chainCommands(C.newlineInCode, C.createParagraphNear, C.liftEmptyBlock,
-                             C.splitBlock),
-    "Delete": C.chainCommands(C.deleteSelection, C.joinForward, C.selectNodeForward),
+    "Enter": chainCommands(newlineInCode, createParagraphNear, liftEmptyBlock,
+                             splitBlock),
+    "Delete": chainCommands(deleteSelection, joinForward, selectNodeForward),
     "ArrowDown": codeExit(K, 1),
     "ArrowUp": codeExit(K, -1),
     "Alt-ArrowUp": moveBlockKey(-1),
@@ -458,7 +473,6 @@ function coreKeymap(K, labels) {
 var LIST_TYPES = { bullet_list: 1, ordered_list: 1, task_list: 1 };
 
 function listPlugins(K) {
-  var P = K.P, SL = P.schemaList, C = P.commands, Selection = P.state.Selection;
   var li = node(K, "list_item"), ti = node(K, "task_item");
   function emptyItem(state) {
     var sel = state.selection, $f = sel.$from;
@@ -470,10 +484,10 @@ function listPlugins(K) {
     return sel.empty && $f.parentOffset === 0 && $f.depth >= 2 && $f.index($f.depth - 1) === 0;
   }
   function liftEmpty(type) {
-    return function (state, dispatch) { return emptyItem(state) && SL.liftListItem(type)(state, dispatch); };
+    return function (state, dispatch) { return emptyItem(state) && liftListItem(type)(state, dispatch); };
   }
   function liftAtStart(type) {
-    return function (state, dispatch) { return atItemStart(state) && SL.liftListItem(type)(state, dispatch); };
+    return function (state, dispatch) { return atItemStart(state) && liftListItem(type)(state, dispatch); };
   }
   function unwrapSingle(state, dispatch) {
     var sel = state.selection, $f = sel.$from, d = $f.depth;
@@ -508,7 +522,7 @@ function listPlugins(K) {
     return true;
   }
   return [
-    new P.state.Plugin({ props: { handleKeyDown: function (view, e) {
+    new Plugin({ props: { handleKeyDown: function (view, e) {
       if (e.key === "Backspace" && !e.shiftKey && !e.ctrlKey && !e.metaKey && !e.altKey &&
           deleteParaAfterList(view.state, view.dispatch)) {
         e.preventDefault();
@@ -516,12 +530,12 @@ function listPlugins(K) {
       }
       return false;
     } } }),
-    P.keymap.keymap({
-      "Enter": C.chainCommands(liftEmpty(ti), liftEmpty(li), unwrapSingle,
-                               SL.splitListItem(li), SL.splitListItem(ti)),
-      "Tab": C.chainCommands(SL.sinkListItem(li), SL.sinkListItem(ti)),
-      "Shift-Tab": C.chainCommands(SL.liftListItem(li), SL.liftListItem(ti)),
-      "Backspace": C.chainCommands(liftEmpty(li), liftEmpty(ti), liftAtStart(li),
+    keymap({
+      "Enter": chainCommands(liftEmpty(ti), liftEmpty(li), unwrapSingle,
+                               splitListItem(li), splitListItem(ti)),
+      "Tab": chainCommands(sinkListItem(li), sinkListItem(ti)),
+      "Shift-Tab": chainCommands(liftListItem(li), liftListItem(ti)),
+      "Backspace": chainCommands(liftEmpty(li), liftEmpty(ti), liftAtStart(li),
                                    liftAtStart(ti), unwrapSingle)
     })
   ];
@@ -530,39 +544,36 @@ function listPlugins(K) {
 // plugins/table_keys.cljs: Tab / Shift-Tab between cells (Tab in the
 // last cell adds a row), Enter a line break inside a cell.
 function tablePlugins(K) {
-  var T = K.P.tables;
   function nextCell(dir) {
     return function (state, dispatch, view) {
-      if (!T.isInTable(state)) { return false; }
-      if (T.goToNextCell(dir)(state, dispatch)) { return true; }
+      if (!isInTable(state)) { return false; }
+      if (goToNextCell(dir)(state, dispatch)) { return true; }
       if (dir < 0 || !dispatch || !view) { return dir > 0; }
-      T.addRowAfter(state, dispatch);
-      T.goToNextCell(1)(view.state, view.dispatch);
+      addRowAfter(state, dispatch);
+      goToNextCell(1)(view.state, view.dispatch);
       return true;
     };
   }
   return [
-    K.P.keymap.keymap({
+    keymap({
       "Tab": nextCell(1),
       "Shift-Tab": nextCell(-1),
       "Enter": function (state, dispatch) {
-        if (!T.isInTable(state)) { return false; }
+        if (!isInTable(state)) { return false; }
         if (dispatch) { dispatch(state.tr.replaceSelectionWith(node(K, "hard_break").create())); }
         return true;
       }
     }),
-    T.tableEditing()
+    tableEditing()
   ];
 }
 
 // plugins/input_rules.cljs (without the maths rules), with a link rule
 // and marks that keep the marks around them.
 function inputRulesPlugin(K) {
-  var IR = K.P.inputrules, T = K.P.transform;
-  var TextSelection = K.P.state.TextSelection;
   function markRule(re, type) {
     // re: group 1 the whole marked text with its delimiters, group 2 the text
-    return new IR.InputRule(re, function (state, m, start, end) {
+    return new InputRule(re, function (state, m, start, end) {
       var text = m[2];
       if (!text) { return null; }
       var from = start + m[0].length - m[1].length;
@@ -574,31 +585,31 @@ function inputRulesPlugin(K) {
     });
   }
   function taskRule(re, checked) {
-    return new IR.InputRule(re, function (state, m, start, end) {
+    return new InputRule(re, function (state, m, start, end) {
       var tr = state.tr.delete(start, end);
       var range = tr.doc.resolve(start).blockRange();
-      var wrap = range && T.findWrapping(range, node(K, "task_list"));
+      var wrap = range && findWrapping(range, node(K, "task_list"));
       if (!wrap) { return null; }
       wrap[wrap.length - 1] = { type: node(K, "task_item"), attrs: { checked: checked } };
       return tr.wrap(range, wrap);
     });
   }
   function replaceText(re, text, keep) {
-    return new IR.InputRule(re, function (state, m, start, end) {
+    return new InputRule(re, function (state, m, start, end) {
       return state.tr.insertText(text, start + (keep ? m[0].length - keep : 0), end);
     });
   }
-  return IR.inputRules({ rules: [
-    IR.textblockTypeInputRule(/^(#{1,6})\s$/, node(K, "heading"),
+  return inputRules({ rules: [
+    textblockTypeInputRule(/^(#{1,6})\s$/, node(K, "heading"),
                               function (m) { return { level: m[1].length }; }),
-    IR.wrappingInputRule(/^\s*>\s$/, node(K, "blockquote")),
-    IR.wrappingInputRule(/^\s*[-*+]\s$/, node(K, "bullet_list")),
-    IR.wrappingInputRule(/^\s*(\d+)\.\s$/, node(K, "ordered_list"),
+    wrappingInputRule(/^\s*>\s$/, node(K, "blockquote")),
+    wrappingInputRule(/^\s*[-*+]\s$/, node(K, "bullet_list")),
+    wrappingInputRule(/^\s*(\d+)\.\s$/, node(K, "ordered_list"),
                          function (m) { return { order: +m[1] }; },
                          function (m, n) { return n.childCount + n.attrs.order === +m[1]; }),
-    IR.textblockTypeInputRule(/^```(\w*)\s$/, node(K, "code_block"),
+    textblockTypeInputRule(/^```(\w*)\s$/, node(K, "code_block"),
                               function (m) { return { language: m[1] || "plaintext" }; }),
-    new IR.InputRule(/^(---|___|\*\*\*)\s$/, function (state, m, start) {
+    new InputRule(/^(---|___|\*\*\*)\s$/, function (state, m, start) {
       var $s = state.doc.resolve(start);
       if ($s.parent.type.name !== "paragraph" || $s.parentOffset !== 0) { return null; }
       var from = $s.before(), to = $s.after();
@@ -614,7 +625,7 @@ function inputRulesPlugin(K) {
     markRule(/(?:^|[^_\w])(_([^\s_](?:[^_]*[^\s_])?)_)$/, mark(K, "em")),
     markRule(/(`([^`]+)`)$/, mark(K, "code")),
     markRule(/(~~([^\s~](?:[^~]*[^\s~])?)~~)$/, mark(K, "strikethrough")),
-    new IR.InputRule(/\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)$/, function (state, m, start, end) {
+    new InputRule(/\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)$/, function (state, m, start, end) {
       var $s = state.doc.resolve(start);
       var link = mark(K, "link").create({ href: m[2], title: m[3] || "" });
       return state.tr.replaceWith(start, end, K.schema.text(m[1], link.addToSet($s.marks())));
@@ -672,7 +683,6 @@ function taskItemView(n, view, getPos) {
 var LOOKS_MD = /^(#{1,6}\s|[-*+]\s|\d+\.\s|>\s|```|---|\*\*|__|~~|\[.+\]\(.+\))/m;
 
 function clipboardPlugin(K) {
-  var Slice = K.P.model.Slice;
   function images(dt) {
     return Array.prototype.filter.call((dt && dt.files) || [], function (f) {
       return /^image\//.test(f.type);
@@ -688,7 +698,7 @@ function clipboardPlugin(K) {
       r.readAsDataURL(f);
     });
   }
-  return new K.P.state.Plugin({ props: {
+  return new Plugin({ props: {
     handlePaste: function (view, e) {
       var dt = e.clipboardData, files = images(dt);
       if (files.length) { insertImages(view, files); return true; }
@@ -714,12 +724,11 @@ function clipboardPlugin(K) {
 
 // plugins/placeholder.cljs: the text of an empty document.
 function placeholderPlugin(K, text) {
-  var V = K.P.view;
-  return new K.P.state.Plugin({ props: { decorations: function (state) {
+  return new Plugin({ props: { decorations: function (state) {
     var doc = state.doc, first = doc.firstChild;
     if (doc.childCount !== 1 || !first.isTextblock || first.type.name !== "paragraph" ||
         first.childCount) { return null; }
-    return V.DecorationSet.create(doc, [V.Decoration.widget(1, function () {
+    return DecorationSet.create(doc, [Decoration.widget(1, function () {
       var s = document.createElement("span");
       s.className = "ah-pm-placeholder";
       s.setAttribute("contenteditable", "false");
@@ -759,7 +768,7 @@ function blockFor(K, type, level) {
 // Replace the (empty or "/") top-level block at `pos' with the item's
 // block and put the cursor inside it.
 function insertBlock(st, type, level, pos) {
-  var K = st.K, view = st.view, P = K.P;
+  var K = st.K, view = st.view;
   var $pos = view.state.doc.resolve(Math.min(pos, view.state.doc.content.size));
   if ($pos.depth < 1) { return; }
   var from = $pos.before(1), to = $pos.after(1);
@@ -778,8 +787,8 @@ function insertBlock(st, type, level, pos) {
   }
   var target = type === "horizontal_rule" ? from + block.nodeSize + 1 : from + 1;
   var $t = tr.doc.resolve(target);
-  tr.setSelection($t.parent.inlineContent ? P.state.TextSelection.create(tr.doc, target)
-                  : P.state.Selection.near($t));
+  tr.setSelection($t.parent.inlineContent ? TextSelection.create(tr.doc, target)
+                  : Selection.near($t));
   view.dispatch(tr.scrollIntoView());
   view.focus();
 }
@@ -856,7 +865,7 @@ function slashPlugin(st) {
   m.show = show;
   m.hide = hide;
 
-  return new K.P.state.Plugin({
+  return new Plugin({
     view: function () {
       var off = new AbortController();
       menu.addEventListener("mousedown", function (e) {
@@ -952,7 +961,7 @@ function handlePlugin(st) {
   }
   function hideLater() { cancel(); timer = setTimeout(hideNow, 150); }
 
-  return new st.K.P.state.Plugin({
+  return new Plugin({
     view: function (view) {
       var off = new AbortController(), opts = { signal: off.signal };
       handle.addEventListener("mouseenter", function () {
@@ -970,7 +979,7 @@ function handlePlugin(st) {
           if (pos == null) { return; }
           var v = st.view, after = v.state.doc.resolve(pos).after(1);
           var tr = v.state.tr.insert(after, node(st.K, "paragraph").create());
-          tr.setSelection(st.K.P.state.TextSelection.create(tr.doc, after + 1));
+          tr.setSelection(TextSelection.create(tr.doc, after + 1));
           v.dispatch(tr.scrollIntoView());
           v.focus();
           if (st.menu) {
@@ -1023,7 +1032,7 @@ function dragPlugin(st) {
     d.block = d.pos = null;
   }
 
-  return new st.K.P.state.Plugin({
+  return new Plugin({
     view: function (view) {
       var off = new AbortController(), moving = null;
       el.addEventListener("mousedown", function (e) {
@@ -1130,7 +1139,7 @@ function statsPlugin(st) {
       st.el.classList.toggle("ah-md-editor-over", over);
     }
   }
-  return new st.K.P.state.Plugin({ view: function (view) {
+  return new Plugin({ view: function (view) {
     fill(view.state.doc);
     return {
       update: function (v, prev) {
@@ -1179,14 +1188,14 @@ function onDocChanged(st) {
 }
 
 function setDoc(st, md) {
-  var view = st.view, P = st.K.P;
-  view.updateState(P.state.EditorState.create({
+  var view = st.view;
+  view.updateState(EditorState.create({
     schema: st.K.schema, doc: st.K.parse(md), plugins: view.state.plugins
   }));
 }
 
-function mountEditor(st, P) {
-  if (!KIT) { KIT = buildKit(P); K0 = P.state; }
+function mountEditor(st) {
+  if (!KIT) { KIT = buildKit(); }
   var K = st.K = KIT, el = st.el;
   var content = el.querySelector(".ah-pm-content") || el;
   var editable = !el.hasAttribute("data-ah-readonly") && el.getAttribute("aria-disabled") !== "true";
@@ -1203,8 +1212,8 @@ function mountEditor(st, P) {
   }
   plugins.push(statsPlugin(st));
   if (editable) {
-    plugins.push(P.keymap.keymap(coreKeymap(K, st.labels)), P.keymap.keymap(P.commands.baseKeymap),
-                 P.history.history(), P.dropcursor.dropCursor(), P.gapcursor.gapCursor());
+    plugins.push(keymap(coreKeymap(K, st.labels)), keymap(baseKeymap),
+                 history(), dropCursor(), gapCursor());
   }
   plugins = plugins.filter(Boolean);
 
@@ -1221,9 +1230,12 @@ function mountEditor(st, P) {
   var ph = el.getAttribute("data-ah-placeholder");
   if (ph && editable) { attrs["aria-placeholder"] = ph; }
 
-  var view = new P.view.EditorView({ mount: place }, {
-    state: P.state.EditorState.create({
-      schema: K.schema, doc: K.parse(el.getAttribute("data-ah-value") || ""), plugins: plugins
+  // The textarea is the editor until this code has loaded: start from
+  // what it holds, so nothing typed there is lost.
+  var md = st.ta ? st.ta.value : el.getAttribute("data-ah-value") || "";
+  var view = new EditorView({ mount: place }, {
+    state: EditorState.create({
+      schema: K.schema, doc: K.parse(md), plugins: plugins
     }),
     editable: function () { return editable; },
     attributes: attrs,
@@ -1240,7 +1252,7 @@ function mountEditor(st, P) {
   view.dom.addEventListener("change", swallow);
   if (st.ta) { st.ta.hidden = true; }
   el.classList.add("ah-md-editor-ready");
-  return view;
+  if (md !== (el.getAttribute("data-ah-value") || "")) { publish(st, md); }
 }
 
 AH.register("markdown-editor", class extends AH.Controller {
@@ -1249,41 +1261,22 @@ AH.register("markdown-editor", class extends AH.Controller {
     var st = this.st = {
       el: el, uid: ++uid, view: null, K: null, labels: labelsOf(el),
       ta: el.querySelector(".ah-md-editor-source"),
-      committed: el.getAttribute("data-ah-value") || "", destroyed: false
+      committed: el.getAttribute("data-ah-value") || ""
     };
-    // Until the editor is up the textarea is the editor.
-    if (st.ta) {
-      this.listen(st.ta, "input", function (e) {
-        e.stopPropagation();
-        if (!st.view) { publish(st, st.ta.value); }
-      });
-      this.listen(st.ta, "change", function (e) {
-        e.stopPropagation();
-        if (!st.view) { commit(st); }
-      });
-    }
     this.listen(el, "focusout", function (e) {
-      if (st.view && e.target === st.view.dom) { commit(st); }
+      if (e.target === st.view.dom) { commit(st); }
     });
-    st.ready = AH.vendor("prosemirror").then(function (P) {
-      if (st.destroyed) { throw new Error("aihtml: markdown editor destroyed"); }
-      return mountEditor(st, P);
-    });
-    st.ready.catch(function (err) {
-      if (!st.destroyed) { console.error("aihtml: markdown editor not loaded", err); }
-    });
+    mountEditor(st);
   }
 
   teardown() {
     var st = this.st, el = this.element;
-    st.destroyed = true;
-    if (st.view) {
-      st.view.dom.removeEventListener("input", swallow);
-      st.view.dom.removeEventListener("change", swallow);
-      st.view.destroy();
-      st.view = null;
-    }
-    if (st.place) { st.place.remove(); st.place = null; }
+    st.view.dom.removeEventListener("input", swallow);
+    st.view.dom.removeEventListener("change", swallow);
+    st.view.destroy();
+    st.view = null;
+    st.place.remove();
+    st.place = null;
     if (st.ta) { st.ta.hidden = false; }
     el.classList.remove("ah-md-editor-ready", "ah-md-editor-over");
   }
@@ -1296,57 +1289,48 @@ AH.register("markdown-editor", class extends AH.Controller {
     this.element.setAttribute("data-ah-value", md);
     st.committed = md;
     if (st.ta) { st.ta.value = md; }
-    if (st.view) { setDoc(st, md); }
+    setDoc(st, md);
   }
   getHtml() {
     var st = this.st;
-    if (!st.view) { return null; }
     var div = document.createElement("div");
-    div.appendChild(st.K.P.model.DOMSerializer.fromSchema(st.K.schema)
+    div.appendChild(DOMSerializer.fromSchema(st.K.schema)
                       .serializeFragment(st.view.state.doc.content));
     return div.innerHTML;
   }
-  getJson() { return this.st.view ? this.st.view.state.doc.toJSON() : null; }
-  focus() {
-    var st = this.st;
-    if (st.view) { st.view.focus(); } else if (st.ta) { st.ta.focus(); }
-  }
+  getJson() { return this.st.view.state.doc.toJSON(); }
+  focus() { this.st.view.focus(); }
   blur() {
     var st = this.st;
-    if (st.view) { st.view.dom.blur(); } else if (st.ta) { st.ta.blur(); }
-    if (st.view && !focused(st)) { commit(st); }
+    st.view.dom.blur();
+    if (!focused(st)) { commit(st); }
   }
-  exec(cmd, opts) {
-    var st = this.st;
-    if (!st.view) { st.ready.then(function () { exec(st, cmd, opts || {}); }); return false; }
-    return exec(st, cmd, opts || {});
-  }
-  stats() { return this.st.view ? stats(this.st.view.state.doc) : null; }
-  ready() { return this.st.ready; }
+  exec(cmd, opts) { return exec(this.st, cmd, opts || {}); }
+  stats() { return stats(this.st.view.state.doc); }
   view() { return this.st.view; }
 });
 
 // exec-command! (core.cljs): marks, blocks, undo / redo.
 function exec(st, cmd, opts) {
-  var K = st.K, view = st.view, P = K.P, C = P.commands;
+  var K = st.K, view = st.view;
   var MARKS = { bold: "strong", italic: "em", code: "code", strikethrough: "strikethrough" };
   var run = function (c) { return c(view.state, view.dispatch, view); };
-  if (MARKS[cmd]) { return run(C.toggleMark(mark(K, MARKS[cmd]))); }
+  if (MARKS[cmd]) { return run(toggleMark(mark(K, MARKS[cmd]))); }
   switch (cmd) {
     case "link":
       if (!opts.href) { return run(linkPrompt(K, st.labels)); }
-      return run(C.toggleMark(mark(K, "link"), { href: opts.href, title: opts.title || "" }));
-    case "undo": return run(P.history.undo);
-    case "redo": return run(P.history.redo);
-    case "heading": return run(C.setBlockType(node(K, "heading"), { level: +opts.level || 1 }));
-    case "paragraph": return run(C.setBlockType(node(K, "paragraph")));
+      return run(toggleMark(mark(K, "link"), { href: opts.href, title: opts.title || "" }));
+    case "undo": return run(undo);
+    case "redo": return run(redo);
+    case "heading": return run(setBlockType(node(K, "heading"), { level: +opts.level || 1 }));
+    case "paragraph": return run(setBlockType(node(K, "paragraph")));
     case "code_block":
-      return run(C.setBlockType(node(K, "code_block"), { language: opts.language || "plaintext" }));
-    case "blockquote": return run(C.wrapIn(node(K, "blockquote")));
+      return run(setBlockType(node(K, "code_block"), { language: opts.language || "plaintext" }));
+    case "blockquote": return run(wrapIn(node(K, "blockquote")));
     case "bullet_list":
     case "ordered_list":
     case "task_list":
-      return run(P.schemaList.wrapInList(node(K, cmd)));
+      return run(wrapInList(node(K, cmd)));
     case "horizontal_rule":
       return run(function (state, dispatch) {
         if (dispatch) { dispatch(state.tr.replaceSelectionWith(node(K, "horizontal_rule").create())); }

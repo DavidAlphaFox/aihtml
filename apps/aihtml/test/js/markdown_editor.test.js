@@ -1,6 +1,6 @@
 /* markdown_editor: the markdown-editor behaviour on markup the server
- * renders, with the real ProseMirror bundle loaded through AH.vendor as on
- * a page. SERVER holds renders of aihtml_markdown_editor:markdown_editor/3:
+ * renders, with ProseMirror as the page gets it (imported by the
+ * component's chunk). SERVER holds renders of aihtml_markdown_editor:markdown_editor/3:
  *   basic     (<<"# Title\n\nSome **bold** text.\n">>, [], [{id, m1}, {name, doc}])
  *   empty     (<<>>, [], [{id, m2}, {placeholder, <<"Write here">>}, {max_chars, 10}])
  *   readonly  (<<"- [x] done\n- [ ] todo\n">>, [readonly], [{id, m3}])
@@ -24,9 +24,13 @@
     fx.innerHTML = SERVER[name];
     var el = fx.firstChild;
     await T.ready(fx);
-    var view = await AH.invoke(el, "ready");
-    return { el: el, view: view };
+    return { el: el, view: AH.invoke(el, "view") };
   }
+
+  // ProseMirror's selection classes, reached through a view (the test page
+  // does not import the modules): a fresh document's selection is a
+  // TextSelection, whose statics include Selection's (atEnd, near).
+  function TextSelection(view) { return view.state.selection.constructor; }
 
   // Types like a user: each character goes through the browser's
   // insertText, which ProseMirror reads back from the DOM (running input
@@ -73,7 +77,7 @@
   T.test("markdown_editor: typing fires input, updates data-ah-value and the textarea", async function (fx) {
     var m = await mount(fx, "basic"), el = m.el, view = m.view, log = events(el);
     view.dispatch(view.state.tr.setSelection(
-      AHProseMirror.state.Selection.atEnd(view.state.doc)));
+      TextSelection(view).atEnd(view.state.doc)));
     await type(view, " More");
     AHTest.eq(el.getAttribute("data-ah-value"), "# Title\n\nSome **bold** text. More");
     AHTest.eq(el.querySelector("textarea").value, "# Title\n\nSome **bold** text. More");
@@ -139,7 +143,7 @@
     AHTest.eq(el.querySelector("textarea").value, "plain *text*");
     AHTest.eq(m.view.dom.querySelector("em").textContent, "text");
     var view = m.view;
-    view.dispatch(view.state.tr.setSelection(AHProseMirror.state.TextSelection.create(view.state.doc, 1, 6)));
+    view.dispatch(view.state.tr.setSelection(TextSelection(view).create(view.state.doc, 1, 6)));
     AH.invoke(el, "exec", "bold");
     AHTest.eq(AH.invoke(el, "getValue"), "**plain** *text*");
     AHTest.eq(log.slice(-1)[0], "change:**plain** *text*");
@@ -229,7 +233,7 @@
     AHTest.eq(AH.invoke(m.el, "getValue"), "C\n\nA\n\nB");
     // keyboard: Alt-ArrowDown moves the block with the cursor
     view.focus();
-    view.dispatch(view.state.tr.setSelection(AHProseMirror.state.TextSelection.create(view.state.doc, 1)));
+    view.dispatch(view.state.tr.setSelection(TextSelection(view).create(view.state.doc, 1)));
     key(view, "ArrowDown", { altKey: true });
     AHTest.eq(AH.invoke(m.el, "getValue"), "A\n\nC\n\nB");
 
@@ -240,36 +244,24 @@
     AHTest.ok(r.view.dom.querySelector(".task-list-item-checkbox").disabled);
   });
 
-  T.test("markdown_editor: the textarea works before the editor, removal restores it", async function (fx) {
-    // hold the vendor bundle back, as on a first page load
-    var realVendor = AH.vendor, release;
-    AH.vendor = function (name) {
-      return new Promise(function (ok) { release = function () { ok(realVendor(name)); }; });
-    };
-    var el, ta, log;
-    try {
-      fx.innerHTML = SERVER.basic;
-      el = fx.firstChild; ta = el.querySelector("textarea"); log = events(el);
-      await T.ready(fx);
-    } finally {
-      AH.vendor = realVendor;
-    }
-    AHTest.ok(!el.classList.contains("ah-md-editor-ready"), "not loaded yet");
+  T.test("markdown_editor: starts from the textarea, removal restores it", async function (fx) {
+    // typed into the textarea before the controller connected (the
+    // component's chunk still loading, as on a first page load)
+    fx.innerHTML = SERVER.basic;
+    var el = fx.firstChild, ta = el.querySelector("textarea"), log = events(el);
     ta.value = "typed early";
-    T.fire(ta, "input");
-    AHTest.eq(el.getAttribute("data-ah-value"), "typed early");
-    T.fire(ta, "change");
-    AHTest.eq(log, ["input:typed early", "change:typed early"]);
-    release();
-    var view = await AH.invoke(el, "ready");
+    await T.ready(fx);
+    var view = AH.invoke(el, "view");
     AHTest.eq(view.state.doc.textContent, "typed early");
+    AHTest.eq(el.getAttribute("data-ah-value"), "typed early");
+    AHTest.eq(log, ["input:typed early"]);
+    AHTest.ok(ta.hidden && el.classList.contains("ah-md-editor-ready"));
     el.remove();
     await sleep(0);                          // teardown ran
     AHTest.ok(!el.querySelector(".ProseMirror"), "ProseMirror removed");
     AHTest.ok(!ta.hidden && !el.classList.contains("ah-md-editor-ready"));
     fx.appendChild(el);
     await T.ready(fx);
-    await AH.invoke(el, "ready");
     AHTest.eq(el.querySelectorAll(".ProseMirror").length, 1, "mounts again");
     AHTest.eq(AH.invoke(el, "getValue"), "typed early");
   });
