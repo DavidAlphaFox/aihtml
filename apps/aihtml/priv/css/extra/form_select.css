@@ -404,3 +404,9 @@
   top: -12px; left: 50%; transform: translateX(-50%);
   border-bottom-color: var(--ah-color-danger, #e53935);
 }
+
+/* controls fill the field, as sigil's form sets width 100% on them */
+.ah-form-field > div:first-child > .ah-input-group {
+  display: flex;
+  width: 100%;
+}
