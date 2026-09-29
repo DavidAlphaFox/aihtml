@@ -1,0 +1,69 @@
+/* aihtml additions for alert (designs/04-components.md). Owned by that
+   component. */
+
+/* ============================================================================
+   Alert (aihtml's own): an inline message box in the style of sigil's
+   notification. Colours come from the palette axis, surfaces and text from
+   the appearance axis, radius and border width from the skin axis. The tint
+   is the accent at low alpha so it reads on light, paper and dark.
+   ============================================================================ */
+
+.ah-alert {
+  --ah-alert-accent: var(--ah-color-info);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  font-size: var(--ah-font-size-sm);
+  line-height: 1.5;
+  color: var(--ah-color-text);
+  background: oklch(from var(--ah-alert-accent) l c h / 0.1);
+  border: var(--ah-border-width) solid oklch(from var(--ah-alert-accent) l c h / 0.35);
+  border-left: 3px solid var(--ah-alert-accent);
+  border-radius: var(--ah-radius-md);
+  box-sizing: border-box;
+}
+.ah-alert-info    { --ah-alert-accent: var(--ah-color-info); }
+.ah-alert-success { --ah-alert-accent: var(--ah-color-success); }
+.ah-alert-warning { --ah-alert-accent: var(--ah-color-warning); }
+.ah-alert-error   { --ah-alert-accent: var(--ah-color-error); }
+
+.ah-alert-icon {
+  flex: none;
+  display: flex;
+  width: 20px;
+  height: 20px;
+  margin-top: 1px;
+  color: var(--ah-alert-accent);
+}
+.ah-alert-icon svg { display: block; width: 20px; height: 20px; }
+
+.ah-alert-content { flex: 1; min-width: 0; }
+.ah-alert-title {
+  font-weight: var(--ah-font-weight-semibold);
+  margin-bottom: 2px;
+}
+.ah-alert-body { color: var(--ah-color-text-secondary); }
+.ah-alert-content > .ah-alert-body:only-child { color: var(--ah-color-text); }
+
+.ah-alert-close {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: -1px -4px 0 0;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--ah-color-text-secondary);
+  background: transparent;
+  border: 0;
+  border-radius: var(--ah-radius-sm);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: opacity var(--ah-transition-fast), background var(--ah-transition-fast);
+}
+.ah-alert-close:hover { opacity: 1; background: oklch(from var(--ah-alert-accent) l c h / 0.15); }
+.ah-alert-close:focus-visible { opacity: 1; outline: 2px solid var(--ah-alert-accent); outline-offset: 1px; }
