@@ -34,5 +34,7 @@
 .api-table th { text-align: left; padding: .4rem .75rem; font-size: var(--ah-font-size-xs); font-weight: 600; text-transform: uppercase;
   letter-spacing: .05em; color: var(--ah-color-text-secondary); border-bottom: 2px solid var(--ah-color-border); }
 .api-table td { padding: .5rem .75rem; border-bottom: 1px solid var(--ah-color-border); vertical-align: top; }
+/* types such as #{K => V} read as code, not as ligatures */
+.api-table code { font-variant-ligatures: none; }
 .api-name { font-family: var(--ah-font-mono); color: var(--ah-color-primary-dark); }
 [data-theme="dark"] .api-name { color: var(--ah-color-primary-light); }

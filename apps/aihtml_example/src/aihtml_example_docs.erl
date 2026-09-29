@@ -164,7 +164,7 @@ api(#{name := Name, root := Root, behavior := Behavior, events := Events} = E) -
 record_section(undefined, _E) -> [];
 record_section(#{record := Rec, header := Header, doc := Doc, fields := Fields}, E) ->
     #{groups := Groups} = E,
-    Docs = maps:get(option_docs, E, #{}),
+    Docs = maps:merge(field_docs(Fields, E), maps:get(option_docs, E, #{})),
     Rows = [[code(atom_to_binary(F), [<<"api-name">>], []),
              code(T, [<<"font-mono text-xs">>], []),
              code(D, [<<"font-mono text-xs">>], []),
@@ -196,6 +196,35 @@ record_section(#{record := Rec, header := Header, doc := Doc, fields := Fields},
               <<"，调用当前模块的 action/4。"/utf8>>],
              [<<"mt-2 text-sm text-muted">>], [])],
           [<<"mb-8">>], []).
+
+%% Descriptions of the fields the catalog does not document: the leading
+%% fields are the function's positional arguments, in order; name and
+%% disabled are the usual form attributes.
+field_docs(Fields, #{signature := Sig}) ->
+    Pos = [<<"函数写法的参数 "/utf8, A/binary>> || A <- positional_args(Sig)],
+    Names = [F || #{name := F} <- lists:sublist(Fields, length(Pos))],
+    maps:merge(#{name => <<"表单字段名，随表单提交当前值"/utf8>>,
+                 disabled => <<"禁用"/utf8>>},
+               maps:from_list(lists:zip(Names, lists:sublist(Pos, length(Names))))).
+
+%% "slider({Min, Max} | {Min, Max, Step}, Value, Css, Attrs)" ->
+%% [<<"{Min, Max} | {Min, Max, Step}">>, <<"Value">>]: the arguments
+%% before Css and Attrs, split at commas outside braces.
+positional_args(Sig) ->
+    case re:run(Sig, <<"\\((.*)\\)">>, [{capture, all_but_first, binary}]) of
+        {match, [Args]} ->
+            All = [string:trim(A) || A <- split_top(Args, 0, <<>>, []), string:trim(A) =/= <<>>],
+            lists:sublist(All, max(0, length(All) - 2));
+        nomatch -> []
+    end.
+
+split_top(<<>>, _, Cur, Acc) -> lists:reverse([Cur | Acc]);
+split_top(<<$,, Rest/binary>>, 0, Cur, Acc) -> split_top(Rest, 0, <<>>, [Cur | Acc]);
+split_top(<<C, Rest/binary>>, D, Cur, Acc) when C =:= ${; C =:= $[ ->
+    split_top(Rest, D + 1, <<Cur/binary, C>>, Acc);
+split_top(<<C, Rest/binary>>, D, Cur, Acc) when C =:= $}; C =:= $] ->
+    split_top(Rest, max(0, D - 1), <<Cur/binary, C>>, Acc);
+split_top(<<C, Rest/binary>>, D, Cur, Acc) -> split_top(Rest, D, <<Cur/binary, C>>, Acc).
 
 %% Header comments quote names as `name'; show those as code.
 doc_text(Doc) ->

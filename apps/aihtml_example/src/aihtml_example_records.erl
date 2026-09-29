@@ -97,7 +97,7 @@ expand(L, Types, Depth) when is_list(L) ->
 expand(X, _, _) -> X.
 
 pp_type(Type) ->
-    Text = text(erl_pp:attribute({attribute, 0, type, {t, Type, []}}, [{encoding, utf8}])),
+    Text = text(erl_pp:attribute({attribute, erl_anno:new(0), type, {t, Type, []}}, [{encoding, utf8}])),
     %% "-type t() :: ... ." on one line
     Body = re:replace(Text, <<"^-type t\\(\\)\\s*::\\s*|\\.\\s*$">>, <<>>, [global, {return, binary}]),
     re:replace(Body, <<"\\s+">>, <<" ">>, [global, {return, binary}]).

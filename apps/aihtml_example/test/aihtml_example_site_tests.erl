@@ -10,9 +10,10 @@ site_test_() ->
      fun(Apps) -> [application:stop(A) || A <- lists:reverse(Apps)] end,
      [{"every component has demos", fun every_component_has_demos/0},
       {"every demo renders and shows its source", fun demos_render/0},
-      {"every docs page renders", fun docs_pages_render/0},
+      %% each renders every docs page (about 90), longer than eunit's 5 s
+      {"every docs page renders", {timeout, 60, fun docs_pages_render/0}},
       {"the home page renders", fun home_renders/0},
-      {"the API tab shows each component's record", fun records_shown/0}]}.
+      {"the API tab shows each component's record", {timeout, 60, fun records_shown/0}}]}.
 
 components() ->
     [N || #{name := N} <- aihtml_example_site:components()].
