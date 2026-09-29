@@ -1,0 +1,76 @@
+/* aihtml additions for panel; sigil styles live in ../sigil/components. */
+
+/* ---- panel: native scrolling instead of sigil's scrollbar widget ---- */
+
+.ah-panel > .ah-panel-wrapper {
+  height: auto;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ah-color-grey-400, var(--ah-color-border)) transparent;
+}
+
+.ah-panel > .ah-panel-wrapper > .ah-panel-content {
+  position: static;
+  min-width: 100%;
+}
+
+.ah-panel.ah-panel-has-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-panel.ah-panel-bordered {
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+}
+
+.ah-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  flex: none;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  background: var(--ah-color-bg-subtle);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-panel-collapsed > .ah-panel-header {
+  border-bottom-color: transparent;
+}
+
+.ah-panel-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text);
+}
+
+.ah-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+}
+
+.ah-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text-secondary);
+  cursor: pointer;
+  transition: transform var(--ah-transition-fast), background var(--ah-transition-fast);
+}
+
+.ah-panel-toggle:hover { background: var(--ah-color-bg-hover, var(--ah-color-grey-100)); }
+.ah-panel-toggle[aria-expanded="false"] { transform: rotate(-90deg); }
+.ah-panel-toggle:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: 1px;
+}
