@@ -1,0 +1,6 @@
+/* aihtml additions for rating_group (designs/04-components.md). */
+
+/* ---- rating: the star buttons are focus targets, keep them plain ---- */
+.ah-rating__star {
+  color: inherit;
+}
