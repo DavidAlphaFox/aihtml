@@ -1,0 +1,41 @@
+/* aihtml additions for dropdownlist (aihtml_dropdownlist); sigil styles live in
+   ../sigil/components. */
+
+.ah-dropdownlist {
+  box-sizing: border-box;
+  outline: none;
+  min-width: 8rem;
+}
+
+.ah-dropdownlist:focus-visible .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-dropdownlist-block {
+  display: flex;
+  width: 100%;
+}
+
+.ah-dropdownlist-content {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  min-height: 34px;
+}
+
+.ah-dropdownlist-disabled {
+  cursor: not-allowed;
+}
+
+/* The popup lives inside the root (position: fixed), so it inherits the
+   root's text; reset what the combobox sets. */
+.ah-dropdownlist-popup {
+  cursor: default;
+  text-align: left;
+}
+
+.ah-validator-error-element.ah-dropdownlist .ah-dropdownlist-input-area,
+.ah-form-row-invalid .ah-dropdownlist .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-danger);
+}
