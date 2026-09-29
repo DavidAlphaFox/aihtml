@@ -1,0 +1,14 @@
+/* aihtml additions for the combobox (aihtml_combobox).
+   Sigil styles live in ../sigil/components. */
+
+/* The popup lives inside the root and is placed by AH.float (fixed, so
+   overflow:hidden ancestors do not clip it). */
+
+/* sigil's tag radius refers to a misspelt variable (--silogl-radius-sm) */
+.ah-combobox-tag {
+  border-radius: var(--ah-radius-sm);
+}
+
+.ah-combobox-disabled .ah-combobox-input {
+  cursor: not-allowed;
+}
