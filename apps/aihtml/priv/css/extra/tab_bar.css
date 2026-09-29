@@ -1,0 +1,6 @@
+/* aihtml additions for tab_bar; sigil styles live in ../sigil/components. */
+
+.ah-tab-bar__tab:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
