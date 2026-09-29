@@ -1,0 +1,172 @@
+/* aihtml additions for the data_pivot group (aihtml_data_pivot). */
+
+/* The root stacks the optional field list over the four quadrants; with a
+   height the quadrants take the rest and the body scrolls. */
+.ah-pg {
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-pg > .ah-pg-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
+}
+
+/* The table is one focusable grid; the focused cell carries the ring. */
+.ah-pg-content:focus {
+  outline: none;
+}
+
+.ah-pg-content:focus-visible {
+  box-shadow: inset 0 0 0 var(--ah-state-focus-outline-width) var(--ah-color-primary);
+}
+
+.ah-pg-content:not(:focus) .ah-pg-cell-focused {
+  outline: none;
+}
+
+.ah-pg-cell {
+  cursor: default;
+}
+
+/* The bottom header of a column sorts the rows by its values. */
+.ah-pg-col-th[data-sort] {
+  cursor: pointer;
+}
+
+.ah-pg-col-th[data-sort]:hover {
+  background: var(--ah-color-bg-hover, var(--ah-color-grey-100));
+}
+
+.ah-pg-col-th .ah-pg-toggle {
+  display: inline-flex;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+/* The widths come from the behaviour; long labels are clipped, not
+   wrapped, so the header and body columns stay aligned. */
+.ah-pg-col-th,
+.ah-pg-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ah-pg-body-table,
+.ah-pg-col-table {
+  box-sizing: border-box;
+}
+
+/* Remote mode: the tables while the action runs. */
+.ah-pg-loading .ah-pg-content {
+  opacity: 0.6;
+  transition: opacity var(--ah-transition-fast);
+  cursor: progress;
+}
+
+/* The context menu: hidden items, the checked aggregate, keyboard focus. */
+.ah-pg-context-menu-item[hidden] {
+  display: none;
+}
+
+.ah-pg-context-menu-item:focus {
+  outline: none;
+  background: var(--ah-color-bg-hover, var(--ah-color-grey-100));
+}
+
+.ah-pg-context-menu-item[aria-checked="true"]::before {
+  content: "✓";
+  display: inline-block;
+  width: 0;
+  margin-left: -12px;
+  margin-right: 12px;
+  color: var(--ah-color-primary);
+}
+
+/* ---- field list ---- */
+.ah-pg-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  padding: var(--ah-spacing-sm);
+  border-bottom: var(--ah-hairline-width) solid var(--ah-color-border);
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-pg-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 30px;
+  min-width: 120px;
+  padding: 2px 6px;
+  border: var(--ah-border-width) dashed var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  transition: border-color var(--ah-transition-fast), background var(--ah-transition-fast);
+}
+
+.ah-pg-zone-fields {
+  flex-basis: 100%;
+  border-style: solid;
+  border-color: transparent;
+  background: transparent;
+  padding-left: 0;
+}
+
+.ah-pg-zone-over {
+  border-color: var(--ah-color-primary);
+  background: var(--ah-color-primary-lighter, var(--ah-color-bg-subtle));
+}
+
+.ah-pg-zone-label {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text-secondary);
+  margin-right: 2px;
+  white-space: nowrap;
+}
+
+.ah-pg-zone-empty {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-disabled);
+}
+
+.ah-pg-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-paper);
+  color: var(--ah-color-text);
+  font-size: var(--ah-font-size-xs);
+  white-space: nowrap;
+  cursor: grab;
+  user-select: none;
+}
+
+.ah-pg-zone-rows .ah-pg-chip,
+.ah-pg-zone-columns .ah-pg-chip {
+  border-color: var(--ah-color-primary-light, var(--ah-color-primary));
+}
+
+.ah-pg-zone-values .ah-pg-chip {
+  border-color: var(--ah-color-success, var(--ah-color-border));
+}
+
+.ah-pg-chip:hover {
+  background: var(--ah-color-bg-hover, var(--ah-color-grey-100));
+}
+
+.ah-pg-chip:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-primary);
+  outline-offset: 1px;
+}
+
+.ah-pg-chip-dragging {
+  opacity: 0.4;
+}

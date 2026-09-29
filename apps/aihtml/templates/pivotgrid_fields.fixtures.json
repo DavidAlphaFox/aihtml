@@ -1,0 +1,9 @@
+[
+  { "zones": [
+    { "zone": "fields", "label": "Fields", "empty": "Drop fields here", "chips": [
+      { "id": "p-chip-fields-0", "zone": "fields", "index": "0", "field": "sales", "label": "Sales & \"more\"" } ] },
+    { "zone": "rows", "label": "Rows", "empty": "Drop fields here", "chips": [] },
+    { "zone": "values", "label": "Values", "empty": "Drop fields here", "chips": [
+      { "id": "p-chip-values-0", "zone": "values", "index": "0", "field": "", "label": "Count" } ] }
+  ] }
+]

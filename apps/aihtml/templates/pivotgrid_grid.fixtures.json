@@ -1,0 +1,32 @@
+[
+  { "empty": "No data to display" },
+  {
+    "empty": "",
+    "corner": "Country / City",
+    "cols": [{}, {}, {}],
+    "hrows": [
+      { "cls": "ah-pg-col-header-row", "cells": [
+        { "cls": "ah-pg-col-th", "colspan": "2", "rowspan": "", "path": "[2023]", "toggle": "ah-pg-toggle ah-pg-toggle-open", "expanded": "true", "label": "2023", "sort": "", "ci": "", "sort_icon": "", "aria_sort": "" },
+        { "cls": "ah-pg-col-th ah-pg-grand-total", "colspan": "", "rowspan": "2", "path": "", "toggle": "", "expanded": "", "label": "Grand <Total>", "sort": "[[],0]", "ci": "2", "sort_icon": "▼", "aria_sort": "descending" }
+      ] },
+      { "cls": "ah-pg-col-header-row", "cells": [
+        { "cls": "ah-pg-col-th", "colspan": "", "rowspan": "", "path": "[2023,\"Q1\"]", "toggle": "", "expanded": "", "label": "Q1", "sort": "[[2023,\"Q1\"],0]", "ci": "0", "sort_icon": "", "aria_sort": "" },
+        { "cls": "ah-pg-col-th ah-pg-total", "colspan": "", "rowspan": "", "path": "", "toggle": "", "expanded": "", "label": "2023 Subtotal", "sort": "[[2023],0]", "ci": "1", "sort_icon": "", "aria_sort": "" }
+      ] }
+    ],
+    "rows": [
+      { "cls": "ah-pg-row-header ah-pg-total", "path": "[\"中国\"]", "vi": "0", "vlabel": "sales (Sum)",
+        "head": [{ "rowspan": "2", "expanded": "true", "indent": "0", "toggle": "ah-pg-toggle ah-pg-toggle-open", "label": "中国" }] },
+      { "cls": "ah-pg-row-header ah-pg-total", "path": "[\"中国\"]", "vi": "1", "vlabel": "units (Avg)", "head": [] },
+      { "cls": "ah-pg-row-header", "path": "[\"中国\",\"北京\"]", "vi": "", "vlabel": "",
+        "head": [{ "rowspan": "", "expanded": "", "indent": "20", "toggle": "ah-pg-toggle ah-pg-toggle-leaf", "label": "北京" }] }
+    ],
+    "body": [
+      { "cls": "ah-pg-body-row ah-pg-total", "cells": [
+        { "id": "p-c0-0", "cls": "ah-pg-cell ah-pg-total", "v": "1200", "text": "¥1,200" },
+        { "id": "p-c0-1", "cls": "ah-pg-cell ah-pg-total", "v": "", "text": "" },
+        { "id": "p-c0-2", "cls": "ah-pg-cell ah-pg-grand-total", "v": "2.5", "text": "2.50" }
+      ] }
+    ]
+  }
+]
