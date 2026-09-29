@@ -1,0 +1,23 @@
+/* aihtml additions for dragdrop (aihtml_dragdrop). sigil styles live in
+   ../sigil/components/dragdrop.css. Rules shared with sortable:
+   lib_dnd.css. */
+
+/* ---- dragdrop ---- */
+
+.ah-dragdrop { position: relative; }
+.ah-draggable { touch-action: none; user-select: none; -webkit-user-select: none; }
+.ah-draggable:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-primary);
+  outline-offset: 2px;
+}
+.ah-dragdrop-disabled .ah-draggable { cursor: not-allowed; }
+.ah-drop-zone { transition: background-color var(--ah-transition-fast, .15s), outline-color var(--ah-transition-fast, .15s); }
+/* zones that take the dragged item */
+.ah-drop-zone-accepting {
+  outline: 2px dashed var(--ah-color-border);
+  outline-offset: 2px;
+}
+.ah-drop-zone-accepting.ah-drop-target-active {
+  outline-color: var(--ah-color-primary);
+  background-color: var(--ah-color-primary-lighter, rgba(59, 130, 246, .08));
+}
