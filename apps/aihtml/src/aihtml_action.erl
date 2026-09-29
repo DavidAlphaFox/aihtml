@@ -47,6 +47,8 @@
 
 %% Rendering and transports.
 -export([token/1, verify/1, execute/3]).
+%% Shared with aihtml_push.
+-export([sign/1, unsign/1, render_ops/1, stream_id/1, plain/1]).
 %% Operations inside an action.
 -export([html/3, html/4, remove/2, attr/4, add_class/3, remove_class/3,
          set_value/3, focus/2, title/2, redirect/2, js/2, flush/1, meta/1]).
@@ -66,15 +68,19 @@
                    checked := boolean() | null, key := binary() | null,
                    form := #{binary() => binary()}, values := #{binary() => term()},
                    data := #{binary() => binary()}}.
--opaque ctx() :: {aihtml_ctx, pid(), fun((map()) -> any()), map()}.
+-opaque ctx() :: {aihtml_ctx, pid(), fun((map()) -> any()), map(), binary() | undefined}.
 %% `emit' writes one AG-UI event to the response. `meta' is handed to the
 %% action untouched (the cowboy transport puts the request there).
+%% `stream_id' names the page's push stream, so a publish can skip the page
+%% that caused it (see aihtml_push:publish/3).
 -type run_opts() :: #{emit := fun((map()) -> any()),
                       meta => map(),
                       thread_id => binary(),
-                      run_id => binary()}.
+                      run_id => binary(),
+                      stream_id => binary()}.
 
 -define(BUF, aihtml_action_buf).
+-define(COLLECT, aihtml_action_collect).
 -define(SECRET_KEY, {aihtml, action_secret}).
 
 %%%===================================================================
@@ -86,28 +92,45 @@
 -spec token(ref()) -> binary().
 token({Mod, Name, Args} = Ref) when is_atom(Mod), is_atom(Name) ->
     plain(Args) orelse error({aihtml, {action_args_not_data, Ref}}),
-    Payload = term_to_binary(Ref, [{minor_version, 2}]),
-    <<(b64(Payload))/binary, ".", (b64(mac(Payload)))/binary>>;
+    sign(Ref);
 token(Other) ->
     error({aihtml, {bad_action, Other}}).
 
 %% @doc Check a token from the browser. Fails unless the signature is ours
 %% and the module declares the aihtml_action behaviour.
 -spec verify(binary()) -> {ok, ref()} | {error, invalid_action}.
-verify(Token) when is_binary(Token) ->
+verify(Token) ->
+    case unsign(Token) of
+        {ok, {Mod, Name, _Args} = Ref} when is_atom(Mod), is_atom(Name) ->
+            case is_action_module(Mod) of
+                true -> {ok, Ref};
+                false -> {error, invalid_action}
+            end;
+        _ ->
+            {error, invalid_action}
+    end.
+
+%% @doc Sign a term with the application secret:
+%% base64url(term_to_binary(T)) "." base64url(HMAC-SHA256).
+-spec sign(term()) -> binary().
+sign(Term) ->
+    Payload = term_to_binary(Term, [{minor_version, 2}]),
+    <<(b64(Payload))/binary, ".", (b64(mac(Payload)))/binary>>.
+
+%% @doc The term inside a token made by `sign/1', if the signature holds.
+%% The payload is only decoded after the signature checks out.
+-spec unsign(term()) -> {ok, term()} | error.
+unsign(Token) when is_binary(Token) ->
     try
         [P, M] = binary:split(Token, <<".">>),
         Payload = unb64(P),
         true = crypto:hash_equals(mac(Payload), unb64(M)),
-        {Mod, Name, _Args} = Ref = binary_to_term(Payload, [safe]),
-        true = is_atom(Mod) andalso is_atom(Name),
-        true = is_action_module(Mod),
-        {ok, Ref}
+        {ok, binary_to_term(Payload, [safe])}
     catch
-        _:_ -> {error, invalid_action}
+        _:_ -> error
     end;
-verify(_) ->
-    {error, invalid_action}.
+unsign(_) ->
+    error.
 
 %%%===================================================================
 %%% Running an action
@@ -120,7 +143,7 @@ verify(_) ->
 execute({Mod, Name, Args}, EventJson, #{emit := Emit} = Opts) ->
     Ids = #{<<"threadId">> => maps:get(thread_id, Opts, <<>>),
             <<"runId">> => maps:get(run_id, Opts, new_id())},
-    Ctx = {aihtml_ctx, self(), Emit, maps:get(meta, Opts, #{})},
+    Ctx = {aihtml_ctx, self(), Emit, maps:get(meta, Opts, #{}), maps:get(stream_id, Opts, undefined)},
     put(?BUF, []),
     Emit(Ids#{<<"type">> => <<"RUN_STARTED">>}),
     try
@@ -198,7 +221,7 @@ js(Ctx, Code) -> push(Ctx, #{op => js, code => text(Code)}).
 
 %% @doc Send the operations buffered so far, before the action returns.
 -spec flush(ctx()) -> ok.
-flush({aihtml_ctx, _, Emit, _} = Ctx) ->
+flush({aihtml_ctx, _, Emit, _, _} = Ctx) ->
     owner(Ctx),
     case put(?BUF, []) of
         [] -> ok;
@@ -211,7 +234,34 @@ flush({aihtml_ctx, _, Emit, _} = Ctx) ->
 %% @doc What the transport passed along; the cowboy transport gives
 %% `#{req => cowboy_req:req()}' for cookies, headers and the peer.
 -spec meta(ctx()) -> map().
-meta({aihtml_ctx, _, _, Meta}) -> Meta.
+meta({aihtml_ctx, _, _, Meta, _}) -> Meta.
+
+%% @doc The push stream of the page that sent this request, or
+%% `undefined' when it has none.
+-spec stream_id(ctx()) -> binary() | undefined.
+stream_id({aihtml_ctx, _, _, _, Id}) -> Id.
+
+%% @doc Run `Fun(Ctx)' and return the operations it produced instead of
+%% sending them: the same operation functions, rendered once, for
+%% aihtml_push to fan out. Safe to call inside an action.
+-spec render_ops(fun((ctx()) -> any())) -> [map()].
+render_ops(Fun) ->
+    Saved = put(?BUF, []),
+    put(?COLLECT, []),
+    Ctx = {aihtml_ctx, self(),
+           fun(#{<<"value">> := Ops}) -> put(?COLLECT, get(?COLLECT) ++ Ops) end,
+           #{}, undefined},
+    try
+        _ = Fun(Ctx),
+        flush(Ctx),
+        get(?COLLECT)
+    after
+        erase(?COLLECT),
+        case Saved of
+            undefined -> erase(?BUF);
+            _ -> put(?BUF, Saved)
+        end
+    end.
 
 %%%===================================================================
 %%% Internal
@@ -224,7 +274,7 @@ push(Ctx, Op) ->
 
 %% Operations are buffered in the request process, so they must be called
 %% from it.
-owner({aihtml_ctx, Pid, _, _}) when Pid =:= self() -> ok;
+owner({aihtml_ctx, Pid, _, _, _}) when Pid =:= self() -> ok;
 owner(_) -> error({aihtml, action_ctx_used_outside_its_request}).
 
 target({id, Id}, Op) -> Op#{id => text(Id)};
@@ -253,6 +303,8 @@ is_action_module(Mod) ->
             false
     end.
 
+%% @doc True for plain data: no funs, pids, ports or references anywhere.
+-spec plain(term()) -> boolean().
 plain(T) when is_function(T); is_pid(T); is_port(T); is_reference(T) -> false;
 plain(T) when is_list(T) -> plain_list(T);
 plain(T) when is_tuple(T) -> lists:all(fun plain/1, tuple_to_list(T));

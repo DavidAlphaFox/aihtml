@@ -16,6 +16,8 @@
 %%%   body_css     Css for `<body>'
 %%%   body_attrs   Attrs for `<body>'
 %%%   action       URL that actions are POSTed to, default <<"/aihtml/action">>
+%%%   events       URL of the push stream, default <<"/aihtml/events">>; the
+%%%                page only connects when it has subscriptions
 %%%
 %%% The default URLs assume `priv/static' of the aihtml application is
 %%% served under `/aihtml/', see the example application.
@@ -38,7 +40,8 @@
                   head => aihtml_html:html(),
                   body_css => aihtml_html:css(),
                   body_attrs => aihtml_html:attrs(),
-                  action => iodata()}.
+                  action => iodata(),
+                  events => iodata()}.
 
 -import(aihtml_html, [el/4, void/3]).
 
@@ -72,6 +75,7 @@ render(Body, Opts) ->
                 [Body, [el(script, [], [], [{src, iolist_to_binary(U)}]) || U <- Scripts]],
                 [<<"ah-body">>, maps:get(body_css, Opts, [])],
                 [{data_ah_action, iolist_to_binary(maps:get(action, Opts, <<"/aihtml/action">>))},
+                 {data_ah_events, iolist_to_binary(maps:get(events, Opts, <<"/aihtml/events">>))},
                  maps:get(body_attrs, Opts, [])]),
     Html = el(html, [Head, BodyEl], [],
               [{lang, maps:get(lang, Opts, <<"en">>)}, aihtml_theme:attrs(Theme)]),
