@@ -285,7 +285,7 @@ set_items_targets_test() ->
                                     fun(Ctx) -> ?M:set_items(Ctx, <<"#cb">>, []) end)).
 
 %%%===================================================================
-%%% Catalog and examples
+%%% Catalog
 %%%===================================================================
 
 catalog_test() ->
@@ -296,11 +296,11 @@ catalog_test() ->
          [_ | _] = aihtml_catalog:classes(E, Flags)
      end || N <- [datepicker, combobox]],
     ?assertEqual([{set_items, 3}, {set_items, 4}], ?M:facade_extras()),
+    %% every option and flag is documented, every behaviour method listed
+    [begin
+         #{flags := Fl, options := Op, option_docs := Docs, methods := Ms} =
+             aihtml_catalog:entry(?M, N),
+         ?assertEqual(lists:sort(Fl ++ Op), lists:sort(maps:keys(Docs))),
+         ?assert(lists:member(setValue, [Name || #{name := Name} <- Ms]))
+     end || N <- [datepicker, combobox]],
     [?assert(erlang:function_exported(?M, F, A)) || {F, A} <- ?M:facade_extras()].
-
-examples_test() ->
-    Ex = ?M:examples(),
-    ?assert(length(Ex) >= 6),
-    Names = lists:usort([N || {N, _, _} <- Ex]),
-    ?assertEqual([combobox, datepicker], Names),
-    [?assert(is_binary(r(Html))) || {_, _, Html} <- Ex].

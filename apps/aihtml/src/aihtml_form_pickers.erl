@@ -35,7 +35,7 @@
 -module(aihtml_form_pickers).
 
 -export([datepicker/3, combobox/4, set_items/3, set_items/4,
-         catalog/0, examples/0, facade_extras/0]).
+         catalog/0, facade_extras/0]).
 
 -export_type([date_value/0, item/0]).
 
@@ -570,7 +570,7 @@ text(L) when is_list(L) -> unicode:characters_to_binary(L);
 text(X) -> beamai_html_escape:to_binary(X, aihtml).
 
 %%%===================================================================
-%%% Catalog and examples
+%%% Catalog
 %%%===================================================================
 
 -spec catalog() -> [aihtml_catalog:entry()].
@@ -585,7 +585,31 @@ catalog() ->
        behavior => <<"datepicker">>,
        events => [<<"change">>, <<"ah:open">>, <<"ah:close">>],
        doc => <<"A date field with a month grid popup and full keyboard support; "
-                "single dates or ranges, value in data-ah-value as yyyy-mm-dd.">>},
+                "single dates or ranges, value in data-ah-value as yyyy-mm-dd.">>,
+       option_docs =>
+           #{disabled => <<"Not editable; the popup does not open.">>,
+             readonly => <<"Shows the value; the popup does not open.">>,
+             range => <<"Select a range: value \"from,to\" (implied by a {From, To} value).">>,
+             clearable => <<"A clear button (and Backspace/Delete) empties the value.">>,
+             inline => <<"The month grid is always shown under the field, rendered on the server.">>,
+             placeholder => <<"Text of the empty field (default \"Select date...\").">>,
+             format => <<"Display format: yyyy yy MMMM MMM MM M dd d (default yyyy-MM-dd).">>,
+             min => <<"Earliest selectable date (ISO binary or calendar:date()).">>,
+             max => <<"Latest selectable date.">>,
+             disabled_dates => <<"List of dates that cannot be picked.">>,
+             first_day => <<"First day of the week, 0 = Sunday (default) .. 6.">>,
+             week_numbers => <<"Show a week number column.">>,
+             other_month_days => <<"Show days of the neighbouring months (default true).">>,
+             weekends => <<"Colour Saturdays and Sundays.">>,
+             labels => <<"Map of months, months_short, weekdays (from Sunday), title (a format), "
+                         "today, clear, prev_month, next_month, prev_year, next_year.">>},
+       methods =>
+           [#{name => setValue, args => <<"(Iso | \"from,to\" | [From, To])">>,
+              doc => <<"Set the value without firing change.">>},
+            #{name => getValue, args => <<"()">>, doc => <<"Return data-ah-value.">>},
+            #{name => clear, args => <<"()">>, doc => <<"Empty the value and fire change.">>},
+            #{name => open, args => <<"()">>, doc => <<"Open the calendar.">>},
+            #{name => close, args => <<"()">>, doc => <<"Close the calendar.">>}]},
      #{name => combobox, category => form,
        signature => <<"combobox(Items, Value, Css, Attrs)">>,
        root => <<"ah-combobox">>,
@@ -597,67 +621,28 @@ catalog() ->
        behavior => <<"combobox">>,
        events => [<<"change">>, <<"ah:open">>, <<"ah:close">>],
        doc => <<"An editable field with a filtered, keyboard navigable list; "
-                "single or multiple values, local or server-side search.">>}].
-
--spec examples() -> [{atom(), binary(), aihtml_html:html()}].
-examples() ->
-    Row = fun(Children) -> ?H:el('div', Children, [<<"flex flex-wrap gap-6 items-start">>], []) end,
-    Fruits = [<<"Apple">>, <<"Apricot">>, <<"Banana">>, <<"Blueberry">>, <<"Cherry">>,
-              <<"Grape">>, <<"Lemon">>, <<"Mango">>, <<"Orange">>, <<"Peach">>],
-    People = [#{value => 1, label => <<"Ada Lovelace">>, description => <<"Analyst">>,
-                group => <<"Engineering">>},
-              #{value => 2, label => <<"Alan Turing">>, description => <<"Cryptography">>,
-                group => <<"Engineering">>},
-              #{value => 3, label => <<"Grace Hopper">>, description => <<"Compilers">>,
-                group => <<"Engineering">>},
-              #{value => 4, label => <<"Joan Clarke">>, description => <<"Cryptanalysis">>,
-                group => <<"Research">>},
-              #{value => 5, label => <<"Katherine Johnson">>, description => <<"Orbital mechanics">>,
-                group => <<"Research">>, disabled => true}],
-    [{datepicker, <<"Single date, empty, range">>,
-      Row([datepicker(<<"2026-09-29">>, [], [{id, <<"dp-single">>}, {name, due}]),
-           datepicker(undefined, [clearable], [{id, <<"dp-empty">>}]),
-           datepicker({<<"2026-09-10">>, <<"2026-09-18">>}, [clearable, <<"w-64">>],
-                      [{id, <<"dp-range">>}, {name, period}])])},
-     {datepicker, <<"Options: min/max, disabled dates, Monday first, week numbers, format">>,
-      Row([datepicker({2026, 9, 15}, [],
-                      [{id, <<"dp-limits">>}, {min, <<"2026-09-05">>}, {max, <<"2026-10-20">>},
-                       {disabled_dates, [<<"2026-09-21">>, <<"2026-09-22">>]},
-                       {first_day, 1}, {week_numbers, true}, {format, <<"d MMM yyyy">>}]),
-           datepicker(<<"2026-09-29">>, [],
-                      [{id, <<"dp-locale">>}, {format, <<"yyyy/MM/dd">>}, {first_day, 1},
-                       {other_month_days, false},
-                       {labels, #{months => [<<"一月"/utf8>>, <<"二月"/utf8>>, <<"三月"/utf8>>,
-                                             <<"四月"/utf8>>, <<"五月"/utf8>>, <<"六月"/utf8>>,
-                                             <<"七月"/utf8>>, <<"八月"/utf8>>, <<"九月"/utf8>>,
-                                             <<"十月"/utf8>>, <<"十一月"/utf8>>, <<"十二月"/utf8>>],
-                                  weekdays => [<<"日"/utf8>>, <<"一"/utf8>>, <<"二"/utf8>>,
-                                               <<"三"/utf8>>, <<"四"/utf8>>, <<"五"/utf8>>,
-                                               <<"六"/utf8>>],
-                                  title => <<"yyyy年 MMMM"/utf8>>, today => <<"今天"/utf8>>}}])])},
-     {datepicker, <<"Inline (month grid rendered on the server)">>,
-      Row([datepicker(<<"2026-09-29">>, [inline], [{id, <<"dp-inline">>}, {first_day, 1},
-                                                    {weekends, true}]),
-           datepicker({<<"2026-09-08">>, <<"2026-09-12">>}, [inline],
-                      [{id, <<"dp-inline-range">>}, {week_numbers, true}])])},
-     {datepicker, <<"Disabled and read-only">>,
-      Row([datepicker(<<"2026-01-01">>, [disabled], []),
-           datepicker(<<"2026-01-01">>, [readonly], [])])},
-     {combobox, <<"Filter a list (restricted to items), free text, no arrow">>,
-      Row([combobox(Fruits, <<"Cherry">>, [<<"w-56">>],
-                    [{id, <<"cb-fruit">>}, {name, fruit}, {placeholder, <<"Pick a fruit">>}]),
-           combobox(Fruits, undefined, [free_text, <<"w-56">>],
-                    [{id, <<"cb-free">>}, {placeholder, <<"Any fruit">>},
-                     {search_mode, starts_with_ignore_case}]),
-           combobox(Fruits, undefined, [no_arrow, <<"w-56">>],
-                    [{placeholder, <<"No arrow">>}])])},
-     {combobox, <<"Groups, descriptions, disabled item">>,
-      Row([combobox(People, 3, [<<"w-72">>], [{id, <<"cb-people">>}, {name, person}])])},
-     {combobox, <<"Multiple (tags) and checkboxes">>,
-      Row([combobox(Fruits, [<<"Apple">>, <<"Mango">>], [multiple, <<"w-72">>],
-                    [{id, <<"cb-multi">>}, {name, fruits}, {placeholder, <<"Fruits">>}]),
-           combobox([<<"Reading">>, <<"Music">>, <<"Sports">>, <<"Travel">>, <<"Coding">>],
-                    [<<"Music">>], [checkboxes, <<"w-72">>],
-                    [{id, <<"cb-check">>}, {placeholder, <<"Hobbies">>}])])},
-     {combobox, <<"Disabled">>,
-      Row([combobox(Fruits, <<"Apple">>, [disabled, <<"w-56">>], [])])}].
+                "single or multiple values, local or server-side search.">>,
+       option_docs =>
+           #{disabled => <<"Not editable.">>,
+             no_arrow => <<"Hide the dropdown arrow.">>,
+             multiple => <<"Several values, shown as tags; value \"a,b,c\".">>,
+             checkboxes => <<"Multiple, with a check box on every row.">>,
+             free_text => <<"The typed text becomes the value on Enter or blur.">>,
+             placeholder => <<"Text of the empty field.">>,
+             search_mode => <<"contains_ignore_case (default), contains, starts_with_ignore_case, "
+                              "starts_with, equals_ignore_case, equals or none.">>,
+             min_length => <<"Characters typed before the list opens (default 0).">>,
+             empty_text => <<"Shown when nothing matches (default \"No results found\").">>,
+             dropdown_height => <<"Maximum list height in px (default 240).">>,
+             search => <<"Action ref {Module, Action, Args} run (debounced) as the user types; "
+                         "Event.value is the query, the action answers with set_items/3.">>},
+       methods =>
+           [#{name => itemsLoaded, args => <<"()">>,
+              doc => <<"Re-read the list after set_items/3 morphed new rows in; "
+                       "called by set_items itself.">>},
+            #{name => setValue, args => <<"(Value | [Value])">>,
+              doc => <<"Set the value without firing change.">>},
+            #{name => getValue, args => <<"()">>, doc => <<"Return data-ah-value.">>},
+            #{name => clear, args => <<"()">>, doc => <<"Empty the value and fire change.">>},
+            #{name => open, args => <<"()">>, doc => <<"Open the list.">>},
+            #{name => close, args => <<"()">>, doc => <<"Close the list.">>}]}].
