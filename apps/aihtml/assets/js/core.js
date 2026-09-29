@@ -1157,7 +1157,8 @@
     xlsx: { file: "xlsx.full.min.js", global: "XLSX" },
     jspdf: { file: "jspdf.umd.min.js", global: "jspdf" },
     "jspdf-autotable": { file: "jspdf.plugin.autotable.min.js", global: "autoTable",
-                         deps: ["jspdf"] }
+                         deps: ["jspdf"] },
+    prosemirror: { file: "prosemirror.min.js", global: "AHProseMirror" }
   };
   var vendorLoads = {};
 

@@ -14,6 +14,16 @@ AHTest.test("vendor loads a list in order, dependencies first", async function (
   AHTest.ok(window.jspdf && typeof window.jspdf.jsPDF === "function", "jspdf loaded as a dependency");
 });
 
+AHTest.test("vendor loads the ProseMirror bundle (markdown_editor)", async function () {
+  var P = await AH.vendor("prosemirror");
+  AHTest.ok(P && typeof P.view.EditorView === "function", "EditorView");
+  AHTest.ok(typeof P.state.EditorState.create === "function", "EditorState");
+  AHTest.ok(typeof P.markdown.MarkdownParser === "function", "MarkdownParser");
+  AHTest.ok(typeof P.tables.tableEditing === "function", "tableEditing");
+  AHTest.eq(P.markdownit().render("**x**").trim(), "<p><strong>x</strong></p>");
+  AHTest.eq(window.AHProseMirror, P);
+});
+
 AHTest.test("vendor rejects an unknown library", async function () {
   var err = null;
   try { await AH.vendor("nope"); } catch (e) { err = e; }
