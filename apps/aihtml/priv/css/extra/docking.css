@@ -1,0 +1,54 @@
+/* aihtml additions for docking (aihtml_docking). */
+
+/* ---- docking ------------------------------------------------------------ */
+
+/* sigil sets the margin inline (windows-offset); here a custom property */
+.ah-docking-window-docked {
+  margin: var(--ah-docking-offset, 5px);
+}
+
+.ah-docking-window-header {
+  touch-action: none;
+}
+
+.ah-docking-window-header:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: -2px;
+}
+
+/* the header buttons are <button>s */
+.ah-docking-window-collapse-btn,
+.ah-docking-window-close-btn {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font: inherit;
+}
+
+.ah-docking-window-collapse-btn:focus-visible,
+.ah-docking-window-close-btn:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 1px;
+}
+
+/* a window floats over the panels, inside the container */
+.ah-docking-window-floating {
+  min-width: 200px;
+}
+
+.ah-docking-window-dragging {
+  box-shadow: var(--ah-shadow-lg, var(--ah-shadow-md));
+}
+
+.ah-docking-drop-indicator {
+  margin: 0 var(--ah-docking-offset, 5px);
+}
+
+.ah-docking-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
