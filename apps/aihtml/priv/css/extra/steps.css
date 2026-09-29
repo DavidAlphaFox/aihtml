@@ -1,0 +1,3 @@
+/* aihtml additions for steps; sigil styles live in ../sigil/components. */
+
+.ah-steps-item-clickable:focus-visible { outline: none; }
