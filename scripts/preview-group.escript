@@ -1,10 +1,11 @@
 #!/usr/bin/env escript
 %%! -noshell
-%% Renders a component group's examples/0 into OutDir/index.html together
+%% Renders a demo module's demos/0 (aihtml_example_demo_<group>) into
+%% OutDir/index.html together
 %% with the assets it needs (Tailwind CSS built from the current sources,
 %% aihtml.js, jQuery), so the page opens from file:// in any browser.
 %%
-%%   escript scripts/preview-group.escript aihtml_form_buttons OutDir [ExtraEbinDir]
+%%   escript scripts/preview-group.escript aihtml_example_demo_form_buttons OutDir [ExtraEbinDir]
 %%
 %% ExtraEbinDir goes first in the code path (freshly compiled modules).
 main([Mod | [OutDir | Rest]]) ->
@@ -17,9 +18,9 @@ main([Mod | [OutDir | Rest]]) ->
     Sections = [aihtml:el(section,
                           [aihtml:el(h3, [atom_to_binary(Name), <<" · "/utf8>> | [Title]],
                                      [<<"text-sm font-bold text-muted mb-3">>], []),
-                           Html],
-                          [<<"border-b border-line py-6">>], [{id, atom_to_binary(Name)}])
-                || {Name, Title, Html} <- M:examples()],
+                           M:Fun()],
+                          [<<"border-b border-line py-6">>], [{id, atom_to_binary(Fun)}])
+                || #{component := Name, demos := Demos} <- M:demos(), {Title, Fun} <- Demos],
     Body = aihtml:el('div', [aihtml:el(h1, Mod, [<<"text-xl font-bold mb-2">>], []),
                              aihtml:theme_switcher([], []), Sections],
                      [<<"max-w-5xl mx-auto p-6">>], []),
@@ -38,6 +39,7 @@ main([Mod | [OutDir | Rest]]) ->
              ["@import \"tailwindcss\" source(none);\n",
               "@import \"", Root, "/apps/aihtml/priv/css/aihtml.css\";\n",
               "@source \"", Root, "/apps/aihtml/src\";\n",
+              "@source \"", Root, "/apps/aihtml_example/src\";\n",
               "@source \"", Root, "/scripts\";\n"]),
     Sh("npx tailwindcss -i " ++ Entry ++ " -o "
        ++ filename:absname(filename:join(OutDir, "aihtml.css")) ++ " 2>&1 | tail -1"),
