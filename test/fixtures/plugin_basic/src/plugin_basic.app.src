@@ -1,8 +1,0 @@
-{application, plugin_basic,
- [{description, "rebar3_aihtml end-to-end fixture"},
-  {vsn, "0.1.0"},
-  {registered, []},
-  {applications, [kernel, stdlib, aihtml]},
-  {env, []},
-  {modules, []}
- ]}.

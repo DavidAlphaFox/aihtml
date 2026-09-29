@@ -1,7 +1,0 @@
-{application, plugin_dual,
- [{description, "Fixture project: mustache and jinja sharing one out_dir"},
-  {vsn, "0.1.0"},
-  {registered, []},
-  {applications, [kernel, stdlib, aihtml]},
-  {modules, []}
- ]}.
