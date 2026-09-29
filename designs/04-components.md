@@ -8,7 +8,7 @@
 - 通用、常用。
 - 不依赖大型 npm 包，适合"服务端渲染 + jQuery 增强"。
 
-共 67 个，分为 10 组。每组一个 Erlang 模块、一个 JS 文件、一个补充 CSS 文件和一个测试模块：
+共 92 个，分为 18 组，分两批移植。每组一个 Erlang 模块、一个 JS 文件、一个补充 CSS 文件和一个测试模块：
 
 | 组 | 模块 | 组件（函数名） |
 |---|---|---|
@@ -22,13 +22,21 @@
 | layout_nav | `aihtml_layout_nav` | menu, navbar, sidenav, toolbar, splitter, listmenu, status_bar |
 | overlay | `aihtml_overlay` | tooltip, popover, drawer, sheet, toast, notification, window |
 | display | `aihtml_display` | avatar, badge, chip, aspect_ratio, kbd, time_ago, expandable_text, progressbar, progress_circle, meter, statistic, kpi_card, timeline, ranking_list, tag_cloud, alert |
+| form_calendar | `aihtml_form_calendar` | calendar（事件日历）, datetime_input |
+| form_lists | `aihtml_form_lists` | cascader, listbox, transfer |
+| form_entry | `aihtml_form_entry` | masked_input, formatted_input, range_selector, repeat_button |
+| form_upload | `aihtml_form_upload` | upload |
+| data_tree | `aihtml_data_tree` | tree, nav_tree, diff, heatmap_calendar |
+| layout_scroll | `aihtml_layout_scroll` | scrollview, scrollbar, responsive_panel |
+| layout_bars | `aihtml_layout_bars` | activity_bar, navigationbar, command |
+| layout_dnd | `aihtml_layout_dnd` | sortable, dragdrop |
+
+第二批（后 8 组）从一开始就按 [05-records.md](05-records.md) 的 record 方式实现。
 
 **暂不移植**：
 - 重型组件：datagrid、pivotgrid、treegrid、datatable、gantt、scheduler、swimlane、各类 chart、node_graph、relation_graph、drawn、docking、dock_layout、ribbon、tile_layout。
 - 编辑器：rich_editor、prose_editor、markdown_editor。
 - AG-UI 与 chat 组件。
-- 日期类：calendar（事件日历）、datetime_input。datepicker 自带月历，不依赖 calendar。
-- 其它：cascader、listbox、transfer、upload、masked_input、formatted_input、range_selector、tree、nav_tree、command、scrollview、scrollbar、activity_bar、navigationbar、responsive_panel、sortable、dragdrop、repeat_button、diff、heatmap_calendar。
 
 ## 文件与所有权
 

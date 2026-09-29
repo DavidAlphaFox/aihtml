@@ -25,7 +25,7 @@ login() ->
 
 - 渲染依赖 [beamai_render](https://github.com/TTalkPro/beamai_render)：转义使用 `beamai_html_escape`，`{safe, iodata()}` 与 beamai_jinja 的安全标记一致，渲染结果可直接放进 Jinja 模板。
 - 前端基础：jQuery 4 与 Tailwind CSS v4（Tailwind CLI 构建）。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
-- 组件与主题移植自 [sigil](../sigil)（MIT）：67 个核心组件，以及四轴主题（外观、配色、排版、外形）。
+- 组件与主题移植自 [sigil](../sigil)（MIT）：92 个组件，以及四轴主题（外观、配色、排版、外形）。
 
 ## 仓库结构
 
@@ -130,7 +130,7 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 ## 组件
 
-从 sigil 移植了 67 个核心组件，分为 10 组，约定见 `designs/04-components.md`：
+从 sigil 移植了 92 个组件，分为 18 组，约定见 `designs/04-components.md`：
 
 | 组 | 组件 |
 |---|---|
@@ -143,6 +143,14 @@ render(#myapp_card{title = T, body = B} = R) ->
 | 导航 | menu, navbar, sidenav, toolbar, splitter, listmenu, status_bar |
 | 浮层 | tooltip, popover, drawer, sheet, window, notification；`toast/3`、`opens/1` 等触发器 |
 | 展示 | avatar, badge, chip, aspect_ratio, kbd, time_ago, expandable_text, progressbar, progress_circle, meter, statistic, kpi_card, timeline, ranking_list, tag_cloud, alert |
+| 日历 | calendar（事件日历：月、周、日、日程视图，可拖动）, datetime_input |
+| 列表选择 | cascader（下一级可由服务端懒加载）, listbox（支持服务端搜索）, transfer |
+| 录入 | masked_input, formatted_input（进制输入）, range_selector, repeat_button |
+| 上传 | upload（XHR 上传到指定 URL，带进度；无 URL 时走原生表单提交） |
+| 树与数据 | tree（子节点可由服务端懒加载）, nav_tree, diff（Erlang 计算差异）, heatmap_calendar |
+| 滚动与响应式 | scrollview（翻页轮播）, scrollbar, responsive_panel |
+| 工具栏与命令 | activity_bar, navigationbar, command（命令面板，支持服务端搜索） |
+| 拖放 | sortable, dragdrop |
 
 - **取值组件**：自定义控件把当前值写在根元素的 `data-ah-value`，用隐藏 input 参与表单，值改变时在根元素上触发 `change`。所以 `on(change, {M, A, Args})` 写在组件的 Attrs 里就能收到事件，`Event.value` 就是这个值。
 - **服务端驱动**：action 里用 `aihtml_action:call(Ctx, Target, Method, Args)` 调用组件方法，例如打开抽屉、设置进度；也可以用 `aihtml_overlay:toast(Ctx, Msg, Opts)` 等封装。
@@ -439,6 +447,7 @@ Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字�
 | `/components/:name` | `aihtml_example_docs` | 组件文档页，结构见下文 |
 | `/demo` | `aihtml_example_actions` | 实时演示：计数器、实时输入、分步加载、服务端搜索、待办、服务端推送的时钟。`?view=processes` 或 `?view=system` 直接渲染对应的数据视图，供浏览器前进后退使用 |
 | `/fetch` | `aihtml_example_page`、`aihtml_example_api`、`aihtml_example_views` | URL 片段模式的同类演示；片段接口是 `/counter`、`/greet`、`/todos`、`/todos/:id`、`/todos/:id/toggle` |
+| `/upload` | `aihtml_example_upload` | upload 组件演示的上传接口：读取 multipart 请求，返回文件名、大小和类型的 JSON，不保存文件内容（默认上限 5 MB） |
 | `/aihtml/action`、`/aihtml/events`、`/aihtml/[...]` | `aihtml_cowboy:routes/1` | action 端点、推送流、库的静态资源 |
 | `/static/[...]` | cowboy_static | 演示站自己的样式 `example.css` |
 
@@ -467,10 +476,11 @@ Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字�
 | `aihtml_example_source` | 示例函数的源码提取和语法高亮 |
 | `aihtml_example_records` | 组件 record 的字段、类型、默认值和说明，供 API 标签使用 |
 | `aihtml_example_demos` | 示例注册表：按组件组找到 `aihtml_example_demo_<group>` 模块 |
-| `aihtml_example_demo_<group>` | 10 个示例模块，每组组件一个 |
+| `aihtml_example_demo_<group>` | 18 个示例模块，每组组件一个 |
 | `aihtml_example_actions` | `/demo` 页面及其 action |
 | `aihtml_example_page`、`aihtml_example_api`、`aihtml_example_views` | `/fetch` 页面、片段接口和共用视图 |
 | `aihtml_example_store` | Mnesia 数据层 |
+| `aihtml_example_upload` | 上传演示的接收端 |
 | `aihtml_example_clock` | 每秒向 `clock` 主题推送服务器时间，集群中只运行一份 |
 
 演示内容只放在这个应用里。库只保留组件目录，也就是组件的 API 元数据。
