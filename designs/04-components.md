@@ -8,13 +8,13 @@
 - 通用、常用。
 - 不依赖大型 npm 包，适合"服务端渲染 + 浏览器端增强"。
 
-共 111 个，分四批移植。**每个组件一个 Erlang 模块** `aihtml_<name>`（`<name>` 就是组件名，也就是构建函数名），此外 `aihtml_theme` 提供主题切换器。按类别：
+共 112 个：从 sigil 分四批移植的 111 个，加上 aihtml 自己的 markdown_view（服务端渲染 Markdown，markdown_editor 的阅读端）。**每个组件一个 Erlang 模块** `aihtml_<name>`（`<name>` 就是组件名，也就是构建函数名），此外 `aihtml_theme` 提供主题切换器。按类别：
 
 | 类别 | 组件 |
 |---|---|
 | 按钮 | button, link_button, toggle_button, button_group, segmented_control, dropdown_button, split_button, repeat_button |
 | 选择 | checkbox, radiobutton, switch_button, checkbox_group, radiobutton_group, radio_cards, rating_group |
-| 文本与录入 | input, textarea, password_input, number_input, input_otp, tag_input, masked_input, formatted_input, markdown_editor |
+| 文本与录入 | input, textarea, password_input, number_input, input_otp, tag_input, masked_input, formatted_input, markdown_editor, markdown_view |
 | 选择与表单 | dropdownlist, select（原生）, slider, range_selector, field, form_layout（sigil 的 form，校验用 `validate/1`） |
 | 选择器与日期 | datepicker, combobox, timepicker, colorpicker, calendar（事件日历）, datetime_input |
 | 列表与上传 | cascader, listbox, transfer, upload |
@@ -115,28 +115,34 @@ apps/aihtml_example/src/aihtml_example_demo_button.erl  演示
 
 文件结构：
 
-每个组件一个 ES 模块 `components/<name>.js`，由 Vite 打包成一个按需加载的代码块（见 [06-bundling.md](06-bundling.md)）。迁移期的写法（jQuery + 适配层）：
+每个组件一个 ES 模块 `components/<name>.js`，由 Vite 打包成一个按需加载的代码块（见 [06-bundling.md](06-bundling.md)）。行为是原生 Stimulus 控制器，不用 jQuery；样板是 `components/rating_group.js` 和它的测试 `test/js/rating_group.test.js`：
 
 ```js
-import $ from "jquery";
 import AH from "../core.js";
 import "./_lib_values.js";                // 用到的共享代码
 import "virtual:ah-tpl/slider_marks";     // 用到的共享模板（注册到 AH.tpl）
 
-AH.define("slider", {
-  init: function (el, $el) { /* 绑定事件，用 AH.NS 命名空间 */ },
-  destroy: function (el, $el) { /* 解绑文档级事件等 */ },
-  methods: { setValue: function (el, $el, v) { ... } }
+AH.register("slider", class extends AH.Controller {
+  setup() {                               // 元素进入页面时运行一次
+    this.delegate("click", ".ah-slider-thumb", (e, thumb) => { ... });
+    this.listen(document, "keydown", (e) => { ... });   // 卸载时自动解绑
+  }
+  teardown() { /* 元素真正离开页面时运行一次 */ }
+  setValue(v) { ...; }                    // 公开方法：服务端 call/4 与 AH.invoke 可调用
+  getValue() { ... }
+  commit(v) { ...; this.fire("change"); } // 原生事件，详情放在 e.detail
 });
-AH.fn("toast", function (opts) { ... });   // 页面级函数
+AH.fn("toast", (opts) => { ... });        // 页面级函数
 ```
 
-- **挂载**：根元素写 `data-ah="<behavior>"`，它就是 Stimulus 控制器。页面上出现这个组件时加载代码块并连接控制器，连接时调用 `init`，离开页面时调用 `destroy`。
-- **按需加载的条件**：构建时扫描组件文件得到。`AH.define("名字")`、`AH.fn("名字")` 自动识别；通过辅助函数注册、名字是算出来的行为，在文件里写 `// ah-define: 名字`；不靠 `data-ah` 根元素、而是作用于某个属性的文件（tooltip、浮层开关、表单校验），写 `// ah-load: 选择器`。`aihtml_tests` 会检查目录里的每个行为名都能在 JS 源码里找到。
-- **事件命名空间**：元素上的事件用 `"click" + AH.NS` 这种形式，`AH.destroy` 会统一解绑。绑在 document 或 window 上的事件，要在 `destroy` 里自己解绑。
-- **服务端驱动**：`methods` 里的方法可由服务端 `aihtml_action:call(Ctx, Target, Method, Args)` 调用，客户端用 `AH.invoke(el, method, ...)`。页面级函数用 `AH.fn`，服务端写 `call(Ctx, global, Name, Args)`。
+- **挂载**：根元素写 `data-ah="<behavior>"`，它就是 Stimulus 控制器。页面上出现这个组件时加载代码块并连接控制器。元素被移动（形变替换、`preserve()`）时控制器保留，`setup`/`teardown` 不会重复运行。
+- **`AH.Controller` 提供的工具**：`this.listen(target, type, handler)`（卸载时自动解绑，document、window 上的也一样）；`this.delegate(type, selector, handler)`（委托监听，mouseenter/mouseleave 要用 mouseover/mouseout 代替）；`this.fire(type, detail)`（冒泡、可取消的原生 CustomEvent）；`this.signal`（给 fetch 用的 AbortSignal）。每个元素的状态放在控制器实例上；几个组件共享、按元素保存的状态放在 lib 里的 `WeakMap`。
+- **事件**：组件之间、组件和服务端 action 之间都用原生事件，数据放在 `e.detail`；在文件头注释里写明每个事件的 detail 结构。
+- **按需加载的条件**：构建时扫描组件文件得到。`AH.register("名字")`、`AH.fn("名字")` 自动识别；通过辅助函数注册、名字是算出来的行为，在文件里写 `// ah-define: 名字`；不靠 `data-ah` 根元素、而是作用于某个属性的文件（tooltip、浮层开关、表单校验），写 `// ah-load: 选择器`。`aihtml_tests` 会检查目录里的每个行为名都能在 JS 源码里找到。
+- **服务端驱动**：控制器的公开方法可由服务端 `aihtml_action:call(Ctx, Target, Method, Args)` 调用，客户端用 `AH.invoke(el, method, ...)`；组件还没加载或还没连接时，调用会排队。页面级函数用 `AH.fn`，服务端写 `call(Ctx, global, Name, Args)`。
+- **浏览器测试**：用原生事件（`T.fire(el, type, init)`、`T.key(el, "Enter")`），插入 fixture 后 `await T.ready(fx)`；检查卸载结果前要等 `setTimeout 0`（卸载推迟一个微任务执行）。每个组件至少测试主要交互、取值与 `change`、一个服务端可调用的方法，以及移除后重新插入仍能工作。
 - **还原 sigil 的交互**：键盘操作、ARIA、焦点管理、点击外部关闭等，对照 sigil 的 cljs 实现。
-- **不引入新的依赖**。jQuery 正在逐个组件去掉：新写的代码用原生 DOM API，组件之间的事件用原生 `dispatchEvent`（jQuery 的 `.trigger` 不产生原生事件，Stimulus 的动作收不到）。
+- **不引入新的依赖**，只用浏览器的原生 API。
 
 ## 验证
 

@@ -1,6 +1,6 @@
 # 06 打包与 Stimulus
 
-浏览器端代码改为 **Stimulus + ES 模块，用 Vite 打包**，只派发打包产物；jQuery 在迁移期保留，逐个组件去掉，最后从库里移除（方案 B）。本文定下目标结构、兼容约束和迁移步骤。
+浏览器端代码改为 **Stimulus + ES 模块，用 Vite 打包**，只派发打包产物；jQuery 在迁移期保留、逐个组件去掉，最后从库里移除（方案 B，已完成）。本文定下目标结构、兼容约束和迁移步骤。
 
 ## 目标
 
@@ -14,13 +14,16 @@
 ```
 apps/aihtml/assets/js/
   main.js                 入口：核心、模板、组件注册表，启动 Stimulus
-  core.js                 运行时：action、推送、替换与形变、浮层定位、主题、适配层
+  core.js                 运行时：Controller 基类、action、推送、替换与形变、浮层定位、主题
   components/<name>.js    一个组件的行为（ES 模块），共用代码 import ./_lib_<topic>.js
 vite.config.mjs           构建配置，含两个插件：
-                          - virtual:ah-templates  把 templates/*.mustache 编译成模块
-                          - virtual:ah-registry   行为名、页面函数、触发选择器 → 代码块
+                          - virtual:ah-tpl/<name>  把 templates/<name>.mustache 编译成模块
+                          - virtual:ah-registry    行为名、页面函数、触发选择器 → 代码块
+                          - 第三方库代码块命名 vendor-<库>，生成 THIRD-PARTY-LICENSES.txt
+apps/aihtml/assets/vendor/prosemirror.entry.js   ProseMirror + markdown-it 的入口
 apps/aihtml/priv/static/js/
-  main-<hash>.js, <chunk>-<hash>.js, .vite/manifest.json
+  main-<hash>.js, <chunk>-<hash>.js, vendor-<库>-<hash>.js, .vite/manifest.json,
+  THIRD-PARTY-LICENSES.txt
 ```
 
 `aihtml_page` 读取 manifest，写出 `<script type="module" src=".../main-<hash>.js">` 和入口依赖的 `<link rel="modulepreload">`。代码块之间用相对路径引用，静态资源挂在 `/aihtml/` 或别的路径下都能工作。
@@ -30,8 +33,8 @@ apps/aihtml/priv/static/js/
 - **属性**：Stimulus 的控制器属性配置成 `data-ah`，所以服务端输出的 HTML 不变：`data-ah="datagrid"` 就是 datagrid 控制器。
 - **生命周期**：Stimulus 用 MutationObserver 在元素进入页面时连接控制器、离开时断开，替换内容后不再需要手动挂载。
 - **元素移动不重置**：元素被移动（形变替换、`preserve()`）时，Stimulus 会先断开再连接。控制器的销毁推迟到微任务里执行，元素仍在页面上就不销毁，所以状态得以保留。
-- **同步可用**：服务端可能在同一个响应里先插入组件、再调用它的方法（`call` 操作），测试也要在挂载后立即断言。所以 `AH.mount(root)` 会立即初始化其中已加载的组件，Stimulus 稍后连接时发现已经初始化就跳过；对还没加载的组件调用方法，会排队到加载并连接之后再执行。
-- **组件之间的事件**：统一用原生 `dispatchEvent`。jQuery 的 `.trigger` 不产生原生事件，Stimulus 的 `data-action` 收不到；去掉 jQuery 的过程中逐个组件改掉。
+- **异步连接**：控制器由 Stimulus 异步连接。服务端可能在同一个响应里先插入组件、再调用它的方法（`call` 操作）：`AH.invoke` 对还没加载或还没连接的组件排队，连接之后再执行。页面脚本和测试插入 HTML 后 `await AH.ready(root)`。`AH.destroy(el)` 立即执行 `teardown`，之后的 `AH.mount(el)` 重新执行 `setup`（形变替换对内容变了的组件就是这样重新初始化的）。
+- **组件之间的事件**：统一用原生 `CustomEvent`（控制器的 `this.fire`），数据在 `e.detail`。运行时事件（`ah:theme`、`ah:error`、`ah:before-fetch` 等）、服务端的 `trigger` 操作和 `[data-ah-on]` 的委托监听都是原生的。
 
 ## 按需加载
 
@@ -39,11 +42,11 @@ apps/aihtml/priv/static/js/
 
 | 触发条件 | 例子 | 来源 |
 |---|---|---|
-| 页面上出现 `data-ah="<name>"` | `data-ah="datagrid"` | 文件里的 `AH.define("<name>", ...)` |
+| 页面上出现 `data-ah="<name>"` | `data-ah="datagrid"` | 文件里的 `AH.register("<name>", ...)` |
 | 服务端调用页面函数 | `call(Ctx, global, toast, ...)` | 文件里的 `AH.fn("<name>", ...)` |
 | 页面上出现某个属性 | `[data-ah-tooltip]`、`[data-ah-open]`、`[data-ah-validate]` | 文件头的注释 `// ah-load: <选择器>` |
 
-运行时在启动时、以及每次 DOM 变化后检查这些条件，加载缺的代码块，再注册控制器。共用代码 `_lib_*.js` 由组件 `import`，打包工具会自动拆出共享代码块。第三方库（echarts、xlsx、jspdf、ProseMirror）先保留 `AH.vendor`，去 jQuery 的阶段再改成组件内部的动态 `import()`。
+运行时在启动时、以及每次 DOM 变化后检查这些条件，加载缺的代码块，再注册控制器。共用代码 `_lib_*.js` 由组件 `import`，打包工具会自动拆出共享代码块。第三方库（echarts、xlsx、jspdf、jspdf-autotable、ProseMirror）是组件动态 `import()` 的代码块，文件名 `vendor-<库>-<hash>.js`，用到时才下载；`AH.vendor(name)` 给页面脚本取得同一份库。
 
 ## 迁移步骤
 
@@ -58,9 +61,16 @@ apps/aihtml/priv/static/js/
      - Stimulus 的动作属性配置成 `data-ah-do`，因为 `data-action` 已经被组件内部使用。
      - 通过辅助函数注册、名字是算出来的行为，用 `// ah-define: <name>` 声明，`aihtml_tests` 会检查每个行为都能找到。
      - 共享模板每个一个虚拟模块 `virtual:ah-tpl/<name>`，由组件自己 import。
-2. **去 jQuery（第二阶段，按组件并行）**：
+2. **去 jQuery（第二阶段，已完成）**：
    - 每个组件改写成原生 Stimulus 控制器：`connect`/`disconnect`、原生 DOM、原生事件、`AbortController` 统一解绑；共用代码同样改写。
    - 对应的浏览器测试改用原生事件。
-   - 第三方库改为动态 `import()`。
-3. **移除 jQuery**：最后一处用完后，从入口里去掉 jQuery 和 `window.jQuery`，`aihtml_page` 默认不再引入。
-4. **SEO 补强**：服务端渲染 datagrid 远程模式的首页、图表的可读数据、导航类交互的真实链接、页面元信息选项。
+   - **结果**：110 个组件文件、18 个共享文件和运行时核心全部改成原生写法；浏览器测试从 216 个增加到 429 个，每个有行为的组件都有测试；服务端 HTML 不变（455 个演示比对）。
+3. **移除 jQuery（已完成）**：入口里不再有 jQuery 和 `window.jQuery`，旧写法的适配层 `AH.define` 已删除，action 事件监听改为原生。入口 82 KB（gzip 后 23 KB）。`aihtml_page` 默认不引入 jQuery，页面脚本需要时用 `jquery` 选项。
+4. **SEO 补强与第三方库（已完成）**：
+   - 页面元信息：`aihtml_page` 的 `description`、`robots`、`canonical`、`alternates`、`og`、`meta`、`json_ld` 选项。
+   - markdown_view：服务端渲染 Markdown（`aihtml_lib_markdown` 移植 markdown-it，输出与浏览器端逐字节一致，由固定用例检查）。
+   - 图表：画布旁输出视觉隐藏的数据表，容器角色 `figure`。
+   - 导航的真实链接：pagination、datagrid、datatable、calendar、scheduler 的 `href` 选项（URL 模板）；配合 `on(change, ...)` 时页面内处理并推入 URL。
+   - datagrid 远程模式首页总在服务端渲染，挂载时不再请求。
+   - 第三方库从 `priv/static/vendor` 的预构建文件改为 Vite 代码块（动态 `import()`），构建时生成许可证清单。
+   - **验收**：460 个演示比对，变化只在图表（数据表、角色）和带 `href` 的导航演示；1423 个 EUnit、445 个浏览器测试通过；演示站 112 个组件页无脚本错误。

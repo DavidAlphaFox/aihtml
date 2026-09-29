@@ -27,8 +27,8 @@ login() ->
 ```
 
 - 渲染依赖 [beamai_render](https://github.com/TTalkPro/beamai_render)：转义使用 `beamai_html_escape`，`{safe, iodata()}` 与 beamai_jinja 的安全标记一致，渲染结果可直接放进 Jinja 模板。
-- 前端基础：Stimulus 3 与 Tailwind CSS v4，浏览器端代码用 Vite 打包（见 `designs/06-bundling.md`）。组件行为正在从 jQuery 迁移到原生 DOM，迁移完成后库不再依赖 jQuery。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
-- 组件与主题移植自 [sigil](../sigil)（MIT）：111 个组件，以及四轴主题（外观、配色、排版、外形）。
+- 前端基础：Stimulus 3 与 Tailwind CSS v4，浏览器端代码用 Vite 打包（见 `designs/06-bundling.md`）。组件行为是原生 DOM 写的 Stimulus 控制器，库不依赖 jQuery。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
+- 组件与主题移植自 [sigil](../sigil)（MIT）：111 个组件，另有服务端渲染的 markdown_view，共 112 个；以及四轴主题（外观、配色、排版、外形）。
 
 ## 仓库结构
 
@@ -38,7 +38,7 @@ login() ->
 | `apps/aihtml/src` | 核心模块（`aihtml`、`aihtml_html`、`aihtml_action`……），每个组件一个模块 `aihtml_<组件名>`，以及组件共用的 `aihtml_lib_*` |
 | `apps/aihtml/include` | `aihtml.hrl`（导入全部构建函数和 record）、每个组件一个 record 头文件 `aihtml_<组件名>.hrl`、自定义组件用的 `aihtml_element.hrl` |
 | `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
-| `apps/aihtml/priv/static` | 预构建产物（只派发这些）：`aihtml.css`、`js/`（Vite 打包的运行时：入口 + 每个组件一个代码块 + `manifest.json`），以及 `vendor/` 下按需加载的 echarts、xlsx、jspdf（见「第三方库」） |
+| `apps/aihtml/priv/static` | 预构建产物（只派发这些）：`aihtml.css`、`js/`（Vite 打包的运行时：入口 + 每个组件一个代码块 + `manifest.json`），echarts、xlsx、jspdf、ProseMirror 也是按需加载的代码块（见「第三方库」）；`vendor/` 只放给页面脚本用的 jQuery |
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
 | `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
 | `apps/aihtml/assets/js` | 浏览器端源码（不派发）：入口 `main.js`、运行时 `core.js`、各组件行为 `components/<组件名>.js`（ES 模块，共用部分在 `_lib_*.js`），由 Vite（`vite.config.mjs`）打包到 `priv/static/js` |
@@ -136,13 +136,13 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 ## 组件
 
-从 sigil 移植了 111 个组件，每个组件一个模块 `aihtml_<组件名>`，文件组织和约定见 `designs/04-components.md`。按用途分类如下：
+从 sigil 移植了 111 个组件，加上 aihtml 自己的 markdown_view 共 112 个，每个组件一个模块 `aihtml_<组件名>`，文件组织和约定见 `designs/04-components.md`。按用途分类如下：
 
 | 类别 | 组件 |
 |---|---|
 | 按钮 | button, button_group, link_button, toggle_button, dropdown_button, split_button, segmented_control |
 | 选择 | checkbox, checkbox_group, radiobutton, radiobutton_group, radio_cards, switch_button, rating_group |
-| 文本输入 | input, textarea, password_input, number_input, input_otp, tag_input, markdown_editor（所见即所得，基于 ProseMirror） |
+| 文本输入 | input, textarea, password_input, number_input, input_otp, tag_input, markdown_editor（所见即所得，基于 ProseMirror）, markdown_view（服务端把 Markdown 渲染成 HTML） |
 | 选择与表单 | dropdownlist, select, slider, field, form_layout；校验用 `validate/1` |
 | 选择器 | datepicker, combobox（支持服务端搜索）, timepicker, colorpicker |
 | 基础布局 | card, panel, expander, tabs, tab_bar, breadcrumbs, pagination, steps, skeleton, loader, empty |
@@ -304,9 +304,10 @@ button(<<"更多">>, more, [outlined],
 
 带 `data-ah="<名字>"` 的根元素由同名的 Stimulus 控制器增强，例如 tabs 切换、alert 关闭。
 
-- **按需加载**：页面只加载运行时入口（gzip 后约 49 KB，其中一半是迁移期仍保留的 jQuery）。页面上第一次出现某个组件时，才加载它的代码块；服务端之后插入的组件也一样，Stimulus 会自动连接，不需要手动挂载。
+- **按需加载**：页面只加载运行时入口（gzip 后约 23 KB）。页面上第一次出现某个组件时，才加载它的代码块；服务端之后插入的组件也一样，Stimulus 会自动连接，不需要手动挂载。
 - **页面引入**：`aihtml_page` 读取打包产物的 `manifest.json`，写出 `<script type="module" src="/aihtml/js/main-<哈希>.js">`。静态资源不挂在 `/aihtml/` 时用 `assets` 选项指定路径；`js` 选项里的页面脚本会加上 `defer`，在运行时之后按顺序执行。
-- **全局变量**：运行时在 `window.AH` 上；迁移期还提供 `window.jQuery`，方便页面脚本使用。页面自己的脚本需要 jQuery 时，最好用 `jquery` 选项单独引入，因为库最终会去掉它。
+- **全局变量**：运行时在 `window.AH` 上。页面自己的脚本需要 jQuery 时，用 `aihtml_page` 的 `jquery` 选项单独引入（`priv/static/vendor/jquery.min.js`）。
+- **事件是原生的**：组件和运行时派发的都是冒泡的原生事件（`change`、`ah:close`、`ah:theme` 等），附带的数据在 `e.detail` 里。页面脚本用 `addEventListener` 监听即可；用 jQuery 监听时，数据要从 `e.originalEvent.detail` 读取，而不是处理函数的第二个参数。服务端 `aihtml_action:trigger/4` 的 `Detail` 同样成为 `e.detail`。
 
 ### 替换方式与形变替换
 
@@ -417,24 +418,51 @@ var h = AH.float(popup, button, { placement: "bottom", align: "start", matchWidt
 h.stop();
 ```
 
+## SEO
+
+页面内容全部由服务端输出，搜索引擎不执行脚本也能读到。几处原本要靠脚本的地方也有服务端版本：
+
+- **页面元信息**：`aihtml_page:render/2` 的选项写进 `<head>`：`description`、`robots`、`canonical`、`alternates`（`[{Lang, Url}]`，写成 hreflang 链接）、`og`（Open Graph，`#{title => ..., image => [...]}`，列表值写多次）、`meta`（其它 `<meta name>`，如 `twitter:card`）、`json_ld`（schema.org 结构化数据，一个 map 或 map 列表）。map 按键排序输出，JSON-LD 里的 `<` 写成 `\u003c`。
+  ```erlang
+  aihtml_page:render(Body, #{title => <<"订单"/utf8>>,
+                             description => <<"本月订单一览"/utf8>>,
+                             canonical => <<"https://example.com/orders">>,
+                             og => #{title => <<"订单"/utf8>>, type => website},
+                             json_ld => #{<<"@context">> => <<"https://schema.org">>, <<"@type">> => <<"WebPage">>}})
+  ```
+- **Markdown**：`markdown_view(Markdown, Css, Attrs)` 在服务端把 Markdown 渲染成 HTML（`aihtml_lib_markdown`，移植自 markdown-it，配置与 markdown_editor 相同，输出与浏览器端逐字节一致）。可以直接显示用户写的 Markdown：原始 HTML 当作文本，链接只保留 http、https、mailto 和相对地址。
+- **图表**：各类图表在画布旁输出一份视觉隐藏的数据表（`<table>`，带标题、表头），图表容器的角色是 `figure`。搜索引擎和读屏软件读到的是数据本身。
+- **导航链接**：pagination、datagrid、datatable、calendar、scheduler 有 `href` 选项（URL 模板），翻页、切换日期和视图的按钮变成真正的 `<a href>`：
+
+  | 组件 | 模板里的占位符 |
+  |---|---|
+  | pagination | `{page}`、`{size}` |
+  | datagrid、datatable | `{page}`、`{size}`、`{sort}`、`{search}` |
+  | calendar、scheduler | `{date}`、`{view}` |
+
+  页面处理函数从查询参数读出状态，渲染同样的组件，于是每个状态都有自己的 URL：爬虫能跟进，新标签页和刷新都能打开，没有脚本也能用。组件同时绑定了 `on(change, Action)` 时，普通点击在页面内处理（action 用 `html/4` 形变替换内容），浏览器把链接的 URL 推入历史，前进、后退、刷新都从服务端加载对应状态。演示站的 `/components/:name/state?...`（`aihtml_example_state`）就是这样的页面处理函数。
+- **datagrid 远程模式**：首页的数据行总是在服务端渲染（`source` 模式下给出的行就是第一页），挂载时不再发请求，之后的排序、筛选、翻页才调用 action。
+
 ## 第三方库
 
-图表、表格导出和 Markdown 编辑器用到几个较大的库，只在需要时加载：
+图表、表格导出和 Markdown 编辑器用到几个较大的库，由 Vite 打包成各自的代码块，只在需要时加载：
 
-| 库 | 用途 | 许可证 |
-|---|---|---|
-| echarts | chart、各类图表、relation_graph | Apache-2.0 |
-| xlsx（SheetJS） | datagrid、pivotgrid 导出 Excel | Apache-2.0 |
-| jspdf、jspdf-autotable | datagrid 导出 PDF | MIT |
-| ProseMirror、markdown-it | markdown_editor（用 esbuild 打包成 `prosemirror.min.js`，全局名 `AHProseMirror`） | MIT |
+| 库 | 用途 | 代码块（压缩后 / gzip） | 许可证 |
+|---|---|---|---|
+| echarts | chart、各类图表、relation_graph | `vendor-echarts`，1.1 MB / 360 KB | Apache-2.0 |
+| xlsx（SheetJS） | datagrid、pivotgrid 导出 Excel | `vendor-xlsx`，415 KB / 135 KB | Apache-2.0 |
+| jspdf、jspdf-autotable | datagrid 导出 PDF | `vendor-jspdf` 392 KB / 125 KB，`vendor-jspdf-autotable` 29 KB / 9 KB | MIT |
+| ProseMirror、markdown-it | markdown_editor（入口 `assets/vendor/prosemirror.entry.js`） | `vendor-prosemirror`，376 KB / 128 KB | MIT |
 
-- **位置**：`npm run vendor` 把它们连同许可证文件复制到 `priv/static/vendor`（ProseMirror 由 esbuild 从 `assets/vendor/prosemirror.entry.js` 打包，各包许可证汇总在 `prosemirror.LICENSE.txt`），版本见 `package.json`。纯 Erlang 的使用方不需要运行 npm。
-- **按需加载**：运行时的 `AH.vendor(name)` 在第一次需要时插入 script 标签，返回 Promise，每个页面只加载一次。图表在挂载时加载 echarts，导出在点击时加载 xlsx 或 jspdf；没用到这些组件的页面不会下载它们。
+- **位置**：代码块和运行时的其他代码块一起在 `priv/static/js`（文件名带内容哈希），版本见 `package.json`。纯 Erlang 的使用方不需要运行 npm，也不需要额外配置路径。jsPDF 自己还会按需引入 html2canvas、canvg、dompurify（`vendor-html2canvas` 等），只在调用它的 `html()` 时才加载，表格导出用不到。
+- **许可证**：代码块里不保留许可证注释；每次构建由 `vite.config.mjs` 生成 `priv/static/js/THIRD-PARTY-LICENSES.txt`，列出打包进去的每个 npm 包（名称、版本、许可证、所在代码块、许可证全文和 NOTICE），包括入口里的 Stimulus。
+- **按需加载**：组件在第一次需要时用动态 `import()` 加载库：图表在挂载时加载 echarts，导出在点击时加载 xlsx 或 jspdf，Markdown 编辑器在挂载时加载 ProseMirror。没用到这些组件的页面不会下载它们。页面脚本用 `AH.vendor(name)` 取得同一份库，返回 Promise，每个页面只加载一次；传列表时按顺序返回列表：
   ```js
   AH.vendor("echarts").then(function (echarts) { ... });
-  AH.vendor(["jspdf", "jspdf-autotable"]).then(function (libs) { ... });
+  AH.vendor(["jspdf", "jspdf-autotable"]).then(function (libs) { ... });   // [{jsPDF, ...}, autoTable]
   ```
-- **路径**：默认是运行时 `js/` 目录旁边的 `vendor/`，所以按 `/aihtml/[...]` 挂载静态资源时不需要配置。放在别处时，在 `<body>` 上写 `data-ah-vendor`，例如 `aihtml:page(Body, #{body_attrs => [{data_ah_vendor, <<"/assets/vendor/">>}]})`。页面上已经有同名全局变量（自己引入了 echarts 等）时不会重复加载。
+  可用的名字：`echarts`、`xlsx`、`jspdf`、`jspdf-autotable`（解析为 `autoTable(doc, options)` 函数）、`prosemirror`（`{model, state, view, ..., markdownit}`，同时设置旧的全局变量 `window.AHProseMirror`）。库不再作为全局变量出现（`window.echarts` 等），页面上自己引入的同名全局变量也不会被使用。
+- **jQuery**：运行时不用 jQuery。`npm run vendor` 只把 `jquery.min.js` 和它的许可证复制到 `priv/static/vendor`，供 `aihtml_page` 的 `jquery` 选项使用。
 - **PDF 中的中文**：jsPDF 的默认字体不含中文，导出的 PDF 里中文显示不出来，和 sigil 相同。
 
 ## 共享模板
