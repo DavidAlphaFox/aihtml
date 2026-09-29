@@ -1,0 +1,5 @@
+/* aihtml additions for the input_otp component (designs/04-components.md).
+   sigil styles live in ../sigil/components. */
+
+/* ---- OTP: an invalid code (set by AH.invoke(el, "invalid", true)) ---- */
+.ah-input-otp[data-invalid="true"] .ah-input-otp__slot { border-color: var(--ah-color-error); }
