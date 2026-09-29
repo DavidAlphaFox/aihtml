@@ -1,13 +1,13 @@
 %% @doc POST endpoint for aihtml actions.
 %%
 %% The body is JSON: `{"action": Token, "event": {...}, "threadId": T,
-%% "runId": R}'. A bad origin, a bad body or an invalid token is refused
+%% "runId": R, "streamId": S}' (streamId: the page's push stream, if any). A bad origin, a bad body or an invalid token is refused
 %% with a plain status (403 / 400 / 405) before anything runs; otherwise the
 %% action runs in this request process and its AG-UI events are streamed
 %% back as server-sent events.
 -module(aihtml_cowboy_action).
 
--export([init/2]).
+-export([init/2, origin_ok/2]).
 
 -define(MAX_BODY, 1048576).
 
@@ -48,7 +48,8 @@ stream(Ref, In, Req0) ->
                               #{emit => Emit,
                                 meta => #{req => Req0},
                                 thread_id => bin(maps:get(<<"threadId">>, In, <<>>)),
-                                run_id => bin(maps:get(<<"runId">>, In, <<>>))}),
+                                run_id => bin(maps:get(<<"runId">>, In, <<>>)),
+                                stream_id => stream_id(maps:get(<<"streamId">>, In, null))}),
     ok = cowboy_req:stream_body(<<>>, fin, Req),
     Req.
 
@@ -72,8 +73,12 @@ refuse(Status, Code, Req) ->
 bin(B) when is_binary(B) -> B;
 bin(_) -> <<>>.
 
-%% Browsers send Origin on POST. Accept the page's own host, and whatever
+stream_id(B) when is_binary(B) -> B;
+stream_id(_) -> undefined.
+
+%% @doc Browsers send Origin on POST. Accept the page's own host, and whatever
 %% the application listed; requests without Origin (curl, tests) pass.
+-spec origin_ok(cowboy_req:req(), [binary()]) -> boolean().
 origin_ok(Req, Extra) ->
     case cowboy_req:header(<<"origin">>, Req) of
         undefined -> true;
