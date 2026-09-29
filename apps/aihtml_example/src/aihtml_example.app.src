@@ -1,0 +1,9 @@
+{application, aihtml_example,
+ [{description, "Cowboy demo for aihtml"},
+  {vsn, "0.1.0"},
+  {registered, [aihtml_example_sup]},
+  {mod, {aihtml_example_app, []}},
+  {applications, [kernel, stdlib, cowboy, aihtml, aihtml_cowboy]},
+  {env, [{port, 8080}]},
+  {modules, []},
+  {licenses, ["Apache-2.0"]}]}.
