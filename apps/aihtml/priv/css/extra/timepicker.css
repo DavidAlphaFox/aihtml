@@ -1,0 +1,133 @@
+/* aihtml additions for the timepicker (aihtml_timepicker).
+   Sigil styles live in ../sigil/components. sigil renders the picker
+   inline only; the popup field around it, disabled clock numbers and
+   keyboard focus rings are aihtml's. */
+
+/* ---- Popup field ----
+   Open popups are positioned by AH.float (position: fixed); the absolute
+   placement below is only the fallback before the script runs. */
+
+.ah-timepicker-field {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  font-family: var(--ah-font-family);
+  vertical-align: top;
+}
+
+.ah-timepicker-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  z-index: 1000;
+}
+
+.ah-timepicker-popup[hidden] {
+  display: none;
+}
+
+/* ---- Timepicker field (styled like sigil's datepicker input area) ---- */
+
+.ah-timepicker-input-area {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  transition: border-color var(--ah-transition-fast), box-shadow var(--ah-transition-fast);
+  cursor: pointer;
+}
+
+.ah-timepicker-field:hover .ah-timepicker-input-area {
+  border-color: var(--ah-color-grey-400);
+}
+
+.ah-timepicker-input-area:focus-within,
+.ah-timepicker-open .ah-timepicker-input-area {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 1px var(--ah-color-primary-lighter);
+}
+
+.ah-timepicker-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: none;
+  outline: none;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  color: var(--ah-color-text);
+  background: transparent;
+}
+
+.ah-timepicker-input::placeholder {
+  color: var(--ah-color-text-disabled);
+}
+
+.ah-timepicker-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  align-self: stretch;
+  flex-shrink: 0;
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+  background: var(--ah-color-grey-50);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-timepicker-clear {
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-lg);
+  line-height: 1;
+  padding: 0 var(--ah-spacing-xs);
+  cursor: pointer;
+}
+
+.ah-timepicker-clear:hover {
+  color: var(--ah-color-text);
+}
+
+.ah-timepicker-clear[hidden] {
+  display: none;
+}
+
+.ah-timepicker-field-disabled .ah-timepicker-input-area {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-timepicker-popup .ah-timepicker {
+  box-shadow: var(--ah-shadow-lg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+/* ---- Timepicker panel additions ---- */
+
+.ah-timepicker-number-disabled {
+  fill: var(--ah-color-text-disabled);
+  opacity: 0.5;
+}
+
+.ah-timepicker-svg:focus {
+  outline: none;
+}
+
+.ah-timepicker-svg:focus-visible .ah-timepicker-face {
+  stroke: var(--ah-color-primary);
+  stroke-width: 2;
+}
+
+.ah-timepicker-header [data-action]:focus-visible {
+  outline: 2px solid var(--ah-color-primary-contrast);
+  outline-offset: 2px;
+  border-radius: var(--ah-radius-sm);
+}
