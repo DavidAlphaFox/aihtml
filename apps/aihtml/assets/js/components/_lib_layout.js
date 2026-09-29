@@ -7,40 +7,39 @@
  * (AH.invoke / aihtml_action:call) update the value without firing
  * "change".
  */
-(function ($, AH) {
-  "use strict";
+import $ from "jquery";
+import AH from "../core.js";
 
-  function setValue(el, $el, v) {
-    el.setAttribute("data-ah-value", v);
-    $el.children("input[type=hidden]").val(v);
+function setValue(el, $el, v) {
+  el.setAttribute("data-ah-value", v);
+  $el.children("input[type=hidden]").val(v);
+}
+
+function key(e) {
+  return e.key;
+}
+
+// Next enabled index from start in direction dir, wrapping.
+function nextEnabled($items, start, dir, disabledCls) {
+  var n = $items.length;
+  for (var s = 1, i = (start + dir + n) % n; s <= n; s++, i = (i + dir + n) % n) {
+    if (!$items.eq(i).hasClass(disabledCls)) { return i; }
   }
+  return start;
+}
 
-  function key(e) {
-    return e.key;
-  }
+// Arrow keys (by orientation), Home, End; Enter/Space activate.
+function listKeys(e, $items, cur, vertical, disabledCls) {
+  var k = key(e);
+  var prev = vertical ? "ArrowUp" : "ArrowLeft";
+  var next = vertical ? "ArrowDown" : "ArrowRight";
+  if (k === "Home") { return nextEnabled($items, -1, 1, disabledCls); }
+  if (k === "End") { return nextEnabled($items, $items.length, -1, disabledCls); }
+  if (k === prev) { return nextEnabled($items, cur, -1, disabledCls); }
+  if (k === next) { return nextEnabled($items, cur, 1, disabledCls); }
+  if (k === "Enter" || k === " ") { return cur; }
+  return null;
+}
 
-  // Next enabled index from start in direction dir, wrapping.
-  function nextEnabled($items, start, dir, disabledCls) {
-    var n = $items.length;
-    for (var s = 1, i = (start + dir + n) % n; s <= n; s++, i = (i + dir + n) % n) {
-      if (!$items.eq(i).hasClass(disabledCls)) { return i; }
-    }
-    return start;
-  }
-
-  // Arrow keys (by orientation), Home, End; Enter/Space activate.
-  function listKeys(e, $items, cur, vertical, disabledCls) {
-    var k = key(e);
-    var prev = vertical ? "ArrowUp" : "ArrowLeft";
-    var next = vertical ? "ArrowDown" : "ArrowRight";
-    if (k === "Home") { return nextEnabled($items, -1, 1, disabledCls); }
-    if (k === "End") { return nextEnabled($items, $items.length, -1, disabledCls); }
-    if (k === prev) { return nextEnabled($items, cur, -1, disabledCls); }
-    if (k === next) { return nextEnabled($items, cur, 1, disabledCls); }
-    if (k === "Enter" || k === " ") { return cur; }
-    return null;
-  }
-
-  AH.lib = AH.lib || {};
-  AH.lib.layout = { setValue: setValue, key: key, nextEnabled: nextEnabled, listKeys: listKeys };
-})(window.jQuery, window.AH);
+AH.lib = AH.lib || {};
+AH.lib.layout = { setValue: setValue, key: key, nextEnabled: nextEnabled, listKeys: listKeys };

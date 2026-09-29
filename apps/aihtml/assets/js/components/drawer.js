@@ -2,11 +2,11 @@
  * overlay/drawer: the root is the scrim (ah-drawer__overlay), CSS animates
  * data-state; swipe to dismiss. The behaviour is shared with the sheet
  * (AH.lib.overlay.defineSlide in _lib_overlay.js). */
-(function ($, AH) {
-  "use strict";
+// ah-define: drawer
+import AH from "../core.js";
+import "./_lib_overlay.js";
 
-  var L = AH.lib.overlay;
-  var defineSlide = L.defineSlide;
+var L = AH.lib.overlay;
+var defineSlide = L.defineSlide;
 
-  defineSlide("drawer");
-})(window.jQuery, window.AH);
+defineSlide("drawer");

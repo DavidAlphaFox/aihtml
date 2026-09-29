@@ -3,40 +3,43 @@
  * templates/notification.mustache and templates/toast.mustache, and a
  * click on a [data-ah-toast] element (shows_toast/2) pops one without a
  * server round trip. Cards: _lib_overlay.js. */
-(function ($, AH) {
-  "use strict";
+// ah-load: [data-ah-toast]
+import $ from "jquery";
+import AH from "../core.js";
+import "./_lib_overlay.js";
+import "virtual:ah-tpl/notification";
+import "virtual:ah-tpl/toast";
 
-  var L = AH.lib.overlay;
-  var GNS = L.GNS,
-      cardView = L.cardView,
-      duration = L.duration,
-      showCard = L.showCard;
+var L = AH.lib.overlay;
+var GNS = L.GNS,
+    cardView = L.cardView,
+    duration = L.duration,
+    showCard = L.showCard;
 
-  // AH.fn("toast", {title, description, variant, duration = 4000, position,
-  // closable, closeOnClick, width}): sigil's toast/show!, for client-side
-  // triggers (shows_toast/2). Text is escaped by the template.
-  function toast(o) {
-    o = typeof o === "string" ? { title: o } : (o || {});
-    var title = o.title === undefined || o.title === null ? "" : String(o.title);
-    var desc = o.description === undefined || o.description === null ? "" : String(o.description);
-    var content = AH.tpl.toast({ has_title: title !== "", title: title,
-                                 has_description: desc !== "", description: desc });
-    return showCard(AH.tpl.notification(cardView(o, content)),
-                    { position: o.position, duration: duration(o.duration, 4000) });
-  }
+// AH.fn("toast", {title, description, variant, duration = 4000, position,
+// closable, closeOnClick, width}): sigil's toast/show!, for client-side
+// triggers (shows_toast/2). Text is escaped by the template.
+function toast(o) {
+  o = typeof o === "string" ? { title: o } : (o || {});
+  var title = o.title === undefined || o.title === null ? "" : String(o.title);
+  var desc = o.description === undefined || o.description === null ? "" : String(o.description);
+  var content = AH.tpl.toast({ has_title: title !== "", title: title,
+                               has_description: desc !== "", description: desc });
+  return showCard(AH.tpl.notification(cardView(o, content)),
+                  { position: o.position, duration: duration(o.duration, 4000) });
+}
 
-  AH.fn("toast", toast);
-  AH.toast = toast;
+AH.fn("toast", toast);
+AH.toast = toast;
 
-  $(document).on("click" + GNS, "[data-ah-toast]", function () {
-    var $t = $(this);
-    toast({
-      title: $t.attr("data-ah-toast"),
-      description: $t.attr("data-ah-toast-description"),
-      variant: $t.attr("data-ah-toast-variant"),
-      duration: $t.attr("data-ah-toast-duration"),
-      position: $t.attr("data-ah-toast-position"),
-      closable: $t.attr("data-ah-toast-closable")
-    });
+$(document).on("click" + GNS, "[data-ah-toast]", function () {
+  var $t = $(this);
+  toast({
+    title: $t.attr("data-ah-toast"),
+    description: $t.attr("data-ah-toast-description"),
+    variant: $t.attr("data-ah-toast-variant"),
+    duration: $t.attr("data-ah-toast-duration"),
+    position: $t.attr("data-ah-toast-position"),
+    closable: $t.attr("data-ah-toast-closable")
   });
-})(window.jQuery, window.AH);
+});
