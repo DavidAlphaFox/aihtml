@@ -68,6 +68,7 @@
          input_otp/4,
          tag_input/3,
          markdown_editor/3,
+         markdown_view/3,
          dropdownlist/4,
          select/4,
          slider/4,
@@ -712,6 +713,13 @@ tag_input(A1, A2, A3) -> aihtml_tag_input:tag_input(A1, A2, A3).
                       aihtml_html:attrs()) ->
                          #ah_markdown_editor{}.
 markdown_editor(A1, A2, A3) -> aihtml_markdown_editor:markdown_editor(A1, A2, A3).
+
+%% aihtml_markdown_view
+-spec markdown_view(undefined | unicode:chardata(),
+                    aihtml_html:css(),
+                    aihtml_html:attrs()) ->
+                       aihtml_markdown_view:element().
+markdown_view(A1, A2, A3) -> aihtml_markdown_view:markdown_view(A1, A2, A3).
 
 %% aihtml_dropdownlist
 -spec dropdownlist([aihtml_lib_select:item()],

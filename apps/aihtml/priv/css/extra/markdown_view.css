@@ -1,0 +1,174 @@
+/* aihtml styles for markdown_view (aihtml_markdown_view): typography for
+   the HTML aihtml_lib_markdown writes, which has no classes of its own
+   (it is markdown-it's HTML), so everything is styled through the root.
+   The values follow the markdown editor's document (sigil's
+   prose_editor.css), so a text reads the same in the editor and here;
+   colours, fonts and radii come from the theme tokens. */
+
+.ah-markdown-view {
+  color: var(--ah-color-text);
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+}
+
+.ah-markdown-view > :first-child { margin-top: 0; }
+.ah-markdown-view > :last-child { margin-bottom: 0; }
+
+/* ---------- headings ---------- */
+
+.ah-markdown-view h1,
+.ah-markdown-view h2,
+.ah-markdown-view h3,
+.ah-markdown-view h4,
+.ah-markdown-view h5,
+.ah-markdown-view h6 {
+  color: var(--ah-color-text);
+  line-height: 1.3;
+}
+
+.ah-markdown-view h1 {
+  font-size: 1.75em;
+  font-weight: 700;
+  margin: 0.6em 0 0.3em;
+  padding-bottom: 0.2em;
+  border-bottom: var(--ah-border-width, 1px) solid var(--ah-color-border);
+}
+
+.ah-markdown-view h2 {
+  font-size: 1.4em;
+  font-weight: 700;
+  margin: 0.5em 0 0.25em;
+  padding-bottom: 0.15em;
+  border-bottom: var(--ah-border-width, 1px) solid var(--ah-color-border);
+}
+
+.ah-markdown-view h3 { font-size: 1.2em; font-weight: 600; margin: 0.5em 0 0.2em; }
+.ah-markdown-view h4 { font-size: 1.1em; font-weight: 600; margin: 0.4em 0 0.2em; }
+.ah-markdown-view h5 { font-size: 1em; font-weight: 600; margin: 0.4em 0 0.15em; }
+.ah-markdown-view h6 {
+  font-size: 0.9em;
+  font-weight: 600;
+  margin: 0.4em 0 0.15em;
+  color: var(--ah-color-text-secondary);
+}
+
+/* ---------- text ---------- */
+
+.ah-markdown-view p { margin: 0 0 0.75em; }
+.ah-markdown-view strong { font-weight: 700; }
+.ah-markdown-view em { font-style: italic; }
+.ah-markdown-view s {
+  text-decoration: line-through;
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-markdown-view a {
+  color: var(--ah-color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.ah-markdown-view a:hover { text-decoration-thickness: 2px; }
+.ah-markdown-view a:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-text);
+  outline-offset: 2px;
+  border-radius: var(--ah-radius-sm);
+}
+
+.ah-markdown-view code {
+  padding: 0.15em 0.4em;
+  background: var(--ah-color-bg-subtle);
+  border-radius: var(--ah-radius-sm);
+  font-family: var(--ah-font-mono, ui-monospace, monospace);
+  font-size: 0.9em;
+  color: var(--ah-color-primary);
+}
+
+/* ---------- blocks ---------- */
+
+.ah-markdown-view blockquote {
+  margin: 0.5em 0 1em;
+  padding: 8px 16px;
+  border-left: 3px solid var(--ah-color-primary);
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text-secondary);
+  border-radius: 0 4px 4px 0;
+}
+.ah-markdown-view blockquote > :last-child { margin-bottom: 0; }
+
+.ah-markdown-view hr {
+  margin: 1.5em 0;
+  border: none;
+  border-top: 2px solid var(--ah-color-border);
+}
+
+.ah-markdown-view img {
+  max-width: 100%;
+  height: auto;
+}
+
+.ah-markdown-view pre {
+  margin: 0.5em 0 1em;
+  padding: 12px 16px;
+  background: var(--ah-color-bg-subtle);
+  border-radius: 6px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+.ah-markdown-view pre code {
+  padding: 0;
+  background: none;
+  border-radius: 0;
+  color: var(--ah-color-text);
+  font-size: 13px;
+  white-space: pre;
+}
+
+/* ---------- lists ---------- */
+
+.ah-markdown-view ul,
+.ah-markdown-view ol {
+  margin: 0.25em 0 0.75em;
+  padding-left: 1.5em;
+}
+.ah-markdown-view ul { list-style-type: disc; }
+.ah-markdown-view ol { list-style-type: decimal; }
+.ah-markdown-view li { margin-bottom: 0.2em; }
+.ah-markdown-view li > ul,
+.ah-markdown-view li > ol { margin: 0.2em 0; }
+.ah-markdown-view li > p { margin: 0 0 0.5em; }
+
+/* task lists: <ul class="contains-task-list"> with a disabled checkbox */
+.ah-markdown-view .contains-task-list {
+  list-style: none;
+  padding-left: 4px;
+}
+.ah-markdown-view .task-list-item-checkbox {
+  width: 16px;
+  height: 16px;
+  margin: 0 8px 0 0;
+  vertical-align: -3px;
+  accent-color: var(--ah-color-primary);
+}
+
+/* ---------- tables ---------- */
+
+.ah-markdown-view table {
+  display: block;
+  max-width: 100%;
+  width: max-content;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 0.5em 0 1em;
+  font-size: 14px;
+}
+.ah-markdown-view th,
+.ah-markdown-view td {
+  padding: 8px 12px;
+  border: var(--ah-border-width, 1px) solid var(--ah-color-border);
+  text-align: left;
+}
+.ah-markdown-view th {
+  background: var(--ah-color-bg-subtle);
+  font-weight: 600;
+}

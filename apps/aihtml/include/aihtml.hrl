@@ -47,6 +47,7 @@
          input_otp/4,
          tag_input/3,
          markdown_editor/3,
+         markdown_view/3,
          dropdownlist/4,
          select/4,
          slider/4,

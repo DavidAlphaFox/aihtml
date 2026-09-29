@@ -1,0 +1,593 @@
+Markdown cases for aihtml_lib_markdown_tests: each is rendered by
+aihtml_lib_markdown and by markdown-it (scripts/render-markdown.mjs) and the
+HTML must be identical. A case starts with a line "%%%% <name>" and runs to
+the next such line; each of its lines ends in a newline (" [nonl]" after the
+name drops the last one).
+%%%% empty [nonl]
+%%%% only blank lines
+
+
+%%%% paragraph
+Hello world.
+%%%% paragraph without final newline [nonl]
+Hello world.
+%%%% two paragraphs
+First paragraph
+continues here.
+
+Second paragraph.
+%%%% paragraph leading spaces
+   indented three
+  and a lazy line
+%%%% atx headings
+# One
+## Two
+### Three
+#### Four
+##### Five
+###### Six
+####### Seven is text
+%%%% atx heading closing hashes
+# Title #
+## Title ##########
+### Title ### b
+#### Title \#
+# #
+#
+%%%% atx heading needs space
+#hashtag
+#	tab heading
+%%%% atx heading with emphasis
+## A *nice* `title` with [a link](https://example.com)
+%%%% setext headings
+Title one
+=========
+
+Title two
+---
+
+Multi line
+setext
+===
+%%%% setext vs hr
+Para
+***
+- - -
+___
+%%%% hard breaks
+line one
+line two\
+line three
+line four
+last
+%%%% soft breaks and trailing spaces
+a
+b
+c
+%%%% hard break at end of paragraph
+trailing spaces at end
+%%%% emphasis basics
+*em* _em_ **strong** __strong__ ***both*** ___both___
+%%%% emphasis intraword
+foo*bar*baz foo_bar_baz snake_case_name 2*3*4
+%%%% emphasis nested
+*a **b** c* **a *b* c** *a _b_ c*
+%%%% emphasis rule of three
+*foo**bar**baz* **foo*bar*baz** ***foo** bar* *foo**bar*
+%%%% emphasis unmatched
+*not closed **also not _nor this
+closing only* here** and_
+%%%% emphasis with punctuation
+"*quoted*" *"quoted"* **"strong"** *(paren)* a*"b"*c
+%%%% emphasis across lines
+*emphasis
+across lines* and **strong
+too**
+%%%% emphasis unicode punctuation
+«*quoted*» 中文*强调*中文 **粗体**。*斜体*，
+%%%% strikethrough
+~~deleted~~ ~single~ ~~~triple~~~ ~~a ~~b~~ c~~
+%%%% strikethrough mixed
+**~~bold deleted~~** ~~*em deleted*~~ ~~unclosed
+%%%% strikethrough odd markers
+~~~a~~ a~~~ ~~~~a~~~~ x~~y~~z
+%%%% inline code
+`code` ``code with ` tick`` ` spaced ` `  two  ` `a
+b`
+%%%% inline code unmatched
+`open ``double ` and ```three``
+%%%% inline code with html
+`<div class="x">&amp;</div>`
+%%%% backslash escapes
+\*not em\* \_no\_ \# \[x\] \` \\ \& \< \> \" \' \~ \| \! \a \é
+%%%% backslash before space and end [nonl]
+a\ b\
+%%%% entities
+&copy; &amp; &lt; &gt; &quot; &nbsp;x &frac12; &ThickSpace;| &notanentity; &AMP &#35; &#x41; &#X4a; &#0; &#1234567; &#xD800; &#x110000; &#99999999;
+%%%% entity in code stays
+`&copy;` and &copy;
+%%%% links inline
+[text](https://example.com) [with title](https://example.com "Title") [single](/path 'single') [paren](/p (paren title))
+%%%% links destinations
+[a](<with space.html>) [b](/p(a)r(e)n) [c]() [d](<>) [e](  /spaces  ) [f](/a\)b)
+%%%% links relative and fragments
+[home](/) [rel](docs/page.html) [frag](#section) [query](?a=1&b=2) [proto](//example.com/x)
+%%%% links unsafe schemes dropped
+[js](javascript:alert(1)) [JS](JAVASCRIPT:alert(1)) [data](data:text/html,x) [vb](vbscript:x) [ftp](ftp://example.com/f) [file](file:///etc/passwd)
+%%%% links mailto
+[mail](mailto:someone@example.com) [upper](MAILTO:a@b.c) [http](HTTP://EXAMPLE.COM/A)
+%%%% links with entities and escapes in url
+[a](https://example.com/a&amp;b) [b](https://example.com/\_x\_) [c](https://example.com/&#x6a;s) [d](&#106;avascript:alert(1))
+%%%% links with unicode and spaces
+[中文](https://例え.jp/パス?q=値#片) [pct](https://example.com/%E4%B8%AD%zz) [sp](<https://example.com/a b>)
+%%%% links nested brackets
+[a [b] c](/x) [not [a link](/inner) here](/outer) [[double]](/d)
+%%%% links with emphasis inside
+[*em* and **strong** and `code`](/x) *[em link](/y)*
+%%%% link text with brackets escaped
+[\[escaped\]](/e) \[not a link](/n)
+%%%% link title with quotes
+[t](/u "a \"quoted\" title") [t2](/u 'it''s') [t3](/u "multi
+line")
+%%%% links not closed
+[open](/x [text] (/y) [a](/b "title) [c](/d
+%%%% reference links
+[full][ref] [collapsed][] [shortcut] [Case Insensitive] [missing][nope]
+
+[ref]: https://example.com/ref "Ref Title"
+[collapsed]: /collapsed
+[shortcut]: </short cut> 'short'
+[case   INSENSITIVE]: /case
+%%%% reference definitions multi line
+[multi]
+
+[multi]:
+  https://example.com/multi
+  "title on
+  two lines"
+%%%% reference first wins and unused
+[x]
+
+[x]: /first
+[x]: /second
+[unused]: /unused
+%%%% reference definition invalid
+[a]: /url "title" junk
+[b]: javascript:x
+[c]:
+
+[a] [b] [c]
+%%%% reference in paragraph not definition
+Text
+[x]: /not-a-def
+%%%% images
+![alt text](/img.png) ![alt *em* `code`](/img.png "Title") ![](/empty.png) ![bad](javascript:x)
+%%%% image nested in link
+[![logo](/logo.png)](https://example.com)
+%%%% image alt with link and entities
+![a [link](/l) &amp; \* b](/i.png)
+%%%% image reference
+![ref image][img] ![img]
+
+[img]: /ref.png "Ref"
+%%%% autolinks
+<https://example.com> <http://a.b/c?d=e&f=g> <mailto:x@y.z> <user@example.com> <ftp://x.y> <javascript:alert(1)> <no spaces allowed> <a+b:c>
+%%%% autolinks encoding
+<https://example.com/%E4%B8%AD/中?q="x"> <https://xn--r8jz45g.jp/> <HTTPS://EXAMPLE.COM/%2f>
+%%%% raw html is text
+<div class="x">block html</div>
+
+Inline <b>bold</b> <img src=x onerror=alert(1)> <!-- comment --> <br/>
+%%%% raw html block like
+<script>alert("x")</script>
+<style>body{}</style>
+%%%% blockquote
+> quoted
+> text
+
+> another
+continued lazily
+%%%% blockquote nested
+> level one
+>> level two
+> > > level three
+%%%% blockquote with blocks
+> # Heading
+> - item
+> - item
+>
+> ```js
+> code();
+> ```
+%%%% blockquote empty and spacing
+>
+>   indented
+>	tab
+>no space
+%%%% blockquote ends at blank line
+> a
+
+b
+%%%% bullet list tight
+- one
+- two
+- three
+%%%% bullet list markers
+* star
+* star
++ plus
+- minus
+%%%% bullet list loose
+- one
+
+- two
+- three
+%%%% bullet list loose by inner blank
+- a
+
+  continued
+- b
+%%%% ordered list
+1. one
+2. two
+3. three
+%%%% ordered list start and paren
+3) three
+4) four
+
+007. seven
+%%%% ordered list interrupting paragraph
+Para
+2. not a list
+1. is a list
+%%%% nested lists
+- a
+  - b
+    - c
+  - d
+- e
+  1. one
+  2. two
+%%%% nested loose and tight
+1. first
+
+   para in first
+   - nested tight
+   - nested tight
+2. second
+%%%% list item with code
+- item
+
+      indented code in item
+- ```
+  fenced in item
+  ```
+%%%% list item empty
+-
+- after empty
+-
+
+text
+%%%% list items with tabs
+-	tab item
+-   spaced item
+1.	tab ordered
+%%%% list separated by blank lines
+- a
+
+
+- b
+%%%% list ends with other marker
+- a
++ b
+1. c
+1) d
+%%%% list lazy continuation
+- item
+lazy line
+- next
+%%%% list long numbers
+123456789. nine digits
+1234567890. ten digits
+%%%% task list
+- [ ] todo
+- [x] done
+- [X] also done
+%%%% task list mixed stays plain
+- [ ] todo
+- plain item
+%%%% task list loose
+- [ ] first
+
+- [x] second
+%%%% task list nested
+- [ ] parent
+  - [x] child
+  - [ ] child two
+- [x] parent two
+%%%% task list with formatting
+- [x] **bold** task
+- [ ] `code` task
+- [ ] [link](/l) task
+- [x]no space
+%%%% task list in ordered stays
+1. [ ] ordered
+2. [x] ordered
+%%%% task list edge
+- [ ]
+- [x]	tab
+- [ ]  two spaces
+%%%% task list inside blockquote
+> - [ ] quoted task
+> - [x] quoted done
+%%%% fenced code
+```
+plain
+```
+
+```js
+const a = 1 < 2 && "x";
+```
+
+~~~ python  extra words
+print("hi")
+~~~
+%%%% fenced code longer fences
+````
+```
+inner
+```
+````
+%%%% fenced code unclosed
+```
+never closed
+%%%% fenced code indented
+  ```
+  indented fence
+    more
+ less
+  ```
+%%%% fenced code info escapes
+```c\+\+ &amp;
+x
+```
+
+``` `bad backtick info
+x
+```
+
+~~~ `ok tilde`
+x
+~~~
+%%%% fenced code with blank lines
+
+```
+
+a
+
+b
+
+```
+%%%% indented code
+    code block
+      more indented
+    <tag> & "quotes"
+
+    after blank
+text
+%%%% indented code with tabs
+	tab code
+	  tab and spaces
+%%%% thematic breaks
+***
+---
+___
+* * *
+- - -
+_ _ _ _
+**
+--
+%%%% thematic break interrupts
+para
+***
+more
+%%%% table basic
+| a | b |
+| --- | --- |
+| 1 | 2 |
+| 3 | 4 |
+%%%% table alignment
+| left | center | right | none |
+|:-----|:------:|------:|------|
+| l | c | r | n |
+%%%% table without edge pipes
+a | b
+--|--
+1 | 2
+%%%% table with inline markup
+| **bold** | `code \| pipe` | [link](/l) |
+| --- | --- | --- |
+| *em* | a \| b | ~~del~~ |
+%%%% table missing and extra cells
+| a | b | c |
+|---|---|---|
+| 1 |
+| 1 | 2 | 3 | 4 |
+%%%% table header only
+| a | b |
+|---|---|
+%%%% table mismatched delimiter
+| a | b |
+|---|
+| 1 | 2 |
+%%%% table ends at blank line and blocks
+| a |
+|---|
+| 1 |
+> quote
+| 2 |
+
+| x |
+|---|
+| y |
+not a row?
+%%%% table inside list and blockquote
+- | a | b |
+  |---|---|
+  | 1 | 2 |
+
+> | q |
+> |---|
+> | r |
+%%%% table escaped pipes in code
+| code |
+|------|
+| `a|b` |
+%%%% mixed document
+# Weekly report
+
+Typing `# ` makes a heading, **bold**, *italic*, `- ` a list, `> ` a quote.
+
+- [x] Design review
+- [ ] More tests
+
+> Type / on an empty line to open the block menu.
+
+| Version | Date |
+| --- | --- |
+| 0.3 | 2026-09-29 |
+
+```erlang
+markdown_view(Md, [], []).
+```
+
+---
+
+The end.
+%%%% editor serializer output
+## Heading
+
+Paragraph with **strong**, *em*, `code`, ~~strike~~ and [link](https://example.com "t").
+
+1. one
+2. two
+
+- [ ] task
+- [x] done
+
+![image](https://example.com/a.png "title")
+
+> quote\
+> with break
+
+---
+
+```js
+let x = 1;
+```
+
+| a | b |
+| --- | --- |
+| c | d |
+%%%% chinese text
+# 标题
+
+这是一段**中文**文本，包含*强调*和`代码`。
+
+- 列表项一
+- 列表项二
+%%%% emoji and astral
+😀 *emoji* **👍** ~~🎉~~ [𝔘](/𝔘) \😀 &#x1F600;
+%%%% special characters escaped
+a & b < c > d "e" 'f' <tag> AT&T x&y;
+%%%% nul and crlf
+line  one
+line two
+%%%% crlf line endings
+a
+b
+
+c
+%%%% cr only
+abc
+%%%% tabs everywhere
+	code	with	tabs
+-	a
+	-	b
+>	quote	tab
+%%%% deeply nested blockquotes
+> > > > > > > > > > deep
+%%%% deeply nested lists
+- a
+  - b
+    - c
+      - d
+        - e
+          - f
+%%%% link reference with emphasis label
+[*emph* label]
+
+[*EMPH* label]: /e
+%%%% brackets without links
+[a] [b]() [] [ ] ![ ] ![]
+%%%% heading followed by list and code
+# H
+- a
+```
+c
+```
+%%%% list interrupted by heading
+- a
+# h
+- b
+%%%% paragraph continuation with indented code
+para
+    not code
+%%%% numbered heading lookalikes
+1986\. A great year.
+2023. Is a list.
+%%%% html entities in link text and title
+[&copy; link](/x "&quot;t&quot;")
+%%%% url with parentheses and spaces
+[a](/url(with)parens) [b](</url with spaces>) [c](/url%20encoded)
+%%%% link with angle brackets in text
+[<b>tag</b>](/x)
+%%%% emphasis underscore unicode
+_中文_ __中文__ a_b_c 中_文_字
+%%%% hard break inside emphasis
+*a
+b*
+%%%% backslash hard break then spaces
+a\
+    b
+%%%% trailing backslash in heading
+# heading\
+%%%% setext with trailing spaces
+Heading
+======
+%%%% list after paragraph with blank bullet
+text
+-
+%%%% ordered list start zero
+0. zero
+1. one
+%%%% list marker width
+10. ten
+    - nested under ten
+%%%% blockquote lazy list
+> - a
+- b
+%%%% blockquote with code lazy
+>     code
+    not code in quote
+%%%% autolink like text
+www.example.com https://example.com user@example.com
+%%%% triple emphasis mixed
+***a** b* *a **b*** **a *b***
+%%%% underscores punctuation
+_(a)_ __(b)__ _a_: _b_.
+%%%% link in heading and table
+# [Link](/l)
+
+| [x](/x) |
+|---|

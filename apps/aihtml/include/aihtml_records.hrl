@@ -54,6 +54,7 @@
 -include("aihtml_listmenu.hrl").
 -include("aihtml_loader.hrl").
 -include("aihtml_markdown_editor.hrl").
+-include("aihtml_markdown_view.hrl").
 -include("aihtml_masked_input.hrl").
 -include("aihtml_menu.hrl").
 -include("aihtml_meter.hrl").
