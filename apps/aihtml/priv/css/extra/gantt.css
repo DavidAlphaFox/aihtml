@@ -1,0 +1,24 @@
+/* aihtml additions for the gantt (aihtml_gantt). */
+
+/* Hidden rows, bars and summary bars: the component classes set display. */
+.ah-gantt [hidden] {
+  display: none !important;
+}
+
+.ah-gantt-sidebar-row:focus-visible,
+.ah-gantt-task-bar:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 1px;
+}
+
+.ah-gantt-sidebar-row:focus-visible {
+  outline-offset: -2px;
+}
+
+.ah-gantt-sidebar-row {
+  cursor: pointer;
+}
+
+.ah-gantt-task-bar {
+  box-sizing: border-box;
+}
