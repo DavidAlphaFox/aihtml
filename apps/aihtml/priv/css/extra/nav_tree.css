@@ -1,0 +1,7 @@
+/* aihtml additions for the nav_tree component (aihtml_nav_tree). */
+
+/* NavTree: keyboard focus on links and summaries. */
+.ah-nav-tree__item:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-primary);
+  outline-offset: -2px;
+}
