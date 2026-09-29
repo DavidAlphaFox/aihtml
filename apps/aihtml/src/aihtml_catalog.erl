@@ -19,7 +19,8 @@
 %%%-------------------------------------------------------------------
 -module(aihtml_catalog).
 
--export([prefabs/0, prefab/1, entry/2, classes/2, flags/2, split_options/2, groups/0]).
+-export([prefabs/0, prefab/1, entry/2, classes/2, flags/2, split_options/2, groups/0,
+         parse_css/2, field_classes/3]).
 
 -export_type([entry/0]).
 
@@ -111,6 +112,43 @@ split_options(Entry, Attrs) ->
                                       (_) -> false
                                    end, flat_attrs(Attrs)),
     {maps:from_list(Opts), Rest}.
+
+%% @doc Split a Css argument for an element record's builder: the chosen
+%% modifier of each group that has one, the flags present, and the literal
+%% classes. Unknown and conflicting modifiers fail as in classes/2.
+-spec parse_css(atom() | entry(), aihtml_html:css()) ->
+          {#{atom() => atom()}, [atom()], aihtml_html:css()}.
+parse_css(Name, Css) when is_atom(Name) -> parse_css(prefab(Name), Css);
+parse_css(Entry0, Css) ->
+    #{name := Name, groups := Groups, flags := Flags} = normalize(Entry0),
+    {Mods, Literal} = lists:partition(fun is_atom/1, flatten(Css)),
+    _ = choose(Name, Mods, Groups, Flags),
+    Chosen = maps:from_list([{G, M} || M <- Mods, {ok, G} <- [group_of(M, Groups)]]),
+    {Chosen, lists:usort([M || M <- Mods, lists:member(M, Flags)]), Literal}.
+
+%% @doc The class list of an element record: `Values' holds its fields by
+%% name; each modifier group is read from the field of the same name
+%% (undefined only where the group has no default), each flag from a
+%% boolean field. `Literal' must hold classes only, no modifier atoms.
+-spec field_classes(atom() | entry(), #{atom() => term()}, aihtml_html:css()) ->
+          aihtml_html:css().
+field_classes(Name, Values, Literal) when is_atom(Name) ->
+    field_classes(prefab(Name), Values, Literal);
+field_classes(Entry0, Values, Literal) ->
+    #{name := Name, groups := Groups, flags := Flags} = Entry = normalize(Entry0),
+    [error({aihtml, {modifier_in_css, Name, A}}) || A <- flatten(Literal), is_atom(A)],
+    Mods = [case maps:get(G, Values, Default) of
+                undefined when Default =:= none -> [];
+                V -> lists:member(V, Ms) orelse
+                         error({aihtml, {bad_modifier, Name, G, V, Ms}}),
+                     [V]
+            end || {G, {Ms, Default}} <- lists:sort(maps:to_list(Groups))],
+    Set = [F || F <- Flags,
+                case maps:get(F, Values, false) of
+                    B when is_boolean(B) -> B;
+                    V -> error({aihtml, {bad_flag, Name, F, V}})
+                end],
+    classes(Entry, [Mods, Set, Literal]).
 
 %%%===================================================================
 %%% Internal
