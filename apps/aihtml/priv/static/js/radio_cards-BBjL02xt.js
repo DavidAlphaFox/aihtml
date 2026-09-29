@@ -1,1 +1,0 @@
-import{t as e}from"./main-gayJiH3Z.js";import"./_lib_choice-Dfe6t2hM.js";var t=e.lib.choice;function n(e){var t=e.closest(`.ah-radio-cards__card`);t&&(t.setAttribute(`data-selected`,e.checked?`true`:`false`),t.setAttribute(`data-disabled`,e.disabled?`true`:`false`))}t.defineGroup(`radio-cards`,{radio:!0,sync:n,item:`.ah-radio-cards__card`,disabledAttr:!0});

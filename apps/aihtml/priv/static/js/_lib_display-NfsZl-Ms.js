@@ -1,0 +1,1 @@
+var e=window.AH;function t(e,t){let n=parseFloat(String(e));return isNaN(n)?t:n}function n(e,t,n){return Math.max(t,Math.min(n,e))}function r(t){e.destroy(t),t.remove()}function i(e,t){(e.key===`Enter`||e.key===` `)&&(e.preventDefault(),(t||e.currentTarget).click())}export{t as i,r as n,i as r,n as t};

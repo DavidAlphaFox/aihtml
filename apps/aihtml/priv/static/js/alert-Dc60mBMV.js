@@ -1,0 +1,1 @@
+import{n as e}from"./_lib_display-NfsZl-Ms.js";var t=window.AH,n=class extends t.Controller{setup(){this.delegate(`click`,`.ah-alert-close`,()=>{this.dismiss()})}dismiss(){this.fire(`ah:dismiss`)&&e(this.element)}};t.register(`alert`,n);

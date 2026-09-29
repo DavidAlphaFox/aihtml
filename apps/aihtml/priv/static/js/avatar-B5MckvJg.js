@@ -1,0 +1,1 @@
+var e=window.AH,t=class extends e.Controller{setup(){this.element.querySelectorAll(`.ah-avatar__image`).forEach(e=>{let t=()=>{e.classList.add(`ah-avatar__image--broken`)};this.listen(e,`error`,t),e.complete&&e.naturalWidth===0&&t()})}};e.register(`avatar`,t);

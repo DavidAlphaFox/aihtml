@@ -1,1 +1,0 @@
-import{t as e}from"./main-gayJiH3Z.js";e.register(`avatar`,class extends e.Controller{setup(){this.element.querySelectorAll(`.ah-avatar__image`).forEach(e=>{let t=()=>{e.classList.add(`ah-avatar__image--broken`)};this.listen(e,`error`,t),e.complete&&e.naturalWidth===0&&t()})}});

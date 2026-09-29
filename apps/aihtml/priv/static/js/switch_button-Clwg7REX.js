@@ -1,0 +1,1 @@
+import{a as e,c as t,i as n,l as r,n as i,r as a}from"./_lib_choice-DiCnFigg.js";var o=window.AH,s=class extends o.Controller{setup(){a(this),this.delegate(`change`,i,(e,n)=>{t(n)})}setChecked(e){let i=n(this.element);i.checked=r(e),t(i)}getValue(){return n(this.element).checked}setDisabled(r){e(n(this.element),r,t)}};o.register(`switch-button`,s);

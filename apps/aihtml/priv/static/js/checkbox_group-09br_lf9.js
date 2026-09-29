@@ -1,0 +1,1 @@
+import{o as e,t}from"./_lib_choice-DiCnFigg.js";var n=window.AH,r=class extends t{kind={radio:!1,sync:e,item:`.ah-checkbox-group-item`,itemDisabled:`ah-checkbox-group-item-disabled`,disabled:`ah-checkbox-group-disabled`}};n.register(`checkbox-group`,r);

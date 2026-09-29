@@ -1,0 +1,1 @@
+import{i as e,r as t}from"./_lib_display-NfsZl-Ms.js";var n=window.AH,r=`.ah-ranking-list__item--clickable`,i=class extends n.Controller{setup(){this.delegate(`click`,r,(t,n)=>{this.fire(`ah:item-click`,{index:e(n.getAttribute(`data-idx`),0)})}),this.delegate(`keydown`,r,(e,n)=>{t(e,n)})}};n.register(`ranking-list`,i);

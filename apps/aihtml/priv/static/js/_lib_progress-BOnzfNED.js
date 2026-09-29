@@ -1,0 +1,1 @@
+function e(e,t,n){return n>t?100*(e-t)/(n-t):0}function t(e,t,n,r){if(t===n)return;let i={previous:t,value:n};e.dispatchEvent(new CustomEvent(`change`,{bubbles:!0,cancelable:!0,detail:i})),n===r&&e.dispatchEvent(new CustomEvent(`ah:complete`,{bubbles:!0,cancelable:!0,detail:i}))}export{e as n,t};

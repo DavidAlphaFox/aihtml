@@ -1,0 +1,1 @@
+import{s as e,t}from"./_lib_choice-DiCnFigg.js";var n=window.AH,r=class extends t{kind={radio:!0,sync:e,item:`.ah-radiobutton-group-item`,itemDisabled:`ah-radiobutton-group-item-disabled`,disabled:`ah-radiobutton-group-disabled`}};n.register(`radiobutton-group`,r);

@@ -1,0 +1,1 @@
+function e(e,t){e.setAttribute(`data-ah-value`,String(t));let n=e.querySelector(`:scope > input[type=hidden]`);n&&(n.value=String(t))}function t(e,t,n){let r=parseFloat(e.getAttribute(t)||``);return isNaN(r)?n:r}function n(e,t){let n=t?t.pointerId:void 0;if(n!==void 0)try{e.setPointerCapture(n)}catch{}}export{t as n,e as r,n as t};

@@ -1,0 +1,1 @@
+import{t as e}from"./_lib_choice-DiCnFigg.js";var t=window.AH;function n(e){let t=e.closest(`.ah-radio-cards__card`);t&&(t.setAttribute(`data-selected`,e.checked?`true`:`false`),t.setAttribute(`data-disabled`,e.disabled?`true`:`false`))}var r=class extends e{kind={radio:!0,sync:n,item:`.ah-radio-cards__card`,disabledAttr:!0}};t.register(`radio-cards`,r);
