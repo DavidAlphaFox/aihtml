@@ -45,6 +45,10 @@ main([Mod | [OutDir | Rest]]) ->
        ++ filename:absname(filename:join(OutDir, "aihtml.css")) ++ " 2>&1 | tail -1"),
     {ok, _} = file:copy(filename:join(Root, "apps/aihtml/priv/static/vendor/jquery.min.js"),
                         filename:join(OutDir, "jquery.min.js")),
+    %% AH.vendor loads echarts, xlsx, jspdf from vendor/ next to aihtml.js
+    Vendor = filename:join(OutDir, "vendor"),
+    _ = file:delete(Vendor),
+    ok = file:make_symlink(filename:join(Root, "apps/aihtml/priv/static/vendor"), Vendor),
     io:format("~s~n", [filename:absname(filename:join(OutDir, "index.html"))]);
 main(_) ->
     io:format("usage: preview-group.escript Module OutDir [ExtraEbinDir]~n"),

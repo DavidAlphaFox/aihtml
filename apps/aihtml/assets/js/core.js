@@ -44,6 +44,9 @@
 
   var NS = ".ah";
   var behaviors = {};
+  // this script's own URL, read while it runs (see vendor below)
+  var SELF = typeof document !== "undefined" && document.currentScript
+    ? document.currentScript.src : "";
 
   // ------------------------------------------------------------------
   // Behaviours
@@ -1140,6 +1143,58 @@
     }
   });
 
+  // ------------------------------------------------------------------
+  // Optional third-party scripts (priv/static/vendor), loaded on demand
+  // ------------------------------------------------------------------
+
+  // AH.vendor("echarts").then(function (echarts) { ... }) loads a library
+  // once per page and resolves with its global; a list loads in order and
+  // resolves with the list of globals. A library already on the page (its
+  // global is defined) is not loaded again. Files come from the body's
+  // data-ah-vendor directory, else from "vendor/" next to aihtml.js.
+  var VENDOR = {
+    echarts: { file: "echarts.min.js", global: "echarts" },
+    xlsx: { file: "xlsx.full.min.js", global: "XLSX" },
+    jspdf: { file: "jspdf.umd.min.js", global: "jspdf" },
+    "jspdf-autotable": { file: "jspdf.plugin.autotable.min.js", global: "autoTable",
+                         deps: ["jspdf"] }
+  };
+  var vendorLoads = {};
+
+  function vendorDir() {
+    var dir = document.body && document.body.getAttribute("data-ah-vendor");
+    if (dir) { return dir.replace(/\/?$/, "/"); }
+    return SELF ? SELF.replace(/[^\/]*$/, "") + "vendor/" : "/aihtml/vendor/";
+  }
+
+  function vendor(names) {
+    if (Array.isArray(names)) {
+      return names.reduce(function (p, n) {
+        return p.then(function (acc) {
+          return vendor(n).then(function (g) { return acc.concat([g]); });
+        });
+      }, Promise.resolve([]));
+    }
+    var lib = VENDOR[names];
+    if (!lib) { return Promise.reject(new Error("aihtml: unknown vendor library " + names)); }
+    if (!vendorLoads[names]) {
+      vendorLoads[names] = vendor(lib.deps || []).then(function () {
+        if (window[lib.global]) { return window[lib.global]; }
+        return new Promise(function (ok, fail) {
+          var s = document.createElement("script");
+          s.src = vendorDir() + lib.file;
+          s.onload = function () { ok(window[lib.global]); };
+          s.onerror = function () {
+            delete vendorLoads[names];
+            fail(new Error("aihtml: cannot load " + s.src));
+          };
+          document.head.appendChild(s);
+        });
+      });
+    }
+    return vendorLoads[names];
+  }
+
   $(function () {
     mount(document);
     syncStream();
@@ -1154,6 +1209,7 @@
     destroy: destroy,
     theme: theme,
     fetch: fetchFor,
+    vendor: vendor,
     apply: applyOps,
     swap: swap,
     morph: function (target, html) { morph($(target)[0], html, true); },

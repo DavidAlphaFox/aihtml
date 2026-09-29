@@ -6,7 +6,7 @@
 //
 //   node scripts/test-js.mjs [filter]
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, readdirSync, writeFileSync, copyFileSync, existsSync } from "node:fs";
+import { mkdtempSync, readdirSync, writeFileSync, copyFileSync, existsSync, symlinkSync } from "node:fs";
 import { tmpdir, homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -29,6 +29,8 @@ if (existsSync(join(root, "scripts", "mustache.test.mjs"))) {
 const dir = mkdtempSync(join(tmpdir(), "aihtml-js-"));
 execFileSync("node", [join(root, "scripts", "build-js.mjs"), join(dir, "aihtml.js")]);
 copyFileSync(join(root, "apps/aihtml/priv/static/vendor/jquery.min.js"), join(dir, "jquery.min.js"));
+// AH.vendor loads from vendor/ next to aihtml.js
+symlinkSync(join(root, "apps/aihtml/priv/static/vendor"), join(dir, "vendor"));
 
 const HARNESS = `
 window.AHTest = (function () {
