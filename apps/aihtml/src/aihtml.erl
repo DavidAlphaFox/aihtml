@@ -67,6 +67,7 @@
          number_input/3,
          input_otp/4,
          tag_input/3,
+         markdown_editor/3,
          dropdownlist/4,
          select/4,
          slider/4,
@@ -135,11 +136,6 @@
          tooltip/4,
          tooltip_attrs/2,
          popover/3,
-         opens/1,
-         toggles/1,
-         closes/0,
-         closes/1,
-         closes/2,
          drawer/3,
          sheet/3,
          shows_toast/2,
@@ -199,7 +195,12 @@
          relation_graph/3,
          node_graph/3,
          node_graph_layout/1,
-         set_node_graph/3]).
+         set_node_graph/3,
+         opens/1,
+         toggles/1,
+         closes/0,
+         closes/1,
+         closes/2]).
 %% END GENERATED EXPORTS
 
 -export_type([html/0, element/0, css/0, attrs/0]).
@@ -705,6 +706,13 @@ input_otp(A1, A2, A3, A4) -> aihtml_input_otp:input_otp(A1, A2, A3, A4).
                    #ah_tag_input{}.
 tag_input(A1, A2, A3) -> aihtml_tag_input:tag_input(A1, A2, A3).
 
+%% aihtml_markdown_editor
+-spec markdown_editor(undefined | unicode:chardata(),
+                      aihtml_html:css(),
+                      aihtml_html:attrs()) ->
+                         #ah_markdown_editor{}.
+markdown_editor(A1, A2, A3) -> aihtml_markdown_editor:markdown_editor(A1, A2, A3).
+
 %% aihtml_dropdownlist
 -spec dropdownlist([aihtml_lib_select:item()],
                    aihtml_lib_select:value() | undefined,
@@ -1167,17 +1175,6 @@ tooltip_attrs(A1, A2) -> aihtml_tooltip:tooltip_attrs(A1, A2).
               aihtml_html:attrs()) ->
                  #ah_popover{}.
 popover(A1, A2, A3) -> aihtml_popover:popover(A1, A2, A3).
--spec opens(aihtml_lib_overlay:target()) -> aihtml_html:attrs().
-opens(A1) -> aihtml_popover:opens(A1).
--spec toggles(aihtml_lib_overlay:target()) -> aihtml_html:attrs().
-toggles(A1) -> aihtml_popover:toggles(A1).
--spec closes() -> aihtml_html:attrs().
-closes() -> aihtml_popover:closes().
--spec closes(aihtml_lib_overlay:target()) -> aihtml_html:attrs().
-closes(A1) -> aihtml_popover:closes(A1).
--spec closes(aihtml_lib_overlay:target() | closest, atom() | iodata()) ->
-                aihtml_html:attrs().
-closes(A1, A2) -> aihtml_popover:closes(A1, A2).
 
 %% aihtml_drawer
 -spec drawer(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
@@ -1530,5 +1527,18 @@ node_graph_layout(A1) -> aihtml_node_graph:node_graph_layout(A1).
                      aihtml_node_graph:graph()) ->
                         ok.
 set_node_graph(A1, A2, A3) -> aihtml_node_graph:set_node_graph(A1, A2, A3).
+
+%% aihtml_lib_overlay
+-spec opens(aihtml_lib_overlay:target()) -> aihtml_html:attrs().
+opens(A1) -> aihtml_lib_overlay:opens(A1).
+-spec toggles(aihtml_lib_overlay:target()) -> aihtml_html:attrs().
+toggles(A1) -> aihtml_lib_overlay:toggles(A1).
+-spec closes() -> aihtml_html:attrs().
+closes() -> aihtml_lib_overlay:closes().
+-spec closes(aihtml_lib_overlay:target()) -> aihtml_html:attrs().
+closes(A1) -> aihtml_lib_overlay:closes(A1).
+-spec closes(aihtml_lib_overlay:target() | closest, atom() | iodata()) ->
+                aihtml_html:attrs().
+closes(A1, A2) -> aihtml_lib_overlay:closes(A1, A2).
 
 %% END GENERATED COMPONENTS

@@ -46,6 +46,7 @@
          number_input/3,
          input_otp/4,
          tag_input/3,
+         markdown_editor/3,
          dropdownlist/4,
          select/4,
          slider/4,
@@ -114,11 +115,6 @@
          tooltip/4,
          tooltip_attrs/2,
          popover/3,
-         opens/1,
-         toggles/1,
-         closes/0,
-         closes/1,
-         closes/2,
          drawer/3,
          sheet/3,
          shows_toast/2,
@@ -178,5 +174,10 @@
          relation_graph/3,
          node_graph/3,
          node_graph_layout/1,
-         set_node_graph/3]).
+         set_node_graph/3,
+         opens/1,
+         toggles/1,
+         closes/0,
+         closes/1,
+         closes/2]).
 %% END GENERATED COMPONENT IMPORTS

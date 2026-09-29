@@ -2,12 +2,14 @@
 %%! -noshell
 %% Regenerates the component section of apps/aihtml/src/aihtml.erl and the
 %% component imports of apps/aihtml/include/aihtml.hrl from the component
-%% component modules (aihtml_catalog:modules/0).
+%% modules (aihtml_catalog:modules/0) and the shared aihtml_lib_* modules
+%% that export `facade_extras/0' (found on the code path).
 %%
-%% For every group module it takes the exported functions named in the
-%% module's catalog, plus the functions listed in its `facade_extras/0' if
-%% it exports one, and writes a delegating wrapper with the module's own
-%% -spec (local types become Module:type() when exported, term() if not).
+%% For every component module it takes the exported functions named in
+%% the module's catalog, plus the functions listed in its `facade_extras/0'
+%% if it exports one; for a lib module only its `facade_extras/0'. Each
+%% gets a delegating wrapper with the module's own -spec (local types
+%% become Module:type() when exported, term() if not).
 %%
 %%   escript scripts/gen-facade.escript [--out Dir] [ExtraEbinDir...]
 %%
@@ -23,7 +25,7 @@ main(Args) ->
     Root = filename:dirname(filename:dirname(filename:absname(escript:script_name()))),
     [code:add_patha(D) || D <- filelib:wildcard(filename:join(Root, "_build/default/lib/*/ebin"))],
     [code:add_patha(D) || D <- Args],
-    Mods = [M || M <- aihtml_catalog:modules(), M =/= aihtml_theme,
+    Mods = [M || M <- aihtml_catalog:modules() ++ lib_modules(), M =/= aihtml_theme,
                    code:ensure_loaded(M) =:= {module, M}],
     Entries = lists:append([entries(M) || M <- Mods]),
     check_clashes(Entries),
@@ -38,10 +40,23 @@ main(Args) ->
     replace(Hrl, "%% BEGIN GENERATED COMPONENT IMPORTS", "%% END GENERATED COMPONENT IMPORTS",
             ["-import(aihtml,\n        [", lists:join(",\n         ", chunk(Exports)), "]).\n"]),
     write_records(filename:dirname(Hrl)),
-    io:format("~b functions from ~b component modules~n", [length(Entries), length(Mods)]).
+    io:format("~b functions from ~b modules~n", [length(Entries), length(Mods)]).
+
+%% The aihtml_lib_* modules on the code path that export facade_extras/0,
+%% in name order (after the component modules).
+lib_modules() ->
+    Names = lists:usort([filename:basename(B, ".beam")
+                         || D <- code:get_path(),
+                            B <- filelib:wildcard("aihtml_lib_*.beam", D)]),
+    [M || N <- Names, M <- [list_to_atom(N)],
+          code:ensure_loaded(M) =:= {module, M},
+          erlang:function_exported(M, facade_extras, 0)].
 
 entries(M) ->
-    Names = [N || #{name := N} <- M:catalog()],
+    Names = case erlang:function_exported(M, catalog, 0) of
+                true -> [N || #{name := N} <- M:catalog()];
+                false -> []
+            end,
     Extras = case erlang:function_exported(M, facade_extras, 0) of
                  true -> M:facade_extras();
                  false -> []

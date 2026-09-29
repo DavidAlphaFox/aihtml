@@ -18,7 +18,7 @@
 %%% `Target' is a CSS selector (binary) or `{id, Id}'.
 %%%
 %%% The declarative triggers are public API: the aihtml facade re-exports
-%%% them through aihtml_popover (see its facade_extras/0).
+%%% them (facade_extras/0, read by scripts/gen-facade.escript).
 %%% open/2, close/2 and toggle/2 stay module qualified because their names
 %%% are too generic to import. The rest of the module is internal: the
 %%% notification card, the drawer and sheet markup and field checks.
@@ -32,7 +32,7 @@
 -mustache_template({tpl_notification, "../templates/notification.mustache"}).
 
 %% Declarative triggers (public, re-exported by the facade)
--export([opens/1, closes/0, closes/1, closes/2, toggles/1]).
+-export([opens/1, closes/0, closes/1, closes/2, toggles/1, facade_extras/0]).
 %% Server-driven helpers, for actions
 -export([open/2, close/2, toggle/2]).
 %% Internal
@@ -83,6 +83,12 @@ closes(Target) -> [{data_ah_close, selector(Target)}].
 -spec closes(target() | closest, atom() | iodata()) -> aihtml_html:attrs().
 closes(closest, Result) -> [{data_ah_close, <<>>}, {data_ah_result, text(Result)}];
 closes(Target, Result) -> [{data_ah_close, selector(Target)}, {data_ah_result, text(Result)}].
+
+%% @doc The declarative triggers, re-exported by the aihtml facade
+%% (scripts/gen-facade.escript).
+-spec facade_extras() -> [{atom(), arity()}].
+facade_extras() ->
+    [{opens, 1}, {closes, 0}, {closes, 1}, {closes, 2}, {toggles, 1}].
 
 trigger_attrs(Key, Target) ->
     [{Key, selector(Target)}, {aria_haspopup, <<"dialog">>},
