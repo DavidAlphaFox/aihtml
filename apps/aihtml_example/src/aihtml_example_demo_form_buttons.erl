@@ -6,7 +6,7 @@
 -include_lib("aihtml/include/aihtml.hrl").
 
 -export([demos/0]).
--export([button_variants/0, button_sizes/0, button_states/0, button_icons/0,
+-export([button_variants/0, button_sizes/0, button_states/0, button_icons/0, button_records/0,
          link_buttons/0, toggle_buttons/0, group_modes/0, group_layouts/0,
          segmented/0, segmented_full/0, dropdown/0, dropdown_variants/0,
          split/0]).
@@ -18,7 +18,8 @@ demos() ->
        demos => [{<<"变体"/utf8>>, button_variants},
                  {<<"尺寸"/utf8>>, button_sizes},
                  {<<"圆角与禁用"/utf8>>, button_states},
-                 {<<"图标"/utf8>>, button_icons}]},
+                 {<<"图标"/utf8>>, button_icons},
+                 {<<"record 写法"/utf8>>, button_records}]},
      #{component => link_button, title => <<"LinkButton">>,
        summary => <<"外观是按钮的链接。"/utf8>>,
        demos => [{<<"看起来像按钮的链接"/utf8>>, link_buttons}]},
@@ -74,6 +75,12 @@ button_icons() ->
          button(<<"Icon right">>, undefined, [outlined],
                 [{icon, <<"→"/utf8>>}, {icon_position, right}]),
          button(<<"Top">>, undefined, [default], [{icon, <<"☰"/utf8>>}, {icon_position, top}])]).
+
+-spec button_records() -> aihtml:html().
+button_records() ->
+    row([#ah_button{body = <<"Save">>, variant = success, icon = <<"✓"/utf8>>},
+         #ah_button{body = <<"Large outlined">>, variant = outlined, size = lg, round = true},
+         #ah_button{body = <<"Disabled">>, disabled = true, css = [<<"opacity-80">>]}]).
 
 -spec link_buttons() -> aihtml:html().
 link_buttons() ->
