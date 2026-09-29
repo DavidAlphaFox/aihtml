@@ -255,7 +255,7 @@ split_button_disabled_test() ->
     ?assertError({aihtml, {conflicting_modifiers, split_button, variant, _}},
                  ?M:split_button(<<"Go">>, [], [primary, error], [])).
 
-%%% catalog and examples
+%%% catalog (demos live in aihtml_example)
 
 catalog_test() ->
     Cat = ?M:catalog(),
@@ -271,8 +271,13 @@ catalog_test() ->
     Behaviors = [B || #{behavior := B} <- Cat],
     ?assertEqual(5, length(Behaviors)).
 
-examples_render_test() ->
-    Ex = ?M:examples(),
-    ?assertEqual(lists:sort([N || #{name := N} <- ?M:catalog()]),
-                 lists:usort([N || {N, _, _} <- Ex])),
-    [?assert(byte_size(r(H)) > 0) || {_, _, H} <- Ex].
+catalog_docs_test() ->
+    [begin
+         Docs = maps:get(option_docs, E, #{}),
+         ?assertEqual(lists:sort(maps:get(options, E, []) ++ maps:get(flags, E, [])),
+                      lists:sort(maps:keys(Docs))),
+         [?assert(is_binary(D) andalso D =/= <<>>) || D <- maps:values(Docs)],
+         Ms = maps:get(methods, E),
+         [#{name := _, args := <<"(", _/binary>>, doc := _} = X || X <- Ms],
+         ?assertEqual(maps:get(behavior, E, none) =/= none, Ms =/= [])
+     end || E <- ?M:catalog()].
