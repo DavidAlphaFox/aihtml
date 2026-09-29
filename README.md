@@ -34,7 +34,7 @@ login() ->
 
 ## 截图
 
-以下截图都来自仓库里的示例站（`rebar3 shell` 后打开 http://localhost:8080/）。每个组件文档页上方是渲染效果，下方是生成它的 Erlang 代码；右上角的四个下拉框切换外观、配色、排版、外形四个主题轴，下面几张用了不同的组合。
+以下截图都来自仓库里的示例站（`rebar3 shell` 后打开 http://localhost:8080/），由 `npm run screenshots` 生成。每个组件文档页上方是渲染效果，下方是生成它的 Erlang 代码；右上角的四个下拉框切换外观、配色、排版、外形四个主题轴，下面几张用了不同的组合。
 
 <table>
   <tr>
@@ -754,6 +754,7 @@ rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、
 - **全部测试**：`rebar3 eunit` 跑类库和演示站；`--app aihtml` 只跑类库。
 - **模板一致性**由 EUnit 的 `aihtml_tpl_tests` 检查，需要能调用 `node`。
 - **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行：它先打包一份运行时，用本地 HTTP 服务提供测试页（ES 模块不能从 `file://` 加载），加载全部组件后再运行测试。
+- **截图**：README 的截图由 `npm run screenshots` 从正在运行的示例站（先 `rebar3 shell`）重新生成到 `docs/screenshots/`；清单（页面和主题）在 `scripts/screenshots.mjs` 里，也可以只截其中几张：`node scripts/screenshots.mjs datagrid live-demo`，`--base=` 指定别的地址。
 - **打包产物要提交**：改了 `assets/js` 或模板后运行 `npm run js`，把 `priv/static/js` 一起提交，使用方不需要运行 npm。组件文件的按需加载条件由构建时扫描得到，写法见 `designs/04-components.md` 的「TypeScript 约定」。
 
 ## 许可证

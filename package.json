@@ -15,7 +15,8 @@
     "css:index": "node scripts/gen-css-index.mjs",
     "css:lib": "tailwindcss -i apps/aihtml/assets/aihtml.build.css -o apps/aihtml/priv/static/aihtml.css --minify",
     "css:example": "tailwindcss -i apps/aihtml_example/assets/example.css -o apps/aihtml_example/priv/static/example.css --minify",
-    "watch:example": "tailwindcss -i apps/aihtml_example/assets/example.css -o apps/aihtml_example/priv/static/example.css --watch"
+    "watch:example": "tailwindcss -i apps/aihtml_example/assets/example.css -o apps/aihtml_example/priv/static/example.css --watch",
+    "screenshots": "node scripts/screenshots.mjs"
   },
   "devDependencies": {
     "@hotwired/stimulus": "^3.2.2",
