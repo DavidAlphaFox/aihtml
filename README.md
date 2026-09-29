@@ -364,26 +364,95 @@ $list.append(AH.tpl.my_badge({ color: "primary", label: name, count: n }));
 
 Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字面量，不能在运行时拼接。
 
-## 开发
+## 演示站
 
-```sh
-rebar3 compile
-rebar3 eunit --app aihtml
-rebar3 dialyzer && rebar3 xref
+`apps/aihtml_example` 是一个完整的 cowboy 应用，同时承担三件事：组件文档、实时交互演示、部署示范。启动方法见"开发"一节的 `rebar3 shell`，端口默认 8080。
 
-npm install
-npm run build          # 复制 jQuery，编译模板并拼出 aihtml.js，构建 aihtml.css 与 example.css
-npm test               # 模板编译器的 Mustache 规范用例 + 浏览器端测试（无头 Chromium）
+### 页面
 
-rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、/components、/demo、/fetch
+| 路由 | 模块 | 内容 |
+|---|---|---|
+| `/` | `aihtml_example_home` | 首页：主视觉区和统计数字，按类别排列的组件卡片，特性介绍 |
+| `/components` | `aihtml_example_docs` | 跳转到第一个组件 |
+| `/components/:name` | `aihtml_example_docs` | 组件文档页，结构见下文 |
+| `/demo` | `aihtml_example_actions` | 实时演示：计数器、实时输入、分步加载、服务端搜索、待办、服务端推送的时钟。`?view=processes` 或 `?view=system` 直接渲染对应的数据视图，供浏览器前进后退使用 |
+| `/fetch` | `aihtml_example_page`、`aihtml_example_api`、`aihtml_example_views` | URL 片段模式的同类演示；片段接口是 `/counter`、`/greet`、`/todos`、`/todos/:id`、`/todos/:id/toggle` |
+| `/aihtml/action`、`/aihtml/events`、`/aihtml/[...]` | `aihtml_cowboy:routes/1` | action 端点、推送流、库的静态资源 |
+| `/static/[...]` | cowboy_static | 演示站自己的样式 `example.css` |
+
+所有页面共用 `aihtml_example_site:topbar/1` 顶栏，导航到组件、实时演示和片段模式。
+
+### 组件文档页
+
+左侧是按类别分组的导航，用库里的 `sidenav` 组件；右侧标题区有组件名、说明、签名和主题切换器，下面是三个标签页：
+
+| 标签 | 内容 | 数据来源 |
+|---|---|---|
+| 演示 | 逐个实时渲染示例，每个示例下方附渲染它的 Erlang 函数 | 示例模块的 `demos/0`；函数源码由 `aihtml_example_source` 从 debug_info 取出、用 `erl_pp` 格式化并做语法高亮 |
+| 代码 | 这个组件的全部示例函数 | 同上 |
+| API | 签名、修饰符、选项说明、事件及绑定写法、方法、CSS 根类名、行为名 | 库的组件目录 `aihtml_catalog`（`option_docs`、`methods` 等字段） |
+
+页面上的代码就是实际运行的代码，不需要另外维护一份文本。注释不在 debug_info 里，示例的意图靠小标题和函数名说明。
+
+### 模块分工
+
+| 模块 | 职责 |
+|---|---|
+| `aihtml_example_app`、`aihtml_example_sup` | 启动数据层、路由和时钟推送进程 |
+| `aihtml_example_site` | 页面外壳、顶栏、组件分类、显示名和简介 |
+| `aihtml_example_home` | 首页 |
+| `aihtml_example_docs` | 组件文档页 |
+| `aihtml_example_source` | 示例函数的源码提取和语法高亮 |
+| `aihtml_example_demos` | 示例注册表：按组件组找到 `aihtml_example_demo_<group>` 模块 |
+| `aihtml_example_demo_<group>` | 10 个示例模块，每组组件一个 |
+| `aihtml_example_actions` | `/demo` 页面及其 action |
+| `aihtml_example_page`、`aihtml_example_api`、`aihtml_example_views` | `/fetch` 页面、片段接口和共用视图 |
+| `aihtml_example_store` | Mnesia 数据层 |
+| `aihtml_example_clock` | 每秒向 `clock` 主题推送服务器时间，集群中只运行一份 |
+
+演示内容只放在这个应用里。库只保留组件目录，也就是组件的 API 元数据。
+
+### 添加组件示例
+
+在对应的 `aihtml_example_demo_<group>.erl` 里做三件事：
+1. 写一个导出的无参函数，返回 `aihtml:html()`，写法和应用代码一样。
+2. 在 `demos/0` 里登记这个函数，并给出中文小标题。
+3. 组件第一次出现时，还要给出站点上的显示名 `title` 和一句中文简介 `summary`，简介用在首页卡片上。
+
+```erlang
+-include_lib("aihtml/include/aihtml.hrl").
+
+demos() ->
+    [#{component => combobox, title => <<"ComboBox">>,
+       summary => <<"可输入、可过滤的下拉选择，支持服务端搜索。"/utf8>>,
+       demos => [{<<"服务端搜索"/utf8>>, combo_search}]}].
+
+-spec combo_search() -> aihtml:html().
+combo_search() ->
+    combobox([], undefined, [<<"w-72">>],
+             [{name, city}, {search, {?MODULE, search, #{}}}]).
 ```
 
-- **配置文件分两份**：`rebar3 shell` 读取 `config/shell.config`（普通 Erlang 配置）；release 读取 `config/sys.config.src`，其中的 `${VAR}` 只有 release 启动脚本会替换，rebar3 shell 读不了它。
-- **新增或修改组件后**，重新生成门面和头文件：`rebar3 compile && escript scripts/gen-facade.escript`。
-- **模板一致性**由 EUnit 的 `aihtml_tpl_tests` 检查，需要能调用 `node`。
-- **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行。
+示例需要服务端参与时，示例模块本身声明 `-behaviour(aihtml_action)` 并实现 `action/4`，文档页上就能直接操作：
 
-### 示例的数据层
+```erlang
+action(search, _Args, #{value := Query} = Event, Ctx) ->
+    set_items(Ctx, Event, [C || C <- cities(), string:find(C, Query) =/= nomatch]).
+```
+
+新增一组组件时，`aihtml_example_demos` 会按命名自动找到新的示例模块，不需要登记。
+
+### 测试与样式
+
+- **测试**：`aihtml_example_site_tests` 检查以下几项：
+  - 每个组件都有示例。
+  - 每个示例都能渲染，源码能提取和高亮。
+  - 每个文档页都能渲染。
+  - 首页链接到所有组件。
+- **数据层测试**：`aihtml_example_store_tests` 覆盖数据层。
+- **样式**：演示站的样式入口是 `apps/aihtml_example/assets/example.css`。它引入库的样式，扫描库和示例应用的 Erlang 源码生成 Tailwind 工具类，并包含首页主视觉、代码块高亮和 API 表格的少量样式。`npm run build` 会一起构建它。
+
+### 数据层
 
 示例用 Mnesia 保存计数器和待办，数据目录默认是 `_build/mnesia/<节点名>`。配置项在 `aihtml_example` 应用环境中：
 
@@ -434,6 +503,25 @@ AIHTML_SECRET=... PORT=8081 NODE_NAME=web2 DB_JOIN=aihtml_example@host1 bin/aiht
 ```
 
 vm.args 里没有写 cookie，VM 和启动脚本都使用 `~/.erlang.cookie`。组成集群的节点需要使用相同的 cookie 文件。
+
+## 开发
+
+```sh
+rebar3 compile
+rebar3 eunit --app aihtml
+rebar3 dialyzer && rebar3 xref
+
+npm install
+npm run build          # 复制 jQuery，编译模板并拼出 aihtml.js，构建 aihtml.css 与 example.css
+npm test               # 模板编译器的 Mustache 规范用例 + 浏览器端测试（无头 Chromium）
+
+rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、/components、/demo、/fetch
+```
+
+- **配置文件分两份**：`rebar3 shell` 读取 `config/shell.config`（普通 Erlang 配置）；release 读取 `config/sys.config.src`，其中的 `${VAR}` 只有 release 启动脚本会替换，rebar3 shell 读不了它。
+- **新增或修改组件后**，重新生成门面和头文件：`rebar3 compile && escript scripts/gen-facade.escript`。
+- **模板一致性**由 EUnit 的 `aihtml_tpl_tests` 检查，需要能调用 `node`。
+- **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行。
 
 ## 许可证
 
