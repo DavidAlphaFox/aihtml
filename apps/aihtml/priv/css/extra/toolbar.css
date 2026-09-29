@@ -1,0 +1,29 @@
+/* aihtml additions for the toolbar component (aihtml_toolbar).
+   Sigil styles live in ../sigil/components. */
+
+/* ==========================================================================
+   toolbar: height as sigil's default (35px), tools moved into the popup
+   ========================================================================== */
+.ah-toolbar { min-height: 35px; }
+.ah-toolbar .ah-toolbar-tool-el.ah-btn-toggled {
+  background-color: var(--ah-color-grey-200);
+}
+.ah-toolbar-tool-el:not(.ah-btn) { display: flex; align-items: center; }
+.ah-toolbar .ah-btn:disabled { opacity: var(--ah-state-disabled-opacity); cursor: default; }
+.ah-toolbar-icon { width: 16px; height: 16px; flex: none; }
+.ah-toolbar-tool-el.ah-btn { gap: 4px; }
+.ah-toolbar-minimize-btn:focus-visible,
+.ah-toolbar .ah-btn:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+.ah-toolbar-popup-tool:has(> .ah-btn) { padding: 1px 4px; }
+.ah-toolbar-popup .ah-btn {
+  width: 100%;
+  justify-content: flex-start;
+  border: none;
+  background-color: transparent;
+  color: var(--ah-color-text);
+}
+.ah-toolbar-popup .ah-btn:hover { background-color: var(--ah-color-bg-subtle); }
+.ah-toolbar-popup .ah-btn-toggled { background-color: var(--ah-color-grey-200); }
