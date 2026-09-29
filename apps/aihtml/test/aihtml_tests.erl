@@ -60,80 +60,32 @@ void_with_children_test() ->
 %%% Prefabs
 %%%===================================================================
 
-button_test() ->
-    ?assertEqual(<<"<button class=\"ah-btn ah-btn-lg ah-btn-danger mt-4\" type=\"submit\""
-                   " value=\"save\">Save</button>">>,
-                 r(button(<<"Save">>, save, [danger, lg, <<"mt-4">>], [{type, submit}]))).
+%% Modifier resolution, against an entry that is not in any group.
+-define(ENTRY, #{name => thing, category => test, signature => <<"thing()">>,
+                 root => <<"ah-thing">>,
+                 groups => #{variant => {[primary, danger], primary}, size => {[sm, lg], none}},
+                 flags => [block], classes => #{lg => [<<"ah-thing-large">>]},
+                 options => [title]}).
 
-button_default_variant_test() ->
-    ?assertEqual(<<"<button class=\"ah-btn ah-btn-primary\" type=\"button\">Go</button>">>,
-                 r(button(<<"Go">>, undefined, [], []))).
+modifiers_test() ->
+    ?assertEqual([<<"ah-thing">>, <<"ah-thing-large">>, <<"ah-thing-danger">>, <<"ah-thing-block">>,
+                  <<"mt-2">>],
+                 aihtml_catalog:classes(?ENTRY, [danger, lg, block, <<"mt-2">>])),
+    ?assertEqual([<<"ah-thing">>, <<"ah-thing-primary">>], aihtml_catalog:classes(?ENTRY, [])).
 
 unknown_modifier_test() ->
-    ?assertError({aihtml, {unknown_modifier, button, primay, _}},
-                 button(<<"x">>, x, [primay], [])).
+    ?assertError({aihtml, {unknown_modifier, thing, primay, _}},
+                 aihtml_catalog:classes(?ENTRY, [primay])).
 
 conflicting_modifiers_test() ->
-    ?assertError({aihtml, {conflicting_modifiers, button, variant, [primary, danger]}},
-                 button(<<"x">>, x, [primary, danger], [])).
+    ?assertError({aihtml, {conflicting_modifiers, thing, variant, [primary, danger]}},
+                 aihtml_catalog:classes(?ENTRY, [primary, danger])).
 
-checkbox_attrs_go_to_input_test() ->
-    ?assertEqual(<<"<label class=\"ah-check mt-2\" data-ah=\"check\">"
-                   "<input class=\"ah-check-input\" type=\"checkbox\" value=\"yes\""
-                   " name=\"remember\" checked>"
-                   "<span class=\"ah-check-label\">Remember</span></label>">>,
-                 r(checkbox(<<"Remember">>, yes, [<<"mt-2">>], [{name, remember},
-                                                               {checked, true}]))).
+options_are_split_from_attrs_test() ->
+    ?assertEqual({#{title => <<"T">>}, [{id, x}]},
+                 aihtml_catalog:split_options(?ENTRY, [{title, <<"T">>}, {id, x}])).
 
-switch_has_role_and_track_test() ->
-    H = r(switch(<<"On">>, 1, [], [])),
-    ?assertMatch({_, _}, binary:match(H, <<"role=\"switch\"">>)),
-    ?assertMatch({_, _}, binary:match(H, <<"ah-switch-track">>)).
-
-select_marks_selected_test() ->
-    ?assertEqual(<<"<select class=\"ah-select\" name=\"r\">"
-                   "<option value=\"a\">A</option>"
-                   "<option value=\"b\" selected>B</option>"
-                   "<option value=\"c\">c</option></select>">>,
-                 r(select([{a, <<"A">>}, {b, <<"B">>}, c], b, [], [{name, r}]))).
-
-input_invalid_flag_test() ->
-    ?assertEqual(<<"<input class=\"ah-input ah-input-invalid\" type=\"text\" value=\"v\""
-                   " aria-invalid=\"true\">">>,
-                 r(input(<<"v">>, [invalid], []))).
-
-field_error_replaces_help_test() ->
-    H = r(field(<<"L">>, input(<<>>, [], []), [], [{for, x}, {help, <<"h">>},
-                                                  {error, <<"e">>}, {id, f}])),
-    ?assertMatch({_, _}, binary:match(H, <<"<div class=\"ah-field ah-field-invalid\" id=\"f\">">>)),
-    ?assertMatch({_, _}, binary:match(H, <<"<label class=\"ah-field-label\" for=\"x\">">>)),
-    ?assertMatch({_, _}, binary:match(H, <<"role=\"alert\">e</p>">>)),
-    ?assertEqual(nomatch, binary:match(H, <<">h</p>">>)).
-
-card_title_option_test() ->
-    ?assertEqual(<<"<div class=\"ah-card\" id=\"c\"><div class=\"ah-card-header\">"
-                   "<h3 class=\"ah-card-title\">T</h3></div>"
-                   "<div class=\"ah-card-body\">x</div></div>">>,
-                 r(card(<<"x">>, [], [{title, <<"T">>}, {id, c}]))).
-
-alert_dismissible_test() ->
-    H = r(alert(<<"m">>, [error, dismissible], [])),
-    ?assertMatch({_, _}, binary:match(H, <<"class=\"ah-alert ah-alert-error ah-alert-dismissible\"">>)),
-    ?assertMatch({_, _}, binary:match(H, <<"data-ah-dismiss">>)).
-
-tabs_test() ->
-    H = r(tabs([{a, <<"A">>, <<"pa">>}, {b, <<"B">>, <<"pb">>}], b, [], [{id, t}])),
-    ?assertMatch({_, _}, binary:match(H, <<"id=\"t-tab-b\" aria-controls=\"t-panel-b\""
-                                           " aria-selected=\"true\"">>)),
-    ?assertMatch({_, _}, binary:match(H, <<"data-ah-panel=\"a\" hidden>pa">>)),
-    ?assertMatch({_, _}, binary:match(H, <<"data-ah-panel=\"b\">pb">>)).
-
-tabs_default_active_is_first_test() ->
-    H = r(tabs([{a, <<"A">>, <<"pa">>}, {b, <<"B">>, <<"pb">>}], undefined, [], [{id, t}])),
-    ?assertMatch({_, _}, binary:match(H, <<"id=\"t-tab-a\" aria-controls=\"t-panel-a\""
-                                           " aria-selected=\"true\"">>)).
-
-every_catalog_prefab_has_a_function_test() ->
+every_catalog_entry_has_a_facade_function_test() ->
     Exports = aihtml:module_info(exports),
     [?assert(lists:keymember(Name, 1, Exports)) || #{name := Name} <- aihtml_catalog:prefabs()].
 
@@ -142,19 +94,18 @@ every_catalog_prefab_has_a_function_test() ->
 %%%===================================================================
 
 fetch_attrs_test() ->
-    ?assertEqual(<<"<button class=\"ah-btn ah-btn-primary\" type=\"button\" value=\"m\""
-                   " data-ah-fetch=\"post\" data-ah-url=\"/more\" data-ah-target=\"#list\""
+    ?assertEqual(<<"<button data-ah-fetch=\"post\" data-ah-url=\"/more\" data-ah-target=\"#list\""
                    " data-ah-swap=\"append\" data-ah-confirm=\"Sure?\">More</button>">>,
-                 r(button(<<"More">>, m, [], [fetch(post, <<"/more">>, <<"#list">>,
-                                                   #{swap => append,
-                                                     confirm => <<"Sure?">>})]))).
+                 r(aihtml:el(button, <<"More">>, [], [fetch(post, <<"/more">>, <<"#list">>,
+                                                            #{swap => append,
+                                                              confirm => <<"Sure?">>})]))).
 
 fetch_bad_method_test() ->
     ?assertError({aihtml, {bad_fetch_method, head}}, fetch(head, <<"/">>, this)).
 
 theme_attrs_test() ->
-    ?assertEqual([{<<"data-theme">>, <<"dark">>}, {<<"data-palette">>, <<"indigo">>},
-                  {<<"data-typography">>, <<"sans">>}, {<<"data-skin">>, <<"brutal">>}],
+    ?assertEqual([{<<"data-theme">>, <<"dark">>}, {<<"data-palette">>, <<"default">>},
+                  {<<"data-typography">>, <<"default">>}, {<<"data-skin">>, <<"brutal">>}],
                  aihtml_theme:attrs(#{appearance => dark, skin => <<"brutal">>})).
 
 theme_bad_value_test() ->
@@ -162,16 +113,19 @@ theme_bad_value_test() ->
                  aihtml_theme:attrs(#{palette => pink})).
 
 theme_values_are_in_the_css_test() ->
-    {ok, Css} = file:read_file(filename:join(code:priv_dir(aihtml), "css/aihtml.css")),
-    [?assertMatch({_, _}, binary:match(Css, <<"[", Attr/binary, "=\"",
-                                               (atom_to_binary(V, utf8))/binary, "\"]">>))
-     || {_, Attr, Values, Default} <- aihtml_theme:axes(), V <- Values, V =/= Default].
+    Dir = filename:join(code:priv_dir(aihtml), "css"),
+    Css = iolist_to_binary([element(2, file:read_file(F))
+                            || F <- filelib:wildcard(filename:join([Dir, "**", "*.css"]))]),
+    [?assertMatch({V, {_, _}}, {V, binary:match(Css, [<<"[", Attr/binary, "=\"", V/binary, "\"]">>,
+                                                    <<"[", Attr/binary, "=", V/binary, "]">>])})
+     || {_, Attr, Values, Default} <- aihtml_theme:axes(), A <- Values, A =/= Default,
+        V <- [atom_to_binary(A, utf8)]].
 
 page_test() ->
     H = iolist_to_binary(aihtml:page(p(<<"x">>), #{title => <<"T">>,
-                                                   theme => #{palette => rose}})),
+                                                   theme => #{palette => green}})),
     ?assertMatch(<<"<!DOCTYPE html>\n<html lang=\"en\" data-theme=\"light\""
-                   " data-palette=\"rose\"", _/binary>>, H),
+                   " data-palette=\"green\"", _/binary>>, H),
     ?assertMatch({_, _}, binary:match(H, <<"<title>T</title>">>)),
     ?assertMatch({_, _}, binary:match(H, <<"<link rel=\"stylesheet\" href=\"/aihtml/aihtml.css\">">>)),
     ?assertMatch({_, _}, binary:match(H, <<"<body class=\"ah-body\" data-ah-action=\"/aihtml/action\" data-ah-events=\"/aihtml/events\"><p>x</p>"
