@@ -1,0 +1,45 @@
+/* aihtml additions for the navbar component (aihtml_navbar).
+   Sigil styles live in ../sigil/components. */
+
+/* ==========================================================================
+   navbar: brand / trailing slots; the hamburger header only when minimized
+   ========================================================================== */
+.ah-navbar { align-items: stretch; }
+.ah-navbar-brand,
+.ah-navbar-extra {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  flex: none;
+  padding: 0 var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+}
+.ah-navbar-brand { border-right: var(--ah-border-width) solid var(--ah-color-border); }
+.ah-navbar-extra { margin-left: auto; padding-right: var(--ah-spacing-sm); }
+a.ah-navbar-item { text-decoration: none; }
+.ah-navbar-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.ah-navbar-popup .ah-navbar-item { justify-content: flex-start; }
+.ah-navbar-icon { width: 16px; height: 16px; flex: none; }
+.ah-navbar-item:focus-visible,
+.ah-navbar-header:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-text);
+  outline-offset: -3px;
+}
+.ah-navbar-item-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+.ah-navbar-vertical .ah-navbar-brand { border-right: none;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border); padding: var(--ah-spacing-sm) var(--ah-spacing-md); }
+.ah-navbar-vertical .ah-navbar-extra { margin: 0; padding: var(--ah-spacing-sm) var(--ah-spacing-md); }
+.ah-navbar-vertical .ah-navbar-item { justify-content: flex-start; }
+.ah-navbar:not(.ah-navbar-minimized) > .ah-navbar-header { display: none; }
+.ah-navbar-minimized > .ah-navbar-item,
+.ah-navbar-minimized > .ah-navbar-brand,
+.ah-navbar-minimized > .ah-navbar-extra { display: none; }
