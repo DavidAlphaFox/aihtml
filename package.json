@@ -15,7 +15,11 @@
   },
   "devDependencies": {
     "@tailwindcss/cli": "^4.3.3",
+    "echarts": "^6.1.0",
     "jquery": "^4.0.0",
-    "tailwindcss": "^4.3.3"
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.8",
+    "tailwindcss": "^4.3.3",
+    "xlsx": "^0.18.5"
   }
 }
