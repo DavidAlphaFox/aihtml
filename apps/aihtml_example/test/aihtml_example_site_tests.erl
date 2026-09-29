@@ -9,7 +9,7 @@ site_test_() ->
      fun() -> {ok, Apps} = application:ensure_all_started(aihtml), Apps end,
      fun(Apps) -> [application:stop(A) || A <- lists:reverse(Apps)] end,
      [{"every component has demos", fun every_component_has_demos/0},
-      {"every demo renders and shows its source", fun demos_render/0},
+      {"every demo renders and shows its source", {timeout, 60, fun demos_render/0}},
       %% each renders every docs page (about 90), longer than eunit's 5 s
       {"every docs page renders", {timeout, 60, fun docs_pages_render/0}},
       {"the home page renders", fun home_renders/0},

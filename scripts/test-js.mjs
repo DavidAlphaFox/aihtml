@@ -1,5 +1,6 @@
 // Runs the browser-side tests: apps/aihtml/test/js/*.test.js, each in a
-// page that loads jQuery and a fresh build of aihtml.js. A test file
+// page (served over HTTP) that loads a fresh build of the runtime bundle
+// with every component chunk loaded (AH.loadAll) before the tests run. A test file
 // registers tests with AHTest.test(name, async fn) and asserts with
 // AHTest.eq / AHTest.ok. Node-only tests (the Mustache compiler) live in
 // scripts/mustache.test.mjs and run first.
@@ -9,7 +10,8 @@ import { execFileSync } from "node:child_process";
 import { mkdtempSync, readdirSync, writeFileSync, copyFileSync, existsSync, symlinkSync } from "node:fs";
 import { tmpdir, homedir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
+import { serve, buildRuntime } from "./serve.mjs";
 import { createRequire } from "node:module";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -27,10 +29,10 @@ if (existsSync(join(root, "scripts", "mustache.test.mjs"))) {
 
 // 2. browser tests
 const dir = mkdtempSync(join(tmpdir(), "aihtml-js-"));
-execFileSync("node", [join(root, "scripts", "build-js.mjs"), join(dir, "aihtml.js")]);
-copyFileSync(join(root, "apps/aihtml/priv/static/vendor/jquery.min.js"), join(dir, "jquery.min.js"));
-// AH.vendor loads from vendor/ next to aihtml.js
+const entry = await buildRuntime(root, join(dir, "js"));
+// AH.vendor loads from vendor/ beside js/, as under priv/static
 symlinkSync(join(root, "apps/aihtml/priv/static/vendor"), join(dir, "vendor"));
+const srv = await serve(dir);
 
 const HARNESS = `
 window.AHTest = (function () {
@@ -81,15 +83,22 @@ const browser = await playwright.chromium.launch({ executablePath: findShell() }
 let total = 0;
 for (const f of files) {
   copyFileSync(join(testDir, f), join(dir, f));
-  const page = join(dir, f + ".html");
-  writeFileSync(page, `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
+  writeFileSync(join(dir, f + ".html"), `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body data-ah-action="/aihtml/action"><div id="fixture"></div>
-<script src="jquery.min.js"></script><script src="harness.js"></script>
-<script src="aihtml.js"></script><script src="${f}"></script></body></html>`);
+<script src="harness.js"></script>
+<script type="module">
+  await import("./js/${entry}");
+  await window.AH.loadAll();
+  const s = document.createElement("script");
+  s.src = ${JSON.stringify(f)};
+  s.onload = () => { window.AHTestReady = true; };
+  document.body.appendChild(s);
+</script></body></html>`);
   const tab = await browser.newPage();
   const errors = [];
   tab.on("pageerror", (e) => errors.push(e.message));
-  await tab.goto(pathToFileURL(page).href);
+  await tab.goto(srv.url(f + ".html"));
+  await tab.waitForFunction(() => window.AHTestReady === true);
   const results = await tab.evaluate((flt) => window.AHTest.run(flt), filter);
   for (const r of results) {
     total++;
@@ -101,5 +110,6 @@ for (const f of files) {
   await tab.close();
 }
 await browser.close();
+await srv.close();
 console.log(`${total} browser tests, ${failed} failed`);
 process.exit(failed ? 1 : 0);

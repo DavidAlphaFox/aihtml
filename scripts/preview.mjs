@@ -6,7 +6,8 @@
 //        [--script=file.js]   (run after load: an async function body that
 //                              may return a value, printed as JSON)
 import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { basename, dirname, resolve } from "node:path";
+import { serve } from "./serve.mjs";
 import { pathToFileURL } from "node:url";
 
 const require_ = (await import("node:module")).createRequire(import.meta.url);
@@ -35,7 +36,11 @@ const page = await browser.newPage({ viewport: { width: +opt("width", 1200), hei
 const problems = [];
 page.on("console", (m) => { if (m.type() === "error") problems.push("console: " + m.text()); });
 page.on("pageerror", (e) => problems.push("pageerror: " + e.message));
-await page.goto(pathToFileURL(resolve(html)).href);
+// served over HTTP (the runtime is an ES module), components all loaded
+const srv = await serve(dirname(resolve(html)));
+await page.goto(srv.url(basename(html)));
+await page.waitForFunction(() => window.AH && window.AH.stimulus && window.AH.stimulus());
+await page.evaluate(() => window.AH.loadAll());
 const theme = opt("theme", "");
 if (theme) { await page.evaluate((t) => document.documentElement.setAttribute("data-theme", t), theme); }
 await page.waitForTimeout(300);
@@ -47,4 +52,5 @@ if (script) {
 }
 await page.screenshot({ path: png, fullPage: true });
 await browser.close();
+await srv.close();
 console.log(problems.length ? problems.join("\n") : "no console errors");
