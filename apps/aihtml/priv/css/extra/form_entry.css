@@ -1,0 +1,39 @@
+/* aihtml additions for the form_entry group (aihtml_form_entry). */
+
+/* formatted_input: the radix menu is rendered in the root and pinned by
+   AH.float; the keyboard-highlighted item */
+.ah-fmt-popup-item-hover {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-fmt-popup-item-active.ah-fmt-popup-item-hover {
+  background: var(--ah-color-primary-lighter);
+}
+
+/* range_selector: the server writes positions in %, so the bar keeps a
+   visible width when Lo = Hi; markers are keyboard sliders */
+.ah-range-selector-slider {
+  min-width: 1px;
+  touch-action: none;
+}
+
+.ah-range-selector-marker {
+  touch-action: none;
+}
+
+.ah-range-selector-marker:focus {
+  outline: none;
+}
+
+.ah-range-selector-marker:focus-visible {
+  box-shadow: 0 0 0 3px var(--ah-color-primary-lighter), 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* the marker being dragged or focused stays above the other one */
+.ah-range-selector-marker:focus {
+  z-index: 11;
+}
+
+.ah-range-selector-dragging .ah-range-selector-slider {
+  cursor: grabbing;
+}
