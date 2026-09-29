@@ -1,14 +1,14 @@
-// Entry of the ProseMirror vendor bundle (priv/static/vendor/prosemirror.min.js),
-// bundled by scripts/vendor.mjs with esbuild into one IIFE whose global is
-// window.AHProseMirror. The markdown_editor behaviour loads it on demand
-// with AH.vendor("prosemirror").
+// ProseMirror and markdown-it for markdown_editor, as one ES module. Vite
+// bundles it (with the packages it imports) into its own lazily loaded
+// chunk; the behaviour gets it with AH.vendor("prosemirror"), which
+// imports this module dynamically and resolves with its namespace:
 //
-//   AHProseMirror.state.EditorState, AHProseMirror.view.EditorView, ...
-//   AHProseMirror.markdownit(...)     markdown-it (the parser behind
-//                                     prosemirror-markdown's MarkdownParser)
+//   P.state.EditorState, P.view.EditorView, ...
+//   P.markdownit(...)     markdown-it (the parser behind
+//                         prosemirror-markdown's MarkdownParser)
 //
 // ProseMirror (prosemirror-*) and markdown-it are MIT licensed; the
-// licences of everything in the bundle are in prosemirror.LICENSE.txt.
+// licences of everything in the bundle are in js/THIRD-PARTY-LICENSES.txt.
 export * as model from "prosemirror-model";
 export * as state from "prosemirror-state";
 export * as view from "prosemirror-view";

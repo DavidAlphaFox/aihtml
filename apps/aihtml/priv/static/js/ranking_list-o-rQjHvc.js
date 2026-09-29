@@ -1,1 +1,0 @@
-import{t as e}from"./main-9pAWs9Yh.js";import"./_lib_display-45YLL8lU.js";var t=e.NS,n=e.lib.display;e.define(`ranking-list`,{init:function(e,r){r.on(`click`+t,`.ah-ranking-list__item--clickable`,function(){r.trigger(`ah:item-click`,[{index:n.num(this.getAttribute(`data-idx`),0)}])}),r.on(`keydown`+t,`.ah-ranking-list__item--clickable`,n.keyClick)}});

@@ -1198,7 +1198,7 @@ catalog() ->
               doc => <<"The selected cells: [{row, col, vi, value}].">>},
             #{name => clearSelection, args => <<"()">>, doc => <<"Clear the selection.">>},
             #{name => exportXlsx, args => <<"({filename, sheetName})">>,
-              doc => <<"Download the table as it is shown as .xlsx (loads AH.vendor(\"xlsx\")), "
+              doc => <<"Download the table as it is shown as .xlsx (imports the xlsx chunk on demand), "
                        "with merged headers and numbers as numbers.">>},
             #{name => exportCsv, args => <<"({filename, separator})">>,
               doc => <<"Download the table as CSV (UTF-8 with BOM).">>},

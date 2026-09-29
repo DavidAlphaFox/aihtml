@@ -1,0 +1,1 @@
+import{t as e}from"./main-C7ceD3Hf.js";import"./_lib_choice-C50SuqGy.js";var t=e.lib.choice;t.defineGroup(`radiobutton-group`,{radio:!0,sync:t.syncRadio,item:`.ah-radiobutton-group-item`,itemDisabled:`ah-radiobutton-group-item-disabled`,disabled:`ah-radiobutton-group-disabled`});

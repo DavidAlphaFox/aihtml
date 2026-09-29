@@ -46,10 +46,6 @@ main([Mod | [OutDir | Rest]]) ->
               "@source \"", Root, "/scripts\";\n"]),
     Sh("npx tailwindcss -i " ++ Entry ++ " -o "
        ++ filename:absname(filename:join(OutDir, "aihtml.css")) ++ " 2>&1 | tail -1"),
-    %% AH.vendor loads echarts, xlsx, jspdf ... from vendor/ beside js/
-    Vendor = filename:join(OutDir, "vendor"),
-    _ = file:delete(Vendor),
-    ok = file:make_symlink(filename:join(Root, "apps/aihtml/priv/static/vendor"), Vendor),
     io:format("~s~n", [filename:absname(filename:join(OutDir, "index.html"))]);
 main(_) ->
     io:format("usage: preview-group.escript Module OutDir [ExtraEbinDir]~n"),

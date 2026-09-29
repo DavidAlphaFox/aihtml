@@ -1,1 +1,0 @@
-import{n as e,t}from"./main-9pAWs9Yh.js";var n=t.NS;t.define(`avatar`,{init:function(t,r){r.find(`.ah-avatar__image`).each(function(){var t=this,r=function(){e(t).addClass(`ah-avatar__image--broken`)};e(t).on(`error`+n,r),t.complete&&t.naturalWidth===0&&r()})},destroy:function(e,t){t.find(`.ah-avatar__image`).off(n)}});

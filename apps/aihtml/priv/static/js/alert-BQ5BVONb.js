@@ -1,1 +1,0 @@
-import{n as e,t}from"./main-9pAWs9Yh.js";import"./_lib_display-45YLL8lU.js";var n=t.NS;function r(n,r){var i=e.Event(`ah:dismiss`);r.trigger(i),i.isDefaultPrevented()||t.lib.display.drop(n)}t.define(`alert`,{init:function(e,t){t.on(`click`+n,`.ah-alert-close`,function(){r(e,t)})},methods:{dismiss:r}});

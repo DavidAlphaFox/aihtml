@@ -7,8 +7,8 @@
 
 -include("aihtml_element.hrl").
 
-%% A chart that draws any echarts option (loaded on demand with
-%% AH.vendor("echarts")), themed from the --ah-* custom properties.
+%% A chart that draws any echarts option (echarts loads on demand, in its
+%% own chunk), themed from the --ah-* custom properties.
 %% Postback fires on 'ah:chart-click' (Event.value is the clicked item's
 %% name; Event.data has series, seriesIndex, name, value, index, kind).
 -record(ah_chart, {?AH_BASE(aihtml_chart),

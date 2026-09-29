@@ -5,9 +5,9 @@
 %%%
 %%%   markdown_editor(Value, Css, Attrs)      Value is the Markdown text
 %%%
-%%% The editor is ProseMirror, bundled with markdown-it into
-%%% priv/static/vendor/prosemirror.min.js and loaded on demand by the
-%%% `markdown-editor' behaviour (assets/js/components/markdown_editor.js)
+%%% The editor is ProseMirror with markdown-it, a chunk of the bundle
+%%% (assets/vendor/prosemirror.entry.js) that the `markdown-editor'
+%%% behaviour (assets/js/components/markdown_editor.js) imports on demand
 %%% through AH.vendor("prosemirror"). Typing Markdown formats in place
 %%% (`# ' a heading, `**bold**', `- ' a list, `> ' a quote, ``` a code
 %%% block, `[text](url)' a link ...); `/' on an empty line opens the block

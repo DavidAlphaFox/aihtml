@@ -1,1 +1,0 @@
-import{t as e}from"./main-9pAWs9Yh.js";import"./_lib_choice-BVhqJmY8.js";var t=e.lib.choice;t.defineGroup(`checkbox-group`,{radio:!1,sync:t.syncCheckbox,item:`.ah-checkbox-group-item`,itemDisabled:`ah-checkbox-group-item-disabled`,disabled:`ah-checkbox-group-disabled`});
