@@ -1,0 +1,24 @@
+/* aihtml additions for tabs; sigil styles live in ../sigil/components. */
+
+/* ---- tabs: scrollable header with sticky scroll buttons -------------- */
+
+.ah-tabs-scrollable > .ah-tabs-header {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ah-tabs-scrollable > .ah-tabs-header::-webkit-scrollbar { display: none; }
+
+.ah-tabs-scrollable .ah-tabs-scroll-btn {
+  position: sticky;
+  z-index: 1;
+  background: var(--ah-color-bg-paper);
+}
+
+.ah-tabs-scrollable .ah-tabs-scroll-left { left: 0; }
+.ah-tabs-scrollable .ah-tabs-scroll-right { right: 0; }
+
+.ah-tabs-item:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
