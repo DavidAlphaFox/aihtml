@@ -102,6 +102,26 @@
 @import "./sigil/components/sortable.css";
 @import "./sigil/components/dragdrop.css";
 
+/* third batch */
+@import "./sigil/components/datagrid.css";
+@import "./sigil/components/datagrid_charting.css";
+@import "./sigil/components/pivotgrid.css";
+@import "./sigil/components/treegrid.css";
+@import "./sigil/components/datatable.css";
+@import "./sigil/components/gantt.css";
+@import "./sigil/components/scheduler.css";
+@import "./sigil/components/swimlane.css";
+@import "./sigil/components/chart.css";
+@import "./sigil/components/area_chart.css";
+@import "./sigil/components/bar_chart.css";
+@import "./sigil/components/donut_chart.css";
+@import "./sigil/components/node_graph.css";
+@import "./sigil/components/relation_graph.css";
+@import "./sigil/components/docking.css";
+@import "./sigil/components/dock_layout.css";
+@import "./sigil/components/ribbon.css";
+@import "./sigil/components/tile_layout.css";
+
 /* aihtml additions per component group */
 @import "./extra/form_buttons.css";
 @import "./extra/form_choice.css";
@@ -121,4 +141,12 @@
 @import "./extra/layout_scroll.css";
 @import "./extra/layout_bars.css";
 @import "./extra/layout_dnd.css";
+@import "./extra/data_grid.css";
+@import "./extra/data_pivot.css";
+@import "./extra/data_tables.css";
+@import "./extra/data_schedule.css";
+@import "./extra/data_charts.css";
+@import "./extra/data_graph.css";
+@import "./extra/layout_dock.css";
+@import "./extra/layout_tiles.css";
 @import "./aihtml-base.css";
