@@ -64,6 +64,8 @@ export const COMPONENTS = [
   "gantt", "scheduler", "swimlane", "chart", "area_chart", "bar_chart",
   "donut_chart", "node_graph", "relation_graph", "docking", "dock_layout",
   "ribbon", "tile_layout",
+  // editors: the markdown editor (on prose_editor's shared styles)
+  "prose_editor", "markdown_editor",
 ];
 
 // Stylesheets that @import every file of a directory next to them.

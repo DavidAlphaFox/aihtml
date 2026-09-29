@@ -1,0 +1,1344 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Prose Editor — ProseMirror 富文本编辑器样式
+   ============================================================================ */
+
+.ah-pm-editor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg);
+  overflow: hidden;
+}
+
+/* ⚠ P14.2b：编辑器内容区自己写了 `.ProseMirror:focus { outline: none }`，而库里
+   **没有任何替代指示** —— 键盘聚焦时下游看不到任何反馈。demo 一直是好的，只因
+   `demo/css/prose-editor.css` 自己补了一条 `:focus-within`，库外的人没有这层。
+   指示放在外壳上（内容区在有边框的壳里，壳上更醒目），与全库统一的 outline 写法一致。 */
+.ah-pm-editor:focus-within {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ---------- ProseMirror 编辑区域 ---------- */
+
+.ah-pm-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.ah-pm-content .ProseMirror {
+  min-height: 200px;
+  padding: 16px 20px 16px 58px;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ah-color-text);
+}
+
+.ah-pm-content .ProseMirror:focus {
+  outline: none;
+}
+
+/* ---------- 占位符 ---------- */
+
+.ah-pm-placeholder {
+  position: absolute;
+  color: var(--ah-color-text-muted);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ---------- 编辑器内元素样式 ---------- */
+
+.ah-pm-content .ProseMirror h1 {
+  font-size: 1.75em;
+  font-weight: 700;
+  margin: 0.6em 0 0.3em;
+  padding-bottom: 0.2em;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  line-height: 1.3;
+}
+
+.ah-pm-content .ProseMirror h2 {
+  font-size: 1.4em;
+  font-weight: 700;
+  margin: 0.5em 0 0.25em;
+  padding-bottom: 0.15em;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  line-height: 1.3;
+}
+
+.ah-pm-content .ProseMirror h3 {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 0.5em 0 0.2em;
+}
+
+.ah-pm-content .ProseMirror h4 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin: 0.4em 0 0.2em;
+}
+
+.ah-pm-content .ProseMirror h5 {
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0.4em 0 0.15em;
+}
+
+.ah-pm-content .ProseMirror h6 {
+  font-size: 0.9em;
+  font-weight: 600;
+  margin: 0.4em 0 0.15em;
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-pm-content .ProseMirror p {
+  margin: 0 0 0.5em;
+}
+
+.ah-pm-content .ProseMirror strong {
+  font-weight: 700;
+}
+
+.ah-pm-content .ProseMirror em {
+  font-style: italic;
+}
+
+.ah-pm-content .ProseMirror s {
+  text-decoration: line-through;
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-pm-content .ProseMirror .ah-md-inline-code {
+  padding: 0.15em 0.4em;
+  background: var(--ah-color-bg-subtle);
+  border-radius: var(--ah-radius-sm);
+  font-family: var(--ah-font-mono);
+  font-size: 0.9em;
+  color: var(--ah-color-primary);
+}
+
+/* ---------- 链接 ---------- */
+
+.ah-pm-content .ProseMirror .ah-md-link {
+  color: var(--ah-color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.ah-pm-content .ProseMirror .ah-md-link:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* ---------- 引用 ---------- */
+
+.ah-pm-content .ProseMirror .ah-md-blockquote {
+  margin: 0.5em 0 1em;
+  padding: 8px 16px;
+  border-left: 3px solid var(--ah-color-primary);
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text-secondary);
+  border-radius: 0 4px 4px 0;
+}
+
+.ah-pm-content .ProseMirror .ah-md-blockquote p {
+  margin: 0;
+}
+
+/* ---------- 水平线 ---------- */
+
+.ah-pm-content .ProseMirror .ah-md-hr {
+  margin: 1.5em 0;
+  border: none;
+  border-top: 2px solid var(--ah-color-border);
+}
+
+/* ---------- 图片 ---------- */
+
+.ah-pm-content .ProseMirror .ah-md-image {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ---------- 列表 ---------- */
+
+.ah-pm-content .ProseMirror ul.ah-md-list {
+  margin: 0.25em 0 0.75em;
+  padding-left: 1.5em;
+  list-style-type: disc;
+}
+
+.ah-pm-content .ProseMirror ol.ah-md-list {
+  margin: 0.25em 0 0.75em;
+  padding-left: 1.5em;
+  list-style-type: decimal;
+}
+
+.ah-pm-content .ProseMirror li {
+  margin-bottom: 0.2em;
+}
+
+/* ---------- 任务列表 ---------- */
+
+.ah-pm-content .ProseMirror .ah-md-tasklist {
+  list-style: none;
+  padding-left: 4px;
+  margin: 0.3em 0;
+}
+
+.ah-pm-content .ProseMirror .task-list-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.ah-pm-content .ProseMirror .task-list-item-checkbox {
+  margin-top: 5px;
+  flex-shrink: 0;
+  cursor: pointer;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--ah-color-primary, #f5a623);
+}
+
+.ah-pm-content .ProseMirror .task-list-item-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ah-pm-content .ProseMirror .task-list-item-content p {
+  margin: 0;
+}
+
+/* ---------- 表格 ---------- */
+
+.ah-pm-content .ProseMirror .ah-md-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.5em 0 1em;
+  font-size: 14px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+}
+
+.ah-pm-content .ProseMirror th,
+.ah-pm-content .ProseMirror td {
+  padding: 8px 12px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  text-align: left;
+  min-width: 80px;
+}
+
+.ah-pm-content .ProseMirror th {
+  background: var(--ah-color-bg-subtle);
+  font-weight: 600;
+}
+
+.ah-pm-content .ProseMirror td:focus,
+.ah-pm-content .ProseMirror th:focus {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+
+/* prosemirror-tables 选中状态 */
+.ah-pm-content .ProseMirror .selectedCell::after {
+  z-index: 2;
+  position: absolute;
+  content: "";
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--ah-color-primary) 15%, transparent);
+  pointer-events: none;
+}
+
+.ah-pm-content .ProseMirror td,
+.ah-pm-content .ProseMirror th {
+  position: relative;
+}
+
+/* ---------- 代码块 ---------- */
+
+.ah-pm-content .ProseMirror pre.ah-md-code {
+  position: relative;
+  display: flex;
+  margin: 0;
+  padding: 0;
+  background: var(--ah-color-bg-subtle);
+  border-radius: 0 0 6px 6px;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+.ah-pm-line-numbers {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 0;
+  padding-right: 12px;
+  padding-left: 16px;
+  border-right: var(--ah-border-width) solid var(--ah-color-border);
+  background: var(--ah-color-bg-subtle);
+  font-family: var(--ah-font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ah-color-text-muted);
+  text-align: right;
+  user-select: none;
+  -webkit-user-select: none;
+  min-width: 40px;
+}
+
+.ah-pm-line-number {
+  white-space: nowrap;
+}
+
+.ah-pm-code-container {
+  position: relative;
+  display: grid;
+  flex: 1;
+  min-width: 0;
+}
+
+.ah-pm-content .ProseMirror pre.ah-md-code > .ah-pm-code-container > code {
+  grid-area: 1 / 1;
+  display: block;
+  padding: 14px 16px;
+  background: none;
+  font-family: var(--ah-font-mono);
+  font-size: 13px;
+  white-space: pre;
+  word-wrap: normal;
+}
+
+.ah-pm-content .ProseMirror pre.ah-md-code > .ah-pm-code-container > code.ah-pm-code-edit {
+  color: transparent;
+  caret-color: var(--ah-color-text);
+  z-index: 1;
+}
+
+.ah-pm-content .ProseMirror pre.ah-md-code > .ah-pm-code-container > code.ah-pm-code-highlight {
+  pointer-events: none;
+  user-select: none;
+  color: var(--ah-color-text);
+}
+
+/* ---------- 代码块工具栏 ---------- */
+
+.ah-pm-code-block-wrapper {
+  margin: 0.5em 0 1em;
+  border-radius: var(--ah-radius-md);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  overflow: visible;
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-pm-code-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: 6px 6px 0 0;
+  background: var(--ah-color-bg-subtle);
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ah-pm-code-lang-selector {
+  position: relative;
+}
+
+.ah-pm-code-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: none;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text-secondary);
+  font-family: var(--ah-font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+
+.ah-pm-code-lang-btn:hover {
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-hover);
+}
+
+.ah-pm-code-lang-dropdown {
+  position: absolute;
+  left: 0;
+  top: 100%;
+  margin-top: 4px;
+  min-width: 150px;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  padding: 4px;
+  z-index: 200;
+  display: none;
+  animation: ah-pm-menu-in 0.12s ease-out;
+}
+
+.ah-pm-code-lang-dropdown--visible {
+  display: block;
+}
+
+.ah-pm-code-lang-option {
+  padding: 5px 10px;
+  border-radius: var(--ah-radius-sm);
+  font-size: 12px;
+  color: var(--ah-color-text);
+  cursor: pointer;
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+
+.ah-pm-code-lang-option:hover {
+  background: var(--ah-color-bg-hover);
+}
+
+.ah-pm-code-lang-option.active {
+  color: var(--ah-color-primary);
+  font-weight: 600;
+}
+
+.ah-pm-code-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border: none;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text-muted);
+  font-family: var(--ah-font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  transition: color 0.12s, background 0.12s;
+}
+
+.ah-pm-code-copy-btn:hover {
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-hover);
+}
+
+.ah-pm-code-copy-btn--copied {
+  color: var(--ah-color-success, #22863a);
+}
+
+/* ---------- highlight.js Token 颜色 ---------- */
+
+.ah-pm-code-block-wrapper .hljs-comment,
+.ah-pm-code-block-wrapper .hljs-quote {
+  color: var(--ah-color-text-muted);
+  font-style: italic;
+}
+
+.ah-pm-code-block-wrapper .hljs-keyword,
+.ah-pm-code-block-wrapper .hljs-selector-tag,
+.ah-pm-code-block-wrapper .hljs-type {
+  color: var(--ah-color-primary);
+}
+
+.ah-pm-code-block-wrapper .hljs-string,
+.ah-pm-code-block-wrapper .hljs-regexp,
+.ah-pm-code-block-wrapper .hljs-addition {
+  color: var(--ah-color-success, #22863a);
+}
+
+.ah-pm-code-block-wrapper .hljs-number,
+.ah-pm-code-block-wrapper .hljs-literal,
+.ah-pm-code-block-wrapper .hljs-built_in {
+  color: var(--ah-color-warning, #b08800);
+}
+
+.ah-pm-code-block-wrapper .hljs-title,
+.ah-pm-code-block-wrapper .hljs-section,
+.ah-pm-code-block-wrapper .hljs-title\.function_,
+.ah-pm-code-block-wrapper .hljs-name {
+  color: var(--ah-color-info, #6f42c1);
+}
+
+.ah-pm-code-block-wrapper .hljs-attr,
+.ah-pm-code-block-wrapper .hljs-attribute,
+.ah-pm-code-block-wrapper .hljs-variable,
+.ah-pm-code-block-wrapper .hljs-template-variable {
+  color: var(--ah-color-danger, #d73a49);
+}
+
+.ah-pm-code-block-wrapper .hljs-tag,
+.ah-pm-code-block-wrapper .hljs-selector-id,
+.ah-pm-code-block-wrapper .hljs-selector-class {
+  color: var(--ah-color-primary);
+}
+
+.ah-pm-code-block-wrapper .hljs-meta,
+.ah-pm-code-block-wrapper .hljs-meta .hljs-keyword,
+.ah-pm-code-block-wrapper .hljs-meta .hljs-string {
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-pm-code-block-wrapper .hljs-deletion {
+  color: var(--ah-color-danger, #d73a49);
+}
+
+.ah-pm-code-block-wrapper .hljs-emphasis {
+  font-style: italic;
+}
+
+.ah-pm-code-block-wrapper .hljs-strong {
+  font-weight: 700;
+}
+
+/* ---------- Block Handle（块操作手柄）---------- */
+
+.ah-pm-block-handle {
+  position: absolute;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  z-index: 10;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+  /* 增大可点击区域：上下各扩展 4px */
+  padding: 4px 2px;
+  margin-top: -4px;
+}
+
+.ah-pm-block-handle--visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ah-pm-block-handle-add,
+.ah-pm-block-handle-drag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: var(--ah-border-width) solid transparent;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.ah-pm-block-handle-add svg,
+.ah-pm-block-handle-drag svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ah-pm-block-handle-add:hover,
+.ah-pm-block-handle-drag:hover {
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-hover);
+  border-color: var(--ah-color-border);
+}
+
+.ah-pm-block-handle-drag {
+  cursor: grab;
+}
+
+.ah-pm-block-handle-drag:active {
+  cursor: grabbing;
+  color: var(--ah-color-primary);
+}
+
+/* ---------- 拖拽指示线 ---------- */
+
+.ah-pm-drag-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--ah-color-primary);
+  border-radius: 1px;
+  pointer-events: none;
+  z-index: 50;
+  display: none;
+  transition: top 0.08s ease;
+}
+
+.ah-pm-drag-indicator::before,
+.ah-pm-drag-indicator::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ah-color-primary);
+}
+
+.ah-pm-drag-indicator::before { left: -4px; }
+.ah-pm-drag-indicator::after  { right: -4px; }
+
+.ah-pm-dragging {
+  opacity: 0.25;
+}
+
+/* ---------- Menu Animation ---------- */
+
+@keyframes ah-pm-menu-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Slash Menu ---------- */
+
+.ah-pm-slash-menu {
+  position: absolute;
+  z-index: 100;
+  width: 220px;
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  overflow: hidden;
+  display: none;
+  animation: ah-pm-menu-in 0.12s ease-out;
+}
+
+.ah-pm-slash-menu--visible {
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-pm-slash-menu-tabs {
+  display: flex;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  padding: 4px 4px 0;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.ah-pm-slash-menu-tab {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  background: transparent;
+  color: var(--ah-color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.ah-pm-slash-menu-tab:hover {
+  background: var(--ah-color-bg-hover);
+}
+
+.ah-pm-slash-menu-tab.active {
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-hover);
+}
+
+.ah-pm-slash-menu-content {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+  scroll-behavior: smooth;
+}
+
+.ah-pm-slash-menu-group-heading {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ah-color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 6px 8px 2px;
+}
+
+.ah-pm-slash-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ah-color-text);
+  transition: background 0.1s;
+  white-space: nowrap;
+}
+
+.ah-pm-slash-menu-item:hover,
+.ah-pm-slash-menu-item.selected {
+  background: var(--ah-color-bg-hover);
+}
+
+.ah-pm-slash-menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text-secondary);
+  flex-shrink: 0;
+}
+
+.ah-pm-slash-menu-item-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.ah-pm-slash-menu-item-label {
+  font-weight: 500;
+}
+
+/* ---------- Selection Toolbar ---------- */
+
+.ah-pm-sel-toolbar {
+  position: fixed;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 6px;
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  white-space: nowrap;
+  transform: translate(-50%, -100%);
+  animation: ah-pm-sel-in 0.1s ease-out;
+}
+
+.ah-pm-sel-toolbar--visible {
+  display: flex;
+}
+
+@keyframes ah-pm-sel-in {
+  from { opacity: 0; transform: translate(-50%, calc(-100% + 4px)); }
+  to   { opacity: 1; transform: translate(-50%, -100%); }
+}
+
+.ah-pm-sel-toolbar button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 4px;
+  border: none;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+
+.ah-pm-sel-toolbar button:hover {
+  background: var(--ah-color-bg-hover);
+}
+
+.ah-pm-sel-toolbar button.active {
+  background: var(--ah-color-primary);
+  color: var(--ah-color-common-white);
+}
+
+/* 按钮容器 */
+.ah-pm-sel-toolbar__btns {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* 分隔线 */
+.ah-pm-sel-toolbar__sep {
+  display: block;
+  width: 1px;
+  height: 16px;
+  margin: 0 2px;
+  background: var(--ah-color-border);
+}
+
+/* 链接输入区 */
+.ah-pm-sel-toolbar__link-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ah-pm-sel-toolbar__link-icon {
+  flex-shrink: 0;
+  color: var(--ah-color-text-muted);
+}
+
+.ah-pm-sel-toolbar__link-input input {
+  width: 200px;
+  height: 26px;
+  padding: 0 8px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text);
+  font-size: 13px;
+  font-family: var(--ah-font-mono);
+  outline: none;
+  transition: border-color 0.12s;
+}
+
+.ah-pm-sel-toolbar__link-input input:focus {
+  border-color: var(--ah-color-primary);
+}
+
+.ah-pm-sel-toolbar__link-input input::placeholder {
+  color: var(--ah-color-text-muted);
+}
+
+/* ---------- Link Tooltip ---------- */
+
+.ah-pm-link-tooltip {
+  position: fixed;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  white-space: nowrap;
+  transform: translateX(-50%);
+  animation: ah-pm-sel-in 0.1s ease-out;
+}
+
+.ah-pm-link-tooltip--visible {
+  display: flex;
+}
+
+.ah-pm-link-tooltip__url {
+  display: inline-block;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+  color: var(--ah-color-text-muted);
+  padding: 0 4px;
+  user-select: none;
+}
+
+.ah-pm-link-tooltip__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text-muted);
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.12s, color 0.12s;
+  text-decoration: none;
+}
+
+.ah-pm-link-tooltip__btn:hover {
+  background: var(--ah-color-bg-hover);
+  color: var(--ah-color-text);
+}
+
+/* 查看模式容器 */
+.ah-pm-link-tooltip__view {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 编辑模式容器 */
+.ah-pm-link-tooltip__edit {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ah-pm-link-tooltip__edit input {
+  width: 220px;
+  height: 26px;
+  padding: 0 8px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text);
+  font-size: 13px;
+  font-family: var(--ah-font-mono);
+  outline: none;
+  transition: border-color 0.12s;
+}
+
+.ah-pm-link-tooltip__edit input:focus {
+  border-color: var(--ah-color-primary);
+}
+
+.ah-pm-link-tooltip__edit input::placeholder {
+  color: var(--ah-color-text-muted);
+}
+
+/* ---------- ProseMirror 内置样式覆盖 ---------- */
+
+.ah-pm-content .ProseMirror-gapcursor {
+  display: none;
+  pointer-events: none;
+  position: absolute;
+}
+
+.ah-pm-content .ProseMirror-gapcursor:after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: -2px;
+  width: 20px;
+  border-top: var(--ah-border-width) solid var(--ah-color-text);
+  animation: ProseMirror-cursor-blink 1.1s steps(2, start) infinite;
+}
+
+@keyframes ProseMirror-cursor-blink {
+  to { visibility: hidden; }
+}
+
+.ah-pm-content .ProseMirror-focused .ProseMirror-gapcursor {
+  display: block;
+}
+
+/* 拖放光标 */
+.ah-pm-content .ProseMirror-dropcursor {
+  background: var(--ah-color-primary);
+}
+
+/* ---------- Table Context Menu（表格右键菜单）---------- */
+
+.ah-pm-table-menu {
+  position: fixed;
+  z-index: 200;
+  display: none;
+  flex-direction: column;
+  min-width: 180px;
+  padding: 4px;
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  animation: ah-pm-menu-in 0.12s ease-out;
+}
+
+.ah-pm-table-menu--visible {
+  display: flex;
+}
+
+.ah-pm-table-menu button {
+  display: block;
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text);
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.1s;
+}
+
+.ah-pm-table-menu button:hover {
+  background: var(--ah-color-bg-hover);
+}
+
+.ah-pm-table-menu button.danger {
+  color: var(--ah-color-danger, #d73a49);
+}
+
+.ah-pm-table-menu button.danger:hover {
+  background: color-mix(in srgb, var(--ah-color-danger) 8%, transparent);
+}
+
+.ah-pm-table-menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--ah-color-border);
+}
+
+/* ---------- Table Add Lines（表格边界加线）---------- */
+
+/* 加列竖线 */
+.ah-pm-add-col-line {
+  position: absolute;
+  z-index: 9;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--ah-color-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.ah-pm-add-col-line.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* 加行横线 */
+.ah-pm-add-row-line {
+  position: absolute;
+  z-index: 9;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--ah-color-primary);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.12s ease;
+}
+
+.ah-pm-add-row-line.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* "+" 圆形按钮 */
+.ah-pm-add-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: var(--ah-border-width) solid var(--ah-color-primary);
+  border-radius: 50%;
+  background: var(--ah-color-bg);
+  color: var(--ah-color-primary);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+
+.ah-pm-add-btn:hover {
+  background: var(--ah-color-primary);
+  color: var(--ah-color-common-white);
+}
+
+/* ---------- Image Caption（图片说明文字）---------- */
+
+.ah-pm-image-block {
+  outline: none;
+  margin: 4px 0;
+  display: block;
+}
+
+.ah-pm-image-block > .ah-pm-image-wrapper {
+  width: fit-content;
+  min-width: 100px;
+  margin: 0 auto;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ah-pm-image-block > .ah-pm-image-wrapper img {
+  object-fit: cover;
+  max-width: 100%;
+  min-height: 100px;
+  display: block;
+}
+
+.ah-pm-image-block .ah-pm-image-wrapper .ah-pm-image-operation {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 12px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.ah-pm-image-block:hover > .ah-pm-image-wrapper .ah-pm-image-operation {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.ah-pm-image-block .ah-pm-image-wrapper .ah-pm-image-operation > .ah-pm-image-op-item {
+  color: var(--ah-color-text, #333);
+  background: var(--ah-color-bg, rgba(255,255,255,0.9));
+  opacity: 0.6;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s;
+}
+
+.ah-pm-image-block .ah-pm-image-wrapper .ah-pm-image-operation > .ah-pm-image-op-item:hover {
+  opacity: 1;
+}
+
+.ah-pm-image-block .ah-pm-image-wrapper .ah-pm-image-resize-handle {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--ah-color-border, #ccc);
+  opacity: 0;
+  border-radius: var(--ah-radius-sm);
+  width: 100%;
+  max-width: 160px;
+  height: 4px;
+  transition: opacity 0.2s;
+  cursor: row-resize;
+}
+
+.ah-pm-image-block:hover > .ah-pm-image-wrapper .ah-pm-image-resize-handle {
+  opacity: 1;
+}
+
+.ah-pm-image-block .ah-pm-image-caption {
+  font-family: inherit;
+  margin: 4px auto;
+  text-align: center;
+  width: 100%;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--ah-color-text-secondary, #666);
+  font-size: 16px;
+  display: block;
+}
+
+.ah-pm-image-block .ah-pm-image-caption::placeholder {
+  color: var(--ah-color-text-muted, #999);
+}
+
+.ah-pm-image-block.ah-pm-image-block--selected > .ah-pm-image-wrapper::before {
+  content: "";
+  background: var(--ah-color-primary, #3b82f6);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.15;
+  border-radius: inherit;
+}
+
+/* ---------- Drag Clone（拖拽克隆元素）---------- */
+
+.ah-pm-drag-clone {
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg);
+  max-width: 600px;
+  overflow: hidden;
+}
+
+/* ---------- 字符统计底部栏（共享）---------- */
+
+.ah-pm-stats {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 8px 14px;
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+  background: linear-gradient(
+    to bottom,
+    var(--ah-color-bg-subtle),
+    color-mix(in srgb, var(--ah-color-bg-subtle) 95%, black)
+  );
+  font-size: 12px;
+  color: var(--ah-color-text-secondary);
+  user-select: none;
+  -webkit-user-select: none;
+  flex-shrink: 0;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.ah-pm-stats--hidden {
+  display: none;
+}
+
+.ah-pm-stats__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ah-pm-stats__label {
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+.ah-pm-stats__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--ah-color-text);
+}
+
+.ah-pm-stats__value--warning {
+  color: var(--ah-color-error, #dc2626);
+  font-weight: 700;
+}
+
+.ah-pm-stats__sep {
+  color: var(--ah-color-border);
+  opacity: 0.5;
+}
+
+.ah-pm-stats__warning {
+  color: var(--ah-color-error, #dc2626);
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+/* ---------- 数学公式 ---------- */
+
+/* 行内公式 */
+.ah-pm-math-inline {
+  display: inline;
+  cursor: pointer;
+  border-radius: var(--ah-radius-sm);
+  padding: 1px 4px;
+  transition: background 0.15s;
+}
+
+.ah-pm-math-inline:hover {
+  background: var(--ah-color-primary-light, rgba(66, 133, 244, 0.08));
+}
+
+.ProseMirror-selectednode .ah-pm-math-inline {
+  outline: 2px solid var(--ah-color-primary, #4285F4);
+  outline-offset: 1px;
+}
+
+/* 块级公式 */
+.ah-pm-math-display {
+  position: relative;
+  cursor: pointer;
+  margin: 1em 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: none;
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.ah-pm-math-display:hover {
+  background: var(--ah-color-primary-light, rgba(66, 133, 244, 0.04));
+  border-radius: var(--ah-radius-sm, 4px);
+}
+
+.ProseMirror-selectednode > .ah-pm-math-display {
+  outline: 2px solid var(--ah-color-primary, #4285F4);
+  outline-offset: 2px;
+  border-radius: var(--ah-radius-sm, 4px);
+}
+
+.ah-pm-math-placeholder {
+  color: var(--ah-color-text-disabled, #999);
+  font-style: italic;
+  font-size: 14px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* KaTeX 渲染层 */
+.ah-pm-math-katex {
+  display: inline;
+}
+
+.ah-pm-math-display .ah-pm-math-katex {
+  display: block;
+}
+
+/* 编辑层 */
+.ah-pm-math-edit {
+  display: none;
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 8px 12px;
+  border: var(--ah-border-width) solid var(--ah-color-primary, #4285F4);
+  border-radius: var(--ah-radius-sm, 4px);
+  font-family: var(--ah-font-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  background: var(--ah-color-bg, #fff);
+  color: var(--ah-color-text, #333);
+  outline: none;
+  resize: vertical;
+  box-shadow: var(--ah-shadow-sm);
+}
+
+/* 错误态 */
+.ah-pm-math-error {
+  display: none;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 8px 12px;
+  border-radius: var(--ah-radius-sm, 4px);
+  background: var(--ah-color-error-light, rgba(220, 38, 38, 0.08));
+  border: var(--ah-border-width) solid var(--ah-color-error, #dc2626);
+}
+
+.ah-pm-math-error-msg {
+  display: block;
+  font-size: 12px;
+  color: var(--ah-color-error, #dc2626);
+  margin-bottom: 6px;
+}
+
+.ah-pm-math-error-src {
+  display: block;
+  font-family: var(--ah-font-mono);
+  font-size: 13px;
+  color: var(--ah-color-text-secondary, #666);
+  word-break: break-all;
+}
+
+.ah-pm-math-empty {
+  color: var(--ah-color-text-disabled, #999);
+  font-style: italic;
+  font-size: 14px;
+}
