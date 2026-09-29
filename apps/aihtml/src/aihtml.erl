@@ -528,74 +528,74 @@ split_button(A1, A2, A3, A4) -> aihtml_form_buttons:split_button(A1, A2, A3, A4)
                aihtml_form_choice:value() | undefined,
                aihtml_html:css(),
                aihtml_html:attrs()) ->
-                  aihtml_html:element().
+                  #ah_checkbox{}.
 checkbox(A1, A2, A3, A4) -> aihtml_form_choice:checkbox(A1, A2, A3, A4).
 -spec radiobutton(aihtml_html:html(),
                   aihtml_form_choice:value() | undefined,
                   aihtml_html:css(),
                   aihtml_html:attrs()) ->
-                     aihtml_html:element().
+                     #ah_radiobutton{}.
 radiobutton(A1, A2, A3, A4) -> aihtml_form_choice:radiobutton(A1, A2, A3, A4).
 -spec switch_button(aihtml_html:html(),
                     aihtml_form_choice:value() | undefined,
                     aihtml_html:css(),
                     aihtml_html:attrs()) ->
-                       aihtml_html:element().
+                       #ah_switch_button{}.
 switch_button(A1, A2, A3, A4) -> aihtml_form_choice:switch_button(A1, A2, A3, A4).
 -spec checkbox_group([aihtml_form_choice:item()],
                      [aihtml_form_choice:value()],
                      aihtml_html:css(),
                      aihtml_html:attrs()) ->
-                        aihtml_html:element().
+                        #ah_checkbox_group{}.
 checkbox_group(A1, A2, A3, A4) -> aihtml_form_choice:checkbox_group(A1, A2, A3, A4).
 -spec radiobutton_group([aihtml_form_choice:item()],
                         aihtml_form_choice:value() | undefined,
                         aihtml_html:css(),
                         aihtml_html:attrs()) ->
-                           aihtml_html:element().
+                           #ah_radiobutton_group{}.
 radiobutton_group(A1, A2, A3, A4) -> aihtml_form_choice:radiobutton_group(A1, A2, A3, A4).
 -spec radio_cards([aihtml_form_choice:item()],
                   aihtml_form_choice:value() | undefined,
                   aihtml_html:css(),
                   aihtml_html:attrs()) ->
-                     aihtml_html:element().
+                     #ah_radio_cards{}.
 radio_cards(A1, A2, A3, A4) -> aihtml_form_choice:radio_cards(A1, A2, A3, A4).
 -spec rating_group(pos_integer(),
                    number() | undefined,
                    aihtml_html:css(),
                    aihtml_html:attrs()) ->
-                      aihtml_html:element().
+                      #ah_rating_group{}.
 rating_group(A1, A2, A3, A4) -> aihtml_form_choice:rating_group(A1, A2, A3, A4).
 
 %% aihtml_form_text
 -spec input(binary() | undefined,
             aihtml_html:css(),
             aihtml_html:attrs()) ->
-               aihtml_html:element().
+               #ah_input{}.
 input(A1, A2, A3) -> aihtml_form_text:input(A1, A2, A3).
 -spec textarea(binary() | undefined,
                aihtml_html:css(),
                aihtml_html:attrs()) ->
-                  aihtml_html:element().
+                  #ah_textarea{}.
 textarea(A1, A2, A3) -> aihtml_form_text:textarea(A1, A2, A3).
 -spec password_input(binary() | undefined,
                      aihtml_html:css(),
                      aihtml_html:attrs()) ->
-                        aihtml_html:element().
+                        #ah_password_input{}.
 password_input(A1, A2, A3) -> aihtml_form_text:password_input(A1, A2, A3).
 -spec number_input(number() | binary() | undefined,
                    aihtml_html:css(),
                    aihtml_html:attrs()) ->
-                      aihtml_html:element().
+                      #ah_number_input{}.
 number_input(A1, A2, A3) -> aihtml_form_text:number_input(A1, A2, A3).
 -spec input_otp(pos_integer(),
                 binary() | undefined,
                 aihtml_html:css(),
                 aihtml_html:attrs()) ->
-                   aihtml_html:element().
+                   #ah_input_otp{}.
 input_otp(A1, A2, A3, A4) -> aihtml_form_text:input_otp(A1, A2, A3, A4).
 -spec tag_input([binary()], aihtml_html:css(), aihtml_html:attrs()) ->
-                   aihtml_html:element().
+                   #ah_tag_input{}.
 tag_input(A1, A2, A3) -> aihtml_form_text:tag_input(A1, A2, A3).
 
 %% aihtml_form_select
@@ -603,7 +603,7 @@ tag_input(A1, A2, A3) -> aihtml_form_text:tag_input(A1, A2, A3).
                    binary() | atom() | number() | undefined,
                    aihtml_html:css(),
                    aihtml_html:attrs()) ->
-                      aihtml_html:element().
+                      #ah_dropdownlist{}.
 dropdownlist(A1, A2, A3, A4) -> aihtml_form_select:dropdownlist(A1, A2, A3, A4).
 -spec select([aihtml_form_select:item()],
              binary() | atom() | number() |
@@ -611,25 +611,25 @@ dropdownlist(A1, A2, A3, A4) -> aihtml_form_select:dropdownlist(A1, A2, A3, A4).
              undefined,
              aihtml_html:css(),
              aihtml_html:attrs()) ->
-                aihtml_html:element().
+                #ah_select{}.
 select(A1, A2, A3, A4) -> aihtml_form_select:select(A1, A2, A3, A4).
 -spec slider({number(), number()} | {number(), number(), number()},
              number() | {number(), number()} | undefined,
              aihtml_html:css(),
              aihtml_html:attrs()) ->
-                aihtml_html:element().
+                #ah_slider{}.
 slider(A1, A2, A3, A4) -> aihtml_form_select:slider(A1, A2, A3, A4).
 -spec field(aihtml_html:html(),
             aihtml_html:html(),
             aihtml_html:css(),
             aihtml_html:attrs()) ->
-               aihtml_html:element().
+               #ah_field{}.
 field(A1, A2, A3, A4) -> aihtml_form_select:field(A1, A2, A3, A4).
 -spec form_layout([aihtml_form_select:field_spec()],
                   #{term() => term()},
                   aihtml_html:css(),
                   aihtml_html:attrs()) ->
-                     aihtml_html:element().
+                     #ah_form_layout{}.
 form_layout(A1, A2, A3, A4) -> aihtml_form_select:form_layout(A1, A2, A3, A4).
 -spec validate([aihtml_form_select:rule() |
                 {hint | position | on, term()}]) ->
@@ -640,13 +640,13 @@ validate(A1) -> aihtml_form_select:validate(A1).
 -spec datepicker(aihtml_form_pickers:date_value(),
                  aihtml_html:css(),
                  aihtml_html:attrs()) ->
-                    aihtml_html:element().
+                    #ah_datepicker{}.
 datepicker(A1, A2, A3) -> aihtml_form_pickers:datepicker(A1, A2, A3).
 -spec combobox([aihtml_form_pickers:item()],
                term() | [term()] | undefined,
                aihtml_html:css(),
                aihtml_html:attrs()) ->
-                  aihtml_html:element().
+                  #ah_combobox{}.
 combobox(A1, A2, A3, A4) -> aihtml_form_pickers:combobox(A1, A2, A3, A4).
 -spec set_items(aihtml_action:ctx(),
                 {id, iodata() | atom()} | aihtml_action:event(),
@@ -664,25 +664,25 @@ set_items(A1, A2, A3, A4) -> aihtml_form_pickers:set_items(A1, A2, A3, A4).
 -spec timepicker(binary() | string() | tuple() | undefined,
                  aihtml_html:css(),
                  aihtml_html:attrs()) ->
-                    aihtml_html:element().
+                    #ah_timepicker{}.
 timepicker(A1, A2, A3) -> aihtml_form_time_color:timepicker(A1, A2, A3).
 -spec colorpicker(binary() | string() | tuple() | undefined,
                   aihtml_html:css(),
                   aihtml_html:attrs()) ->
-                     aihtml_html:element().
+                     #ah_colorpicker{}.
 colorpicker(A1, A2, A3) -> aihtml_form_time_color:colorpicker(A1, A2, A3).
 
 %% aihtml_layout_basic
 -spec card(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-              aihtml_html:element().
+              #ah_card{}.
 card(A1, A2, A3) -> aihtml_layout_basic:card(A1, A2, A3).
 -spec panel(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-               aihtml_html:element().
+               #ah_panel{}.
 panel(A1, A2, A3) -> aihtml_layout_basic:panel(A1, A2, A3).
 -spec expander(aihtml_html:html(),
                aihtml_html:css(),
                aihtml_html:attrs()) ->
-                  aihtml_html:element().
+                  #ah_expander{}.
 expander(A1, A2, A3) -> aihtml_layout_basic:expander(A1, A2, A3).
 -spec tabs([{aihtml_layout_basic:key(),
              aihtml_html:html(),
@@ -694,27 +694,27 @@ expander(A1, A2, A3) -> aihtml_layout_basic:expander(A1, A2, A3).
            aihtml_layout_basic:key() | undefined,
            aihtml_html:css(),
            aihtml_html:attrs()) ->
-              aihtml_html:element().
+              #ah_tabs{}.
 tabs(A1, A2, A3, A4) -> aihtml_layout_basic:tabs(A1, A2, A3, A4).
 -spec tab_bar([{aihtml_layout_basic:key(), aihtml_html:html()} |
                {aihtml_layout_basic:key(), aihtml_html:html(), map()}],
               aihtml_layout_basic:key() | undefined,
               aihtml_html:css(),
               aihtml_html:attrs()) ->
-                 aihtml_html:element().
+                 #ah_tab_bar{}.
 tab_bar(A1, A2, A3, A4) -> aihtml_layout_basic:tab_bar(A1, A2, A3, A4).
 -spec breadcrumbs([aihtml_html:html() |
                    {aihtml_html:html(), binary() | undefined} |
                    map()],
                   aihtml_html:css(),
                   aihtml_html:attrs()) ->
-                     aihtml_html:element().
+                     #ah_breadcrumbs{}.
 breadcrumbs(A1, A2, A3) -> aihtml_layout_basic:breadcrumbs(A1, A2, A3).
 -spec pagination(non_neg_integer(),
                  pos_integer(),
                  aihtml_html:css(),
                  aihtml_html:attrs()) ->
-                    aihtml_html:element().
+                    #ah_pagination{}.
 pagination(A1, A2, A3, A4) -> aihtml_layout_basic:pagination(A1, A2, A3, A4).
 -spec steps([aihtml_html:html() |
              {aihtml_html:html(), aihtml_html:html()} |
@@ -722,16 +722,14 @@ pagination(A1, A2, A3, A4) -> aihtml_layout_basic:pagination(A1, A2, A3, A4).
             non_neg_integer(),
             aihtml_html:css(),
             aihtml_html:attrs()) ->
-               aihtml_html:element().
+               #ah_steps{}.
 steps(A1, A2, A3, A4) -> aihtml_layout_basic:steps(A1, A2, A3, A4).
--spec skeleton(aihtml_html:css(), aihtml_html:attrs()) ->
-                  aihtml_html:element().
+-spec skeleton(aihtml_html:css(), aihtml_html:attrs()) -> #ah_skeleton{}.
 skeleton(A1, A2) -> aihtml_layout_basic:skeleton(A1, A2).
--spec loader(aihtml_html:css(), aihtml_html:attrs()) ->
-                aihtml_html:element().
+-spec loader(aihtml_html:css(), aihtml_html:attrs()) -> #ah_loader{}.
 loader(A1, A2) -> aihtml_layout_basic:loader(A1, A2).
 -spec empty(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-               aihtml_html:element().
+               #ah_empty{}.
 empty(A1, A2, A3) -> aihtml_layout_basic:empty(A1, A2, A3).
 
 %% aihtml_layout_nav
@@ -739,13 +737,13 @@ empty(A1, A2, A3) -> aihtml_layout_basic:empty(A1, A2, A3).
            aihtml_layout_nav:key() | undefined,
            aihtml_html:css(),
            aihtml_html:attrs()) ->
-              aihtml_html:element().
+              #ah_menu{}.
 menu(A1, A2, A3, A4) -> aihtml_layout_nav:menu(A1, A2, A3, A4).
 -spec navbar([aihtml_layout_nav:item()],
              aihtml_layout_nav:key() | undefined,
              aihtml_html:css(),
              aihtml_html:attrs()) ->
-                aihtml_html:element().
+                #ah_navbar{}.
 navbar(A1, A2, A3, A4) -> aihtml_layout_nav:navbar(A1, A2, A3, A4).
 -spec sidenav([#{label => aihtml_html:html(),
                  items := [aihtml_layout_nav:item()]}] |
@@ -753,28 +751,28 @@ navbar(A1, A2, A3, A4) -> aihtml_layout_nav:navbar(A1, A2, A3, A4).
               aihtml_layout_nav:key() | undefined,
               aihtml_html:css(),
               aihtml_html:attrs()) ->
-                 aihtml_html:element().
+                 #ah_sidenav{}.
 sidenav(A1, A2, A3, A4) -> aihtml_layout_nav:sidenav(A1, A2, A3, A4).
 -spec toolbar([aihtml_layout_nav:tool()],
               aihtml_html:css(),
               aihtml_html:attrs()) ->
-                 aihtml_html:element().
+                 #ah_toolbar{}.
 toolbar(A1, A2, A3) -> aihtml_layout_nav:toolbar(A1, A2, A3).
 -spec splitter([aihtml_layout_nav:pane()],
                aihtml_html:css(),
                aihtml_html:attrs()) ->
-                  aihtml_html:element().
+                  #ah_splitter{}.
 splitter(A1, A2, A3) -> aihtml_layout_nav:splitter(A1, A2, A3).
 -spec listmenu([aihtml_layout_nav:item()],
                aihtml_layout_nav:key() | undefined,
                aihtml_html:css(),
                aihtml_html:attrs()) ->
-                  aihtml_html:element().
+                  #ah_listmenu{}.
 listmenu(A1, A2, A3, A4) -> aihtml_layout_nav:listmenu(A1, A2, A3, A4).
 -spec status_bar([aihtml_layout_nav:segment()],
                  aihtml_html:css(),
                  aihtml_html:attrs()) ->
-                    aihtml_html:element().
+                    #ah_status_bar{}.
 status_bar(A1, A2, A3) -> aihtml_layout_nav:status_bar(A1, A2, A3).
 
 %% aihtml_overlay
@@ -782,28 +780,28 @@ status_bar(A1, A2, A3) -> aihtml_layout_nav:status_bar(A1, A2, A3).
               aihtml_html:html(),
               aihtml_html:css(),
               aihtml_html:attrs()) ->
-                 aihtml_html:element().
+                 #ah_tooltip{}.
 tooltip(A1, A2, A3, A4) -> aihtml_overlay:tooltip(A1, A2, A3, A4).
 -spec tooltip_attrs(iodata(), map()) -> aihtml_html:attrs().
 tooltip_attrs(A1, A2) -> aihtml_overlay:tooltip_attrs(A1, A2).
 -spec popover(aihtml_html:html(),
               aihtml_html:css(),
               aihtml_html:attrs()) ->
-                 aihtml_html:element().
+                 #ah_popover{}.
 popover(A1, A2, A3) -> aihtml_overlay:popover(A1, A2, A3).
 -spec drawer(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-                aihtml_html:element().
+                #ah_drawer{}.
 drawer(A1, A2, A3) -> aihtml_overlay:drawer(A1, A2, A3).
 -spec sheet(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-               aihtml_html:element().
+               #ah_sheet{}.
 sheet(A1, A2, A3) -> aihtml_overlay:sheet(A1, A2, A3).
 -spec window(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-                aihtml_html:element().
+                #ah_window{}.
 window(A1, A2, A3) -> aihtml_overlay:window(A1, A2, A3).
 -spec notification(aihtml_html:html(),
                    aihtml_html:css(),
                    aihtml_html:attrs()) ->
-                      aihtml_html:element().
+                      #ah_notification{}.
 notification(A1, A2, A3) -> aihtml_overlay:notification(A1, A2, A3).
 -spec shows_toast(iodata(), map()) -> aihtml_html:attrs().
 shows_toast(A1, A2) -> aihtml_overlay:shows_toast(A1, A2).
@@ -823,70 +821,70 @@ toast(A1, A2, A3) -> aihtml_overlay:toast(A1, A2, A3).
 
 %% aihtml_display
 -spec avatar(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-                aihtml_html:element().
+                #ah_avatar{}.
 avatar(A1, A2, A3) -> aihtml_display:avatar(A1, A2, A3).
 -spec badge(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-               aihtml_html:element().
+               #ah_badge{}.
 badge(A1, A2, A3) -> aihtml_display:badge(A1, A2, A3).
 -spec chip(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-              aihtml_html:element().
+              #ah_chip{}.
 chip(A1, A2, A3) -> aihtml_display:chip(A1, A2, A3).
 -spec aspect_ratio(aihtml_html:html(),
                    aihtml_html:css(),
                    aihtml_html:attrs()) ->
-                      aihtml_html:element().
+                      #ah_aspect_ratio{}.
 aspect_ratio(A1, A2, A3) -> aihtml_display:aspect_ratio(A1, A2, A3).
 -spec kbd(aihtml_html:html() | [aihtml_html:html()],
           aihtml_html:css(),
           aihtml_html:attrs()) ->
-             aihtml_html:element().
+             #ah_kbd{}.
 kbd(A1, A2, A3) -> aihtml_display:kbd(A1, A2, A3).
 -spec time_ago(integer() | calendar:datetime() | binary(),
                aihtml_html:css(),
                aihtml_html:attrs()) ->
-                  aihtml_html:element().
+                  #ah_time_ago{}.
 time_ago(A1, A2, A3) -> aihtml_display:time_ago(A1, A2, A3).
 -spec expandable_text(unicode:chardata(),
                       aihtml_html:css(),
                       aihtml_html:attrs()) ->
-                         aihtml_html:element().
+                         #ah_expandable_text{}.
 expandable_text(A1, A2, A3) -> aihtml_display:expandable_text(A1, A2, A3).
 -spec alert(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
-               aihtml_html:element().
+               #ah_alert{}.
 alert(A1, A2, A3) -> aihtml_display:alert(A1, A2, A3).
 -spec progressbar(number() | undefined,
                   aihtml_html:css(),
                   aihtml_html:attrs()) ->
-                     aihtml_html:element().
+                     #ah_progressbar{}.
 progressbar(A1, A2, A3) -> aihtml_display:progressbar(A1, A2, A3).
 -spec progress_circle(number() | undefined,
                       aihtml_html:css(),
                       aihtml_html:attrs()) ->
-                         aihtml_html:element().
+                         #ah_progress_circle{}.
 progress_circle(A1, A2, A3) -> aihtml_display:progress_circle(A1, A2, A3).
 -spec meter(number(), aihtml_html:css(), aihtml_html:attrs()) ->
-               aihtml_html:element().
+               #ah_meter{}.
 meter(A1, A2, A3) -> aihtml_display:meter(A1, A2, A3).
 -spec statistic(number() | aihtml_html:html(),
                 aihtml_html:css(),
                 aihtml_html:attrs()) ->
-                   aihtml_html:element().
+                   #ah_statistic{}.
 statistic(A1, A2, A3) -> aihtml_display:statistic(A1, A2, A3).
 -spec kpi_card(aihtml_html:html(),
                aihtml_html:css(),
                aihtml_html:attrs()) ->
-                  aihtml_html:element().
+                  #ah_kpi_card{}.
 kpi_card(A1, A2, A3) -> aihtml_display:kpi_card(A1, A2, A3).
 -spec timeline([map()], aihtml_html:css(), aihtml_html:attrs()) ->
-                  aihtml_html:element().
+                  #ah_timeline{}.
 timeline(A1, A2, A3) -> aihtml_display:timeline(A1, A2, A3).
 -spec ranking_list([map()], aihtml_html:css(), aihtml_html:attrs()) ->
-                      aihtml_html:element().
+                      #ah_ranking_list{}.
 ranking_list(A1, A2, A3) -> aihtml_display:ranking_list(A1, A2, A3).
 -spec tag_cloud([map() | {aihtml_html:html(), number()}],
                 aihtml_html:css(),
                 aihtml_html:attrs()) ->
-                   aihtml_html:element().
+                   #ah_tag_cloud{}.
 tag_cloud(A1, A2, A3) -> aihtml_display:tag_cloud(A1, A2, A3).
 
 %% END GENERATED COMPONENTS
