@@ -1,0 +1,8 @@
+/* aihtml additions for empty; sigil styles live in ../sigil/components. */
+
+/* ---- empty: compact ------------------------------------------------- */
+
+.ah-empty.ah-empty-compact {
+  padding: 16px 12px;
+  gap: 4px;
+}
