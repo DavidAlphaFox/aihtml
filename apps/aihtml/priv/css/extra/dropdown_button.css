@@ -1,0 +1,57 @@
+/* aihtml additions for dropdown_button (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- dropdown button ----
+   sigil mounts the popup on <body>; here it stays inside the root (so
+   AH.destroy and swaps clean it up) and JS pins it with AH.float
+   (position: fixed, flips when there is no room). The trigger is a
+   native button. */
+.ah-dropdown-btn-wrapper {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ah-dropdown-btn-wrapper:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset, 2px);
+}
+
+.ah-dropdown-btn > .ah-dropdown-btn-popup {
+  min-width: 10rem;
+  max-height: 20rem;
+}
+
+.ah-dropdown-btn-popup > .ah-dropdown-btn-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--ah-color-text);
+  font: inherit;
+  text-align: left;
+  white-space: nowrap;
+}
+.ah-dropdown-btn-popup > .ah-dropdown-btn-item:focus-visible {
+  outline: none;
+  background-color: var(--ah-color-primary-lighter);
+}
+.ah-dropdown-btn-popup > .ah-dropdown-btn-item.selected {
+  background-color: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+}
+.ah-dropdown-btn-popup > .ah-dropdown-btn-item:disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+  background: transparent;
+}
+.ah-dropdown-btn-popup > .ah-dropdown-btn-divider {
+  height: 1px;
+  padding: 0;
+  margin: var(--ah-spacing-xs) 0;
+  background: var(--ah-color-border);
+  cursor: default;
+}
+.ah-dropdown-btn-item-icon { display: inline-flex; }
