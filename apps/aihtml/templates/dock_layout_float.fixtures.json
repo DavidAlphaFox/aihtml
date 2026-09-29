@@ -1,0 +1,4 @@
+[
+  {"fid": "dl-f1", "title": "Inspector", "x": 120, "y": 80, "width": 260, "height": 180, "close_label": "Close", "body": "<div class=\"x\">b</div>"},
+  {"fid": "dl-f2", "title": "A & <B>", "x": 0, "y": -4, "width": 300, "height": 200, "close_label": "Schließen", "body": ""}
+]

@@ -1,0 +1,11 @@
+[
+  {"gid": "dl-g1", "document": false, "pin": "true", "close": "true", "pinned": "true", "unpinned": false,
+   "edge": false, "size": 0, "style": "flex:22 1 0px", "pin_label": "Auto Hide", "close_label": "Close",
+   "tabs": [{"id": "explorer", "tid": "dl-t-explorer", "pid": "dl-p-explorer", "title": "Explorer <&>", "selected": true, "body": "<p>tree</p>"},
+            {"id": "search", "tid": "dl-t-search", "pid": "dl-p-search", "title": "Search", "selected": false, "body": ""}]},
+  {"gid": "dl-g2", "document": true, "pin": "false", "close": "false", "pinned": "true", "unpinned": false,
+   "edge": false, "size": 0, "style": false, "pin_label": "Auto Hide", "close_label": "Close", "tabs": []},
+  {"gid": "dl-g3", "document": false, "pin": "true", "close": "false", "pinned": "false", "unpinned": true,
+   "edge": "left", "size": 250, "style": false, "pin_label": "Pin \"x\"", "close_label": "Close",
+   "tabs": [{"id": "out", "tid": "dl-t-out", "pid": "dl-p-out", "title": "Output", "selected": true, "body": "<b>log</b>"}]}
+]
