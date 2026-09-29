@@ -20,7 +20,7 @@ demos() ->
 -spec expandable_default() -> aihtml:html().
 expandable_default() ->
     expandable_text(<<"aihtml renders every page on the server as Erlang function calls; "
-                      "jQuery only adds behaviour. This paragraph is long enough to be cut "
+                      "the browser only adds behaviour. This paragraph is long enough to be cut "
                       "at the threshold and shows a toggle to read the rest.">>,
                     [], [{threshold, 60}]).
 

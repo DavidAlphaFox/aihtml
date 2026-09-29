@@ -41,7 +41,7 @@
 
 -define(SEED, [<<"Write pages as Erlang calls">>,
                <<"Switch the four theme axes">>,
-               <<"Swap fragments with jQuery">>]).
+               <<"Swap fragments from the server">>]).
 
 %%%===================================================================
 %%% Setup

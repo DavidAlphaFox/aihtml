@@ -1,5 +1,5 @@
 %% @doc Fragment endpoints. Each answers with an HTML fragment that the
-%% jQuery runtime swaps into the page, rendered by the same view functions
+%% browser runtime swaps into the page, rendered by the same view functions
 %% the full page uses.
 -module(aihtml_example_api).
 

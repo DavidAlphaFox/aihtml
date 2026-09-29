@@ -30,7 +30,7 @@ hero(Comps) ->
              {length(aihtml_theme:axes()), <<"主题轴"/utf8>>},
              {length(aihtml_tpl:names()), <<"共享模板"/utf8>>}],
     section('div'([h1(<<"aihtml">>, [<<"text-6xl font-bold tracking-tight">>], []),
-                   p(<<"用 Erlang 函数直接写 HTML 页面。组件映射到 jQuery 行为和 Tailwind 样式，"
+                   p(<<"用 Erlang 函数直接写 HTML 页面。组件由 Stimulus 控制器增强、Tailwind 定样式，"
                        "交互走无状态 action，服务端可以向页面推送更新。"/utf8>>,
                      [<<"mt-6 text-lg text-white/80 max-w-2xl mx-auto leading-relaxed">>], []),
                    'div'([stat(N, L) || {N, L} <- Stats],

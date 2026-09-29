@@ -31,7 +31,7 @@ demos() ->
 
 -spec nav_basic() -> aihtml:html().
 nav_basic() ->
-    navigationbar([{<<"快速入门"/utf8>>, para(<<"aihtml 用 Erlang 在服务端生成 HTML，浏览器端只做 jQuery 增强。"/utf8>>)},
+    navigationbar([{<<"快速入门"/utf8>>, para(<<"aihtml 用 Erlang 在服务端生成 HTML，浏览器端由 Stimulus 控制器增强。"/utf8>>)},
                    {<<"安装"/utf8>>, para(<<"把 aihtml 加进 rebar.config 的依赖，页面用 aihtml_page 输出，自动引入 aihtml.css 和运行时。"/utf8>>)},
                    {<<"基本用法"/utf8>>, para(<<"组件函数返回 record，交给 aihtml_html:render/1 输出。"/utf8>>)}],
                   0, [<<"max-w-md">>], []).
