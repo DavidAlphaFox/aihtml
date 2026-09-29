@@ -1,0 +1,183 @@
+/* aihtml additions for the ribbon (aihtml_ribbon). */
+
+/* ---- ribbon ---- */
+
+/* the selection token scrolls with the tabs */
+.ah-ribbon-tabs-inner {
+  position: relative;
+}
+.ah-ribbon-position-left .ah-ribbon-tabs-inner,
+.ah-ribbon-position-right .ah-ribbon-tabs-inner {
+  flex-direction: column;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.ah-ribbon-tab:focus {
+  outline: none;
+}
+.ah-ribbon-tab:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: -2px;
+}
+.ah-ribbon-tab-selected {
+  z-index: 1;
+}
+
+/* collapse button at the end of the tab strip */
+.ah-ribbon-collapse-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  flex-shrink: 0;
+  border: none;
+  background: transparent;
+  color: var(--ah-color-text-secondary);
+  cursor: pointer;
+}
+.ah-ribbon-collapse-btn:hover {
+  background: var(--ah-color-grey-100);
+  color: var(--ah-color-text);
+}
+.ah-ribbon-collapse-btn svg {
+  transition: transform var(--ah-transition-fast, .15s ease);
+}
+.ah-ribbon-mode-collapsed .ah-ribbon-collapse-btn svg {
+  transform: rotate(180deg);
+}
+.ah-ribbon-position-left .ah-ribbon-collapse-btn,
+.ah-ribbon-position-right .ah-ribbon-collapse-btn {
+  width: auto;
+  height: 28px;
+}
+
+/* collapsed (and popup) ribbons show a panel only while it is open,
+   floating over the page like sigil's popup mode */
+.ah-ribbon-mode-collapsed:not(.ah-ribbon-open) .ah-ribbon-tabs-content,
+.ah-ribbon-mode-popup:not(.ah-ribbon-open) .ah-ribbon-tabs-content {
+  display: none;
+}
+.ah-ribbon-mode-collapsed .ah-ribbon-tabs-content {
+  position: absolute;
+  z-index: 1000;
+  box-shadow: var(--ah-shadow-md, 0 8px 16px rgba(0, 0, 0, 0.16));
+  border: var(--ah-border-width) solid var(--ah-color-border);
+}
+.ah-ribbon-mode-collapsed.ah-ribbon-position-top .ah-ribbon-tabs-content { top: 100%; left: 0; right: 0; }
+.ah-ribbon-mode-collapsed.ah-ribbon-position-bottom .ah-ribbon-tabs-content { bottom: 100%; left: 0; right: 0; }
+.ah-ribbon-mode-collapsed.ah-ribbon-position-left .ah-ribbon-tabs-content { left: 100%; top: 0; min-width: 200px; }
+.ah-ribbon-mode-collapsed.ah-ribbon-position-right .ah-ribbon-tabs-content { right: 100%; top: 0; min-width: 200px; }
+.ah-ribbon-mode-collapsed,
+.ah-ribbon-mode-popup {
+  height: auto !important;
+}
+.ah-ribbon-mode-collapsed .ah-ribbon-tabs,
+.ah-ribbon-mode-popup .ah-ribbon-tabs {
+  border-bottom: none;
+  border-top: none;
+}
+/* closed: no tab looks pressed */
+.ah-ribbon-mode-collapsed:not(.ah-ribbon-open) .ah-ribbon-tab-selected,
+.ah-ribbon-mode-popup:not(.ah-ribbon-open) .ah-ribbon-tab-selected {
+  background: transparent;
+  color: var(--ah-color-text);
+}
+.ah-ribbon-mode-collapsed:not(.ah-ribbon-open) .ah-ribbon-tab-selected::after,
+.ah-ribbon-mode-popup:not(.ah-ribbon-open) .ah-ribbon-tab-selected::after,
+.ah-ribbon-mode-collapsed:not(.ah-ribbon-open) .ah-ribbon-selection-token,
+.ah-ribbon-mode-popup:not(.ah-ribbon-open) .ah-ribbon-selection-token {
+  display: none;
+}
+
+/* groups: the label sits at the bottom of equal-height groups */
+.ah-ribbon-tab-content {
+  white-space: nowrap;
+}
+.ah-ribbon-tab-content-active:has(> .ah-ribbon-group) {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: var(--ah-spacing-xs, 4px) var(--ah-spacing-sm, 8px);
+}
+.ah-ribbon-group {
+  justify-content: space-between;
+  margin-bottom: 0;
+  margin-right: 0;
+  padding: 0 var(--ah-spacing-sm, 8px);
+  border-right: var(--ah-border-width) solid var(--ah-color-border);
+}
+.ah-ribbon-group:last-child {
+  border-right: none;
+}
+.ah-ribbon-group-content {
+  flex: 1;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+.ah-ribbon-group-label {
+  border-top: none;
+}
+.ah-ribbon-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.ah-ribbon-separator {
+  height: auto;
+  margin: 2px var(--ah-spacing-xs, 4px);
+}
+
+/* buttons: sigil styles them for a demo; make them real buttons */
+.ah-ribbon-button,
+.ah-ribbon-button-large {
+  font-family: inherit;
+  color: var(--ah-color-text);
+  line-height: 1.2;
+}
+.ah-ribbon-button {
+  gap: var(--ah-spacing-xs, 4px);
+  font-size: var(--ah-font-size-xs, 12px);
+  white-space: nowrap;
+}
+.ah-ribbon-button-icon {
+  display: inline-flex;
+  margin-right: 0;
+}
+.ah-ribbon-button-large-icon {
+  display: inline-flex;
+  color: inherit;
+}
+.ah-ribbon-button-large-text {
+  white-space: nowrap;
+}
+.ah-ribbon-button:focus-visible,
+.ah-ribbon-button-large:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-primary);
+  outline-offset: -1px;
+}
+.ah-ribbon-button:disabled,
+.ah-ribbon-button-large:disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+  background: transparent;
+  border-color: transparent;
+}
+.ah-ribbon-button-pressed,
+.ah-ribbon-button-pressed:hover,
+.ah-ribbon-dropdown-toggle[aria-expanded="true"] {
+  background: var(--ah-color-primary-lighter, var(--ah-color-grey-200));
+  border-color: var(--ah-color-primary-light, var(--ah-color-border));
+}
+.ah-ribbon-caret {
+  font-size: 10px;
+  margin-left: 2px;
+  opacity: .7;
+}
+.ah-ribbon-dropdown {
+  display: inline-flex;
+}
+.ah-ribbon-menu {
+  min-width: 10rem;
+  max-height: 20rem;
+}
