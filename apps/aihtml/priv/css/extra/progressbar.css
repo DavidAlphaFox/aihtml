@@ -1,0 +1,69 @@
+/* aihtml additions for progressbar (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- progressbar: colours, reverse, stripes, indeterminate ---- */
+.ah-progressbar-success { --ah-progressbar-fill: var(--ah-color-success); }
+.ah-progressbar-warning { --ah-progressbar-fill: var(--ah-color-warning); }
+.ah-progressbar-error   { --ah-progressbar-fill: var(--ah-color-error); }
+.ah-progressbar-info    { --ah-progressbar-fill: var(--ah-color-info); }
+.ah-progressbar > .ah-progressbar-value,
+.ah-progressbar > .ah-progressbar-value-vertical {
+  background-color: var(--ah-progressbar-fill, var(--ah-color-primary));
+}
+
+.ah-progressbar-reverse.ah-progressbar-horizontal > .ah-progressbar-value,
+.ah-progressbar-reverse.ah-progressbar-horizontal > .ah-progressbar-range {
+  left: auto;
+  right: 0;
+}
+.ah-progressbar-reverse.ah-progressbar-vertical > .ah-progressbar-value-vertical,
+.ah-progressbar-reverse.ah-progressbar-vertical > .ah-progressbar-range {
+  top: auto;
+  bottom: 0;
+}
+.ah-progressbar-vertical > .ah-progressbar-range { width: 100%; }
+.ah-progressbar-horizontal > .ah-progressbar-range { height: 100%; }
+
+.ah-progressbar-striped > .ah-progressbar-value,
+.ah-progressbar-striped > .ah-progressbar-value-vertical,
+.ah-progressbar-striped > .ah-progressbar-range {
+  background-image: linear-gradient(45deg,
+    rgb(255 255 255 / .18) 25%, transparent 25%, transparent 50%,
+    rgb(255 255 255 / .18) 50%, rgb(255 255 255 / .18) 75%, transparent 75%, transparent);
+  background-size: 16px 16px;
+}
+.ah-progressbar-animated > .ah-progressbar-value,
+.ah-progressbar-animated > .ah-progressbar-value-vertical {
+  animation: ah-progressbar-stripes 1s linear infinite;
+}
+@keyframes ah-progressbar-stripes {
+  from { background-position: 16px 0; }
+  to   { background-position: 0 0; }
+}
+
+.ah-progressbar-indeterminate > .ah-progressbar-value {
+  width: 40%;
+  transition: none;
+  animation: ah-progressbar-indeterminate 1.4s ease-in-out infinite;
+}
+.ah-progressbar-indeterminate > .ah-progressbar-value-vertical {
+  height: 40%;
+  transition: none;
+  animation: ah-progressbar-indeterminate-v 1.4s ease-in-out infinite;
+}
+@keyframes ah-progressbar-indeterminate {
+  from { left: -40%; }
+  to   { left: 100%; }
+}
+@keyframes ah-progressbar-indeterminate-v {
+  from { top: -40%; }
+  to   { top: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-progressbar-animated > .ah-progressbar-value,
+  .ah-progressbar-indeterminate > .ah-progressbar-value,
+  .ah-progressbar-indeterminate > .ah-progressbar-value-vertical {
+    animation-duration: 3s;
+  }
+}
