@@ -1,6 +1,7 @@
 -module(aihtml_layout_nav_tests).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("aihtml/include/aihtml_layout_nav.hrl").
 
 -define(M, aihtml_layout_nav).
 
@@ -228,7 +229,7 @@ splitter_horizontal_pixels_test() ->
     ?assert(has(H, <<"style=\"height:8px\"">>)),
     ?assert(has(H, <<"data-ah-resizable=\"false\"">>)),
     ?assertNot(has(H, <<"data-ah-value">>)),
-    ?assertError({aihtml, {splitter_needs_two_panes, 3}}, ?M:splitter([a, b, c], [], [])).
+    ?assertError({aihtml, {splitter_needs_two_panes, 3}}, r(?M:splitter([a, b, c], [], []))).
 
 %%%===================================================================
 %%% listmenu
@@ -287,3 +288,108 @@ status_bar_test() ->
     Plain = r(?M:status_bar([#{count => 2, label => <<"errors">>}], [], [])),
     ?assertNot(has(Plain, <<"data-dirty">>)),
     ?assertNot(has(Plain, <<"ah-status-bar__popover">>)).
+
+%%%===================================================================
+%%% element records (designs/05-records.md)
+%%%===================================================================
+
+-define(ITEMS, [#{key => file, label => <<"File">>, children => [{new, <<"New">>}]},
+                {help, <<"Help">>}]).
+
+record_equals_builder_test() ->
+    ?assertEqual(r(?M:menu(?ITEMS, new, [vertical, show_arrows, <<"mt-2">>],
+                           [{name, cmd}, {keyboard, false}, {id, m}, {title, <<"Main">>},
+                            {aria_label, <<"x">>}])),
+                 r(#ah_menu{items = ?ITEMS, value = new, mode = vertical, show_arrows = true,
+                            css = [<<"mt-2">>], name = cmd, keyboard = false, id = m,
+                            title = <<"Main">>, attrs = [{aria_label, <<"x">>}]})),
+    ?assertEqual(r(?M:navbar(?ITEMS, help, [minimized],
+                             [{brand, <<"B">>}, {columns, [<<"30%">>]}, {minimized_height, 40}])),
+                 r(#ah_navbar{items = ?ITEMS, value = help, minimized = true, brand = <<"B">>,
+                              columns = [<<"30%">>], minimized_height = 40})),
+    ?assertEqual(r(?M:sidenav(?ITEMS, new, [collapsed],
+                              [{route_prefix, <<"#/">>}, {collapsible, true},
+                               {style, <<"--w:1px">>}])),
+                 r(#ah_sidenav{groups = ?ITEMS, value = new, collapsed = true,
+                               route_prefix = <<"#/">>, collapsible = true,
+                               attrs = [{style, <<"--w:1px">>}]})),
+    ?assertEqual(r(?M:splitter([<<"L">>, <<"R">>], [horizontal], [{splitbar_size, 8}])),
+                 r(#ah_splitter{panes = [<<"L">>, <<"R">>], orientation = horizontal,
+                                splitbar_size = 8})),
+    ?assertEqual(r(?M:listmenu(?ITEMS, new, [], [{filter, true}, {back_label, <<"Up">>}])),
+                 r(#ah_listmenu{items = ?ITEMS, value = new, filter = true,
+                                back_label = <<"Up">>})),
+    ?assertEqual(r(?M:status_bar([<<"Ln 1">>], [], [{dirty, true}, {content, <<"a b">>}])),
+                 r(#ah_status_bar{segments = [<<"Ln 1">>], dirty = true,
+                                  content = <<"a b">>})).
+
+builder_fills_fields_test() ->
+    T = ?M:toolbar([#{key => b, label => <<"B">>}], [disabled, <<"x">>],
+                   [{popup_width, 160}, {id, tb}, {aria_label, <<"Tools">>}]),
+    ?assertMatch(#ah_toolbar{disabled = true, popup_width = 160, id = tb, css = [<<"x">>],
+                             attrs = [{aria_label, <<"Tools">>}]}, T),
+    ?assertMatch(#ah_listmenu{header = true, back_button = true, filter = false,
+                              arrows = true, back_label = <<"Back">>, name = food},
+                 ?M:listmenu([], undefined, [], [{name, food}])),
+    ?assertError({aihtml, {record_only_field, ah_menu, postback}},
+                 ?M:menu([], undefined, [], [{postback, go}])).
+
+postback_test() ->
+    Token = fun(Html) ->
+                    {match, [T]} = re:run(r(Html), <<"data-ah-on=\"([a-z]+:[^\"]+)\"">>,
+                                          [{capture, all_but_first, binary}]),
+                    [Ev, Tok] = binary:split(T, <<":">>),
+                    {ok, Ref} = aihtml_action:unsign(Tok),
+                    {Ev, Ref}
+            end,
+    ?assertEqual({<<"change">>, {?MODULE, go, #{}}},
+                 Token(#ah_menu{items = ?ITEMS, postback = go})),
+    ?assertEqual({<<"change">>, {?MODULE, go, 1}},
+                 Token(#ah_navbar{items = ?ITEMS, postback = {go, 1}})),
+    ?assertEqual({<<"change">>, {other_mod, go, #{}}},
+                 Token(#ah_sidenav{groups = ?ITEMS, postback = go, delegate = other_mod})),
+    ?assertMatch({<<"change">>, _}, Token(#ah_toolbar{tools = [#{key => b}], postback = go})),
+    ?assertMatch({<<"change">>, _}, Token(#ah_splitter{panes = [<<"a">>], postback = go})),
+    ?assertMatch({<<"change">>, _}, Token(#ah_listmenu{items = ?ITEMS, postback = go})).
+
+no_postback_event_test() ->
+    ?assertError({aihtml, {no_postback_event, ah_status_bar}},
+                 r(#ah_status_bar{postback = go})).
+
+field_validation_test() ->
+    ?assertError({aihtml, {bad_modifier, menu, mode, sideways, _}},
+                 r(#ah_menu{mode = sideways})),
+    ?assertError({aihtml, {bad_modifier, splitter, orientation, diagonal, _}},
+                 r(#ah_splitter{panes = [a], orientation = diagonal})),
+    ?assertError({aihtml, {bad_flag, sidenav, collapsed, yes}},
+                 r(#ah_sidenav{collapsed = yes})),
+    ?assertError({aihtml, {modifier_in_css, navbar, vertical}},
+                 r(#ah_navbar{css = [vertical]})),
+    ?assertError({aihtml, {splitter_needs_two_panes, 0}}, r(#ah_splitter{})),
+    ?assertError({aihtml, {bad_option, dirty, sometimes}}, r(#ah_status_bar{dirty = sometimes})),
+    %% all defaults render
+    ?assert(has(r(#ah_toolbar{}), <<"class=\"ah-toolbar\"">>)).
+
+records_match_catalog_test() ->
+    Base = [module, id, css, attrs, postback, delegate],
+    [begin
+         Tag = list_to_atom("ah_" ++ atom_to_list(N)),
+         Fields = ?M:fields(Tag),
+         ?assertEqual(Base, lists:sublist(Fields, 6)),
+         Defaults = maps:from_list(lists:zip(Fields, tl(tuple_to_list(default(Tag))))),
+         [?assertEqual({N, G, case D of none -> undefined; _ -> D end},
+                       {N, G, maps:get(G, Defaults)})
+          || {G, {_, D}} <- maps:to_list(maps:get(groups, E, #{}))],
+         [?assertEqual({N, F, false}, {N, F, maps:get(F, Defaults)})
+          || F <- maps:get(flags, E, [])],
+         [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
+         ?assertEqual(?M, maps:get(module, Defaults))
+     end || #{name := N} = E <- ?M:catalog()].
+
+default(ah_menu) -> #ah_menu{};
+default(ah_navbar) -> #ah_navbar{};
+default(ah_sidenav) -> #ah_sidenav{};
+default(ah_toolbar) -> #ah_toolbar{};
+default(ah_splitter) -> #ah_splitter{};
+default(ah_listmenu) -> #ah_listmenu{};
+default(ah_status_bar) -> #ah_status_bar{}.

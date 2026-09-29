@@ -25,44 +25,37 @@
 %%% Selecting an item without `href' sets `data-ah-value' on the root to
 %%% the item's key and fires `change' there, so `on(change, Action)' in the
 %%% root's Attrs receives it (Event.value is the key).
+%%%
+%%% Each function builds an element record (#ah_menu{} ..., defined in
+%%% include/aihtml_layout_nav.hrl) and render/1 turns it into HTML, so
+%%% pages may also write the records directly (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_layout_nav).
+-behaviour(aihtml_element).
+
+-include("aihtml_layout_nav.hrl").
 
 -export([menu/4, navbar/4, sidenav/4, toolbar/3, splitter/3, listmenu/4,
          status_bar/3]).
--export([catalog/0]).
+-export([render/1, fields/1, catalog/0]).
 
--export_type([item/0, key/0, icon/0, tool/0, pane/0, segment/0]).
+-export_type([item/0, key/0, icon/0, tool/0, pane/0, segment/0, element/0]).
 
 -type html() :: aihtml_html:html().
--type key() :: atom() | binary() | integer().
--type icon() :: binary() | html().
--type item() :: #{key => key(), label => html(), icon => icon(),
-                  href => binary(), target => binary(), disabled => boolean(),
-                  children => [item()],
-                  columns => [#{header => html(), children => [item()]}],
-                  open => left | up | [left | up],
-                  expanded => boolean(),
-                  divider => true}
-              | divider | {key(), html()}.
+-type key() :: ah_nav_key().
+-type icon() :: ah_nav_icon().
+-type item() :: ah_nav_item().
 %% A toolbar tool: a button (map), a separator, or any other html (custom).
--type tool() :: #{key => key(), label => html(), icon => icon(),
-                  title => binary(), disabled => boolean(),
-                  toggle => boolean(), pressed => boolean(),
-                  minimizable => boolean()}
-              | separator | {custom, html()} | html().
+-type tool() :: ah_nav_tool().
 %% A splitter pane: its content, or a map with its initial size
 %% (<<"30%">> or pixels) and minimum size in pixels.
--type pane() :: #{content => html(), size => binary() | number(),
-                  min => non_neg_integer()}
-              | html().
--type segment() :: #{content := html(), align => left | right}
-                 | #{count := integer(), label => html(),
-                     details => [{html(), html()}], align => left | right}
-                 | html().
+-type pane() :: ah_nav_pane().
+-type segment() :: ah_nav_segment().
+-type element() :: #ah_menu{} | #ah_navbar{} | #ah_sidenav{} | #ah_toolbar{}
+                 | #ah_splitter{} | #ah_listmenu{} | #ah_status_bar{}.
 
--define(E(Name), aihtml_catalog:entry(?MODULE, Name)).
+-define(EL, aihtml_element).
 
 -define(TOGGLE_SVG, <<"<svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" "
                       "stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" "
@@ -72,6 +65,39 @@
                      "viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" "
                      "stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" "
                      "aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg>">>).
+
+%%%===================================================================
+%%% Records
+%%%===================================================================
+
+build(R, Css, Attrs) ->
+    Tag = element(1, R),
+    ?EL:build(R, fields(Tag), entry(?EL:component_name(Tag)), Css, Attrs).
+
+%% @doc The field names of one of this group's records.
+-spec fields(atom()) -> [atom()].
+fields(ah_menu) -> record_info(fields, ah_menu);
+fields(ah_navbar) -> record_info(fields, ah_navbar);
+fields(ah_sidenav) -> record_info(fields, ah_sidenav);
+fields(ah_toolbar) -> record_info(fields, ah_toolbar);
+fields(ah_splitter) -> record_info(fields, ah_splitter);
+fields(ah_listmenu) -> record_info(fields, ah_listmenu);
+fields(ah_status_bar) -> record_info(fields, ah_status_bar).
+
+-spec render(element()) -> html().
+render(#ah_menu{} = R) -> render_menu(R);
+render(#ah_navbar{} = R) -> render_navbar(R);
+render(#ah_sidenav{} = R) -> render_sidenav(R);
+render(#ah_toolbar{} = R) -> render_toolbar(R);
+render(#ah_splitter{} = R) -> render_splitter(R);
+render(#ah_listmenu{} = R) -> render_listmenu(R);
+render(#ah_status_bar{} = R) -> render_status_bar(R).
+
+classes(R) ->
+    Tag = element(1, R),
+    ?EL:classes(R, fields(Tag), entry(?EL:component_name(Tag))).
+
+entry(Name) -> aihtml_catalog:entry(?MODULE, Name).
 
 %%%===================================================================
 %%% menu
@@ -85,14 +111,14 @@
 %% and drawer below this window width), `popup_target' (selector whose
 %% right click opens a popup menu; default the document).
 -spec menu([item()], key() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
-          aihtml_html:element().
+          #ah_menu{}.
 menu(Items, Value, Css, Attrs) ->
-    E = ?E(menu),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
-    Classes = aihtml_catalog:classes(E, Css),
-    Horizontal = lists:member(<<"ah-menu-horizontal">>, Classes),
-    Disabled = lists:member(disabled, aihtml_catalog:flags(E, Css)),
-    Title = maps:get(title, Opts, undefined),
+    build(#ah_menu{items = Items, value = Value}, Css, Attrs).
+
+render_menu(#ah_menu{items = Items, value = Value, mode = Mode, disabled = Disabled,
+                     title = Title} = R) ->
+    Classes = classes(R),
+    Horizontal = Mode =:= horizontal,
     Btn = aihtml_html:el(button,
               aihtml_html:el(span, [aihtml_html:el(span, [], [], []) || _ <- [1, 2, 3]],
                              [<<"ah-menu-hamburger">>], [{aria_hidden, <<"true">>}]),
@@ -101,7 +127,7 @@ menu(Items, Value, Css, Attrs) ->
                {aria_haspopup, menu}, {aria_expanded, <<"false">>}]),
     List = aihtml_html:el(ul, [menu_item(norm(I), Value) || I <- Items],
                           [<<"ah-menu-list">>], [{role, none}]),
-    aihtml_html:el('div', [Btn, List, hidden_input(Opts, Value)], Classes,
+    aihtml_html:el('div', [Btn, List, hidden_input(R#ah_menu.name, Value)], Classes,
                    [[{data_ah, <<"menu">>},
                      {role, case Horizontal of true -> menubar; false -> menu end},
                      {tabindex, 0},
@@ -112,12 +138,11 @@ menu(Items, Value, Css, Attrs) ->
                      {aria_disabled, Disabled andalso <<"true">>},
                      {data_title, text_or(Title, undefined)},
                      {data_ah_value, value_attr(Value)},
-                     {data_ah_click_to_open, maps:get(click_to_open, Opts, false)},
-                     {data_ah_keyboard, maps:get(keyboard, Opts, true) =:= false
-                                            andalso <<"false">>},
-                     {data_ah_minimize_width, maps:get(minimize_width, Opts, undefined)},
-                     {data_ah_popup_target, maps:get(popup_target, Opts, undefined)}],
-                    Rest]).
+                     {data_ah_click_to_open, R#ah_menu.click_to_open},
+                     {data_ah_keyboard, R#ah_menu.keyboard =:= false andalso <<"false">>},
+                     {data_ah_minimize_width, R#ah_menu.minimize_width},
+                     {data_ah_popup_target, R#ah_menu.popup_target}],
+                    ?EL:root_attrs(R, change)]).
 
 menu_item(divider, _V) ->
     aihtml_html:el(li, [], [<<"ah-menu-separator">>], [{role, separator}]);
@@ -185,17 +210,16 @@ menu_column(Col, V) ->
 %% `columns' (item widths, e.g. [<<"30%">>, <<"70%">>]), `selection'
 %% (default true), `name'.
 -spec navbar([item()], key() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
-          aihtml_html:element().
+          #ah_navbar{}.
 navbar(Items, Value, Css, Attrs) ->
-    E = ?E(navbar),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
-    Classes = aihtml_catalog:classes(E, Css),
-    Vertical = lists:member(<<"ah-navbar-vertical">>, Classes),
-    Minimized = lists:member(minimized, aihtml_catalog:flags(E, Css)),
-    Columns = maps:get(columns, Opts, []),
+    build(#ah_navbar{items = Items, value = Value}, Css, Attrs).
+
+render_navbar(#ah_navbar{items = Items, value = Value, minimized = Minimized,
+                         columns = Columns, minimized_height = Height,
+                         title = Title} = R) ->
+    Classes = classes(R),
+    Vertical = R#ah_navbar.orientation =:= vertical,
     Norm = [norm(I) || I <- Items, norm(I) =/= divider],
-    Height = maps:get(minimized_height, Opts, 36),
-    Title = maps:get(title, Opts, <<>>),
     Header = aihtml_html:el('div',
                  [aihtml_html:el('div',
                                  [aihtml_html:el(span, [], [<<"ah-navbar-toggle-bar">>], [])
@@ -209,9 +233,10 @@ navbar(Items, Value, Css, Attrs) ->
                   {aria_label, text_or(Title, <<"Navigation">>)}]),
     ItemEls = [navbar_item(I, Value, col(Columns, N))
                || {N, I} <- lists:enumerate(Norm)],
-    Brand = slot(maps:get(brand, Opts, undefined), <<"ah-navbar-brand">>),
-    Extra = slot(maps:get(extra, Opts, undefined), <<"ah-navbar-extra">>),
-    aihtml_html:el('div', [Header, Brand, ItemEls, Extra, hidden_input(Opts, Value)],
+    Brand = slot(R#ah_navbar.brand, <<"ah-navbar-brand">>),
+    Extra = slot(R#ah_navbar.extra, <<"ah-navbar-extra">>),
+    aihtml_html:el('div', [Header, Brand, ItemEls, Extra,
+                           hidden_input(R#ah_navbar.name, Value)],
                    Classes,
                    [[{data_ah, <<"navbar">>}, {role, tablist},
                      {aria_orientation, case Vertical of
@@ -220,10 +245,10 @@ navbar(Items, Value, Css, Attrs) ->
                                         end},
                      {data_ah_value, value_attr(Value)},
                      {data_ah_minimized, Minimized andalso <<"static">>},
-                     {data_ah_selection, maps:get(selection, Opts, true) =:= false
+                     {data_ah_selection, R#ah_navbar.selection =:= false
                                              andalso <<"false">>},
-                     {data_ah_minimize_width, maps:get(minimize_width, Opts, undefined)}],
-                    Rest]).
+                     {data_ah_minimize_width, R#ah_navbar.minimize_width}],
+                    ?EL:root_attrs(R, change)]).
 
 navbar_item(Item, V, ColW) ->
     Selected = is_value(Item, V),
@@ -258,17 +283,17 @@ col(_, _) -> undefined.
 %% `name'.
 -spec sidenav([#{label => html(), items := [item()]}] | [item()],
               key() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
-          aihtml_html:element().
-sidenav(Groups0, Value, Css, Attrs) ->
-    E = ?E(sidenav),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
-    Classes = aihtml_catalog:classes(E, Css),
-    Collapsed = lists:member(collapsed, aihtml_catalog:flags(E, Css)),
+          #ah_sidenav{}.
+sidenav(Groups, Value, Css, Attrs) ->
+    build(#ah_sidenav{groups = Groups, value = Value}, Css, Attrs).
+
+render_sidenav(#ah_sidenav{groups = Groups0, value = Value, collapsed = Collapsed,
+                           route_prefix = Prefix} = R) ->
+    Classes = classes(R),
     Groups = case Groups0 of
                  [#{items := _} | _] -> Groups0;
                  _ -> [#{items => Groups0}]
              end,
-    Prefix = maps:get(route_prefix, Opts, undefined),
     Tree = aihtml_html:el(nav,
                [aihtml_html:el('div',
                     [case maps:get(label, G, undefined) of
@@ -280,7 +305,7 @@ sidenav(Groups0, Value, Css, Attrs) ->
                     [<<"ah-nav-tree__group">>], [])
                 || G <- Groups],
                [<<"ah-nav-tree">>], []),
-    Toggle = case maps:get(collapsible, Opts, false) of
+    Toggle = case R#ah_sidenav.collapsible of
                  false -> [];
                  true ->
                      aihtml_html:el(button, {safe, ?TOGGLE_SVG},
@@ -289,17 +314,18 @@ sidenav(Groups0, Value, Css, Attrs) ->
                                      {aria_label, <<"Toggle navigation">>},
                                      {aria_expanded, atom_to_binary(not Collapsed)}])
              end,
-    Footer = case maps:get(footer, Opts, undefined) of
+    Footer = case R#ah_sidenav.footer of
                  undefined -> [];
                  F -> aihtml_html:el('div', F, [<<"ah-sidenav__footer">>], [])
              end,
     aihtml_html:el(aside,
-        [aihtml_html:el('div', [brand(maps:get(brand, Opts, undefined)), Toggle],
+        [aihtml_html:el('div', [brand(R#ah_sidenav.brand), Toggle],
                         [<<"ah-sidenav__head">>], []),
          aihtml_html:el('div', Tree, [<<"ah-sidenav__nav">>], []),
-         Footer, hidden_input(Opts, Value)],
+         Footer, hidden_input(R#ah_sidenav.name, Value)],
         Classes,
-        [[{data_ah, <<"sidenav">>}, {data_ah_value, value_attr(Value)}], Rest]).
+        [[{data_ah, <<"sidenav">>}, {data_ah_value, value_attr(Value)}],
+         ?EL:root_attrs(R, change)]).
 
 
 brand(undefined) -> [];
@@ -373,10 +399,12 @@ contains_value(Items, V) ->
 %% sets `data-ah-value' to that key and fires `change'; `toggle' tools also
 %% flip `aria-pressed'. Flag `disabled'. Options: `popup_width' (default
 %% 200).
--spec toolbar([tool()], aihtml_html:css(), aihtml_html:attrs()) -> aihtml_html:element().
+-spec toolbar([tool()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_toolbar{}.
 toolbar(Tools, Css, Attrs) ->
-    E = ?E(toolbar),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
+    build(#ah_toolbar{tools = Tools}, Css, Attrs).
+
+render_toolbar(#ah_toolbar{tools = Tools} = R) ->
+    Classes = classes(R),
     Runs = tool_runs(Tools),
     Els = lists:join(aihtml_html:el('div', [], [<<"ah-toolbar-separator">>],
                                     [{role, separator}, {aria_orientation, vertical}]),
@@ -384,11 +412,11 @@ toolbar(Tools, Css, Attrs) ->
     MinBtn = aihtml_html:el('div', <<"\x{2630}"/utf8>>, [<<"ah-toolbar-minimize-btn">>],
                             [{role, button}, {tabindex, 0}, {aria_label, <<"More tools">>},
                              {aria_haspopup, menu}, {aria_expanded, <<"false">>}]),
-    aihtml_html:el('div', [Els, MinBtn], aihtml_catalog:classes(E, Css),
+    aihtml_html:el('div', [Els, MinBtn], Classes,
                    [[{data_ah, <<"toolbar">>}, {role, toolbar},
                      {aria_orientation, horizontal},
-                     {data_ah_popup_width, maps:get(popup_width, Opts, undefined)}],
-                    Rest]).
+                     {data_ah_popup_width, R#ah_toolbar.popup_width}],
+                    ?EL:root_attrs(R, change)]).
 
 %% Tools split into runs at separators.
 tool_runs(Tools) ->
@@ -459,18 +487,18 @@ tool_custom(Html, Cls) ->
 %% while dragging and `change' at the end with `data-ah-value' set to the
 %% two sizes in percent ("30,70"). Options: `splitbar_size' (px, default
 %% 5), `resizable' (default true), `step' (px, default 10), `name'.
--spec splitter([pane()], aihtml_html:css(), aihtml_html:attrs()) -> aihtml_html:element().
+-spec splitter([pane()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_splitter{}.
 splitter(Panes, Css, Attrs) ->
-    E = ?E(splitter),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
-    Classes = aihtml_catalog:classes(E, Css),
-    Horiz = lists:member(<<"ah-splitter-horizontal">>, Classes),
+    build(#ah_splitter{panes = Panes}, Css, Attrs).
+
+render_splitter(#ah_splitter{panes = Panes, splitbar_size = Bar} = R) ->
+    Classes = classes(R),
+    Horiz = R#ah_splitter.orientation =:= horizontal,
     [P0, P1] = case [pane(P) || P <- Panes] of
                    [A, B] -> [A, B];
                    [A] -> [A, pane([])];
                    _ -> error({aihtml, {splitter_needs_two_panes, length(Panes)}})
                end,
-    Bar = maps:get(splitbar_size, Opts, 5),
     {Basis, Pct} = case maps:get(size, P0, <<"50%">>) of
                        S when is_number(S) -> {[px(S)], undefined};
                        S -> F = percent(S),
@@ -501,14 +529,14 @@ splitter(Panes, Css, Attrs) ->
         [Panel(0, P0, [<<"flex:0 0 ">>, Basis, $;, Min(P0)]),
          Splitbar,
          Panel(1, P1, [<<"flex:1 1 0;">>, Min(P1)]),
-         hidden_input(Opts, Value)],
+         hidden_input(R#ah_splitter.name, Value)],
         Classes,
         [[{data_ah, <<"splitter">>}, {data_ah_value, Value},
           {data_ah_min, iolist_to_binary([integer_to_binary(maps:get(min, P0, 0)), $,,
                                           integer_to_binary(maps:get(min, P1, 0))])},
-          {data_ah_resizable, maps:get(resizable, Opts, true) =:= false andalso <<"false">>},
-          {data_ah_step, maps:get(step, Opts, undefined)}],
-         Rest]).
+          {data_ah_resizable, R#ah_splitter.resizable =:= false andalso <<"false">>},
+          {data_ah_step, R#ah_splitter.step}],
+         ?EL:root_attrs(R, change)]).
 
 pane(#{} = P) -> P;
 pane(Html) -> #{content => Html}.
@@ -530,28 +558,30 @@ percent(L) when is_list(L) -> percent(list_to_binary(L)).
 %% (false), `arrows' (true), `back_label' ("Back"), `filter_placeholder'
 %% ("Filter..."), `animation' (slide | fade | none), `name'.
 -spec listmenu([item()], key() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
-          aihtml_html:element().
+          #ah_listmenu{}.
 listmenu(Items, Value, Css, Attrs) ->
-    E = ?E(listmenu),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
+    build(#ah_listmenu{items = Items, value = Value}, Css, Attrs).
+
+render_listmenu(#ah_listmenu{items = Items, value = Value, arrows = Arrows,
+                             filter_placeholder = Placeholder} = R) ->
+    Classes = classes(R),
     {Pages, _} = lm_pages(Items, <<"root">>, 0),
     Path = lm_path(Pages, Value),
     Current = case Path of [] -> <<"root">>; _ -> lists:last(Path) end,
-    Arrows = maps:get(arrows, Opts, true),
     Titles = maps:from_list([{integer_to_binary(Id), label(I)}
                              || {_, Is} <- Pages, {Id, I} <- Is]),
-    Header = case maps:get(header, Opts, true) of
+    Header = case R#ah_listmenu.header of
                  false -> [];
                  true ->
                      aihtml_html:el('div',
-                         [case maps:get(back_button, Opts, true) of
+                         [case R#ah_listmenu.back_button of
                               false -> [];
                               true ->
                                   aihtml_html:el(button,
                                       [aihtml_html:el(span, <<"\x{25C0}"/utf8>>,
                                                       [<<"ah-listmenu-back-arrow">>],
                                                       [{aria_hidden, <<"true">>}]),
-                                       aihtml_html:el(span, maps:get(back_label, Opts, <<"Back">>),
+                                       aihtml_html:el(span, R#ah_listmenu.back_label,
                                                       [<<"ah-listmenu-back-label">>], [])],
                                       [<<"ah-listmenu-back">>],
                                       [{type, button}, {tabindex, -1},
@@ -561,28 +591,27 @@ listmenu(Items, Value, Css, Attrs) ->
                                          [<<"ah-listmenu-title">>], [])],
                          [<<"ah-listmenu-header">>], [])
              end,
-    Filter = case maps:get(filter, Opts, false) of
+    Filter = case R#ah_listmenu.filter of
                  false -> [];
                  true ->
                      aihtml_html:el('div',
                          aihtml_html:void(input, [<<"ah-listmenu-filter-input">>],
                                           [{type, text}, {tabindex, -1},
-                                           {placeholder, maps:get(filter_placeholder, Opts,
-                                                                  <<"Filter...">>)},
-                                           {aria_label, maps:get(filter_placeholder, Opts,
-                                                                 <<"Filter">>)}]),
+                                           {placeholder, default(Placeholder,
+                                                                 <<"Filter...">>)},
+                                           {aria_label, default(Placeholder, <<"Filter">>)}]),
                          [<<"ah-listmenu-filter">>], [])
              end,
     Viewport = aihtml_html:el('div',
                    [lm_page(P, Is, P =:= Current, Value, Arrows) || {P, Is} <- Pages],
                    [<<"ah-listmenu-viewport">>], []),
-    aihtml_html:el('div', [Header, Filter, Viewport, hidden_input(Opts, Value)],
-                   aihtml_catalog:classes(E, Css),
+    aihtml_html:el('div', [Header, Filter, Viewport, hidden_input(R#ah_listmenu.name, Value)],
+                   Classes,
                    [[{data_ah, <<"listmenu">>}, {tabindex, 0},
                      {data_ah_value, value_attr(Value)},
                      {data_ah_stack, iolist_to_binary(lists:join($,, Path))},
-                     {data_ah_animation, maps:get(animation, Opts, undefined)}],
-                    Rest]).
+                     {data_ah_animation, R#ah_listmenu.animation}],
+                    ?EL:root_attrs(R, change)]).
 
 %% [{PageId, [{ItemId, Item}]}] in document order, root first.
 lm_pages(Items, PageId, N0) ->
@@ -644,17 +673,19 @@ lm_item(Id, Item, V, Arrows) ->
 %% hover. Options: `content' (text: adds sigil's CJK-aware word count
 %% segment), `dirty' (true | false: adds the saved/unsaved dot on the
 %% right), `labels' (map overriding the default English labels).
--spec status_bar([segment()], aihtml_html:css(), aihtml_html:attrs()) ->
-          aihtml_html:element().
+-spec status_bar([segment()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_status_bar{}.
 status_bar(Segments, Css, Attrs) ->
-    E = ?E(status_bar),
-    {Opts, Rest} = aihtml_catalog:split_options(E, Attrs),
-    Labels = maps:merge(default_labels(), maps:get(labels, Opts, #{})),
-    Words = case maps:get(content, Opts, undefined) of
+    build(#ah_status_bar{segments = Segments}, Css, Attrs).
+
+render_status_bar(#ah_status_bar{segments = Segments, dirty = Dirty} = R) ->
+    Classes = classes(R),
+    lists:member(Dirty, [undefined, true, false])
+        orelse error({aihtml, {bad_option, dirty, Dirty}}),
+    Labels = maps:merge(default_labels(), R#ah_status_bar.labels),
+    Words = case R#ah_status_bar.content of
                 undefined -> [];
                 Text -> [word_count_segment(Text, Labels)]
             end,
-    Dirty = maps:get(dirty, Opts, undefined),
     Save = case Dirty of
                undefined -> [];
                _ -> [#{align => right,
@@ -667,11 +698,11 @@ status_bar(Segments, Css, Attrs) ->
         [aihtml_html:el('div', Left, [<<"ah-status-bar__side">>], []),
          aihtml_html:el('div', Right,
                         [<<"ah-status-bar__side">>, <<"ah-status-bar__side--right">>], [])],
-        aihtml_catalog:classes(E, Css),
+        Classes,
         [[{role, status},
           {data_ah, <<"status-bar">>},
           {data_dirty, Dirty =/= undefined andalso atom_to_binary(Dirty =:= true)}],
-         Rest]).
+         ?EL:root_attrs(R, none)]).
 
 seg(#{content := _} = S) -> S;
 seg(#{count := _} = S) -> S;
@@ -761,15 +792,13 @@ is_value(_, undefined) -> false;
 is_value(#{key := K}, V) -> key_bin(K) =:= key_bin(V);
 is_value(_, _) -> false.
 
-hidden_input(Opts, Value) ->
-    case maps:get(name, Opts, undefined) of
-        undefined -> [];
-        Name -> aihtml_html:void(input, [], [{type, hidden}, {name, Name},
-                                            {value, case Value of
-                                                        undefined -> <<>>;
-                                                        _ -> key_bin(Value)
-                                                    end}])
-    end.
+hidden_input(undefined, _Value) -> [];
+hidden_input(Name, Value) ->
+    aihtml_html:void(input, [], [{type, hidden}, {name, Name},
+                                 {value, case Value of
+                                             undefined -> <<>>;
+                                             _ -> key_bin(Value)
+                                         end}]).
 
 icon(_Class, undefined) -> [];
 icon(Class, Src) when is_binary(Src) ->
@@ -783,6 +812,9 @@ icon_body(Html) -> Html.
 
 slot(undefined, _Class) -> [];
 slot(Html, Class) -> aihtml_html:el('div', Html, [Class], []).
+
+default(undefined, Default) -> Default;
+default(V, _) -> V.
 
 text_or(B, _) when is_binary(B), B =/= <<>> -> B;
 text_or(_, Default) -> Default.
