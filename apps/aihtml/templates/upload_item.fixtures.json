@@ -1,0 +1,5 @@
+[
+  {"cls": "ah-upload-item ah-upload-item-success", "id": "s0", "icon": "image", "name": "photo.png", "size": "1.2 KB", "uploading": false, "percent": 100, "has_error": false, "error": "", "remove": "Remove", "disabled": false},
+  {"cls": "ah-upload-item ah-upload-item-uploading", "id": "f3", "icon": "file", "name": "<b>&\"'.txt", "size": "12 B", "uploading": true, "percent": 42, "has_error": false, "error": "", "remove": "Remove", "disabled": true},
+  {"cls": "ah-upload-item ah-upload-item-error", "id": "f4", "icon": "video", "name": "clip.mp4", "size": "3.0 MB", "uploading": false, "percent": 0, "has_error": true, "error": "File too large", "remove": "删除", "disabled": false}
+]

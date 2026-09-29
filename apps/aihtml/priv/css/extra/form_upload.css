@@ -1,0 +1,39 @@
+/* aihtml additions for the form_upload group (aihtml_form_upload). */
+
+/* The file input stays in the DOM (native mode submits it with the form)
+   but only the drop zone is seen. */
+.ah-upload > .ah-upload-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+}
+.ah-upload {
+  position: relative;
+}
+
+.ah-upload-dragger:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset, 2px);
+}
+
+/* the remove control is a <button> here (a <span> in sigil) */
+.ah-upload-item-remove {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+}
+.ah-upload-item-remove:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: 1px;
+}
+.ah-upload-item-remove:disabled {
+  cursor: not-allowed;
+}
