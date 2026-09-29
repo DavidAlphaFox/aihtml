@@ -1,0 +1,69 @@
+/* aihtml additions for switch_button (designs/04-components.md). Sigil
+   styles live in ../sigil/components. */
+
+/* ---- switch: a label with the track and optional text ---- */
+.ah-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+}
+
+.ah-switch-track {
+  width: 50px;
+  height: 24px;
+  flex-shrink: 0;
+  --sw-travel: -26px;
+}
+
+.ah-switch-thumb {
+  width: 20px;
+  height: 20px;
+}
+
+.ah-switch-sm .ah-switch-track { --sw-travel: -16px; }
+.ah-switch-lg .ah-switch-track { --sw-travel: -30px; }
+
+.ah-switch-text {
+  line-height: 1.4;
+}
+
+.ah-switch:hover:not(.ah-switch-disabled) .ah-switch-track {
+  background-color: var(--ah-color-grey-400);
+}
+
+.ah-switch.ah-switch-on:hover:not(.ah-switch-disabled) .ah-switch-track {
+  background-color: var(--ah-color-primary-dark);
+}
+
+.ah-switch:active:not(.ah-switch-disabled) .ah-switch-thumb {
+  transform: scale(0.95);
+}
+
+.ah-switch.ah-switch-on:active:not(.ah-switch-disabled) .ah-switch-thumb {
+  transform: translateX(calc(-1 * var(--sw-travel, -26px))) scale(0.95);
+}
+
+/* Direction: sigil parks the thumb on the right when off and slides it
+   left when on. aihtml follows the usual convention (off = left, on =
+   right) and swaps the on/off track labels to match. --sw-travel keeps
+   sigil's (negative) value. */
+.ah-switch-thumb {
+  right: auto;
+  left: 2px;
+}
+
+.ah-switch-on .ah-switch-thumb {
+  transform: translateX(calc(-1 * var(--sw-travel, -26px)));
+}
+
+.ah-switch-label-on {
+  right: auto;
+  left: var(--ah-spacing-sm);
+}
+
+.ah-switch-label-off {
+  left: auto;
+  right: var(--ah-spacing-sm);
+}
