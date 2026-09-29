@@ -1,0 +1,33 @@
+/* aihtml additions for button (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. The ah-btn rules
+   also style link_button, toggle_button and repeat_button. */
+
+/* ---- button: variants sigil's meta lists but button.css leaves out ---- */
+:where(.ah-btn-default) {
+  --ah-btn-bg:        var(--ah-color-bg-paper);
+  --ah-btn-fg:        var(--ah-color-text);
+  --ah-btn-border:    var(--ah-color-border);
+  --ah-btn-bg-hover:  var(--ah-color-bg-subtle);
+  --ah-btn-bg-active: color-mix(in srgb, var(--ah-color-text) 14%, var(--ah-color-bg-paper));
+  --ah-btn-shadow-toggled: inset 0 2px 4px rgb(0 0 0 / 0.12);
+}
+
+:where(.ah-btn-borderless) {
+  --ah-btn-bg:        transparent;
+  --ah-btn-fg:        var(--ah-color-primary);
+  --ah-btn-bg-hover:  var(--ah-color-primary-lighter);
+  --ah-btn-bg-active: var(--ah-color-primary-light);
+}
+
+/* ---- button: large size (sigil only has sm) ---- */
+.ah-btn-lg {
+  --ah-btn-pad-y: 0.625rem;
+  --ah-btn-pad-x: var(--ah-spacing-lg);
+  --ah-btn-font-size: var(--ah-font-size-base);
+}
+
+/* Native disabled buttons, also without the class. */
+.ah-btn:disabled {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}
