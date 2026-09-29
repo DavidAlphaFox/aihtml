@@ -1,0 +1,81 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Breadcrumbs · 面包屑（借鉴 happy breadcrumbs 基元）
+   末项为当前页（aria-current="page"）；无 separator 文本时用 CSS 圆点。
+   ============================================================================ */
+
+.ah-breadcrumbs {
+  display: block;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.ah-breadcrumbs__list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ah-breadcrumbs__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ah-breadcrumbs__icon {
+  display: inline-flex;
+  align-items: center;
+}
+.ah-breadcrumbs__icon svg { width: 14px; height: 14px; }
+
+.ah-breadcrumbs__link {
+  color: var(--ah-color-text-secondary);
+  text-decoration: none;
+  border-radius: var(--ah-radius-sm);
+  transition: color .14s ease;
+}
+.ah-breadcrumbs__link:hover {
+  color: var(--ah-color-primary);
+  text-decoration: underline;
+}
+
+/* 当前页（末项） */
+.ah-breadcrumbs__item[aria-current="page"] .ah-breadcrumbs__text {
+  color: var(--ah-color-text);
+  font-weight: 500;
+}
+
+.ah-breadcrumbs__text {
+  color: var(--ah-color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-breadcrumbs__separator {
+  display: inline-flex;
+  align-items: center;
+  color: var(--ah-color-text-disabled, var(--ah-color-text-muted));
+  user-select: none;
+}
+
+/* 无分隔符文本 → 用 4px 圆点 */
+.ah-breadcrumbs[data-has-separator="false"] .ah-breadcrumbs__separator::before {
+  content: "";
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.ah-breadcrumbs__ellipsis {
+  color: var(--ah-color-text-muted);
+  user-select: none;
+}

@@ -1,0 +1,22 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   排版 · Serif（衬线）—— data-typography="serif"
+
+   三正交轴之「排版」：只覆盖字体族。纯系统衬线字体栈，无需网络加载，
+   营造编辑排版气质。与任意 data-theme / data-palette 正交组合。
+   ============================================================================ */
+
+
+/* ⚠ P14.5：与 sigil.css 同处 `@layer components.ah`。
+   本文件是独立编译的入口（不经 lib.css），所以在这里自己声明层。
+   同层 + 在 sigil.css 之后加载 ⇒ 正确覆盖 baked 进去的默认配色；
+   若不声明层则会变成「无层」而**永远**赢过 sigil.css，那样下游就再也压不住它了。 */
+
+@layer components.ah {
+  [data-typography="serif"] {
+    --ah-font-family: "Iowan Old Style", "Charter", "Palatino Linotype",
+      "Palatino", "Georgia", Cambria, "Times New Roman", ui-serif, serif;
+  }
+}

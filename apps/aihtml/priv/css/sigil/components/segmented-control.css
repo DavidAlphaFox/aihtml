@@ -1,0 +1,54 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   SegmentedControl · 分段控制器（借鉴 happy segmented-control.css）
+   一排互斥选项，选中高亮。data-state=active / data-size / data-full-width。
+   ============================================================================ */
+
+.ah-segmented-control {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-subtle);
+  border: var(--ah-border-width) solid var(--ah-color-border-subtle, var(--ah-color-border));
+}
+.ah-segmented-control[data-full-width="true"] { display: flex; width: 100%; }
+.ah-segmented-control[data-disabled="true"] { opacity: var(--ah-state-disabled-opacity); pointer-events: none; }
+
+.ah-segmented-control__item {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 0;
+  border-radius: var(--ah-radius-md);
+  background: transparent;
+  color: var(--ah-color-text-secondary);
+  transition: background .16s ease, color .16s ease, box-shadow .16s ease;
+}
+.ah-segmented-control[data-size="sm"] .ah-segmented-control__item { padding: 3px 10px; font-size: 12px; }
+.ah-segmented-control[data-size="lg"] .ah-segmented-control__item { padding: 8px 18px; font-size: 14px; }
+
+.ah-segmented-control__item:hover:not([data-state="active"]):not([data-disabled="true"]) {
+  color: var(--ah-color-text);
+}
+
+.ah-segmented-control__item[data-state="active"] {
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg);
+  box-shadow: 0 1px 3px rgb(0 0 0 / .12);
+}
+
+.ah-segmented-control__item[data-disabled="true"] {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+}

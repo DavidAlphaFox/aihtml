@@ -1,0 +1,192 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================
+   NumberInput — 数值输入框
+   带微调按钮的数值输入框，支持前缀/后缀显示
+   ============================================================ */
+
+/* ---- 容器 ---- */
+.ah-numinput-group {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.ah-numinput-row {
+  display: flex;
+  align-items: stretch;
+}
+
+/* ---- 输入框 ---- */
+input.ah-numinput-input {
+  flex: 1;
+  min-width: 0;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  font-size: var(--ah-font-size-sm);
+  font-family: var(--ah-font-family);
+  font-variant-numeric: tabular-nums;
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+  box-sizing: border-box;
+  text-align: right;
+}
+
+input.ah-numinput-input::placeholder {
+  color: var(--ah-color-text-disabled);
+}
+
+/* 有 spin 按钮时，input 去掉右侧圆角 */
+.ah-numinput-row > input.ah-numinput-input:not(:last-child) {
+  border-radius: var(--ah-radius-md) 0 0 var(--ah-radius-md);
+}
+
+/* ---- 焦点状态 ---- */
+.ah-numinput-focused input.ah-numinput-input {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-numinput-focused .ah-numinput-spin {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ---- 微调按钮容器 ---- */
+.ah-numinput-spin {
+  display: flex;
+  flex-direction: column;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-left: none;
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+  background: var(--ah-color-bg-paper);
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+}
+
+.ah-numinput-spin-up,
+.ah-numinput-spin-down {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  flex: 1;
+  cursor: pointer;
+  user-select: none;
+  font-size: 8px;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast),
+              color var(--ah-transition-fast);
+}
+
+.ah-numinput-spin-up:hover,
+.ah-numinput-spin-down:hover {
+  background: var(--ah-color-grey-100);
+  color: var(--ah-color-text);
+}
+
+.ah-numinput-spin-up:active,
+.ah-numinput-spin-down:active {
+  background: var(--ah-color-grey-200);
+}
+
+.ah-numinput-spin-up {
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+/* ---- 浮动标签 ---- */
+.ah-numinput-label {
+  position: absolute;
+  top: 50%;
+  right: var(--ah-spacing-md);
+  transform: translateY(-50%);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  pointer-events: none;
+  transition: all var(--ah-transition-fast);
+  transform-origin: top right;
+  background: var(--ah-color-bg-paper);
+  padding: 0 4px;
+}
+
+.ah-numinput-label-float {
+  top: 0;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-primary);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-numinput-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-numinput-disabled input.ah-numinput-input {
+  background: var(--ah-color-bg-subtle);
+  cursor: not-allowed;
+}
+
+/* ---- 只读状态 ---- */
+.ah-numinput-readonly input.ah-numinput-input {
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-numinput-readonly .ah-numinput-spin {
+  display: none;
+}
+
+/* ---- 前缀/后缀 ---- */
+.ah-numinput-prefix,
+.ah-numinput-suffix {
+  display: flex;
+  align-items: center;
+  padding: 0 var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  background: var(--ah-color-grey-50);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ah-numinput-prefix {
+  border-right: none;
+  border-radius: var(--ah-radius-md) 0 0 var(--ah-radius-md);
+}
+
+/* 有 prefix 时 input 去掉左圆角 */
+.ah-numinput-prefix + input.ah-numinput-input {
+  border-radius: 0;
+}
+
+.ah-numinput-prefix + input.ah-numinput-input:last-child {
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+}
+
+.ah-numinput-suffix {
+  border-left: none;
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+}
+
+/* suffix 在 spin 之后 */
+.ah-numinput-spin + .ah-numinput-suffix {
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+}
+
+/* 有 suffix 时 spin 去掉右圆角 */
+.ah-numinput-row > .ah-numinput-spin:not(:last-child) {
+  border-radius: 0;
+}
+
+/* ---- 焦点状态边框 ---- */
+.ah-numinput-focused .ah-numinput-prefix,
+.ah-numinput-focused .ah-numinput-suffix {
+  border-color: var(--ah-color-primary);
+}

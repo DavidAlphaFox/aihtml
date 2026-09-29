@@ -1,0 +1,48 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   外观 · 暖象牙纸感（明色变体）—— data-theme="paper"
+
+   三正交轴之「外观」的第三个取值：一层暖象牙（ivory）中性色，色值取自原
+   editorial 主题的纸背设计，现独立为可复用的 appearance 变体，与任意 data-palette
+   正交组合（paper + editorial = 经典编辑纸感；paper + green = 象牙底绿强调）。
+
+   仍是明色（color-scheme: light）。灰阶沿用明色冷灰（editorial 原设计也未定义暖灰阶），
+   仅覆盖表面/文本/边框为暖色调；阴影沿用明色。
+   ============================================================================ */
+
+[data-theme="paper"] {
+  color-scheme: light;
+
+  /* ---- 灰度色阶：沿用明色冷灰 ---- */
+  --ah-color-grey-50: var(--color-grey-50);
+  --ah-color-grey-100: var(--color-grey-100);
+  --ah-color-grey-200: var(--color-grey-200);
+  --ah-color-grey-300: var(--color-grey-300);
+  --ah-color-grey-400: var(--color-grey-400);
+  --ah-color-grey-500: var(--color-grey-500);
+  --ah-color-grey-600: var(--color-grey-600);
+  --ah-color-grey-700: var(--color-grey-700);
+  --ah-color-grey-800: var(--color-grey-800);
+  --ah-color-grey-900: var(--color-grey-900);
+
+  /* ---- 背景色（暖象牙）---- */
+  --ah-color-bg: #F5F4EE;          /* 主背景 · ivory */
+  --ah-color-bg-paper: #FCFBF8;    /* 卡片/纸张，略亮于主背景 */
+  --ah-color-bg-subtle: #EEECE3;   /* 次要背景 */
+
+  /* ---- 文本色（暖近黑 + 暖灰）---- */
+  --ah-color-text: #1F1E1D;            /* 主要文本 · 暖近黑 */
+  --ah-color-text-secondary: #6E6B64;  /* 次要文本 · 暖灰 */
+  --ah-color-text-disabled: #A8A399;   /* 禁用文本 */
+
+  /* ---- 边框色（低对比暖灰）---- */
+  --ah-color-border: #E3E1D8;
+  --ah-color-border-subtle: #EDEBE3;
+
+  /* ---- 阴影（沿用明色，灰调）---- */
+  --ah-shadow-sm: 0 1px 2px 0 rgb(145 158 171 / 0.16);
+  --ah-shadow-md: 0 8px 16px 0 rgb(145 158 171 / 0.16);
+  --ah-shadow-lg: 0 16px 32px 0 rgb(145 158 171 / 0.24);
+}

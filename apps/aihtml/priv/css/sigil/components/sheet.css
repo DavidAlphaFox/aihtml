@@ -1,0 +1,130 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Sheet · 侧滑面板（借鉴 happy sheet）
+   贴边滑入 + 遮罩；data-state=open/closed 驱动过渡，data-side 决定方向。
+   ============================================================================ */
+
+.ah-sheet-anchor { display: none; }
+
+/* ⚠ P15.5：收起态用 `visibility` 而不是让 cljs 内联 `display:none`——
+   理由与 drawer 完全一致，见 drawer.css 顶部那段。
+   ⚠ delay 必须 ≥ `.ah-sheet__panel` 的 .22s。 */
+.ah-sheet__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20500;
+  background: color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity), transparent);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .2s ease, visibility 0s linear .22s;
+}
+.ah-sheet__overlay[data-state="open"] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .2s ease, visibility 0s linear 0s;
+}
+
+.ah-sheet__panel {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  max-width: 100vw;
+  max-height: 100vh;
+  background: var(--ah-color-bg);
+  box-shadow: 0 8px 40px rgb(0 0 0 / .24);
+  outline: none;
+  transition: transform .22s cubic-bezier(.32, .72, 0, 1);
+}
+
+/* ---- 四个方向：定位 + 收起态位移 ---- */
+.ah-sheet__panel[data-side="right"] {
+  top: 0; right: 0; bottom: 0;
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+  transform: translateX(100%);
+}
+.ah-sheet__panel[data-side="left"] {
+  top: 0; left: 0; bottom: 0;
+  border-right: var(--ah-border-width) solid var(--ah-color-border);
+  transform: translateX(-100%);
+}
+.ah-sheet__panel[data-side="top"] {
+  top: 0; left: 0; right: 0;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  transform: translateY(-100%);
+}
+.ah-sheet__panel[data-side="bottom"] {
+  bottom: 0; left: 0; right: 0;
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+  transform: translateY(100%);
+}
+.ah-sheet__panel[data-state="open"] { transform: none; }
+
+/* ---- 内部结构 ---- */
+.ah-sheet__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-sheet__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ah-color-text);
+}
+
+.ah-sheet__description {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ah-color-text-muted);
+}
+
+.ah-sheet__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ah-radius-md);
+  background: transparent;
+  color: var(--ah-color-text-muted);
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.ah-sheet__close svg { width: 16px; height: 16px; }
+.ah-sheet__close:hover {
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text);
+}
+
+.ah-sheet__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ah-color-text);
+}
+
+.ah-sheet__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-sheet__panel,
+  .ah-sheet__overlay { transition: none; }
+}

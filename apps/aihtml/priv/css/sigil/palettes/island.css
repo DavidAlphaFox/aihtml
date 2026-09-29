@@ -1,0 +1,189 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Island（浅滩青绿 + 暖沙 · 田园海岛）—— data-palette="island"
+
+   移植自 animal-island-ui（guokaigdg.github.io/animal-island-ui）。
+
+   「胖调色板」：除强调色外，**同时覆盖灰阶与语义表面**。理由：本风格的辨识点
+   有一半在中性层 —— 奶油底 + 棕字，而不只是青绿主色。瘦调色板（只换强调色）
+   配 light 的冷灰底会完全丢掉那股暖意，配 paper 也只是象牙白、拿不到 #F8F8F0
+   的沙调。
+
+   与形态轴 data-skin="island" 是一对（胶囊圆角 + 实色台阶），但两轴仍正交：
+     - 只要形态不要配色：data-skin="island" 单开，配色留 default
+     - 只要配色不要形态：data-palette="island" 单开，形态留 default
+
+   ⚠ 2026-08-14 对齐：色值**直接取自参考站的 :root token 表**（实测 computed，
+     不是照色卡推的），逐条对应关系写在下面各段注释里。唯一不照抄的是**前景色**
+     —— 参考站在青绿/草绿上放白字（实测 2.1 / 2.6:1），本文件改用同色系深色前景
+     （≥8:1）。底色与色相完全一致，只有字色更深，观感不变而字读得出。
+     红色一组例外：#E05A5A 配白字是它的招牌长相，与参考站一致保留。
+   ============================================================================ */
+
+/* ⚠ 与 sigil.css 同处 `@layer components.ah`，理由见 palettes/brutal.css 同段。 */
+
+@layer components.ah {
+  [data-palette="island"] {
+    /* ---- 主色调（浅滩青绿）—— 参考站 --primary-color 一族 ----
+       lighter=--primary-color-bg / light=--primary-color-hover /
+       base=--primary-color / dark=--primary-color-active（**台阶色取这一档**）。
+       darker 是本文件为「深青前景/深色描边」补的，参考站没有对应档。 */
+    --ah-color-primary-lighter: #E6F9F6;
+    --ah-color-primary-light: #3DD4C6;
+    --ah-color-primary: #19C8B9;
+    --ah-color-primary-dark: #50B9AB;
+    --ah-color-primary-darker: #0D6B63;
+    --ah-color-primary-contrast: #0B3E39;
+
+    /* ---- 次要色调（木牌棕 #8F6A3B · 告示牌/工具台）---- */
+    --ah-color-secondary-lighter: #EFE1CD;
+    --ah-color-secondary-light: #CBA87C;
+    --ah-color-secondary: #8F6A3B;
+    --ah-color-secondary-dark: #785931;
+    --ah-color-secondary-darker: #48351D;
+    --ah-color-secondary-contrast: #FFFFFF;
+
+    /* ---- 信息色（海空蓝 #2E7BA8）---- */
+    --ah-color-info-lighter: #CFE6F3;
+    --ah-color-info-light: #74B4D8;
+    --ah-color-info: #2E7BA8;
+    --ah-color-info-dark: #26668C;
+    --ah-color-info-darker: #183F57;
+    --ah-color-info-contrast: #FFFFFF;
+
+    /* ---- 成功色（草地绿）—— 参考站 --success-color 一族 ----
+       light=--success-color-hover / base=--success-color / dark=--success-color-active。
+       前景改深绿（参考站是白字，2.6:1）。 */
+    --ah-color-success-lighter: #EEF8DF;
+    --ah-color-success-light: #85CC45;
+    --ah-color-success: #6FBA2C;
+    --ah-color-success-dark: #5A9E1E;
+    --ah-color-success-darker: #2F5510;
+    --ah-color-success-contrast: #1C2E05;
+
+    /* ---- 警告色（铃钱黄）—— 参考站 --warning-color 一族 ----
+       light=--warning-color-hover / base=--warning-color / dark=--warning-color-active。
+       黄底恒配深字，参考站亦然。 */
+    --ah-color-warning-lighter: #FEF8E4;
+    --ah-color-warning-light: #F7D04A;
+    --ah-color-warning: #F5C31C;
+    --ah-color-warning-dark: #DBA90E;
+    --ah-color-warning-darker: #836509;
+    --ah-color-warning-contrast: #4A3606;
+
+    /* ---- 错误色（陶砖红）—— 参考站 --error-color 一族 ----
+       light=--error-color-hover / base=--error-color / dark=--error-color-active
+       （台阶色，实测 Danger 按钮的台阶就是 #C94444）。白字与参考站一致。 */
+    --ah-color-error-lighter: #FBEDED;
+    --ah-color-error-light: #E87878;
+    --ah-color-error: #E05A5A;
+    --ah-color-error-dark: #C94444;
+    --ah-color-error-darker: #872D2D;
+    --ah-color-error-contrast: #FFFFFF;
+
+    /* ── 胖的那部分（一）：暖沙灰阶 ──────────────────────────────────
+       参考稿只给了 6 个中性色（text / text-secondary / text-disabled /
+       border / border-light / bg），这里内插成 10 阶，并让那 6 个原色各自
+       落在对应档位上（注释标出），便于回溯。 */
+    --ah-color-grey-50: #FDFCF6;
+    --ah-color-grey-100: #F8F8F0;   /* 参考稿 bg */
+    --ah-color-grey-200: #F0E8D8;   /* 参考稿 bg-secondary */
+    --ah-color-grey-300: #E8E2D6;   /* 参考稿 border-light */
+    --ah-color-grey-400: #C4B89E;   /* 参考稿 text-disabled */
+    --ah-color-grey-500: #AAA69D;   /* 参考稿 border */
+    --ah-color-grey-600: #9F927D;   /* 参考稿 text-secondary */
+    --ah-color-grey-700: #827157;   /* 参考稿 border-hover */
+    --ah-color-grey-800: #794F27;   /* 参考稿 text（主文本棕） */
+    --ah-color-grey-900: #5A3B1D;
+
+    /* ── 胖的那部分（二）：语义表面 ──────────────────────────────────
+       全部取自参考站 :root（实测 computed）：
+         --bg-color #F8F8F0            → 页面地色
+         输入框面 #FFFBE7（实测 Input wrapper 背景）→ --ah-color-bg-paper
+         卡片面 #F7F3DF（实测 Card 背景）           → --ah-card-bg
+         --bg-color-secondary #F0E8D8  → 次级面
+       ⚠ 面色分成两个 token 是必须的：参考站的层次是「奶油地 → 象牙输入框 →
+         沙色卡片」三层，卡片**比地色更暖更深**、靠暖度分层且**完全没有阴影**。
+         sigil 原本卡片与输入框共用 bg-paper，照抄会让卡片与面板同色而消失；
+         card.css 因此补了 --ah-card-bg（默认仍跟随 bg-paper，其它配色不受影响）。 */
+    --ah-color-bg: #F8F8F0;
+    --ah-color-bg-paper: #FFFBE7;
+    --ah-color-bg-subtle: #F0E8D8;
+    --ah-card-bg: #F7F3DF;
+
+    --ah-color-text: #794F27;             /* 参考站 --text-color */
+    --ah-color-text-secondary: #9F927D;   /* --text-color-secondary */
+    --ah-color-text-disabled: #C4B89E;    /* --text-color-disabled */
+
+    /* 描边用实色而非半透明 —— 半透明叠在暖底上会发灰。
+       两档对应参考站的 --border-color / --border-color-light。 */
+    --ah-color-border: #AAA69D;
+    --ah-color-border-subtle: #E8E2D6;
+
+    --ah-color-bg-hover: rgb(159 146 125 / 0.12);
+    --ah-color-bg-overlay: rgb(0 0 0 / 0.35);   /* 参考站 --mask-bg */
+
+    /* ── 交给外形轴的颜色（skin 只 var() 取值 + 兜底，真实取值归这里）──────
+       ⚠ 变量名在 --ah-color-* 命名空间下：skin 不分层而 palette 分层，
+       同名时 skin 的兜底会把这里吃掉（实测台阶被刷成黑色兑透明）。
+       台阶色是**暖灰褐实色**，不是黑色兑透明 —— 实测参考站输入框台阶 #D4C9B4、
+       hover #C4B89E，按钮（奶油档）台阶 #BDAEA0，都在同一族。skins/island.css
+       的默认值（纯黑兑透明）是给**其它配色**兜底用的，配 island 时以这里为准。
+       ink 取 --border-color：Select 触发器/开关/标签那几条可见描边就是它。 */
+    --ah-color-skin-ink: #AAA69D;
+    --ah-color-skin-ledge: #D4C9B4;
+    --ah-color-skin-ledge-hover: #C4B89E;
+    --ah-color-skin-shadow: #5A3B1D;
+  }
+
+  /* ── Island · Dark（暖夜岛屿）──
+     参考稿没有暗色形态，这里按同一套暖调向下延伸：深棕底 + 沙色字，
+     强调色提亮一档（与其余 palette 的 dark 约定一致）。
+     特异性 (0,2,0) 稳过 appearance/dark.css 的 (0,1,0)。 */
+  [data-palette="island"][data-theme="dark"] {
+    --ah-color-grey-50: #241C14;
+    --ah-color-grey-100: #2A2018;
+    --ah-color-grey-200: #2E241A;
+    --ah-color-grey-300: #453626;
+    --ah-color-grey-400: #55432F;
+    --ah-color-grey-500: #6B563C;
+    --ah-color-grey-600: #8A7358;
+    --ah-color-grey-700: #B5A88F;
+    --ah-color-grey-800: #D8CDB6;
+    --ah-color-grey-900: #F0E8D8;
+
+    --ah-color-bg: #241C14;
+    --ah-color-bg-paper: #2E241A;
+    --ah-color-bg-subtle: #322619;
+    --ah-card-bg: #33281C;   /* 暗色下卡片仍比输入框面更暖一档 */
+
+    --ah-color-text: #F0E8D8;
+    --ah-color-text-secondary: #B5A88F;
+    --ah-color-text-disabled: #8A7358;
+
+    --ah-color-border: #453626;
+    --ah-color-border-subtle: #322619;
+
+    --ah-color-bg-hover: rgb(240 232 216 / 0.08);
+
+    /* 强调色提亮：青绿与蓝上移到 light 档，草绿与红回到参考稿原色 */
+    --ah-color-primary: #33CFBF;
+    --ah-color-primary-contrast: #05302D;
+    --ah-color-secondary: #B0885A;
+    --ah-color-secondary-contrast: #1E160C;
+    --ah-color-info: #4A99C6;
+    --ah-color-info-contrast: #0A1C26;
+    --ah-color-success: #6FBA2C;
+    --ah-color-success-contrast: #0F1C05;
+    --ah-color-error: #E05A5A;
+    --ah-color-error-contrast: #2C0F0F;
+
+    /* 暗色下台阶必须比物体更暗（明色那两个暖灰在深底上会变成亮条） */
+    --ah-color-skin-ink: #6B563C;
+    --ah-color-skin-ledge: #17110B;
+    --ah-color-skin-ledge-hover: #0E0A06;
+    --ah-color-skin-shadow: #120D08;
+  }
+}

@@ -1,0 +1,448 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   菜单 (Menu)
+   水平/垂直菜单组件，支持下拉子菜单、弹出菜单和响应式折叠
+   ============================================================================ */
+
+/* ---- 基础容器 ---- */
+
+.ah-menu {
+  display: inline-flex;
+  position: relative;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  user-select: none;
+  outline: none;
+}
+
+.ah-menu-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 顶级列表 ---- */
+
+.ah-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+}
+
+/* ---- 水平模式 ---- */
+
+.ah-menu-horizontal > .ah-menu-list {
+  flex-direction: row;
+}
+
+/* ---- 垂直模式 ---- */
+
+.ah-menu-vertical {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.ah-menu-vertical > .ah-menu-list {
+  flex-direction: column;
+}
+
+/* ---- 弹出模式 ---- */
+
+.ah-menu-popup {
+  position: fixed;
+  display: none;
+  flex-direction: column;
+  border-radius: var(--ah-radius-sm);
+  box-shadow: var(--ah-shadow-md);
+  min-width: 160px;
+  padding: 4px 0;
+}
+
+.ah-menu-popup > .ah-menu-list {
+  flex-direction: column;
+}
+
+.ah-menu-popup.ah-menu-open {
+  display: inline-flex;
+}
+
+/* ---- 菜单项 ---- */
+
+.ah-menu-item {
+  position: relative;
+  list-style: none;
+}
+
+/* ---- 菜单链接（可点击区域）---- */
+
+.ah-menu-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  color: inherit;
+  transition: background var(--ah-transition-fast),
+              color var(--ah-transition-fast);
+}
+
+.ah-menu-link:hover {
+  background: var(--ah-color-grey-100);
+  color: var(--ah-color-text);
+}
+
+.ah-menu-link-active {
+  background: var(--ah-color-primary-light, var(--ah-color-grey-100));
+  color: var(--ah-color-primary);
+}
+
+.ah-menu-link-focus {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+
+/* 禁用项 */
+.ah-menu-item-disabled > .ah-menu-link {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 图标 ---- */
+
+.ah-menu-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+/* ---- 箭头指示器 ---- */
+
+.ah-menu-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 0.5;
+}
+
+.ah-menu-arrow::after {
+  content: "";
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+}
+
+/* 水平顶级菜单：箭头向下 */
+.ah-menu-horizontal > .ah-menu-list > .ah-menu-item > .ah-menu-link > .ah-menu-arrow::after {
+  transform: rotate(45deg);
+  margin-top: -2px;
+}
+
+/* 垂直和嵌套子菜单：箭头向右 */
+.ah-menu-vertical > .ah-menu-list > .ah-menu-item > .ah-menu-link > .ah-menu-arrow::after,
+.ah-menu-submenu .ah-menu-arrow::after {
+  transform: rotate(-45deg);
+  margin-left: -2px;
+}
+
+/* 默认隐藏水平顶级项的箭头 */
+.ah-menu-horizontal > .ah-menu-list > .ah-menu-item > .ah-menu-link > .ah-menu-arrow {
+  display: none;
+}
+
+/* 显式启用时显示箭头 */
+.ah-menu-show-arrows > .ah-menu-list > .ah-menu-item > .ah-menu-link > .ah-menu-arrow {
+  display: inline-flex;
+}
+
+/* ---- 分隔符 ---- */
+
+.ah-menu-separator {
+  list-style: none;
+}
+
+.ah-menu-horizontal > .ah-menu-list > .ah-menu-separator {
+  width: 1px;
+  margin: 4px 0;
+  background: var(--ah-color-border);
+  align-self: stretch;
+}
+
+.ah-menu-vertical > .ah-menu-list > .ah-menu-separator,
+.ah-menu-submenu > .ah-menu-separator {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--ah-color-border);
+}
+
+/* ---- 子菜单 ---- */
+
+.ah-menu-submenu {
+  display: none;
+  position: absolute;
+  list-style: none;
+  margin: 0;
+  padding: 4px 0;
+  min-width: 160px;
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  box-shadow: var(--ah-shadow-md);
+  z-index: 100;
+  flex-direction: column;
+  opacity: 0;
+  transition: opacity var(--ah-transition-fast);
+}
+
+.ah-menu-submenu.ah-menu-submenu-open {
+  display: flex;
+  opacity: 1;
+}
+
+/* 水平顶级菜单：子菜单向下展开 */
+.ah-menu-horizontal > .ah-menu-list > .ah-menu-item > .ah-menu-submenu {
+  top: 100%;
+  left: 0;
+}
+
+/* 垂直顶级菜单：子菜单向右展开 */
+.ah-menu-vertical > .ah-menu-list > .ah-menu-item > .ah-menu-submenu {
+  top: 0;
+  left: 100%;
+}
+
+/* 嵌套子菜单：向右展开 */
+.ah-menu-submenu .ah-menu-submenu {
+  top: 0;
+  left: 100%;
+}
+
+/* 展开方向覆盖 */
+.ah-menu-submenu.ah-menu-open-left {
+  left: auto;
+  right: 100%;
+}
+
+.ah-menu-submenu.ah-menu-open-up {
+  top: auto;
+  bottom: 100%;
+}
+
+/* 水平模式的"左展开" */
+.ah-menu-horizontal > .ah-menu-list > .ah-menu-item > .ah-menu-submenu.ah-menu-open-left {
+  left: auto;
+  right: 0;
+}
+
+/* ---- 子菜单链接样式 ---- */
+
+.ah-menu-submenu .ah-menu-link {
+  padding: 6px 16px;
+  font-size: var(--ah-font-size-sm);
+}
+
+/* ---- 多列子菜单 ---- */
+
+.ah-menu-submenu.ah-menu-columns {
+  flex-direction: row;
+  flex-wrap: nowrap;
+  padding: 0;
+  min-width: auto;
+  width: auto;
+}
+
+.ah-menu-column {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  min-width: 140px;
+  border-right: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-menu-column:last-child {
+  border-right: none;
+}
+
+.ah-menu-column-header {
+  padding: 8px 16px 4px;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---- 最小化/响应式 ---- */
+
+.ah-menu-minimized-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  cursor: pointer;
+  color: var(--ah-color-text);
+}
+
+.ah-menu-minimized-btn:hover {
+  background: var(--ah-color-grey-100);
+}
+
+/* 汉堡图标 */
+.ah-menu-hamburger {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.ah-menu-hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+}
+
+/* 最小化时隐藏主列表并显示按钮 */
+.ah-menu.ah-menu-is-minimized {
+  border: none;
+  background: transparent;
+}
+
+.ah-menu.ah-menu-is-minimized > .ah-menu-list {
+  display: none;
+}
+
+.ah-menu.ah-menu-is-minimized > .ah-menu-minimized-btn {
+  display: flex;
+}
+
+/* 最小化抽屉覆盖层 */
+.ah-menu-drawer {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 260px;
+  background: var(--ah-color-bg);
+  box-shadow: 4px 0 16px rgba(0, 0, 0, 0.18);
+  z-index: 10000;
+  flex-direction: column;
+  overflow-y: auto;
+  transform: translateX(-100%);
+  transition: transform 0.25s ease;
+}
+
+.ah-menu-drawer.ah-menu-drawer-open {
+  display: flex;
+  transform: translateX(0);
+}
+
+.ah-menu-drawer-title {
+  padding: 12px 16px;
+  font-size: var(--ah-font-size-base);
+  font-weight: var(--ah-font-weight-semibold);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.ah-menu-drawer-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--ah-color-text-secondary);
+  border-radius: var(--ah-radius-sm);
+}
+
+.ah-menu-drawer-close:hover {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-menu-drawer-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-menu-drawer-list .ah-menu-list {
+  flex-direction: column;
+}
+
+.ah-menu-drawer-list .ah-menu-link {
+  padding: 10px 16px;
+}
+
+.ah-menu-drawer-list .ah-menu-submenu {
+  position: static;
+  display: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  min-width: 0;
+  padding: 0;
+  opacity: 1;
+  background: var(--ah-color-grey-50);
+}
+
+.ah-menu-drawer-list .ah-menu-submenu.ah-menu-submenu-open {
+  display: flex;
+}
+
+.ah-menu-drawer-list .ah-menu-submenu .ah-menu-link {
+  padding-left: 32px;
+}
+
+.ah-menu-drawer-list .ah-menu-submenu .ah-menu-submenu .ah-menu-link {
+  padding-left: 48px;
+}
+
+/* 抽屉遮罩 */
+.ah-menu-drawer-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity), transparent);
+  z-index: 9999;
+}
+
+.ah-menu-drawer-backdrop.ah-menu-drawer-backdrop-visible {
+  display: block;
+}
+
+/* ---- 触屏设备：保证最小 44px 触达高度 ---- */
+@media (pointer: coarse) {
+  .ah-menu-link {
+    min-height: 44px;
+  }
+}

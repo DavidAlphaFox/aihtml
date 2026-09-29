@@ -1,0 +1,173 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Progress Circle 组件
+   圆形进度指示器 — SVG 圆形进度环
+   ============================================================================ */
+
+/* ============================================================================
+   颜色主题变量定义
+   ============================================================================ */
+
+.ah-progress-circle {
+  --ah-progress-color: var(--ah-color-primary);
+  --ah-progress-track: oklch(from var(--ah-progress-color) l c h / 0.12);
+}
+
+.ah-progress-circle--primary {
+  --ah-progress-color: var(--ah-color-primary);
+  --ah-progress-track: oklch(from var(--ah-progress-color) l c h / 0.12);
+}
+
+.ah-progress-circle--success {
+  --ah-progress-color: var(--ah-color-success);
+  --ah-progress-track: oklch(from var(--ah-progress-color) l c h / 0.12);
+}
+
+.ah-progress-circle--warning {
+  --ah-progress-color: var(--ah-color-warning);
+  --ah-progress-track: oklch(from var(--ah-progress-color) l c h / 0.12);
+}
+
+.ah-progress-circle--info {
+  --ah-progress-color: var(--ah-color-info);
+  --ah-progress-track: oklch(from var(--ah-progress-color) l c h / 0.12);
+}
+
+.ah-progress-circle--error {
+  --ah-progress-color: var(--ah-color-error);
+  --ah-progress-track: oklch(from var(--ah-progress-color) l c h / 0.12);
+}
+
+/* ============================================================================
+   主容器样式
+   ============================================================================ */
+
+.ah-progress-circle {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* ============================================================================
+   圆环容器（SVG + value）
+   ============================================================================ */
+
+.ah-progress-circle-ring {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================================
+   SVG 圆形样式
+   ============================================================================ */
+
+.ah-progress-circle-ring svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.ah-progress-circle-track {
+  fill: none;
+  stroke: var(--ah-progress-track);
+  stroke-linecap: round;
+}
+
+.ah-progress-circle-fill {
+  fill: none;
+  stroke: var(--ah-progress-color);
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+/* ============================================================================
+   文本样式
+   ============================================================================ */
+
+.ah-progress-circle-value {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-progress-color);
+  white-space: nowrap;
+}
+
+.ah-progress-circle-label {
+  margin-top: 8px;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   尺寸变体
+   ============================================================================ */
+
+.ah-progress-circle--sm .ah-progress-circle-ring {
+  width: 48px;
+  height: 48px;
+}
+
+.ah-progress-circle--sm .ah-progress-circle-value {
+  font-size: var(--ah-font-size-xs);
+}
+
+.ah-progress-circle--md .ah-progress-circle-ring {
+  width: 80px;
+  height: 80px;
+}
+
+.ah-progress-circle--md .ah-progress-circle-value {
+  font-size: var(--ah-font-size-sm);
+}
+
+.ah-progress-circle--lg .ah-progress-circle-ring {
+  width: 120px;
+  height: 120px;
+}
+
+.ah-progress-circle--lg .ah-progress-circle-value {
+  font-size: var(--ah-font-size-lg);
+}
+
+.ah-progress-circle--lg .ah-progress-circle-label {
+  font-size: var(--ah-font-size-sm);
+}
+
+.ah-progress-circle--sm .ah-progress-circle-track,
+.ah-progress-circle--sm .ah-progress-circle-fill {
+  stroke-width: 6;
+}
+
+.ah-progress-circle--md .ah-progress-circle-track,
+.ah-progress-circle--md .ah-progress-circle-fill {
+  stroke-width: 8;
+}
+
+.ah-progress-circle--lg .ah-progress-circle-track,
+.ah-progress-circle--lg .ah-progress-circle-fill {
+  stroke-width: 10;
+}
+
+/* ============================================================================
+   禁用状态
+   ============================================================================ */
+
+.ah-progress-circle-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-progress-circle-disabled .ah-progress-circle-value,
+.ah-progress-circle-disabled .ah-progress-circle-label {
+  opacity: var(--ah-state-disabled-opacity);
+}

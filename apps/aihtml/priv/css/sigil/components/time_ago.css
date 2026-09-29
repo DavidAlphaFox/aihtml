@@ -1,0 +1,22 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   TimeAgo · 相对时间（借鉴 happy time-ago）
+   纯内联 span，跟随上下文字色；有 title 时给出可提示光标。
+   ============================================================================ */
+
+.ah-time-ago {
+  display: inline;
+  color: inherit;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ah-time-ago[title] {
+  cursor: help;
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: var(--ah-color-border);
+  text-underline-offset: 2px;
+}

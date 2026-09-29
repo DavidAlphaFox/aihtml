@@ -1,0 +1,63 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   RatingGroup · 星级评分（借鉴 happy rating-group）
+   半星 = 实星覆盖层按百分比裁剪（无需额外半星图标）。
+   ============================================================================ */
+
+.ah-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.ah-rating__star {
+  --ah-star-size: 22px;
+  position: relative;
+  display: inline-block;
+  width: var(--ah-star-size);
+  height: var(--ah-star-size);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.ah-rating[data-size="sm"] .ah-rating__star { --ah-star-size: 16px; }
+.ah-rating[data-size="md"] .ah-rating__star { --ah-star-size: 22px; }
+.ah-rating[data-size="lg"] .ah-rating__star { --ah-star-size: 30px; }
+
+.ah-rating[data-readonly="true"] .ah-rating__star,
+.ah-rating[data-disabled="true"] .ah-rating__star { cursor: not-allowed; }
+.ah-rating[data-disabled="true"] { opacity: var(--ah-state-disabled-opacity); }
+
+.ah-rating__empty,
+.ah-rating__filled {
+  position: absolute;
+  inset: 0;
+  display: block;
+  overflow: hidden;
+}
+.ah-rating__empty  { color: var(--ah-color-border); }
+.ah-rating__filled { width: 0; color: var(--ah-color-warning); transition: width .1s linear; }
+
+/* 覆盖层裁剪时图标不能跟着缩，故固定为整星宽度 */
+.ah-rating__empty svg,
+.ah-rating__filled svg {
+  width: var(--ah-star-size);
+  height: var(--ah-star-size);
+  display: block;
+}
+
+.ah-rating[data-color="primary"] .ah-rating__filled { color: var(--ah-color-primary); }
+.ah-rating[data-color="success"] .ah-rating__filled { color: var(--ah-color-success); }
+.ah-rating[data-color="error"]   .ah-rating__filled { color: var(--ah-color-error); }
+.ah-rating[data-color="warning"] .ah-rating__filled { color: var(--ah-color-warning); }
+
+.ah-rating__star:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: 2px;
+  border-radius: var(--ah-radius-sm);
+}

@@ -1,0 +1,27 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Toast · 吐司内容（借鉴 happy sonner）
+   toast 复用 notification 的卡片外壳（.ah-notify*），本文件只管内容排版。
+   ============================================================================ */
+
+.ah-toast__title {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ah-color-text);
+}
+
+.ah-toast__description {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ah-color-text-secondary);
+}
+
+/* 标题与描述同在时留出呼吸；仅描述时不塌陷 */
+.ah-toast__title + .ah-toast__description { margin-top: 4px; }
+
+/* 隐藏模板元素永不可见（toast 的模板挂在 body 上） */
+.ah-toast-tpl { display: none !important; }

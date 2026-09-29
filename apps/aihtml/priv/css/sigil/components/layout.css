@@ -1,0 +1,379 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================
+   Layout — 布局组件
+   页面布局相关的样式，包括容器、侧边栏、内容区域等
+   ============================================================ */
+
+/* ---- 页面容器 ---- */
+.ah-page {
+  min-height: 100vh;
+}
+
+/* ---- 主容器 ---- */
+.ah-container {
+  margin-inline: auto;
+  max-width: 64rem;
+  padding: var(--ah-spacing-xl);
+}
+
+/* ---- 页面标题 ---- */
+.ah-page-title {
+  font-size: var(--ah-font-size-3xl);
+  font-weight: var(--ah-font-weight-bold);
+  margin: 0 0 var(--ah-spacing-xl) 0;
+}
+
+/* ---- 区块标题 ---- */
+.ah-section-title {
+  font-size: var(--ah-font-size-xl);
+  font-weight: var(--ah-font-weight-semibold);
+  margin: 0 0 var(--ah-spacing-sm) 0;
+}
+
+/* ---- 区块容器 ---- */
+.ah-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ah-spacing-xl);
+}
+
+/* ---- 按钮组 ---- */
+.ah-button-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ah-spacing-sm);
+}
+
+/* ---- 分类组 ---- */
+.ah-category {
+  border: var(--ah-border-width) solid var(--ah-color-border-subtle);
+  border-radius: var(--ah-radius-lg);
+  background: var(--ah-color-bg-paper);
+  overflow: hidden;
+}
+
+.ah-category-header {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  background: var(--ah-color-bg-subtle);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border-subtle);
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-category-tag {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ah-category-name {
+  font-size: var(--ah-font-size-lg);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text);
+}
+
+.ah-category-body {
+  padding: var(--ah-spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ah-spacing-lg);
+}
+
+.ah-subsection-title {
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-text-secondary);
+  margin: 0 0 var(--ah-spacing-sm) 0;
+}
+
+/* ---- 应用外壳 ---- */
+.ah-app {
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;  /* 移动端垂直布局 */
+}
+
+/* 桌面端: 水平布局 */
+@media (min-width: 1024px) {
+  .ah-app {
+    flex-direction: row;
+  }
+}
+
+/* ---- 移动端顶部栏 ---- */
+.ah-mobile-header {
+  display: none;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  background: var(--ah-color-bg-subtle);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border-subtle);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+@media (max-width: 1023px) {
+  .ah-mobile-header {
+    display: flex;
+  }
+}
+
+.ah-mobile-header-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-paper);
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--ah-color-text);
+  transition: background var(--ah-transition-fast);
+}
+
+.ah-mobile-header-toggle:hover {
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-mobile-header-title {
+  font-size: var(--ah-font-size-lg);
+  font-weight: var(--ah-font-weight-bold);
+  margin-left: var(--ah-spacing-sm);
+  color: var(--ah-color-text);
+}
+
+/* 桌面端隐藏 */
+@media (min-width: 1024px) {
+  .ah-mobile-header {
+    display: none;
+  }
+}
+
+/* ---- 侧边栏 ---- */
+.ah-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--ah-color-bg-subtle);
+  border-right: var(--ah-border-width) solid var(--ah-color-border-subtle);
+  padding: var(--ah-spacing-lg) 0;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1000;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .ah-sidebar {
+    position: static;
+    width: 220px;
+    transform: none;
+    z-index: auto;
+  }
+}
+
+/* ---- 侧边栏遮罩层 ---- */
+.ah-sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity), transparent);
+  z-index: 999;
+}
+
+.ah-sidebar-open .ah-sidebar {
+  transform: translateX(0);
+}
+
+.ah-sidebar-open .ah-sidebar-overlay {
+  display: block;
+}
+
+.ah-sidebar-title {
+  font-size: var(--ah-font-size-xl);
+  font-weight: var(--ah-font-weight-bold);
+  padding: 0 var(--ah-spacing-lg);
+  margin-bottom: var(--ah-spacing-lg);
+  color: var(--ah-color-text);
+}
+
+.ah-sidebar-logo {
+  color: var(--ah-color-text);
+  text-decoration: none;
+}
+
+.ah-sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.ah-sidebar-group {
+  margin-bottom: var(--ah-spacing-xs);
+}
+
+.ah-sidebar-group-label {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-lg) var(--ah-spacing-xs);
+  font-size: 10px;
+  font-weight: var(--ah-font-weight-bold);
+  color: var(--ah-color-text-disabled);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.ah-sidebar-link {
+  display: block;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-lg);
+  color: var(--ah-color-text-secondary);
+  text-decoration: none;
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-medium);
+  transition: all 0.15s ease;
+  border-left: 3px solid transparent;
+}
+
+.ah-sidebar-link:hover {
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+}
+
+.ah-sidebar-link-active {
+  color: var(--ah-color-primary);
+  border-left-color: var(--ah-color-primary);
+  background: var(--ah-color-primary-lighter);
+  font-weight: var(--ah-font-weight-semibold);
+}
+
+/* ---- 主内容区 ---- */
+.ah-content {
+  flex: 1;
+  padding: var(--ah-spacing-md);
+  overflow-y: auto;
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .ah-content {
+    padding: var(--ah-spacing-lg);
+  }
+}
+
+@media (min-width: 1024px) {
+  .ah-content {
+    padding: var(--ah-spacing-xl);
+  }
+}
+
+/* ---- 演示页面样式 ---- */
+.ah-demo-page {
+  max-width: 900px;
+}
+
+.ah-demo-title {
+  font-size: var(--ah-font-size-2xl);
+  font-weight: var(--ah-font-weight-bold);
+  color: var(--ah-color-text);
+  margin: 0 0 var(--ah-spacing-sm) 0;
+}
+
+.ah-demo-desc {
+  font-size: var(--ah-font-size-base);
+  color: var(--ah-color-text-secondary);
+  margin: 0 0 var(--ah-spacing-xl) 0;
+  line-height: 1.6;
+}
+
+.ah-demo-section {
+  margin-bottom: var(--ah-spacing-xl);
+  padding: var(--ah-spacing-lg);
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border-subtle);
+  border-radius: var(--ah-radius-lg);
+}
+
+.ah-demo-section-title {
+  font-size: var(--ah-font-size-lg);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text);
+  margin: 0 0 var(--ah-spacing-xs) 0;
+}
+
+.ah-demo-section-desc {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  margin: 0 0 var(--ah-spacing-md) 0;
+}
+
+.ah-demo-row {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-md);
+  flex-wrap: wrap;
+}
+
+.ah-demo-col {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ah-demo-value {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  font-family: var(--ah-font-mono);
+}
+
+.ah-demo-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ah-spacing-sm);
+}
+
+/* ---- 主题切换器 ---- */
+.ah-theme-switcher {
+  margin-top: auto;
+  padding: var(--ah-spacing-md) var(--ah-spacing-lg);
+  border-top: var(--ah-border-width) solid var(--ah-color-border-subtle);
+}
+
+.ah-theme-switcher-label {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--ah-spacing-xs);
+}
+
+.ah-theme-select {
+  width: 100%;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-medium);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-paper);
+  color: var(--ah-color-text);
+  cursor: pointer;
+  transition: border-color var(--ah-transition-fast);
+}
+
+.ah-theme-select:hover {
+  border-color: var(--ah-color-border);
+}
+
+.ah-theme-select:focus {
+  outline: none;
+  border-color: var(--ah-color-primary);
+}

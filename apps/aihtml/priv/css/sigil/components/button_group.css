@@ -1,0 +1,175 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   按钮组 (Button Group)
+   将多个按钮组合在一起，支持水平和垂直布局
+   ============================================================================ */
+
+/* ---- 按钮组容器 ---- */
+
+.ah-btn-group {
+  display: inline-flex;
+  position: relative;
+  font-size: var(--ah-font-size-sm);
+}
+
+.ah-btn-group-vertical {
+  flex-direction: column;
+}
+
+/* ---- 组内按钮 ---- */
+
+.ah-btn-group-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  background-color: var(--ah-color-bg-paper);
+  color: var(--ah-color-text);
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--ah-transition-fast),
+              border-color var(--ah-transition-fast),
+              color var(--ah-transition-fast);
+  white-space: nowrap;
+  margin: 0;
+}
+
+/* ---- 水平布局 ---- */
+
+.ah-btn-group-horizontal .ah-btn-group-btn {
+  border-radius: 0;
+}
+
+.ah-btn-group-horizontal .ah-btn-group-btn-first {
+  border-top-left-radius: var(--ah-radius-md);
+  border-bottom-left-radius: var(--ah-radius-md);
+}
+
+.ah-btn-group-horizontal .ah-btn-group-btn-last {
+  border-top-right-radius: var(--ah-radius-md);
+  border-bottom-right-radius: var(--ah-radius-md);
+}
+
+.ah-btn-group-horizontal .ah-btn-group-btn:not(:first-child) {
+  margin-left: -1px;
+}
+
+/* ---- 垂直布局 ---- */
+
+.ah-btn-group-vertical .ah-btn-group-btn {
+  border-radius: 0;
+  width: 100%;
+}
+
+.ah-btn-group-vertical .ah-btn-group-btn-first {
+  border-top-left-radius: var(--ah-radius-md);
+  border-top-right-radius: var(--ah-radius-md);
+}
+
+.ah-btn-group-vertical .ah-btn-group-btn-last {
+  border-bottom-left-radius: var(--ah-radius-md);
+  border-bottom-right-radius: var(--ah-radius-md);
+}
+
+.ah-btn-group-vertical .ah-btn-group-btn:not(:first-child) {
+  margin-top: -1px;
+}
+
+/* ---- 圆角变体 ---- */
+
+.ah-btn-group-rounded .ah-btn-group-btn-first {
+  border-top-left-radius: var(--ah-radius-full);
+  border-bottom-left-radius: var(--ah-radius-full);
+}
+
+.ah-btn-group-rounded .ah-btn-group-btn-last {
+  border-top-right-radius: var(--ah-radius-full);
+  border-bottom-right-radius: var(--ah-radius-full);
+}
+
+.ah-btn-group-vertical.ah-btn-group-rounded .ah-btn-group-btn-first {
+  border-top-left-radius: var(--ah-radius-full);
+  border-top-right-radius: var(--ah-radius-full);
+}
+
+.ah-btn-group-vertical.ah-btn-group-rounded .ah-btn-group-btn-last {
+  border-bottom-left-radius: var(--ah-radius-full);
+  border-bottom-right-radius: var(--ah-radius-full);
+}
+
+/* ---- 悬停状态 ---- */
+
+.ah-btn-group-btn-hover {
+  background-color: var(--ah-color-primary-lighter);
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-primary);
+  z-index: 1;
+}
+
+/* ---- 选中/按下状态 ---- */
+
+.ah-btn-group-btn-selected,
+.ah-btn-group-btn-pressed {
+  background-color: var(--ah-color-primary);
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+  z-index: 2;
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-btn-group-disabled {
+  pointer-events: none;
+}
+
+.ah-btn-group-btn-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+  background-color: var(--ah-color-bg-subtle);
+}
+
+/* ---- 焦点状态 ---- */
+
+.ah-btn-group-btn:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+  z-index: 3;
+}
+
+/* ---- 填充变体 ---- */
+
+.ah-btn-group-filled .ah-btn-group-btn {
+  background-color: var(--ah-color-primary);
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+}
+
+.ah-btn-group-filled .ah-btn-group-btn-hover {
+  background-color: var(--ah-color-primary-dark);
+}
+
+.ah-btn-group-filled .ah-btn-group-btn-selected {
+  background-color: var(--ah-color-primary-darker);
+  box-shadow: inset 0 2px 4px rgb(0 0 0 / 0.2);
+}
+
+/* ---- 轮廓变体 ---- */
+
+.ah-btn-group-outlined .ah-btn-group-btn {
+  background-color: transparent;
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-primary);
+}
+
+.ah-btn-group-outlined .ah-btn-group-btn-hover {
+  background-color: var(--ah-color-primary-lighter);
+}
+
+.ah-btn-group-outlined .ah-btn-group-btn-selected {
+  background-color: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+}

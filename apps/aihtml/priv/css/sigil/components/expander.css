@@ -1,0 +1,235 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   折叠面板 (Expander)
+   可展开/折叠的内容区域组件，支持顶部和底部展开方向
+   ============================================================================ */
+
+/* ---- 折叠面板容器 ---- */
+
+.ah-expander {
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  overflow: hidden;
+}
+
+/* ---- 底部展开模式 ---- */
+
+.ah-expander-bottom {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+/* ---- 头部 ---- */
+
+.ah-expander-header {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  background: var(--ah-color-grey-50);
+  cursor: pointer;
+  user-select: none;
+  transition: background var(--ah-transition-fast);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-expander-header.ah-expander-header-expanded {
+  background: var(--ah-color-grey-200);
+}
+
+.ah-expander-bottom > .ah-expander-header {
+  border-bottom: none;
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+/* 折叠时内容侧无边框 */
+.ah-expander-header:not(.ah-expander-header-expanded) {
+  border-bottom: none;
+}
+
+.ah-expander-bottom > .ah-expander-header:not(.ah-expander-header-expanded) {
+  border-top: none;
+}
+
+.ah-expander-header:hover {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-expander-header-expanded:hover {
+  background: var(--ah-color-grey-300);
+}
+
+/* ---- 头部文本 ---- */
+
+.ah-expander-header-text {
+  flex: 1;
+  font-weight: var(--ah-font-weight-medium);
+  font-size: var(--ah-font-size-sm);
+  min-width: 0;
+}
+
+/* ---- 结构化头部（{:title :subheader :extra}）---- */
+
+.ah-expander-header-text-structured {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-md);
+}
+
+.ah-expander-header-title {
+  font-weight: var(--ah-font-weight-medium);
+  flex-shrink: 0;
+}
+
+.ah-expander-header-subheader {
+  color: var(--ah-color-text-secondary);
+  font-weight: var(--ah-font-weight-normal);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-expander-header-extra {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-xs);
+}
+
+/* ---- 展开箭头 ---- */
+
+.ah-expander-arrow {
+  flex: none;
+  font-size: 10px;
+  transition: transform var(--ah-transition-fast);
+  color: var(--ah-color-text-secondary);
+  margin-left: var(--ah-spacing-sm);
+}
+
+.ah-expander-arrow-left {
+  order: -1;
+  margin-left: 0;
+  margin-right: var(--ah-spacing-sm);
+}
+
+.ah-expander-arrow-expanded {
+  transform: rotate(180deg);
+}
+
+/* ---- Body 包装层（动画目标，含 content + actions） ---- */
+
+.ah-expander-body {
+  overflow: hidden;
+}
+
+/* ---- 内容区域 ---- */
+
+.ah-expander-content {
+  padding: var(--ah-spacing-md);
+}
+
+/* ---- 底部操作区 (actions) ---- */
+
+.ah-expander-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-expander-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 无切换模式（头部不可点击）---- */
+
+.ah-expander-header-no-toggle {
+  cursor: default;
+}
+
+/* ---- 焦点样式（键盘导航）---- */
+
+.ah-expander-header:focus {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+  z-index: 1;
+}
+
+.ah-expander-header:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ---- 紧凑形态：去外边框/圆角 ---- */
+
+.ah-expander-no-gutters {
+  border: none;
+  border-radius: 0;
+}
+
+.ah-expander-no-gutters > .ah-expander-header {
+  padding-left: 0;
+  padding-right: 0;
+  background: transparent;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-expander-no-gutters > .ah-expander-content {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* ---- Square：去圆角 ---- */
+
+.ah-expander-square {
+  border-radius: 0;
+}
+
+/* ---- 双图标模式（plus/minus 风格，不再旋转容器）---- */
+
+.ah-expander-arrow-dual {
+  position: relative;
+  width: 1em;
+  height: 1em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: none !important;
+}
+
+.ah-expander-arrow-dual .ah-expander-icon {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--ah-transition-fast),
+              transform var(--ah-transition-fast);
+}
+
+.ah-expander-arrow-dual .ah-expander-icon-expand {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.ah-expander-arrow-dual .ah-expander-icon-collapse {
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.ah-expander-arrow-dual.ah-expander-arrow-expanded .ah-expander-icon-expand {
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.ah-expander-arrow-dual.ah-expander-arrow-expanded .ah-expander-icon-collapse {
+  opacity: 1;
+  transform: scale(1);
+}

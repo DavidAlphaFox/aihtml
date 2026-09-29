@@ -1,0 +1,91 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   SplitButton · 分离按钮（借鉴 happy split-button）
+   左主操作 + 右箭头菜单；两半共用 ah-btn 的 variant 配色，中缝一条分隔。
+   ============================================================================ */
+
+.ah-split-button {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+}
+
+.ah-split-button[data-disabled="true"] { opacity: var(--ah-state-disabled-opacity); pointer-events: none; }
+
+/* 左右两半各自削掉相邻圆角，拼成一个整体 */
+.ah-split-button__main {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.ah-split-button__arrow {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+  min-width: 0;
+  /* 中缝：用半透明白线，在任意 variant 底色上都可见 */
+  box-shadow: inset 1px 0 0 rgb(255 255 255 / .28);
+}
+
+.ah-split-button__caret { font-size: 10px; line-height: 1; }
+
+.ah-split-button[data-size="sm"] .ah-split-button__main,
+.ah-split-button[data-size="sm"] .ah-split-button__arrow { font-size: 12px; padding-top: 4px; padding-bottom: 4px; }
+.ah-split-button[data-size="lg"] .ah-split-button__main,
+.ah-split-button[data-size="lg"] .ah-split-button__arrow { font-size: 15px; padding-top: 10px; padding-bottom: 10px; }
+
+/* ---- 菜单 ---- */
+.ah-split-button__menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  z-index: 1200;
+  min-width: 168px;
+  padding: 4px;
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  box-shadow: 0 8px 24px rgb(0 0 0 / .16);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: opacity .12s ease, transform .12s ease, visibility .12s;
+}
+.ah-split-button[data-menu-align="end"]   .ah-split-button__menu { right: 0; }
+.ah-split-button[data-menu-align="start"] .ah-split-button__menu { left: 0; }
+
+.ah-split-button[data-open="true"] .ah-split-button__menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.ah-split-button__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0;
+  border-radius: var(--ah-radius-md);
+  background: transparent;
+  font-size: 13px;
+  text-align: left;
+  color: var(--ah-color-text);
+  cursor: pointer;
+  transition: background .1s ease;
+}
+.ah-split-button__item:hover:not([data-disabled="true"]) {
+  background: var(--ah-color-bg-subtle);
+}
+.ah-split-button__item[data-disabled="true"] { opacity: var(--ah-state-disabled-opacity); cursor: not-allowed; }
+
+.ah-split-button__item-icon { display: inline-flex; }
+.ah-split-button__item-icon svg { width: 15px; height: 15px; }
+
+.ah-split-button__divider {
+  height: 1px;
+  margin: 4px 6px;
+  background: var(--ah-color-border);
+}

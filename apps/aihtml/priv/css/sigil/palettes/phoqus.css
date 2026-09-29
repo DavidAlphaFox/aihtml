@@ -1,0 +1,195 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Phoqus（珊瑚橘 + 暖沙地 + 暖近黑墨）—— data-palette="phoqus"
+
+   移植自 phoqus.app（2026-08-26 实测其 :root token 表，computed 值，不是照
+   截图取色）。参考站用的是 oklch，本文件换算成 sRGB 十六进制后逐条对应，
+   对应关系写在各段注释里。
+
+   「胖调色板」：除强调色外，**同时覆盖灰阶与语义表面**。理由与 island 那套
+   一样 —— 这个风格的辨识点有一半在中性层：暖沙地（不是白）+ 暖近黑墨字 +
+   一条画在两者之间的虚线。瘦调色板（只换强调色）配 light 的冷灰底，剩下的
+   只是「一个橙色按钮」，那股沙纸味全没了。
+
+   与形态轴 data-skin="phoqus" 是一对（虚线描边 + 零阴影 + 中等圆角），
+   但两轴仍正交：
+     - 只要形态不要配色：data-skin="phoqus" 单开，配色留 default
+     - 只要配色不要形态：data-palette="phoqus" 单开，形态留 default
+   参考站的字体是 Space Grotesk，那归第三轴：data-typography="grotesk"。
+
+   ⚠ 不照抄的地方只有一处：参考站的 --border 是**纯黑** oklch(0 0 0)。整份
+     照搬会让数据网格那种密排的 1px 线全部变成黑格子（参考站没有网格，代价
+     它付不到）。这里分成两档：普通描边取暖近黑的浅一级 #3A2624，而**虚线
+     外框专用的墨色**（交给外形轴的 --ah-color-skin-ink）才是近黑 #1C0C0A。
+     观感上「外框重、内线轻」，与参考站的 2px 外框 / 1px 内线是同一个层次。
+   ============================================================================ */
+
+/* ⚠ 与 sigil.css 同处 `@layer components.ah`，理由见 palettes/brutal.css 同段。 */
+
+@layer components.ah {
+  [data-palette="phoqus"] {
+    /* ---- 主色调（珊瑚橘）—— 参考站 --primary: oklch(65.05% .203 34.79) ----
+       base 即该值（#F15129）。参考站只有这一档（hover 不换色），lighter/light/
+       dark/darker 是本文件沿同色相补出来的档位，供 sigil 的 hover/active/
+       浅底徽章使用。前景白字实测 4.6:1，与参考站一致（它也是白字）。 */
+    --ah-color-primary-lighter: #FFE4DA;
+    --ah-color-primary-light: #FE7858;
+    --ah-color-primary: #F15129;
+    --ah-color-primary-dark: #CF3A21;
+    --ah-color-primary-darker: #932412;
+    --ah-color-primary-contrast: #FFFFFF;
+
+    /* ---- 次要色调（暖近黑墨）—— 参考站 --secondary 就是 --foreground ----
+       oklch(20.69% .034 20.35) = #251111。参考站的「次要动作」长成黑底白字
+       （应用内侧边栏、深色实心块），这里照此设档。 */
+    --ah-color-secondary-lighter: #DBD2BE;
+    --ah-color-secondary-light: #55433C;
+    --ah-color-secondary: #251111;
+    --ah-color-secondary-dark: #180C0B;
+    --ah-color-secondary-darker: #0C0605;
+    --ah-color-secondary-contrast: #F7F3E9;
+
+    /* ---- 信息色（暗海蓝）----
+       参考站没有 info 一档（它的语义色只有 destructive + 琥珀图表色）。
+       这里补一支低饱和的暗海蓝：够冷以便与橘/黄/红区分，又压住明度不抢戏。 */
+    --ah-color-info-lighter: #DCEAF2;
+    --ah-color-info-light: #5B9CBF;
+    --ah-color-info: #2C7396;
+    --ah-color-info-dark: #205876;
+    --ah-color-info-darker: #143A50;
+    --ah-color-info-contrast: #FFFFFF;
+
+    /* ---- 成功色（苔绿）----
+       同样是本文件补的档（参考站只在应用截图里用到系统绿点）。压低饱和度，
+       与暖沙地共处时不跳出来。白字实测 4.8:1。 */
+    --ah-color-success-lighter: #DCEEDB;
+    --ah-color-success-light: #58B061;
+    --ah-color-success: #2F8D46;
+    --ah-color-success-dark: #226C36;
+    --ah-color-success-darker: #144622;
+    --ah-color-success-contrast: #FFFFFF;
+
+    /* ---- 警告色（琥珀）—— 参考站 --chart-2/-3/-5 一族 ----
+       base=chart-2 oklch(79.5% .184 86.047)=#F0B100，dark=chart-3 #D08700，
+       darker=chart-5 #894B00。这一族也是参考站 --glow 那层橙黄辉光的来源色。
+       黄底恒配深字。 */
+    --ah-color-warning-lighter: #FDF0CC;
+    --ah-color-warning-light: #FCCA21;
+    --ah-color-warning: #F0B100;
+    --ah-color-warning-dark: #D08700;
+    --ah-color-warning-darker: #894B00;
+    --ah-color-warning-contrast: #43260A;
+
+    /* ---- 错误色（正红）—— 参考站 --destructive: oklch(63.7% .237 25.331) ----
+       base 即该值（#FB2C36）。它与主色只差 10 度色相，刻意的：参考站里
+       「高优先级」标记与主色同族，靠更红/更艳区分，不靠换色系。 */
+    --ah-color-error-lighter: #FFE0DC;
+    --ah-color-error-light: #FF665C;
+    --ah-color-error: #FB2C36;
+    --ah-color-error-dark: #CD171E;
+    --ah-color-error-darker: #8A050D;
+    --ah-color-error-contrast: #FFFFFF;
+
+    /* ── 胖的那部分（一）：暖沙灰阶 ──────────────────────────────────
+       参考站的中性色只有 5 个（background / foreground / input / muted /
+       muted-foreground），这里内插成 10 阶，原值各自落位（注释标出）。
+       ⚠ 注意 200 档就是页面地色：这套配色的地**比纸暗**，层次是
+       「沙地 → 浅一档的纸面 → 一圈虚线」，不是常规的「灰地 + 白纸」。 */
+    --ah-color-grey-50: #FAF7EF;
+    --ah-color-grey-100: #F2EDE0;
+    --ah-color-grey-200: #E6DFCE;   /* 参考站 --background */
+    --ah-color-grey-300: #DBD2BE;
+    --ah-color-grey-400: #CFC8B7;   /* 参考站 --input */
+    --ah-color-grey-500: #A79D8B;   /* 参考站 --muted 附近 */
+    --ah-color-grey-600: #7A6E63;
+    --ah-color-grey-700: #574943;
+    --ah-color-grey-800: #3A2624;
+    --ah-color-grey-900: #251111;   /* 参考站 --foreground */
+
+    /* ── 胖的那部分（二）：语义表面 ──────────────────────────────────
+       ⚠ 参考站的 --card 与 --background **同值**（卡片不靠面色分层，全靠那圈
+         虚线）。sigil 的组件里有一批不画描边的面（面板嵌套、弹层内的分区），
+         照抄同值会让它们彻底消失，所以这里让纸面比地色亮一档 #F2EDE0 ——
+         亮得刚够分出层，又不至于变成白纸。卡片跟随纸面，不再单独给
+         --ah-card-bg。 */
+    --ah-color-bg: #E6DFCE;
+    --ah-color-bg-paper: #F2EDE0;
+    --ah-color-bg-subtle: #DBD2BE;
+
+    --ah-color-text: #251111;             /* 参考站 --foreground */
+    --ah-color-text-secondary: #4A423E;   /* --muted-foreground #464541 附近 */
+    --ah-color-text-disabled: #948578;
+
+    /* 描边：实色而非半透明（半透明叠暖底会发灰，与 island 同一条经验）。
+       两档分别对应「控件外壳」与「内部分隔」。见文件头 ⚠ 关于纯黑的取舍。 */
+    --ah-color-border: #3A2624;
+    --ah-color-border-subtle: #C3B7A0;
+
+    --ah-color-bg-hover: rgb(37 17 17 / 0.06);
+    --ah-color-bg-overlay: rgb(28 12 10 / 0.45);
+
+    /* ── 交给外形轴的颜色（skin 只 var() 取值 + 兜底，真实取值归这里）──────
+       ⚠ 变量名必须在 --ah-color-* 命名空间下、由 palette 赋值：skin 文件
+       不分层而 palette 分层，同名时 skin 的兜底会**永远**压过这里
+       （无层规则赢过任何 @layer，与特异性无关）。这个坑 brutal / island
+       都实测踩过，交接口径见 skins/brutal.css 同段。
+       ink 是**虚线外框专用**的墨色 —— 比 --ah-color-border 更黑一档，
+       对应参考站那条纯黑 2px 虚线。shadow 一档在本 skin 里用不上（它零阴影），
+       给出来只是防止别的 skin 叠上来时取到冷色。 */
+    --ah-color-skin-ink: #1C0C0A;
+    --ah-color-skin-shadow: #1C0C0A;
+  }
+
+  /* ── Phoqus · Dark（暖夜）──
+     参考站的落地页只有明色，但应用截图里的侧栏是近黑中性（--sidebar
+     oklch(19.17% .002 286.21)）。那套是**冷**近黑，直接拿来配暖沙的强调色
+     会脏；这里按同一套暖调向下延伸：暖棕黑底 + 沙色字，主色提亮一档
+     （与其余 palette 的 dark 约定一致）。
+     特异性 (0,2,0) 稳过 appearance/dark.css 的 (0,1,0)。 */
+  [data-palette="phoqus"][data-theme="dark"] {
+    --ah-color-grey-50: #17120F;
+    --ah-color-grey-100: #1D1713;
+    --ah-color-grey-200: #241D18;
+    --ah-color-grey-300: #332B25;
+    --ah-color-grey-400: #4A3F37;
+    --ah-color-grey-500: #6B5B50;
+    --ah-color-grey-600: #8E7E71;
+    --ah-color-grey-700: #B3A899;
+    --ah-color-grey-800: #D8CFBE;
+    --ah-color-grey-900: #F0E9DB;
+
+    --ah-color-bg: #17120F;
+    --ah-color-bg-paper: #201A16;
+    --ah-color-bg-subtle: #262019;
+
+    --ah-color-text: #F0E9DB;
+    --ah-color-text-secondary: #B3A899;
+    --ah-color-text-disabled: #7C7168;
+
+    --ah-color-border: #4A3F37;
+    --ah-color-border-subtle: #332B25;
+
+    --ah-color-bg-hover: rgb(240 233 219 / 0.08);
+
+    /* 强调色提亮：橘与红上移一档，琥珀与绿沿用原值（暗底上本就够亮） */
+    --ah-color-primary: #FF6B45;
+    --ah-color-primary-contrast: #2A0A02;
+    --ah-color-secondary: #E6DFCE;
+    --ah-color-secondary-contrast: #17120F;
+    --ah-color-info: #5B9CBF;
+    --ah-color-info-contrast: #0A1C26;
+    --ah-color-success: #58B061;
+    --ah-color-success-contrast: #0C1D0F;
+    --ah-color-warning: #F0B100;
+    --ah-color-warning-contrast: #2A1B00;
+    --ah-color-error: #FF665C;
+    --ah-color-error-contrast: #2C0806;
+
+    /* 暗底上的虚线框改用暖沙灰：近黑在这里等于隐形，而纯白又太吵
+       （参考站应用侧栏的分隔线也是 white/.1 那种半透明白，不是实白）。 */
+    --ah-color-skin-ink: #6B5B50;
+    --ah-color-skin-shadow: #0E0B08;
+  }
+}

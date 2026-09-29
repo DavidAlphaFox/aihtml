@@ -1,0 +1,151 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   工具栏组件 (Toolbar)
+   水平工具栏，支持工具项分组、分隔符和最小化弹出菜单
+   ============================================================================ */
+
+/* ---- 容器 ---- */
+.ah-toolbar {
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  padding: 2px 4px;
+}
+
+/* ---- 工具项 ---- */
+.ah-toolbar-tool {
+  flex-shrink: 0;
+  position: relative;
+  margin: 0 2px;
+}
+
+.ah-toolbar-tool:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: var(--ah-color-border);
+}
+
+.ah-toolbar-tool-separator-after {
+  margin-right: 8px;
+}
+
+.ah-toolbar-tool-separator-after::after {
+  display: none;
+}
+
+/* ---- 工具栏按钮：无边框风格 ---- */
+.ah-toolbar .ah-btn {
+  border: none;
+  background-color: transparent;
+  color: var(--ah-color-text);
+}
+
+.ah-toolbar .ah-btn:hover {
+  background-color: var(--ah-color-bg-subtle);
+}
+
+.ah-toolbar .ah-btn:active {
+  background-color: var(--ah-color-grey-200);
+}
+
+/* 按钮分组：相邻按钮共享圆角 */
+.ah-toolbar-tool-first .ah-btn {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.ah-toolbar-tool-inner .ah-btn {
+  border-radius: 0;
+}
+
+.ah-toolbar-tool-last .ah-btn {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+/* ---- 分隔符 ---- */
+.ah-toolbar-separator {
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 6px;
+  background: var(--ah-color-border);
+}
+
+/* ---- 最小化按钮（汉堡菜单） ---- */
+.ah-toolbar-minimize-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  display: none;
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ah-radius-sm);
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-base);
+  transition: background-color var(--ah-transition-fast);
+}
+
+.ah-toolbar-minimize-btn:hover {
+  background-color: var(--ah-color-bg-subtle);
+}
+
+.ah-toolbar-minimize-visible {
+  display: flex;
+}
+
+/* ---- 弹出菜单（fixed 定位，附加到 body） ---- */
+.ah-toolbar-popup {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  padding: 4px 0;
+  overflow: auto;
+}
+
+.ah-toolbar-popup-open {
+  display: block;
+}
+
+/* 弹出工具项：默认隐藏，最小化时显示 */
+.ah-toolbar-popup-tool {
+  display: none;
+  padding: 6px 12px;
+}
+
+.ah-toolbar-popup-tool-visible {
+  display: block;
+}
+
+.ah-toolbar-popup-separator {
+  display: none;
+  height: 1px;
+  margin: 4px 8px;
+  background: var(--ah-color-border);
+}
+
+.ah-toolbar-popup-separator-visible {
+  display: block;
+}
+
+/* ---- 禁用状态 ---- */
+.ah-toolbar-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

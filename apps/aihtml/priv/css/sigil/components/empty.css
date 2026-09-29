@@ -1,0 +1,40 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Empty · 空态占位（借鉴 happy empty.css）
+   图标 + 标题 + 描述 + 操作区，居中。
+   ============================================================================ */
+
+.ah-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--ah-color-text-muted);
+}
+
+.ah-empty__icon {
+  display: inline-flex;
+  color: var(--ah-color-text-disabled, var(--ah-color-text-muted));
+}
+.ah-empty__icon svg { width: 44px; height: 44px; }
+
+.ah-empty__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ah-color-text);
+}
+
+.ah-empty__description {
+  font-size: 13px;
+  color: var(--ah-color-text-muted);
+  max-width: 320px;
+}
+
+.ah-empty__content {
+  margin-top: 8px;
+}

@@ -1,0 +1,143 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   弹出气泡 (Popover)
+   锚定定位的浮动气泡组件，支持箭头指示和模态遮罩
+   ============================================================================ */
+
+/* ---- 弹出气泡容器 ---- */
+
+.ah-popover {
+  position: absolute;
+  z-index: 1050;
+  display: none;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  box-shadow: var(--ah-shadow-md);
+}
+
+/* ---- 标题栏 ---- */
+
+.ah-popover-title {
+  position: relative;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-medium);
+  background: var(--ah-color-grey-100);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md) var(--ah-radius-md) 0 0;
+  user-select: none;
+}
+
+/* ---- 关闭按钮 ---- */
+
+.ah-popover-close-btn {
+  position: absolute;
+  top: 50%;
+  right: var(--ah-spacing-sm);
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast), color var(--ah-transition-fast);
+}
+
+.ah-popover-close-btn:hover {
+  background: var(--ah-color-grey-200);
+  color: var(--ah-color-text);
+}
+
+.ah-popover-close-btn::after {
+  content: "\00d7";
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* ---- 内容区域 ---- */
+
+.ah-popover-content {
+  padding: var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* ---- 箭头（旋转的带边框正方形）---- */
+
+.ah-popover-arrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  transform: rotate(45deg);
+}
+
+/* 标题和内容需要 z-index 来覆盖箭头内部 */
+.ah-popover-title,
+.ah-popover-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* 隐藏箭头 */
+.ah-popover-no-arrow .ah-popover-arrow {
+  display: none;
+}
+
+/* 底部位置：箭头在顶部边缘，裁剪右下边框 */
+.ah-popover-bottom .ah-popover-arrow {
+  top: -6px;
+  left: 50%;
+  margin-left: -5px;
+  border-bottom: none;
+  border-right: none;
+}
+
+/* 顶部位置：箭头在底部边缘，裁剪左上边框 */
+.ah-popover-top .ah-popover-arrow {
+  bottom: -6px;
+  left: 50%;
+  margin-left: -5px;
+  border-top: none;
+  border-left: none;
+}
+
+/* 左侧位置：箭头在右边缘 */
+.ah-popover-left .ah-popover-arrow {
+  top: 50%;
+  right: -6px;
+  margin-top: -5px;
+  border-left: none;
+  border-bottom: none;
+}
+
+/* 右侧位置：箭头在左边缘 */
+.ah-popover-right .ah-popover-arrow {
+  top: 50%;
+  left: -6px;
+  margin-top: -5px;
+  border-right: none;
+  border-top: none;
+}
+
+/* ---- 模态遮罩 ---- */
+
+.ah-popover-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity), transparent);
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-popover-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

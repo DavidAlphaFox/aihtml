@@ -1,0 +1,73 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Sidebar —— 独立侧边栏组件
+   品牌区（brand）+ nav-tree 导航（自动填充剩余高度）+ 底部插槽（footer）。
+   类名前缀 .ah-sidenav；通过 --ssn-* 变量主题化（默认取 Sigil 设计令牌）。
+   导航树本体由 nav-tree 组件提供（样式见 nav_tree.css，变量前缀 --snt-*）。
+   ============================================================================ */
+
+.ah-sidenav {
+  /* —— 主题变量（可被宿主覆盖）—— */
+  --ah-ssn-width:        280px;
+  --ah-ssn-height:       100vh;
+  --ah-ssn-bg:           var(--ah-color-bg-paper, #ffffff);
+  --ah-ssn-border:       var(--ah-color-border, #e5e8eb);
+  --ah-ssn-fg:           var(--ah-color-text, #1c252e);
+  --ah-ssn-accent:       var(--ah-color-primary, #00a76f);
+  --ah-ssn-padding:      20px 16px;
+
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  width: var(--ah-ssn-width);
+  flex-shrink: 0;
+  height: var(--ah-ssn-height);
+  display: flex;
+  flex-direction: column;
+  background: var(--ah-ssn-bg);
+  border-right: var(--ah-border-width) dashed var(--ah-ssn-border);
+  padding: var(--ah-ssn-padding);
+  overflow-y: auto;
+  color: var(--ah-ssn-fg);
+  /* 让内嵌 nav-tree 子菜单 height:auto 可参与过渡 */
+  interpolate-size: allow-keywords;
+}
+
+/* —— 品牌区 —— */
+.ah-sidenav__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 20px;
+  color: inherit;
+  text-decoration: none;
+}
+.ah-sidenav__brand-mark {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--ah-radius-lg);
+  /* 底色是品牌色，前景就该取品牌轴给的对比色 —— 写死 #fff 的话，
+     浅色 primary 的配色（arctic / retro）上会看不清 */
+  color: var(--ah-color-primary-contrast);
+  background: var(--ah-ssn-accent);
+}
+.ah-sidenav__brand-name {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+
+/* —— 导航区：填充剩余高度（不设 min-height:0，避免被压缩后内容
+   外溢、footer 浮盖在导航中间；整体滚动由根元素 overflow-y 承担） —— */
+.ah-sidenav__nav {
+  flex: 1;
+}
+
+/* —— 底部插槽 —— */
+.ah-sidenav__footer {
+  padding-top: 16px;
+}

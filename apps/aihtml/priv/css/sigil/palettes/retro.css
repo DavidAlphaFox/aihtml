@@ -1,0 +1,65 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Retro（复古蓝 + 洋红）—— data-palette="retro"
+   只覆盖品牌强调色；中性层归 data-theme，字体归 data-typography。
+   ============================================================================ */
+
+
+/* ⚠ P14.5：与 sigil.css 同处 `@layer components.ah`。
+   本文件是独立编译的入口（不经 lib.css），所以在这里自己声明层。
+   同层 + 在 sigil.css 之后加载 ⇒ 正确覆盖 baked 进去的默认配色；
+   若不声明层则会变成「无层」而**永远**赢过 sigil.css，那样下游就再也压不住它了。 */
+
+@layer components.ah {
+  [data-palette="retro"] {
+    /* ---- 主色调 (复古蓝) ---- */
+    --ah-color-primary-lighter: #DAE0E7;
+    --ah-color-primary-light: #5F7997;
+    --ah-color-primary: #4D6A8C;
+    --ah-color-primary-dark: #46607F;
+    --ah-color-primary-darker: #19222C;
+    --ah-color-primary-contrast: #DAE0E7;
+
+    /* ---- 次要色调 (洋红) ---- */
+    --ah-color-secondary-lighter: #F0D1DF;
+    --ah-color-secondary-light: #D1699C;
+    --ah-color-secondary: #BF2A72;
+    --ah-color-secondary-dark: #861F51;
+    --ah-color-secondary-darker: #3C0F26;
+    --ah-color-secondary-contrast: #F0D1DF;
+
+    /* ---- 信息色 ---- */
+    --ah-color-info-lighter: #D5E2EC;
+    --ah-color-info-light: #6A97BC;
+    --ah-color-info: #2B6C9F;
+    --ah-color-info-dark: #1F4C71;
+    --ah-color-info-darker: #0E2231;
+    --ah-color-info-contrast: #D5E2EC;
+
+    /* ---- 成功色 ---- */
+    --ah-color-success-lighter: #DAE2E0;
+    --ah-color-success-light: #557E74;
+    --ah-color-success: #427065;
+    --ah-color-success-dark: #2F4F47;
+    --ah-color-success-darker: #162420;
+    --ah-color-success-contrast: #DAE2E0;
+
+    /* ---- 警告色 ---- */
+    --ah-color-warning-lighter: #EDD7CF;
+    --ah-color-warning-light: #B95631;
+    --ah-color-warning: #B1441B;
+    --ah-color-warning-dark: #7D3014;
+    --ah-color-warning-darker: #36160A;
+    --ah-color-warning-contrast: #EDD7CF;
+
+    /* ---- 错误色 ---- */
+    --ah-color-error-lighter: #EFD1D3;
+    --ah-color-error-light: #D16F79;
+    --ah-color-error: #BE3240;
+    --ah-color-error-dark: #AB2D3A;
+    --ah-color-error-darker: #3A1115;
+    --ah-color-error-contrast: #EFD1D3;
+  }
+}

@@ -1,0 +1,144 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   布局原语（SMACSS 的 Layout 层）—— P14.4
+   ============================================================================
+
+   ⭐ 立项时写的是「提炼 Grid 布局原语，对应 Pure 的 pure-g / pure-u-*」。
+   实测把这条修正了两处：
+
+   1. **不需要造一套页面栅格。** 全库 `display:grid` 只有 24 条规则 / 16 文件，
+      其中 8 条是 `repeat(7, 1fr)`（日历的一周）——都是组件内部的具体布局，
+      不是「页面栅格」的需求。硬造 24 列栅格是无的放矢。
+
+   2. **栅格其实早就有了，只是不在 CSS 里。** A2UI 的 `Row` / `Column` 已经实现了
+      完整的 12 分栅格（`span` 1–12 / `offset` 0–11）外加 justify/align/gap/flexWrap，
+      但它是 `a2ui/components.cljs` 里 **JS 在 mount 时写的内联样式**。后果有两个：
+        · 写普通 HTML + sigil.css 的下游**一个布局原语都拿不到**
+          （这恰恰是 Pure 的核心卖点，而我们在 CSS 层完全缺失）
+        · A2UI 渲染出来的布局**下游改不动**——内联样式赢过一切选择器，
+          除非上 `!important`
+
+   所以本文件做的是：**把 A2UI 已有的 Row/Column 词汇 1:1 搬到 CSS 层**，
+   不发明第二套语义。取值逐条对着 `a2ui/components.cljs` 的
+   `justify-map` / `align-map` / `mount-flex!` 抄下来，并在浏览器里比对过
+   「A2UI 渲染的 Row」与「手写 .ah-row」的计算样式完全一致。
+
+   ⚠ **这不是 utility-first。** 这里只有「布局」一个系统，没有通用的间距/颜色原子类
+     （`p-4` / `text-red-500` 那种）。Phase 14 的立场是让消费方靠 token 与布局系统
+     组合，而不是靠原子类堆砌。
+
+   ── 用法 ────────────────────────────────────────────────────────────────
+     <div class="ah-row ah-gap-md ah-align-center">
+       <div class="ah-col ah-col-8">主区</div>
+       <div class="ah-col ah-col-4">侧栏</div>
+     </div>
+   ============================================================================ */
+
+/* ── Row：横向 ──────────────────────────────────────────────────────────── */
+.ah-row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;                       /* 与 A2UI 一致：默认不换行 */
+  gap: var(--ah-layout-gap, 8px);       /* A2UI Row/Column 的 :gap 默认值就是 8 */
+}
+
+.ah-row-wrap { flex-wrap: wrap; }
+
+/* ── Column：纵向；同时是 Row 里的栅格单元 ────────────────────────────────
+   ⚠ 两个身份合一是 A2UI 的既有语义，不是我加的：Column 既纵向排列自己的子元素，
+     又作为 Row 的 flex item 占据 span/12 宽度。独立使用时 span=12 → 100%，无副作用。 */
+.ah-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ah-layout-gap, 8px);
+
+  /* 12 分栅格 —— 公式逐字对齐 a2ui/components.cljs 的 mount-flex! */
+  flex: 0 1 calc(var(--ah-col-span, 12) / 12 * 100%);
+  max-width: calc(var(--ah-col-span, 12) / 12 * 100%);
+  margin-left: calc(var(--ah-col-offset, 0) / 12 * 100%);
+  box-sizing: border-box;
+}
+
+/* span / offset 的糖衣类。⚠ 用 var 回退形式而不是在 .ah-col 里声明默认值，
+   理由同 button：若在 .ah-col 里写 `--ah-col-span: 12`，那条声明 (0,1,0)
+   会与糖衣类同特异性、按顺序决胜，下游想直接设 `--ah-col-span` 反而更绕。 */
+.ah-col-1  { --ah-col-span: 1; }
+.ah-col-2  { --ah-col-span: 2; }
+.ah-col-3  { --ah-col-span: 3; }
+.ah-col-4  { --ah-col-span: 4; }
+.ah-col-5  { --ah-col-span: 5; }
+.ah-col-6  { --ah-col-span: 6; }
+.ah-col-7  { --ah-col-span: 7; }
+.ah-col-8  { --ah-col-span: 8; }
+.ah-col-9  { --ah-col-span: 9; }
+.ah-col-10 { --ah-col-span: 10; }
+.ah-col-11 { --ah-col-span: 11; }
+.ah-col-12 { --ah-col-span: 12; }
+
+.ah-col-offset-1  { --ah-col-offset: 1; }
+.ah-col-offset-2  { --ah-col-offset: 2; }
+.ah-col-offset-3  { --ah-col-offset: 3; }
+.ah-col-offset-4  { --ah-col-offset: 4; }
+.ah-col-offset-5  { --ah-col-offset: 5; }
+.ah-col-offset-6  { --ah-col-offset: 6; }
+.ah-col-offset-7  { --ah-col-offset: 7; }
+.ah-col-offset-8  { --ah-col-offset: 8; }
+.ah-col-offset-9  { --ah-col-offset: 9; }
+.ah-col-offset-10 { --ah-col-offset: 10; }
+.ah-col-offset-11 { --ah-col-offset: 11; }
+
+/* ── justify / align ──────────────────────────────────────────────────────
+   ⚠ 取值表逐条对齐 a2ui/components.cljs 的 justify-map / align-map，
+     包括 `stretch`（flexbox 里 justify-content:stretch 行为等同 flex-start，
+     A2UI 为完整覆盖规范 enum 保留了它，这里同样保留以免两边语义分叉）。 */
+.ah-justify-start          { justify-content: flex-start; }
+.ah-justify-center         { justify-content: center; }
+.ah-justify-end            { justify-content: flex-end; }
+.ah-justify-space-between  { justify-content: space-between; }
+.ah-justify-space-around   { justify-content: space-around; }
+.ah-justify-space-evenly   { justify-content: space-evenly; }
+.ah-justify-stretch        { justify-content: stretch; }
+
+.ah-align-start    { align-items: flex-start; }
+.ah-align-center   { align-items: center; }
+.ah-align-end      { align-items: flex-end; }
+.ah-align-stretch  { align-items: stretch; }
+.ah-align-baseline { align-items: baseline; }
+
+/* ── 间距 ─────────────────────────────────────────────────────────────────
+   只设 --ah-layout-gap，由 .ah-row / .ah-col 读取；
+   取值直接用既有的 spacing token，不新造一套刻度。 */
+.ah-gap-none { --ah-layout-gap: 0; }
+.ah-gap-xs   { --ah-layout-gap: var(--ah-spacing-xs); }
+.ah-gap-sm   { --ah-layout-gap: var(--ah-spacing-sm); }
+.ah-gap-md   { --ah-layout-gap: var(--ah-spacing-md); }
+.ah-gap-lg   { --ah-layout-gap: var(--ah-spacing-lg); }
+
+/* ── 三个高频惯用法 ───────────────────────────────────────────────────────
+   实测（619 条 flex 规则 / 140 种布局指纹）出来的前几名，收成命名原语：
+     居中     inline-flex+center+center ×70 · flex+center+center ×46  → 116 处
+     纵向堆叠 flex+column ×54                                          →  54 处
+     两端对齐 flex+center+space-between ×12                            →  12 处
+   ⚠ 这三条**不改动存量组件**——组件的 flex 是它自己的实现细节，改它既要动 cljs
+     发类名、又要重测 619 条规则，收益不抵风险（见 TASK.md P14.4 的判断）。
+     它们是给**消费方**用的，与 Pure 的 pure-g 定位一致。 */
+.ah-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ah-center-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ah-split {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ah-layout-gap, 8px);
+}

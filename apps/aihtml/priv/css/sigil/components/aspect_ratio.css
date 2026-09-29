@@ -1,0 +1,26 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   AspectRatio · 固定宽高比容器（借鉴 happy aspect-ratio）
+   走原生 CSS aspect-ratio，无 padding-top hack；防加载前后布局跳动（CLS）。
+   ============================================================================ */
+
+.ah-aspect-ratio {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--ah-radius-md);
+}
+
+/* 常见内容自动铺满 */
+.ah-aspect-ratio > img,
+.ah-aspect-ratio > video,
+.ah-aspect-ratio > iframe,
+.ah-aspect-ratio > canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: 0;
+}

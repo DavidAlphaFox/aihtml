@@ -1,0 +1,151 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   列表菜单 (ListMenu)
+   移动端风格的层级列表菜单组件，支持页面切换和过滤
+   ============================================================================ */
+
+/* ---- 列表菜单容器 ---- */
+
+.ah-listmenu {
+  overflow: hidden;
+  font-size: var(--ah-font-size-sm);
+  user-select: none;
+  outline: none;
+}
+
+/* ---- 头部 ---- */
+
+.ah-listmenu-header {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: var(--ah-color-grey-50);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  min-height: 40px;
+}
+
+/* ---- 返回按钮 ---- */
+
+.ah-listmenu-back {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 4px 8px;
+  margin: -4px 0;
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-primary);
+  transition: background var(--ah-transition-fast);
+}
+
+.ah-listmenu-back:hover {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-listmenu-back-arrow {
+  font-size: 10px;
+}
+
+/* ---- 标题 ---- */
+
+.ah-listmenu-title {
+  flex: 1;
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- 视口 ---- */
+
+.ah-listmenu-viewport {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---- 页面 ---- */
+
+.ah-listmenu-page {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---- 菜单项 ---- */
+
+.ah-listmenu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  transition: background var(--ah-transition-fast);
+}
+
+.ah-listmenu-item:hover {
+  background: var(--ah-color-grey-50);
+}
+
+.ah-listmenu-item:last-child {
+  border-bottom: none;
+}
+
+/* ---- 项标签 ---- */
+
+.ah-listmenu-item-label {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- 右箭头 ---- */
+
+.ah-listmenu-arrow {
+  color: var(--ah-color-text-secondary);
+  font-size: 16px;
+  flex: none;
+  margin-left: 8px;
+}
+
+/* ---- 禁用项 ---- */
+
+.ah-listmenu-item-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 过滤栏 ---- */
+
+.ah-listmenu-filter {
+  padding: 8px 12px;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-listmenu-filter-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  font-size: var(--ah-font-size-sm);
+  outline: none;
+  transition: border-color var(--ah-transition-fast);
+}
+
+.ah-listmenu-filter-input:focus {
+  border-color: var(--ah-color-primary);
+}
+
+/* ---- 整体禁用 ---- */
+
+.ah-listmenu-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

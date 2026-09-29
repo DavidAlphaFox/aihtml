@@ -1,0 +1,89 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   进度条组件 (ProgressBar)
+   水平或垂直的进度指示器，支持动态值和文本显示
+   ============================================================================ */
+
+.ah-progressbar {
+  position: relative;
+  overflow: hidden;
+  background: var(--ah-color-grey-100);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  box-sizing: border-box;
+}
+
+/* ---- 水平默认尺寸 ---- */
+.ah-progressbar-horizontal {
+  width: 100%;
+  height: 28px;
+}
+
+/* ---- 垂直默认尺寸 ---- */
+.ah-progressbar-vertical {
+  width: 28px;
+  height: 200px;
+}
+
+/* ---- 进度值填充条 ---- */
+.ah-progressbar-value {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--ah-color-primary);
+  transition: width 0.3s ease, height 0.3s ease, left 0.3s ease, top 0.3s ease;
+  border-radius: inherit;
+  min-width: 0;
+}
+
+/* ---- 垂直填充条 ---- */
+.ah-progressbar-value-vertical {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background: var(--ah-color-primary);
+  transition: width 0.3s ease, height 0.3s ease, left 0.3s ease, top 0.3s ease;
+  border-radius: inherit;
+  min-height: 0;
+}
+
+/* ---- 颜色范围层 ---- */
+.ah-progressbar-range {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: inherit;
+}
+
+/* ---- 文本覆盖层容器 ---- */
+.ah-progressbar-text-host {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+/* ---- 进度文本 ---- */
+.ah-progressbar-text {
+  font-size: var(--ah-font-size-xs);
+  font-weight: 600;
+  color: var(--ah-color-text);
+  white-space: nowrap;
+  user-select: none;
+}
+
+/* ---- 禁用状态 ---- */
+.ah-progressbar-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

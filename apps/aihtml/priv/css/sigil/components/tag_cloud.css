@@ -1,0 +1,43 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   标签云组件 (TagCloud)
+   以云状布局展示标签集合，支持不同大小和权重的标签
+   ============================================================================ */
+
+.ah-tagcloud {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.ah-tagcloud-item {
+  display: inline-block;
+}
+
+.ah-tagcloud-link {
+  display: inline-block;
+  padding: 2px 8px;
+  text-decoration: none;
+  color: var(--ah-color-primary);
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  transition: background var(--ah-transition-fast),
+              color var(--ah-transition-fast);
+}
+
+.ah-tagcloud-link:hover {
+  background: var(--ah-color-primary-lighter);
+  color: var(--ah-color-primary-dark);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-tagcloud-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

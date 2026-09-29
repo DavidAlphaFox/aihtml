@@ -1,0 +1,201 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   时间选择器 (TimePicker)
+   用于选择时间的组件，支持时钟面板交互和横向/纵向布局
+   ============================================================================ */
+
+/* ---- 时间选择器容器 ---- */
+
+.ah-timepicker {
+  display: inline-flex;
+  flex-direction: column;
+  width: min(300px, calc(100vw - 16px));
+  border-radius: var(--ah-radius-lg);
+  box-shadow: var(--ah-shadow-md);
+  background: var(--ah-color-bg-paper);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ---- 横向布局 ---- */
+
+.ah-timepicker-landscape {
+  flex-direction: row;
+  width: auto;
+}
+
+/* ---- 头部区域 ---- */
+
+.ah-timepicker-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--ah-spacing-lg) var(--ah-spacing-xl);
+  background: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+  gap: 0;
+}
+
+.ah-timepicker-landscape .ah-timepicker-header {
+  flex-direction: column;
+  padding: var(--ah-spacing-xl) var(--ah-spacing-lg);
+  min-width: 100px;
+}
+
+/* ---- 小时/分钟显示 ---- */
+
+.ah-timepicker-header-hours,
+.ah-timepicker-header-minutes {
+  font-size: var(--ah-font-size-3xl);
+  font-weight: var(--ah-font-weight-bold);
+  cursor: pointer;
+  opacity: 0.54;
+  transition: opacity var(--ah-transition-fast);
+  line-height: 1;
+}
+
+.ah-timepicker-header-hours:hover,
+.ah-timepicker-header-minutes:hover {
+  opacity: 0.76;
+}
+
+.ah-timepicker-header-active {
+  opacity: 1;
+}
+
+.ah-timepicker-header-active:hover {
+  opacity: 1;
+}
+
+/* ---- 分隔符 ---- */
+
+.ah-timepicker-header-sep {
+  font-size: var(--ah-font-size-3xl);
+  font-weight: var(--ah-font-weight-bold);
+  opacity: 0.54;
+  line-height: 1;
+}
+
+/* ---- AM/PM 切换 ---- */
+
+.ah-timepicker-header-period {
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--ah-spacing-sm);
+  gap: 2px;
+}
+
+.ah-timepicker-landscape .ah-timepicker-header-period {
+  flex-direction: row;
+  margin-left: 0;
+  margin-top: var(--ah-spacing-sm);
+  gap: var(--ah-spacing-xs);
+}
+
+.ah-timepicker-header-am,
+.ah-timepicker-header-pm {
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-bold);
+  cursor: pointer;
+  opacity: 0.54;
+  padding: 2px 4px;
+  border-radius: var(--ah-radius-sm);
+  transition: opacity var(--ah-transition-fast), background-color var(--ah-transition-fast);
+  line-height: 1.2;
+}
+
+.ah-timepicker-header-am:hover,
+.ah-timepicker-header-pm:hover {
+  opacity: 0.76;
+}
+
+.ah-timepicker-header-am-active,
+.ah-timepicker-header-pm-active {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ---- 主体区域 ---- */
+
+.ah-timepicker-body {
+  padding: var(--ah-spacing-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- 时钟包装器 ---- */
+
+.ah-timepicker-clock-wrap {
+  position: relative;
+  width: min(260px, calc(100vw - 16px));
+  height: 260px;
+}
+
+/* ---- SVG 时钟 ---- */
+
+.ah-timepicker-svg {
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.ah-timepicker-face {
+  fill: var(--ah-color-grey-100);
+}
+
+.ah-timepicker-hand {
+  stroke: var(--ah-color-primary);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.ah-timepicker-selection {
+  fill: var(--ah-color-primary);
+}
+
+.ah-timepicker-center {
+  fill: var(--ah-color-primary);
+}
+
+/* ---- 时钟数字 ---- */
+
+.ah-timepicker-number {
+  fill: var(--ah-color-text);
+  font-size: 14px;
+  text-anchor: middle;
+  dominant-baseline: central;
+  pointer-events: none;
+  font-family: var(--ah-font-family);
+}
+
+.ah-timepicker-number-inner {
+  font-size: 12px;
+  fill: var(--ah-color-text-secondary);
+}
+
+.ah-timepicker-number-selected {
+  fill: var(--ah-color-primary-contrast);
+}
+
+/* ---- 底部区域 ---- */
+
+.ah-timepicker-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border-top: var(--ah-border-width) solid var(--ah-color-border-subtle);
+}
+
+.ah-timepicker-footer:empty {
+  display: none;
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-timepicker-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

@@ -1,0 +1,45 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   外观 · 暗色中性层 —— data-theme="dark"
+
+   三正交轴之「外观」的暗色态：规范暗色中性层。色值采用库默认暗色
+   （原 midnight 主题）的灰阶/表面/文本/边框/暗阴影，与任何 data-palette
+   品牌强调色正交组合。品牌强调色见 palettes/，字体见 typography/。
+   ============================================================================ */
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* ---- 灰度色阶（暗色：50=近背景暗色，900=最亮灰色） ---- */
+  --ah-color-grey-50: #1F2129;
+  --ah-color-grey-100: #272B35;
+  --ah-color-grey-200: #303441;
+  --ah-color-grey-300: #3B4050;
+  --ah-color-grey-400: #464C5E;
+  --ah-color-grey-500: #535A70;
+  --ah-color-grey-600: #606881;
+  --ah-color-grey-700: #6D7693;
+  --ah-color-grey-800: #7E87A0;
+  --ah-color-grey-900: #9097AD;
+
+  /* ---- 背景色 ---- */
+  --ah-color-bg: #1A1F2E;
+  --ah-color-bg-paper: #272C3A;
+  --ah-color-bg-subtle: #232734;
+
+  /* ---- 文本色 ---- */
+  --ah-color-text: #DADCE5;
+  --ah-color-text-secondary: #A2A6B2;
+  --ah-color-text-disabled: #818591;
+
+  /* ---- 边框色 ---- */
+  --ah-color-border: #3B4050;
+  --ah-color-border-subtle: #303441;
+
+  /* ---- 阴影（暗色，更暗） ---- */
+  --ah-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.24);
+  --ah-shadow-md: 0 8px 16px 0 rgb(0 0 0 / 0.24);
+  --ah-shadow-lg: 0 16px 32px 0 rgb(0 0 0 / 0.36);
+}

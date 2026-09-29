@@ -1,0 +1,93 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================
+   Loader — 加载指示器
+   用于显示加载状态，支持模态模式
+   ============================================================ */
+
+/* ---- 基础样式 ---- */
+.ah-loader {
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background-color: color-mix(in srgb, var(--ah-color-bg-paper) 60%, transparent);
+  z-index: 999;
+  border-radius: var(--ah-radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-loader-hidden {
+  display: none;
+}
+
+/* ---- 加载图标 ---- */
+.ah-loader-icon {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--ah-color-grey-200);
+  border-top-color: var(--ah-color-primary);
+  border-radius: 50%;
+  animation: ah-loader-spin 0.8s linear infinite;
+}
+
+@keyframes ah-loader-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- 加载文字 ---- */
+.ah-loader-text {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+}
+
+/* ---- 文字位置 ---- */
+.ah-loader-text-top {
+  order: -1;
+}
+
+.ah-loader-text-bottom {
+  order: 1;
+}
+
+.ah-loader-text-left {
+  flex-direction: row;
+}
+
+.ah-loader-text-right {
+  flex-direction: row-reverse;
+}
+
+/* ---- 模态遮罩 ---- */
+.ah-loader-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 998;
+  background-color: color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity-strong), transparent);
+  cursor: default;
+}
+
+/* ---- 居中定位 (非模态) ---- */
+.ah-loader-center {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: var(--ah-color-bg-paper);
+  padding: var(--ah-spacing-lg);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-lg);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-loader-disabled {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}

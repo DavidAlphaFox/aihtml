@@ -1,0 +1,49 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Meter · 度量计（借鉴 happy meter.css）
+   value/min/max → 填充宽度；low/optimum/high 三态变色。data-state / data-size。
+   ============================================================================ */
+
+.ah-meter {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.ah-meter__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 13px;
+}
+.ah-meter__label { color: var(--ah-color-text); }
+.ah-meter__value { color: var(--ah-color-text-muted); font-variant-numeric: tabular-nums; }
+
+.ah-meter__track {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--ah-color-bg-subtle);
+}
+.ah-meter[data-size="sm"] .ah-meter__track { height: 6px; }
+.ah-meter[data-size="lg"] .ah-meter__track { height: 12px; }
+
+.ah-meter__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--ah-color-success);
+  transition: width .3s ease, background .2s ease;
+}
+.ah-meter__fill[data-state="optimum"] { background: var(--ah-color-success); }
+.ah-meter__fill[data-state="low"]     { background: var(--ah-color-error); }
+.ah-meter__fill[data-state="high"]    { background: var(--ah-color-warning); }
+
+.ah-meter__helper {
+  font-size: 12px;
+  color: var(--ah-color-text-muted);
+}

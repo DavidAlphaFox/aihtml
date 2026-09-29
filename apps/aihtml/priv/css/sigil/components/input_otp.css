@@ -1,0 +1,50 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   InputOTP · 分段验证码输入（借鉴 happy input-otp）
+   ============================================================================ */
+
+.ah-input-otp {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ah-input-otp__slot {
+  width: 44px;
+  height: 52px;
+  padding: 0;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md, 8px);
+  outline: 0;
+  transition: border-color .14s ease, box-shadow .14s ease, background .14s ease;
+}
+
+.ah-input-otp__slot[data-filled="true"] {
+  border-color: color-mix(in srgb, var(--ah-color-primary) 45%, var(--ah-color-border));
+}
+
+.ah-input-otp__slot:focus {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ah-color-primary) 18%, transparent);
+}
+
+.ah-input-otp__separator {
+  color: var(--ah-color-text-muted);
+  font-size: 18px;
+  user-select: none;
+}
+
+.ah-input-otp[data-disabled="true"] { opacity: var(--ah-state-disabled-opacity); pointer-events: none; }
+
+/* 填满时整体给一点成功感 */
+.ah-input-otp[data-complete="true"] .ah-input-otp__slot {
+  border-color: color-mix(in srgb, var(--ah-color-success) 55%, var(--ah-color-border));
+}

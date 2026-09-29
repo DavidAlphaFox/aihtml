@@ -1,0 +1,136 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   通知组件 (Notification / Toast)
+   轻量级消息提示，支持多种位置和主题样式
+   ============================================================================ */
+
+/* ---- 通知容器 ---- */
+.ah-notify-container {
+  position: fixed;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+/* ---- 位置变体 ---- */
+.ah-notify-top-right {
+  top: 12px;
+  right: 12px;
+}
+
+.ah-notify-top-left {
+  top: 12px;
+  left: 12px;
+}
+
+.ah-notify-bottom-right {
+  bottom: 12px;
+  right: 12px;
+  flex-direction: column-reverse;
+}
+
+.ah-notify-bottom-left {
+  bottom: 12px;
+  left: 12px;
+  flex-direction: column-reverse;
+}
+
+/* ---- 单条通知卡片 ---- */
+.ah-notify {
+  pointer-events: auto;
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  min-width: min(280px, calc(100vw - 32px));
+  max-width: 400px;
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  font-size: var(--ah-font-size-sm);
+  line-height: 1.4;
+  opacity: 0.95;
+  cursor: default;
+  background: var(--ah-notify-bg, var(--ah-color-bg-paper));
+  border-left: 3px solid var(--ah-notify-accent, var(--ah-color-grey-300));
+}
+
+.ah-notify:hover {
+  opacity: 1;
+}
+
+.ah-notify-clickable {
+  cursor: pointer;
+}
+
+/* ---- 主题变体 ---- */
+.ah-notify-info {
+  --ah-notify-accent: var(--ah-color-info);
+  --ah-notify-bg: var(--ah-color-info-lighter);
+}
+
+.ah-notify-success {
+  --ah-notify-accent: var(--ah-color-success);
+  --ah-notify-bg: var(--ah-color-success-lighter);
+}
+
+.ah-notify-warning {
+  --ah-notify-accent: var(--ah-color-warning);
+  --ah-notify-bg: var(--ah-color-warning-lighter);
+}
+
+.ah-notify-error {
+  --ah-notify-accent: var(--ah-color-error);
+  --ah-notify-bg: var(--ah-color-error-lighter);
+}
+
+/* ---- 图标 ---- */
+.ah-notify-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  overflow: hidden;
+  color: var(--ah-notify-accent, var(--ah-color-grey-500));
+}
+
+.ah-notify-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
+/* ---- 内容 ---- */
+.ah-notify-content {
+  flex: 1;
+  color: var(--ah-color-text);
+}
+
+/* ---- 关闭按钮 ---- */
+.ah-notify-close {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.5;
+  border-radius: var(--ah-radius-sm);
+  color: var(--ah-color-text-secondary);
+  transition: opacity var(--ah-transition-fast),
+              background var(--ah-transition-fast);
+}
+
+.ah-notify-close:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.ah-notify-close::after {
+  content: "\00d7";
+  font-size: 16px;
+  line-height: 1;
+}

@@ -1,0 +1,247 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   KPI Card 组件
+   用于展示关键业务指标及趋势
+   ============================================================================ */
+
+/* 颜色主题变量 */
+.ah-kpi-card {
+  --ah-kpi-color: var(--ah-color-primary);
+  --ah-kpi-color-light: var(--ah-color-primary-light);
+  --ah-kpi-color-lighter: var(--ah-color-primary-lighter);
+  --ah-kpi-color-dark: var(--ah-color-primary-dark);
+  --ah-kpi-color-darker: var(--ah-color-primary-darker);
+}
+
+.ah-kpi-card.ah-kpi-card--primary {
+  --ah-kpi-color: var(--ah-color-primary);
+  --ah-kpi-color-light: var(--ah-color-primary-light);
+  --ah-kpi-color-lighter: var(--ah-color-primary-lighter);
+  --ah-kpi-color-dark: var(--ah-color-primary-dark);
+  --ah-kpi-color-darker: var(--ah-color-primary-darker);
+}
+
+.ah-kpi-card.ah-kpi-card--success {
+  --ah-kpi-color: var(--ah-color-success);
+  --ah-kpi-color-light: var(--ah-color-success-light);
+  --ah-kpi-color-lighter: var(--ah-color-success-lighter);
+  --ah-kpi-color-dark: var(--ah-color-success-dark);
+  --ah-kpi-color-darker: var(--ah-color-success-darker);
+}
+
+.ah-kpi-card.ah-kpi-card--warning {
+  --ah-kpi-color: var(--ah-color-warning);
+  --ah-kpi-color-light: var(--ah-color-warning-light);
+  --ah-kpi-color-lighter: var(--ah-color-warning-lighter);
+  --ah-kpi-color-dark: var(--ah-color-warning-dark);
+  --ah-kpi-color-darker: var(--ah-color-warning-darker);
+}
+
+.ah-kpi-card.ah-kpi-card--info {
+  --ah-kpi-color: var(--ah-color-info);
+  --ah-kpi-color-light: var(--ah-color-info-light);
+  --ah-kpi-color-lighter: var(--ah-color-info-lighter);
+  --ah-kpi-color-dark: var(--ah-color-info-dark);
+  --ah-kpi-color-darker: var(--ah-color-info-darker);
+}
+
+.ah-kpi-card.ah-kpi-card--error {
+  --ah-kpi-color: var(--ah-color-error);
+  --ah-kpi-color-light: var(--ah-color-error-light);
+  --ah-kpi-color-lighter: var(--ah-color-error-lighter);
+  --ah-kpi-color-dark: var(--ah-color-error-dark);
+  --ah-kpi-color-darker: var(--ah-color-error-darker);
+}
+
+/* 主容器 */
+.ah-kpi-card {
+  overflow: hidden;
+  background-color: var(--ah-color-bg-paper);
+  border-radius: var(--ah-radius-lg);
+  border: none;
+  box-shadow: none;
+  padding: 24px;
+  box-sizing: border-box;
+  position: relative;
+  color: var(--ah-kpi-color-darker);
+  background-image: linear-gradient(135deg, var(--ah-kpi-color-lighter) 0%, var(--ah-kpi-color-light) 100%);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* 装饰性背景形状 */
+.ah-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  left: -80px;
+  width: 200px;
+  height: 200px;
+  background-color: var(--ah-kpi-color);
+  opacity: 0.16;
+  border-radius: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 悬停效果 */
+.ah-kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -8px oklch(from var(--ah-kpi-color) l c h / 0.24);
+}
+
+/* 内容区域 */
+.ah-kpi-card-content {
+  position: relative;
+  z-index: 1;
+}
+
+/* 图标 */
+.ah-kpi-card-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ah-kpi-card-icon-wrapper svg {
+  width: 48px;
+  height: 48px;
+  color: var(--ah-kpi-color);
+}
+
+.ah-kpi-card-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--ah-radius-lg);
+  background-color: oklch(from var(--ah-kpi-color) l c h / 0.12);
+  color: var(--ah-kpi-color);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ah-kpi-card:hover .ah-kpi-card-header-icon {
+  transform: scale(1.05);
+}
+
+.ah-kpi-card-title {
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-kpi-color-darker);
+  letter-spacing: 0.01em;
+  margin-bottom: 8px;
+  opacity: 0.72;
+}
+
+/* 底部区域 */
+.ah-kpi-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-kpi-card-value-section {
+  flex-grow: 1;
+  min-width: 112px;
+}
+
+.ah-kpi-card-value {
+  font-size: 32px;
+  font-weight: var(--ah-font-weight-bold);
+  color: var(--ah-kpi-color-darker);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* 趋势指示器 */
+.ah-kpi-card-trend {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-semibold);
+}
+
+.ah-kpi-card-trend-up {
+  color: var(--ah-color-success);
+}
+
+.ah-kpi-card-trend-down {
+  color: var(--ah-color-error);
+}
+
+.ah-kpi-card-trend-icon {
+  display: flex;
+  align-items: center;
+}
+
+.ah-kpi-card-trend-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.ah-kpi-card-trend-up .ah-kpi-card-trend-icon svg {
+  transform: translateY(-1px);
+}
+
+.ah-kpi-card-trend-down .ah-kpi-card-trend-icon svg {
+  transform: translateY(1px);
+}
+
+.ah-kpi-card-trend-value {
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-semibold);
+  line-height: 1;
+}
+
+.ah-kpi-card-trend-label {
+  display: block;
+  margin-top: 4px;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-kpi-color-darker);
+  opacity: 0.64;
+}
+
+/* 迷你图表 */
+div.ah-kpi-card.ah-kpi-card-with-chart .ah-kpi-card-chart {
+  width: 84px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+.ah-kpi-card-chart-wrapper {
+  width: 84px;
+  height: 56px;
+  flex-shrink: 0;
+}
+
+/* 禁用状态 */
+.ah-kpi-card-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-kpi-card-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.ah-kpi-card-disabled .ah-kpi-card-header-icon {
+  transform: none;
+}
+
+.ah-kpi-card-disabled .ah-kpi-card-trend-up,
+.ah-kpi-card-disabled .ah-kpi-card-trend-down {
+  color: var(--ah-color-text-disabled);
+}

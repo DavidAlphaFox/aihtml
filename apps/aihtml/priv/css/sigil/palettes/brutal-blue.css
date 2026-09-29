@@ -1,0 +1,147 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Brutal Blue（新野兽派 · 冷调）—— data-palette="brutal-blue"
+
+   新野兽派的**冷调**变体：周期蓝主色 + 珊瑚粉次色 + 淡蓝灰地。
+   暖调那套（芥末黄 + 暖米地）在 palettes/brutal.css。两者是并列的同门配色，
+   都可与 `data-skin="brutal"` 自由组合，按项目气质挑一个：
+
+     brutal        暖芥末 + 暖米地   —— 更响、更「海报感」
+     brutal-blue   周期蓝 + 淡蓝地   —— 更冷静，做数据/工具类界面时更好读  ← 本文件
+
+   两套的分野源自两个上游取值不同：本文件对齐 neobrutalism.dev（周期蓝 #88AAEE
+   作 --main、淡蓝灰 #DFE5F2 作地），brutal.css 对齐 neobrutalism.com。
+
+   同为「胖调色板」：除强调色外还覆盖灰阶与语义表面。形状特征在第 4 轴
+   `data-skin="brutal"`（两套配色共用同一个 skin）。
+
+   实色填充上一律配黑字（-contrast: #000）—— neo 的招牌做法。
+   ============================================================================ */
+
+/* ⚠ 与 sigil.css 同处 `@layer components.ah`，理由见 palettes/brutal.css 同段。 */
+
+@layer components.ah {
+  [data-palette="brutal-blue"] {
+    /* ---- 主色调（周期蓝 periwinkle #88AAEE，上游 --main）---- */
+    --ah-color-primary-lighter: #E2EAFB;
+    --ah-color-primary-light: #A9C0F2;
+    --ah-color-primary: #88AAEE;
+    --ah-color-primary-dark: #4E76D2;
+    --ah-color-primary-darker: #2C4581;
+    --ah-color-primary-contrast: #000000;
+
+    /* ---- 次要色调（珊瑚粉 coral pink）---- */
+    --ah-color-secondary-lighter: #FFE0EA;
+    --ah-color-secondary-light: #FFA3BF;
+    --ah-color-secondary: #FF6B9D;
+    --ah-color-secondary-dark: #E64A80;
+    --ah-color-secondary-darker: #952B4F;
+    --ah-color-secondary-contrast: #000000;
+
+    /* ---- 信息色（电光青 electric cyan）---- */
+    --ah-color-info-lighter: #D5F9FF;
+    --ah-color-info-light: #6FE7FB;
+    --ah-color-info: #3ED8F2;
+    --ah-color-info-dark: #0E97B4;
+    --ah-color-info-darker: #135F74;
+    --ah-color-info-contrast: #000000;
+
+    /* ---- 成功色（酸橙绿 lime）---- */
+    --ah-color-success-lighter: #E4F9CB;
+    --ah-color-success-light: #ACE768;
+    --ah-color-success: #90DA3E;
+    --ah-color-success-dark: #559B15;
+    --ah-color-success-darker: #375D17;
+    --ah-color-success-contrast: #000000;
+
+    /* ---- 警告色（芥末黄 #FFDC58，上游备选 --main 之一）---- */
+    --ah-color-warning-lighter: #FFF5C9;
+    --ah-color-warning-light: #FFEA93;
+    --ah-color-warning: #FFDC58;
+    --ah-color-warning-dark: #D98A03;
+    --ah-color-warning-darker: #924C0D;
+    --ah-color-warning-contrast: #000000;
+
+    /* ---- 错误色（番茄红 tomato）---- */
+    --ah-color-error-lighter: #FFE0E0;
+    --ah-color-error-light: #FF9E9E;
+    --ah-color-error: #FF6B6B;
+    --ah-color-error-dark: #E42020;
+    --ah-color-error-darker: #9E1717;
+    --ah-color-error-contrast: #000000;
+
+    /* ── 胖的那部分（一）：冷蓝灰阶 ──────────────────────────────── */
+    /* ⚠ 灰阶必须保持单调（50 最亮 → 900 最暗），别照抄「地色 = grey-100」的
+       推导法：本套的地色 #DFE5F2 比 muted #EEF1F8 更暗，塞进 100 档会把
+       整条阶梯拧成波浪，直接读 grey-N 的组件（表格斑马纹、骨架屏）当场发花。
+       地色与 muted 在下面按语义显式给。 */
+    --ah-color-grey-50: #F7F9FD;
+    --ah-color-grey-100: #EEF1F8;
+    --ah-color-grey-200: #DFE5F2;
+    --ah-color-grey-300: #C9D1E4;
+    --ah-color-grey-400: #A3ADC4;
+    --ah-color-grey-500: #7A839A;
+    --ah-color-grey-600: #4A4A4A;
+    --ah-color-grey-700: #2F2F2F;
+    --ah-color-grey-800: #212121;
+    --ah-color-grey-900: #000000;
+
+    /* ── 胖的那部分（二）：语义表面 ──────────────────────────────────
+       底（淡蓝灰）与面（纯白）必须有明度差 —— neo 靠这个差 + 黑描边立层次。
+       上游 oklch 值的 sRGB 近似：background #DFE5F2 / secondary-bg #FFFFFF。 */
+    --ah-color-bg: #DFE5F2;
+    --ah-color-bg-paper: #FFFFFF;
+    --ah-color-bg-subtle: #EEF1F8;
+
+    --ah-color-text: #000000;
+    --ah-color-text-secondary: #4A4A4A;
+    --ah-color-text-disabled: #8A8A8A;
+
+    --ah-color-border: #000000;
+    --ah-color-border-subtle: #C9D1E4;
+
+    --ah-color-bg-hover: rgb(0 0 0 / 0.06);
+    --ah-color-bg-overlay: rgb(0 0 0 / 0.8);
+
+    /* 交给外形轴的两个墨色（命名空间必须是 --ah-color-*，理由见 brutal.css 同段）。
+       明色下描边与阴影同为纯黑 —— 取值相同但仍分开写，暗色块里两者会分开。 */
+    --ah-color-skin-ink: #000000;
+    --ah-color-skin-shadow: #000000;
+  }
+
+  /* ── Brutal Blue · Dark ──────────────────────────────────────────────────
+     上游暗色：background #2A2C3A、secondary-background #212121、foreground #E8E8E8。
+     描边在暗色下改用前景白 —— 上游保持纯黑，靠「面比底亮」勉强读得出；本库的
+     组件密度下黑描边基本看不见，白描边才是能用的那个（此处有意偏离上游）。
+     这也是与暖调那套的分野：brutal 暗色的面比底亮，能用暖灰描边 + 更暗的阴影色。 */
+  [data-palette="brutal-blue"][data-theme="dark"] {
+    --ah-color-grey-50: #212121;
+    --ah-color-grey-100: #2A2C3A;
+    --ah-color-grey-200: #2F2F2F;
+    --ah-color-grey-300: #3A3A46;
+    --ah-color-grey-400: #4A4A56;
+    --ah-color-grey-500: #6A6A76;
+    --ah-color-grey-600: #A8A8A8;
+    --ah-color-grey-700: #C4C4C4;
+    --ah-color-grey-800: #D8D8D8;
+    --ah-color-grey-900: #E8E8E8;
+
+    --ah-color-bg: #2A2C3A;
+    --ah-color-bg-paper: #212121;
+    --ah-color-bg-subtle: #2F2F2F;
+
+    --ah-color-text: #E8E8E8;
+    --ah-color-text-secondary: #A8A8A8;
+    --ah-color-text-disabled: #6A6A76;
+
+    --ah-color-border: #E8E8E8;
+    --ah-color-border-subtle: #4A4A56;
+
+    --ah-color-bg-hover: rgb(232 232 232 / 0.08);
+
+    --ah-color-skin-ink: #E8E8E8;
+    --ah-color-skin-shadow: #E8E8E8;
+  }
+}

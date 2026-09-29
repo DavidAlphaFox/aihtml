@@ -1,0 +1,270 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Ranking List 组件
+   排行榜列表组件 — 展示排名数据的列表组件
+   ============================================================================ */
+
+/* ============================================================================
+   CSS 变量定义
+   ============================================================================ */
+
+.ah-ranking-list {
+  --ah-ranking-list-bg: var(--ah-color-bg-paper);
+  --ah-ranking-list-border: var(--ah-color-border);
+  --ah-ranking-list-item-hover: var(--ah-color-bg-hover);
+  --ah-ranking-list-text: var(--ah-color-text);
+  --ah-ranking-list-text-secondary: var(--ah-color-text-secondary);
+  --ah-ranking-list-gap: 8px;
+  --ah-ranking-list-padding: 16px;
+  --ah-ranking-list-min-width: 280px;
+
+  /* 前三名的奖牌色（金 / 银 / 铜）。
+     ⚠ P14.6c：这三处原先引用 `--ah-color-yellow` / `-gray` / `-orange`，
+     而库里**根本没有这三个 token**，于是 `oklch(from var(...) …)` 整条失效 ——
+     前三名一直和第四名长得一样。
+     ⚠ 刻意**不映射到品牌色**（primary 恰好是橙的，但换成绿色配色后「铜牌」就绿了）：
+     金银铜是与配色无关的固有语义，所以在这里给具体值，并暴露为组件 token 供覆盖。 */
+  --ah-ranking-list-medal-1: #D4A017;   /* 金 */
+  --ah-ranking-list-medal-2: #9AA4AF;   /* 银 */
+  --ah-ranking-list-medal-3: #B87333;   /* 铜 */
+}
+
+/* ============================================================================
+    主容器样式
+    ============================================================================ */
+
+.ah-ranking-list {
+  background: var(--ah-ranking-list-bg);
+  border: none;
+  box-shadow: 0 1px 3px oklch(from var(--ah-color-text) l c h / 0.08);
+  border-radius: var(--ah-radius-lg);
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   紧凑模式变体
+   ============================================================================ */
+
+.ah-ranking-list--dense {
+  --ah-ranking-list-gap: 4px;
+  --ah-ranking-list-padding: 8px;
+}
+
+.ah-ranking-list--dense .ah-ranking-list__item {
+  padding: 4px;
+}
+
+/* ============================================================================
+   标题区域
+   ============================================================================ */
+
+.ah-ranking-list__header {
+  margin-bottom: 12px;
+}
+
+.ah-ranking-list__title {
+  font-size: var(--ah-font-size-base);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-ranking-list-text);
+  margin: 0;
+}
+
+/* ============================================================================
+   列表容器
+   ============================================================================ */
+
+.ah-ranking-list__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ah-ranking-list-gap);
+}
+
+/* ============================================================================
+    列表项
+    ============================================================================ */
+
+.ah-ranking-list__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--ah-radius-md);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.ah-ranking-list__item:hover {
+  background: oklch(from var(--ah-color-bg-hover) l c h / 0.08);
+  transform: scale(1.01);
+}
+
+.ah-ranking-list__item--clickable {
+  cursor: pointer;
+}
+
+.ah-ranking-list__item--clickable:hover {
+  background: var(--ah-ranking-list-item-hover);
+}
+
+/* ============================================================================
+    排名序号
+    ============================================================================ */
+
+.ah-ranking-list__rank {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ah-ranking-list-text);
+  background: oklch(from var(--ah-color-text) l c h / 0.08);
+  flex-shrink: 0;
+}
+
+.ah-ranking-list__rank[data-rank="1"] {
+  background: oklch(from var(--ah-ranking-list-medal-1) l c h / 0.2);
+  color: var(--ah-ranking-list-medal-1);
+}
+
+.ah-ranking-list__rank[data-rank="2"] {
+  background: oklch(from var(--ah-ranking-list-medal-2) l c h / 0.2);
+  color: var(--ah-ranking-list-medal-2);
+}
+
+.ah-ranking-list__rank[data-rank="3"] {
+  background: oklch(from var(--ah-ranking-list-medal-3) l c h / 0.2);
+  color: var(--ah-ranking-list-medal-3);
+}
+
+/* ============================================================================
+    旗帜容器
+    ============================================================================ */
+
+.ah-ranking-list__flag {
+  width: 24px;
+  height: 24px;
+  border-radius: var(--ah-radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ah-ranking-list__flag--emoji {
+  font-size: 1.25em;
+  line-height: 1;
+}
+
+.ah-ranking-list__flag--img .fi {
+  width: 24px;
+  height: 16px;
+  border-radius: 2px;
+  display: block;
+}
+
+/* ============================================================================
+    主内容区
+    ============================================================================ */
+
+.ah-ranking-list__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ah-ranking-list__primary {
+  display: block;
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-ranking-list-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: var(--ah-font-size-base);
+  line-height: 1.4;
+}
+
+.ah-ranking-list__secondary {
+  display: block;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-ranking-list-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* ============================================================================
+    数值区域
+    ============================================================================ */
+
+.ah-ranking-list__values {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  flex-shrink: 0;
+  min-width: 50px;
+}
+
+.ah-ranking-list__value {
+  font-weight: 600;
+  color: var(--ah-ranking-list-text);
+  font-size: var(--ah-font-size-lg);
+}
+
+.ah-ranking-list__sub-value {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-ranking-list-text-secondary);
+  margin-top: 2px;
+}
+
+/* ============================================================================
+    标签样式
+    ============================================================================ */
+
+.ah-ranking-list__tag {
+  padding: 4px 10px;
+  border-radius: var(--ah-radius-md);
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+  white-space: nowrap;
+}
+
+.ah-ranking-list__tag--success {
+  background: oklch(from var(--ah-color-success) l c h / 0.12);
+  color: var(--ah-color-success);
+}
+
+.ah-ranking-list__tag--warning {
+  background: oklch(from var(--ah-color-warning) l c h / 0.12);
+  color: var(--ah-color-warning);
+}
+
+.ah-ranking-list__tag--error {
+  background: oklch(from var(--ah-color-error) l c h / 0.12);
+  color: var(--ah-color-error);
+}
+
+.ah-ranking-list__tag--info {
+  background: oklch(from var(--ah-color-info) l c h / 0.12);
+  color: var(--ah-color-info);
+}
+
+/* ============================================================================
+   禁用状态
+   ============================================================================ */
+
+.ah-ranking-list--disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-ranking-list--disabled .ah-ranking-list__item:hover {
+  background: transparent;
+}

@@ -1,0 +1,61 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   卡片 (Card)
+   用于展示内容的容器组件，包含头部、主体和底部区域
+   ============================================================================ */
+
+/* ---- 卡片容器 ----
+   组件 token `--ah-card-bg`：卡片面色，默认跟随纸面色。
+   ⚠ 独立出来是因为「卡片面 == 输入框面」并非普适：有的配色里卡片是**另一层**
+   （如 island 的沙色卡片坐在象牙面板上），共用一个 --ah-color-bg-paper 时
+   卡片会与面板同色、失去层次，而给卡片补阴影又不是那套设计的做法。 */
+
+.ah-card {
+  overflow: hidden;
+  background-color: var(--ah-card-bg, var(--ah-color-bg-paper));
+  border-radius: var(--ah-radius-lg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  box-shadow: var(--ah-shadow-sm);
+  transition: box-shadow var(--ah-transition-normal),
+              transform var(--ah-transition-normal),
+              border-color var(--ah-transition-normal);
+}
+
+/* 可悬停卡片（加 .ah-card-hover 触发微抬升 + 加深投影）*/
+.ah-card-hover:hover {
+  box-shadow: var(--ah-shadow-md);
+  border-color: var(--ah-color-border-subtle);
+  transform: translateY(-2px);
+}
+
+/* ---- 卡片头部 ---- */
+
+.ah-card-header {
+  padding: var(--ah-spacing-md) var(--ah-spacing-lg);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border-subtle);
+}
+
+/* ---- 卡片标题 ---- */
+
+.ah-card-title {
+  margin: 0;
+  font-size: var(--ah-font-size-lg);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text);
+}
+
+/* ---- 卡片主体 ---- */
+
+.ah-card-body {
+  padding: var(--ah-spacing-md) var(--ah-spacing-lg);
+}
+
+/* ---- 卡片底部 ---- */
+
+.ah-card-footer {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-lg);
+  background-color: var(--ah-color-bg-subtle);
+  border-top: var(--ah-border-width) solid var(--ah-color-border-subtle);
+}

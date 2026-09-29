@@ -1,0 +1,39 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   排版 · Grotesk（几何无衬线）—— data-typography="grotesk"
+
+   四正交轴之「排版」：只覆盖字体族。取自 phoqus.app 的 --font-sans
+   （实测 `"Space Grotesk", sans-serif`）—— 那种紧排、方肩、单层 a 的
+   几何无衬线，是那套沙纸风格里除虚线之外最强的辨识点。
+
+   ⚠ Space Grotesk 与 Nunito 一样**不由本库分发**：字体文件得由页面自己
+     加载（Google Fonts 或自托管 woff2 皆可），本文件只声明族名与回退栈。
+     没加载时会落到回退栈的第一个可用项，版式仍然成立、只是少了那股方肩。
+
+         <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
+               rel="stylesheet">
+
+   回退栈的挑法：先找同类的几何/中性无衬线（Space Grotesk → Chakra Petch 这
+   一挂在多数系统上都没有，所以直接跳到系统栈），再退到 ui-sans-serif。
+   等宽族（--ah-font-mono）不动 —— 参考站的代码块用的就是系统 ui-monospace，
+   与 sigil 默认的 JetBrains Mono 栈是同一类东西。
+
+   与任意 data-theme / data-palette / data-skin 正交组合；要完整复刻参考站，
+   叠 data-palette="phoqus" + data-skin="phoqus"。
+   ============================================================================ */
+
+
+/* ⚠ P14.5：与 sigil.css 同处 `@layer components.ah`。
+   本文件是独立编译的入口（不经 lib.css），所以在这里自己声明层。
+   同层 + 在 sigil.css 之后加载 ⇒ 正确覆盖 baked 进去的默认排版；
+   若不声明层则会变成「无层」而**永远**赢过 sigil.css，那样下游就再也压不住它了。 */
+
+@layer components.ah {
+  [data-typography="grotesk"] {
+    --ah-font-family: "Space Grotesk", "Grotesk", ui-sans-serif, system-ui,
+      "Segoe UI", Roboto, "Helvetica Neue", sans-serif,
+      "Apple Color Emoji", "Segoe UI Emoji";
+  }
+}

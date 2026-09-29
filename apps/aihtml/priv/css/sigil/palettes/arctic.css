@@ -1,0 +1,65 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Arctic（冰蓝 + 靛紫）—— data-palette="arctic"
+   只覆盖品牌强调色；中性层归 data-theme，字体归 data-typography。
+   ============================================================================ */
+
+
+/* ⚠ P14.5：与 sigil.css 同处 `@layer components.ah`。
+   本文件是独立编译的入口（不经 lib.css），所以在这里自己声明层。
+   同层 + 在 sigil.css 之后加载 ⇒ 正确覆盖 baked 进去的默认配色；
+   若不声明层则会变成「无层」而**永远**赢过 sigil.css，那样下游就再也压不住它了。 */
+
+@layer components.ah {
+  [data-palette="arctic"] {
+    /* ---- 主色调 (冰蓝) ---- */
+    --ah-color-primary-lighter: #CEE7E8;
+    --ah-color-primary-light: #1A8896;
+    --ah-color-primary: #017B8B;
+    --ah-color-primary-dark: #016F7D;
+    --ah-color-primary-darker: #00252A;
+    --ah-color-primary-contrast: #E0DCEF;
+
+    /* ---- 次要色调 (靛紫) ---- */
+    --ah-color-secondary-lighter: #E0DCEF;
+    --ah-color-secondary-light: #8E86CA;
+    --ah-color-secondary: #5E53B3;
+    --ah-color-secondary-dark: #423A7E;
+    --ah-color-secondary-darker: #1C1936;
+    --ah-color-secondary-contrast: #E0DCEF;
+
+    /* ---- 信息色 ---- */
+    --ah-color-info-lighter: #CEE0ED;
+    --ah-color-info-light: #65A0C5;
+    --ah-color-info: #2377AD;
+    --ah-color-info-dark: #195479;
+    --ah-color-info-darker: #0B2434;
+    --ah-color-info-contrast: #CEE0ED;
+
+    /* ---- 成功色 ---- */
+    --ah-color-success-lighter: #D7E9E0;
+    --ah-color-success-light: #43C87E;
+    --ah-color-success: #2DA262;
+    --ah-color-success-dark: #0D5B30;
+    --ah-color-success-darker: #052715;
+    --ah-color-success-contrast: #D7E9E0;
+
+    /* ---- 警告色 ---- */
+    --ah-color-warning-lighter: #EBE4D6;
+    --ah-color-warning-light: #9F7834;
+    --ah-color-warning: #95691E;
+    --ah-color-warning-dark: #694A15;
+    --ah-color-warning-darker: #2D2009;
+    --ah-color-warning-contrast: #EBE4D6;
+
+    /* ---- 错误色 ---- */
+    --ah-color-error-lighter: #F0D0D0;
+    --ah-color-error-light: #D67E7E;
+    --ah-color-error: #C44747;
+    --ah-color-error-dark: #B14040;
+    --ah-color-error-darker: #3B1515;
+    --ah-color-error-contrast: #F0D0D0;
+  }
+}

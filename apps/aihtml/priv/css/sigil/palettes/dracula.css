@@ -1,0 +1,66 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Dracula（紫罗兰 + 粉红）—— data-palette="dracula"
+   只覆盖品牌强调色；中性层归 data-theme（推荐配 dark），字体归 data-typography。
+   强调色为暗底优化值，配 data-theme="dark" 观感最佳。
+   ============================================================================ */
+
+
+/* ⚠ P14.5：与 sigil.css 同处 `@layer components.ah`。
+   本文件是独立编译的入口（不经 lib.css），所以在这里自己声明层。
+   同层 + 在 sigil.css 之后加载 ⇒ 正确覆盖 baked 进去的默认配色；
+   若不声明层则会变成「无层」而**永远**赢过 sigil.css，那样下游就再也压不住它了。 */
+
+@layer components.ah {
+  [data-palette="dracula"] {
+    /* ---- 主色调 (紫罗兰) ---- */
+    --ah-color-primary-lighter: #342252;
+    --ah-color-primary-light: #6E4AA8;
+    --ah-color-primary: #AB7EF2;
+    --ah-color-primary-dark: #BB98F5;
+    --ah-color-primary-darker: #DECDFA;
+    --ah-color-primary-contrast: #342252;
+
+    /* ---- 次要色调 (粉红) ---- */
+    --ah-color-secondary-lighter: #52223D;
+    --ah-color-secondary-light: #A84A7F;
+    --ah-color-secondary: #F27EC0;
+    --ah-color-secondary-dark: #F598CC;
+    --ah-color-secondary-darker: #FACDE6;
+    --ah-color-secondary-contrast: #52223D;
+
+    /* ---- 信息色 ---- */
+    --ah-color-info-lighter: #224952;
+    --ah-color-info-light: #4A97A8;
+    --ah-color-info: #7EDDF2;
+    --ah-color-info-dark: #98E4F5;
+    --ah-color-info-darker: #B5E9F5;
+    --ah-color-info-contrast: #224952;
+
+    /* ---- 成功色 ---- */
+    --ah-color-success-lighter: #22522D;
+    --ah-color-success-light: #4AA860;
+    --ah-color-success: #7EF299;
+    --ah-color-success-dark: #98F5AD;
+    --ah-color-success-darker: #B5F5C4;
+    --ah-color-success-contrast: #22522D;
+
+    /* ---- 警告色 ---- */
+    --ah-color-warning-lighter: #523A22;
+    --ah-color-warning-light: #8A5F34;
+    --ah-color-warning: #F2B87E;
+    --ah-color-warning-dark: #F5C698;
+    --ah-color-warning-darker: #F5D5B5;
+    --ah-color-warning-contrast: #523A22;
+
+    /* ---- 错误色 ---- */
+    --ah-color-error-lighter: #522222;
+    --ah-color-error-light: #D15E5E;
+    --ah-color-error: #F27E7E;
+    --ah-color-error-dark: #F59898;
+    --ah-color-error-darker: #F5B5B5;
+    --ah-color-error-contrast: #522222;
+  }
+}

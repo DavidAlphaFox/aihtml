@@ -1,0 +1,173 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   设计令牌 (Design Tokens)
+   定义 Sigil 组件库的全局 CSS 变量，包括颜色、间距、圆角、字体、阴影、过渡等。
+
+   颜色令牌通过 --ah-color-* 桥接到 Tailwind --color-* 变量。
+   非颜色令牌（间距、圆角、字体、阴影、过渡）在此直接定义。
+   用户可以通过重新定义 --ah-* 变量来覆盖默认值，无需修改 Tailwind。
+   ============================================================================ */
+
+:root {
+  /* ---- 颜色：桥接到 Tailwind 主题变量 ---- */
+
+  /* 主色调 */
+  --ah-color-primary-lighter: var(--color-primary-lighter);
+  --ah-color-primary-light: var(--color-primary-light);
+  --ah-color-primary: var(--color-primary);
+  --ah-color-primary-dark: var(--color-primary-dark);
+  --ah-color-primary-darker: var(--color-primary-darker);
+  --ah-color-primary-contrast: var(--color-primary-contrast);
+
+  /* 次要色调 */
+  --ah-color-secondary-lighter: var(--color-secondary-lighter);
+  --ah-color-secondary-light: var(--color-secondary-light);
+  --ah-color-secondary: var(--color-secondary);
+  --ah-color-secondary-dark: var(--color-secondary-dark);
+  --ah-color-secondary-darker: var(--color-secondary-darker);
+  --ah-color-secondary-contrast: var(--color-secondary-contrast);
+
+  /* 信息色 */
+  --ah-color-info-lighter: var(--color-info-lighter);
+  --ah-color-info-light: var(--color-info-light);
+  --ah-color-info: var(--color-info);
+  --ah-color-info-dark: var(--color-info-dark);
+  --ah-color-info-darker: var(--color-info-darker);
+  --ah-color-info-contrast: var(--color-info-contrast);
+
+  /* 成功色 */
+  --ah-color-success-lighter: var(--color-success-lighter);
+  --ah-color-success-light: var(--color-success-light);
+  --ah-color-success: var(--color-success);
+  --ah-color-success-dark: var(--color-success-dark);
+  --ah-color-success-darker: var(--color-success-darker);
+  --ah-color-success-contrast: var(--color-success-contrast);
+
+  /* 警告色 */
+  --ah-color-warning-lighter: var(--color-warning-lighter);
+  --ah-color-warning-light: var(--color-warning-light);
+  --ah-color-warning: var(--color-warning);
+  --ah-color-warning-dark: var(--color-warning-dark);
+  --ah-color-warning-darker: var(--color-warning-darker);
+  --ah-color-warning-contrast: var(--color-warning-contrast);
+
+  /* 错误色 */
+  --ah-color-error-lighter: var(--color-error-lighter);
+  --ah-color-error-light: var(--color-error-light);
+  --ah-color-error: var(--color-error);
+  --ah-color-error-dark: var(--color-error-dark);
+  --ah-color-error-darker: var(--color-error-darker);
+  --ah-color-error-contrast: var(--color-error-contrast);
+
+  /* 通用色 */
+  --ah-color-common-black: var(--color-common-black);
+  --ah-color-common-white: var(--color-common-white);
+
+  /* 别名/派生色（无 var 引用的字面量） */
+  --ah-color-bg-hover: rgba(145, 158, 171, 0.08);
+  --ah-color-bg-overlay: rgba(145, 158, 171, 0.5);
+
+  /* 原生控件强调色：跟随当前 data-palette 主色（属基座，非外观轴）。
+     color-scheme 由外观轴 [data-theme] 决定（见 appearance/light.css、dark.css）。 */
+  accent-color: var(--ah-color-primary);
+
+  /* 注：灰度色阶（--ah-color-grey-*）与阴影（--ah-shadow-*）属「外观」轴，
+     已移至 appearance/light.css 与 appearance/dark.css，随 data-theme 明/暗切换。 */
+
+  /* ---- 间距（基准 4px）---- */
+  --ah-spacing-xs: 0.25rem;   /* 4px */
+  --ah-spacing-sm: 0.5rem;    /* 8px */
+  --ah-spacing-md: 1rem;      /* 16px */
+  --ah-spacing-lg: 1.5rem;    /* 24px */
+  --ah-spacing-xl: 2rem;      /* 32px */
+
+  /* ---- 圆角 ---- */
+  --ah-radius-sm: 0.25rem;    /* 4px */
+  --ah-radius-md: 0.5rem;     /* 8px */
+  --ah-radius-lg: 0.75rem;    /* 12px */
+  --ah-radius-full: 9999px;   /* 完全圆角 */
+
+  /* ---- 描边宽度（P15.4a）────────────────────────────────────────────
+     ⚠ **两个 token 不是粗细两档，是两种语义**，混用会让皮肤出错：
+
+       --ah-border-width    控件外壳的边 —— 按钮 / 卡片 / 输入框 / 弹层…
+                               **外形轴可以翻**（brutal 翻到 2px）
+       --ah-hairline-width  **布局由 JS 按像素算**的组件里的边，
+                               **任何外形轴都不许翻**
+
+     ⭐ 判据是「这个组件的布局是不是 JS 算出来的」，**不是**「这条边会不会累积」。
+     网格 / 甘特 / 日程 / 白板自己测容器高、行高、视口偏移，它们 chrome 里
+     **任何一条**边变粗都会打乱那套算术 —— 所以连这些组件里的普通按钮和弹层
+     也归 hairline。这条是从 skins/brutal.css 的「墨色+加宽」/「只上色」两个桶
+     反推出来的（那份清单是当初逐类校订过的答案），不是拍脑袋。
+
+     具体名单：datagrid/** · scheduler/** · datatable · treegrid · pivotgrid ·
+     gantt · swimlane · calendar · drawn · docking · dock_layout · tile_layout ·
+     relation_graph · timeline · range_selector · datagrid_charting ·
+     heatmap_calendar —— 这些文件里的边一律 hairline，其余一律控件外壳。
+
+     ⚠ 非 1px 的边（2px 强调框 / 3px 语义色左边条 / 选中下划线）**不走这两个 token**：
+     它们是「组件在表达状态」不是「默认外壳」，保持字面量。
+
+     两个默认值都是 1px，所以不引入任何皮肤时全库逐像素不变。 */
+  --ah-border-width: 1px;
+  --ah-hairline-width: 1px;
+
+  /* ---- 遮罩（scrim）────────────────────────────────────────────────────
+     ⭐ [2026-08-31] 四轴审计的产物：库里原有 **16 处手写遮罩**、12 种不同透明度
+     （`rgba(0,0,0,.3)` / `.35` / `.38` / `.4` / `.5` / `.6` / `rgb(15 23 42/45%)`…），
+     每一处都不跟任何一根轴走 —— 暗色下与明色下压出来的是同一层黑。
+     而 `--ah-color-bg-overlay` 这个 token **早就有、却一处都没用**。
+
+     现在收成「一个颜色 + 两档不透明度」：
+       模态遮罩（对话框 / 抽屉 / 弹层 / 侧边栏 / 断线遮罩）  38%  ← 原多数派
+       阻断式遮罩（loader 的 busy 层，要盖住底下的内容）      60%
+     ⚠ 归并的是**概念重复**，不是「把分歧一刀切」：0.3–0.5 那一档全是同一件事
+     （对话框背后压暗一层），差值肉眼分辨不出；loader 那 0.6 是另一件事
+     （告诉你「现在什么都点不了」），所以单独留一档。
+
+     ⚠ 颜色**不在这里预合成**（`color-mix` 写进 :root 会在 :root 上就求值定死，
+     作用域局部主题再改 scrim 就劫不到了，同 primitives/state.css 顶部那条）——
+     组件侧写 `color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity), transparent)`。 */
+  --ah-scrim-opacity: 38%;
+  --ah-scrim-opacity-strong: 60%;
+
+  /* ---- 字体 ---- */
+  --ah-font-family: "Nunito", ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+  --ah-font-mono: "JetBrains Mono", "Fira Code", "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  --ah-font-size-xs: 0.75rem;     /* 12px */
+  --ah-font-size-sm: 0.875rem;    /* 14px */
+  --ah-font-size-base: 1rem;      /* 16px */
+  --ah-font-size-lg: 1.125rem;    /* 18px */
+  --ah-font-size-xl: 1.25rem;     /* 20px */
+  --ah-font-size-2xl: 1.5rem;     /* 24px */
+  --ah-font-size-3xl: 1.875rem;   /* 30px */
+  --ah-font-weight-normal: 400;
+  --ah-font-weight-medium: 500;
+  --ah-font-weight-semibold: 600;
+  --ah-font-weight-bold: 700;
+
+  /* ---- 过渡 ---- */
+  --ah-transition-fast: 0.15s ease-in-out;
+  --ah-transition-normal: 0.25s ease-in-out;
+}
+
+/* ============================================================================
+   引用其他变量的派生别名。
+   自定义属性中的 var() 在声明所在元素上求值后再被继承，
+   若只声明在 :root 会固定捕获默认值。
+   因此同时声明在三轴作用域（[data-theme] / [data-palette] 可加在 <html>
+   或任意祖先上），使求值发生在轴覆盖生效的元素上——例如局部作用域切换
+   palette 后 danger 随 error 重求值、切换 appearance 后 text-muted 随之更新。
+   ============================================================================ */
+:root,
+[data-theme],
+[data-palette] {
+  --ah-color-danger: var(--ah-color-error);
+  --ah-color-primary-lightest: var(--ah-color-primary-lighter);
+  --ah-color-text-muted: var(--ah-color-text-secondary);
+  /* 遮罩底色。默认纯黑；外观轴（或下游）可整体换掉，全库 14 处遮罩跟着变。 */
+  --ah-color-scrim: var(--ah-color-common-black);
+}

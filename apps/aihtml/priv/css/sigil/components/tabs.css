@@ -1,0 +1,172 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   选项卡 (Tabs)
+   用于在多个标签页之间切换内容的组件，支持多种布局方向
+   ============================================================================ */
+
+/* ---- 选项卡容器 ---- */
+
+.ah-tabs {
+  display: flex;
+  width: 100%;
+}
+
+/* ---- 顶部布局 ---- */
+
+.ah-tabs-top {
+  flex-direction: column;
+}
+
+/* ---- 底部布局 ---- */
+
+.ah-tabs-bottom {
+  flex-direction: column-reverse;
+}
+
+/* ---- 左侧布局 ---- */
+
+.ah-tabs-left {
+  flex-direction: row;
+}
+
+/* ---- 右侧布局 ---- */
+
+.ah-tabs-right {
+  flex-direction: row-reverse;
+}
+
+/* ---- 选项卡头部 ---- */
+
+.ah-tabs-header {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.ah-tabs-top > .ah-tabs-header,
+.ah-tabs-bottom > .ah-tabs-header {
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  flex-direction: row;
+}
+
+.ah-tabs-bottom > .ah-tabs-header {
+  border-bottom: none;
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-tabs-left > .ah-tabs-header {
+  flex-direction: column;
+  border-bottom: none;
+  border-right: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-tabs-right > .ah-tabs-header {
+  flex-direction: column;
+  border-bottom: none;
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+/* ---- 选项卡项 ---- */
+
+.ah-tabs-item {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color var(--ah-transition-fast),
+              border-color var(--ah-transition-fast);
+  white-space: nowrap;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  user-select: none;
+}
+
+.ah-tabs-item:hover {
+  color: var(--ah-color-primary);
+  border-bottom-color: var(--ah-color-primary-light);
+}
+
+.ah-tabs-item-selected {
+  color: var(--ah-color-primary);
+  border-bottom-color: var(--ah-color-primary);
+  font-weight: var(--ah-font-weight-medium);
+}
+
+.ah-tabs-item-disabled {
+  color: var(--ah-color-text-disabled);
+  pointer-events: none;
+}
+
+/* ---- 左/右侧选项卡使用边框 ---- */
+
+.ah-tabs-left > .ah-tabs-header .ah-tabs-item {
+  border-bottom: none;
+  border-right: 2px solid transparent;
+}
+
+.ah-tabs-left > .ah-tabs-header .ah-tabs-item:hover {
+  border-right-color: var(--ah-color-primary-light);
+}
+
+.ah-tabs-left > .ah-tabs-header .ah-tabs-item-selected {
+  border-right-color: var(--ah-color-primary);
+}
+
+.ah-tabs-right > .ah-tabs-header .ah-tabs-item {
+  border-bottom: none;
+  border-left: 2px solid transparent;
+}
+
+.ah-tabs-right > .ah-tabs-header .ah-tabs-item:hover {
+  border-left-color: var(--ah-color-primary-light);
+}
+
+.ah-tabs-right > .ah-tabs-header .ah-tabs-item-selected {
+  border-left-color: var(--ah-color-primary);
+}
+
+/* ---- 内容区域 ---- */
+
+.ah-tabs-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.ah-tabs-panel {
+  padding: var(--ah-spacing-md);
+  position: relative;
+  overflow: hidden;
+}
+
+.ah-tabs-panel-active {
+  display: block;
+}
+
+/* ---- 滚动按钮 ---- */
+
+.ah-tabs-scroll-btn {
+  flex: 0 0 auto;
+  cursor: pointer;
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+  display: flex;
+  align-items: center;
+  transition: background-color var(--ah-transition-fast);
+  user-select: none;
+}
+
+.ah-tabs-scroll-btn:hover {
+  background: var(--ah-color-grey-200);
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-tabs-disabled {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}

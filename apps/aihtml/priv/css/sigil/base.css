@@ -1,0 +1,20 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   基础样式
+   页面全局样式，包括字体、颜色、背景等
+   ============================================================================ */
+
+body {
+  font-family: var(--ah-font-family);
+  font-size: var(--ah-font-size-base);
+  color: var(--ah-color-text);
+  background-color: var(--ah-color-bg);
+  @apply antialiased m-0;
+}
+
+/* 文本选区跟随主题主色（暗色主题下避免浏览器默认蓝底） */
+::selection {
+  background-color: color-mix(in srgb, var(--ah-color-primary) 28%, transparent);
+}

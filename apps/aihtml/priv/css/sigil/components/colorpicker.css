@@ -1,0 +1,248 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   颜色选择器 (ColorPicker)
+   HSV 颜色选择器，包含 SV 面板、色相条、预览块和输入框
+   ============================================================================ */
+
+/* ---- 根容器 ---- */
+.ah-colorpicker {
+  display: inline-block;
+  box-sizing: border-box;
+  padding: var(--ah-spacing-sm);
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: var(--ah-font-family);
+  font-size: var(--ah-font-size-sm);
+  outline: none;
+  width: min(260px, calc(100vw - 32px));
+}
+
+.ah-colorpicker:focus-visible {
+  box-shadow: 0 0 0 2px var(--ah-color-primary-lighter);
+}
+
+/* ---- 禁用态 ---- */
+.ah-colorpicker-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 主体容器：面板 + 色相条 ---- */
+.ah-colorpicker-body {
+  display: flex;
+  gap: var(--ah-spacing-sm);
+  margin-bottom: var(--ah-spacing-sm);
+}
+
+/* ---- SV 色彩面板 ---- */
+.ah-colorpicker-map {
+  position: relative;
+  flex: 1;
+  height: 160px;
+  border-radius: var(--ah-radius-sm);
+  overflow: hidden;
+  cursor: crosshair;
+  /* 基础色 — 由 JS 动态设置 background-color */
+  background: hsl(0, 100%, 50%);
+  /* 白→透明渐变（左到右） */
+  background-image: linear-gradient(to right, #fff, transparent);
+}
+
+/* 黑色渐变叠层（上到下） */
+.ah-colorpicker-map-overlay {
+  position: absolute;
+  inset: 0;
+  /* ⚠ 这三处颜色（纯红色相基底 / 到黑的明度渐变 / 白与深灰的取色环）
+     **故意不跟任何一根轴走**：它们画的是 HSV 色彩空间本身，不是界面配色。
+     跟着主题变的取色器就不是取色器了。四轴审计时不要当漏网之鱼来报。 */
+  background: linear-gradient(to bottom, transparent, #000);
+  pointer-events: none;
+}
+
+/* 面板指针 */
+.ah-colorpicker-map-pointer {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: var(--ah-radius-full);
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 1;
+  top: 0;
+  left: 0;
+}
+
+/* 暗色指针（亮色背景用） */
+.ah-colorpicker-map-pointer-dark {
+  border-color: #333;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+}
+
+/* 亮色指针（暗色背景用） */
+.ah-colorpicker-map-pointer-light {
+  border-color: #fff;
+}
+
+/* ---- 色相条 ---- */
+.ah-colorpicker-bar {
+  position: relative;
+  width: 20px;
+  height: 160px;
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  background: linear-gradient(
+    to bottom,
+    #f00 0%,
+    #ff0 17%,
+    #0f0 33%,
+    #0ff 50%,
+    #00f 67%,
+    #f0f 83%,
+    #f00 100%
+  );
+}
+
+/* 色相条指针 */
+.ah-colorpicker-bar-pointer {
+  position: absolute;
+  left: -2px;
+  right: -2px;
+  height: 4px;
+  background: #fff;
+  border: var(--ah-border-width) solid rgba(0, 0, 0, 0.3);
+  border-radius: 2px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  box-shadow: var(--ah-shadow-sm);
+  top: 0;
+}
+
+/* ---- 输入区容器 ---- */
+.ah-colorpicker-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--ah-spacing-xs);
+}
+
+/* Hex 输入行 */
+.ah-colorpicker-hex {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+}
+
+/* 预览块 */
+.ah-colorpicker-preview {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ah-radius-sm);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  flex-shrink: 0;
+}
+
+/* # 号 */
+.ah-colorpicker-hash {
+  font-family: var(--ah-font-mono);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  flex-shrink: 0;
+}
+
+/* Hex 输入框 */
+.ah-colorpicker-hex-input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 0 var(--ah-spacing-xs);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  font-family: var(--ah-font-mono);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.ah-colorpicker-hex-input:focus {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 1px var(--ah-color-primary-lighter);
+}
+
+/* RGB 输入行 */
+.ah-colorpicker-rgb {
+  display: flex;
+  gap: var(--ah-spacing-xs);
+}
+
+/* RGB 标签 */
+.ah-colorpicker-label {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+}
+
+/* 单个数字输入框 */
+.ah-colorpicker-r-input,
+.ah-colorpicker-g-input,
+.ah-colorpicker-b-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  height: 28px;
+  padding: 0 var(--ah-spacing-xs);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  font-family: var(--ah-font-mono);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  box-sizing: border-box;
+  /* 隐藏 number 输入框的上下箭头 */
+  -moz-appearance: textfield;
+}
+
+.ah-colorpicker-r-input::-webkit-inner-spin-button,
+.ah-colorpicker-g-input::-webkit-inner-spin-button,
+.ah-colorpicker-b-input::-webkit-inner-spin-button,
+.ah-colorpicker-r-input::-webkit-outer-spin-button,
+.ah-colorpicker-g-input::-webkit-outer-spin-button,
+.ah-colorpicker-b-input::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.ah-colorpicker-r-input:focus,
+.ah-colorpicker-g-input:focus,
+.ah-colorpicker-b-input:focus {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 1px var(--ah-color-primary-lighter);
+}
+
+/* 透明色链接 */
+.ah-colorpicker-transparent {
+  text-align: center;
+  padding-top: var(--ah-spacing-xs);
+}
+
+.ah-colorpicker-transparent a {
+  color: var(--ah-color-primary);
+  font-size: var(--ah-font-size-xs);
+  text-decoration: none;
+}
+
+.ah-colorpicker-transparent a:hover {
+  text-decoration: underline;
+}

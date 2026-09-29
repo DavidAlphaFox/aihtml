@@ -1,0 +1,313 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================
+   ComboBox — 下拉选择框组件
+   带搜索功能的下拉选择器，支持多选、复选框等特性
+   ============================================================ */
+
+/* ---- 主容器 ---- */
+.ah-combobox {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  font-family: var(--ah-font-family);
+  cursor: pointer;
+}
+
+/* ---- 输入区域 ---- */
+.ah-combobox-input-area {
+  display: flex;
+  align-items: center;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+  min-height: 36px;
+  padding: 0;
+  cursor: pointer;
+}
+
+.ah-combobox:hover .ah-combobox-input-area {
+  border-color: var(--ah-color-grey-400);
+}
+
+.ah-combobox-focused .ah-combobox-input-area {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-combobox-disabled .ah-combobox-input-area {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+  background: var(--ah-color-bg-subtle);
+}
+
+/* ---- 输入框 ---- */
+.ah-combobox-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+  font-family: inherit;
+  color: var(--ah-color-text);
+  background: transparent;
+  cursor: pointer;
+  min-width: 60px;
+}
+
+/* 多选模式：输入框在标签容器内 */
+.ah-combobox-tags .ah-combobox-input {
+  padding: 2px 4px;
+  min-width: 40px;
+}
+
+.ah-combobox-input::placeholder {
+  color: var(--ah-color-text-disabled);
+}
+
+.ah-combobox-input:focus {
+  cursor: text;
+}
+
+.ah-combobox-readonly .ah-combobox-input {
+  cursor: pointer;
+}
+
+/* ---- 下拉箭头 ---- */
+.ah-combobox-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-height: 34px;
+  align-self: stretch;
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+  background: var(--ah-color-grey-50);
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ah-combobox-arrow:hover {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-combobox-arrow-icon {
+  font-size: 10px;
+  transition: transform var(--ah-transition-fast);
+}
+
+.ah-combobox-open .ah-combobox-arrow-icon {
+  transform: rotate(180deg);
+}
+
+.ah-combobox-disabled .ah-combobox-arrow {
+  background: var(--ah-color-bg-subtle);
+}
+
+/* ---- 已选项（多选模式） ---- */
+.ah-combobox-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px var(--ah-spacing-sm);
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+}
+
+.ah-combobox-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--ah-color-grey-100);
+  border-radius: var(--silogl-radius-sm);
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text);
+  max-width: 150px;
+}
+
+.ah-combobox-tag-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-combobox-tag-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--ah-color-grey-300);
+  color: var(--ah-color-common-white);
+  font-size: 10px;
+  cursor: pointer;
+  transition: background var(--ah-transition-fast);
+  flex-shrink: 0;
+}
+
+.ah-combobox-tag-close:hover {
+  background: var(--ah-color-error);
+}
+
+/* ---- 下拉弹出层 ---- */
+.ah-combobox-popup {
+  position: absolute;
+  z-index: 1000;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-lg);
+  max-height: 240px;
+  overflow-y: auto;
+  display: none;
+  box-sizing: border-box;
+}
+
+.ah-combobox-popup-open {
+  display: block;
+}
+
+/* ---- 下拉列表 ---- */
+.ah-combobox-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--ah-spacing-xs) 0;
+}
+
+/* ---- 下拉项 ---- */
+.ah-combobox-item {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  cursor: pointer;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  transition: background-color var(--ah-transition-fast);
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-combobox-item:hover,
+.ah-combobox-item-active {
+  background-color: var(--ah-color-primary-lighter);
+}
+
+.ah-combobox-item-selected {
+  background-color: var(--ah-color-primary-lighter);
+  color: var(--ah-color-primary-dark);
+}
+
+.ah-combobox-item-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 复选框模式 ---- */
+.ah-combobox-checkbox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg-paper);
+  flex-shrink: 0;
+}
+
+.ah-combobox-checkbox-checked {
+  background: var(--ah-color-primary);
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-common-white);
+}
+
+.ah-combobox-checkbox-icon {
+  font-size: 10px;
+  font-weight: bold;
+}
+
+/* ---- 项内容 ---- */
+.ah-combobox-item-content {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ah-combobox-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-combobox-item-desc {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 分组标题 ---- */
+.ah-combobox-group-header {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-md);
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: var(--ah-color-grey-50);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+/* ---- 空状态 ---- */
+.ah-combobox-empty {
+  padding: var(--ah-spacing-lg);
+  text-align: center;
+  color: var(--ah-color-text-disabled);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* ---- 加载状态 ---- */
+.ah-combobox-loading {
+  padding: var(--ah-spacing-lg);
+  text-align: center;
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-sm);
+}
+
+/* ---- 高亮匹配 ---- */
+.ah-combobox-item b {
+  font-weight: var(--ah-font-weight-bold);
+  color: var(--ah-color-primary-dark);
+}
+
+/* ---- 无箭头变体 ---- */
+.ah-combobox-no-arrow .ah-combobox-arrow {
+  display: none;
+}
+
+.ah-combobox-no-arrow .ah-combobox-input {
+  border-radius: var(--ah-radius-md);
+}
+
+/* ---- 向上弹出 ---- */
+.ah-combobox-popup-above {
+  bottom: 100%;
+  margin-bottom: 4px;
+}
+
+.ah-combobox-popup-below {
+  top: 100%;
+  margin-top: 4px;
+}

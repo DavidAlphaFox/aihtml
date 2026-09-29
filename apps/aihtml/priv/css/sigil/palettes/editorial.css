@@ -1,0 +1,66 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Editorial（黏土橙 + 鼠尾草绿）—— data-palette="editorial"
+   只覆盖品牌强调色；中性层归 data-theme，字体（衬线）归 data-typography="serif"。
+   经典编辑配色：黏土橙 / terracotta 主色，鼠尾草绿次色。
+   ============================================================================ */
+
+
+/* ⚠ P14.5：与 sigil.css 同处 `@layer components.ah`。
+   本文件是独立编译的入口（不经 lib.css），所以在这里自己声明层。
+   同层 + 在 sigil.css 之后加载 ⇒ 正确覆盖 baked 进去的默认配色；
+   若不声明层则会变成「无层」而**永远**赢过 sigil.css，那样下游就再也压不住它了。 */
+
+@layer components.ah {
+  [data-palette="editorial"] {
+    /* ---- 主色调 (黏土橙 / Clay) ---- */
+    --ah-color-primary-lighter: #F3E3D8;
+    --ah-color-primary-light: #DB8A6A;
+    --ah-color-primary: #C15F3C;
+    --ah-color-primary-dark: #A24A2B;
+    --ah-color-primary-darker: #6E2E17;
+    --ah-color-primary-contrast: #FFFFFF;
+
+    /* ---- 次要色调 (鼠尾草绿 / Sage) ---- */
+    --ah-color-secondary-lighter: #DEE7DF;
+    --ah-color-secondary-light: #8FA894;
+    --ah-color-secondary: #556B5D;
+    --ah-color-secondary-dark: #3C4E43;
+    --ah-color-secondary-darker: #232E28;
+    --ah-color-secondary-contrast: #FFFFFF;
+
+    /* ---- 信息色 (雾青蓝) ---- */
+    --ah-color-info-lighter: #D8E4EA;
+    --ah-color-info-light: #7BA3B8;
+    --ah-color-info: #4A7A96;
+    --ah-color-info-dark: #345C74;
+    --ah-color-info-darker: #1B2F3B;
+    --ah-color-info-contrast: #FFFFFF;
+
+    /* ---- 成功色 (苔藓绿) ---- */
+    --ah-color-success-lighter: #DCE8DB;
+    --ah-color-success-light: #82AC84;
+    --ah-color-success: #5C8A5E;
+    --ah-color-success-dark: #416542;
+    --ah-color-success-darker: #243824;
+    --ah-color-success-contrast: #FFFFFF;
+
+    /* ---- 警告色 (赭黄 / Ochre) ---- */
+    --ah-color-warning-lighter: #F1E4CE;
+    --ah-color-warning-light: #D8AC6A;
+    --ah-color-warning: #C08A3C;
+    --ah-color-warning-dark: #8E6428;
+    --ah-color-warning-darker: #4E3714;
+    --ah-color-warning-contrast: #FFFFFF;
+
+    /* ---- 错误色 (砖红 / Brick) ---- */
+    --ah-color-error-lighter: #F1D8D2;
+    --ah-color-error-light: #D6897C;
+    --ah-color-error: #BC4B3C;
+    --ah-color-error-dark: #97382C;
+    --ah-color-error-darker: #521C15;
+    --ah-color-error-contrast: #FFFFFF;
+  }
+}

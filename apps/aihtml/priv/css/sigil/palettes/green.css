@@ -1,0 +1,26 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Green（翡翠绿，来自 Minimals.cc）—— data-palette="green"
+
+   三正交轴之「配色」：只覆盖品牌强调色，中性层由 data-theme 决定，
+   字体由 data-typography 决定。green 仅覆盖主色调，其余强调色沿用默认。
+   ============================================================================ */
+
+
+/* ⚠ P14.5：与 sigil.css 同处 `@layer components.ah`。
+   本文件是独立编译的入口（不经 lib.css），所以在这里自己声明层。
+   同层 + 在 sigil.css 之后加载 ⇒ 正确覆盖 baked 进去的默认配色；
+   若不声明层则会变成「无层」而**永远**赢过 sigil.css，那样下游就再也压不住它了。 */
+
+@layer components.ah {
+  [data-palette="green"] {
+    --ah-color-primary-lighter: #C8FAD6;
+    --ah-color-primary-light: #5BE49B;
+    --ah-color-primary: #00A76F;
+    --ah-color-primary-dark: #007867;
+    --ah-color-primary-darker: #004B50;
+    --ah-color-primary-contrast: #FFFFFF;
+  }
+}

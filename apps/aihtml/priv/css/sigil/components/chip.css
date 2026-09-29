@@ -1,0 +1,127 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Chip · 标签片（借鉴 happy chip.css）
+   filled / outlined / soft × 7 色矩阵；small / medium。data-* 驱动。
+   ============================================================================ */
+
+.ah-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 13px;
+  line-height: 1;
+  border-radius: var(--ah-radius-lg);
+  border: var(--ah-border-width) solid transparent;
+  white-space: nowrap;
+  user-select: none;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+.ah-chip[data-size="small"] { height: 22px; padding: 0 8px; font-size: 12px; border-radius: var(--ah-radius-lg); gap: 4px; }
+
+.ah-chip[data-clickable="true"] { cursor: pointer; }
+.ah-chip[data-disabled="true"]  { opacity: var(--ah-state-disabled-opacity); pointer-events: none; }
+
+.ah-chip__avatar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; margin-left: -4px;
+  font-size: 10px; font-weight: 600; border-radius: 50%;
+  background: var(--ah-color-bg); color: var(--ah-color-text);
+}
+.ah-chip__icon { display: inline-flex; align-items: center; }
+.ah-chip__icon svg { width: 14px; height: 14px; }
+.ah-chip__label { overflow: hidden; text-overflow: ellipsis; }
+
+.ah-chip__delete {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; margin-right: -4px; padding: 0;
+  font-size: 14px; line-height: 1; cursor: pointer;
+  border: 0; border-radius: 50%; background: transparent;
+  color: currentColor; opacity: .6;
+  transition: opacity .12s ease, background .12s ease;
+}
+.ah-chip__delete:hover { opacity: 1; background: rgb(0 0 0 / .12); }
+
+/* ============================================================================
+   配色 × 变体（P14.3b 组件 token）
+
+   改造前这里是一张 **3 变体 × 6 色 = 18 格逐格手写的矩阵**（外加 3 条无色基线，
+   共 21 条规则），每一格都在重述 background / color / border-color。
+   加第 7 个色要写 3 条，加第 4 个变体要写 6 条 —— N×M 增长。
+
+   现在拆成两根**正交**的轴，各自只设 token、不写属性：
+     · 配色轴 `[data-color]` —— 只声明「这个色系的四个可用取值」
+     · 变体轴 `[data-variant]` —— 只决定「用哪个槽」
+   21 条 → 9 条。加第 7 个色 = 1 条；加第 4 个变体 = 1 条。
+
+   ⚠ **`--ah-chip-c-ink` 单独存在，是因为 outlined 的前景色逐色不同，而这个
+     差异是真的、不是漂移**：success / warning 底色偏亮，前景取 `-dark` 才够对比度；
+     primary / secondary / error / info 本身够深，取基色即可。把它并成统一规则会
+     悄悄改掉 4 个颜色的可读性，所以保留为「每个色系自己声明的一个槽」。
+     （同 P14.2 的教训：看着像重复，实为语义分化。）
+   ============================================================================ */
+
+/* ---- 配色轴：只声明色系取值 ---- */
+.ah-chip[data-color="primary"] {
+  --ah-chip-c:         var(--ah-color-primary);
+  --ah-chip-c-on:      var(--ah-color-primary-contrast, #fff);
+  --ah-chip-c-ink:     var(--ah-color-primary);
+  --ah-chip-c-soft-bg: var(--ah-color-primary-lighter, var(--ah-color-primary-light));
+  --ah-chip-c-soft-fg: var(--ah-color-primary-dark, var(--ah-color-primary));
+}
+.ah-chip[data-color="secondary"] {
+  --ah-chip-c:         var(--ah-color-secondary);
+  --ah-chip-c-on:      var(--ah-color-secondary-contrast, #fff);
+  --ah-chip-c-ink:     var(--ah-color-secondary);
+  --ah-chip-c-soft-bg: var(--ah-color-secondary-lighter, var(--ah-color-secondary-light));
+  --ah-chip-c-soft-fg: var(--ah-color-secondary-dark, var(--ah-color-secondary));
+}
+.ah-chip[data-color="success"] {
+  --ah-chip-c:         var(--ah-color-success);
+  --ah-chip-c-on:      var(--ah-color-success-contrast, #fff);
+  --ah-chip-c-ink:     var(--ah-color-success-dark, var(--ah-color-success));
+  --ah-chip-c-soft-bg: var(--ah-color-success-lighter, var(--ah-color-success-light));
+  --ah-chip-c-soft-fg: var(--ah-color-success-dark, var(--ah-color-success));
+}
+.ah-chip[data-color="warning"] {
+  --ah-chip-c:         var(--ah-color-warning);
+  --ah-chip-c-on:      var(--ah-color-warning-contrast, #fff);
+  --ah-chip-c-ink:     var(--ah-color-warning-dark, var(--ah-color-warning));
+  --ah-chip-c-soft-bg: var(--ah-color-warning-lighter, var(--ah-color-warning-light));
+  --ah-chip-c-soft-fg: var(--ah-color-warning-dark, var(--ah-color-warning));
+}
+.ah-chip[data-color="error"] {
+  --ah-chip-c:         var(--ah-color-error);
+  --ah-chip-c-on:      var(--ah-color-error-contrast, #fff);
+  --ah-chip-c-ink:     var(--ah-color-error);
+  --ah-chip-c-soft-bg: var(--ah-color-error-lighter, var(--ah-color-error-light));
+  --ah-chip-c-soft-fg: var(--ah-color-error-dark, var(--ah-color-error));
+}
+.ah-chip[data-color="info"] {
+  --ah-chip-c:         var(--ah-color-info);
+  --ah-chip-c-on:      var(--ah-color-info-contrast, #fff);
+  --ah-chip-c-ink:     var(--ah-color-info);
+  --ah-chip-c-soft-bg: var(--ah-color-info-lighter, var(--ah-color-info-light));
+  --ah-chip-c-soft-fg: var(--ah-color-info-dark, var(--ah-color-info));
+}
+
+/* ---- 变体轴：只决定用哪个槽 ----
+   ⚠ 每个 var() 的回退值就是改造前「无 data-color 时」那条基线规则的取值，
+     所以有色/无色两种情况合成了一条规则（改造前是 1 条基线 + 6 条格子）。 */
+.ah-chip[data-variant="filled"] {
+  background: var(--ah-chip-c, var(--ah-color-bg-subtle));
+  color: var(--ah-chip-c-on, var(--ah-color-text));
+}
+.ah-chip[data-variant="outlined"] {
+  background: transparent;
+  border-color: var(--ah-chip-c, var(--ah-color-border));
+  color: var(--ah-chip-c-ink, var(--ah-color-text));
+}
+.ah-chip[data-variant="soft"] {
+  background: var(--ah-chip-c-soft-bg, var(--ah-color-bg-subtle));
+  color: var(--ah-chip-c-soft-fg, var(--ah-color-text));
+}

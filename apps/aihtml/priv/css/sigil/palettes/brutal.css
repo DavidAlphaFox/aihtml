@@ -1,0 +1,196 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Brutal（新野兽派 neubrutalism · 暖调）—— data-palette="brutal"
+
+   「胖调色板」：除 6 组强调色外，还覆盖**中性层**（灰阶 / 地色 / 纸面 / 文本 /
+   描边）。理由是这套风格的地色不是白 —— 靠「暖米地色 + 纯白面 + 纯黑描边」立
+   层次，换成库默认的冷灰地会整个塌掉。与 editorial（瘦，只换强调色）不同档。
+
+   ⚠ 本文件只管**颜色**。直角 / 2px 描边 / 硬边偏移阴影 / 按下位移那些**形状**
+     特征在第 4 轴 `data-skin="brutal"`（skins/brutal.css）。两轴正交，可各用各的：
+       - 只 palette：配色是 neo 的，组件仍是圆角柔阴影（≈「柔和版」）
+       - 只 skin：形状是 neo 的，配色沿用 default/editorial/…
+       - 两个都开：完整还原 neobrutalism
+
+   ─── 取值来源：两个上游的融合 ──────────────────────────────────────────────
+   两家在关键取值上直接冲突，各取所长（取值来自 happy 仓库 2026-08-14 的实测记录）：
+
+                    neobrutalism.dev(ekmas)   neobrutalism.com(RetroUI)   本 palette
+     地色            淡蓝 #DFE5F2              暖米 #FFF7E8                RetroUI
+     主色            周期蓝 #88AAEE            芥末黄 #FFDC58              RetroUI
+     中性            冷灰                      暖灰 #EFE7D6 / #6B6355      RetroUI
+     暗色描边        纯黑                      暖灰 #6F675A                RetroUI
+     暗色阴影色      纯黑                      #4A443C（比描边更暗）        RetroUI
+
+   暖米 + 芥末是这套风格辨识度最高的一组，故主线走 RetroUI；ekmas 的周期蓝
+   #88AAEE 不舍得丢，降为 secondary（与芥末黄正好冷暖互补）。冷调那套完整版
+   见 palettes/brutal-blue.css。
+
+   ⚠ 主色让给芥末黄之后，warning **必须**从芥末挪走，否则「主色」与「警告」同色，
+     语义当场糊掉。warning 改用 RetroUI orange 主题的橙。
+
+   实色填充上一律配黑字（-contrast: #000）—— neo 的招牌做法，对比度也更高。
+   例外只有 error：#E63946 已经够深，白字更清楚。
+
+   ⚠ **已知边界：品牌色当「文本色」用时对比度不足。** 芥末黄 #FFDC58 在白底上只有
+   约 1.5:1，薄荷青与酸橙绿同理。这不是漏改 —— 上游 neo 的设计语言里主色**只做填充**
+   （黄底黑字），文字与描边一律用黑。而本库有 59 处 `color: var(--ah-color-primary)`
+   （选中态标签页、激活的导航项、链接等），它们在本配色下会偏淡。
+   两条路只能选一条：保住招牌的亮黄填充（本文件的选择），或把 --ah-color-primary
+   指到深一档而失掉那个填充。下游若更看重可读性，覆盖一行即可：
+     [data-palette="brutal"] { --ah-color-primary: var(--ah-color-primary-darker); }
+   ============================================================================ */
+
+/* ⚠ P14.5：与 sigil.css 同处 `@layer components.ah`。
+   本文件是独立编译的入口（不经 lib.css），所以在这里自己声明层。
+   同层 + 在 sigil.css 之后加载 ⇒ 正确覆盖 baked 进去的默认配色；
+   若不声明层则会变成「无层」而**永远**赢过 sigil.css，那样下游就再也压不住它了。 */
+
+@layer components.ah {
+  [data-palette="brutal"] {
+    /* ---- 主色调（芥末黄 mustard，RetroUI --primary）----
+       ⚠ `-dark` 取上游的 `--primary-hover: #FFD12E` 而不是「再暗一档的金」：
+       sigil 用 `-dark` 当实心按钮的 hover 底色，上游那颗按钮 hover 时就是变成
+       #FFD12E（只暗一点点）。真正深的那档留给 `-darker`。 */
+    --ah-color-primary-lighter: #FFF7D9;
+    --ah-color-primary-light: #FFE784;
+    --ah-color-primary: #FFDC58;
+    --ah-color-primary-dark: #FFD12E;
+    --ah-color-primary-darker: #8E6E00;
+    --ah-color-primary-contrast: #000000;
+
+    /* ---- 次要色调（周期蓝 periwinkle #88AAEE，ekmas --main）---- */
+    --ah-color-secondary-lighter: #E2EAFB;
+    --ah-color-secondary-light: #A9C0F2;
+    --ah-color-secondary: #88AAEE;
+    --ah-color-secondary-dark: #4E76D2;
+    --ah-color-secondary-darker: #2C4581;
+    --ah-color-secondary-contrast: #000000;
+
+    /* ---- 信息色（薄荷青 mint，RetroUI chart-2 #01FFCC）---- */
+    --ah-color-info-lighter: #C7FFF3;
+    --ah-color-info-light: #4DFFD9;
+    --ah-color-info: #01FFCC;
+    --ah-color-info-dark: #00AE8C;
+    --ah-color-info-darker: #006E59;
+    --ah-color-info-contrast: #000000;
+
+    /* ---- 成功色（酸橙绿 lime）---- */
+    --ah-color-success-lighter: #E8F9CB;
+    --ah-color-success-light: #BBEA6B;
+    --ah-color-success: #A3E635;
+    --ah-color-success-dark: #69A013;
+    --ah-color-success-darker: #426215;
+    --ah-color-success-contrast: #000000;
+
+    /* ---- 警告色（橙 orange，RetroUI orange 主题）----
+       ⚠ 不能用芥末黄 —— 那是本调色板的 primary。 */
+    --ah-color-warning-lighter: #FFE6CC;
+    --ah-color-warning-light: #FFA95F;
+    --ah-color-warning: #FF8011;
+    --ah-color-warning-dark: #C85D00;
+    --ah-color-warning-darker: #7C3A02;
+    --ah-color-warning-contrast: #000000;
+
+    /* ---- 错误色（番茄红，RetroUI --destructive #E63946）----
+       唯一用白字的一组 —— #E63946 已经够深，黑字反而糊。 */
+    --ah-color-error-lighter: #FDE0E3;
+    --ah-color-error-light: #F79AA3;
+    --ah-color-error: #E63946;
+    --ah-color-error-dark: #CC2634;
+    --ah-color-error-darker: #8A1D27;
+    --ah-color-error-contrast: #FFFFFF;
+
+    /* ── 胖的那部分（一）：暖灰阶 ────────────────────────────────────
+       压过 appearance/light.css 的冷灰（那套桥接 Tailwind 原色）。
+       语义表面在下面显式给，不靠灰阶推导 —— 因为 brutal 的描边是纯黑，
+       与「border = grey-300」的默认推导法不是一回事。 */
+    --ah-color-grey-50: #FFFDF7;
+    --ah-color-grey-100: #FFF7E8;
+    --ah-color-grey-200: #F7EFDE;
+    --ah-color-grey-300: #EFE7D6;
+    --ah-color-grey-400: #D8CDB6;
+    --ah-color-grey-500: #A69C88;
+    --ah-color-grey-600: #6B6355;
+    --ah-color-grey-700: #4A443C;
+    --ah-color-grey-800: #262320;
+    --ah-color-grey-900: #1A1815;
+
+    /* ── 胖的那部分（二）：语义表面 ──────────────────────────────────
+       底（暖米）与面（纯白）必须有明度差 —— neo 靠这个差 + 黑描边立层次，
+       两者都设白会让卡片彻底消失在背景里。取值来自 RetroUI：
+         --background #FFF7E8 / --card #FFF / --muted #EFE7D6 */
+    --ah-color-bg: #FFF7E8;
+    --ah-color-bg-paper: #FFFFFF;
+    --ah-color-bg-subtle: #EFE7D6;
+
+    --ah-color-text: #000000;
+    --ah-color-text-secondary: #6B6355;
+    --ah-color-text-disabled: #A69C88;
+
+    /* 纯黑描边。1px 时也成立；要 2px 硬描边请叠 data-skin="brutal"。
+       border-subtle 是分隔线/次级边框，全黑会把表格与列表刷成栅栏，故留暖灰。 */
+    --ah-color-border: #000000;
+    --ah-color-border-subtle: #C9BFA8;
+
+    /* 列表 hover / 选中项的底色 —— 取上游的 `--accent: #FFE7A3`（暖米黄**实色**，
+       不是半透明灰）。实测 RetroUI 的 select 高亮项就是这个值：neo 的 hover 是
+       「刷一块颜色上去」，不是「压一层灰」。
+       浮层遮罩加深到 .8（ekmas --overlay），让浮层与底页的分离更硬。 */
+    --ah-color-bg-hover: #FFE7A3;
+    --ah-color-bg-overlay: rgb(0 0 0 / 0.8);
+
+    /* ── 交给外形轴的两个「墨色」──────────────────────────────────────
+       skins/*.css 只 `var(--ah-color-skin-ink, <兜底>)` 取值，真实取值归
+       颜色轴、即这里。⚠ 变量名必须在 --ah-color-* 命名空间下：skin 不分层、
+       palette 分层，无层永远压过有层 —— 若两边用同一个 `--ah-skin-ink`，
+       skin 的默认值会把这里的覆盖吃掉（实测暗色描边被刷成近白）。
+       描边与阴影分开两个变量，是因为 RetroUI 暗色下两者**不同色**
+       （描边 #6F675A / 阴影 #4A443C）；明色下两者同为纯黑。 */
+    --ah-color-skin-ink: #000000;
+    --ah-color-skin-shadow: #000000;
+  }
+
+  /* ── Brutal · Dark ───────────────────────────────────────────────────────
+     RetroUI 暗色是**暖**的（不是中性灰）：#1A1815 底 / #262320 面 / #F5F0E6 字。
+     描边 #6F675A、阴影 #4A443C —— 两者不同色，且都不是纯黑也不是纯白：
+     纯黑在暗底上读不出来，纯白又太吵。
+     特异性 (0,2,0) 稳过 appearance/dark.css 的 (0,1,0)。
+
+     强调色不做提亮 —— 本调色板的强调色本就是 pastel（芥末/周期蓝/薄荷/酸橙），
+     在暗底上对比度够；只有 error 偏深，换成亮一档的番茄红并翻转字色。 */
+  [data-palette="brutal"][data-theme="dark"] {
+    /* 暗色灰阶：50 = 近背景暗色，900 = 最亮 —— 与 appearance/dark.css 同向 */
+    --ah-color-grey-50: #1A1815;
+    --ah-color-grey-100: #221F1B;
+    --ah-color-grey-200: #262320;
+    --ah-color-grey-300: #2E2A24;
+    --ah-color-grey-400: #38342B;
+    --ah-color-grey-500: #4A443C;
+    --ah-color-grey-600: #6F675A;
+    --ah-color-grey-700: #938A79;
+    --ah-color-grey-800: #B3AC9E;
+    --ah-color-grey-900: #F5F0E6;
+
+    --ah-color-bg: #1A1815;
+    --ah-color-bg-paper: #262320;
+    --ah-color-bg-subtle: #2E2A24;
+
+    --ah-color-text: #F5F0E6;
+    --ah-color-text-secondary: #B3AC9E;
+    --ah-color-text-disabled: #6F675A;
+
+    --ah-color-border: #6F675A;
+    --ah-color-border-subtle: #38342B;
+
+    --ah-color-bg-hover: rgb(245 240 230 / 0.08);
+
+    --ah-color-error: #F06B78;
+    --ah-color-error-contrast: #1A1815;
+
+    --ah-color-skin-ink: #6F675A;
+    --ah-color-skin-shadow: #4A443C;
+  }
+}

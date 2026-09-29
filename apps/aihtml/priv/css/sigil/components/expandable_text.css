@@ -1,0 +1,27 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   ExpandableText · 可展开长文本（借鉴 happy expandable-text）
+   ============================================================================ */
+
+.ah-expandable-text {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ah-color-text);
+}
+
+.ah-expandable-text__body { white-space: pre-wrap; word-break: break-word; }
+
+.ah-expandable-text__toggle {
+  margin-left: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ah-color-primary);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ah-expandable-text__toggle:hover { text-decoration: underline; }

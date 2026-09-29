@@ -1,0 +1,196 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   输入框组件
+   支持自动完成、浮动标签、前后缀插件等功能
+   ============================================================================ */
+
+/* ---- 输入框容器 ---- */
+.ah-input-group {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+}
+
+/* ---- 基础输入框 ---- */
+.ah-input {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  font-size: var(--ah-font-size-sm);
+  font-family: var(--ah-font-family);
+  color: var(--ah-color-text);
+  background: var(--ah-color-bg-paper);
+  outline: none;
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.ah-input::placeholder {
+  color: var(--ah-color-text-disabled);
+}
+
+.ah-input:focus {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-input-focused .ah-input {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-input-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-input-disabled .ah-input {
+  background: var(--ah-color-bg-subtle);
+  cursor: not-allowed;
+}
+
+/* ============================================================================
+   浮动标签
+   ============================================================================ */
+
+.ah-input-label {
+  position: absolute;
+  left: var(--ah-spacing-md);
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-disabled);
+  pointer-events: none;
+  background-color: transparent;
+  padding: 0 4px;
+  margin-left: -4px;
+  transition: top var(--ah-transition-fast),
+              font-size var(--ah-transition-fast),
+              color var(--ah-transition-fast),
+              background-color var(--ah-transition-fast);
+  transform-origin: left center;
+}
+
+.ah-input-label-float {
+  top: 0;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-primary);
+  background-color: var(--ah-color-bg-paper);
+}
+
+/* ============================================================================
+   自动完成弹出层（附加到 body）
+   ============================================================================ */
+
+.ah-input-popup {
+  position: absolute;
+  z-index: 1000;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  max-height: 240px;
+  overflow-y: auto;
+  display: none;
+  box-sizing: border-box;
+}
+
+.ah-input-popup ul {
+  list-style: none;
+  margin: 0;
+  padding: var(--ah-spacing-xs) 0;
+}
+
+.ah-input-popup-item {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  cursor: pointer;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  transition: background-color var(--ah-transition-fast);
+}
+
+.ah-input-popup-item:hover,
+.ah-input-popup-item-active {
+  background-color: var(--ah-color-primary-lighter);
+}
+
+.ah-input-popup-item b {
+  font-weight: var(--ah-font-weight-bold);
+  color: var(--ah-color-primary-dark);
+}
+
+/* ============================================================================
+   输入框行（插件容器）
+   ============================================================================ */
+
+.ah-input-row {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+}
+
+.ah-input-row .ah-input {
+  flex: 1;
+  min-width: 0;
+  border-radius: 0;
+}
+
+/* ============================================================================
+   前后缀插件
+   ============================================================================ */
+
+.ah-input-addon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--ah-spacing-sm);
+  background: var(--ah-color-grey-50);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  transition: border-color var(--ah-transition-fast);
+}
+
+.ah-input-addon-prefix {
+  border-right: none;
+  border-radius: var(--ah-radius-md) 0 0 var(--ah-radius-md);
+}
+
+.ah-input-addon-suffix {
+  border-left: none;
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+}
+
+/* ---- 行内输入框圆角 ---- */
+.ah-input-row .ah-input:first-child {
+  border-radius: var(--ah-radius-md) 0 0 var(--ah-radius-md);
+}
+
+.ah-input-row .ah-input:last-child {
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+}
+
+/* ---- 无圆角模式 ---- */
+.ah-input-no-rounded .ah-input,
+.ah-input-no-rounded .ah-input-addon-prefix,
+.ah-input-no-rounded .ah-input-addon-suffix {
+  border-radius: 0;
+}
+
+/* ---- 聚焦时插件边框跟随 ---- */
+.ah-input-focused .ah-input-addon {
+  border-color: var(--ah-color-primary);
+}
+
+/* ---- 禁用插件 ---- */
+.ah-input-disabled .ah-input-addon {
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text-disabled);
+}

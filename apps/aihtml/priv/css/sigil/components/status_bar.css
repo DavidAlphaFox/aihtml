@@ -1,0 +1,95 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   StatusBar · 编辑器底部状态栏（借鉴 happy status-bar）
+   字数 hover → 明细弹层（纯 CSS，弹层是根的子节点，hover 稳定）。
+   ============================================================================ */
+
+.ah-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 4px 12px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--ah-color-text-muted);
+  background: var(--ah-color-bg-subtle);
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+/* ---- 字数 + 明细弹层 ---- */
+.ah-status-bar__count {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 2px 4px;
+  border-radius: var(--ah-radius-sm);
+  cursor: default;
+  outline: none;
+}
+.ah-status-bar__count:hover { background: var(--ah-color-bg-hover, var(--ah-color-bg)); }
+
+.ah-status-bar__count-num {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ah-color-text);
+}
+
+.ah-status-bar__popover {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  min-width: 168px;
+  padding: 8px 10px;
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  box-shadow: 0 6px 20px rgb(0 0 0 / .14);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition: opacity .14s ease, transform .14s ease, visibility .14s;
+}
+.ah-status-bar__count:hover .ah-status-bar__popover,
+.ah-status-bar__count:focus-visible .ah-status-bar__popover {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.ah-status-bar__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 2px 0;
+}
+.ah-status-bar__row-label { color: var(--ah-color-text-muted); }
+.ah-status-bar__row-val {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ah-color-text);
+}
+
+/* ---- 保存态 ---- */
+.ah-status-bar__save {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ah-status-bar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ah-color-success);
+  transition: background .14s ease;
+}
+.ah-status-bar[data-dirty="true"] .ah-status-bar__dot {
+  background: var(--ah-color-warning);
+}
+
+.ah-status-bar__extra { display: inline-flex; align-items: center; gap: 8px; }

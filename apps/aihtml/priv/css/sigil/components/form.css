@@ -1,0 +1,142 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Form 表单组件
+   ============================================================================ */
+
+.ah-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-form-bordered {
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+}
+
+.ah-form-bg {
+  background-color: var(--ah-color-bg-paper);
+}
+
+/* --- 行 --- */
+
+.ah-form-row {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+}
+
+/* label-position: top */
+.ah-form-row-top {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.ah-form-row-top > .ah-form-label {
+  margin-bottom: 4px;
+  padding-right: 0;
+}
+
+/* label-position: right */
+.ah-form-row-right {
+  flex-direction: row-reverse;
+}
+
+.ah-form-row-right > .ah-form-label {
+  padding-right: 0;
+  padding-left: 8px;
+}
+
+/* label-position: bottom */
+.ah-form-row-bottom {
+  flex-direction: column-reverse;
+  align-items: flex-start;
+}
+
+.ah-form-row-bottom > .ah-form-label {
+  margin-top: 4px;
+  padding-right: 0;
+}
+
+/* --- 标签 --- */
+
+.ah-form-label {
+  flex-shrink: 0;
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-sm);
+  padding-right: 8px;
+  line-height: 1.5;
+}
+
+.ah-form-required {
+  color: var(--ah-color-error, #e53e3e);
+  margin-left: 2px;
+}
+
+/* --- 字段 --- */
+
+.ah-form-field {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ah-form-field > div:first-child {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
+
+/* --- 多列布局 --- */
+
+.ah-form-columns {
+  gap: var(--ah-spacing-md);
+}
+
+.ah-form-col {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.ah-form-col > .ah-form-field {
+  flex: 1;
+}
+
+/* --- 信息图标 --- */
+
+.ah-form-info {
+  color: var(--ah-color-text-secondary);
+  cursor: help;
+  font-size: var(--ah-font-size-xs);
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
+.ah-form-info:hover {
+  opacity: 1;
+}
+
+/* --- 静态文字行 --- */
+
+.ah-form-label-text {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  padding: 4px 0;
+}
+
+/* --- 空行 --- */
+
+.ah-form-row-blank {
+  pointer-events: none;
+}
+
+/* --- 禁用状态 --- */
+
+.ah-form-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

@@ -1,0 +1,199 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   窗口 (Window)
+   可拖拽和调整大小的对话框组件，支持模态和折叠功能
+   ============================================================================ */
+
+/* ---- 窗口容器 ---- */
+
+.ah-window {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  outline: none;
+  overflow: hidden;
+  min-width: 100px;
+  min-height: 60px;
+}
+
+/* ---- 头部 ---- */
+
+.ah-window-header {
+  display: flex;
+  align-items: center;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  background: var(--ah-color-grey-100);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  user-select: none;
+  flex: none;
+}
+
+.ah-window-header-draggable {
+  cursor: move;
+}
+
+.ah-window-title {
+  flex: 1;
+  font-weight: var(--ah-font-weight-medium);
+  font-size: var(--ah-font-size-sm);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ah-window-header-buttons {
+  display: flex;
+  gap: var(--ah-spacing-xs);
+  flex: none;
+  margin-left: var(--ah-spacing-sm);
+}
+
+/* ---- 头部按钮 ---- */
+
+.ah-window-collapse-btn,
+.ah-window-close-btn {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast), color var(--ah-transition-fast);
+}
+
+.ah-window-collapse-btn:hover,
+.ah-window-close-btn:hover {
+  background: var(--ah-color-grey-200);
+  color: var(--ah-color-text);
+}
+
+.ah-window-close-btn::after {
+  content: "\00d7";
+  font-size: 16px;
+  line-height: 1;
+}
+
+.ah-window-collapse-btn::after {
+  content: "\25b4";
+  font-size: 10px;
+  line-height: 1;
+}
+
+.ah-window-collapsed .ah-window-collapse-btn::after {
+  content: "\25be";
+}
+
+/* ---- 内容区域 ---- */
+
+.ah-window-content {
+  flex: 1;
+  overflow: auto;
+  padding: var(--ah-spacing-md);
+}
+
+.ah-window-collapsed .ah-window-content {
+  display: none;
+}
+
+.ah-window-collapsed {
+  height: auto !important;
+}
+
+/* ---- 调整大小手柄 ---- */
+
+.ah-window-resize-handle {
+  position: absolute;
+  z-index: 1;
+}
+
+.ah-window-resize-n {
+  top: -3px;
+  left: 6px;
+  right: 6px;
+  height: 6px;
+  cursor: n-resize;
+}
+
+.ah-window-resize-s {
+  bottom: -3px;
+  left: 6px;
+  right: 6px;
+  height: 6px;
+  cursor: s-resize;
+}
+
+.ah-window-resize-e {
+  top: 6px;
+  bottom: 6px;
+  right: -3px;
+  width: 6px;
+  cursor: e-resize;
+}
+
+.ah-window-resize-w {
+  top: 6px;
+  bottom: 6px;
+  left: -3px;
+  width: 6px;
+  cursor: w-resize;
+}
+
+.ah-window-resize-ne {
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  cursor: ne-resize;
+}
+
+.ah-window-resize-nw {
+  top: -3px;
+  left: -3px;
+  width: 10px;
+  height: 10px;
+  cursor: nw-resize;
+}
+
+.ah-window-resize-se {
+  bottom: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
+  cursor: se-resize;
+}
+
+.ah-window-resize-sw {
+  bottom: -3px;
+  left: -3px;
+  width: 10px;
+  height: 10px;
+  cursor: sw-resize;
+}
+
+.ah-window:not(.ah-window-resizable) .ah-window-resize-handle {
+  display: none;
+}
+
+/* ---- 模态遮罩 ---- */
+
+.ah-window-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity), transparent);
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-window-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

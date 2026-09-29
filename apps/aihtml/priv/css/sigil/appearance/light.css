@@ -1,0 +1,47 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   外观 · 明色中性层 —— data-theme="light"（亦为 :root 默认态）
+
+   三正交轴之「外观」：只拥有中性层（灰阶、表面/文本/边框、明色阴影、
+   color-scheme）。品牌强调色见 palettes/，字体见 typography/。
+   同时挂 :root 与 [data-theme="light"]：前者提供无属性时的默认明色态，
+   后者让「暗色根内嵌套一块明色」等局部作用域也能重新点亮。
+   ============================================================================ */
+
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* ---- 灰度色阶：桥接明色 Tailwind 原色 ---- */
+  --ah-color-grey-50: var(--color-grey-50);
+  --ah-color-grey-100: var(--color-grey-100);
+  --ah-color-grey-200: var(--color-grey-200);
+  --ah-color-grey-300: var(--color-grey-300);
+  --ah-color-grey-400: var(--color-grey-400);
+  --ah-color-grey-500: var(--color-grey-500);
+  --ah-color-grey-600: var(--color-grey-600);
+  --ah-color-grey-700: var(--color-grey-700);
+  --ah-color-grey-800: var(--color-grey-800);
+  --ah-color-grey-900: var(--color-grey-900);
+
+  /* ---- 背景色 ---- */
+  --ah-color-bg: var(--ah-color-grey-100);          /* 默认背景 */
+  --ah-color-bg-paper: var(--ah-color-common-white); /* 纸张/卡片背景 */
+  --ah-color-bg-subtle: var(--ah-color-grey-200);   /* 次要背景 */
+
+  /* ---- 文本色 ---- */
+  --ah-color-text: var(--ah-color-grey-800);           /* 主要文本 */
+  --ah-color-text-secondary: var(--ah-color-grey-600);  /* 次要文本 */
+  --ah-color-text-disabled: var(--ah-color-grey-500);   /* 禁用文本 */
+
+  /* ---- 边框色 ---- */
+  --ah-color-border: var(--ah-color-grey-300);          /* 默认边框 */
+  --ah-color-border-subtle: var(--ah-color-grey-200);   /* 次要边框 */
+
+  /* ---- 阴影（明色，灰调） ---- */
+  --ah-shadow-sm: 0 1px 2px 0 rgb(145 158 171 / 0.16);
+  --ah-shadow-md: 0 8px 16px 0 rgb(145 158 171 / 0.16);
+  --ah-shadow-lg: 0 16px 32px 0 rgb(145 158 171 / 0.24);
+}

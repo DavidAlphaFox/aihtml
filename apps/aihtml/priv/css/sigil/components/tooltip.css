@@ -1,0 +1,78 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   提示框组件 (Tooltip)
+   轻量级浮动提示，锚定到宿主元素显示额外信息
+   ============================================================================ */
+
+.ah-tooltip {
+  position: absolute;
+  z-index: 99999;
+  display: none;
+  max-width: 300px;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  font-size: var(--ah-font-size-sm);
+  line-height: 1.4;
+  color: var(--ah-color-common-white);
+  background: var(--ah-color-grey-800);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  pointer-events: none;
+  opacity: 0;
+  word-wrap: break-word;
+}
+
+/* ---- 箭头（CSS 边框三角形） ---- */
+.ah-tooltip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+}
+
+/* 隐藏箭头 */
+.ah-tooltip-no-arrow .ah-tooltip-arrow {
+  display: none;
+}
+
+/* 下方位置：提示框在宿主下方，箭头朝上 */
+.ah-tooltip-bottom .ah-tooltip-arrow {
+  top: -6px;
+  left: 50%;
+  margin-left: -6px;
+  border-top: none;
+  border-bottom-color: var(--ah-color-grey-800);
+}
+
+/* 上方位置：提示框在宿主上方，箭头朝下 */
+.ah-tooltip-top .ah-tooltip-arrow {
+  bottom: -6px;
+  left: 50%;
+  margin-left: -6px;
+  border-bottom: none;
+  border-top-color: var(--ah-color-grey-800);
+}
+
+/* 左侧位置：提示框在宿主左侧，箭头朝右 */
+.ah-tooltip-left .ah-tooltip-arrow {
+  top: 50%;
+  right: -6px;
+  margin-top: -6px;
+  border-right: none;
+  border-left-color: var(--ah-color-grey-800);
+}
+
+/* 右侧位置：提示框在宿主右侧，箭头朝左 */
+.ah-tooltip-right .ah-tooltip-arrow {
+  top: 50%;
+  left: -6px;
+  margin-top: -6px;
+  border-left: none;
+  border-right-color: var(--ah-color-grey-800);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-tooltip-disabled {
+  display: none !important;
+}

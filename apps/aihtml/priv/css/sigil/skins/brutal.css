@@ -1,0 +1,931 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   外形 · Brutal（新野兽派 neubrutalism）—— data-skin="brutal"
+   ============================================================================
+
+   第 4 条正交轴「外形（skin）」的首个非 default 值。四轴的职责边界：
+
+     外观 data-theme       light / dark / paper      —— 中性层与语义表面的**明度**
+     品牌 data-palette     default / brutal / …      —— 强调色与表面的**色相**
+     排版 data-typography  default / serif           —— **字体族**
+     外形 data-skin        default / brutal / island —— **圆角 / 描边宽度 / 阴影 / 交互**  ← 本文件
+
+   四轴自由组合。`data-skin="brutal"` 单开就能把任意配色变成野兽派（橙色 + 黑描边 +
+   硬阴影）；要连配色一起换成上游那套芥末黄/周期蓝，再叠 `data-palette="brutal"`
+   或 `"brutal-blue"`。
+
+   ─── 两个文件的硬边界 ─────────────────────────────────────────────────────
+     palettes/*.css  只写颜色 —— 只赋值 --ah-color-*，不碰形状
+     skins/*.css     只写形状 —— **不赋值任何 --ah-color-***，不出现颜色字面量
+
+   于是下游可以精确按需引入：只想换配色就只 <link> palette，只想换控件外形/交互就只
+   <link> skin，两份互不干扰、**也没有加载顺序要求**。
+
+   本文件确实要画黑描边，但墨色取自 var(--ah-color-text) —— 读颜色轴的结果，
+   不改颜色轴的值。这条是本文件唯一需要守住的纪律（`bb css:check` 盯着它）：
+     ✗ --ah-color-border: #000               ← 越界：改了颜色轴的 token
+     ✓ border-color: var(--ah-skin-ink)      ← 本分：只在自己的规则里用颜色
+
+   ─── 哪些能靠 token 翻转、哪些必须逐组件写 ────────────────────────────────
+     ✅ 圆角 —— 库内 308 处 `var(--ah-radius-*)`，覆盖这一套即可全库生效。
+        `--ah-radius-full`（9999px）**不翻**：头像 / 开关轨道 / 胶囊标签本来
+        就该是圆的，正好自动豁免。
+     ✅ 阴影 —— 库内 77 处 `var(--ah-shadow-*)`，同上。
+     ⚠ 例外：另有约 130 个类**直接写死了** `border-radius: 8px` 这样的字面量
+        （原值 1px–14px），它们不读 --ah-radius-*，翻转劫不到。本文件末尾按
+        原值分组压平了这一批。
+     ❌ 描边宽度 —— 库内 207 处 `border: 1px solid …` 字面量，无 var 可劫，
+        只能逐组件改写（下半部分的 :is() 清单由 scripts/skin_coverage.mjs 推导
+        后人工校订）。
+
+   ─── 层级 ─────────────────────────────────────────────────────────────────
+   本文件**不分层**，靠加载在 sigil.css 之后取胜（无层规则永远压过任何 @layer，
+   与特异性无关）。选择器一律带 `.ah-*` 前缀，不碰下游页面样式。
+
+   ⚠ 铁律：每条规则都必须带 `[data-skin="brutal"]` 前缀。漏一条就污染 default
+     外形，而「不引入本文件时库的长相一个像素都不变」正是本轴存在的前提。
+
+   取值来源：neobrutalism.dev（ekmas/neobrutalism-components，MIT）
+   与 neobrutalism.com（RetroUI）—— 圆角 4px、描边 2px、阴影偏移 4px/4px、
+   hover 时元素朝阴影方向位移并撤掉阴影。
+   ============================================================================ */
+
+[data-skin="brutal"] {
+  /* ── 外形基元 ──────────────────────────────────────────────────────── */
+  /* 4px：实测 neobrutalism.com 的组件圆角就是 4px，ekmas 是 5px，取前者。 */
+  --ah-skin-radius: 4px;
+  --ah-skin-border-width: 2px;
+  --ah-skin-offset-x: 4px;
+  --ah-skin-offset-y: 4px;
+
+  /* ── 两个「墨色」覆盖点 ────────────────────────────────────────────
+     描边与阴影**分开两个变量**：实测 RetroUI 暗色下两者不同色
+     （描边 #6F675A / 阴影 #4A443C，阴影比描边更暗），一个变量装不下。
+
+     这里只**读**颜色、不写颜色字面量 —— 本文件不做颜色决策。真实取值由 palette
+     赋值 `--ah-color-skin-ink` / `--ah-color-skin-shadow`（见
+     palettes/brutal.css）；没有 palette 覆盖时退回文本色，于是任意配色叠上本
+     skin 都有一条读得出的描边（明色近黑、暗色近白），也因此不需要
+     [data-theme="dark"] 分支。
+
+     ⚠ 别改回「skin 直接给默认值、palette 同名覆盖」那种写法：skin 文件**不分层**，
+     palette 在 `@layer components.ah` 里，而无层规则永远压过任何 @layer ——
+     那样 palette 的覆盖**永远生不了效**（实测：brutal 暗色的暖灰描边 #6F675A
+     被 skin 的前景色吃掉，变成近白；island 的暖灰褐台阶被黑色兑透明吃掉）。
+     交接必须走「palette 赋值 --ah-color-skin-*，skin 只 var() 取值 + 就地兜底」。 */
+  --ah-skin-ink: var(--ah-color-skin-ink, var(--ah-color-text));
+  --ah-skin-shadow-color: var(--ah-color-skin-shadow, var(--ah-skin-ink));
+
+  --ah-skin-shadow:
+    var(--ah-skin-offset-x) var(--ah-skin-offset-y) 0 0 var(--ah-skin-shadow-color);
+  --ah-skin-shadow-sm: 2px 2px 0 0 var(--ah-skin-shadow-color);
+  --ah-skin-shadow-lg: 6px 6px 0 0 var(--ah-skin-shadow-color);
+
+  /* ── 圆角刻度整体压平 ────────────────────────────────────────────
+     ⚠ --ah-radius-full 有意不动：那是「几何意图为圆」的地方（头像、开关
+     轨道、spinner、胶囊标签），任何 skin 都不该把它压成方角。 */
+  --ah-radius-sm: var(--ah-skin-radius);
+  --ah-radius-md: var(--ah-skin-radius);
+  --ah-radius-lg: var(--ah-skin-radius);
+
+  /* ── 描边宽度（P15.4a）：一次翻转覆盖所有走 token 的控件外壳 ──────────
+     ⚠ **`--ah-hairline-width` 有意不翻**。它标的是「测量敏感」的线 ——
+     表格网格线 / 甘特 / 日程 / 白板这类按像素排版的东西，加宽会沿行列累积，
+     几十行之后就是肉眼可见的错位。这条区分不是新发明的，正是下面
+     「墨色+加宽」与「只上色（测量敏感）」两个桶当初逐类校订出来的结论，
+     P15.4a 只是把它从类名清单**提升成了 token**。
+
+     [2026-08-17 · P15.4a-2] 全库 1px 字面量已转完（86 类走 border-width、
+     107 类走 hairline-width），所以这一行现在真的在干活：本文件下半部分
+     `:is()` 清单里那些 `border-width` 行已经是冗余的重复表态，
+     删不掉只是因为同一条规则还要承载 `border-color`（皮肤不许赋值颜色 token，
+     只能逐类写）。**新增组件不必再回来补宽度清单** —— 用对 token 即可。
+
+     ⚠ a-2 有意让三处**新变粗**：card-header / card-footer / window-header。
+     本文件此前只给它们上色，于是「2px 外壳 + 1px 内分隔」，本来就不自洽。 */
+  --ah-border-width: var(--ah-skin-border-width);
+
+  /* ── 阴影：所有走 var() 的都换成硬边偏移 ──────────────────────────── */
+  --ah-shadow-sm: var(--ah-skin-shadow-sm);
+  --ah-shadow-md: var(--ah-skin-shadow);
+  --ah-shadow-lg: var(--ah-skin-shadow-lg);
+
+  /* 字重：上游 base 500 / heading 700 */
+  --ah-font-weight-normal: 500;
+  --ah-font-weight-medium: 600;
+  --ah-font-weight-semibold: 700;
+  --ah-font-weight-bold: 800;
+}
+
+/* 正文加粗一档、标题一律 700（neo 的排版底子） */
+[data-skin="brutal"] body {
+  font-weight: 500;
+}
+[data-skin="brutal"] :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: 700;
+}
+
+/* ============================================================================
+   一、核心组件（手写）—— 需要判断的那些：hover 位移、拼接控件的接缝、
+   哪些变体该豁免。下半部分的 :is() 清单是脚本推导的，不含这些细节。
+   ============================================================================ */
+
+/* ── 1. Button ────────────────────────────────────────────────────────────
+   hover 时朝阴影方向位移并撤掉阴影 = 「纸片被按到桌面上」，是这套风格的招牌交互。
+   ⚠ 只给**有变体的**按钮上纸片：裸 `.ah-btn`（无变体类）是工具栏里的透明
+     图标按钮，全给描边阴影会让每根工具条变成一排纸片。 */
+[data-skin="brutal"] .ah-btn:is(.ah-btn-primary, .ah-btn-secondary,
+                                   .ah-btn-success, .ah-btn-warning,
+                                   .ah-btn-error, .ah-btn-info,
+                                   .ah-btn-outlined) {
+  --ah-btn-shadow: var(--ah-skin-shadow);
+  --ah-btn-shadow-hover: none;
+  --ah-btn-shadow-toggled: none;
+  --ah-btn-lift-hover: translate(var(--ah-skin-offset-x), var(--ah-skin-offset-y));
+  border-width: var(--ah-skin-border-width);
+  border-color: var(--ah-skin-ink);
+  /* ⚠ 上游按钮是 `font-base`（500），**不是**粗体 —— 700 只给标题、标签页、表头。
+     sigil 的 `.ah-btn` 读的是 --ah-font-weight-semibold，而本 skin 把那档
+     抬到了 700，于是按钮会连带变粗；这里显式拉回基础字重。 */
+  font-weight: var(--ah-font-weight-normal);
+}
+
+/* 位移与撤影必须同时发生，否则纸片会「带着影子滑走」。
+   :active 与 .ah-btn-pressed 一起写 —— 后者是无 JS 时的 JS 态回退。 */
+[data-skin="brutal"] .ah-btn:is(.ah-btn-primary, .ah-btn-secondary,
+                                   .ah-btn-success, .ah-btn-warning,
+                                   .ah-btn-error, .ah-btn-info,
+                                   .ah-btn-outlined):is(:hover, .ah-btn-hover,
+                                                           :active, .ah-btn-pressed,
+                                                           .ah-btn-toggled) {
+  transform: translate(var(--ah-skin-offset-x), var(--ah-skin-offset-y));
+  box-shadow: none;
+}
+
+/* 连排控件：不收口会得到一排各自带投影的纸片，hover 时组内还会错位。
+   两个组件的**结构不同，收口方式也不同**，别用一条规则套：
+
+     SplitButton   两半就是 `.ah-btn`（共用 variant 配色），交给容器画框
+     ButtonGroup   成员是 `.ah-btn-group-btn`（自带 1px 边与 −1px 重叠），
+                   让成员自己把边加粗到 2px 更省事
+
+   ⚠ 早先这里只写了 `.ah-btn`，ButtonGroup 的成员一条都没命中 —— 于是页面上
+     是「方框 + 成员自己的 1px 边 + 两端的胶囊头」三样叠在一起（实测截图里
+     胶囊端直接支棱到方框外面）。 */
+
+/* ── SplitButton：整组当成一张纸，外框一圈描边 + 一个阴影，中缝一条竖线 ── */
+[data-skin="brutal"] .ah-split-button {
+  border: var(--ah-skin-border-width) solid var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius);
+  box-shadow: var(--ah-skin-shadow);
+}
+[data-skin="brutal"] .ah-split-button .ah-btn {
+  --ah-btn-shadow: none;
+  --ah-btn-lift-hover: none;
+  border-width: 0;
+  border-right: var(--ah-skin-border-width) solid var(--ah-skin-ink);
+  box-shadow: none;
+}
+[data-skin="brutal"] .ah-split-button .ah-btn:last-child {
+  border-right: 0;
+}
+[data-skin="brutal"] .ah-split-button .ah-btn:is(:hover, :active) {
+  transform: none;
+}
+
+/* ── ButtonGroup：成员自己把 1px 边加粗到 2px，重叠量同步加到 −2px，
+   相邻两条边正好并成一条（原本 −1px 是为 1px 边配的，不改会留一条 3px 的粗缝）。
+   容器只负责投影，圆角与两端成员同档（都被下面那节压回 skin 圆角了）。 */
+[data-skin="brutal"] .ah-btn-group {
+  border-radius: var(--ah-skin-radius);
+  box-shadow: var(--ah-skin-shadow);
+}
+/* ── 形状变体类归形状轴管 ──────────────────────────────────────────────
+   `:round? true` / `:rounded? true` 在 cljs 里**只是拼一个 class**（没有内联
+   样式、没有 JS 几何），也就是说它们是 CSS 钩子而不是行为参数 —— 那么「这个钩子
+   长什么样」就该由形状轴决定。何况 ButtonGroup 的 `:rounded?` 默认值就是 true，
+   页面上那对胶囊端多数时候根本不是调用方的意图，是组件的默认长相。
+   neo 里没有胶囊分段控件（实测 ekmas 的分段条是直角、按钮一律 5px），所以这里
+   把两个**样式变体**压回本 skin 的圆角档。
+
+   ⚠ 只压样式变体，不碰**真几何**：开关轨道、滑块、进度环、头像、spinner、
+     日历日格、选中点那些也用 --ah-radius-full，但它们「是圆的」而不是
+     「被设成圆的」，上游同样保留（ekmas 的 Switch 就是 rounded-full）。 */
+[data-skin="brutal"] .ah-btn-round {
+  --ah-btn-radius: var(--ah-skin-radius);
+}
+/* ⚠ 选择器必须**逐条镜像**组件里那四条，别自作主张加 `-horizontal` 限定：
+   组件的「左右两角」那两条是**不带方向限定**的通用规则，横排竖排都吃得到
+   （竖排再叠一条「上下两角」）。我第一版给覆盖加了 `-horizontal`，于是竖排组的
+   左侧仍是胶囊角、右侧已经压平，成了半圆半方（实测截图里一眼看出来）。
+   也不能图省事写 `border-radius: 4px` 一把梭 —— 那会把**接缝处的内角**也抹圆，
+   相邻两片中间会露出一对缺口。 */
+[data-skin="brutal"] .ah-btn-group-rounded .ah-btn-group-btn-first {
+  border-top-left-radius: var(--ah-skin-radius);
+  border-bottom-left-radius: var(--ah-skin-radius);
+}
+[data-skin="brutal"] .ah-btn-group-rounded .ah-btn-group-btn-last {
+  border-top-right-radius: var(--ah-skin-radius);
+  border-bottom-right-radius: var(--ah-skin-radius);
+}
+[data-skin="brutal"] .ah-btn-group-vertical.ah-btn-group-rounded .ah-btn-group-btn-first {
+  border-top-left-radius: var(--ah-skin-radius);
+  border-top-right-radius: var(--ah-skin-radius);
+}
+[data-skin="brutal"] .ah-btn-group-vertical.ah-btn-group-rounded .ah-btn-group-btn-last {
+  border-bottom-left-radius: var(--ah-skin-radius);
+  border-bottom-right-radius: var(--ah-skin-radius);
+}
+[data-skin="brutal"] .ah-btn-group-btn {
+  border-width: var(--ah-skin-border-width);
+  border-color: var(--ah-skin-ink);
+}
+[data-skin="brutal"] .ah-btn-group-horizontal .ah-btn-group-btn:not(:first-child) {
+  margin-left: calc(-1 * var(--ah-skin-border-width));
+}
+[data-skin="brutal"] .ah-btn-group-vertical .ah-btn-group-btn:not(:first-child) {
+  margin-top: calc(-1 * var(--ah-skin-border-width));
+}
+
+/* ── 2. Input / Textarea / 输入组 ──────────────────────────────────────── */
+[data-skin="brutal"] :is(.ah-input, .ah-a2ui-textarea, .ah-masked-input,
+                         .ah-pwd, .ah-numinput-input, .ah-fmt-input,
+                         .ah-dti-input, .ah-tag-input) {
+  border-width: var(--ah-skin-border-width);
+  border-color: var(--ah-skin-ink);
+}
+/* ⚠ 别给 `.ah-input-group` 上描边：它是 input 外层的**布局壳**（inline-flex
+    纵向容器、浮动标签的定位父级），本体无边框。早年这里加过一圈，结果每个
+    输入框都是「外层直角方框 + 内层圆角框」双层套娃，未聚焦时就双框（demo 的
+    Form 页 18 处全中）；聚焦再叠 outline 就成三圈。上游输入框只有自身一圈
+    border-2 + 聚焦 ring。壳不画框，画框的永远是输入框自己和前后缀。 */
+/* 输入组的前后缀与主体拼成一整块：接缝处只留一条线，不要两条并排的粗边。 */
+[data-skin="brutal"] :is(.ah-input-addon-prefix, .ah-input-addon-suffix) {
+  border-color: var(--ah-skin-ink);
+  border-width: var(--ah-skin-border-width);
+}
+/* ── 聚焦态：输入族只留单框（有意偏离上游）────────────────────────────
+   上游 ekmas 聚焦是 `border-2 + ring-2 ring-offset-2`（两圈黑线），组件层沿
+   `:focus` / `.ah-input-focused` 画 outline，本 skin 早先还把环加粗 —— 聚焦
+   瞬间「描边 + 环」双框，产品决策不要第二圈（demo Form 页实测反馈）。
+   文本输入框有**闪烁光标**作为天然聚焦指示（WCAG 对 text field 认可），砍环
+   不伤键盘可达性。
+   ⚠ 只灭「有光标的文本类」；按钮 / 下拉等无光标控件仍靠 outline 指示焦点
+     （下面的按钮规则保留），别把清单扩到它们头上。 */
+[data-skin="brutal"] :is(.ah-input, .ah-a2ui-textarea, .ah-masked-input,
+                         .ah-pwd, .ah-numinput-input, .ah-fmt-input,
+                         .ah-dti-input, .ah-tag-input) {
+  outline: none;
+}
+/* 按钮：聚焦环加粗到 2px，但**保留 2px 间隙**（沿用组件层的 outline-offset）——
+   实测上游 ekmas 的类是 `focus-visible:ring-2 ring-black ring-offset-2`，环与描边
+   之间是有缝的。早先这里写过 offset:0「紧贴描边」，那是从 happy 抄来的修法，
+   针对的是它自己组件的双层边框，sigil 没有那个结构，照抄反而与上游不符。
+   ⚠ 清单里只放「自己画聚焦环的本体」；`.ah-dropdownlist` 那类外壳曾在此
+     匹配 `.ah-dropdownlist-focused` 拿到裸 outline-width —— 环是它的
+     input-area 在画（组件层），外壳不该掺和，哪天有人给外壳补了
+     outline-style 就会叠成双环。 */
+[data-skin="brutal"] .ah-btn:is(:focus-visible, :focus-within, .ah-btn-focused) {
+  outline-width: var(--ah-skin-border-width);
+}
+
+/* ── 3. Card / Panel / Window ─────────────────────────────────────────── */
+[data-skin="brutal"] :is(.ah-card, .ah-panel, .ah-window, .ah-kpi-card) {
+  border-width: var(--ah-skin-border-width);
+  border-color: var(--ah-skin-ink);
+  box-shadow: var(--ah-skin-shadow);
+}
+[data-skin="brutal"] .ah-card-hover:hover {
+  box-shadow: var(--ah-skin-shadow-lg);
+  border-color: var(--ah-skin-ink);
+}
+/* 卡片内的分隔线跟着变墨色，否则粗黑外框里嵌一根淡灰发丝，看着像没改干净。 */
+[data-skin="brutal"] :is(.ah-card-header, .ah-window-header) {
+  border-bottom-color: var(--ah-skin-ink);
+}
+[data-skin="brutal"] .ah-card-footer {
+  border-top-color: var(--ah-skin-ink);
+}
+
+/* ── 4. Checkbox / Radio / Switch ──────────────────────────────────────
+   ⚠ 勾选框的对勾是 ::after 用两条边画的，别去动它的 border-width。
+   ⚠ 开关轨道是 --ah-radius-full（胶囊），本 skin 不翻圆角刻度里的 full，
+     所以这里只加描边宽度，形状保持胶囊 —— 上游 neo 的 switch 也是胶囊。 */
+[data-skin="brutal"] :is(.ah-checkbox-box, .ah-radiobutton-box) {
+  border-width: var(--ah-skin-border-width);
+  border-color: var(--ah-skin-ink);
+}
+/* ⚠ 描边要挂在 `.ah-switch-track`（那个胶囊）上，**不是** `.ah-switch` ——
+   后者是 inline-block 的外层容器、本身没有圆角也没有背景，给它上边框会在胶囊
+   外面套一个直角方框（实测就是这个样子）。
+   用 inset 环而非 border：轨道里的滑块是 absolute 定位、行程由 JS 按宽度算，
+   真加一圈 border 会把定位坐标系整体内缩，滑块到「开」位时被 overflow:hidden 切掉。 */
+[data-skin="brutal"] .ah-switch-track {
+  box-shadow: inset 0 0 0 var(--ah-skin-border-width) var(--ah-skin-ink);
+}
+/* 实测上游：轨道与滑块**各一圈 2px 黑描边**（`border-2 border-border` 两处都有）。 */
+[data-skin="brutal"] .ah-switch-thumb {
+  box-shadow: inset 0 0 0 var(--ah-skin-border-width) var(--ah-skin-ink);
+}
+/* 滑块与轨道描边之间的**白隙**（上游 translate-x-1：描边内再让 4px 空白）。
+   sigil 的滑块按「轨道无边框」的几何定位：right:2px、行程公式两端各留 2px ——
+   描边一加，2px 正好被墨线吃掉，滑块**零间隙顶死**轨道两端（关态右端 / 开态
+   左端两条墨线叠成 4px 墨块），远看就是一节实心圆角，丢了上游「白底黑环的
+   滑块浮在白底黑环的轨道里」的层次。补偿：thumb 外缘让到「墨线外 + 4px 白隙」
+   处，行程两端各补回「墨线 + 4px − 原 2px 基线」（--sw-travel 是 JS 按原几何
+   算的内联值，只能在这里 calc 补差，改组件会动 default 外形）。 */
+[data-skin="brutal"] .ah-switch-thumb {
+  right: calc(var(--ah-skin-border-width) + 4px);
+}
+[data-skin="brutal"] .ah-switch-on .ah-switch-thumb {
+  transform: translateX(calc(var(--sw-travel, -26px) + 2 * var(--ah-skin-border-width) + 4px));
+}
+/* 镜像组件的 pressed 态（scale 不变，位移同上）。 */
+[data-skin="brutal"] .ah-switch-on.ah-switch-pressed .ah-switch-thumb {
+  transform: translateX(calc(var(--sw-travel, -26px) + 2 * var(--ah-skin-border-width) + 4px)) scale(0.95);
+}
+
+/* ── 5. Badge / Chip / Tag ─────────────────────────────────────────────
+   实测上游 Badge：`rounded-base border-2 border-border px-2.5 py-0.5 text-xs font-base`
+   —— 5px 圆角 + 2px 描边 + **无阴影** + 常规字重。早先这里给了小号硬阴影和 700 字重，
+   两样上游都没有：标签是「贴上去的一小片」，不是「浮起来的纸」，一带阴影就变成
+   一排小卡片。
+   ⚠ chip 的圆角写死在组件里（14px / 小号 11px），--ah-radius-* 翻转劫不到，
+     所以这里要点名压平。 */
+/* ⚠ `.ah-badge-indicator` 有个 `[data-dot="true"]` 状态是**无文字的小圆点**
+   （10×10、border-radius 50%），那是几何不是样式变体 —— 压平会变成一个圆角小方块，
+   状态点的语义当场没了。所以这里要把它排除掉（`bb css:check` 的检查 17 咬出来的）。 */
+[data-skin="brutal"] :is(.ah-chip, .ah-dg-badge,
+                         .ah-badge-indicator:not([data-dot="true"])) {
+  border: var(--ah-skin-border-width) solid var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius);
+  box-shadow: none;
+}
+
+/* ── 6. 下拉 / 菜单 / 浮层 ─────────────────────────────────────────────
+    浮层是「盖在页面上的一张纸」，硬阴影正是 neo 的表达方式。
+    ⚠ 别在这里给下拉类「外壳 / 裸叶子」上描边，画框的永远是 `-input-area`：
+      · `.ah-dropdownlist` 是布局外壳（组件层无 border，Tailwind preflight 把
+        border-style 默认置 solid），这里一给 width 就在 input-area 外面再套一圈
+        直角方框 —— 未聚焦即双框（demo Form 页实测）。
+      · `.ah-combobox-input` / `-cascader-input` / `-datepicker-input` 是组件层
+        `border: none` 的裸 input 叶子，这里给的 width 被 style:none 压着不渲染，
+        纯死代码；哪天组件层改了写法它就活过来变成内嵌双框。
+    四个 `-input-area` 已由下方「墨色 + 加宽」清单统一上框。 */
+[data-skin="brutal"] :is(.ah-dropdownlist-popup, .ah-listbox, .ah-menu-popup,
+                         .ah-menu-submenu, .ah-popover, .ah-input-popup,
+                         .ah-toolbar-popup, .ah-navbar-popup,
+                         .ah-dropdown-btn-popup, .ah-split-button__menu) {
+  border-width: var(--ah-skin-border-width);
+  border-color: var(--ah-skin-ink);
+  box-shadow: var(--ah-skin-shadow);
+}
+
+/* ── 7. Tabs ──────────────────────────────────────────────────────────
+   选中态的下划线加粗到描边宽度，与整套的 2px 语言对齐。 */
+[data-skin="brutal"] .ah-tabs-header {
+  border-bottom-width: var(--ah-skin-border-width);
+  border-bottom-color: var(--ah-skin-ink);
+}
+[data-skin="brutal"] .ah-tabs-item {
+  border-bottom-width: var(--ah-skin-border-width);
+  font-weight: 700;
+}
+
+/* ── 8. Tooltip / Toast / Notification / 校验提示 ───────────────────── */
+[data-skin="brutal"] :is(.ah-tooltip, .ah-toast-tpl,
+                         .ah-validator-hint) {
+  border: var(--ah-skin-border-width) solid var(--ah-skin-ink);
+  box-shadow: var(--ah-skin-shadow);
+}
+
+/* 通知单独一条 —— ⚠ 它左边那 3px 是**语义色条**（`border-left: 3px solid
+   var(--ah-notify-accent)`，info/success/warning/error 靠它区分）。用简写
+   `border: 2px solid ink` 会把色条一起抹掉，等于删掉了一层状态信息。
+   所以三边分开写，左边留原样。（phoqus 早就是这么写的，这里补齐。） */
+[data-skin="brutal"] .ah-notify {
+  border-top-width: var(--ah-skin-border-width);
+  border-right-width: var(--ah-skin-border-width);
+  border-bottom-width: var(--ah-skin-border-width);
+  border-top-color: var(--ah-skin-ink);
+  border-right-color: var(--ah-skin-ink);
+  border-bottom-color: var(--ah-skin-ink);
+  box-shadow: var(--ah-skin-shadow);
+}
+
+/* ── 9. 进度条：填充块的前缘是一条黑线 ────────────────────────────────
+   实测上游 Progress：轨道 `rounded-base border-2`，填充 `border-r-2 border-border`
+   —— 填充块本身没有圆角，靠右侧那条 2px 黑线切出「已完成到这里」。
+   这是 neo 里少见的、非装饰性的描边，别省。 */
+[data-skin="brutal"] .ah-progressbar-value {
+  border-radius: 0;
+}
+/* ⚠ 前缘的方向跟着朝向走：横向条的前缘在右边，竖向条的在**顶边**（sigil 的竖向
+   进度是从下往上长的）。一刀切写 border-right 会在竖向条上画出一条竖直的边线，
+   看着像轨道被劈成两半。 */
+[data-skin="brutal"] .ah-progressbar-horizontal .ah-progressbar-value {
+  border-right: var(--ah-skin-border-width) solid var(--ah-skin-ink);
+}
+[data-skin="brutal"] .ah-progressbar-value-vertical {
+  border-top: var(--ah-skin-border-width) solid var(--ah-skin-ink);
+}
+
+/* ── 10. 表格 ─────────────────────────────────────────────────────────
+   ⚠ 只上墨色、**不加宽**：数据网格按行高列宽算滚动位置，每格加 1px 会一路累积
+     成明显错位（虚拟滚动尤其明显）。这条边界与下面「只上色（测量敏感）」桶同源。 */
+[data-skin="brutal"] :is(.ah-dt, .ah-dg, .ah-tg, .ah-pg) {
+  border-color: var(--ah-skin-ink);
+}
+
+/* ============================================================================
+   二、脚本推导的覆盖面 —— `node scripts/skin_coverage.mjs brutal` 后人工校订。
+   重跑时 diff 一下输出与这几组清单，把新增的类补进来。
+   ============================================================================ */
+
+/* ── 墨色 + 加宽 ───────────────────────────────────────────────────────── */
+[data-skin="brutal"] :is(
+  .ah-a2ui-card,
+  .ah-a2ui-chip,
+  .ah-a2ui-divider,
+  .ah-a2ui-modal-close,
+  .ah-a2ui-native-input,
+  .ah-activity-bar__item,
+  .ah-cascader-clear,
+  .ah-cascader-input-area,
+  .ah-cascader-popup,
+  .ah-chat-input__btn,
+  .ah-chat-input__field,
+  .ah-chat-input__row,
+  .ah-chat-markdown,
+  .ah-chat-markdown__copy,
+  .ah-chat-markdown__mermaid,
+  .ah-chip__delete,
+  .ah-colorpicker,
+  .ah-colorpicker-b-input,
+  .ah-colorpicker-hex-input,
+  .ah-colorpicker-preview,
+  .ah-combobox-input-area,
+  .ah-combobox-popup,
+  .ah-command,
+  .ah-command__input,
+  .ah-context-ring__action,
+  .ah-context-ring__popover,
+  .ah-context-ring__trigger,
+  .ah-datepicker-input-area,
+  .ah-datepicker-nav-next,
+  .ah-datepicker-popup,
+  .ah-diff,
+  .ah-drawer__close,
+  .ah-dropdown-btn-wrapper,
+  .ah-dropdownlist-input-area,
+  .ah-dt-adv-filter-input,
+  .ah-dt-adv-filter-select,
+  .ah-dt-chooser-btn,
+  .ah-dt-chooser-panel,
+  .ah-dt-expand-btn,
+  .ah-dt-filter-input,
+  .ah-dt-pager-btn,
+  .ah-dt-pager-size-select,
+  .ah-dt-search-input,
+  .ah-dti-cal-btn,
+  .ah-dti-dropdown,
+  .ah-dti-live,
+  .ah-dti-spin,
+  .ah-dti-time-input,
+  .ah-expander,
+  .ah-fmt-dropdown-btn,
+  .ah-fmt-popup,
+  .ah-fmt-spin-buttons,
+  .ah-form-bordered,
+  .ah-input-otp__slot,
+  .ah-kbd,
+  .ah-listbox-filter-input,
+  .ah-listmenu-filter-input,
+  .ah-md-details,
+  .ah-md-editor,
+  .ah-md-hr,
+  .ah-md-table,
+  .ah-menu,
+  .ah-menu-drawer-close,
+  .ah-menu-is-minimized,
+  .ah-menu-minimized-btn,
+  .ah-mobile-header-toggle,
+  .ah-navbar,
+  .ah-navbar-item,
+  .ah-navigationbar,
+  .ah-numinput-spin,
+  .ah-numinput-suffix,
+  .ah-pagination-item,
+  .ah-pagination-jumper-btn,
+  .ah-pagination-jumper-input,
+  .ah-pagination-nav,
+  .ah-pagination-size-select,
+  .ah-pm-code-block-wrapper,
+  .ah-pm-code-copy-btn,
+  .ah-pm-code-lang-btn,
+  .ah-pm-code-lang-dropdown,
+  .ah-pm-content,
+  .ah-pm-editor,
+  .ah-pm-embed,
+  .ah-pm-emoji-popup,
+  .ah-pm-find-bar,
+  .ah-pm-find-bar__input,
+  .ah-pm-image-caption,
+  .ah-pm-image-op-item,
+  .ah-pm-link-tooltip,
+  .ah-pm-link-tooltip__btn,
+  .ah-pm-link-tooltip__edit,
+  .ah-pm-math-display,
+  .ah-pm-mention-popup,
+  .ah-pm-sel-toolbar,
+  .ah-pm-sel-toolbar__link-input,
+  .ah-pm-slash-menu,
+  .ah-pm-slash-menu-tab,
+  .ah-pm-table-menu,
+  .ah-progressbar,
+  .ah-pwd-toggle,
+  .ah-radio-cards__card,
+  .ah-ranking-list,
+  .ah-re-dialog,
+  .ah-re-dialog__btn-cancel,
+  .ah-re-dialog__close,
+  .ah-re-dialog__field,
+  .ah-re-editor,
+  .ah-re-toolbar,
+  .ah-re-toolbar__align-menu,
+  .ah-re-toolbar__color-menu,
+  .ah-re-toolbar__emoji-cell,
+  .ah-re-toolbar__emoji-panel,
+  .ah-re-toolbar__emoji-tab,
+  .ah-re-toolbar__font-size-menu,
+  .ah-re-toolbar__heading-menu,
+  .ah-re-toolbar__math-menu,
+  .ah-responsive-panel-content,
+  .ah-responsive-panel-toggle,
+  .ah-ribbon,
+  .ah-ribbon-scroll-btn,
+  .ah-ribbon-tab,
+  .ah-segmented-control,
+  .ah-sheet__close,
+  .ah-slash-menu,
+  .ah-slider-button,
+  .ah-split-button__item,
+  .ah-status-bar__popover,
+  .ah-steps-btn,
+  .ah-steps-indicator,
+  .ah-steps-panel,
+  .ah-tab-bar__close,
+  .ah-tag-input__field,
+  .ah-theme-select,
+  .ah-thinking-block__trigger,
+  .ah-toolbar,
+  .ah-transfer-btn,
+  .ah-transfer-filter-input,
+  .ah-transfer-panel,
+  .ah-upload-dragger,
+  .ah-upload-item,
+  .ah-web-card,
+  .ah-web-card__toggle
+) {
+  border-color: var(--ah-skin-ink);
+  border-width: var(--ah-skin-border-width);
+}
+
+/* ── 两张 chat 卡：三边上墨，**左边留给状态色** ────────────────────────
+   `.ah-tool-call-card` 与 `.ah-subagent-card` 的左边框不是装饰，是那张卡
+   唯一的状态表达：
+     tool-call-card  `3px solid var(--ah-tcc-accent)` —— executing 蓝 /
+                     awaiting 橙 / completed 绿 / failed 红
+     subagent-card   `3px solid var(--ah-sac-accent)` —— 由 data-accent 决定
+                     info / success / warning / error / primary
+   两件先前都跟着上面那条清单一起被四边刷墨，于是所有状态在 brutal 下长得一模一样
+   —— accent token 一直是对的，只是没人看得见。
+
+   外形轴只管形状，刷掉一条语义色边是越界（island 那边就没这么干）。
+   故单列一条，只给三边上墨。 */
+[data-skin="brutal"] :is(.ah-tool-call-card, .ah-subagent-card) {
+  border-top-color: var(--ah-skin-ink);
+  border-right-color: var(--ah-skin-ink);
+  border-bottom-color: var(--ah-skin-ink);
+  border-top-width: var(--ah-skin-border-width);
+  border-right-width: var(--ah-skin-border-width);
+  border-bottom-width: var(--ah-skin-border-width);
+}
+
+/* ── 只上色（测量敏感：网格 / 甘特 / 日程 / 白板按像素排版，加宽会累积错位）── */
+[data-skin="brutal"] :is(
+  .ah-calendar-btn,
+  .ah-calendar-view-btn,
+  .ah-dg-cell-editor,
+  .ah-dg-column-chooser,
+  .ah-dg-column-menu,
+  .ah-dg-command-btn,
+  .ah-dg-context-menu,
+  .ah-dg-ever-present-input,
+  .ah-dg-excel-filter-panel,
+  .ah-dg-excel-filter-search,
+  .ah-dg-filter-btn,
+  .ah-dg-filter-input,
+  .ah-dg-filter-operator-select,
+  .ah-dg-filter-panel,
+  .ah-dg-filter-value-input,
+  .ah-dg-group-panel-tag,
+  .ah-dg-pager-button,
+  .ah-dg-pager-goto-input,
+  .ah-dg-pager-size-select,
+  .ah-dg-popup-cancel-btn,
+  .ah-dg-popup-input,
+  .ah-dg-reorder-helper,
+  .ah-dg-row,
+  .ah-dg-row-cancel-btn,
+  .ah-dg-search-input,
+  .ah-dg-toolbar-btn,
+  .ah-dl-btn,
+  .ah-dl-context-menu,
+  .ah-dl-float-window,
+  .ah-docking-window,
+  .ah-drawn-app-menu,
+  .ah-drawn-context-menu,
+  .ah-drawn-context-menu__item,
+  .ah-drawn-dialog,
+  .ah-drawn-dialog__textarea,
+  .ah-drawn-emoji-btn,
+  .ah-drawn-freehand__preset,
+  .ah-drawn-island,
+  .ah-drawn-link-popup,
+  .ah-drawn-link-popup__input,
+  .ah-drawn-search__close,
+  .ah-drawn-search__input,
+  .ah-drawn-settings-input,
+  .ah-drawn-settings-select,
+  .ah-drawn-shape-menu,
+  .ah-drawn-shape-menu__item,
+  .ah-drawn-swatch,
+  .ah-drawn-theme-dot,
+  .ah-gantt,
+  .ah-node-graph,
+  .ah-node-graph-ctxmenu,
+  .ah-node-graph-minimap,
+  .ah-node-graph-node-header,
+  .ah-node-graph-search,
+  .ah-node-graph-search-input,
+  .ah-node-graph-toolbar,
+  .ah-pg-context-menu,
+  .ah-range-selector-marker-value,
+  .ah-relation-graph,
+  .ah-relation-graph__detail,
+  .ah-relation-graph__detail-close,
+  .ah-relation-graph__tool,
+  .ah-relation-graph__toolbar,
+  .ah-scheduler-btn,
+  .ah-scheduler-contextmenu,
+  .ah-scheduler-dialog-btn,
+  .ah-scheduler-dialog-close,
+  .ah-scheduler-dialog-textarea,
+  .ah-scheduler-more-popover,
+  .ah-scheduler-view-btn,
+  .ah-swimlane,
+  .ah-tg-toggle,
+  .ah-timeline-item-content,
+  .ah-timeline-item-pointer,
+  .ah-tl-feedback
+) {
+  border-color: var(--ah-skin-ink);
+}
+
+/* ── 只加宽（语义色描边：边框本身在传达状态，只加粗不夺色）── */
+[data-skin="brutal"] :is(
+  .ah-datepicker-today-btn,
+  .ah-dt-editor,
+  .ah-expandable-text__toggle,
+  .ah-listmenu-back,
+  .ah-pm-add-btn,
+  .ah-pm-math-edit,
+  .ah-pm-math-error,
+  .ah-re-image-drop-zone__btn,
+  .ah-sortable-placeholder
+) {
+  border-width: var(--ah-skin-border-width);
+}
+
+/* ── 硬边偏移阴影 ──────────────────────────────────────────────────────
+   ⚠ 已从脚本输出里剔掉这几类：网格粘性列/冻结行的**溢出提示**阴影
+   （.ah-dg-cell-pinned-last / .ah-dt-pinned）、甘特任务条、分段控件
+   指示器 —— 它们的 box-shadow 不是「抬升」而是别的语义，换成 4px 偏移会变成
+   明显的错位色块。 */
+[data-skin="brutal"] :is(
+  .ah-a2ui-modal-dialog,
+  .ah-cascader-popup,
+  .ah-combobox-popup,
+  .ah-command-panel,
+  .ah-context-ring__popover,
+  .ah-datepicker-popup,
+  .ah-dg-column-chooser,
+  .ah-dg-column-menu,
+  .ah-dg-context-menu,
+  .ah-dg-excel-filter-panel,
+  .ah-dg-filter-panel,
+  .ah-dg-loading-message,
+  .ah-dg-reorder-helper,
+  .ah-dg-validation-tooltip,
+  .ah-dl-context-menu,
+  .ah-dl-drag-ghost,
+  .ah-dl-float-window,
+  .ah-docking-window,
+  .ah-docking-window-floating,
+  .ah-drag-feedback,
+  .ah-drawer__panel,
+  .ah-drawn-app-menu,
+  .ah-drawn-context-menu,
+  .ah-drawn-dialog,
+  .ah-drawn-island,
+  .ah-drawn-link-popup,
+  .ah-drawn-shape-menu,
+  .ah-dt-chooser-panel,
+  .ah-dti-dropdown,
+  .ah-fmt-popup,
+  .ah-input-popup,
+  .ah-menu-drawer,
+  .ah-pg-context-menu,
+  .ah-pm-code-lang-dropdown,
+  .ah-pm-emoji-popup,
+  .ah-pm-link-tooltip,
+  .ah-pm-mention-popup,
+  .ah-pm-sel-toolbar,
+  .ah-pm-slash-menu,
+  .ah-pm-table-menu,
+  .ah-ranking-list,
+  .ah-re-dialog,
+  .ah-re-toolbar__align-menu,
+  .ah-re-toolbar__color-menu,
+  .ah-re-toolbar__emoji-panel,
+  .ah-re-toolbar__font-size-menu,
+  .ah-re-toolbar__heading-menu,
+  .ah-re-toolbar__math-menu,
+  .ah-relation-graph__detail,
+  .ah-responsive-panel-content,
+  .ah-ribbon-tabs-content,
+  .ah-scheduler-contextmenu,
+  .ah-scheduler-dialog,
+  .ah-scheduler-more-popover,
+  .ah-sheet__panel,
+  .ah-slash-menu,
+  .ah-sortable-helper,
+  .ah-status-bar__popover,
+  .ah-timepicker,
+  .ah-tl-feedback,
+  .ah-toolbar-popup
+) {
+  box-shadow: var(--ah-skin-shadow);
+}
+
+/* 小件降一档（4px 偏移比控件本身还大） */
+[data-skin="brutal"] :is(
+  .ah-colorpicker-bar-pointer,
+  .ah-range-selector-marker,
+  .ah-slider-thumb-dragging,
+  .ah-swimlane-node
+) {
+  box-shadow: var(--ah-skin-shadow-sm);
+}
+
+/* ── 硬编码圆角（够不着 --ah-radius-*，按原值分组压平）──────────────
+   全部压到 4px。原值 1–3px 的那批（进度条、指示条、找词高亮）保持不动 ——
+   它们本就近乎直角，压不压看不出来，动了反而多一组规则要维护。 */
+[data-skin="brutal"] :is(
+  .ah-breadcrumbs__link,
+  .ah-cascader-menu-item,
+  .ah-chat-input__btn,
+  .ah-chat-input__row,
+  .ah-chat-markdown,
+  .ah-chat-markdown__copy,
+  .ah-command,
+  .ah-command-panel,
+  .ah-command__item,
+  .ah-context-ring__action,
+  .ah-context-ring__popover,
+  .ah-dg-badge,
+  .ah-dg-cell-image,
+  .ah-dg-column-chooser,
+  .ah-dg-excel-filter-panel,
+  .ah-dg-progress,
+  .ah-dg-progress-bar,
+  .ah-dg-row,
+  .ah-dg-scroll-tooltip,
+  .ah-diff,
+  .ah-drawer__close,
+  .ah-drawn-app-menu,
+  .ah-drawn-context-menu,
+  .ah-drawn-context-menu__item,
+  .ah-drawn-dialog,
+  .ah-drawn-dialog__textarea,
+  .ah-drawn-emoji-btn,
+  .ah-drawn-freehand__preset,
+  .ah-drawn-island,
+  .ah-drawn-link-popup,
+  .ah-drawn-link-popup__input,
+  .ah-drawn-search__close,
+  .ah-drawn-search__input,
+  .ah-drawn-settings-input,
+  .ah-drawn-settings-select,
+  .ah-drawn-shape-menu,
+  .ah-drawn-shape-menu__item,
+  .ah-drawn-swatch,
+  .ah-drawn-text-edit,
+  .ah-heatmap-calendar__tooltip,
+  .ah-kbd,
+  .ah-listbox-scroll-tooltip,
+  .ah-md-table,
+  .ah-message-bubble__body,
+  .ah-nav-tree__item,
+  .ah-nav-tree__item--parent,
+  .ah-page-header__back,
+  .ah-pm-code-block-wrapper,
+  .ah-pm-code-copy-btn,
+  .ah-pm-code-lang-btn,
+  .ah-pm-code-lang-option,
+  .ah-pm-drag-clone,
+  .ah-pm-link-tooltip__btn,
+  .ah-pm-link-tooltip__edit,
+  .ah-pm-mention,
+  .ah-pm-sel-toolbar,
+  .ah-pm-sel-toolbar__link-input,
+  .ah-pm-slash-menu-item,
+  .ah-pm-slash-menu-item-icon,
+  .ah-pm-table-menu,
+  .ah-radio-cards__card,
+  .ah-ranking-list,
+  .ah-ranking-list__flag,
+  .ah-ranking-list__item,
+  .ah-ranking-list__tag,
+  .ah-re-dialog__btn-cancel,
+  .ah-re-dialog__close,
+  .ah-re-dialog__field,
+  .ah-re-image-drop-zone__btn,
+  .ah-re-toolbar,
+  .ah-re-toolbar__color-menu,
+  .ah-re-toolbar__math-menu,
+  .ah-relation-graph,
+  .ah-relation-graph__detail,
+  .ah-relation-graph__detail-close,
+  .ah-relation-graph__tool,
+  .ah-relation-graph__toolbar,
+  .ah-segmented-control,
+  .ah-segmented-control__item,
+  .ah-sheet__close,
+  .ah-sidenav__brand-mark,
+  .ah-skeleton__shape,
+  .ah-slash-menu,
+  .ah-slash-menu__item,
+  .ah-slash-menu__mode,
+  .ah-split-button__item,
+  .ah-split-button__menu,
+  .ah-statistic__title,
+  .ah-status-bar__count,
+  .ah-status-bar__popover,
+  .ah-subagent-card,
+  .ah-swimlane,
+  .ah-tab-bar__close,
+  .ah-thinking-block__trigger,
+  .ah-tool-call-card,
+  .ah-transfer-panel-count,
+  .ah-web-card
+) {
+  border-radius: var(--ah-skin-radius);
+}
+
+/* ── 分隔线：虚改实 ────────────────────────────────────────────────────
+   淡灰时虚线不显眼，刷成墨色就叫得很响；neo 里没有虚线发丝。
+   ⚠ 四边 dashed 的那批（拖放区 .ah-upload-dragger / .ah-tl-drop-area /
+     .ah-sortable-placeholder …）**保留虚线** —— 那是「这里可以拖进来」的
+     语义，改实线等于把提示抹了。 */
+[data-skin="brutal"] .ah-sidenav {
+  border-style: solid;
+}
+
+/* ── 「直角」是地板线：任何 skin 都不许把调用方显式压平的东西再圆回去 ──────
+   `:no-rounded?` / `:square?` 这类开关同样只是拼一个 class，但它们的方向与
+   `:round?` **相反** —— 调用方要的是「这里不要圆角」，而不是「按默认长相来」。
+   形状轴可以决定「默认长什么样」，不该否决一个明确的否定。
+   ⚠ 必须在 skin 里重新声明一遍：组件那几条在 `@layer components.ah` 里，
+     而 skin 不分层、无层永远压过有层 —— 实测 island 会把
+     `.ah-input-no-rounded` 的输入框强行变成 999px 胶囊。 */
+[data-skin="brutal"] :is(.ah-input-no-rounded, .ah-masked-input-no-rounded, .ah-dti-no-rounded)
+  :is(.ah-input, .ah-input-addon-prefix, .ah-input-addon-suffix,
+      .ah-masked-input, .ah-dti-input, .ah-dti-cal-btn, .ah-dti-spinner) {
+  border-radius: 0;
+}
+[data-skin="brutal"] :is(.ah-expander-square, .ah-navigationbar-square) {
+  border-radius: 0;
+}
+
+/* ── 几何地板线：真圆的东西任何 skin 都不许压平 ──────────────────────────
+   ⚠ 实测踩过：骨架屏的圆形变体原先是 cljs 内联 `border-radius:50%`（内联赢过
+   一切，所以没人发现问题）；把它搬进 CSS 之后，本文件的「硬编码圆角压平」清单
+   里那条 `.ah-skeleton__shape` 立刻把圆形也压成了圆角方块（skin 不分层，
+   压过库里的类）。凡是从内联搬进 CSS 的几何，都要在这里补一条。 */
+[data-skin="brutal"] .ah-skeleton__shape-circle {
+  border-radius: 50%;
+}

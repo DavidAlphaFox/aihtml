@@ -1,0 +1,76 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Badge · 角标（借鉴 happy badge.css）
+   锚点右上角叠加计数/圆点/状态点。data-* 驱动，纯 CSS 显隐缩放。
+   ============================================================================ */
+
+.ah-badge-root {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.ah-badge-indicator {
+  position: absolute;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  border-radius: var(--ah-radius-lg);
+  color: var(--ah-color-primary-contrast, #fff);
+  background: var(--ah-color-primary);
+  transform: scale(1) translate(50%, -50%);
+  transform-origin: 100% 0%;
+  transition: transform .16s ease, opacity .16s ease;
+  white-space: nowrap;
+}
+
+/* 锚点角落定位 */
+.ah-badge-root[data-anchor-vertical="top"]    .ah-badge-indicator { top: 0; }
+.ah-badge-root[data-anchor-vertical="bottom"] .ah-badge-indicator { bottom: 0; top: auto; transform: scale(1) translate(50%, 50%); transform-origin: 100% 100%; }
+.ah-badge-root[data-anchor-horizontal="left"] .ah-badge-indicator { left: 0; right: auto; transform: scale(1) translate(-50%, -50%); transform-origin: 0% 0%; }
+.ah-badge-root[data-anchor-vertical="bottom"][data-anchor-horizontal="left"] .ah-badge-indicator { transform: scale(1) translate(-50%, 50%); transform-origin: 0% 100%; }
+.ah-badge-root[data-anchor-horizontal="right"] .ah-badge-indicator { right: 0; left: auto; }
+
+/* 圆形锚点内缩，避免溢出圆角 */
+.ah-badge-root[data-overlap="circular"] .ah-badge-indicator { transform: scale(1) translate(35%, -35%); }
+
+/* dot / 状态点：无文字小圆 */
+.ah-badge-indicator[data-dot="true"] {
+  min-width: 10px;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px var(--ah-color-bg);
+}
+
+/* 隐藏 */
+.ah-badge-indicator[data-invisible="true"] {
+  transform: scale(0) translate(50%, -50%);
+  opacity: 0;
+}
+
+/* 颜色矩阵 */
+.ah-badge-indicator[data-color="primary"]   { background: var(--ah-color-primary);   color: var(--ah-color-primary-contrast, #fff); }
+.ah-badge-indicator[data-color="secondary"] { background: var(--ah-color-secondary); color: var(--ah-color-secondary-contrast, #fff); }
+.ah-badge-indicator[data-color="success"]   { background: var(--ah-color-success);   color: var(--ah-color-success-contrast, #fff); }
+.ah-badge-indicator[data-color="warning"]   { background: var(--ah-color-warning);   color: var(--ah-color-warning-contrast, #fff); }
+.ah-badge-indicator[data-color="error"]     { background: var(--ah-color-error);     color: var(--ah-color-error-contrast, #fff); }
+.ah-badge-indicator[data-color="info"]      { background: var(--ah-color-info);      color: var(--ah-color-info-contrast, #fff); }
+.ah-badge-indicator[data-color="default"]   { background: var(--ah-color-text-secondary); color: var(--ah-color-bg); }
+
+/* 状态点语义色 */
+.ah-badge-indicator[data-variant="online"]  { background: var(--ah-color-success); }
+.ah-badge-indicator[data-variant="away"]    { background: var(--ah-color-warning); }
+.ah-badge-indicator[data-variant="busy"]    { background: var(--ah-color-error); }
+.ah-badge-indicator[data-variant="offline"] { background: var(--ah-color-text-disabled, #9aa0a6); }

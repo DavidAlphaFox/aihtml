@@ -1,0 +1,48 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   TagInput · 标签输入框（借鉴 happy tag-input）
+   复用 .ah-chip 的视觉（标签直接渲染成 chip 标记）。
+   ============================================================================ */
+
+.ah-tag-input {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 5px 8px;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md, 8px);
+  background: var(--ah-color-bg);
+  cursor: text;
+  transition: border-color .14s ease, box-shadow .14s ease;
+}
+
+.ah-tag-input:focus-within {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ah-color-primary) 18%, transparent);
+}
+
+.ah-tag-input[data-disabled="true"] {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-tag-input__field {
+  flex: 1;
+  min-width: 90px;
+  border: 0;
+  outline: 0;
+  padding: 2px 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ah-color-text);
+  background: transparent;
+}
+.ah-tag-input__field::placeholder { color: var(--ah-color-text-muted); }
+
+/* 标签片沿用 chip 样式，这里只做微调 */
+.ah-tag-input__chip { flex-shrink: 0; }

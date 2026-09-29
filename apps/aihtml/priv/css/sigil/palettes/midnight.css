@@ -1,0 +1,66 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   配色 · Midnight（午夜蓝 + 薰衣草）—— data-palette="midnight"
+   只覆盖品牌强调色；中性层归 data-theme（推荐配 dark），字体归 data-typography。
+   注：规范暗色外观 data-theme="dark" 的中性层即取自本主题原设计。
+   ============================================================================ */
+
+
+/* ⚠ P14.5：与 sigil.css 同处 `@layer components.ah`。
+   本文件是独立编译的入口（不经 lib.css），所以在这里自己声明层。
+   同层 + 在 sigil.css 之后加载 ⇒ 正确覆盖 baked 进去的默认配色；
+   若不声明层则会变成「无层」而**永远**赢过 sigil.css，那样下游就再也压不住它了。 */
+
+@layer components.ah {
+  [data-palette="midnight"] {
+    /* ---- 主色调 (午夜蓝) ---- */
+    --ah-color-primary-lighter: #263457;
+    --ah-color-primary-light: #4E66A3;
+    --ah-color-primary: #86A4F0;
+    --ah-color-primary-dark: #A2BBFC;
+    --ah-color-primary-darker: #D4E0FC;
+    --ah-color-primary-contrast: #263457;
+
+    /* ---- 次要色调 (薰衣草) ---- */
+    --ah-color-secondary-lighter: #2F2657;
+    --ah-color-secondary-light: #5E4EA3;
+    --ah-color-secondary: #9A86F0;
+    --ah-color-secondary-dark: #B2A2FC;
+    --ah-color-secondary-darker: #DBD4FC;
+    --ah-color-secondary-contrast: #2F2657;
+
+    /* ---- 信息色 ---- */
+    --ah-color-info-lighter: #264757;
+    --ah-color-info-light: #4E87A3;
+    --ah-color-info: #86CDF0;
+    --ah-color-info-dark: #A2DEFC;
+    --ah-color-info-darker: #BDE7FC;
+    --ah-color-info-contrast: #264757;
+
+    /* ---- 成功色 ---- */
+    --ah-color-success-lighter: #265747;
+    --ah-color-success-light: #4EA388;
+    --ah-color-success: #86F0CE;
+    --ah-color-success-dark: #A2FCE0;
+    --ah-color-success-darker: #BDFCE8;
+    --ah-color-success-contrast: #265747;
+
+    /* ---- 警告色 ---- */
+    --ah-color-warning-lighter: #574726;
+    --ah-color-warning-light: #806A3C;
+    --ah-color-warning: #F0CE86;
+    --ah-color-warning-dark: #FCE0A2;
+    --ah-color-warning-darker: #FCE8BD;
+    --ah-color-warning-contrast: #574726;
+
+    /* ---- 错误色 ---- */
+    --ah-color-error-lighter: #572642;
+    --ah-color-error-light: #C45C97;
+    --ah-color-error: #F086C2;
+    --ah-color-error-dark: #FCA2D5;
+    --ah-color-error-darker: #FCBDE1;
+    --ah-color-error-contrast: #572642;
+  }
+}

@@ -1,0 +1,161 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   NavTree —— 分组树状侧边导航组件
+   类名前缀 .ah-nav-tree；通过 --snt-* 变量主题化（默认取 Sigil 设计令牌）。
+   折叠用原生 <details>，展开经 interpolate-size + ::details-content 平滑过渡。
+   ============================================================================ */
+
+.ah-nav-tree {
+  /* —— 主题变量（可被宿主覆盖）—— */
+  --ah-snt-fg:          var(--ah-color-text, #1c252e);
+  --ah-snt-fg-muted:    var(--ah-color-text-secondary, #637381);
+  --ah-snt-fg-faint:    var(--ah-color-text-disabled, #919eab);
+  --ah-snt-accent:      var(--ah-color-primary, #00a76f);
+  --ah-snt-accent-dark: var(--ah-color-primary-dark, var(--ah-snt-accent));
+  --ah-snt-accent-soft: color-mix(in srgb, var(--ah-snt-accent) 8%, transparent);
+  --ah-snt-accent-soft-strong: color-mix(in srgb, var(--ah-snt-accent) 12%, transparent);
+  --ah-snt-line:        var(--ah-color-border, #e0e4e8);
+  --ah-snt-radius:      var(--ah-radius-md, 8px);
+  /* 树干几何：弯头中心相对“行首”顶部的偏移（≈行首半高）；
+     首行向上延伸量：脊柱根部只向上伸入父行少许，止于父级图标下方、
+     留出呼吸空隙——不要伸到父行中心，否则线会插进父级图标里。 */
+  --ah-snt-elbow-c:     18px;
+  --ah-snt-trunk-up:    8px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  /* 让子菜单 height:auto 可参与过渡 */
+  interpolate-size: allow-keywords;
+}
+
+/* —— 分组 —— */
+.ah-nav-tree__group { display: flex; flex-direction: column; gap: 2px; }
+.ah-nav-tree__group-label {
+  font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--ah-snt-fg-faint); padding: 8px 12px 4px;
+}
+
+/* —— 一级项（链接 / 折叠头）—— */
+.ah-nav-tree__item {
+  position: relative;
+  display: flex; align-items: center; gap: 14px;
+  padding: 11px 12px; border-radius: var(--ah-radius-lg);
+  color: var(--ah-snt-fg-muted); font-size: 14px; font-weight: 600;
+  text-decoration: none; cursor: pointer;
+  transition: background-color .2s, color .2s;
+}
+.ah-nav-tree__item:hover { background: var(--ah-snt-accent-soft); color: var(--ah-snt-fg); }
+.ah-nav-tree__icon { display: grid; place-items: center; color: var(--ah-snt-fg-faint); transition: color .2s; }
+.ah-nav-tree__item:hover .ah-nav-tree__icon { color: var(--ah-snt-accent); }
+.ah-nav-tree__label { flex: 1; min-width: 0; }
+
+/* 激活叶子项 */
+.ah-nav-tree__item.ah-is-active {
+  color: var(--ah-snt-accent-dark); font-weight: 700;
+  background: linear-gradient(90deg, var(--ah-snt-accent-soft-strong), transparent);
+}
+.ah-nav-tree__item.ah-is-active .ah-nav-tree__icon { color: var(--ah-snt-accent); }
+/* 顶级叶子项激活：左侧主色竖条（仅作用于分组直接子项，避免影响子树弯头）*/
+.ah-nav-tree__group > .ah-nav-tree__item.ah-is-active::before {
+  content: ""; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 20px; border-radius: 0 3px 3px 0; background: var(--ah-snt-accent);
+}
+
+/* —— 折叠节点 —— */
+.ah-nav-tree__node > summary { list-style: none; }
+.ah-nav-tree__node > summary::-webkit-details-marker { display: none; }
+.ah-nav-tree__caret {
+  margin-left: auto; color: var(--ah-snt-fg-faint); display: grid; place-items: center;
+  transition: transform .25s cubic-bezier(.4,0,.2,1);
+}
+.ah-nav-tree__node[open] > .ah-nav-tree__item--parent .ah-nav-tree__caret { transform: rotate(180deg); }
+.ah-nav-tree__item--parent.ah-is-open { color: var(--ah-snt-fg); }
+.ah-nav-tree__item--parent.ah-is-open .ah-nav-tree__icon { color: var(--ah-snt-accent); }
+
+/* —— 子项容器 —— */
+.ah-nav-tree__children { position: relative; margin: 2px 0 2px 22px; }
+.ah-nav-tree__children-inner { display: flex; flex-direction: column; }
+
+/* —— 行（leaf <a> 与可折叠节点 <details>）——
+   连接线要画在“每一行”上，因此 leaf 与 node 都视为 children-inner 的直接行。
+   node 的行首是其 <summary>，需与 leaf 同样的紧凑内边距/字号，保证行首等高、弯头对齐。 */
+.ah-nav-tree__children-inner > .ah-nav-tree__item,
+.ah-nav-tree__children-inner > .ah-nav-tree__node > .ah-nav-tree__item--parent {
+  padding: 8px 12px 8px 24px; border-radius: var(--ah-radius-md); font-size: 13.5px;
+}
+.ah-nav-tree__children-inner > .ah-nav-tree__item,
+.ah-nav-tree__children-inner > .ah-nav-tree__node { position: relative; }
+
+/* ————————————————————————————————————————————————————————————
+   连接线 = 不间断脊柱 + 圆角分岔（对齐 happy 的画法）：
+     ::before 弯头 —— 竖段与脊柱同 x 重叠，末端以 1/4 圆弧弯入该行；
+     ::after  竖干 —— 贯穿整行高度（top:0/bottom:0），与兄弟首尾相接。
+   竖干在弯头曲线背后直穿而过，脊柱因此没有断点；
+   最后一行不画竖干，脊柱随其弯头圆弧自然收尾。
+   ———————————————————————————————————————————————————————————— */
+
+/* 圆弧弯头（╰）：弯头中心用固定 --ah-snt-elbow-c（而非 50%）锚定行首，
+   使节点展开的高子树不致拉偏弯头。首行 top/height 向上延伸衔接父行底部。 */
+.ah-nav-tree__children-inner > .ah-nav-tree__item::before,
+.ah-nav-tree__children-inner > .ah-nav-tree__node::before {
+  content: ""; position: absolute; left: 0; top: 0;
+  width: 13px; height: var(--ah-snt-elbow-c);
+  border-left: 2px solid var(--ah-snt-line);
+  border-bottom: 2px solid var(--ah-snt-line);
+  border-bottom-left-radius: 13px;
+  pointer-events: none;
+}
+.ah-nav-tree__children-inner > .ah-nav-tree__item:first-child::before,
+.ah-nav-tree__children-inner > .ah-nav-tree__node:first-child::before {
+  top: calc(-1 * var(--ah-snt-trunk-up));
+  height: calc(var(--ah-snt-trunk-up) + var(--ah-snt-elbow-c));
+}
+
+/* 主干竖线：贯穿整行高度（node 借 bottom:0 延伸到展开子树底部），在弯头
+   曲线背后直穿而过 → 脊柱连续无断点。首行同样向上延伸与父行相接；
+   末行之后没有兄弟：不画竖干，脊柱随弯头圆弧收尾。 */
+.ah-nav-tree__children-inner > .ah-nav-tree__item::after,
+.ah-nav-tree__children-inner > .ah-nav-tree__node::after {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0;
+  width: 0; border-left: 2px solid var(--ah-snt-line);
+  pointer-events: none;
+}
+.ah-nav-tree__children-inner > .ah-nav-tree__item:first-child::after,
+.ah-nav-tree__children-inner > .ah-nav-tree__node:first-child::after {
+  top: calc(-1 * var(--ah-snt-trunk-up));
+}
+.ah-nav-tree__children-inner > .ah-nav-tree__item:last-child::after,
+.ah-nav-tree__children-inner > .ah-nav-tree__node:last-child::after { display: none; }
+
+/* 命中叶子：底色高亮 */
+.ah-nav-tree__children-inner > .ah-nav-tree__item.ah-is-active { background: var(--ah-snt-accent-soft-strong); }
+
+/* —— 命中路径高亮：弯头 + 脊柱连续转主色 ——
+   压盖关系：竖干（::after）默认画在弯头（::before）之上，灰竖干盖住灰弯头
+   的重叠竖段无痕；命中行（或命中所在节点）的主色弯头用 z-index 抬到自身
+   灰色竖干之上，主色路径不被截断；其下方竖干保持灰色（路径进入该行、
+   而非越过它继续向下）。 */
+.ah-nav-tree__children-inner > .ah-nav-tree__item.ah-is-active::before,
+.ah-nav-tree__children-inner > .ah-nav-tree__node:has(.ah-is-active)::before {
+  border-left-color: var(--ah-snt-accent);
+  border-bottom-color: var(--ah-snt-accent);
+  z-index: 1;
+}
+/* 命中项之前“被穿过”的兄弟行（直接命中兄弟 ~ .ah-is-active，或后续兄弟内部
+   嵌套命中 ~ * .ah-is-active）：贯穿整行的竖干转主色，盖过自身灰弯头竖段，
+   露出的灰色 ┗ 残桩仍指向本行。 */
+.ah-nav-tree__children-inner > .ah-nav-tree__item:has(~ .ah-is-active, ~ * .ah-is-active)::after,
+.ah-nav-tree__children-inner > .ah-nav-tree__node:has(~ .ah-is-active, ~ * .ah-is-active)::after {
+  border-left-color: var(--ah-snt-accent);
+}
+
+/* —— 平滑展开/收起（现代浏览器；不支持则瞬时，仍可用）—— */
+.ah-nav-tree__node::details-content {
+  height: 0; overflow: hidden; opacity: 0;
+  transition: height .26s cubic-bezier(.4,0,.2,1), opacity .2s, content-visibility .26s allow-discrete;
+  transition-behavior: allow-discrete;
+}
+.ah-nav-tree__node[open]::details-content { height: auto; opacity: 1; }

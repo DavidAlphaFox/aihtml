@@ -1,0 +1,169 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Drawer · 手势抽屉（借鉴 happy drawer）
+   结构同 sheet，另加把手条与拖拽态：拖动中关闭过渡，松手才恢复（防回跳）。
+   ============================================================================ */
+
+.ah-drawer-anchor { display: none; }
+
+/* ⚠ P15.5：收起态用 `visibility` 而不是让 cljs 内联 `display:none`。
+   遮罩必须真的从命中测试里消失（`opacity:0` 的全屏固定层照样吃掉整页点击），
+   但 `display` 一关，面板的 transform 过渡就跑不起来 —— 原实现于是变成
+   「开：内联 display:block + 强制重排；关：setTimeout 260ms 再内联 display:none」，
+   把显隐状态搬进了 JS，外部 CSS 类改不动它。
+   `visibility:hidden` 同样不吃事件，又不打断过渡，且**自身可过渡**（离散属性，
+   靠 delay 排期）：开时 0s 立刻可见，关时延后到面板滑完再隐藏。
+   ⚠ 那个 delay 必须 ≥ `.ah-drawer__panel` 的 .26s —— 短了会在面板滑到一半时
+     把它连同遮罩一起藏掉（visibility 会继承给子元素）。 */
+.ah-drawer__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20600;
+  background: color-mix(in srgb, var(--ah-color-scrim) var(--ah-scrim-opacity), transparent);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .2s ease, visibility 0s linear .26s;
+}
+.ah-drawer__overlay[data-state="open"] {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity .2s ease, visibility 0s linear 0s;
+}
+
+.ah-drawer__panel {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  max-width: 100vw;
+  max-height: 100vh;
+  background: var(--ah-color-bg);
+  box-shadow: 0 -8px 40px rgb(0 0 0 / .24);
+  outline: none;
+  touch-action: none;                 /* 手势由 pointer 事件接管 */
+  transition: transform .26s cubic-bezier(.32, .72, 0, 1);
+}
+
+/* 拖动中禁用过渡 —— 否则逐帧直写 transform 会被过渡插值拖慢、产生粘滞感 */
+.ah-drawer__panel[data-dragging="true"] { transition: none; }
+
+/* ---- 四方向 ---- */
+.ah-drawer__panel[data-side="bottom"] {
+  bottom: 0; left: 0; right: 0;
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: 14px 14px 0 0;
+  transform: translateY(100%);
+}
+.ah-drawer__panel[data-side="top"] {
+  top: 0; left: 0; right: 0;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: 0 0 14px 14px;
+  transform: translateY(-100%);
+}
+.ah-drawer__panel[data-side="right"] {
+  top: 0; right: 0; bottom: 0;
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: 14px 0 0 14px;
+  transform: translateX(100%);
+}
+.ah-drawer__panel[data-side="left"] {
+  top: 0; left: 0; bottom: 0;
+  border-right: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: 0 14px 14px 0;
+  transform: translateX(-100%);
+}
+.ah-drawer__panel[data-state="open"] { transform: none; }
+
+/* ---- 把手条 ---- */
+.ah-drawer__handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0 4px;
+  cursor: grab;
+  flex-shrink: 0;
+}
+.ah-drawer__panel[data-dragging="true"] .ah-drawer__handle { cursor: grabbing; }
+
+.ah-drawer__handle-bar {
+  width: 36px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--ah-color-border);
+}
+/* 左右方向时把手转成竖条 */
+.ah-drawer__panel[data-side="left"]  .ah-drawer__handle-bar,
+.ah-drawer__panel[data-side="right"] .ah-drawer__handle-bar {
+  width: 4px;
+  height: 36px;
+}
+
+/* ---- 内部结构 ---- */
+.ah-drawer__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 18px 14px;
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-drawer__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--ah-color-text);
+}
+
+.ah-drawer__description {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ah-color-text-muted);
+}
+
+.ah-drawer__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ah-radius-md);
+  background: transparent;
+  color: var(--ah-color-text-muted);
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+}
+.ah-drawer__close svg { width: 16px; height: 16px; }
+.ah-drawer__close:hover {
+  background: var(--ah-color-bg-subtle);
+  color: var(--ah-color-text);
+}
+
+.ah-drawer__body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--ah-color-text);
+  touch-action: pan-y;                /* 内容区仍可正常滚动 */
+}
+
+.ah-drawer__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 18px;
+  border-top: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-drawer__panel,
+  .ah-drawer__overlay { transition: none; }
+}

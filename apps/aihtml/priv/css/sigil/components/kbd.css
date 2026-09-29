@@ -1,0 +1,31 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Kbd · 键盘键（借鉴 happy kbd.css）
+   键帽样式的 <kbd>。data-size。
+   ============================================================================ */
+
+.ah-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  font-family: var(--ah-font-mono);
+  font-size: 12px;
+  line-height: 1;
+  color: var(--ah-color-text-secondary);
+  background: var(--ah-color-bg-subtle);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-bottom-width: 2px;
+  border-radius: var(--ah-radius-sm);
+  white-space: nowrap;
+}
+.ah-kbd[data-size="lg"] {
+  min-width: 26px;
+  height: 26px;
+  padding: 0 9px;
+  font-size: 14px;
+}

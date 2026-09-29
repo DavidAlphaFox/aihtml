@@ -1,0 +1,395 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   滑块组件 (Slider)
+   水平或垂直的数值选择器，支持范围选择和多种主题样式
+   ============================================================================ */
+
+/* ---- 主容器 ---- */
+.ah-slider {
+  position: relative;
+  display: inline-block;
+  user-select: none;
+  -webkit-user-select: none;
+  box-sizing: border-box;
+}
+
+.ah-slider-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 方向类 ---- */
+.ah-slider-horizontal {
+  height: 30px;
+}
+
+.ah-slider-vertical {
+  width: 30px;
+  min-width: 96px;
+}
+
+/* ---- 内容包装器 ---- */
+.ah-slider-content {
+  position: absolute;
+  overflow: visible;
+}
+
+.ah-slider-horizontal .ah-slider-content {
+  top: 0;
+  left: 24px;
+  right: 24px;
+  height: 100%;
+}
+
+.ah-slider-vertical .ah-slider-content {
+  left: 0;
+  top: 24px;
+  bottom: 24px;
+  width: 100%;
+}
+
+/* ---- 无按钮时的内容位置 ---- */
+.ah-slider-buttons-hidden .ah-slider-content {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+}
+
+/* ---- 增减按钮 ---- */
+.ah-slider-button {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-grey-100);
+  cursor: pointer;
+  transition: background var(--ah-transition-fast);
+}
+
+.ah-slider-button:hover {
+  background: var(--ah-color-grey-200);
+}
+
+.ah-slider-button:active {
+  background: var(--ah-color-grey-300);
+}
+
+.ah-slider-button-icon {
+  font-size: 10px;
+  color: var(--ah-color-grey-600);
+}
+
+/* ---- 水平方向按钮位置 ---- */
+.ah-slider-horizontal .ah-slider-button-prev {
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ah-slider-horizontal .ah-slider-button-next {
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ---- 垂直方向按钮位置 ---- */
+.ah-slider-vertical .ah-slider-button-prev {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.ah-slider-vertical .ah-slider-button-next {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ---- 刻度容器 ---- */
+.ah-slider-ticks {
+  position: absolute;
+  pointer-events: none;
+}
+
+.ah-slider-horizontal .ah-slider-ticks {
+  width: 100%;
+  height: 20px;
+}
+
+.ah-slider-vertical .ah-slider-ticks {
+  height: 100%;
+  width: 20px;
+}
+
+/* ---- 刻度线 ---- */
+.ah-slider-tick {
+  position: absolute;
+  background: var(--ah-color-grey-400);
+}
+
+.ah-slider-tick-major {
+  background: var(--ah-color-grey-500);
+}
+
+.ah-slider-tick-minor {
+  opacity: 0.5;
+}
+
+/* ---- 水平刻度 ---- */
+.ah-slider-tick-horizontal {
+  width: 1px;
+  height: 8px;
+  top: 0;
+}
+
+.ah-slider-tick-major.ah-slider-tick-horizontal {
+  height: 10px;
+}
+
+/* ---- 垂直刻度 ---- */
+.ah-slider-tick-vertical {
+  height: 1px;
+  width: 8px;
+  left: 0;
+}
+
+.ah-slider-tick-major.ah-slider-tick-vertical {
+  width: 10px;
+}
+
+/* ---- 刻度标签 ---- */
+.ah-slider-tick-label {
+  position: absolute;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-600);
+  white-space: nowrap;
+}
+
+.ah-slider-horizontal .ah-slider-tick-label {
+  top: 12px;
+  transform: translateX(-50%);
+}
+
+.ah-slider-vertical .ah-slider-tick-label {
+  left: 14px;
+  transform: translateY(-50%);
+}
+
+/* ---- 刻度位置变体 ---- */
+.ah-slider-ticks-top .ah-slider-ticks {
+  top: 0;
+}
+
+.ah-slider-ticks-bottom .ah-slider-ticks {
+  bottom: 0;
+}
+
+.ah-slider-ticks-both .ah-slider-ticks-top,
+.ah-slider-ticks-both .ah-slider-ticks-bottom {
+  position: absolute;
+}
+
+/* ---- 轨道 ---- */
+.ah-slider-track {
+  position: absolute;
+  background: var(--ah-color-grey-200);
+  border-radius: var(--ah-radius-full);
+  box-sizing: border-box;
+}
+
+.ah-slider-horizontal .ah-slider-track {
+  height: 6px;
+  width: 100%;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.ah-slider-vertical .ah-slider-track {
+  width: 6px;
+  height: 100%;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+}
+
+/* ---- 范围条（已选中区域） ---- */
+.ah-slider-range {
+  position: absolute;
+  background: var(--ah-color-primary);
+  border-radius: var(--ah-radius-full);
+}
+
+.ah-slider-horizontal .ah-slider-range {
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+.ah-slider-vertical .ah-slider-range {
+  width: 100%;
+  left: 0;
+  bottom: 0;
+}
+
+/* ---- 滑块手柄 ---- */
+.ah-slider-thumb {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ah-color-primary);
+  border: 2px solid var(--ah-color-common-white);
+  box-shadow: var(--ah-shadow-sm);
+  cursor: grab;
+  z-index: 10;
+  transition: transform var(--ah-transition-fast), box-shadow var(--ah-transition-fast);
+}
+
+.ah-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: var(--ah-shadow-md);
+}
+
+.ah-slider-thumb:active,
+.ah-slider-thumb-dragging {
+  cursor: grabbing;
+  transform: scale(1.15);
+  box-shadow: var(--ah-shadow-md);
+}
+
+/* ---- 水平手柄位置 ---- */
+.ah-slider-horizontal .ah-slider-thumb {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.ah-slider-horizontal .ah-slider-thumb:hover {
+  transform: translateY(-50%) scale(1.1);
+}
+
+.ah-slider-horizontal .ah-slider-thumb:active,
+.ah-slider-horizontal .ah-slider-thumb-dragging {
+  transform: translateY(-50%) scale(1.15);
+}
+
+/* ---- 垂直手柄位置 ---- */
+.ah-slider-vertical .ah-slider-thumb {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.ah-slider-vertical .ah-slider-thumb:hover {
+  transform: translateX(-50%) scale(1.1);
+}
+
+.ah-slider-vertical .ah-slider-thumb:active,
+.ah-slider-vertical .ah-slider-thumb-dragging {
+  transform: translateX(-50%) scale(1.15);
+}
+
+/* ---- 提示框（Tooltip） ---- */
+.ah-slider-tooltip {
+  position: absolute;
+  padding: 2px 8px;
+  font-size: var(--ah-font-size-xs);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-common-white);
+  background: var(--ah-color-grey-800);
+  border-radius: var(--ah-radius-sm);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--ah-transition-fast);
+  z-index: 20;
+}
+
+.ah-slider-tooltip-visible {
+  opacity: 1;
+}
+
+/* ---- 水平提示框位置 ---- */
+.ah-slider-horizontal .ah-slider-tooltip {
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ---- 垂直提示框位置 ---- */
+.ah-slider-vertical .ah-slider-tooltip {
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ---- 主题颜色 ---- */
+.ah-slider-primary .ah-slider-range,
+.ah-slider-primary .ah-slider-thumb {
+  background: var(--ah-color-primary);
+}
+
+.ah-slider-success .ah-slider-range,
+.ah-slider-success .ah-slider-thumb {
+  background: var(--ah-color-success);
+}
+
+.ah-slider-warning .ah-slider-range,
+.ah-slider-warning .ah-slider-thumb {
+  background: var(--ah-color-warning);
+}
+
+.ah-slider-danger .ah-slider-range,
+.ah-slider-danger .ah-slider-thumb {
+  background: var(--ah-color-error);
+}
+
+.ah-slider-info .ah-slider-range,
+.ah-slider-info .ah-slider-thumb {
+  background: var(--ah-color-info);
+}
+
+.ah-slider-secondary .ah-slider-range,
+.ah-slider-secondary .ah-slider-thumb {
+  background: var(--ah-color-secondary);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-slider-disabled .ah-slider-thumb {
+  background: var(--ah-color-grey-400);
+  cursor: not-allowed;
+}
+
+.ah-slider-disabled .ah-slider-range {
+  background: var(--ah-color-grey-300);
+}
+
+.ah-slider-disabled .ah-slider-button {
+  cursor: not-allowed;
+  background: var(--ah-color-grey-100);
+}
+
+/* ---- 焦点状态 ---- */
+.ah-slider-focused .ah-slider-track {
+  outline: 2px solid var(--ah-color-primary-light);
+  outline-offset: 2px;
+}
+
+/* ---- 隐藏元素 ---- */
+.ah-slider-buttons-hidden .ah-slider-button {
+  display: none;
+}
+
+.ah-slider-ticks-hidden .ah-slider-ticks {
+  visibility: hidden;
+}
+
+.ah-slider-range-hidden .ah-slider-range {
+  display: none;
+}

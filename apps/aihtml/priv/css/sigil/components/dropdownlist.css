@@ -1,0 +1,233 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================
+   DropDownList — 下拉选择器组件
+   简单的下拉选择器，用于从列表中选择单个值
+   ============================================================ */
+
+/* ---- 主容器 ---- */
+.ah-dropdownlist {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  font-family: var(--ah-font-family);
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+/* ---- 输入区域 ---- */
+.ah-dropdownlist-input-area {
+  display: flex;
+  align-items: center;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  transition: border-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+  min-height: 36px;
+  overflow: hidden;
+}
+
+.ah-dropdownlist:hover .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-grey-400);
+}
+
+.ah-dropdownlist-focused .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-dropdownlist-disabled .ah-dropdownlist-input-area {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+  background: var(--ah-color-bg-subtle);
+}
+
+/* ---- 显示内容 ---- */
+.ah-dropdownlist-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  min-width: 0;
+  overflow: hidden;
+}
+
+.ah-dropdownlist-content-placeholder {
+  color: var(--ah-color-text-disabled);
+}
+
+/* ---- 下拉箭头 ---- */
+.ah-dropdownlist-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  min-height: 34px;
+  align-self: stretch;
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+  background: var(--ah-color-grey-50);
+  border-radius: 0 var(--ah-radius-md) var(--ah-radius-md) 0;
+  color: var(--ah-color-text-secondary);
+  transition: background var(--ah-transition-fast);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.ah-dropdownlist-arrow:hover {
+  background: var(--ah-color-grey-100);
+}
+
+.ah-dropdownlist-arrow-icon {
+  font-size: 10px;
+  transition: transform var(--ah-transition-fast);
+}
+
+.ah-dropdownlist-open .ah-dropdownlist-arrow-icon {
+  transform: rotate(180deg);
+}
+
+.ah-dropdownlist-disabled .ah-dropdownlist-arrow {
+  background: var(--ah-color-bg-subtle);
+}
+
+/* ---- 悬停状态 ---- */
+.ah-dropdownlist-state-hover .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-grey-400);
+}
+
+/* ---- 激活/按下状态 ---- */
+.ah-dropdownlist-state-selected .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-primary);
+  background: var(--ah-color-primary-lighter);
+}
+
+/* ---- 焦点状态 ---- */
+.ah-dropdownlist-state-focus .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ---- 禁用状态 ---- */
+.ah-dropdownlist-state-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 模板变体 ---- */
+.ah-dropdownlist-primary .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-primary);
+}
+
+.ah-dropdownlist-primary:hover .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-primary-dark);
+}
+
+.ah-dropdownlist-primary.ah-dropdownlist-focused .ah-dropdownlist-input-area {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+.ah-dropdownlist-success .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-success);
+}
+
+.ah-dropdownlist-warning .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-warning);
+}
+
+.ah-dropdownlist-danger .ah-dropdownlist-input-area {
+  border-color: var(--ah-color-error);
+}
+
+/* ---- 简单模式（无箭头） ---- */
+.ah-dropdownlist-simple .ah-dropdownlist-arrow {
+  display: none;
+}
+
+.ah-dropdownlist-simple .ah-dropdownlist-input-area {
+  border-radius: var(--ah-radius-md);
+}
+
+/* ---- 弹出层容器 ---- */
+.ah-dropdownlist-popup {
+  position: fixed;
+  z-index: 1000;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  box-shadow: var(--ah-shadow-md);
+  overflow: hidden;
+  display: none;
+  box-sizing: border-box;
+}
+
+/* 弹出层内的 listbox 需要填满宽度，去掉自身边框 */
+.ah-dropdownlist-popup .ah-listbox {
+  display: flex;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+}
+
+.ah-dropdownlist-popup-open {
+  display: block;
+}
+
+.ah-dropdownlist-popup-above {
+  /* 位置由 JS 通过 position:fixed + getBoundingClientRect 计算 */
+}
+
+.ah-dropdownlist-popup-below {
+  /* 位置由 JS 通过 position:fixed + getBoundingClientRect 计算 */
+}
+
+/* ---- 动画 ---- */
+.ah-dropdownlist-popup-animated {
+  animation: dropdownlist-slide 0.2s ease-out;
+}
+
+@keyframes dropdownlist-slide {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ah-dropdownlist-popup-above.ah-dropdownlist-popup-animated {
+  animation: dropdownlist-slide-up 0.2s ease-out;
+}
+
+@keyframes dropdownlist-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- 圆角 ---- */
+.ah-dropdownlist-rc-t .ah-dropdownlist-input-area {
+  border-radius: var(--ah-radius-md) var(--ah-radius-md) 0 0;
+}
+
+.ah-dropdownlist-rc-b .ah-dropdownlist-input-area {
+  border-radius: 0 0 var(--ah-radius-md) var(--ah-radius-md);
+}
+
+.ah-dropdownlist-rc-all .ah-dropdownlist-input-area {
+  border-radius: var(--ah-radius-md);
+}

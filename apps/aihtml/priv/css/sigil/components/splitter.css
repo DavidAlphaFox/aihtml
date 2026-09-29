@@ -1,0 +1,119 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   分割器 (Splitter)
+   可调整大小的分割面板布局组件，支持水平和垂直方向
+   ============================================================================ */
+
+/* ---- 分割器容器 ---- */
+
+.ah-splitter {
+  display: flex;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+/* ---- 垂直布局（左右分割）---- */
+
+.ah-splitter-vertical {
+  flex-direction: row;
+}
+
+/* ---- 水平布局（上下分割）---- */
+
+.ah-splitter-horizontal {
+  flex-direction: column;
+}
+
+/* ---- 面板 ---- */
+
+.ah-splitter-panel {
+  overflow: hidden;
+  position: relative;
+}
+
+/* ---- 分割条 ---- */
+
+.ah-splitter-splitbar {
+  flex: 0 0 auto;
+  background: var(--ah-color-grey-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color var(--ah-transition-fast);
+  position: relative;
+}
+
+/* 伪元素扩大触控热区至约 20px（视觉宽度不变） */
+.ah-splitter-splitbar::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+}
+
+.ah-splitter-vertical > .ah-splitter-splitbar {
+  cursor: col-resize;
+}
+
+.ah-splitter-vertical > .ah-splitter-splitbar::before {
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  right: -8px;
+}
+
+.ah-splitter-horizontal > .ah-splitter-splitbar {
+  cursor: row-resize;
+}
+
+.ah-splitter-horizontal > .ah-splitter-splitbar::before {
+  left: 0;
+  right: 0;
+  top: -8px;
+  bottom: -8px;
+}
+
+.ah-splitter-splitbar:hover {
+  background: var(--ah-color-grey-300);
+}
+
+.ah-splitbar-invalid {
+  background: var(--ah-color-error-lighter);
+}
+
+/* ---- 折叠按钮 ---- */
+
+.ah-splitter-collapse-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--ah-radius-sm);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--ah-color-grey-600);
+  transition: background-color var(--ah-transition-fast);
+}
+
+.ah-splitter-collapse-btn:hover {
+  background: var(--ah-color-grey-300);
+}
+
+.ah-splitter-vertical > .ah-splitter-splitbar .ah-splitter-collapse-btn::after {
+  content: "◀";
+}
+
+.ah-splitter-horizontal > .ah-splitter-splitbar .ah-splitter-collapse-btn::after {
+  content: "▲";
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-splitter-disabled {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}

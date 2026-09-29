@@ -1,0 +1,66 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Skeleton · 骨架屏占位（借鉴 happy loader :skeleton 变体）
+   内联内容形状占位 + 微光扫过。区别于 .ah-loader（遮罩式）。
+   ============================================================================ */
+
+.ah-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.ah-skeleton[data-variant="circle"],
+.ah-skeleton[data-variant="rect"] {
+  display: inline-flex;
+  width: auto;
+}
+
+.ah-skeleton__line,
+.ah-skeleton__shape {
+  display: block;
+  height: 12px;
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-subtle);
+}
+
+/* ⚠ 这两档圆角原先是 cljs 内联写的（矩形默认 8px、圆形 50%），内联样式赢过一切，
+   于是外形轴（data-skin）永远改不动骨架屏的长相。取值搬到这里、一像素不变，
+   cljs 只在调用方**显式传了 :radius** 时才内联。 */
+.ah-skeleton__shape {
+  border-radius: var(--ah-radius-md);
+}
+
+/* 圆形骨架是**几何**而不是样式变体：任何外形下它都该是圆的（同头像/spinner）。 */
+.ah-skeleton__shape-circle {
+  border-radius: 50%;
+}
+
+/* 微光扫过 */
+.ah-skeleton[data-animated="true"] .ah-skeleton__line,
+.ah-skeleton[data-animated="true"] .ah-skeleton__shape {
+  background: linear-gradient(90deg,
+    var(--ah-color-bg-subtle) 25%,
+    var(--ah-color-border-subtle, var(--ah-color-border)) 37%,
+    var(--ah-color-bg-subtle) 63%);
+  background-size: 400% 100%;
+  animation: ah-skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes ah-skeleton-shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
+
+/* 加载完成 → 隐藏骨架 */
+.ah-skeleton--done { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ah-skeleton[data-animated="true"] .ah-skeleton__line,
+  .ah-skeleton[data-animated="true"] .ah-skeleton__shape {
+    animation: none;
+  }
+}

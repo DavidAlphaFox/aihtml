@@ -1,0 +1,89 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   RadioCards · 卡片式单选（借鉴 happy radio-cards）
+   选中卡片：primary 描边 + 淡染底（data-selected 驱动）。
+   ============================================================================ */
+
+.ah-radio-cards {
+  display: grid;
+  gap: 10px;
+}
+
+/* 列数：auto 按容器自适应；1/2/3 强制 */
+.ah-radio-cards[data-columns="auto"] {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.ah-radio-cards[data-columns="1"] { grid-template-columns: 1fr; }
+.ah-radio-cards[data-columns="2"] { grid-template-columns: repeat(2, 1fr); }
+.ah-radio-cards[data-columns="3"] { grid-template-columns: repeat(3, 1fr); }
+
+.ah-radio-cards[data-disabled="true"] { opacity: var(--ah-state-disabled-opacity); pointer-events: none; }
+
+.ah-radio-cards__card {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 14px;
+  text-align: left;
+  cursor: pointer;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-lg);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text);
+  transition: border-color .14s ease, background .14s ease, box-shadow .14s ease;
+}
+
+/* 内容对齐：center 垂直居中 / start 顶部对齐（多行描述更自然） */
+.ah-radio-cards[data-align="center"] .ah-radio-cards__card { align-items: center; }
+.ah-radio-cards[data-align="start"]  .ah-radio-cards__card { align-items: flex-start; }
+
+.ah-radio-cards__card:hover:not([data-disabled="true"]):not([data-selected="true"]) {
+  background: var(--ah-color-bg-subtle);
+}
+
+.ah-radio-cards__card[data-selected="true"] {
+  border-color: var(--ah-color-primary);
+  background: color-mix(in srgb, var(--ah-color-primary) 7%, var(--ah-color-bg));
+  box-shadow: 0 0 0 1px var(--ah-color-primary);
+}
+
+.ah-radio-cards__card[data-disabled="true"] {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+}
+
+.ah-radio-cards__card:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: 2px;
+}
+
+.ah-radio-cards__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--ah-color-text-muted);
+}
+.ah-radio-cards__icon svg { width: 22px; height: 22px; }
+.ah-radio-cards__card[data-selected="true"] .ah-radio-cards__icon {
+  color: var(--ah-color-primary);
+}
+
+.ah-radio-cards__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ah-radio-cards__label {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.ah-radio-cards__description {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--ah-color-text-muted);
+}

@@ -1,0 +1,87 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   表单验证组件 (Validator)
+   表单字段验证提示，支持气泡提示和标签错误信息两种模式
+   ============================================================================ */
+
+/* ---- 提示气泡（tooltip 模式） ---- */
+.ah-validator-hint {
+  position: absolute;
+  z-index: 9999;
+  padding: 6px 12px;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-common-white);
+  background: var(--ah-color-danger, #e53935);
+  border-radius: var(--ah-radius-sm);
+  white-space: nowrap;
+  pointer-events: auto;
+  cursor: pointer;
+  box-shadow: var(--ah-shadow-sm);
+  opacity: 0;
+  transition: opacity var(--ah-transition-fast);
+}
+
+.ah-validator-hint-visible {
+  opacity: 1;
+}
+
+/* ---- 提示箭头 ---- */
+.ah-validator-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+}
+
+/* ---- 箭头方向 — 提示在输入框右侧，箭头朝左 ---- */
+.ah-validator-arrow-left {
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-right-color: var(--ah-color-danger, #e53935);
+}
+
+/* ---- 箭头方向 — 提示在输入框左侧，箭头朝右 ---- */
+.ah-validator-arrow-right {
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-left-color: var(--ah-color-danger, #e53935);
+}
+
+/* ---- 箭头方向 — 提示在输入框上方，箭头朝下 ---- */
+.ah-validator-arrow-bottom {
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-top-color: var(--ah-color-danger, #e53935);
+}
+
+/* ---- 箭头方向 — 提示在输入框下方，箭头朝上 ---- */
+.ah-validator-arrow-top {
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-bottom-color: var(--ah-color-danger, #e53935);
+}
+
+/* ---- 标签模式提示 ---- */
+.ah-validator-error-label {
+  display: block;
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-danger, #e53935);
+  margin-top: 4px;
+  padding: 0 2px;
+}
+
+/* ---- 输入框错误边框 ---- */
+.ah-validator-error-element {
+  border-color: var(--ah-color-danger, #e53935) !important;
+}
+
+/* ---- 成功状态 ---- */
+.ah-validator-success-element {
+  border-color: var(--ah-color-success, #43a047) !important;
+}

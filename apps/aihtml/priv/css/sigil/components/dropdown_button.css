@@ -1,0 +1,199 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   下拉按钮 (Dropdown Button)
+   带有下拉菜单的按钮组件，支持多种样式变体
+   ============================================================================ */
+
+/* ---- 下拉按钮容器 ---- */
+
+.ah-dropdown-btn {
+  display: inline-block;
+  position: relative;
+  font-size: var(--ah-font-size-sm);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ---- 按钮包装器 ---- */
+
+.ah-dropdown-btn-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background-color: var(--ah-color-bg-paper);
+  color: var(--ah-color-text);
+  transition: border-color var(--ah-transition-fast),
+              background-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+}
+
+/* ---- 按钮内容 ---- */
+
+.ah-dropdown-btn-content {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- 下拉箭头 ---- */
+
+.ah-dropdown-btn-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: var(--ah-spacing-sm);
+}
+
+.ah-dropdown-btn-arrow-icon {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid var(--ah-color-text-secondary);
+  transition: transform var(--ah-transition-fast);
+}
+
+.ah-dropdown-btn-opened .ah-dropdown-btn-arrow-icon {
+  transform: rotate(180deg);
+}
+
+/* ---- 下拉弹出层（挂载在 body 上） ---- */
+
+.ah-dropdown-btn-popup {
+  position: absolute;
+  z-index: 1500;
+  padding: var(--ah-spacing-xs) 0;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background-color: var(--ah-color-bg-paper);
+  box-shadow: var(--ah-shadow-lg);
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+/* ---- 展开状态 ---- */
+
+.ah-dropdown-btn-opened .ah-dropdown-btn-wrapper {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 3px var(--ah-color-primary-lighter);
+}
+
+/* ---- 悬停状态 ---- */
+
+.ah-dropdown-btn-hover .ah-dropdown-btn-wrapper {
+  border-color: var(--ah-color-primary);
+  background-color: var(--ah-color-bg-paper);
+}
+
+/* ---- 焦点状态 ---- */
+
+.ah-dropdown-btn-focused .ah-dropdown-btn-wrapper {
+  border-color: var(--ah-color-primary);
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-dropdown-btn-disabled {
+  pointer-events: none;
+}
+
+.ah-dropdown-btn-disabled .ah-dropdown-btn-wrapper {
+  background-color: var(--ah-color-bg-subtle);
+  opacity: var(--ah-state-disabled-opacity);
+}
+
+/* ---- 主要变体 ---- */
+
+.ah-dropdown-btn-primary .ah-dropdown-btn-wrapper {
+  background-color: var(--ah-color-primary);
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+}
+
+.ah-dropdown-btn-primary .ah-dropdown-btn-arrow-icon {
+  border-top-color: var(--ah-color-primary-contrast);
+}
+
+.ah-dropdown-btn-primary.ah-dropdown-btn-hover .ah-dropdown-btn-wrapper {
+  background-color: var(--ah-color-primary-dark);
+}
+
+/* ---- 成功变体 ---- */
+
+.ah-dropdown-btn-success .ah-dropdown-btn-wrapper {
+  background-color: var(--ah-color-success);
+  border-color: var(--ah-color-success);
+  color: var(--ah-color-success-contrast);
+}
+
+/* ---- 警告变体 ---- */
+
+.ah-dropdown-btn-warning .ah-dropdown-btn-wrapper {
+  background-color: var(--ah-color-warning);
+  border-color: var(--ah-color-warning);
+  color: var(--ah-color-warning-contrast);
+}
+
+/* ---- 错误变体 ---- */
+
+.ah-dropdown-btn-error .ah-dropdown-btn-wrapper {
+  background-color: var(--ah-color-error);
+  border-color: var(--ah-color-error);
+  color: var(--ah-color-error-contrast);
+}
+
+/* ---- 轮廓变体 ---- */
+
+.ah-dropdown-btn-outlined .ah-dropdown-btn-wrapper {
+  background-color: transparent;
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-primary);
+}
+
+.ah-dropdown-btn-outlined.ah-dropdown-btn-hover .ah-dropdown-btn-wrapper {
+  background-color: var(--ah-color-primary-lighter);
+}
+
+/* ---- 圆角变体 ---- */
+
+.ah-dropdown-btn-rounded .ah-dropdown-btn-wrapper {
+  border-radius: var(--ah-radius-full);
+}
+
+/* ---- 尺寸变体 ---- */
+
+.ah-dropdown-btn-sm .ah-dropdown-btn-wrapper {
+  padding: var(--ah-spacing-xs) var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-xs);
+}
+
+.ah-dropdown-btn-lg .ah-dropdown-btn-wrapper {
+  padding: var(--ah-spacing-md) var(--ah-spacing-lg);
+  font-size: var(--ah-font-size-base);
+}
+
+/* ---- 弹出层选项样式 ---- */
+
+.ah-dropdown-btn-popup > * {
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  cursor: pointer;
+  transition: background-color var(--ah-transition-fast);
+}
+
+.ah-dropdown-btn-popup > *:hover {
+  background-color: var(--ah-color-primary-lighter);
+}
+
+.ah-dropdown-btn-popup > *.selected {
+  background-color: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+}

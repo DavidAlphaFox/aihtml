@@ -1,0 +1,60 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   复选框组 (CheckBoxGroup)
+   将多个复选框组合在一起，支持水平/垂直布局
+   ============================================================================ */
+
+/* ---- 组容器 ---- */
+.ah-checkbox-group {
+  display: flex;
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-checkbox-group-vertical {
+  flex-direction: column;
+}
+
+.ah-checkbox-group-horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ---- 单项容器 ---- */
+.ah-checkbox-group-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+  cursor: pointer;
+  user-select: none;
+  padding: var(--ah-spacing-xs) 0;
+}
+
+.ah-checkbox-group-item-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 标签 ---- */
+.ah-checkbox-group-label {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.ah-checkbox-group-item:hover:not(.ah-checkbox-group-item-disabled) .ah-checkbox-group-label {
+  color: var(--ah-color-primary);
+}
+
+.ah-checkbox-group-item-disabled .ah-checkbox-group-label {
+  cursor: not-allowed;
+}
+
+/* ---- 禁用整个组 ---- */
+.ah-checkbox-group-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

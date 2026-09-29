@@ -1,0 +1,40 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   面板 (Panel)
+   可滚动的内容容器组件
+   ============================================================================ */
+
+/* ---- 面板容器 ---- */
+
+.ah-panel {
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---- 包装器 ---- */
+
+.ah-panel-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* ---- 内容区域 ---- */
+
+.ah-panel-content {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/* ---- 角落区域（滚动条交汇处）---- */
+
+.ah-panel-corner {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: var(--ah-color-grey-100);
+}

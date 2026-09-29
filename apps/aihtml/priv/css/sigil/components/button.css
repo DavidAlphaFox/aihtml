@@ -1,0 +1,235 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   按钮组件
+   支持多种变体：主要、次要、轮廓、成功、警告、错误、信息
+   支持多种状态：禁用、悬停、按下、聚焦、切换
+
+   ── 写法（P14.3 组件 token 打样）────────────────────────────────────────────
+   改造前这里是一张 **7 变体 × 6 状态、逐格手写的矩阵**（第 42–206 行，约 165 行）：
+   每一格都在重述 `background-color:` 这个属性名，加一个变体要写 4 条、
+   加一个状态要写 6 条，N×M 增长。
+
+   现在的结构（参照 Infima，见 TASK.md Phase 14）：
+     · **骨架** `.ah-btn` 只读组件 token，属性名在全文件只出现一次
+     · **变体** 只重设 token，**一条属性都不写**
+     · **状态** 每个状态一条规则，读同一批 token
+   于是变体和状态从 N×M 变成 N+M：加第 8 个变体 = 加一个 token 块，
+   加第 7 个状态 = 加一条规则，两边互不牵扯。
+
+   ⚠ 变体一律用 `:where()` 包住 —— 特异性归零，下游写 `.ah-btn-primary { ... }`
+     一条就能覆盖，不必跟我们比选择器长度。这是 Phase 14 的核心目标之一。
+
+   ⚠ token 全部用 `var(--x, 默认值)` 的**回退形式**，骨架里不声明它们。
+     若改成在 `.ah-btn` 里声明默认值，那些声明的特异性(0,1,0)会**压过**
+     `:where()` 变体(0,0,0)，变体将永远不生效。
+
+   组件 token（下游可直接覆盖，无需写选择器）：
+     --ah-btn-bg / -fg / -border          底色 / 前景 / 边框
+     --ah-btn-bg-hover / -bg-active       悬停 / 按下·切换 的底色
+     --ah-btn-shadow / -shadow-hover / -shadow-toggled
+     --ah-btn-lift-hover                  悬停位移（整个 transform 值）
+     --ah-btn-pad-x / -pad-y / -radius / -font-size
+   ============================================================================ */
+
+/* ---- 骨架：属性名只在这里出现一次 ---- */
+.ah-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  line-height: 1.5;
+
+  padding: var(--ah-btn-pad-y, var(--ah-spacing-sm))
+           var(--ah-btn-pad-x, var(--ah-spacing-md));
+  border-radius: var(--ah-btn-radius, var(--ah-radius-md));
+  font-size: var(--ah-btn-font-size, var(--ah-font-size-sm));
+  font-weight: var(--ah-font-weight-semibold);
+
+  border: var(--ah-border-width) solid var(--ah-btn-border, transparent);
+  background-color: var(--ah-btn-bg, transparent);
+  color: var(--ah-btn-fg, inherit);
+  box-shadow: var(--ah-btn-shadow, none);
+
+  transition: background-color var(--ah-transition-fast),
+              border-color var(--ah-transition-fast),
+              color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast),
+              transform var(--ah-transition-fast);
+}
+
+/* 按下时轻微回弹，提供更现代的触感反馈。
+   ⚠ 必须排在下面的 :hover 之前 —— 两者特异性相同，同时命中（按住不放）时
+   要让 :hover 的抬升赢，这是改造前的既有表现。 */
+.ah-btn:active {
+  transform: translateY(1px);
+}
+
+/* ---- 小号按钮：只改尺寸 token，不重写 padding/font-size ---- */
+.ah-btn-sm {
+  --ah-btn-pad-y: var(--ah-spacing-xs);
+  --ah-btn-pad-x: var(--ah-spacing-sm);
+  --ah-btn-font-size: var(--ah-font-size-xs);
+}
+
+/* ============================================================================
+   变体 —— 只设 token，不写属性
+   ⚠ 块的先后顺序保持与改造前一致：`:where()` 特异性全为 0，同时命中多个变体时
+     按书写顺序决胜（例如 `primary outlined` 取 outlined、`outlined success` 取
+     success），这是改造前就有的表现，换顺序会悄悄改掉它。
+   ============================================================================ */
+
+:where(.ah-btn-primary) {
+  --ah-btn-bg:        var(--ah-color-primary);
+  --ah-btn-fg:        var(--ah-color-primary-contrast);
+  --ah-btn-bg-hover:  var(--ah-color-primary-dark);
+  --ah-btn-bg-active: var(--ah-color-primary-darker);
+}
+
+:where(.ah-btn-secondary) {
+  --ah-btn-bg:        var(--ah-color-secondary);
+  --ah-btn-fg:        var(--ah-color-secondary-contrast);
+  --ah-btn-bg-hover:  var(--ah-color-secondary-dark);
+  --ah-btn-bg-active: var(--ah-color-secondary-darker);
+}
+
+/* 实心按钮共有的质感：柔和投影 + 悬停微抬升。
+   ⚠ 刻意不含 outlined —— 轮廓按钮没有投影。若同时带 outlined 与某个实心变体，
+     这条仍然命中（与改造前一致：那种组合本来就吃实心投影）。
+   ⚠ 位置卡在 secondary 与 outlined 之间是有讲究的：改造前 `.ah-btn-toggled.ah-btn-outlined`
+     写在所有实心 toggled 规则之后，所以「outlined + 某实心变体」同时命中时，
+     切换态的内阴影取 outlined 那份更浅的 0.1。`:where()` 特异性全为 0、只按顺序决胜，
+     故这条必须排在 outlined 之前，才能让 outlined 覆盖得掉 --ah-btn-shadow-toggled。 */
+:where(.ah-btn-primary, .ah-btn-secondary, .ah-btn-success,
+       .ah-btn-warning, .ah-btn-error, .ah-btn-info) {
+  --ah-btn-shadow:         0 1px 2px 0 rgb(145 158 171 / 0.16);
+  --ah-btn-shadow-hover:   0 6px 14px -4px rgb(145 158 171 / 0.36);
+  --ah-btn-lift-hover:     translateY(-1px);
+  --ah-btn-shadow-toggled: inset 0 2px 4px rgb(0 0 0 / 0.2);
+}
+
+/* 轮廓：底色透明，前景与边框同色 —— 边框 token 复用为前景 token，
+   这样「轮廓」与「配色」两个维度天然可组合，不必为每种色再写一格。 */
+:where(.ah-btn-outlined) {
+  --ah-btn-bg:        transparent;
+  --ah-btn-border:    var(--ah-color-primary);
+  --ah-btn-fg:        var(--ah-btn-border);
+  --ah-btn-bg-hover:  var(--ah-color-primary-lighter);
+  --ah-btn-bg-active: var(--ah-color-primary-light);
+  --ah-btn-shadow-toggled: inset 0 2px 4px rgb(0 0 0 / 0.1);
+}
+
+:where(.ah-btn-success) {
+  --ah-btn-bg:        var(--ah-color-success);
+  --ah-btn-fg:        var(--ah-color-success-contrast);
+  --ah-btn-bg-hover:  var(--ah-color-success-dark);
+  --ah-btn-bg-active: var(--ah-color-success-darker);
+}
+
+:where(.ah-btn-warning) {
+  --ah-btn-bg:        var(--ah-color-warning);
+  --ah-btn-fg:        var(--ah-color-warning-contrast);
+  --ah-btn-bg-hover:  var(--ah-color-warning-dark);
+  --ah-btn-bg-active: var(--ah-color-warning-darker);
+}
+
+:where(.ah-btn-error) {
+  --ah-btn-bg:        var(--ah-color-error);
+  --ah-btn-fg:        var(--ah-color-error-contrast);
+  --ah-btn-bg-hover:  var(--ah-color-error-dark);
+  --ah-btn-bg-active: var(--ah-color-error-darker);
+}
+
+:where(.ah-btn-info) {
+  --ah-btn-bg:        var(--ah-color-info);
+  --ah-btn-fg:        var(--ah-color-info-contrast);
+  --ah-btn-bg-hover:  var(--ah-color-info-dark);
+  --ah-btn-bg-active: var(--ah-color-info-darker);
+}
+
+/* ============================================================================
+   状态 —— 每个状态一条规则，读同一批 token
+
+   伪类是**无 JS 回退**，`.ah-btn-*` 类由 widget/refresh 切换。
+   ⚠ 两者刻意不合并：JS 的 `-hover` 只换底色，而 CSS 的 `:hover` 还带投影与抬升。
+     真实按钮上两者同时成立（JS 态是 mouseenter 加的），所以看得到的效果一致；
+     但若有人只用 `set-state!` 程序化置 hover 而鼠标不在上面，抬升不该发生。
+   ============================================================================ */
+
+.ah-btn:hover {
+  background-color: var(--ah-btn-bg-hover, var(--ah-btn-bg, transparent));
+  box-shadow: var(--ah-btn-shadow-hover, var(--ah-btn-shadow, none));
+}
+
+/* 悬停抬升 —— ⚠ 这条必须单列，且必须把实心变体列进选择器，不能并进上面那条。
+   `transform` 与其它属性不同：`.ah-btn:active` 已经给**所有**按钮写了下沉 1px，
+   若在 `.ah-btn:hover` 里无条件写 `transform: var(--ah-btn-lift-hover, none)`，
+   那么轮廓按钮/裸按钮「悬停时按下」会被这条以 `none` 覆盖掉下沉反馈——
+   实测确实回归了（`ah-btn PH PA` 与 `ah-btn-outlined PH PA` 的 transform 从
+   +1px 变成 none）。选择器特异性 (0,2,0) 与 `.ah-btn:active` 相同且排在其后，
+   于是实心按钮「悬停+按下」仍取抬升 −1px，与改造前一致。 */
+.ah-btn:hover:where(.ah-btn-primary, .ah-btn-secondary, .ah-btn-success,
+                       .ah-btn-warning, .ah-btn-error, .ah-btn-info) {
+  transform: var(--ah-btn-lift-hover, none);
+}
+
+.ah-btn-hover {
+  background-color: var(--ah-btn-bg-hover, var(--ah-btn-bg, transparent));
+}
+
+/* ⚠ 排在 :hover 之后：两者同时成立（按住不放）时按下色要赢，与改造前一致。
+   ⭐ 改造前 `:active` 的变色**只写了 primary / secondary 两格**，其余五个变体
+   （success/warning/error/info/outlined）在无 JS 时按下毫无反馈，而 JS 侧的
+   `.ah-btn-pressed` 七个变体全都有。本文件顶部自己写着「伪类作为无 JS 回退」，
+   一个只覆盖 2/7 的回退是漏写而不是设计，这里一并补齐。 */
+.ah-btn:active,
+.ah-btn-pressed {
+  background-color: var(--ah-btn-bg-active, var(--ah-btn-bg, transparent));
+}
+
+.ah-btn-toggled {
+  background-color: var(--ah-btn-bg-active, var(--ah-btn-bg, transparent));
+  box-shadow: var(--ah-btn-shadow-toggled, var(--ah-btn-shadow, none));
+}
+
+.ah-btn:focus-visible,
+.ah-btn-focused {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: 2px;
+}
+
+.ah-btn-disabled {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}
+
+/* ============================================================================
+   按钮形状与布局
+   ============================================================================ */
+
+/* ---- 圆形按钮 ---- */
+.ah-btn-round {
+  --ah-btn-radius: var(--ah-radius-full);
+}
+
+/* ---- 图文布局 ---- */
+.ah-btn-img-left   { flex-direction: row;    gap: var(--ah-spacing-sm); }
+.ah-btn-img-right  { flex-direction: row;    gap: var(--ah-spacing-sm); }
+.ah-btn-img-top    { flex-direction: column; gap: var(--ah-spacing-xs); }
+.ah-btn-img-bottom { flex-direction: column; gap: var(--ah-spacing-xs); }
+
+.ah-btn-img  { flex-shrink: 0; }
+.ah-btn-text { flex-shrink: 0; }
+
+/* ---- 链接按钮 ---- */
+.ah-link-btn {
+  text-decoration-line: none;
+}
+
+/* ---- 触屏设备：保证最小 44px 触达高度 ---- */
+@media (pointer: coarse) {
+  .ah-btn {
+    min-height: 44px;
+  }
+}

@@ -1,0 +1,56 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Avatar · 头像（借鉴 happy avatar.css）
+   图片加载失败 → 露出 initials/? 回退。data-size / data-shape / data-color。
+   ============================================================================ */
+
+.ah-avatar {
+  --ah-avatar-size: 40px;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: var(--ah-avatar-size);
+  height: var(--ah-avatar-size);
+  overflow: hidden;
+  border-radius: 50%;
+  font-weight: 600;
+  color: var(--ah-color-primary-contrast, #fff);
+  background: var(--ah-color-primary);
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.ah-avatar[data-size="sm"] { --ah-avatar-size: 28px; font-size: 11px; }
+.ah-avatar[data-size="md"] { --ah-avatar-size: 40px; font-size: 15px; }
+.ah-avatar[data-size="lg"] { --ah-avatar-size: 56px; font-size: 20px; }
+.ah-avatar[data-size="xl"] { --ah-avatar-size: 80px; font-size: 28px; }
+
+.ah-avatar[data-shape="square"]  { border-radius: 0; }
+.ah-avatar[data-shape="rounded"] { border-radius: 20%; }
+
+.ah-avatar[data-color="secondary"] { background: var(--ah-color-secondary); }
+.ah-avatar[data-color="success"]   { background: var(--ah-color-success); }
+.ah-avatar[data-color="warning"]   { background: var(--ah-color-warning); }
+.ah-avatar[data-color="error"]     { background: var(--ah-color-error); }
+.ah-avatar[data-color="info"]      { background: var(--ah-color-info); }
+
+.ah-avatar__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+/* 加载失败 → 隐藏 img，露出下层 fallback */
+.ah-avatar__image--broken { display: none; }
+
+.ah-avatar__fallback {
+  position: relative;
+  z-index: 0;
+  line-height: 1;
+}

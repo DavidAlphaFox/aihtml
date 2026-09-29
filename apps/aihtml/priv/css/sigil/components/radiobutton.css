@@ -1,0 +1,105 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   单选按钮 (RadioButton)
+   用于在多个互斥选项中选择一个的表单组件
+   ============================================================================ */
+
+/* ---- 单选按钮容器 ---- */
+
+.ah-radiobutton {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-radiobutton:hover:not(.ah-radiobutton-disabled) {
+  color: var(--ah-color-primary);
+}
+
+.ah-radiobutton-hover {
+  color: var(--ah-color-primary);
+}
+
+/* ---- 单选框 ---- */
+
+.ah-radiobutton-box {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--ah-color-border);
+  border-radius: 50%;
+  background-color: var(--ah-color-bg-paper);
+  transition: border-color var(--ah-transition-fast),
+              background-color var(--ah-transition-fast),
+              box-shadow var(--ah-transition-fast);
+  flex-shrink: 0;
+}
+
+.ah-radiobutton:hover:not(.ah-radiobutton-disabled) .ah-radiobutton-box {
+  border-color: var(--ah-color-primary);
+}
+
+.ah-radiobutton-checked .ah-radiobutton-box {
+  border-color: var(--ah-color-primary);
+}
+
+/* ---- 选中标记（内部圆点）---- */
+
+.ah-radiobutton-check {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+  border-radius: 50%;
+  background-color: var(--ah-color-primary);
+  transition: background-color var(--ah-transition-fast);
+}
+
+.ah-radiobutton-check-checked {
+  display: block;
+  width: 50%;
+  height: 50%;
+}
+
+/* ---- 文本标签 ---- */
+
+.ah-radiobutton-label {
+  line-height: 1.4;
+}
+
+/* ---- 禁用状态 ---- */
+
+.ah-radiobutton-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+.ah-radiobutton-box-disabled {
+  background-color: var(--ah-color-bg-subtle);
+  border-color: var(--ah-color-border);
+}
+
+.ah-radiobutton-disabled .ah-radiobutton-check-checked {
+  background-color: var(--ah-color-text-disabled);
+}
+
+/* ---- 焦点状态 ---- */
+
+.ah-radiobutton-focused .ah-radiobutton-box {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ---- 按下状态 ---- */
+
+.ah-radiobutton-pressed .ah-radiobutton-box {
+  transform: scale(0.95);
+}

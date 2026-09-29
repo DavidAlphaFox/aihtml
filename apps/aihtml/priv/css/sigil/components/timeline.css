@@ -1,0 +1,264 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================
+   Timeline — 时间线组件
+   CSS Grid 三列布局：near-cell | track-cell | far-cell
+   支持 both/near/far 三种位置模式，可折叠展开
+   ============================================================ */
+
+/* ---- 基础容器 ---- */
+.ah-timeline {
+  padding: var(--ah-spacing-lg);
+}
+
+/* ---- Grid 容器 ---- */
+.ah-timeline-container {
+  display: grid;
+  grid-template-columns: 1fr 30px 1fr;
+  position: relative;
+}
+
+/* 中间轨道线（贯穿整个容器的竖线） */
+.ah-timeline-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  margin-left: -2px;
+  background: var(--ah-color-grey-300);
+  border-radius: 2px;
+  z-index: 0;
+}
+
+/* ---- Grid 单元格 ---- */
+.ah-timeline-near-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: var(--ah-spacing-md) var(--ah-spacing-lg) var(--ah-spacing-md) 0;
+}
+
+.ah-timeline-track-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.ah-timeline-far-cell {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: var(--ah-spacing-md) 0 var(--ah-spacing-md) var(--ah-spacing-lg);
+}
+
+/* ---- 节点圆点 ---- */
+.ah-timeline-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ah-color-primary);
+  flex-shrink: 0;
+}
+
+.ah-timeline-dot.ah-timeline-dot-primary { background: var(--ah-color-primary); }
+.ah-timeline-dot.ah-timeline-dot-success { background: var(--ah-color-success); }
+.ah-timeline-dot.ah-timeline-dot-warning { background: var(--ah-color-warning); }
+.ah-timeline-dot.ah-timeline-dot-danger  { background: var(--ah-color-danger); }
+
+/* ---- 日期标签 ---- */
+.ah-timeline-date {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+  white-space: nowrap;
+}
+
+/* ---- 项目卡片 ---- */
+.ah-timeline-item {
+  position: relative;
+  max-width: 300px;
+}
+
+.ah-timeline-item[ah-collapsible] {
+  cursor: pointer;
+}
+
+/* 卡片内容区域（z-index 高于箭头，覆盖箭头的内半部分） */
+.ah-timeline-item-content {
+  position: relative;
+  z-index: 2;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  padding: var(--ah-spacing-md) var(--ah-spacing-lg);
+  border-radius: var(--ah-radius-md);
+}
+
+/* ---- 箭头指针（旋转 45° 的方块，内容区域覆盖内半部分） ---- */
+.ah-timeline-item-pointer {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  background: var(--ah-color-bg-paper);
+  border: var(--ah-hairline-width) solid var(--ah-color-border);
+  transform: rotate(45deg);
+  z-index: 1;
+  margin-top: -7px;
+}
+
+/* Near 侧卡片 — 箭头在右侧，指向轨道 */
+.ah-timeline-near-cell .ah-timeline-item-pointer {
+  right: -7px;
+  border-left: none;
+  border-bottom: none;
+}
+
+/* Far 侧卡片 — 箭头在左侧，指向轨道 */
+.ah-timeline-far-cell .ah-timeline-item-pointer {
+  left: -7px;
+  border-right: none;
+  border-top: none;
+}
+
+/* ---- 卡片头部 ---- */
+.ah-timeline-item-header {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- 图标 ---- */
+.ah-timeline-item-icon {
+  margin-bottom: var(--ah-spacing-xs);
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-base);
+}
+
+/* ---- 标题 ---- */
+.ah-timeline-item-title {
+  font-size: var(--ah-font-size-base);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-text);
+}
+
+/* 可折叠箭头指示符 ›  */
+.ah-timeline-item[ah-collapsible] .ah-timeline-item-title::after {
+  content: " \203A";
+  color: var(--ah-color-text-secondary);
+  font-weight: normal;
+  margin-left: var(--ah-spacing-xs);
+  transition: transform 0.2s;
+  display: inline-block;
+}
+
+/* 展开时箭头旋转 */
+.ah-timeline-item.ah-timeline-item-expanded[ah-collapsible] .ah-timeline-item-title::after {
+  transform: rotate(90deg);
+}
+
+/* ---- 副标题 ---- */
+.ah-timeline-item-subtitle {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-text-secondary);
+  margin-top: 2px;
+}
+
+/* ---- 描述（折叠内容，默认隐藏） ---- */
+.ah-timeline-item-description {
+  display: none;
+  margin-top: var(--ah-spacing-sm);
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-sm);
+  line-height: 1.5;
+}
+
+/* 展开时显示描述 */
+.ah-timeline-item.ah-timeline-item-expanded .ah-timeline-item-description {
+  display: block;
+}
+
+/* ============================================================
+   水平模式
+   三行结构：near-row(上) | track-row(中) | far-row(下)
+   grid-auto-flow: column 使每个 item 的三个单元格自动填入同一列
+   ============================================================ */
+
+.ah-timeline-horizontal .ah-timeline-container {
+  grid-template-columns: unset;
+  grid-template-rows: 1fr 30px 1fr;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+}
+
+/* 水平轨道线 */
+.ah-timeline-horizontal .ah-timeline-container::before {
+  top: 50%;
+  bottom: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 4px;
+  margin-top: -2px;
+  margin-left: 0;
+}
+
+/* Near 单元格（上方）— 内容底部对齐 */
+.ah-timeline-horizontal .ah-timeline-near-cell {
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 var(--ah-spacing-sm) var(--ah-spacing-lg) var(--ah-spacing-sm);
+}
+
+/* Track 单元格 */
+.ah-timeline-horizontal .ah-timeline-track-cell {
+  justify-content: center;
+}
+
+/* Far 单元格（下方）— 内容顶部对齐 */
+.ah-timeline-horizontal .ah-timeline-far-cell {
+  align-items: flex-start;
+  justify-content: center;
+  padding: var(--ah-spacing-lg) var(--ah-spacing-sm) 0 var(--ah-spacing-sm);
+}
+
+/* 水平模式卡片宽度限制 */
+.ah-timeline-horizontal .ah-timeline-item {
+  max-width: 180px;
+}
+
+/* 水平模式箭头指针 — Near 侧卡片（上方），箭头在底部指向下方 */
+.ah-timeline-horizontal .ah-timeline-near-cell .ah-timeline-item-pointer {
+  top: auto;
+  bottom: -7px;
+  left: 50%;
+  right: auto;
+  margin-top: 0;
+  margin-left: -7px;
+  border-top: none;
+  border-left: none;
+}
+
+/* 水平模式箭头指针 — Far 侧卡片（下方），箭头在顶部指向上方 */
+.ah-timeline-horizontal .ah-timeline-far-cell .ah-timeline-item-pointer {
+  top: -7px;
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  margin-top: 0;
+  margin-left: -7px;
+  border-right: none;
+  border-bottom: none;
+}
+
+/* 水平模式日期标签居中 */
+.ah-timeline-horizontal .ah-timeline-date {
+  text-align: center;
+}
+
+/* ---- 禁用状态 ---- */
+.ah-timeline-disabled {
+  pointer-events: none;
+  opacity: var(--ah-state-disabled-opacity);
+}

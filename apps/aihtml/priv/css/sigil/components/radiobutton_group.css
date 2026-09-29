@@ -1,0 +1,60 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   单选按钮组 (RadioButtonGroup)
+   将多个单选按钮组合在一起，支持水平/垂直布局
+   ============================================================================ */
+
+/* ---- 组容器 ---- */
+.ah-radiobutton-group {
+  display: flex;
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-radiobutton-group-vertical {
+  flex-direction: column;
+}
+
+.ah-radiobutton-group-horizontal {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ---- 单项容器 ---- */
+.ah-radiobutton-group-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+  cursor: pointer;
+  user-select: none;
+  padding: var(--ah-spacing-xs) 0;
+}
+
+.ah-radiobutton-group-item-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ---- 标签 ---- */
+.ah-radiobutton-group-label {
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text);
+  line-height: 1.4;
+  cursor: pointer;
+}
+
+.ah-radiobutton-group-item:hover:not(.ah-radiobutton-group-item-disabled) .ah-radiobutton-group-label {
+  color: var(--ah-color-primary);
+}
+
+.ah-radiobutton-group-item-disabled .ah-radiobutton-group-label {
+  cursor: not-allowed;
+}
+
+/* ---- 禁用整个组 ---- */
+.ah-radiobutton-group-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}

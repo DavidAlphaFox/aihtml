@@ -1,0 +1,967 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   外形 · Phoqus（虚线描边 + 零阴影 + 中等圆角）—— data-skin="phoqus"
+   ============================================================================
+
+   第 4 条正交轴「外形（skin）」的第三个非 default 值。轴的职责边界见
+   skins/brutal.css 头部与 docs/css-usage.md「品牌 vs 外形」：
+
+     palettes/*.css  只写颜色 —— 只赋值 --ah-color-*，不碰形状
+     skins/*.css     只写形状 —— **不赋值任何 --ah-color-***，不出现颜色字面量
+
+   本文件要画墨色虚线，但墨色取自 var(--ah-color-skin-ink)（palette 赋值、
+   这里只 var() 取值 + 兜底）—— 读颜色轴的结果，不改颜色轴的值。
+   `bb css:check` 的第 16 检盯着这条。
+
+   `data-skin="phoqus"` 单开就能把任意配色变成虚线外形；要连配色一起换成
+   phoqus.app 那套珊瑚橘 + 暖沙地，再叠 `data-palette="phoqus"`；字体（Space
+   Grotesk）在第三轴 `data-typography="grotesk"`。
+
+   ─── 本外形的核心机制：虚线是**结构线**，不是装饰 ─────────────────────────
+   参考实现（phoqus.app，2026-08-26 实测 computed）里，几乎所有的「面」都不靠
+   阴影、不靠底色差，只靠一圈 `2px dashed` 把自己从地上圈出来：
+
+       导航条     2px dashed，圆角 14，半透明沙底
+       应用外框   2px dashed，圆角 14
+       FAQ 列表   2px dashed 外框 + 每行之间 1px dashed
+       徽章       2px dashed **胶囊**（这个是它最抢眼的一处）
+       侧栏/分栏  1px dashed 竖线，没有实线
+       主行动按钮 **无描边**、无阴影，实心珊瑚橘 + 圆角 7
+
+   所以本 skin 的三条判据是：
+
+     1. 是「面」→ 2px 虚线 + 大圆角（卡片、弹层、对话框、工具条、表格外框）
+     2. 是「控件」→ 1px **实线** + 中圆角（输入框、下拉触发器、分页项、键帽）
+        —— 参考站的输入框确实是实线：虚线放在能输入的框上会读成「占位/待填」。
+     3. 是「分隔」→ 虚线（卡片头尾线、菜单分组线、表头下沿、侧栏边）
+
+   ⚠ 全库刷成虚线是**刻意不做**的：数据网格那种密排的行列线一旦虚化，几十行
+     叠起来就是一片麻点（实测参考站自己的表格也只有横向分隔虚线，纵向没有）。
+     所以下半部分「测量敏感」那一桶只换颜色、保持实线。
+
+   ─── ⚠⚠ 本 skin 独有的坑：`border-style` 会把「没有边」的元素变出一条 3px 边 ──
+   前两个 skin（brutal / island）只动 `border-width` 与 `border-color`，**从不动
+   `border-style`**，所以它们天然免疫这一条；本 skin 的立身之本恰恰是换线型，于是
+   一头撞上 CSS 的这条规则：
+
+       border-style: none 的元素，其 border-width 的**计算值**是 0，但**指定值**
+       仍是初始的 `medium`。一旦有人把 style 改成 dashed/solid，那条 medium
+       就活过来了 —— 浏览器渲成 **3px**。
+
+   库里大量元素写的是 `border: none`（密码框的眼睛按钮、日期输入的裸 input、
+   数字输入右侧的步进器、菜单分组线…），它们在 default 外形下**一条边都没有**。
+   第一版本文件对这些类批量下了 `border-style: solid`，结果是一圈凭空冒出来的
+   3px 粗边（实测：`.ah-pwd-toggle` / `.ah-datepicker-input` / `.ah-dti-spin`
+   四边 3px，`.ah-numinput-spin` / `.ah-fmt-spin-buttons` / `.ah-dti-cal-btn`
+   左边 3px —— 全是拼接控件的接缝处，看着就是「外框裂了」）。
+
+   所以本文件的两条纪律：
+     1. **`border-style` 只下给「本来就有可见描边」的类**（用
+        `node scripts/skin_coverage.mjs` 的清单还不够 —— 它只看有没有 `border:`
+        声明，`border: none` 也算命中；得再核一遍**有效宽度**是不是 0）。
+     2. **改线型时必须同时钉死宽度**，否则就是把 `medium` 放出来。上面那些
+        「面」的规则都写了 `border-width: var(--ah-skin-frame-width)`，
+        正是为此；下半部分脚本推导的两桶则反过来 —— 一律只换颜色，不碰线型。
+     库默认线型本来就是 `solid`，所以「控件那一桶」根本不需要 `border-style: solid`
+     这句话：它一句有效的活都不干，只会把没有边的元素点着。
+
+   ─── 零阴影 ───────────────────────────────────────────────────────────────
+   参考站全站 box-shadow 只剩两处：次要按钮上一层 `0 1px 2px rgba(0,0,0,.05)`，
+   以及主色元素的橙黄辉光 `0 0 15px #f59f0a26`（--glow）。别的一律 none。
+   所以本文件把 --ah-shadow-* 全部关掉，改用 --ah-skin-glow 作为
+   「这个东西是活的」的唯一提示（hover / focus 的主色件）。
+   ⚠ 关掉阴影之后，浮层与地面的分离**全部**由那圈虚线承担 —— 下面弹层一节
+     里的 border 不是装饰，删掉菜单就会糊进页面。
+
+   ─── 圆角刻度 ─────────────────────────────────────────────────────────────
+   实测参考站三档：3.5 / 7 / 14（Tailwind 的 sm / md / xl，14 用得最多）。
+   这里映射成 sigil 的 sm / md / lg = 4 / 7 / 14。
+   --ah-radius-full 不动（胶囊/圆本来就该圆）。
+
+   ─── 层级 ─────────────────────────────────────────────────────────────────
+   本文件**不分层**，靠加载在 sigil.css 之后取胜（无层规则永远压过任何 @layer，
+   与特异性无关）。选择器一律带 `.ah-*` 前缀，不碰下游页面样式。
+   ⚠ 铁律：每条规则都必须带 `[data-skin="phoqus"]` 前缀，漏一条就污染 default。
+   ============================================================================ */
+
+[data-skin="phoqus"] {
+  /* ── 外形基元 ──────────────────────────────────────────────────────── */
+  --ah-skin-radius-sm: 4px;      /* 参考站 rounded-sm 3.5 */
+  --ah-skin-radius: 7px;         /* rounded-md 7 —— 按钮/输入框 */
+  --ah-skin-radius-lg: 14px;     /* rounded-xl 14 —— 所有「面」 */
+  --ah-skin-frame-width: 2px;    /* 面的虚线 */
+  --ah-skin-border-width: 1px;   /* 控件的实线（= 库默认，写出来是为了让
+                                       下半部分脚本推导的清单有个统一出口） */
+
+  /* ── 颜色的交接点 ──────────────────────────────────────────────────
+     ⚠ 写法上有个坑，别改回「直接给默认值」：skin 文件**不分层**，而 palette 在
+     `@layer components.ah` 里 —— 无层规则永远压过任何 @layer，与特异性无关。
+     所以 skin 若直接写 `--ah-skin-ink: <默认>`，palette 里同名的覆盖**永远
+     生不了效**（brutal / island 都实测踩过）。正确做法是**读一个颜色轴命名空间
+     下的变量、就地给兜底**：palette 赋值 --ah-color-skin-ink，skin 只取值。
+     兜底取文本色，于是任意配色叠上本 skin 都有一条读得出的虚线（明色近黑、
+     暗色近白），也因此不需要 [data-theme="dark"] 分支。 */
+  --ah-skin-ink: var(--ah-color-skin-ink, var(--ah-color-text));
+
+  /* 墨色的两档减弱 —— 参考站的描边**不是一个颜色**，是三档（2026-08-26 复核）：
+       结构线（面的外框、分栏线、分组线）  纯黑
+       密排数据表的横向行线               黑 20%
+       密排数据表的外框与表头下沿         黑 30%
+     这三档必须分开，否则数据表会被一层全黑的网格糊死 —— 参考站那张
+     `border-border/30 + border-border/20` 的表就是明证：它嵌在文档里，
+     线一重整块就压过正文。 */
+  --ah-skin-ink-soft: color-mix(in srgb, var(--ah-skin-ink) 25%, transparent);
+  --ah-skin-ink-faint: color-mix(in srgb, var(--ah-skin-ink) 14%, transparent);
+
+  /* 辉光 —— 参考站 --glow / --glow-sm 的几何（0 0 15px / 0 0 8px）。
+     那两条的颜色是琥珀 #f59f0a，属**颜色决策**，本文件不写颜色字面量：
+     改从当前配色的主色兑透明，于是换配色时辉光跟着走。 */
+  --ah-skin-glow: 0 0 15px 0 color-mix(in srgb, var(--ah-color-primary) 22%, transparent);
+  --ah-skin-glow-sm: 0 0 8px 0 color-mix(in srgb, var(--ah-color-primary) 30%, transparent);
+
+  /* ── 圆角刻度 ──────────────────────────────────────────────────────── */
+  --ah-radius-sm: var(--ah-skin-radius-sm);
+  --ah-radius-md: var(--ah-skin-radius);
+  --ah-radius-lg: var(--ah-skin-radius-lg);
+
+  /* ── 阴影：全库走 var() 的一律关掉（见文件头「零阴影」）────────────── */
+  --ah-shadow-sm: none;
+  --ah-shadow-md: none;
+  --ah-shadow-lg: none;
+
+  /* ── 按钮：实测参考站 rounded-md 7 / font-weight 700 / padding 7px 14px ── */
+  --ah-btn-radius: var(--ah-skin-radius);
+  --ah-btn-pad-y: 7px;
+  --ah-btn-pad-x: 14px;
+}
+
+/* 标题一律 700 + 收紧字距（实测参考站 h1 tracking −0.025em、h3 −0.025em）。
+   这是排版的**形态**而非字体族，故归形状轴；换成任何字体族都成立。 */
+[data-skin="phoqus"] :is(h1, h2, h3, h4, h5, h6) {
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* ============================================================================
+   一、核心组件（手写）—— 哪些该虚、哪些该实、辉光挂在哪，这些需要判断。
+   ============================================================================ */
+
+/* ── 1. Button ────────────────────────────────────────────────────────────
+   实心档：无描边、无阴影、字重 700。参考站的实心按钮 hover **不换色**也不位移，
+   只是整块亮起来一圈辉光（--glow）——那是它唯一的动效语言。 */
+/* ⚠ 圆角不在这里写：按钮读的是 `var(--ah-btn-radius, var(--ah-radius-md))`，
+   上面的 token 块已经把 --ah-btn-radius 翻成 7px 了。在这里再写一句四角统一的
+   `border-radius` 会把「拼接位置」的分角规则压掉（skin 不分层，无层压过有层）——
+   实测工具条里的连排按钮 `0 8px 8px 0` 会被拍成四角 7px，接缝处鼓出来。 */
+/* ⚠ 字重分两档，别一刀切成 700：实测参考站**实心按钮 700、次要（轮廓）按钮
+   500**。一律 700 会让次要按钮抢戏 —— 那正是它要避免的。 */
+[data-skin="phoqus"] .ah-btn {
+  font-weight: var(--ah-font-weight-medium);
+}
+[data-skin="phoqus"] .ah-btn:is(.ah-btn-primary, .ah-btn-secondary,
+                                   .ah-btn-success, .ah-btn-warning,
+                                   .ah-btn-error, .ah-btn-info) {
+  font-weight: var(--ah-font-weight-bold);
+  --ah-btn-shadow: none;
+  --ah-btn-lift-hover: none;
+  border-color: transparent;
+}
+@media (hover: hover) {
+  [data-skin="phoqus"] .ah-btn:is(.ah-btn-primary, .ah-btn-secondary,
+                                     .ah-btn-success, .ah-btn-warning,
+                                     .ah-btn-error,
+                                     .ah-btn-info):hover:not(.ah-btn-disabled) {
+    box-shadow: var(--ah-skin-glow);
+  }
+}
+[data-skin="phoqus"] .ah-btn-disabled {
+  box-shadow: none;
+}
+
+/* 轮廓按钮 —— 对应参考站的次要按钮：1px **实线**墨边 + 一层几乎看不见的
+   `0 1px 2px rgba(0,0,0,.05)`。那层微阴影在零阴影的语境里是唯一的例外，
+   它的作用不是抬升而是「这块是可按的纸」，所以保留形态、改从墨色兑透明。 */
+[data-skin="phoqus"] .ah-btn-outlined {
+  border-width: var(--ah-skin-border-width);
+  border-style: solid;
+  border-color: var(--ah-skin-ink);
+  box-shadow: 0 1px 2px 0 color-mix(in srgb, var(--ah-skin-ink) 8%, transparent);
+}
+@media (hover: hover) {
+  [data-skin="phoqus"] .ah-btn-outlined:hover:not(.ah-btn-disabled) {
+    box-shadow: var(--ah-skin-glow-sm);
+  }
+}
+
+/* 小号按钮：实测参考站 h28 / padding 0 10.5 / 12.25px。sigil 的高度由 padding
+   撑出来，故换算成 pad-y 5px（12.25×1.5 行高 + 2×5 + 0 描边 ≈ 28）。 */
+[data-skin="phoqus"] .ah-btn-sm {
+  --ah-btn-pad-y: 5px;
+  --ah-btn-pad-x: 10px;
+}
+
+/* 焦点环取主色（参考站 focus-visible:ring-[3px] ring-ring/50，环是橘的） */
+[data-skin="phoqus"] .ah-btn:is(:focus-visible, .ah-btn-focused) {
+  outline-color: var(--ah-color-primary);
+}
+
+/* 连排按钮：整组一颗圆角，成员之间靠竖线分。实心档已无描边，这里补回接缝。 */
+[data-skin="phoqus"] :is(.ah-btn-group, .ah-split-button) {
+  border-radius: var(--ah-skin-radius);
+  box-shadow: none;
+}
+
+/* ── 2. Input / 输入类：1px 实线（见文件头判据 2）────────────────────────
+   ⚠ 别顺手改成虚线 —— 虚线框在表单里会被读成「拖放区 / 待填占位」，
+     参考站自己的输入框也是实线，只有包着它们的**面**才是虚线。
+
+   ⚠ **这里不设 `border-radius`**（曾经设过，是个 bug）：输入框的圆角本来就走
+     `var(--ah-radius-md)`，上面的刻度翻转已经把它变成 7px 了。而拼接控件
+     （前后缀组、数字输入的步进器、日期输入的日历按钮…）靠库里那批**分角**规则
+     把接缝那一侧压平：`border-radius: var(--ah-radius-md) 0 0 var(--ah-radius-md)`。
+     skin 不分层、无层压过有层，所以在这里写一句四角统一的 `border-radius`
+     会把那些分角规则全盖掉 —— 接缝两边各自圆起来，看着就是「$ 那块和输入框
+     裂成了两个盒子」（实测 NumberInput 的货币前缀、百分比后缀都这样）。 */
+/* ⚠ 名单里只放**输入面**，不放外壳：`.ah-pwd` / `.ah-numinput` /
+   `.ah-fmt` / `.ah-dti` 都是不画边的容器（库里连 border 声明都没有），
+   给它们钉 1px 就会在真正的输入框外面再套一圈 —— 双框。真正的面是里层那个
+   同时挂着 `.ah-input` 的 input。 */
+/* ⚠ 参考站**没有任何真实表单控件**（落地页里那些输入框全是静态 div），所以这一节
+   不是「实测移植」而是**推导**：站上与输入框最接近的实物是次要按钮
+   —— 1px 实线纯黑 + 圆角 7 + 一层 `0 1px 2px rgba(0,0,0,.05)`。输入框照它抄，
+   于是「可按的纸」与「可输入的纸」在同一套语言里。 */
+[data-skin="phoqus"] :is(.ah-input, .ah-a2ui-textarea, .ah-masked-input,
+                         .ah-numinput-input, .ah-fmt-input,
+                         .ah-dti-input, .ah-tag-input) {
+  border-width: var(--ah-skin-border-width);
+  border-style: solid;
+  border-color: var(--ah-skin-ink);
+  box-shadow: 0 1px 2px 0 color-mix(in srgb, var(--ah-skin-ink) 8%, transparent);
+}
+[data-skin="phoqus"] :is(.ah-input, .ah-a2ui-textarea,
+                         .ah-masked-input):is(:focus, :focus-visible,
+                                                 .ah-input-focused) {
+  outline-color: var(--ah-color-primary);
+  box-shadow: var(--ah-skin-glow-sm);
+}
+/* 前后缀块：打**基类** `.ah-input-addon`（画边的是它，`-prefix` / `-suffix`
+   两个修饰类只负责把接缝那一侧的边收成 0）。且只换颜色 —— 给修饰类下线型会
+   让那条被收成 0 的接缝边按 `medium` 复活成 3px，接缝处裂开（实测）。 */
+[data-skin="phoqus"] .ah-input-addon {
+  border-color: var(--ah-skin-ink);
+}
+
+/* 下拉触发器与输入框同配方（它们在视觉上就是一类东西） */
+[data-skin="phoqus"] :is(.ah-dropdownlist-input-area, .ah-combobox-input-area,
+                         .ah-cascader-input-area, .ah-datepicker-input-area) {
+  border-color: var(--ah-skin-ink);
+  box-shadow: none;
+}
+
+/* ── 3. 面：Card / Panel / Window —— 2px 虚线 + 14 圆角 + 零阴影 ──────────
+   ⚠ `.ah-kpi-card` 与 `.ah-panel` 在库里**本来没有描边**（KPI 卡靠淡色底
+   + 阴影立面）。本 skin 关掉了全部阴影，若不给它们补这圈虚线，它们会变成一块
+   没有边界的色块 —— 所以这里是**有意**让它们「凭空多出一圈」，不是漏网的
+   3px 幽灵边（宽度已钉死 2px，见文件头）。 */
+[data-skin="phoqus"] :is(.ah-card, .ah-panel, .ah-window, .ah-kpi-card) {
+  border-width: var(--ah-skin-frame-width);
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius-lg);
+  box-shadow: none;
+}
+/* 卡片头尾的分隔线跟着虚（参考站 FAQ 列表每行之间就是 1px dashed） */
+[data-skin="phoqus"] :is(.ah-card-header, .ah-window-header, .ah-card-footer) {
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  /* 可点卡片：不抬升（零阴影），改成辉光亮一下 */
+  [data-skin="phoqus"] .ah-card-hover:hover {
+    box-shadow: var(--ah-skin-glow);
+  }
+}
+
+/* 下拉家族的焦点环：参考站所有可聚焦件的环都是主色（`ring-ring/50`），而 sigil 的
+   下拉根元素**没有接管 :focus**，鼠标点开时露的是浏览器默认的蓝环 —— 一整套暖沙
+   配色里突然冒出个系统蓝。这里接管掉：鼠标聚焦不画环（弹层本身就是反馈），
+   键盘聚焦画主色环，可达性不倒退。 */
+[data-skin="phoqus"] :is(.ah-dropdownlist, .ah-combobox, .ah-cascader,
+                         .ah-datepicker):focus {
+  outline: none;
+}
+[data-skin="phoqus"] :is(.ah-dropdownlist, .ah-combobox, .ah-cascader,
+                         .ah-datepicker):focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-primary);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* 面套面只画外面那圈 —— 弹层里嵌的 listbox 自己也在「面」名单里，不掐掉就是
+   两圈虚线（实测每个下拉都是双框）。 */
+[data-skin="phoqus"] :is(.ah-dropdownlist-popup, .ah-combobox-popup,
+                         .ah-cascader-popup, .ah-input-popup,
+                         .ah-menu-popup, .ah-navbar-popup) .ah-listbox {
+  border-style: none;
+}
+
+/* ── 4. 弹层 / 对话框 / 抽屉：同样是「面」──────────────────────────────
+   ⚠ 这里的 border 不是装饰：本 skin 零阴影，浮层与页面的分离全靠这圈虚线。 */
+[data-skin="phoqus"] :is(.ah-dropdownlist-popup, .ah-listbox, .ah-menu-popup,
+                         .ah-menu-submenu, .ah-popover, .ah-input-popup,
+                         .ah-toolbar-popup, .ah-navbar-popup,
+                         .ah-dropdown-btn-popup, .ah-split-button__menu,
+                         .ah-cascader-popup, .ah-combobox-popup,
+                         .ah-datepicker-popup, .ah-command-panel,
+                         .ah-slash-menu, .ah-timepicker) {
+  border-width: var(--ah-skin-frame-width);
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius-lg);
+  box-shadow: none;
+}
+[data-skin="phoqus"] :is(.ah-a2ui-modal-dialog, .ah-drawer__panel,
+                         .ah-sheet__panel, .ah-re-dialog,
+                         .ah-scheduler-dialog, .ah-drawn-dialog) {
+  border-width: var(--ah-skin-frame-width);
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius-lg);
+  box-shadow: none;
+}
+/* ── 分组线：把「背景画的实线」改成「虚线描边」──────────────────────────
+   ⚠ 这几个类库里**没有 border**，线是 `height: 1px + background` 画的。所以
+   不能只下 `border-style: dashed`（那只会凭空多出一圈 3px 框，见文件头），
+   得连画法一起换：高度归零、背景撤掉、改用一条虚线上边框。总高仍是 1px，
+   布局不动。
+   两侧内缩 12px 是实测参考站的 `mx-3`（158px 的线放在 180px 的面板里）——
+   分组线不顶到边，是那套菜单最容易被忽略、又最像它的一处细节。
+   ⚠ 只改形状：颜色仍是 var() 取值，不赋值任何 --ah-color-*。 */
+[data-skin="phoqus"] :is(.ah-menu-separator, .ah-dg-context-menu-separator,
+                         .ah-dg-column-menu-separator, .ah-dl-menu-divider,
+                         .ah-cascader-search-item-separator) {
+  height: 0;
+  background: none;
+  border-top: 1px dashed var(--ah-skin-ink);
+  margin-inline: 12px;
+}
+/* 横排菜单里的分隔是**竖**线，同理换成左边框 */
+[data-skin="phoqus"] .ah-menu-horizontal > .ah-menu-list > .ah-menu-separator {
+  width: 0;
+  height: auto;
+  background: none;
+  border-top: none;
+  border-left: 1px dashed var(--ah-skin-ink);
+  margin-inline: 0;
+  margin-block: 4px;
+}
+
+
+/* 浮动提示 / 气泡：飘在页面上的小面，同样一圈虚线，圆角小一档。
+   （两者库内均无描边，所以这里必须用**带宽度的简写**把 2px 钉死。） */
+[data-skin="phoqus"] :is(.ah-toast-tpl, .ah-tooltip) {
+  border: var(--ah-skin-frame-width) dashed var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius);
+  box-shadow: none;
+}
+
+/* ── 菜单/下拉里的条目：圆角 7 + 面自身留 4px 内边距 ────────────────────
+   实测参考站侧栏条目：`rounded-md`（7px）+ padding 5.25/7 + 两侧由容器留白内缩。
+   sigil 的菜单弹层原本是 `padding: 4px 0`（只有上下），条目顶到边 —— 那样给条目
+   加圆角是看不见的。这里把左右也补上 4px，圆角才有意义。
+   ⚠ 只动**弹层容器**的内边距，不动条目高度：列表类组件按条目高算滚动位置。 */
+[data-skin="phoqus"] :is(.ah-menu-popup, .ah-menu-submenu) {
+  padding: 4px;
+}
+[data-skin="phoqus"] :is(.ah-menu-link, .ah-listbox-item, .ah-cascader-menu-item,
+                         .ah-command__item, .ah-slash-menu__item) {
+  border-radius: var(--ah-skin-radius);
+}
+[data-skin="phoqus"] :is(.ah-dropdownlist-popup, .ah-combobox-popup) {
+  padding: 4px;
+}
+
+/* 通知单独一条 —— ⚠ 它左边那 3px 是**语义色条**（`border-left: 3px solid
+   var(--ah-notify-accent)`，info/success/warning/error 靠它区分）。用简写
+   `border: 2px dashed ink` 会把色条一起抹掉，等于删掉了一层状态信息。
+   所以四边分开写：左边只留原样，其余三边虚化并上墨色。 */
+[data-skin="phoqus"] .ah-notify {
+  border-top-width: var(--ah-skin-frame-width);
+  border-right-width: var(--ah-skin-frame-width);
+  border-bottom-width: var(--ah-skin-frame-width);
+  border-style: dashed dashed dashed solid;
+  border-top-color: var(--ah-skin-ink);
+  border-right-color: var(--ah-skin-ink);
+  border-bottom-color: var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius);
+  box-shadow: none;
+}
+
+/* ── 5. Checkbox / Radio / Switch ─────────────────────────────────────────
+   多选框是**小圆角方块**（参考站 rounded-sm 3.5），单选与开关保持真圆/胶囊。 */
+[data-skin="phoqus"] .ah-checkbox-box {
+  border-color: var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius-sm);
+}
+[data-skin="phoqus"] .ah-radiobutton-box {
+  border-color: var(--ah-skin-ink);
+}
+[data-skin="phoqus"] :is(.ah-checkbox-focused .ah-checkbox-box,
+                         .ah-radiobutton-focused .ah-radiobutton-box) {
+  outline-color: var(--ah-color-primary);
+}
+/* ⚠ 描边挂 track（胶囊本体），不是 .ah-switch 外壳（无圆角，会套出直角框）；
+   且用 inset 环而非 border：滑块 absolute 定位、行程由 JS 按轨道宽算，
+   真加边框会内缩定位坐标系（island 那边实测踩过）。 */
+[data-skin="phoqus"] .ah-switch-track {
+  box-shadow: inset 0 0 0 1px var(--ah-skin-ink);
+}
+[data-skin="phoqus"] .ah-switch:focus-visible .ah-switch-track {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-primary);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ── 6. Chip / Tag / Badge：虚线胶囊 ──────────────────────────────────────
+   参考站那颗 `NOW IN BETA · MACOS` 徽章 = 2px dashed + 胶囊 + 700 字重 +
+   1.47px 字距，是整站辨识度最高的一件小东西。这里把虚线胶囊这一半接过来
+   （字距/大写属排版，不在形状轴的职责里）。 */
+/* ⚠ `.ah-dg-badge` / `.ah-ranking-list__tag` 不在名单里：它们是**纯色块**、
+   库里没有描边，给它们加 1.5px 虚线等于凭空加 3px 宽，且那两处本来就靠底色分类。 */
+[data-skin="phoqus"] :is(.ah-chip, .ah-a2ui-chip) {
+  border-width: 1.5px;
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+  border-radius: var(--ah-radius-full);
+  box-shadow: none;
+  font-weight: var(--ah-font-weight-semibold);
+}
+
+/* ── 7. Tabs / 分段控件 ───────────────────────────────────────────────────
+   标签页的下沿线是「分隔」→ 虚；选中项本身不虚（它在指状态，不在圈范围）。 */
+[data-skin="phoqus"] .ah-tabs-header {
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+}
+[data-skin="phoqus"] .ah-tabs-item {
+  border-radius: var(--ah-skin-radius) var(--ah-skin-radius) 0 0;
+}
+
+/* ── 8. 表格：外框虚、表头下沿虚、单元格线保持实（见文件头 ⚠）──────────
+   ⚠ 铁律：数据网格**只动圆角与描边样式/颜色，绝不动宽度** —— 它们按行高列宽
+     算滚动位置，每格加 1px 会一路累积成错位。 */
+[data-skin="phoqus"] :is(.ah-dg, .ah-dt, .ah-tg, .ah-pg) {
+  border-width: var(--ah-skin-frame-width);
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius-lg);
+}
+
+/* 内部线走**软墨**，不是结构黑 —— 2026-08-26 实测参考站文档里那张表：
+     外框与表头下沿  1px solid 黑 30%
+     行分隔          1px solid 黑 20%
+     竖线            **一条都没有**
+   （落地页那张营销对比表才是 2px 虚框 + 虚线分行，那种表在 sigil 这边对应
+   「卡片里放几行」，不是数据表。）
+   这里的取舍：横线取软墨、竖线再弱一档 —— 竖线全撤会让宽表的列对不上，
+   但留成全黑就成了网格纸。宽度一律不动（网格按行高列宽算滚动位置）。 */
+[data-skin="phoqus"] :is(.ah-dt-row, .ah-dt-cell, .ah-dt-th,
+                         .ah-dg-row, .ah-dg-cell, .ah-dg-header-cell,
+                         .ah-dg-header-group-cell, .ah-dg-filter-cell,
+                         .ah-tg-row, .ah-tg-cell, .ah-tg-header-cell,
+                         .ah-pg-row, .ah-pg-cell, .ah-pg-header-cell,
+                         .ah-dt-filter-cell, .ah-dt-footer-cell) {
+  border-color: var(--ah-skin-ink-soft);
+}
+[data-skin="phoqus"] :is(.ah-dt-cell, .ah-dt-th, .ah-dg-cell,
+                         .ah-dg-header-cell, .ah-dg-header-group-cell,
+                         .ah-tg-cell, .ah-tg-header-cell,
+                         .ah-pg-cell, .ah-pg-header-cell) {
+  border-right-color: var(--ah-skin-ink-faint);
+}
+/* ⚠ 只有 `.ah-dt-header` 真的画了底边（2px solid）；`.ah-dg-header-cell`
+   画的是**右**边（列分隔），`-tg-/-pg-header-cell` 干脆没有 —— 给它们下
+   `border-bottom-style` 会各自多出一条 3px 虚线。 */
+/* 表头下沿是**结构线**，与外框同一档墨色（库里它用的是 --ah-color-border，
+   与 skin-ink 差半档，两条并排能看出色差）。 */
+[data-skin="phoqus"] .ah-dt-header {
+  border-bottom-style: dashed;
+  border-bottom-color: var(--ah-skin-ink);
+}
+
+/* ── 9. 侧栏 / 工具条 / 状态条：分栏的竖线是虚的（参考站左右两栏就这样）── */
+/* ⚠ `.ah-page-header` 不在名单里：它库内无描边，加线型只会多出 3px 虚框。 */
+[data-skin="phoqus"] :is(.ah-sidenav, .ah-activity-bar, .ah-status-bar,
+                         .ah-navigationbar) {
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+}
+
+/* ── 10. 凹槽与把手：进度条 / 滑块 / 滚动条 ───────────────────────────────
+   零阴影下这些原本靠内阴影做的「凹」没了，改用一条极淡的墨线圈住槽。
+   ⚠ 滑块轨道只有几像素高，只上内环、不加真描边（加了会把槽吃掉）。 */
+[data-skin="phoqus"] :is(.ah-progressbar, .ah-slider-track) {
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ah-skin-ink) 25%, transparent);
+}
+[data-skin="phoqus"] .ah-slider-thumb {
+  box-shadow: none;
+  border: var(--ah-skin-border-width) solid var(--ah-skin-ink);
+}
+
+/* ── 11. 拖放区：本就该虚，这里只把它拉到本 skin 的墨色与圆角 ──────────── */
+/* ⚠ `.ah-empty` 不在名单里：空态本来就没有描边，给它一圈虚框是**新长相**
+   而不是「拉到本 skin 的墨色」，且会凭空长成 3px。 */
+[data-skin="phoqus"] :is(.ah-upload-dragger, .ah-tl-drop-area,
+                         .ah-sortable-placeholder, .ah-re-image-drop-zone) {
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+  border-radius: var(--ah-skin-radius-lg);
+}
+
+/* ============================================================================
+   二、脚本推导的覆盖面 —— `node scripts/skin_coverage.mjs phoqus` 后人工校订。
+
+   ⚠ 校订的重点与 brutal / island 都不同：脚本只知道「哪些类有四边描边」，
+     不知道**这条边圈的是面还是控件** —— 而那正是本 skin 的分野。所以脚本那一桶
+     「墨色 + 加宽」在这里被人工劈成了两半：
+       面   → 虚线（下面第一组）
+       控件 → 实线（下面第二组）
+     宽度两边都不动（默认 1px 足够；2px 只留给上半部分点名的那些「大面」）。
+   ============================================================================ */
+
+/* ── 面：虚线 ───────────────────────────────────────────────────────────
+   ⚠ 这份名单是脚本清单**减去**「库内无可见描边」的那批之后的结果（脚本只看有没有
+   `border:` 声明，`border: none` / `border: 0` 也算命中）。被剔掉的 12 个：
+   aspect-ratio · chat-markdown · dti-live · expander-no-gutters · menu-is-minimized ·
+   navigationbar-no-gutters · pm-content · pm-embed · pm-image-caption · pm-math-display ·
+   ranking-list · subagent-card__header —— 给它们换线型只会凭空长出 3px 虚框。 */
+[data-skin="phoqus"] :is(
+  .ah-a2ui-card,
+  .ah-a2ui-divider,
+  .ah-cascader-popup,
+  .ah-chat-input__row,
+  .ah-chat-markdown__mermaid,
+  .ah-colorpicker,
+  .ah-combobox-popup,
+  .ah-command,
+  .ah-context-ring__popover,
+  .ah-datepicker-popup,
+  .ah-diff,
+  .ah-dt-chooser-panel,
+  .ah-dt-th-drag-clone,
+  .ah-dti-dropdown,
+  .ah-expander,
+  .ah-fmt-popup,
+  .ah-form-bordered,
+  .ah-listbox,
+  .ah-md-details,
+  .ah-md-editor,
+  .ah-md-hr,
+  .ah-md-table,
+  .ah-menu,
+  .ah-navbar,
+  .ah-navbar-popup,
+  .ah-pm-code-block-wrapper,
+  .ah-pm-code-lang-dropdown,
+  .ah-pm-editor,
+  .ah-pm-emoji-popup,
+  .ah-pm-find-bar,
+  .ah-pm-link-tooltip,
+  .ah-pm-mention-popup,
+  .ah-pm-sel-toolbar,
+  .ah-pm-slash-menu,
+  .ah-pm-table-menu,
+  .ah-radio-cards__card,
+  .ah-re-editor,
+  .ah-re-toolbar,
+  .ah-re-toolbar__align-menu,
+  .ah-re-toolbar__color-menu,
+  .ah-re-toolbar__emoji-panel,
+  .ah-re-toolbar__font-size-menu,
+  .ah-re-toolbar__heading-menu,
+  .ah-re-toolbar__math-menu,
+  .ah-responsive-panel-content,
+  .ah-ribbon,
+  .ah-segmented-control,
+  .ah-status-bar__popover,
+  .ah-steps-panel,
+  .ah-toolbar,
+  .ah-transfer-panel,
+  .ah-upload-item,
+  .ah-web-card
+) {
+  border-style: dashed;
+  border-color: var(--ah-skin-ink);
+}
+
+/* ── 两张 chat 卡：三边虚线上墨，**左边留给状态色** ────────────────────
+   与 brutal 同一处修正。`.ah-tool-call-card` / `.ah-subagent-card` 的左边框
+   是那张卡唯一的状态表达（`3px solid var(--ah-tcc-accent)` /
+   `var(--ah-sac-accent)`：executing 蓝 / awaiting 黄 / completed 绿 / failed 红），
+   跟着上面那条清单四边一起刷成墨色虚线之后，所有状态长得一模一样。
+
+   外形轴只管形状 —— 虚线是本皮肤的招牌，照上；但那条边的**颜色**是语义，不该动。
+   故单列一条，只给三边上虚线与墨色。 */
+[data-skin="phoqus"] :is(.ah-tool-call-card, .ah-subagent-card) {
+  border-top-style: dashed;
+  border-right-style: dashed;
+  border-bottom-style: dashed;
+  border-top-color: var(--ah-skin-ink);
+  border-right-color: var(--ah-skin-ink);
+  border-bottom-color: var(--ah-skin-ink);
+}
+
+/* ── 控件：**只换颜色**，宽度与线型都不动 ──────────────────────────────
+   ⚠ 这里原本还写了 `border-style: solid`，已删。库默认线型就是 solid，那句话
+   一件有效的事都不干，却会把 `border: none` 的元素（密码框眼睛按钮、日期裸
+   input、步进器…）点亮成 3px 边 —— 拼接控件的接缝处尤其明显。详见文件头。 */
+[data-skin="phoqus"] :is(
+  .ah-a2ui-modal-close,
+  .ah-a2ui-native-input,
+  .ah-activity-bar__item,
+  .ah-btn-group-btn,
+  .ah-cascader-checkbox,
+  .ah-cascader-clear,
+  .ah-cascader-input,
+  .ah-chat-input__btn,
+  .ah-chat-input__field,
+  .ah-chat-markdown__copy,
+  .ah-chip__delete,
+  .ah-colorpicker-b-input,
+  .ah-colorpicker-bar-pointer,
+  .ah-colorpicker-hex-input,
+  .ah-colorpicker-map-pointer,
+  .ah-colorpicker-preview,
+  .ah-combobox-checkbox,
+  .ah-combobox-input,
+  .ah-command__input,
+  .ah-context-ring__action,
+  .ah-context-ring__trigger,
+  .ah-datepicker-input,
+  .ah-datepicker-nav-next,
+  .ah-drawer__close,
+  .ah-dropdown-btn-wrapper,
+  .ah-dt-adv-filter-input,
+  .ah-dt-adv-filter-select,
+  .ah-dt-chooser-btn,
+  .ah-dt-editor-checkbox,
+  .ah-dt-expand-btn,
+  .ah-dt-filter-input,
+  .ah-dt-pager-btn,
+  .ah-dt-pager-size-select,
+  .ah-dt-search-input,
+  .ah-dti-cal-btn,
+  .ah-dti-spin,
+  .ah-dti-time-input,
+  .ah-fmt-dropdown-btn,
+  .ah-fmt-spin-buttons,
+  .ah-input-otp__slot,
+  .ah-kbd,
+  .ah-listbox-checkbox,
+  .ah-listbox-checkbox-checked,
+  .ah-listbox-filter-input,
+  .ah-listmenu-filter-input,
+  .ah-menu-drawer-close,
+  .ah-menu-minimized-btn,
+  .ah-mobile-header-toggle,
+  .ah-navbar-item,
+  .ah-numinput-spin,
+  .ah-numinput-suffix,
+  .ah-pagination-item,
+  .ah-pagination-jumper-btn,
+  .ah-pagination-jumper-input,
+  .ah-pagination-nav,
+  .ah-pagination-size-select,
+  .ah-pm-code-copy-btn,
+  .ah-pm-code-lang-btn,
+  .ah-pm-find-bar__input,
+  .ah-pm-image-op-item,
+  .ah-pm-link-tooltip__btn,
+  .ah-pm-link-tooltip__edit,
+  .ah-pm-sel-toolbar__link-input,
+  .ah-pm-slash-menu-tab,
+  .ah-popover-arrow,
+  .ah-pwd-toggle,
+  .ah-rating__star,
+  .ah-re-dialog__btn-cancel,
+  .ah-re-dialog__close,
+  .ah-re-dialog__field,
+  .ah-re-toolbar__emoji-cell,
+  .ah-re-toolbar__emoji-tab,
+  .ah-responsive-panel-toggle,
+  .ah-ribbon-scroll-btn,
+  .ah-ribbon-tab,
+  .ah-segmented-control__item,
+  .ah-sheet__close,
+  .ah-slider-button,
+  .ah-split-button__item,
+  .ah-steps-btn,
+  .ah-steps-indicator,
+  .ah-tab-bar__close,
+  .ah-tag-input__field,
+  .ah-theme-select,
+  .ah-thinking-block__trigger,
+  .ah-transfer-btn,
+  .ah-transfer-filter-input,
+  .ah-web-card__toggle
+) {
+  border-color: var(--ah-skin-ink);
+}
+
+/* ── 只上色（测量敏感：网格 / 甘特 / 日程 / 白板按像素排版）──────────────
+   这一桶**保持实线**：密排的行列线一旦虚化，几十行叠起来就是一片麻点。
+   宽度更是碰都不碰（加 1px 会沿行列累积成错位）。 */
+[data-skin="phoqus"] :is(
+  .ah-calendar-btn,
+  .ah-calendar-view-btn,
+  .ah-dg-cell-editor,
+  .ah-dg-cell-hidden-by-merge,
+  .ah-dg-column-chooser,
+  .ah-dg-column-menu,
+  .ah-dg-command-btn,
+  .ah-dg-context-menu,
+  .ah-dg-ever-present-input,
+  .ah-dg-excel-filter-panel,
+  .ah-dg-excel-filter-search,
+  .ah-dg-filter-btn,
+  .ah-dg-filter-input,
+  .ah-dg-filter-operator-select,
+  .ah-dg-filter-panel,
+  .ah-dg-filter-value-input,
+  .ah-dg-group-panel-tag,
+  .ah-dg-pager-button,
+  .ah-dg-pager-goto-input,
+  .ah-dg-pager-size-select,
+  .ah-dg-popup-cancel-btn,
+  .ah-dg-popup-input,
+  .ah-dg-reorder-helper,
+  .ah-dg-row,
+  .ah-dg-row-cancel-btn,
+  .ah-dg-search-input,
+  .ah-dg-toolbar-btn,
+  .ah-dl-btn,
+  .ah-dl-context-menu,
+  .ah-dl-float-window,
+  .ah-docking-window,
+  .ah-drawn-app-menu,
+  .ah-drawn-context-menu,
+  .ah-drawn-context-menu__item,
+  .ah-drawn-dialog,
+  .ah-drawn-dialog__textarea,
+  .ah-drawn-emoji-btn,
+  .ah-drawn-freehand__preset,
+  .ah-drawn-island,
+  .ah-drawn-link-popup,
+  .ah-drawn-link-popup__input,
+  .ah-drawn-mind-hover-preview__box,
+  .ah-drawn-search__close,
+  .ah-drawn-search__input,
+  .ah-drawn-settings-input,
+  .ah-drawn-settings-select,
+  .ah-drawn-shape-menu,
+  .ah-drawn-shape-menu__item,
+  .ah-drawn-swatch,
+  .ah-drawn-theme-dot,
+  .ah-gantt,
+  .ah-node-graph,
+  .ah-node-graph-ctxmenu,
+  .ah-node-graph-minimap,
+  .ah-node-graph-node-header,
+  .ah-node-graph-search,
+  .ah-node-graph-search-input,
+  .ah-node-graph-toolbar,
+  .ah-pg-context-menu,
+  .ah-pg-virtual-spacer,
+  .ah-range-selector-marker-value,
+  .ah-relation-graph,
+  .ah-relation-graph__detail,
+  .ah-relation-graph__detail-close,
+  .ah-relation-graph__tool,
+  .ah-relation-graph__toolbar,
+  .ah-scheduler-btn,
+  .ah-scheduler-contextmenu,
+  .ah-scheduler-dialog-btn,
+  .ah-scheduler-dialog-close,
+  .ah-scheduler-dialog-textarea,
+  .ah-scheduler-more-popover,
+  .ah-scheduler-view-btn,
+  .ah-swimlane,
+  .ah-swimlane-node,
+  .ah-tg-toggle,
+  .ah-timeline-item-content,
+  .ah-timeline-item-pointer,
+  .ah-tl-feedback
+) {
+  border-color: var(--ah-skin-ink);
+}
+
+/* ── 阴影：写死了 box-shadow 字面量、劫不到 --ah-shadow-* 的那批 ──────
+   本 skin 零阴影，一律关掉。分离由上面那圈虚线承担。 */
+[data-skin="phoqus"] :is(
+  .ah-a2ui-card,
+  .ah-a2ui-modal-dialog,
+  .ah-btn-toggled,
+  .ah-card-hover,
+  .ah-cascader-popup,
+  .ah-colorpicker-bar-pointer,
+  .ah-combobox-popup,
+  .ah-command-panel,
+  .ah-context-ring__popover,
+  .ah-datepicker-popup,
+  .ah-dg-column-chooser,
+  .ah-dg-column-menu,
+  .ah-dg-context-menu,
+  .ah-dg-excel-filter-panel,
+  .ah-dg-filter-panel,
+  .ah-dg-loading-message,
+  .ah-dg-reorder-helper,
+  .ah-dg-validation-tooltip,
+  .ah-dl-autohide-preview-slot-bottom,
+  .ah-dl-autohide-preview-slot-left,
+  .ah-dl-autohide-preview-slot-right,
+  .ah-dl-autohide-preview-slot-top,
+  .ah-dl-context-menu,
+  .ah-dl-drag-ghost,
+  .ah-dl-float-window,
+  .ah-docking-window,
+  .ah-docking-window-floating,
+  .ah-drag-feedback,
+  .ah-drawer__panel,
+  .ah-drawn-app-menu,
+  .ah-drawn-context-menu,
+  .ah-drawn-dialog,
+  .ah-drawn-island,
+  .ah-drawn-link-popup,
+  .ah-drawn-mind-hover-preview__box,
+  .ah-drawn-shape-menu,
+  .ah-dropdown-btn-popup,
+  .ah-dt-chooser-panel,
+  .ah-dti-dropdown,
+  .ah-fmt-popup,
+  .ah-gantt-task-bar,
+  .ah-input-popup,
+  .ah-kpi-card,
+  .ah-menu-drawer,
+  .ah-menu-submenu,
+  .ah-navbar-popup,
+  .ah-pg-context-menu,
+  .ah-pm-code-lang-dropdown,
+  .ah-pm-emoji-popup,
+  .ah-pm-link-tooltip,
+  .ah-pm-math-edit,
+  .ah-pm-mention-popup,
+  .ah-pm-sel-toolbar,
+  .ah-pm-slash-menu,
+  .ah-pm-table-menu,
+  .ah-range-selector-marker,
+  .ah-ranking-list,
+  .ah-re-dialog,
+  .ah-re-toolbar__align-menu,
+  .ah-re-toolbar__color-menu,
+  .ah-re-toolbar__emoji-panel,
+  .ah-re-toolbar__font-size-menu,
+  .ah-re-toolbar__heading-menu,
+  .ah-re-toolbar__math-menu,
+  .ah-relation-graph__detail,
+  .ah-responsive-panel-content,
+  .ah-ribbon-tabs-content,
+  .ah-scheduler-contextmenu,
+  .ah-scheduler-dialog,
+  .ah-scheduler-more-popover,
+  .ah-segmented-control__item,
+  .ah-server-dialog,
+  .ah-server-disconnect-box,
+  .ah-server-toast,
+  .ah-sheet__panel,
+  .ah-slash-menu,
+  .ah-slider-thumb-dragging,
+  .ah-sortable-helper,
+  .ah-split-button__menu,
+  .ah-status-bar__popover,
+  .ah-steps-btn-disabled,
+  .ah-swimlane-node,
+  .ah-timepicker,
+  .ah-tl-feedback,
+  .ah-toolbar-popup,
+  .ah-validator-hint
+) {
+  box-shadow: none;
+}
+
+/* ⚠ 两个例外：冻结列的右缘靠阴影表示「这列钉住了、右边还有内容」。
+   关掉就再也看不出冻结边界（那不是装饰，是信息）。换成一条实墨线，
+   宽度写在 box-shadow 里 —— 不占布局，网格的像素计算不受影响。 */
+[data-skin="phoqus"] :is(.ah-dg-cell-pinned-last, .ah-dt-pinned) {
+  box-shadow: 1px 0 0 0 var(--ah-skin-ink);
+}
+
+/* ── 硬编码圆角（够不着 --ah-radius-*，原值 1–2px）→ 小圆角档 ───────── */
+[data-skin="phoqus"] :is(
+  .ah-calendar-list-event-status,
+  .ah-cascader-menu-item,
+  .ah-checkbox-check-indeterminate,
+  .ah-colorpicker-bar-pointer,
+  .ah-dg-ever-present-input,
+  .ah-dg-excel-filter-search,
+  .ah-dl-btn-pin,
+  .ah-docking-drop-indicator,
+  .ah-heatmap-calendar__legend-cell,
+  .ah-listbox-checkbox-indeterminate,
+  .ah-listbox-item-focused,
+  .ah-menu-hamburger,
+  .ah-menu-link-focus,
+  .ah-navbar-toggle-bar,
+  .ah-pm-find-match,
+  .ah-range-selector-marker-value,
+  .ah-ranking-list__flag--img,
+  .ah-scheduler-agenda-event-status,
+  .ah-steps-connector,
+  .ah-timeline-container,
+  .ah-upload-item-progress,
+  .ah-upload-item-progress-bar
+) {
+  border-radius: var(--ah-skin-radius-sm);
+}
+
+/* ============================================================================
+   三、地板线 —— 任何 skin 都不许越过的两条
+   ============================================================================ */
+
+/* ── 「直角」是地板线：调用方显式压平的东西，形状轴不许再圆回去 ────────
+   ⚠ 必须在 skin 里重新声明一遍：组件那几条在 `@layer components.ah` 里，
+     而 skin 不分层、无层永远压过有层。 */
+[data-skin="phoqus"] :is(.ah-input-no-rounded, .ah-masked-input-no-rounded, .ah-dti-no-rounded)
+  :is(.ah-input, .ah-input-addon-prefix, .ah-input-addon-suffix,
+      .ah-masked-input, .ah-dti-input, .ah-dti-cal-btn, .ah-dti-spinner) {
+  border-radius: 0;
+}
+[data-skin="phoqus"] :is(.ah-expander-square, .ah-navigationbar-square) {
+  border-radius: 0;
+}
+
+/* ── 「被撤掉的边」是地板线：组件或变体显式去掉的那一侧，形状轴不许换线型 ──
+   ⚠ 这是本 skin 特有的一条（brutal / island 不动线型，遇不上）：
+     `border-bottom: none` 留下的**宽度指定值**仍是初始的 `medium`，换线型等于
+     把它放出来 —— 浏览器渲成 3px。详见文件头。
+   下面四条是把 65 个 demo 路由逐个跑一遍「default 外形 vs 本外形的四边宽度差」
+   之后抓出来的全部残留（工具条那条同时撤掉描边与微阴影，回到 default 的长相）。 */
+[data-skin="phoqus"] :is(.ah-tabs-bottom, .ah-tabs-left, .ah-tabs-right)
+  > .ah-tabs-header {
+  border-bottom-style: none;
+}
+[data-skin="phoqus"] .ah-expander-no-gutters {
+  border-style: none;
+}
+[data-skin="phoqus"] .ah-re-toolbar--filled {
+  border-bottom-style: none;
+}
+[data-skin="phoqus"] .ah-toolbar-tool-el.ah-btn-outlined {
+  border-style: none;
+  box-shadow: none;
+}
+
+/* ── 几何地板线：真圆的东西任何 skin 都不许压平 ──────────────────────────
+   凡是从内联搬进 CSS 的几何，都要在这里补一条（详见 skins/island.css 同段）。 */
+[data-skin="phoqus"] .ah-skeleton__shape-circle {
+  border-radius: 50%;
+}

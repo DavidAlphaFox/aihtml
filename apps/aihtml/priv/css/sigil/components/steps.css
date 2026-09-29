@@ -1,0 +1,485 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   步骤条 (Steps) - 分步流程指示器
+   支持水平/垂直布局，多状态（pending/active/completed/error/disabled），
+   可点击导航与面板切换。
+   ============================================================================ */
+
+/* ---- 容器 ---- */
+
+.ah-steps {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  font-family: var(--ah-font-family);
+}
+
+/* ---- 水平布局 ---- */
+
+.ah-steps-horizontal > .ah-steps-header {
+  flex-direction: row;
+  justify-content: space-between;
+  padding-bottom: var(--ah-spacing-lg);
+  margin-bottom: var(--ah-spacing-xl);
+}
+
+.ah-steps-horizontal > .ah-steps-header .ah-steps-item {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.ah-steps-horizontal > .ah-steps-header .ah-steps-content {
+  align-items: center;
+  margin-top: var(--ah-spacing-sm);
+  padding: 0 var(--ah-spacing-xs);
+}
+
+/* 水平连接线 */
+.ah-steps-horizontal > .ah-steps-header .ah-steps-connector {
+  top: 20px;
+  left: calc(50% + 22px);
+  right: calc(-50% + 22px);
+  height: 2px;
+  width: auto;
+}
+
+/* ---- 垂直布局 ---- */
+
+.ah-steps-vertical {
+  flex-direction: row;
+  align-items: flex-start;
+}
+
+.ah-steps-vertical > .ah-steps-header {
+  flex-direction: column;
+  border-right: var(--ah-border-width) solid var(--ah-color-border-subtle);
+  padding-right: var(--ah-spacing-lg);
+  margin-right: var(--ah-spacing-lg);
+}
+
+.ah-steps-vertical > .ah-steps-header .ah-steps-item {
+  flex-direction: row;
+  align-items: flex-start;
+  padding-bottom: var(--ah-spacing-xl);
+}
+
+.ah-steps-vertical > .ah-steps-header .ah-steps-item:last-child {
+  padding-bottom: 0;
+}
+
+.ah-steps-vertical > .ah-steps-header .ah-steps-content {
+  align-items: flex-start;
+  padding-top: 8px;
+  margin-left: var(--ah-spacing-md);
+}
+
+/* 垂直连接线 */
+.ah-steps-vertical > .ah-steps-header .ah-steps-connector {
+  left: 19px;
+  top: 44px;
+  bottom: 4px;
+  width: 2px;
+  height: auto;
+}
+
+.ah-steps-vertical .ah-steps-panels {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ---- 步骤头部 ---- */
+
+.ah-steps-header {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+/* ---- 步骤项 ---- */
+
+.ah-steps-item {
+  display: flex;
+  align-items: flex-start;
+  flex: 1;
+  position: relative;
+}
+
+/* ---- 步骤指示器（圆形数字/图标） ---- */
+
+.ah-steps-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: var(--ah-radius-full);
+  background: var(--ah-color-bg-paper);
+  border: 2px solid var(--ah-color-grey-300);
+  color: var(--ah-color-text-secondary);
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-semibold);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+  transition: all var(--ah-transition-normal);
+}
+
+/* ---- 连接线 ---- */
+
+.ah-steps-connector {
+  position: absolute;
+  background: var(--ah-color-grey-300);
+  z-index: 1;
+  transition: background var(--ah-transition-normal);
+  border-radius: 1px;
+}
+
+.ah-steps-item:last-child .ah-steps-connector {
+  display: none;
+}
+
+/* ---- 步骤内容（标题 + 描述） ---- */
+
+.ah-steps-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.ah-steps-title {
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-medium);
+  color: var(--ah-color-text-secondary);
+  transition: color var(--ah-transition-fast);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.ah-steps-description {
+  font-size: var(--ah-font-size-xs);
+  color: var(--ah-color-grey-500);
+  line-height: 1.4;
+  max-width: 140px;
+}
+
+/* ---- 状态图标 ---- */
+
+.ah-steps-check {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: var(--ah-font-weight-bold);
+}
+
+.ah-steps-error-icon {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: var(--ah-font-weight-bold);
+}
+
+/* ============================================================================
+   步骤状态样式
+   ============================================================================ */
+
+/* ---- Active（当前步骤） ---- */
+
+.ah-steps-item-active .ah-steps-indicator {
+  background: var(--ah-color-primary);
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+  box-shadow: 0 0 0 4px var(--ah-color-primary-lighter);
+}
+
+.ah-steps-item-active .ah-steps-title {
+  color: var(--ah-color-primary);
+  font-weight: var(--ah-font-weight-semibold);
+}
+
+.ah-steps-item-active .ah-steps-description {
+  color: var(--ah-color-text-secondary);
+}
+
+/* ---- Completed（已完成） ---- */
+
+.ah-steps-item-completed .ah-steps-indicator {
+  background: var(--ah-color-success);
+  border-color: var(--ah-color-success);
+  color: var(--ah-color-success-contrast);
+}
+
+.ah-steps-item-completed .ah-steps-connector,
+.ah-steps-connector-done {
+  background: var(--ah-color-success);
+}
+
+.ah-steps-item-completed .ah-steps-title {
+  color: var(--ah-color-text);
+}
+
+/* ---- Error（错误） ---- */
+
+.ah-steps-item-error .ah-steps-indicator {
+  background: var(--ah-color-error);
+  border-color: var(--ah-color-error);
+  color: var(--ah-color-error-contrast);
+  box-shadow: 0 0 0 4px var(--ah-color-error-lighter);
+}
+
+.ah-steps-item-error .ah-steps-title {
+  color: var(--ah-color-error);
+  font-weight: var(--ah-font-weight-semibold);
+}
+
+/* ---- Disabled（禁用） ---- */
+
+.ah-steps-item-disabled .ah-steps-indicator {
+  background: var(--ah-color-grey-100);
+  border-color: var(--ah-color-grey-200);
+  color: var(--ah-color-text-disabled);
+  opacity: var(--ah-state-disabled-opacity);
+}
+
+.ah-steps-item-disabled .ah-steps-title {
+  color: var(--ah-color-text-disabled);
+}
+
+.ah-steps-item-disabled .ah-steps-description {
+  color: var(--ah-color-text-disabled);
+}
+
+/* ---- Pending（待处理，默认） ---- */
+
+.ah-steps-item-pending .ah-steps-title {
+  color: var(--ah-color-text-secondary);
+}
+
+/* ============================================================================
+   交互状态
+   ============================================================================ */
+
+/* ---- 可点击 ---- */
+
+.ah-steps-item-clickable {
+  cursor: pointer;
+}
+
+.ah-steps-item-clickable:hover .ah-steps-indicator {
+  border-color: var(--ah-color-primary);
+  box-shadow: 0 0 0 3px var(--ah-color-primary-lighter);
+}
+
+.ah-steps-item-clickable:hover .ah-steps-title {
+  color: var(--ah-color-primary);
+}
+
+/* 已完成步骤的 hover 保持 success 背景 */
+.ah-steps-item-clickable.ah-steps-item-completed:hover .ah-steps-indicator {
+  border-color: var(--ah-color-success);
+  box-shadow: 0 0 0 3px var(--ah-color-success-lighter);
+}
+
+/* active 步骤 hover 不改变 */
+.ah-steps-item-clickable.ah-steps-item-active:hover .ah-steps-indicator {
+  box-shadow: 0 0 0 4px var(--ah-color-primary-lighter);
+}
+
+/* ---- 选中反馈 ---- */
+
+.ah-steps-item-selected .ah-steps-indicator {
+  box-shadow: 0 0 0 4px var(--ah-color-primary-lighter);
+}
+
+/* ---- 焦点状态（键盘导航） ---- */
+
+.ah-steps-item-clickable:focus-visible .ah-steps-indicator {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: 2px;
+}
+
+/* ============================================================================
+   步骤面板（内容区域）
+   ============================================================================ */
+
+.ah-steps-panels {
+  flex: 1;
+}
+
+.ah-steps-panel {
+  display: none;
+  padding: var(--ah-spacing-lg);
+  background: var(--ah-color-bg-paper);
+  border-radius: var(--ah-radius-lg);
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  min-height: 80px;
+  color: var(--ah-color-text);
+  font-size: var(--ah-font-size-sm);
+  line-height: 1.6;
+}
+
+.ah-steps-panel-active {
+  display: block;
+  animation: ah-steps-panel-in 0.3s ease;
+}
+
+@keyframes ah-steps-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   导航按钮
+   ============================================================================ */
+
+.ah-steps-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  margin-top: var(--ah-spacing-lg);
+  padding-top: var(--ah-spacing-md);
+}
+
+.ah-steps-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 20px;
+  border: var(--ah-border-width) solid var(--ah-color-grey-300);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+  color: var(--ah-color-text);
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-medium);
+  font-family: var(--ah-font-family);
+  cursor: pointer;
+  transition: all var(--ah-transition-fast);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.ah-steps-btn:hover:not(.ah-steps-btn-disabled) {
+  background: var(--ah-color-primary);
+  border-color: var(--ah-color-primary);
+  color: var(--ah-color-primary-contrast);
+  box-shadow: var(--ah-shadow-sm);
+}
+
+.ah-steps-btn:active:not(.ah-steps-btn-disabled) {
+  transform: scale(0.97);
+  box-shadow: none;
+}
+
+.ah-steps-btn:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: 2px;
+}
+
+.ah-steps-btn-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  cursor: not-allowed;
+  background: var(--ah-color-grey-100);
+  border-color: var(--ah-color-grey-200);
+  color: var(--ah-color-text-disabled);
+}
+
+/* ============================================================================
+   禁用整体
+   ============================================================================ */
+
+.ah-steps-disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+
+/* ============================================================================
+   响应式
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  .ah-steps-horizontal > .ah-steps-header .ah-steps-item {
+    padding-right: var(--ah-spacing-xs);
+  }
+
+  .ah-steps-indicator {
+    min-width: 32px;
+    height: 32px;
+    width: 32px;
+    font-size: var(--ah-font-size-xs);
+  }
+
+  .ah-steps-horizontal > .ah-steps-header .ah-steps-connector {
+    top: 16px;
+    left: calc(50% + 18px);
+    right: calc(-50% + 18px);
+  }
+
+  .ah-steps-title {
+    font-size: var(--ah-font-size-xs);
+  }
+
+  .ah-steps-description {
+    display: none;
+  }
+
+  .ah-steps-panel {
+    padding: var(--ah-spacing-md);
+  }
+
+  .ah-steps-btn {
+    padding: 6px 14px;
+    font-size: var(--ah-font-size-xs);
+  }
+
+  /* 垂直布局在移动端堆叠 */
+  .ah-steps-vertical {
+    flex-direction: column;
+  }
+
+  .ah-steps-vertical > .ah-steps-header {
+    border-right: none;
+    border-bottom: var(--ah-border-width) solid var(--ah-color-border-subtle);
+    padding-right: 0;
+    margin-right: 0;
+    padding-bottom: var(--ah-spacing-md);
+    margin-bottom: var(--ah-spacing-md);
+    flex-direction: row;
+    overflow-x: auto;
+  }
+
+  .ah-steps-vertical > .ah-steps-header .ah-steps-item {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 0;
+  }
+
+  .ah-steps-vertical > .ah-steps-header .ah-steps-content {
+    align-items: center;
+    margin-left: 0;
+    margin-top: var(--ah-spacing-xs);
+    padding-top: 0;
+  }
+
+  .ah-steps-vertical > .ah-steps-header .ah-steps-connector {
+    left: calc(50% + 18px);
+    right: calc(-50% + 18px);
+    top: 16px;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+  }
+}

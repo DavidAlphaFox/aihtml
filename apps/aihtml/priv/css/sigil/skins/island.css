@@ -1,0 +1,786 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   外形 · Island（胶囊圆角 + 实色台阶 + 抬起/踩实）—— data-skin="island"
+   ============================================================================
+
+   第 4 条正交轴「外形（skin）」的第二个非 default 值。轴的职责边界见
+   skins/brutal.css 头部与 docs/css-usage.md「品牌 vs 外形」：
+
+     palettes/*.css  只写颜色 —— 只赋值 --ah-color-*，不碰形状
+     skins/*.css     只写形状 —— **不赋值任何 --ah-color-***，不出现颜色字面量
+
+   本文件确实要画台阶，但台阶色取自 var(--ah-color-common-black) 的半透明
+   兑色 —— 读颜色轴的结果，不改颜色轴的值。`bb css:check` 盯着这条。
+
+   `data-skin="island"` 单开就能把任意配色变成岛屿外形；要连配色一起换成
+   animal-island-ui 那套奶油底 + 棕字 + 浅滩青绿，再叠 `data-palette="island"`。
+
+   ─── 本外形的核心机制：实色台阶（ledge），不是描边 ─────────────────────────
+   参考实现（guokaigdg.github.io/animal-island-ui）的 Less 变量里有个
+   `@border-width: 2px`，那是幌子 —— 按钮/输入框的 border-color 全是 transparent，
+   输入框甚至 `border-style: none`。真正做出实体感的是一层**零模糊的实色
+   box-shadow**，像积木底下垫的一块：
+
+       box-shadow: 0 5px 0 0 <台阶色>;      ← 无 blur、无 spread，纯色块
+
+   配套是一套交互编排（该风格最强的辨识点，静态截图看不出来）。两个状态的几何
+   **不对称**，别以为是镜像的（实测算术，以静止态底边为 0）：
+
+       静止  物体底边 +0，台阶 5px  →  整体底边 +5
+       抬起  物体底边 −1，台阶 6px  →  整体底边 +5   ← 锚住底边，只是离地更高
+       踩实  物体底边 +2，台阶 1px  →  整体底边 +3   ← 上移 2px，整体被压扁
+
+   所以 hover 是「垫高」、active 是「压扁」。若把 active 也做成锚底边，按下去只会
+   像整体下沉，没有那股被压实的手感。
+
+   ⚠ 描边并非全无 —— 是**分组**的，别一刀切（取值全部实测自参考站，2026-08-14 复核）：
+       按钮              2px 描边，但实心档与底同色，只占位不显形
+       输入框 / 下拉触发器 无描边，靠台阶 + 填充色分层（胶囊 + 3px 台阶）
+       开关轨道与滑块    2.5px 描边
+       多选框            **正圆** + 2px 描边（不是圆角方块）
+       标签（Tag/Chip）  1.5px 描边 + 胶囊
+       卡片              无描边、**无阴影**，靠沙色填充坐在更亮的面板上
+
+   ─── 台阶 vs 柔阴影：两类东西别混 ───────────────────────────────────────────
+   台阶只给「能按的东西」（按钮、输入框、滑块拇指、kbd）。弹层 / 卡片 / 浮窗是
+   「浮起来的面」，参考实现给的是带模糊的暖阴影，本文件用 --ah-skin-veil。
+   全部上台阶会让下拉菜单看着像一排能按下去的积木。
+
+   ⚠ 本文件给台阶色的**默认值**是纯黑兑透明，不能取灰阶中段的实色：sigil 的
+     --ah-color-grey-* 在暗色外观下是**反向**的（grey-900 在暗色里最亮）。
+     取灰阶中段时明色下看着对，一进暗色就变成压在深底上的**亮条**。半透明黑则
+     明暗两边都成立，且不需要 [data-theme="dark"] 分支。
+     配 data-palette="island" 时另有真值：参考站的台阶是**暖灰褐实色**
+     （输入框 #D4C9B4 / hover #C4B89E），由 palettes/island.css 覆盖这两个变量 ——
+     颜色决策归颜色轴，本文件只负责「有没有台阶、多厚、怎么动」。
+
+   ─── 层级 ─────────────────────────────────────────────────────────────────
+   本文件**不分层**，靠加载在 sigil.css 之后取胜（无层规则永远压过任何 @layer，
+   与特异性无关）。选择器一律带 `.ah-*` 前缀，不碰下游页面样式。
+   ============================================================================ */
+
+[data-skin="island"] {
+  /* ── 外形基元 ──────────────────────────────────────────────────────── */
+  --ah-skin-ledge-depth: 5px;         /* 按钮静止态 */
+  --ah-skin-ledge-depth-hover: 6px;   /* 抬起 */
+  --ah-skin-ledge-depth-active: 1px;  /* 踩实 */
+  --ah-skin-ledge-depth-sm: 2px;      /* 小控件 */
+  --ah-skin-ledge-depth-input: 3px;   /* 输入框 */
+  --ah-skin-border-width: 2px;
+
+  /* ── 颜色的交接点 ──────────────────────────────────────────────────
+     ⚠ 写法上有个坑，别改回「直接给默认值」：skin 文件**不分层**，而 palette 在
+     `@layer components.ah` 里 —— 无层规则永远压过任何 @layer，与特异性无关。
+     所以 skin 若直接写 `--ah-skin-ink: <默认>`，palette 里同名的覆盖**永远
+     生不了效**（实测：island 的暖灰褐台阶被这里的黑色兑透明吃掉了）。
+     正确做法是**读一个颜色轴命名空间下的变量、就地给兜底**：
+       palette 赋值 --ah-color-skin-*（颜色轴的事，在颜色轴的命名空间里）
+       skin 只 var() 取值 + 兜底（形状轴不赋值任何 --ah-color-*，守卫照过）
+     兜底值负责「任意 palette 叠上本 skin 也说得过去」。 */
+  --ah-skin-ink: var(--ah-color-skin-ink, var(--ah-color-border));
+
+  /* 台阶色 —— 兜底从纯黑兑透明（理由见文件头 ⚠）。任何底色上它都比物体更暗，
+     这正是「垫在下面的一块」在物理上该有的样子。 */
+  --ah-skin-ledge: var(--ah-color-skin-ledge,
+    color-mix(in srgb, var(--ah-color-common-black) 30%, transparent));
+  --ah-skin-ledge-hover: var(--ah-color-skin-ledge-hover,
+    color-mix(in srgb, var(--ah-color-common-black) 45%, transparent));
+
+  /* 抬升面用的柔阴影（带模糊）。几何与透明度实测自参考站的 --shadow-sm/base/lg：
+       0 2px 4px rgba(61,52,40,.06) / 0 3px 10px …,.1 / 0 8px 24px …,.14
+     那个 rgba(61,52,40) 是**暖褐**而非中性黑，所以这里从文本色兑透明（island
+     文本正是棕色系），而不是从纯黑 —— 换任何配色也都自洽。不写颜色字面量。 */
+  --ah-skin-veil:    0 3px 10px 0 color-mix(in srgb, var(--ah-color-text) 10%, transparent);
+  --ah-skin-veil-sm: 0 2px 4px 0  color-mix(in srgb, var(--ah-color-text) 6%, transparent);
+  --ah-skin-veil-lg: 0 8px 24px 0 color-mix(in srgb, var(--ah-color-text) 14%, transparent);
+  --ah-skin-veil-xl: 0 16px 40px 0 color-mix(in srgb, var(--ah-color-text) 18%, transparent);
+
+  /* ── 圆角刻度整体上移 ────────────────────────────────────────────────
+     线上命名档是 16/18/24，但按钮与输入框实际走胶囊，18px 那档几乎没用上。
+     胶囊由下面的组件规则点名给，这里只把整体量级抬起来。
+     --ah-radius-full 不动（本来就是胶囊）。 */
+  --ah-radius-sm: 8px;
+  --ah-radius-md: 12px;
+  --ah-radius-lg: 16px;
+
+  /* 按钮走胶囊：组件层写的是 var(--ah-btn-radius, var(--ah-radius-md))，
+     翻这个组件 token 即可，不必逐个选择器点名。 */
+  --ah-btn-radius: 999px;
+
+  /* 尺寸对齐参考站（实测 middle 高 45 / padX 20 / 字号 14 / 字重 600；
+     small 高 32 / padX 16 / 字号 12）。sigil 的按钮高度由 padding 撑出来，
+     故换算成 pad-y：45 = 14×1.5 行高 + 2×10 + 2×2 描边。 */
+  --ah-btn-pad-y: 10px;
+  --ah-btn-pad-x: 20px;
+
+  /* ── 阴影：库内所有走 var() 的都换成柔阴影 ────────────────────────── */
+  --ah-shadow-sm: var(--ah-skin-veil-sm);
+  --ah-shadow-md: var(--ah-skin-veil);
+  --ah-shadow-lg: var(--ah-skin-veil-lg);
+
+  /* ── 动效：线上 .15/.25s + cubic-bezier(.4,0,.2,1) ──
+     台阶编排要动 transform 与 box-shadow，两者都得进过渡，否则是硬跳。 */
+  --ah-transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --ah-transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── 过渡时长：按钮/输入家族走 normal ────────────────────────────────────
+   2026-08-15 复核：参考站按钮（.animal-btn）与输入框（.animal-wrapper）的
+   过渡统一是 `all var(--animal-motion-duration-base) …` = .25s，而核心骨架
+   （button.css / input.css）逐属性点名用的都是 --ah-transition-fast = .15s
+   —— 抬起/踩实快了 40%，手感发脆。线上 .15s 只用在弹层、菜单那类小件上，
+   所以只就地把「能按/能输」的家族改回 normal，全局 fast 不动。
+   属性面照抄参考站的 all：台阶编排横跨 transform 与 box-shadow，逐属性点名
+   漏一个就是硬跳，all 最稳。 */
+[data-skin="island"] :is(.ah-btn, .ah-input, .ah-a2ui-textarea,
+                         .ah-masked-input, .ah-pwd, .ah-numinput-input,
+                         .ah-fmt-input, .ah-dti-input, .ah-tag-input,
+                         .ah-dropdownlist-input-area, .ah-combobox-input-area,
+                         .ah-cascader-input-area, .ah-datepicker-input-area) {
+  transition: all var(--ah-transition-normal);
+}
+
+/* ============================================================================
+   一、核心组件（手写）—— 台阶编排、哪些该去掉描边，这些需要判断。
+   ============================================================================ */
+
+/* 小号按钮：参考站 32 / padX 16 / 12px */
+[data-skin="island"] .ah-btn-sm {
+  --ah-btn-pad-y: 5px;
+  --ah-btn-pad-x: 16px;
+}
+
+/* 全部按钮 2px 描边（参考站 --border-width: 2px；实心档描边与底同色，只占位） */
+[data-skin="island"] .ah-btn {
+  border-width: var(--ah-skin-border-width);
+}
+
+/* ── 1. Button ────────────────────────────────────────────────────────────
+   实心变体才有台阶 —— outlined / 裸按钮在线上也没有。
+   各色的台阶取该色的深一档（darker），实心底色上压出「同色更深的一块」。 */
+/* 台阶取该色的 `-dark` 档 —— 实测参考站的台阶色就是它自己那族的 `-active`
+   （Danger 按钮底 #E05A5A、台阶 #C94444 = --error-color-active），是**同色系
+   压暗一档**而不是深到底。用 -darker 会得到一条几乎发黑的粗边。 */
+[data-skin="island"] .ah-btn-primary   { --ah-skin-ledge: var(--ah-color-primary-dark); }
+[data-skin="island"] .ah-btn-secondary { --ah-skin-ledge: var(--ah-color-secondary-dark); }
+[data-skin="island"] .ah-btn-info      { --ah-skin-ledge: var(--ah-color-info-dark); }
+[data-skin="island"] .ah-btn-success   { --ah-skin-ledge: var(--ah-color-success-dark); }
+[data-skin="island"] .ah-btn-warning   { --ah-skin-ledge: var(--ah-color-warning-dark); }
+[data-skin="island"] .ah-btn-error     { --ah-skin-ledge: var(--ah-color-error-dark); }
+
+[data-skin="island"] .ah-btn:is(.ah-btn-primary, .ah-btn-secondary,
+                                   .ah-btn-success, .ah-btn-warning,
+                                   .ah-btn-error, .ah-btn-info) {
+  --ah-btn-shadow: 0 var(--ah-skin-ledge-depth) 0 0 var(--ah-skin-ledge);
+  --ah-btn-lift-hover: translateY(-1px);
+  /* 实测参考站：实心按钮 hover/active **不换底色**，只做抬起/踩实
+     （`.btn-primary:hover` 把 background 又设回了原值）。这里把两个状态色
+     冻结成基色 —— 组件 token 不属于颜色轴，是取值不是赋值。
+     ⚠ 唯一例外是 error，见紧跟其后的覆盖块（2026-08-15 复核）。 */
+  --ah-btn-bg-hover: var(--ah-btn-bg);
+  --ah-btn-bg-active: var(--ah-btn-bg);
+  border-color: transparent;
+}
+
+/* 例外：参考站的 danger 实心按钮（.animal-btn-danger.animal-btn-primary）是
+   **换底色**的 —— hover → error-hover 亮一档（island 调色板恰为
+   --ah-color-error-light #E87878），active → error-active 暗一档
+   （= --ah-color-error-dark #C94444，**恰为台阶色**：按到底时物体坐进
+   台阶里，底色与台阶融为一体）。
+   ⚠ 特异性必须凑到与冻结块同级的 (0,3,0)（.ah-btn.ah-btn-error 两类
+   + [data-skin]），再靠写在后面按顺序决胜 —— 只写 .ah-btn-error 是
+   (0,2,0)，会被 :is() 压平到 (0,3,0) 的冻结块吃掉（实测踩过）。 */
+[data-skin="island"] .ah-btn.ah-btn-error {
+  --ah-btn-bg-hover:  var(--ah-color-error-light);
+  --ah-btn-bg-active: var(--ah-color-error-dark);
+}
+
+@media (hover: hover) {
+  /* 抬起：物体上移 1px、台阶厚 6px，底边不动 */
+  [data-skin="island"] .ah-btn:is(.ah-btn-primary, .ah-btn-secondary,
+                                     .ah-btn-success, .ah-btn-warning,
+                                     .ah-btn-error, .ah-btn-info):hover:not(.ah-btn-disabled) {
+    box-shadow: 0 var(--ah-skin-ledge-depth-hover) 0 0 var(--ah-skin-ledge);
+  }
+  [data-skin="island"] .ah-btn-outlined:hover:not(.ah-btn-disabled) {
+    transform: translateY(-1px);
+  }
+}
+
+/* 焦点环颜色：参考站 .animal-btn:focus-visible 用 primary（青绿），核心层
+   默认是文本色（棕色）—— 两种都能看见，但线上的辨识点就是青绿环，对齐之。 */
+[data-skin="island"] .ah-btn:is(:focus-visible, .ah-btn-focused) {
+  outline-color: var(--ah-color-primary);
+}
+
+/* 踩实：物体下移 2px、台阶塌到 1px（不是抬起的镜像 —— 见文件头的算术） */
+[data-skin="island"] .ah-btn:is(.ah-btn-primary, .ah-btn-secondary,
+                                   .ah-btn-success, .ah-btn-warning,
+                                   .ah-btn-error, .ah-btn-info):is(:active, .ah-btn-pressed):not(.ah-btn-disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 var(--ah-skin-ledge-depth-active) 0 0 var(--ah-skin-ledge);
+}
+
+/* 位移是纯装饰性动效，reduced-motion 下只留台阶的厚度变化 */
+@media (prefers-reduced-motion: reduce) {
+  [data-skin="island"] .ah-btn:is(:hover, :active) {
+    transform: none;
+  }
+}
+
+/* 禁用态：台阶消失，按钮「贴地」 */
+[data-skin="island"] .ah-btn-disabled {
+  box-shadow: none;
+  transform: none;
+}
+
+/* 轮廓按钮（对应参考站 default / dashed 档）：2px 描边 + 一层很淡的柔阴影，
+   **没有台阶**；hover 抬 1px 并加深阴影，active 落回原位。 */
+[data-skin="island"] .ah-btn-outlined {
+  border-width: var(--ah-skin-border-width);
+  box-shadow: var(--ah-skin-veil-sm);
+}
+[data-skin="island"] .ah-btn-outlined:hover:not(.ah-btn-disabled) {
+  box-shadow: var(--ah-skin-veil);
+}
+[data-skin="island"] .ah-btn-outlined:is(:active, .ah-btn-pressed):not(.ah-btn-disabled) {
+  transform: translateY(0);
+  box-shadow: var(--ah-skin-veil-sm);
+}
+
+/* 连排按钮：台阶只挂在**整组**上。逐个给会得到一排各自带台阶的胶囊，
+   且 hover 单个时组内错位。 */
+[data-skin="island"] :is(.ah-btn-group, .ah-split-button) {
+  border-radius: 999px;
+  box-shadow: 0 var(--ah-skin-ledge-depth) 0 0 var(--ah-skin-ledge);
+}
+[data-skin="island"] :is(.ah-btn-group, .ah-split-button) .ah-btn {
+  --ah-btn-shadow: none;
+  --ah-btn-lift-hover: none;
+  box-shadow: none;
+}
+[data-skin="island"] :is(.ah-btn-group, .ah-split-button) .ah-btn:is(:hover, :active) {
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── 2. Input / 输入类 ────────────────────────────────────────────────────
+   线上输入框没有 border，分层全靠台阶 + 填充色。所以这里是**去掉**描边，
+   不是加粗。尺寸实测参考站：小 32 / 中 40 / 大 48，padding-x 14 / 18 / 22，
+   台阶厚度也随档位走 2 / 3 / 4px。sigil 只有一档，取中档。 */
+[data-skin="island"] :is(.ah-input, .ah-a2ui-textarea, .ah-masked-input,
+                         .ah-pwd, .ah-numinput-input, .ah-fmt-input,
+                         .ah-dti-input, .ah-tag-input) {
+  border-color: transparent;
+  border-radius: 999px;
+  box-shadow: 0 var(--ah-skin-ledge-depth-input) 0 0 var(--ah-skin-ledge);
+  height: 40px;
+  padding: 0 18px;
+}
+/* 多行输入胶囊会把首尾行切掉，给大圆角而非全圆 */
+[data-skin="island"] :is(.ah-a2ui-textarea, .ah-tag-input) {
+  border-radius: var(--ah-radius-lg);
+}
+@media (hover: hover) {
+  [data-skin="island"] :is(.ah-input, .ah-a2ui-textarea):hover:not(.ah-input-disabled) {
+    box-shadow: 0 var(--ah-skin-ledge-depth-input) 0 0 var(--ah-skin-ledge-hover);
+  }
+}
+/* 聚焦：2026-08-15 复核 —— 参考站输入框聚焦**什么也不换**（两张样式表里都没有
+   :focus 规则，实弹聚焦 input 后量到的 box-shadow/bg 均无变化）。之前「聚焦只换
+   台阶颜色为 primary-dark」是误读，已删。核心层 .ah-input:focus 的 2px 文本
+   色环也要一并灭掉：胶囊 + 台阶的风格里它是一圈生硬的直角环（addon 行里还会
+   穿出胶囊），参考站没有对应物。可达性不倒退：文本输入有**闪烁光标**作天然
+   聚焦指示（WCAG 对 text field 认可），与 brutal 皮肤同清单同决策。 */
+[data-skin="island"] :is(.ah-input, .ah-a2ui-textarea, .ah-masked-input,
+                         .ah-pwd, .ah-numinput-input, .ah-fmt-input,
+                         .ah-dti-input, .ah-tag-input):is(:focus, :focus-visible,
+                                                                .ah-input-focused) {
+  outline: none;
+}
+[data-skin="island"] .ah-input-disabled {
+  box-shadow: none;
+}
+/* 带前后缀的输入组是**拼接控件**：整行当成一颗胶囊，成员各自的圆角与台阶要清掉，
+   否则会看到「一个圆角方块 + 一颗胶囊」拼在一起、接缝处露出两个半圆（实测）。
+   台阶挂在行上，圆角由两端的成员各自补半边。 */
+[data-skin="island"] .ah-input-row:has(.ah-input-addon) {
+  box-shadow: 0 var(--ah-skin-ledge-depth-input) 0 0 var(--ah-skin-ledge);
+  border-radius: 999px;
+}
+[data-skin="island"] .ah-input-row:has(.ah-input-addon) .ah-input {
+  box-shadow: none;
+  border-radius: 0;
+  height: auto;
+  padding: 0 12px;
+}
+[data-skin="island"] .ah-input-addon-prefix {
+  border-radius: 999px 0 0 999px;
+  padding-left: 16px;
+}
+[data-skin="island"] .ah-input-addon-suffix {
+  border-radius: 0 999px 999px 0;
+  padding-right: 16px;
+}
+
+/* ── 3. 下拉触发器 ────────────────────────────────────────────────────────
+   ⚠ 2026-08-14 复核参考站后改过一次：站上**同时存在两代 Select** —— 老的一代是
+   「2px 描边 + 12px 圆角 + 白底」，新的一代与 Input 同配方（胶囊 + 台阶 + 无描边，
+   实测 height 32/40/48、padding-x 14/18/22、hover 时台阶换深色）。这里跟新的那代，
+   顺带让 island 下所有表单控件长得一致。 */
+/* ⚠ 目标是 `-input-area`（那才是画了边框与底色的可见框），**不是**组件根元素
+   （`.ah-dropdownlist` 是个透明容器，给它上胶囊会在控件外面多出一圈带台阶的
+   空壳），也不是 `-input`（内层那个无边框的裸输入）。实测踩过这两个。 */
+[data-skin="island"] :is(.ah-dropdownlist-input-area, .ah-combobox-input-area,
+                         .ah-cascader-input-area, .ah-datepicker-input-area) {
+  border-color: transparent;
+  border-radius: 999px;
+  box-shadow: 0 var(--ah-skin-ledge-depth-input) 0 0 var(--ah-skin-ledge);
+}
+@media (hover: hover) {
+  [data-skin="island"] :is(.ah-dropdownlist-input-area, .ah-combobox-input-area,
+                           .ah-cascader-input-area,
+                           .ah-datepicker-input-area):hover {
+    box-shadow: 0 var(--ah-skin-ledge-depth-input) 0 0 var(--ah-skin-ledge-hover);
+  }
+}
+
+/* 校验态（warning / danger）：核心层靠**换边框色**表达（dropdownlist.css
+   .ah-dropdownlist-warning/-danger → border-color），而 island 的触发器边框
+   是透明的 —— 不接住这层状态，校验反馈就整个隐形。参考站的对应行为是**换台阶
+   色**：error 输入框的台阶变 error-active（island 调色板 = --ah-color-error-dark）
+   且 hover 不再变浅，warning 同理。两条都写在 hover 之后，同特异性按顺序决胜。 */
+[data-skin="island"] .ah-dropdownlist-warning .ah-dropdownlist-input-area {
+  box-shadow: 0 var(--ah-skin-ledge-depth-input) 0 0 var(--ah-color-warning-dark);
+}
+[data-skin="island"] .ah-dropdownlist-danger .ah-dropdownlist-input-area {
+  box-shadow: 0 var(--ah-skin-ledge-depth-input) 0 0 var(--ah-color-error-dark);
+}
+/* 触发器右端的箭头段是**拼进同一颗胶囊**的一块：它自己带 `0 12px 12px 0` 的圆角
+   与一条竖分隔线，套进 999px 胶囊后两个直角会从胶囊边上支棱出来（实测）。
+   收成半个胶囊、并撤掉分隔线与底色 —— 参考站的选择器里箭头就是贴着文字的一个
+   图标，没有分隔线。 */
+[data-skin="island"] :is(.ah-dropdownlist-arrow, .ah-combobox-arrow,
+                         .ah-cascader-arrow, .ah-datepicker-trigger) {
+  border-radius: 0 999px 999px 0;
+  border-left-color: transparent;
+  background: transparent;
+}
+
+/* ── 4. Card / Panel / Window ─────────────────────────────────────────────
+   实测参考站的卡片：20px 圆角 / 无描边 / **完全没有阴影** / padding 16px 24px，
+   分层全靠沙色填充坐在更亮的面板上（填充色由 palette 的 --ah-card-bg 给，
+   见 palettes/island.css 的「语义表面」段）。 */
+[data-skin="island"] :is(.ah-card, .ah-panel, .ah-kpi-card) {
+  border-color: transparent;
+  border-radius: 20px;
+  box-shadow: none;
+}
+[data-skin="island"] .ah-window {
+  border-color: transparent;
+  border-radius: 20px;
+  box-shadow: var(--ah-skin-veil-lg);
+}
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  /* 参考站 .card-hoverable:hover 只有 translateY(-2px)，不加阴影 */
+  [data-skin="island"] .ah-card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ah-skin-veil-sm);
+  }
+}
+
+/* ── 5. Checkbox / Radio / Switch ─────────────────────────────────────────
+   ⚠ 参考站的多选框是**正圆**（实测 22px、border-radius 50%、2px 描边），
+   不是圆角方块 —— 这是该风格辨识度很高的一处，别按常识改回方的。
+   单选框本来就是圆的，跟着一起给 2px 描边即可。 */
+[data-skin="island"] .ah-checkbox-box {
+  border-width: var(--ah-skin-border-width);
+  border-radius: 50%;
+}
+[data-skin="island"] .ah-radiobutton-box {
+  border-width: var(--ah-skin-border-width);
+}
+/* 焦点环颜色：参考站的 checkbox/radio focus-visible 是金钟黄（.animal-cbx
+   input:focus-visible → 2px solid #f5c31c），不是按钮那套 primary —— 这族
+   「无光标控件」的环全用 warning 黄（= island 调色板 --ah-color-warning
+   #F5C31C，注释见 palettes/island.css「铃钱黄」段）。核心层画的是文本色，
+   这里只换色不换几何。 */
+[data-skin="island"] :is(.ah-checkbox-focused .ah-checkbox-box,
+                         .ah-radiobutton-focused .ah-radiobutton-box) {
+  outline-color: var(--ah-color-warning);
+}
+/* Switch 核心层没有接管 focus（量到过 UA 默认蓝环 auto 1px），参考站是
+   2px solid #ffcc00 + offset 2px。环画在 track（胶囊本体）而非 .ah-switch
+   外壳 —— 外壳无圆角，环会变成包住胶囊的直角方框（同上面描边踩过的坑）。 */
+[data-skin="island"] .ah-switch:focus-visible .ah-switch-track {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-warning);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+/* ⚠ 描边挂 `.ah-switch-track`（胶囊本体），**不是** `.ah-switch` —— 后者是
+   inline-block 外层容器，无圆角无背景，给它上边框会在胶囊外套一个直角方框。
+   且用 inset 环而非 border：滑块是 absolute 定位、行程由 JS 按轨道宽度算，
+   真加边框会内缩定位坐标系，滑到「开」位时被 overflow:hidden 切掉。 */
+[data-skin="island"] .ah-switch-track {
+  box-shadow: inset 0 0 0 2.5px var(--ah-skin-ink);
+}
+/* 滑块也有一圈 2.5px 描边（实测参考站 handle: 21px 圆 + 2.5px border）。
+   用 inset 环而非 border：滑块尺寸由 JS 按轨道高算，加 border 会把它撑变形。
+   ⚠ 不给滑块台阶：轨道 overflow:hidden 会把台阶切掉一半，只剩一道脏边。 */
+[data-skin="island"] .ah-switch-thumb {
+  box-shadow: inset 0 0 0 2.5px var(--ah-skin-ink);
+}
+
+/* ── 6. Chip / Tag / Badge ────────────────────────────────────────────────
+   线上标签是胶囊 + 1.5px 描边（比其它地方细半档，刻意的）。 */
+/* 实测参考站 Tag：胶囊 + **1px** 描边（不是 1.5px，那是它基础规则里被尺寸档覆盖掉的
+   值）+ 字重 600 + 无阴影，尺寸 24/32/40、padX 10/12/16。sigil 的 chip 本来就是
+   1px，所以这里只把形状收成胶囊、不动描边宽度。 */
+[data-skin="island"] :is(.ah-chip, .ah-dg-badge, .ah-ranking-list__tag) {
+  border-radius: 999px;
+  box-shadow: none;
+}
+
+/* ── 7. 弹层：柔阴影而非台阶 ──────────────────────────────────────────────
+   浮层是「浮起来的面」，不是「能按下去的积木」，所以给带模糊的柔阴影而非台阶。
+   ⚠ 但**不是无描边**：实测参考站的日期面板是「1.5px #E8DCC8 描边 + 20px 圆角 +
+   柔阴影」，Select 下拉面板 28px 圆角。之前这里一律 transparent，浮层在奶油底上
+   会糊掉边界。描边取 --ah-color-border-subtle（就是参考站那档 border-light）。 */
+[data-skin="island"] :is(.ah-dropdownlist-popup, .ah-listbox, .ah-menu-popup,
+                         .ah-menu-submenu, .ah-popover, .ah-input-popup,
+                         .ah-toolbar-popup, .ah-navbar-popup,
+                         .ah-dropdown-btn-popup, .ah-split-button__menu,
+                         .ah-cascader-popup, .ah-combobox-popup,
+                         .ah-datepicker-popup, .ah-command-panel,
+                         .ah-slash-menu, .ah-timepicker) {
+  border-width: 1.5px;
+  border-color: var(--ah-color-border-subtle);
+  border-radius: 20px;
+  box-shadow: var(--ah-skin-veil-lg);
+}
+
+/* ── 8. 对话框 / 抽屉 / 面板 ──────────────────────────────────────────── */
+/* 实测参考站 Drawer：沙色面 + 20px 圆角（只圆朝内的两个角）+ 一层很大的方向性
+   阴影 `rgba(61,52,40,.18) ±12px 0 32px`。这里统一给 20px 与 veil-xl —— 方向性
+   阴影要按四个方位分别写，收益不抵那四条规则的维护成本。 */
+[data-skin="island"] :is(.ah-a2ui-modal-dialog, .ah-drawer__panel,
+                         .ah-sheet__panel, .ah-re-dialog,
+                         .ah-scheduler-dialog, .ah-drawn-dialog) {
+  border-radius: 20px;
+  box-shadow: var(--ah-skin-veil-xl);
+}
+
+/* 通知/浮动提示：实测参考站是**2px 描边** + 18px 圆角 + `0 6px 18px .14` 阴影，
+   与卡片（无描边无阴影）不是一路 —— 它飘在页面之上，得有一条实边框住。 */
+[data-skin="island"] .ah-toast-tpl {
+  border: var(--ah-skin-border-width) solid var(--ah-skin-ink);
+  border-radius: 18px;
+  box-shadow: var(--ah-skin-veil-lg);
+}
+
+/* 通知单独一条 —— ⚠ 它左边那 3px 是**语义色条**（`border-left: 3px solid
+   var(--ah-notify-accent)`，info/success/warning/error 靠它区分）。用简写
+   `border: 2px solid ink` 会把色条一起抹掉，等于删掉了一层状态信息。
+   所以三边分开写，左边留原样。（phoqus 早就是这么写的，这里补齐。） */
+[data-skin="island"] .ah-notify {
+  border-top-width: var(--ah-skin-border-width);
+  border-right-width: var(--ah-skin-border-width);
+  border-bottom-width: var(--ah-skin-border-width);
+  border-top-color: var(--ah-skin-ink);
+  border-right-color: var(--ah-skin-ink);
+  border-bottom-color: var(--ah-skin-ink);
+  border-radius: 18px;
+  box-shadow: var(--ah-skin-veil-lg);
+}
+
+/* 气泡提示：16px 圆角 + 柔阴影，无描边（参考站的 bordered 变体才有） */
+[data-skin="island"] .ah-tooltip {
+  border-radius: 16px;
+  box-shadow: var(--ah-skin-veil);
+}
+
+/* 凹槽（groove）—— 进度条 / 滑块轨道 / 开关轨道是同一个配方：胶囊 + 2px 描边
+   + 一层内阴影，做出「凹下去的槽」。实测参考站 Progress track：
+     border: 2px solid #E8DCC8; box-shadow: inset 0 2px 4px rgba(114,93,66,.08)
+   填充块是纯色胶囊，不带阴影。 */
+[data-skin="island"] .ah-progressbar {
+  border-width: var(--ah-skin-border-width);
+  border-color: var(--ah-color-border-subtle);
+  border-radius: 999px;
+  box-shadow: inset 0 2px 4px 0 color-mix(in srgb, var(--ah-color-text) 8%, transparent);
+}
+/* ⚠ 滑块轨道只有 6px 高，2px 描边会把槽吃掉一大半（参考站那条槽是 20px 高的
+   进度条），所以这里只上内阴影、不加描边。 */
+[data-skin="island"] .ah-slider-track {
+  box-shadow: inset 0 1px 3px 0 color-mix(in srgb, var(--ah-color-text) 10%, transparent);
+}
+[data-skin="island"] :is(.ah-progressbar-value, .ah-slider-range) {
+  border-radius: 999px;
+}
+
+/* ── 9. Tabs / 分段控件：胶囊化 ──────────────────────────────────────── */
+[data-skin="island"] :is(.ah-segmented-control, .ah-segmented-control__item) {
+  border-radius: 999px;
+}
+
+/* ── 10. 小件的台阶 ──────────────────────────────────────────────────────
+   只给「能按/能拖的东西」：滑块拇指、键帽。 */
+[data-skin="island"] :is(.ah-slider-thumb, .ah-kbd) {
+  box-shadow: 0 var(--ah-skin-ledge-depth-sm) 0 0 var(--ah-skin-ledge);
+}
+
+/* ============================================================================
+   二、脚本推导的覆盖面 —— `node scripts/skin_coverage.mjs island` 后人工校订。
+
+   ⚠ 与 brutal 的取舍不同：island **不加宽描边**（它的分层靠台阶与填充色），
+     所以脚本的「墨色 + 加宽」两个桶在本文件里整段不用；只用「阴影」桶和
+     「硬编码圆角」桶 —— 前者换成柔阴影，后者按原值分档抬圆。
+   ============================================================================ */
+
+/* ── 柔阴影（写死了 box-shadow 字面量、劫不到 --ah-shadow-* 的那批）── */
+[data-skin="island"] :is(
+  .ah-context-ring__popover,
+  .ah-dg-column-chooser,
+  .ah-dg-column-menu,
+  .ah-dg-context-menu,
+  .ah-dg-excel-filter-panel,
+  .ah-dg-filter-panel,
+  .ah-dg-loading-message,
+  .ah-dg-validation-tooltip,
+  .ah-dl-context-menu,
+  .ah-dl-drag-ghost,
+  .ah-dl-float-window,
+  .ah-docking-window,
+  .ah-drag-feedback,
+  .ah-drawn-app-menu,
+  .ah-drawn-context-menu,
+  .ah-drawn-island,
+  .ah-drawn-link-popup,
+  .ah-drawn-shape-menu,
+  .ah-dt-chooser-panel,
+  .ah-dti-dropdown,
+  .ah-fmt-popup,
+  .ah-menu-drawer,
+  .ah-pg-context-menu,
+  .ah-pm-code-lang-dropdown,
+  .ah-pm-emoji-popup,
+  .ah-pm-link-tooltip,
+  .ah-pm-mention-popup,
+  .ah-pm-sel-toolbar,
+  .ah-pm-slash-menu,
+  .ah-pm-table-menu,
+  .ah-ranking-list,
+  .ah-re-toolbar__align-menu,
+  .ah-re-toolbar__color-menu,
+  .ah-re-toolbar__emoji-panel,
+  .ah-re-toolbar__font-size-menu,
+  .ah-re-toolbar__heading-menu,
+  .ah-re-toolbar__math-menu,
+  .ah-relation-graph__detail,
+  .ah-responsive-panel-content,
+  .ah-ribbon-tabs-content,
+  .ah-scheduler-contextmenu,
+  .ah-scheduler-more-popover,
+  .ah-sortable-helper,
+  .ah-status-bar__popover,
+  .ah-tl-feedback
+) {
+  box-shadow: var(--ah-skin-veil-lg);
+}
+
+/* ── 硬编码圆角，按原值分三档抬圆 ────────────────────────────────────── */
+
+/* 原值 1–4px 的小件 → 8px */
+[data-skin="island"] :is(
+  .ah-breadcrumbs__link,
+  .ah-cascader-menu-item,
+  .ah-dg-cell-image,
+  .ah-dg-progress,
+  .ah-dg-progress-bar,
+  .ah-dg-row,
+  .ah-dg-scroll-tooltip,
+  .ah-drawn-emoji-btn,
+  .ah-drawn-swatch,
+  .ah-drawn-text-edit,
+  .ah-listbox-scroll-tooltip,
+  .ah-pm-code-copy-btn,
+  .ah-pm-code-lang-btn,
+  .ah-pm-code-lang-option,
+  .ah-pm-link-tooltip__btn,
+  .ah-pm-link-tooltip__edit,
+  .ah-pm-slash-menu-item,
+  .ah-pm-slash-menu-item-icon,
+  .ah-ranking-list__flag,
+  .ah-re-dialog__btn-cancel,
+  .ah-re-dialog__close,
+  .ah-re-dialog__field,
+  .ah-re-image-drop-zone__btn,
+  .ah-relation-graph__detail-close,
+  .ah-slash-menu__mode,
+  .ah-status-bar__count,
+  .ah-tab-bar__close
+) {
+  border-radius: 8px;
+}
+
+/* 原值 5–10px 的中件 → 12px */
+[data-skin="island"] :is(
+  .ah-activity-bar__item,
+  .ah-aspect-ratio,
+  .ah-chat-input__btn,
+  .ah-chat-markdown,
+  .ah-chat-markdown__copy,
+  .ah-command__item,
+  .ah-context-ring__action,
+  .ah-diff,
+  .ah-drawer__close,
+  .ah-drawn-dialog__textarea,
+  .ah-drawn-freehand__preset,
+  .ah-drawn-link-popup__input,
+  .ah-drawn-search__close,
+  .ah-drawn-search__input,
+  .ah-drawn-settings-input,
+  .ah-drawn-settings-select,
+  .ah-drawn-shape-menu__item,
+  .ah-heatmap-calendar__tooltip,
+  .ah-kbd,
+  .ah-md-table,
+  .ah-nav-tree__item,
+  .ah-nav-tree__item--parent,
+  .ah-page-header__back,
+  .ah-pm-code-block-wrapper,
+  .ah-pm-drag-clone,
+  .ah-pm-mention,
+  .ah-radio-cards__card,
+  .ah-ranking-list__item,
+  .ah-relation-graph__tool,
+  .ah-sheet__close,
+  .ah-sidenav__brand-mark,
+  .ah-skeleton__shape,
+  .ah-slash-menu__item,
+  .ah-split-button__item,
+  .ah-statistic__title,
+  .ah-subagent-card,
+  .ah-swimlane,
+  .ah-thinking-block__trigger,
+  .ah-tool-call-card,
+  .ah-transfer-panel-count,
+  .ah-web-card
+) {
+  border-radius: 12px;
+}
+
+/* 原值 12–14px 的大件 → 20px */
+[data-skin="island"] :is(
+  .ah-chat-input__row,
+  .ah-command,
+  .ah-drawn-app-menu,
+  .ah-drawn-context-menu,
+  .ah-drawn-island,
+  .ah-drawn-link-popup,
+  .ah-drawn-shape-menu,
+  .ah-message-bubble__body,
+  .ah-relation-graph,
+  .ah-relation-graph__detail,
+  .ah-relation-graph__toolbar,
+  .ah-re-toolbar
+) {
+  border-radius: 20px;
+}
+
+/* ============================================================================
+   三、参考站没有对应件的组件 —— 按 island 的语言自行定规矩
+
+   参考站只做到 Card / Form / Modal 这一层，没有数据网格、分页、步骤条、
+   工具条。这一节不是「实测移植」而是**设计决策**，判据是把参考站那套语言
+   往下推的三条：
+
+     1. 能按的东西 → 胶囊（按钮、分页项、步骤按钮）
+     2. 浮起来的面 → 大圆角 + 一条很淡的暖描边（面板、网格、工具条）
+     3. 凹进去的槽 → 胶囊 + 内阴影（进度条、轨道、滚动条）
+
+   ⚠ 铁律仍在：数据网格**只动圆角与描边颜色，绝不动宽度**。它们按行高列宽算
+     滚动位置，每格加 1px 会一路累积成错位（这也是脚本把它们分进「只上色」桶的
+     原因）。下面给容器的 1.5px 描边只作用在**最外层**那一圈，不碰任何单元格。
+   ============================================================================ */
+
+/* ── 网格容器：当成一块「面板」。四个根元素本来就有 overflow: hidden，
+   所以圆角能把行一起裁掉，不会在四角露出直角的行。 ── */
+[data-skin="island"] :is(.ah-dg, .ah-dt, .ah-tg, .ah-pg) {
+  border-width: 1.5px;
+  border-color: var(--ah-color-border-subtle);
+  border-radius: 20px;
+}
+
+/* ── 分页：条目是「能按的东西」，收成胶囊。
+   ⚠ 静止态**不给台阶** —— 一排十个带台阶的胶囊会吵得看不出哪个是当前页；
+   台阶只在 hover 时冒出来，作为「这个能按」的提示。 ── */
+[data-skin="island"] :is(.ah-pagination-item, .ah-pagination-nav,
+                         .ah-pagination-jumper-btn, .ah-dt-pager-btn,
+                         .ah-dg-pager-button) {
+  border-radius: 999px;
+}
+@media (hover: hover) {
+  [data-skin="island"] :is(.ah-pagination-item, .ah-pagination-nav,
+                           .ah-dt-pager-btn,
+                           .ah-dg-pager-button):hover:not(.ah-pagination-item-disabled) {
+    box-shadow: 0 var(--ah-skin-ledge-depth-sm) 0 0 var(--ah-skin-ledge);
+  }
+}
+
+/* ── 步骤条：指示器本来就是圆的，连接线收成两端圆头（那是「一段路」而不是
+   「一根尺」），步骤按钮跟按钮一样走胶囊。 ── */
+[data-skin="island"] .ah-steps-connector {
+  border-radius: 999px;
+}
+[data-skin="island"] .ah-steps-btn {
+  border-radius: 999px;
+}
+
+/* ── 工具条 / 功能区 / 状态条：与面板同档的大圆角。 ── */
+[data-skin="island"] :is(.ah-toolbar, .ah-ribbon, .ah-status-bar,
+                         .ah-navigationbar, .ah-activity-bar) {
+  border-radius: 20px;
+}
+/* 工具条里的按钮跟着走胶囊，否则圆角面板里嵌一排方角按钮 */
+[data-skin="island"] :is(.ah-toolbar-minimize-btn, .ah-ribbon-tab, .ah-ribbon-scroll-btn,
+                         .ah-dg-toolbar-btn, .ah-dg-command-btn, .ah-dt-chooser-btn,
+                         .ah-transfer-btn, .ah-scheduler-btn, .ah-calendar-btn) {
+  border-radius: 999px;
+}
+
+/* ── 滚动条与分隔条把手：细长的「可拖的东西」，一律胶囊；
+   滚动条滑块再补一层内阴影，与进度条的凹槽同一套语言。 ── */
+[data-skin="island"] :is(.ah-scrollbar-thumb, .ah-splitter-splitbar,
+                         .ah-splitter-collapse-btn) {
+  border-radius: 999px;
+}
+[data-skin="island"] .ah-scrollbar-thumb {
+  box-shadow: inset 0 1px 2px 0 color-mix(in srgb, var(--ah-color-text) 8%, transparent);
+}
+
+/* ── 「直角」是地板线：任何 skin 都不许把调用方显式压平的东西再圆回去 ──────
+   `:no-rounded?` / `:square?` 这类开关同样只是拼一个 class，但它们的方向与
+   `:round?` **相反** —— 调用方要的是「这里不要圆角」，而不是「按默认长相来」。
+   形状轴可以决定「默认长什么样」，不该否决一个明确的否定。
+   ⚠ 必须在 skin 里重新声明一遍：组件那几条在 `@layer components.ah` 里，
+     而 skin 不分层、无层永远压过有层 —— 实测 island 会把
+     `.ah-input-no-rounded` 的输入框强行变成 999px 胶囊。 */
+[data-skin="island"] :is(.ah-input-no-rounded, .ah-masked-input-no-rounded, .ah-dti-no-rounded)
+  :is(.ah-input, .ah-input-addon-prefix, .ah-input-addon-suffix,
+      .ah-masked-input, .ah-dti-input, .ah-dti-cal-btn, .ah-dti-spinner) {
+  border-radius: 0;
+}
+[data-skin="island"] :is(.ah-expander-square, .ah-navigationbar-square) {
+  border-radius: 0;
+}
+
+/* ── 几何地板线：真圆的东西任何 skin 都不许压平 ──────────────────────────
+   ⚠ 实测踩过：骨架屏的圆形变体原先是 cljs 内联 `border-radius:50%`（内联赢过
+   一切，所以没人发现问题）；把它搬进 CSS 之后，本文件的「硬编码圆角压平」清单
+   里那条 `.ah-skeleton__shape` 立刻把圆形也压成了圆角方块（skin 不分层，
+   压过库里的类）。凡是从内联搬进 CSS 的几何，都要在这里补一条。 */
+[data-skin="island"] .ah-skeleton__shape-circle {
+  border-radius: 50%;
+}

@@ -1,0 +1,70 @@
+/* Ported from sigil, MIT License,
+   (c) 2026 通九（大连）互联科技有限公司. See ./LICENSE.
+   Imported by scripts/port-sigil.mjs: sigil- renamed to ah-. */
+/* ============================================================================
+   Statistic · 统计数值（借鉴 happy statistic.css）
+   标题 + 前后缀 + 数值 + 涨跌趋势。data-color / data-loading / data-direction。
+   ============================================================================ */
+
+.ah-statistic {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ah-statistic__title {
+  font-size: 13px;
+  color: var(--ah-color-text-muted);
+}
+
+.ah-statistic__value {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ah-color-text);
+}
+
+.ah-statistic__prefix,
+.ah-statistic__suffix {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-statistic[data-color="primary"] .ah-statistic__number { color: var(--ah-color-primary); }
+.ah-statistic[data-color="success"] .ah-statistic__number { color: var(--ah-color-success); }
+.ah-statistic[data-color="warning"] .ah-statistic__number { color: var(--ah-color-warning); }
+.ah-statistic[data-color="error"]   .ah-statistic__number { color: var(--ah-color-error); }
+
+.ah-statistic__delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.ah-statistic__delta[data-direction="up"]   { color: var(--ah-color-success); }
+.ah-statistic__delta[data-direction="down"] { color: var(--ah-color-error); }
+.ah-statistic__delta[data-direction="flat"] { color: var(--ah-color-text-muted); }
+.ah-statistic__delta-arrow { font-size: 11px; }
+
+/* loading 骨架 */
+.ah-statistic[data-loading="true"] .ah-statistic__value,
+.ah-statistic[data-loading="true"] .ah-statistic__title {
+  color: transparent;
+  border-radius: var(--ah-radius-md);
+  background: linear-gradient(90deg,
+    var(--ah-color-bg-subtle) 25%,
+    var(--ah-color-bg-hover, var(--ah-color-border-subtle)) 37%,
+    var(--ah-color-bg-subtle) 63%);
+  background-size: 400% 100%;
+  animation: ah-statistic-shimmer 1.4s ease infinite;
+}
+
+@keyframes ah-statistic-shimmer {
+  0%   { background-position: 100% 50%; }
+  100% { background-position: 0 50%; }
+}
