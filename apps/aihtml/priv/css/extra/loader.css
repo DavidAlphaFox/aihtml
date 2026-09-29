@@ -1,0 +1,23 @@
+/* aihtml additions for loader; sigil styles live in ../sigil/components. */
+
+/* ---- loader: text positions (sigil set them on the wrong element),
+        inline variant ---------------------------------------------- */
+
+.ah-loader.ah-loader-text-top,
+.ah-loader.ah-loader-text-bottom { order: 0; }
+.ah-loader.ah-loader-text-top > .ah-loader-text { order: -1; }
+.ah-loader.ah-loader-text-left { flex-direction: row-reverse; }
+.ah-loader.ah-loader-text-right { flex-direction: row; }
+
+.ah-loader.ah-loader-inline {
+  position: static;
+  display: inline-flex;
+  margin: 0;
+  padding: var(--ah-spacing-sm);
+  background: transparent;
+}
+
+.ah-loader.ah-loader-inline.ah-loader-hidden,
+.ah-loader.ah-loader-hidden { display: none; }
+
+.ah-loader-modal.ah-loader-hidden { display: none; }
