@@ -1,0 +1,48 @@
+/* aihtml additions for the scheduler (aihtml_scheduler). */
+
+/* Hidden elements: the component classes set display. */
+.ah-scheduler [hidden] {
+  display: none !important;
+}
+
+.ah-scheduler-event:focus-visible,
+.ah-scheduler-timeline-event:focus-visible,
+.ah-scheduler-agenda-event:focus-visible,
+.ah-scheduler-day-more:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 1px;
+}
+
+/* Scheduler: a navigation request is running (aihtml adds ah-request). */
+.ah-scheduler.ah-request .ah-scheduler-view-container {
+  opacity: 0.55;
+  transition: opacity var(--ah-transition-fast);
+}
+
+.ah-scheduler {
+  position: relative;
+}
+
+/* The timeline slot header follows the grid's horizontal scroll. */
+.ah-scheduler-timeline-header {
+  overflow: hidden;
+}
+
+.ah-scheduler-timeline-resource-header {
+  position: relative;
+  z-index: 1;
+  background: var(--ah-color-bg-paper);
+}
+
+.ah-scheduler-timeline-slots-header {
+  overflow: visible;
+}
+
+.ah-scheduler-day-more > template {
+  display: none;
+}
+
+.ah-scheduler-contextmenu-item:focus {
+  outline: none;
+  background: var(--ah-color-grey-100);
+}
