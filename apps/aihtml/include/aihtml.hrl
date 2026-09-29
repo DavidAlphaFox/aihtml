@@ -6,6 +6,11 @@
 %%
 %% Leave this header out and call aihtml:button/4 etc. when an imported
 %% name would clash with a local function.
+%%
+%% It also brings in the element records (#ah_button{} ...), see
+%% aihtml_records.hrl and designs/05-records.md.
+-include("aihtml_records.hrl").
+
 -import(aihtml,
         ['div'/1, 'div'/3, span/1, span/3, p/1, p/3, a/1, a/3,
          h1/1, h1/3, h2/1, h2/3, h3/1, h3/3, h4/1, h4/3,

@@ -19,6 +19,10 @@
 %%%-------------------------------------------------------------------
 -module(aihtml).
 
+%% The builders of migrated groups return element records; their specs
+%% (generated below) name them.
+-include("aihtml_records.hrl").
+
 %% Tags with children, /1 and /3.
 -export(['div'/1, 'div'/3, span/1, span/3, p/1, p/3, a/1, a/3,
          h1/1, h1/3, h2/1, h2/3, h3/1, h3/3, h4/1, h4/3,
@@ -480,43 +484,43 @@ theme_switcher(Css, Attrs) -> aihtml_theme:switcher(Css, Attrs).
              term(),
              aihtml_html:css(),
              aihtml_html:attrs()) ->
-                aihtml_html:element().
+                #ah_button{}.
 button(A1, A2, A3, A4) -> aihtml_form_buttons:button(A1, A2, A3, A4).
 -spec link_button(aihtml_html:html(),
                   iodata() | undefined,
                   aihtml_html:css(),
                   aihtml_html:attrs()) ->
-                     aihtml_html:element().
+                     #ah_link_button{}.
 link_button(A1, A2, A3, A4) -> aihtml_form_buttons:link_button(A1, A2, A3, A4).
 -spec toggle_button(aihtml_html:html(),
                     boolean(),
                     aihtml_html:css(),
                     aihtml_html:attrs()) ->
-                       aihtml_html:element().
+                       #ah_toggle_button{}.
 toggle_button(A1, A2, A3, A4) -> aihtml_form_buttons:toggle_button(A1, A2, A3, A4).
 -spec button_group([aihtml_form_buttons:item()],
                    term(),
                    aihtml_html:css(),
                    aihtml_html:attrs()) ->
-                      aihtml_html:element().
+                      #ah_button_group{}.
 button_group(A1, A2, A3, A4) -> aihtml_form_buttons:button_group(A1, A2, A3, A4).
 -spec segmented_control([aihtml_form_buttons:item()],
                         term(),
                         aihtml_html:css(),
                         aihtml_html:attrs()) ->
-                           aihtml_html:element().
+                           #ah_segmented_control{}.
 segmented_control(A1, A2, A3, A4) -> aihtml_form_buttons:segmented_control(A1, A2, A3, A4).
 -spec dropdown_button(aihtml_html:html(),
                       [aihtml_form_buttons:item()],
                       aihtml_html:css(),
                       aihtml_html:attrs()) ->
-                         aihtml_html:element().
+                         #ah_dropdown_button{}.
 dropdown_button(A1, A2, A3, A4) -> aihtml_form_buttons:dropdown_button(A1, A2, A3, A4).
 -spec split_button(aihtml_html:html(),
                    [aihtml_form_buttons:item()],
                    aihtml_html:css(),
                    aihtml_html:attrs()) ->
-                      aihtml_html:element().
+                      #ah_split_button{}.
 split_button(A1, A2, A3, A4) -> aihtml_form_buttons:split_button(A1, A2, A3, A4).
 
 %% aihtml_form_choice
