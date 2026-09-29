@@ -1,0 +1,34 @@
+/* aihtml additions for the tile layout (aihtml_tile_layout). */
+
+/* ---- tile layout ---- */
+
+.ah-tl {
+  min-height: 0;
+}
+.ah-tl > .ah-tl-group,
+.ah-tl > .ah-tl-tab-group,
+.ah-tl > .ah-tl-item {
+  height: 100%;
+}
+.ah-tl-tab-group {
+  background: var(--ah-color-bg-paper, var(--ah-color-bg));
+}
+.ah-tl-tab {
+  touch-action: none;
+}
+.ah-tl-tab:focus {
+  outline: none;
+}
+.ah-tl-tab:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: -2px;
+}
+.ah-tl-splitbar {
+  touch-action: none;
+}
+.ah-tl-splitbar:focus {
+  outline: none;
+}
+.ah-tl-splitbar:focus-visible {
+  background: var(--ah-color-primary);
+}
