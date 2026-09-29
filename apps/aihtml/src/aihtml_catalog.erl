@@ -3,8 +3,8 @@
 %%% documentation and tooling (the Erlang counterpart of sigil's per-
 %%% component meta record).
 %%%
-%%% Each component group module exports `catalog/0' returning entries; this
-%%% module aggregates them (see ?GROUPS) and resolves a component's `Css'
+%%% Each component module exports `catalog/0' returning its entry; this
+%%% module aggregates them (see ?COMPONENTS) and resolves a component's `Css'
 %%% argument, whose entries are:
 %%%
 %%%   atom     a semantic modifier, validated here and written as
@@ -19,7 +19,7 @@
 %%%-------------------------------------------------------------------
 -module(aihtml_catalog).
 
--export([prefabs/0, prefab/1, entry/2, classes/2, flags/2, split_options/2, groups/0,
+-export([prefabs/0, prefab/1, entry/2, classes/2, flags/2, split_options/2, modules/0,
          parse_css/2, field_classes/3]).
 
 -export_type([entry/0]).
@@ -52,27 +52,53 @@
                    option_docs => #{atom() => binary()},
                    methods => [#{name := atom(), args := binary(), doc := binary()}]}.
 
-%% Component group modules, in catalog order. A module that is not there
-%% (yet) is skipped.
--define(GROUPS, [aihtml_theme,
-                 aihtml_form_buttons, aihtml_form_choice, aihtml_form_text,
-                 aihtml_form_select, aihtml_form_pickers, aihtml_form_time_color,
-                 aihtml_form_calendar, aihtml_form_lists, aihtml_form_entry,
-                 aihtml_form_upload,
-                 aihtml_layout_basic,
-                 aihtml_layout_nav,
-                 aihtml_layout_scroll, aihtml_layout_bars, aihtml_layout_dnd,
-                 aihtml_layout_dock, aihtml_layout_tiles,
-                 aihtml_overlay, aihtml_display, aihtml_data_tree,
-                 aihtml_data_grid, aihtml_data_pivot, aihtml_data_tables,
-                 aihtml_data_schedule, aihtml_data_charts, aihtml_data_graph]).
-
--spec groups() -> [module()].
-groups() -> ?GROUPS.
+%% Component modules, in catalog order: one module per component
+%% (aihtml_<name>), plus aihtml_theme for the theme switcher. A module that
+%% is not loaded is skipped.
+-define(COMPONENTS, [aihtml_theme,
+                   aihtml_button, aihtml_link_button, aihtml_toggle_button,
+                   aihtml_button_group, aihtml_segmented_control,
+                   aihtml_dropdown_button, aihtml_split_button, aihtml_checkbox,
+                   aihtml_radiobutton, aihtml_switch_button, aihtml_checkbox_group,
+                   aihtml_radiobutton_group, aihtml_radio_cards,
+                   aihtml_rating_group, aihtml_input, aihtml_textarea,
+                   aihtml_password_input, aihtml_number_input, aihtml_input_otp,
+                   aihtml_tag_input, aihtml_dropdownlist, aihtml_select,
+                   aihtml_slider, aihtml_field, aihtml_form_layout,
+                   aihtml_datepicker, aihtml_combobox, aihtml_timepicker,
+                   aihtml_colorpicker, aihtml_calendar, aihtml_datetime_input,
+                   aihtml_cascader, aihtml_listbox, aihtml_transfer,
+                   aihtml_masked_input, aihtml_formatted_input,
+                   aihtml_range_selector, aihtml_repeat_button, aihtml_upload,
+                   aihtml_card, aihtml_panel, aihtml_expander, aihtml_tabs,
+                   aihtml_tab_bar, aihtml_breadcrumbs, aihtml_pagination,
+                   aihtml_steps, aihtml_skeleton, aihtml_loader, aihtml_empty,
+                   aihtml_menu, aihtml_navbar, aihtml_sidenav, aihtml_toolbar,
+                   aihtml_splitter, aihtml_listmenu, aihtml_status_bar,
+                   aihtml_scrollview, aihtml_scrollbar, aihtml_responsive_panel,
+                   aihtml_activity_bar, aihtml_navigationbar, aihtml_command,
+                   aihtml_sortable, aihtml_dragdrop, aihtml_docking,
+                   aihtml_dock_layout, aihtml_ribbon, aihtml_tile_layout,
+                   aihtml_tooltip, aihtml_popover, aihtml_drawer, aihtml_sheet,
+                   aihtml_toast, aihtml_notification, aihtml_window, aihtml_avatar,
+                   aihtml_badge, aihtml_chip, aihtml_aspect_ratio, aihtml_kbd,
+                   aihtml_time_ago, aihtml_expandable_text, aihtml_alert,
+                   aihtml_progressbar, aihtml_progress_circle, aihtml_meter,
+                   aihtml_statistic, aihtml_kpi_card, aihtml_timeline,
+                   aihtml_ranking_list, aihtml_tag_cloud, aihtml_tree,
+                   aihtml_nav_tree, aihtml_diff, aihtml_heatmap_calendar,
+                   aihtml_datagrid, aihtml_pivotgrid, aihtml_treegrid,
+                   aihtml_datatable, aihtml_gantt, aihtml_scheduler,
+                   aihtml_swimlane, aihtml_chart, aihtml_area_chart,
+                   aihtml_bar_chart, aihtml_donut_chart, aihtml_radar_chart,
+                   aihtml_relation_graph, aihtml_node_graph]).
+%% @doc The modules that define components, in catalog order.
+-spec modules() -> [module()].
+modules() -> ?COMPONENTS.
 
 -spec prefabs() -> [entry()].
 prefabs() ->
-    [normalize(E) || M <- ?GROUPS, loaded(M), E <- M:catalog()].
+    [normalize(E) || M <- modules(), loaded(M), E <- M:catalog()].
 
 -spec prefab(atom()) -> entry().
 prefab(Name) ->

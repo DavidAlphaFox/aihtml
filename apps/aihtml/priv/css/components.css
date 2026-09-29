@@ -122,31 +122,6 @@
 @import "./sigil/components/ribbon.css";
 @import "./sigil/components/tile_layout.css";
 
-/* aihtml additions per component group */
-@import "./extra/form_buttons.css";
-@import "./extra/form_choice.css";
-@import "./extra/form_text.css";
-@import "./extra/form_select.css";
-@import "./extra/form_pickers.css";
-@import "./extra/form_time_color.css";
-@import "./extra/layout_basic.css";
-@import "./extra/layout_nav.css";
-@import "./extra/overlay.css";
-@import "./extra/display.css";
-@import "./extra/form_calendar.css";
-@import "./extra/form_lists.css";
-@import "./extra/form_entry.css";
-@import "./extra/form_upload.css";
-@import "./extra/data_tree.css";
-@import "./extra/layout_scroll.css";
-@import "./extra/layout_bars.css";
-@import "./extra/layout_dnd.css";
-@import "./extra/data_grid.css";
-@import "./extra/data_pivot.css";
-@import "./extra/data_tables.css";
-@import "./extra/data_schedule.css";
-@import "./extra/data_charts.css";
-@import "./extra/data_graph.css";
-@import "./extra/layout_dock.css";
-@import "./extra/layout_tiles.css";
+/* aihtml additions per component (generated list) */
+@import "./extra/index.css";
 @import "./aihtml-base.css";
