@@ -2,7 +2,7 @@
 %%% @doc Horizontal toolbar with an overflow popup, ported from sigil's
 %%% toolbar (DOM and class names are sigil's, so the ported styles under
 %%% priv/css/sigil/components apply unchanged). The behaviour is in
-%%% assets/js/components/toolbar.js, aihtml's additions in
+%%% assets/js/components/toolbar.ts, aihtml's additions in
 %%% priv/css/extra/toolbar.css.
 %%%
 %%% toolbar/3 builds an #ah_toolbar{} record (include/aihtml_toolbar.hrl)

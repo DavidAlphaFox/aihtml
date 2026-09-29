@@ -74,7 +74,7 @@ binary_to_existing(V, Axis) ->
 %%% Theme switcher
 %%%===================================================================
 
-%% @doc Four selects, one per axis; aihtml.js keeps them in step with
+%% @doc Four selects, one per axis; the runtime keeps them in step with
 %% <html> and saves the choice (AH.theme).
 -spec switcher(aihtml_html:css(), aihtml_html:attrs()) -> aihtml_html:element().
 switcher(Css, Attrs) ->

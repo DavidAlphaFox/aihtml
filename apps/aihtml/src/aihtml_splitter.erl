@@ -2,7 +2,7 @@
 %%% @doc Two panes separated by a draggable bar, ported from sigil's
 %%% splitter (DOM and class names are sigil's, so the ported styles under
 %%% priv/css/sigil/components apply unchanged). The behaviour is in
-%%% assets/js/components/splitter.js, aihtml's additions in
+%%% assets/js/components/splitter.ts, aihtml's additions in
 %%% priv/css/extra/splitter.css.
 %%%
 %%% splitter/3 builds an #ah_splitter{} record (include/aihtml_splitter.hrl)

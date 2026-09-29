@@ -28,7 +28,7 @@
 %%% sigil's geometry (templates/node_graph_link.mustache), group frames,
 %%% toolbar. Nodes without a `pos' (or all nodes with `{layout, auto}')
 %%% are placed by a layered layout computed here (node_graph_layout/1).
-%%% The browser behaviour (assets/js/components/node_graph.js) keeps the
+%%% The browser behaviour (assets/js/components/node_graph.ts) keeps the
 %%% graph in memory and redraws with the same templates while the user
 %%% edits: drag nodes (grid snap), drag links between slots (incompatible
 %%% slots dim, a dragged input link is detached), select with a marquee,
@@ -137,7 +137,7 @@
 -type link_mode() :: spline | linear | straight.
 
 %% Card layout, in graph units (= px at zoom 1). They match node_graph.css
-%% (30px header, 4px body padding, 20px slot rows) and node_graph.js.
+%% (30px header, 4px body padding, 20px slot rows) and node_graph.ts.
 -define(TITLE_H, 30).
 -define(SLOT_H, 20).
 -define(PAD_TOP, 4).
@@ -269,7 +269,7 @@ ic(hand) ->
       "a2 2 0 0 1 2.83-2.82L7 15">>.
 
 %%%===================================================================
-%%% Views (the same fields as node_graph.js builds for the templates)
+%%% Views (the same fields as node_graph.ts builds for the templates)
 %%%===================================================================
 
 node_view(#{id := Id, inputs := Ins, outputs := Outs, collapsed := Collapsed} = N,

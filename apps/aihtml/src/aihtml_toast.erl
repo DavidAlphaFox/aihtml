@@ -3,7 +3,7 @@
 %%% an element. toast/3 in an action or shows_toast/2 on a trigger pops a
 %%% card in a screen corner; the card is templates/notification.mustache
 %%% (see aihtml_lib_overlay:card/2) around templates/toast.mustache. The
-%%% browser side is AH.fn("toast") in assets/js/components/toast.js.
+%%% browser side is AH.fn("toast") in assets/js/components/toast.ts.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_toast).

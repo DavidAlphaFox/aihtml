@@ -4,7 +4,7 @@
 %%% aihtml_notification, aihtml_window).
 %%%
 %%% Everything renders server-side, hidden; the behaviours in
-%%% assets/js/components (with _lib_overlay.js) open and close it. Three
+%%% assets/js/components (with _lib_overlay.ts) open and close it. Three
 %%% ways to drive an overlay:
 %%%
 %%%   declarative   splice `opens(Target)', `toggles(Target)', `closes()'
@@ -115,7 +115,7 @@ toggle(Ctx, Target) -> aihtml_action:call(Ctx, Target, toggle, []).
 %%%===================================================================
 
 %% @doc Internal: a card from templates/notification.mustache. The view
-%% is built the same way in _lib_overlay.js (cardView).
+%% is built the same way in _lib_overlay.ts (cardView).
 -spec card(map(), iodata()) -> {safe, iodata()}.
 card(Opts, ContentHtml) ->
     V = case maps:get(variant, Opts, info) of

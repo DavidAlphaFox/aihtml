@@ -3,7 +3,7 @@
 %%% status-bar (DOM and class names are sigil's, so the ported styles
 %%% under priv/css/sigil/components apply unchanged). The behaviour (the
 %%% count details float above their segment) is in
-%%% assets/js/components/status_bar.js, aihtml's additions in
+%%% assets/js/components/status_bar.ts, aihtml's additions in
 %%% priv/css/extra/status_bar.css.
 %%%
 %%% status_bar/3 builds an #ah_status_bar{} record

@@ -2,7 +2,7 @@
 %%% @doc Drill-down list menu, ported from sigil's listmenu (DOM and class
 %%% names are sigil's, so the ported styles under
 %%% priv/css/sigil/components apply unchanged). The behaviour is in
-%%% assets/js/components/listmenu.js, aihtml's additions in
+%%% assets/js/components/listmenu.ts, aihtml's additions in
 %%% priv/css/extra/listmenu.css.
 %%%
 %%% Items take the shape of `aihtml_lib_nav:item()'. Selecting a leaf sets

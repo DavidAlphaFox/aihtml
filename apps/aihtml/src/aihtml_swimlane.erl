@@ -6,7 +6,7 @@
 %%%   swimlane_update(Ctx, Event, S)       (in an action) re-render after an edit
 %%%
 %%% Everything is rendered here, on the server, the flow lines included
-%%% (SVG paths). The behaviour (assets/js/components/swimlane.js) selects
+%%% (SVG paths). The behaviour (assets/js/components/swimlane.ts) selects
 %%% nodes and handles keyboard and drag and drop; after a local change it
 %%% moves the existing nodes and recomputes the lines, but never builds
 %%% HTML.

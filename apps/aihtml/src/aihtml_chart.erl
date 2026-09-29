@@ -32,7 +32,7 @@
 %%% have the browser rebuild it from echarts' merged option by the same
 %%% rules (see aihtml_lib_chart:data_text/2).
 %%%
-%%% The behaviour (assets/js/components/_lib_chart.js) loads echarts,
+%%% The behaviour (assets/js/components/_lib_chart.ts) loads echarts,
 %%% themes it from the --ah-* custom properties (palette, text, border,
 %%% paper colours, font), draws the option, follows size changes and
 %%% theme changes, and fires 'ah:chart-click' (and 'ah:chart-dblclick',

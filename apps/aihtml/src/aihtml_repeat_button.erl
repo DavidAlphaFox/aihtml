@@ -5,7 +5,7 @@
 %%% repeat_button renders the markup of `aihtml_button:button/4' (it
 %%% returns an #ah_button{}) and fires `click' on press and then
 %%% repeatedly while held, so `on(click, ...)' or a postback runs once per
-%%% repetition. The behaviour lives in assets/js/components/repeat_button.js.
+%%% repetition. The behaviour lives in assets/js/components/repeat_button.ts.
 %%%
 %%% repeat_button/4 builds an #ah_repeat_button{}
 %%% (include/aihtml_repeat_button.hrl) and render/1 turns it into HTML, so

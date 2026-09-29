@@ -7,7 +7,7 @@
 %%% A value-bearing component: `Attrs' go to the root, which carries
 %%% `data-ah-value' and fires `change'; `name' goes to a hidden input. The
 %%% popup is rendered inside the root and driven by the `datepicker'
-%%% behaviour (assets/js/components/datepicker.js). The browser builds the
+%%% behaviour (assets/js/components/datepicker.ts). The browser builds the
 %%% month grid from the shared template templates/datepicker_month.mustache.
 %%%
 %%% datepicker/3 builds an #ah_datepicker{} (include/aihtml_datepicker.hrl)
@@ -313,7 +313,7 @@ days(Iso) ->
                                     binary_to_integer(D)).
 
 %% date-fns getWeek (weekStartsOn = First, firstWeekContainsDate = 1),
-%% the same algorithm as weekNumber in datepicker.js.
+%% the same algorithm as weekNumber in datepicker.ts.
 week_number(D, First) ->
     {Y, _, _} = calendar:gregorian_days_to_date(D),
     Jan1 = fun(Yr) -> ?D:start_of_week(calendar:date_to_gregorian_days(Yr, 1, 1), First) end,

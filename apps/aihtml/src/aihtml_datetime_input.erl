@@ -6,7 +6,7 @@
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
 %%% `data-ah-value' and fires `change'; `name' goes to a hidden input. The
-%%% behaviour is `datetime_input' (assets/js/components/datetime_input.js),
+%%% behaviour is `datetime_input' (assets/js/components/datetime_input.ts),
 %%% which draws the drop-down calendar from the shared template
 %%% templates/datetime_input_calendar.mustache.
 %%%

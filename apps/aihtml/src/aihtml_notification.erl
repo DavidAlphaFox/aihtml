@@ -14,7 +14,7 @@
 %%% The card is rendered from templates/notification.mustache (see
 %%% aihtml_lib_overlay:card/2, shared with aihtml_toast). A record's
 %%% postback fires on `ah:close' (when a card closes). Behaviour:
-%%% assets/js/components/notification.js. notification/3 builds an
+%%% assets/js/components/notification.ts. notification/3 builds an
 %%% #ah_notification{} (include/aihtml_notification.hrl) and render/1
 %%% turns it into HTML (designs/05-records.md).
 %%% @end

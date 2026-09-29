@@ -6,7 +6,7 @@
 %%% zone, so there is no DST shifting. Used by aihtml_calendar,
 %%% aihtml_datetime_input, aihtml_gantt, aihtml_scheduler (and
 %%% aihtml_lib_rrule); aihtml_datepicker uses the week helpers. The
-%%% browser twin is AH.lib.date (assets/js/components/_lib_date.js).
+%%% browser twin is AH.lib.date (assets/js/components/_lib_date.ts).
 %%%
 %%% Invalid input raises `error({aihtml, {bad_date, Value}})'.
 %%% @end

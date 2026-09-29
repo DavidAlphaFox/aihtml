@@ -6,7 +6,7 @@
 %%%
 %%% Items are as in aihtml_lib_select. The markup and classes are
 %%% sigil's, so the ported stylesheets under priv/css/sigil/components
-%%% apply; behaviour is in assets/js/components/dropdownlist.js.
+%%% apply; behaviour is in assets/js/components/dropdownlist.ts.
 %%%
 %%% The component function builds an #ah_dropdownlist{} record (include/
 %%% aihtml_dropdownlist.hrl) and render/1 turns it into HTML, so pages may

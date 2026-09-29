@@ -7,7 +7,7 @@
 %%% being edited); `name' goes to a hidden input. The server renders the
 %%% complete first state (the track with its ticks, labels and markers),
 %%% so nothing needs to be laid out in the browser before it is shown. The
-%%% behaviour lives in assets/js/components/range_selector.js.
+%%% behaviour lives in assets/js/components/range_selector.ts.
 %%%
 %%% range_selector/4 builds an #ah_range_selector{}
 %%% (include/aihtml_range_selector.hrl) and render/1 turns it into HTML, so

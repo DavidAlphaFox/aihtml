@@ -3,7 +3,7 @@
 %%% collapsible sections under clickable headers (an accordion). DOM and
 %%% class names are the ones sigil renders, so the styles in
 %%% priv/css/sigil apply unchanged; the behaviour is in
-%%% assets/js/components/navigationbar.js.
+%%% assets/js/components/navigationbar.ts.
 %%%
 %%% The value (the expanded indexes, "0,2") is in `data-ah-value' on the
 %%% root, a `name' renders a hidden input, and user changes fire `change'

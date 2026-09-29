@@ -9,7 +9,7 @@
 %%% `ah:close' carries `{result}' (the `closes/2' result, or null).
 %%%
 %%% Literal (binary) classes in `Css' go on the tooltip bubble. The
-%%% record has no postback. Behaviour: assets/js/components/tooltip.js.
+%%% record has no postback. Behaviour: assets/js/components/tooltip.ts.
 %%% tooltip/4 builds an #ah_tooltip{} (include/aihtml_tooltip.hrl) and
 %%% render/1 turns it into HTML (designs/05-records.md).
 %%% @end

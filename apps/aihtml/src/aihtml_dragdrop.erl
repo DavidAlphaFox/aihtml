@@ -22,7 +22,7 @@
 %%% arrows walk through the zones that accept it, Space or Enter drops,
 %%% Escape cancels.
 %%%
-%%% Behaviour: assets/js/components/dragdrop.js. dragdrop/3 builds an
+%%% Behaviour: assets/js/components/dragdrop.ts. dragdrop/3 builds an
 %%% #ah_dragdrop{} (include/aihtml_dragdrop.hrl) and render/1 turns it
 %%% into HTML.
 %%% @end

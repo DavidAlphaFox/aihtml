@@ -2,7 +2,7 @@
 %%% @doc Menu bar or context menu with nested submenus, ported from sigil's
 %%% menu (DOM and class names are sigil's, so the ported styles under
 %%% priv/css/sigil/components apply unchanged). The behaviour is in
-%%% assets/js/components/menu.js.
+%%% assets/js/components/menu.ts.
 %%%
 %%% Items take the shape of `aihtml_lib_nav:item()'. Selecting an item
 %%% without `href' sets `data-ah-value' on the root to its key and fires

@@ -10,7 +10,7 @@
 %%% Everything is rendered here, on the server: the time grid, the month
 %%% segments, the agenda and the timelines, recurring appointments
 %%% expanded (aihtml_lib_rrule). The behaviour
-%%% (assets/js/components/scheduler.js) handles scrolling, keyboard, drag
+%%% (assets/js/components/scheduler.ts) handles scrolling, keyboard, drag
 %%% and drop and the context menu; after a local change it moves the
 %%% existing elements, but never builds HTML.
 %%%
@@ -313,7 +313,7 @@ fill_href(Href, D, V) ->
     B = binary:replace(text(Href), <<"{date}">>, ?D:iso_date(D), [global]),
     binary:replace(B, <<"{view}">>, atom_to_binary(V), [global]).
 
-%% The day prev (-1) or next (1) shows (the twin of step() in scheduler.js).
+%% The day prev (-1) or next (1) shows (the twin of step() in scheduler.ts).
 step(View, D, Dir, _) when View =:= day; View =:= timeline_day -> D + Dir;
 step(View, D, Dir, _) when View =:= week; View =:= timeline_week -> D + 7 * Dir;
 step(View, D, Dir, _) when View =:= month; View =:= timeline_month -> ?D:add_months(D, Dir);

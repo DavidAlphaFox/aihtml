@@ -25,7 +25,7 @@
 %%%
 %%% tile_layout/4 builds an #ah_tile_layout{} (include/aihtml_tile_layout.hrl)
 %%% and render/1 turns it into HTML (designs/05-records.md). Behaviour:
-%%% assets/js/components/tile_layout.js.
+%%% assets/js/components/tile_layout.ts.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_tile_layout).

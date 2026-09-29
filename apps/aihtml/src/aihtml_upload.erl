@@ -36,7 +36,7 @@
 %%%
 %%% The component function builds an #ah_upload{} record (include/
 %%% aihtml_upload.hrl); render/1 turns it into HTML. The behaviour is in
-%%% assets/js/components/upload.js.
+%%% assets/js/components/upload.ts.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_upload).

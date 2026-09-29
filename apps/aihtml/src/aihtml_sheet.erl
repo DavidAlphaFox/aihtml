@@ -10,7 +10,7 @@
 %%% `ah:close' carries `{result}' (the `closes/2' result, or null).
 %%%
 %%% Literal (binary) classes in `Css' go on the panel. A record's
-%%% postback fires on `ah:close'. Behaviour: assets/js/components/sheet.js
+%%% postback fires on `ah:close'. Behaviour: assets/js/components/sheet.ts
 %%% (the markup and behaviour are shared with the drawer, see
 %%% aihtml_lib_overlay:slide/5). sheet/3 builds an #ah_sheet{}
 %%% (include/aihtml_sheet.hrl) and render/1 turns it into HTML

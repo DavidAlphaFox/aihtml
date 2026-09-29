@@ -6,7 +6,7 @@
 %%%
 %%% The markup and classes are sigil's, so the ported stylesheets under
 %%% priv/css/sigil/components apply; behaviour is in
-%%% assets/js/components/slider.js.
+%%% assets/js/components/slider.ts.
 %%%
 %%% The component function builds an #ah_slider{} record (include/
 %%% aihtml_slider.hrl) and render/1 turns it into HTML, so pages may also

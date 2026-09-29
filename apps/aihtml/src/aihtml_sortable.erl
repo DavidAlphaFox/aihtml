@@ -16,7 +16,7 @@
 %%% arrows move it, Space or Enter drops it and Escape puts it back;
 %%% Alt+arrow moves the focused item at once.
 %%%
-%%% Behaviour: assets/js/components/sortable.js. sortable/4 builds an
+%%% Behaviour: assets/js/components/sortable.ts. sortable/4 builds an
 %%% #ah_sortable{} (include/aihtml_sortable.hrl) and render/1 turns it
 %%% into HTML.
 %%% @end

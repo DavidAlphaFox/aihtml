@@ -36,7 +36,7 @@
 %%% The browser builds HTML only from the shared templates
 %%% templates/dock_layout_{group,float,menu}.mustache, which render the
 %%% tab groups and float windows on the server too. Behaviour:
-%%% assets/js/components/dock_layout.js. dock_layout/3 builds an
+%%% assets/js/components/dock_layout.ts. dock_layout/3 builds an
 %%% #ah_dock_layout{} (include/aihtml_dock_layout.hrl) and render/1 turns
 %%% it into HTML.
 %%% @end

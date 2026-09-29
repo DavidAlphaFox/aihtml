@@ -8,7 +8,7 @@
 %%% `change' there when the user changes it, so `on(change, Action)' on the
 %%% root receives the new value as `Event.value'; `hidden/2' renders the
 %%% hidden input of a `name'. The browser side is AH.lib.layout
-%%% (assets/js/components/_lib_layout.js).
+%%% (assets/js/components/_lib_layout.ts).
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_lib_layout).

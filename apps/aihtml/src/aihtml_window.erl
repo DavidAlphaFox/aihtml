@@ -12,7 +12,7 @@
 %%%
 %%% Literal (binary) classes in `Css' go on the window. A record's
 %%% postback fires on `ah:close'. Behaviour:
-%%% assets/js/components/window.js. window/3 builds an #ah_window{}
+%%% assets/js/components/window.ts. window/3 builds an #ah_window{}
 %%% (include/aihtml_window.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end

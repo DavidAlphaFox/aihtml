@@ -13,7 +13,7 @@
 %%%
 %%%   ActionPath       POST endpoint for actions, default "/aihtml/action"
 %%%   EventsPath       GET push stream (SSE), default "/aihtml/events"
-%%%   /aihtml/[...]    aihtml.js, aihtml.css and jQuery (static => false
+%%%   /aihtml/[...]    the runtime bundle (js/), aihtml.css and jQuery (static => false
 %%%                    leaves it out when another route serves them)
 %%%
 %%% Options:

@@ -8,7 +8,7 @@
 %%% `data-ah-value' (the keys on the right joined by aihtml_value:join/1)
 %%% and fires
 %%% `change'; `name' goes to a hidden input. Both lists are rendered here;
-%%% the behaviour (assets/js/components/transfer.js) moves an item by
+%%% the behaviour (assets/js/components/transfer.ts) moves an item by
 %%% moving its node.
 %%%
 %%% The component function builds an #ah_transfer{} record (include/

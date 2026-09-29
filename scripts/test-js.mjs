@@ -3,7 +3,8 @@
 // with every component chunk loaded (AH.loadAll) before the tests run. A test file
 // registers tests with AHTest.test(name, async fn) and asserts with
 // AHTest.eq / AHTest.ok. Node-only tests (the Mustache compiler) live in
-// scripts/mustache.test.mjs and run first.
+// scripts/mustache.test.mjs and run first, then the type check
+// (npm run typecheck).
 //
 //   node scripts/test-js.mjs [filter]
 import { execFileSync } from "node:child_process";
@@ -27,7 +28,18 @@ if (existsSync(join(root, "scripts", "mustache.test.mjs"))) {
   }
 }
 
-// 2. browser tests
+// 2. type check (tsconfig.json) and the catalog types it checks against
+try {
+  execFileSync("escript", [join(root, "scripts", "gen-ts-catalog.escript"), "--check"], { stdio: "inherit" });
+  execFileSync(process.execPath, [join(root, "node_modules", "typescript", "bin", "tsc"), "-p", root],
+               { stdio: "inherit" });
+  console.log("typecheck: ok");
+} catch {
+  console.log("typecheck: FAILED");
+  failed++;
+}
+
+// 3. browser tests
 const dir = mkdtempSync(join(tmpdir(), "aihtml-js-"));
 const entry = await buildRuntime(root, join(dir, "js"));
 const srv = await serve(dir);

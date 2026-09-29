@@ -11,7 +11,7 @@
 %%%
 %%% By default it renders a field that opens the sigil panel in a popup;
 %%% the `inline' flag renders the panel alone, as sigil does. The
-%%% behaviour is `timepicker' (assets/js/components/timepicker.js).
+%%% behaviour is `timepicker' (assets/js/components/timepicker.ts).
 %%%
 %%% timepicker/3 builds an #ah_timepicker{} (include/aihtml_timepicker.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
@@ -205,7 +205,7 @@ time_panel(H, M, Format, Step, Min, Max, Landscape, Disabled, Footer, Inline) ->
            [<<"ah-timepicker-disabled">> || Disabled andalso Inline]],
           []).
 
-%% View data as built by timepicker.js tpHeader (hours mode).
+%% View data as built by timepicker.ts tpHeader (hours mode).
 time_header(H, M, Period, Format, Disabled) ->
     HourText = case Format of
                    '24h' -> pad2(H);
@@ -219,7 +219,7 @@ time_header(H, M, Period, Format, Disabled) ->
                         disabled => Disabled,
                         tabindex => case Disabled of true -> -1; false -> 0 end})).
 
-%% The clock in hours mode; aihtml.js redraws the numbers on mode changes.
+%% The clock in hours mode; the browser redraws the numbers on mode changes.
 %% Drawing order differs from sigil: the selection circle goes under the
 %% numbers so the selected number stays readable.
 clock_svg(H, Format, Period, Step, Min, Max) ->

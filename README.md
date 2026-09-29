@@ -41,7 +41,7 @@ login() ->
 | `apps/aihtml/priv/static` | 预构建产物（只派发这些）：`aihtml.css`、`js/`（Vite 打包的运行时：入口 + 每个组件一个代码块 + `manifest.json`），echarts、xlsx、jspdf 是按需加载的代码块，ProseMirror 在 markdown_editor 的代码块里（见「第三方库」）；`vendor/` 只放给页面脚本用的 jQuery |
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
 | `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
-| `apps/aihtml/assets/js` | 浏览器端源码（不派发）：入口 `main.js`、运行时 `core.js`、各组件行为 `components/<组件名>.js`（ES 模块，共用部分在 `_lib_*.js`），由 Vite（`vite.config.mjs`）打包到 `priv/static/js` |
+| `apps/aihtml/assets/js` | 浏览器端 TypeScript 源码（不派发）：入口 `main.ts`、运行时 `core.ts` 和 `runtime/`、各组件行为 `components/<组件名>.ts`（控制器类，共用部分在 `_lib_*.ts`），由 Vite（`vite.config.mjs`）打包到 `priv/static/js`；`npm run typecheck` 做类型检查 |
 | `apps/aihtml_example` | cowboy 示例站：`/` 首页，`/components/:name` 组件文档（演示、代码、API），`/demo` 实时演示，`/fetch` URL 片段模式。组件示例 `aihtml_example_demo_*` 也在这里，不在库里 |
 | `scripts/` | 构建与测试脚本：样式移植、JS 构建、模板编译器、门面生成、预览 |
 | `designs/` | 设计文档 |
@@ -452,7 +452,7 @@ h.stop();
 | echarts | chart、各类图表、relation_graph | `vendor-echarts`，1.1 MB / 360 KB | Apache-2.0 |
 | xlsx（SheetJS） | datagrid、pivotgrid 导出 Excel | `vendor-xlsx`，415 KB / 135 KB | Apache-2.0 |
 | jspdf、jspdf-autotable | datagrid 导出 PDF | `vendor-jspdf` 392 KB / 125 KB，`vendor-jspdf-autotable` 29 KB / 9 KB | MIT |
-| ProseMirror、markdown-it | markdown_editor | 由 `markdown_editor.js` 直接 import，和组件代码同在 `markdown_editor` 代码块，共 390 KB / 131 KB | MIT |
+| ProseMirror、markdown-it | markdown_editor | 由 `markdown_editor.ts` 直接 import，和组件代码同在 `markdown_editor` 代码块，共 390 KB / 131 KB | MIT |
 
 - **位置**：代码块和运行时的其他代码块一起在 `priv/static/js`（文件名带内容哈希），版本见 `package.json`。纯 Erlang 的使用方不需要运行 npm，也不需要额外配置路径。jsPDF 自己还会按需引入 html2canvas、canvg、dompurify（`vendor-html2canvas` 等），只在调用它的 `html()` 时才加载，表格导出用不到。
 - **许可证**：代码块里不保留许可证注释；每次构建由 `vite.config.mjs` 生成 `priv/static/js/THIRD-PARTY-LICENSES.txt`，列出打包进去的每个 npm 包（名称、版本、许可证、所在代码块、许可证全文和 NOTICE），包括入口里的 Stimulus。
@@ -716,19 +716,20 @@ rebar3 dialyzer && rebar3 xref
 npm install
 npm run build          # 复制并打包第三方库，Vite 打包运行时到 priv/static/js，构建 aihtml.css 与 example.css
 npm run js:dev         # 开发时：未压缩、带 source map，文件变化时重新打包
-npm test               # 模板编译器的 Mustache 规范用例 + 浏览器端测试（无头 Chromium）
+npm run typecheck      # TypeScript 类型检查（strict），并确认 types/catalog.d.ts 是最新的
+npm test               # 模板编译器的 Mustache 规范用例 + 类型检查 + 浏览器端测试（无头 Chromium）
 
 rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、/components、/demo、/fetch
 ```
 
 - **配置文件分两份**：`rebar3 shell` 读取 `config/shell.config`（普通 Erlang 配置）；release 读取 `config/sys.config.src`，其中的 `${VAR}` 只有 release 启动脚本会替换，rebar3 shell 读不了它。
-- **新增或修改组件后**，重新生成门面和头文件：`rebar3 compile && escript scripts/gen-facade.escript`。
+- **新增或修改组件后**，重新生成门面和头文件：`rebar3 compile && escript scripts/gen-facade.escript`；目录里的 `methods` 变了，再运行 `npm run types:catalog` 重新生成 `types/catalog.d.ts`（`AH.register` 按它检查控制器类有没有这些方法）。
   - `--out Dir` 选项把门面和 `aihtml.hrl` 生成到 `Dir`，不改动源码。适合在组还没接入时单独验证它的示例。
 - **导入 sigil 样式**：在 `scripts/port-sigil.mjs` 的清单里加上组件名，运行 `node scripts/port-sigil.mjs`。它只写入新文件，已有文件（可能改过）要加 `--force` 才会覆盖。
 - **全部测试**：`rebar3 eunit` 跑类库和演示站；`--app aihtml` 只跑类库。
 - **模板一致性**由 EUnit 的 `aihtml_tpl_tests` 检查，需要能调用 `node`。
 - **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行：它先打包一份运行时，用本地 HTTP 服务提供测试页（ES 模块不能从 `file://` 加载），加载全部组件后再运行测试。
-- **打包产物要提交**：改了 `assets/js` 或模板后运行 `npm run js`，把 `priv/static/js` 一起提交，使用方不需要运行 npm。组件文件的按需加载条件由构建时扫描得到，写法见 `designs/04-components.md` 的「JS 约定」。
+- **打包产物要提交**：改了 `assets/js` 或模板后运行 `npm run js`，把 `priv/static/js` 一起提交，使用方不需要运行 npm。组件文件的按需加载条件由构建时扫描得到，写法见 `designs/04-components.md` 的「TypeScript 约定」。
 
 ## 许可证
 

@@ -2,7 +2,7 @@
 %%% @doc Navigation bar of selectable items, ported from sigil's navbar
 %%% (DOM and class names are sigil's, so the ported styles under
 %%% priv/css/sigil/components apply unchanged). The behaviour is in
-%%% assets/js/components/navbar.js, aihtml's additions in
+%%% assets/js/components/navbar.ts, aihtml's additions in
 %%% priv/css/extra/navbar.css.
 %%%
 %%% Items take the shape of `aihtml_lib_nav:item()'. Selecting an item

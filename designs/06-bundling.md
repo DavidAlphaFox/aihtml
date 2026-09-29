@@ -1,6 +1,6 @@
 # 06 打包与 Stimulus
 
-浏览器端代码改为 **Stimulus + ES 模块，用 Vite 打包**，只派发打包产物；jQuery 在迁移期保留、逐个组件去掉，最后从库里移除（方案 B，已完成）。本文定下目标结构、兼容约束和迁移步骤。
+浏览器端代码是 **TypeScript（面向对象、strict）+ Stimulus，用 Vite 打包**，只派发打包产物；jQuery 在迁移期保留、逐个组件去掉，最后从库里移除（方案 B，已完成）。本文定下目标结构、兼容约束和迁移步骤。
 
 ## 目标
 
@@ -13,17 +13,32 @@
 
 ```
 apps/aihtml/assets/js/
-  main.js                 入口：核心、模板、组件注册表，启动 Stimulus
-  core.js                 运行时：Controller 基类、action、推送、替换与形变、浮层定位、主题
-  components/<name>.js    一个组件的行为（ES 模块），共用代码 import ./_lib_<topic>.js
-vite.config.mjs           构建配置，含两个插件：
+  main.ts                 入口：设置 window.AH，交给运行时组件注册表，启动 Stimulus
+  core.ts                 运行时对外的 AH 对象（AHApi 接口），把 runtime/ 的各部分接起来
+  runtime/controller.ts   Controller 基类（setup/teardown、listen、delegate、fire、signal）
+  runtime/behaviours.ts   Behaviours：注册、调用、就绪、按需加载
+  runtime/swap.ts         Swapper：替换、preserve、settle、焦点、形变
+  runtime/actions.ts      Actions：data-ah-on、请求协调、服务端操作（类型化的 Op 联合）
+  runtime/push.ts         PushStream：订阅与重连刷新
+  runtime/fetch.ts        Fetcher：data-ah-fetch 往返
+  runtime/float.ts        FloatingPopup：浮层定位
+  runtime/theme.ts        Theme：四轴
+  runtime/forms.ts、requests.ts、dom.ts、vendor.ts   表单取值、请求状态、元素工具、第三方库
+  components/<name>.ts    一个组件的行为：控制器类，共用代码 import ./_lib_<topic>.ts
+  types/catalog.d.ts      生成：每个行为服务端可调用的方法（scripts/gen-ts-catalog.escript）
+  types/env.d.ts、virtual.d.ts   window.AH，虚拟模块
+tsconfig.json             类型检查（strict）；npm run typecheck
+vite.config.mjs           构建配置：
+                          - 组件里的 import AH from "../core.ts" 改写成 window.AH（见下）
                           - virtual:ah-tpl/<name>  把 templates/<name>.mustache 编译成模块
                           - virtual:ah-registry    行为名、页面函数、触发选择器 → 代码块
                           - 第三方库代码块命名 vendor-<库>，生成 THIRD-PARTY-LICENSES.txt
 apps/aihtml/priv/static/js/
   main-<hash>.js, <chunk>-<hash>.js, vendor-<库>-<hash>.js, .vite/manifest.json,
-  THIRD-PARTY-LICENSES.txt
+  preload-<hash>.js, tpl_runtime-<hash>.js, THIRD-PARTY-LICENSES.txt
 ```
+
+**文件名稳定**：代码块之间按带哈希的文件名互相引用，被引用的块一改名，引用它的块也跟着改名；入口又列出了全部代码块的文件名（注册表）。所以组件不直接 import 入口：源码写 `import AH from "../core.ts"`（类型照常检查），构建时改写成 `const AH = window.AH`（`main.ts` 在加载任何组件之前设置它，写法不对时构建报错；`import type` 不受限制）。Vite 预加载动态 import 依赖的辅助函数、模板运行时也各放一个小代码块，不留在入口里。结果：改一个组件只改名它自己和 `main`，改运行时只改名 `main`（原来两种情况都会让 110 多个文件全部改名）。
 
 `aihtml_page` 读取 manifest，写出 `<script type="module" src=".../main-<hash>.js">` 和入口依赖的 `<link rel="modulepreload">`。代码块之间用相对路径引用，静态资源挂在 `/aihtml/` 或别的路径下都能工作。
 
@@ -37,7 +52,7 @@ apps/aihtml/priv/static/js/
 
 ## 按需加载
 
-构建时扫描 `components/*.js`，生成对照表：
+构建时扫描 `components/*.ts`，生成对照表：
 
 | 触发条件 | 例子 | 来源 |
 |---|---|---|
@@ -45,7 +60,7 @@ apps/aihtml/priv/static/js/
 | 服务端调用页面函数 | `call(Ctx, global, toast, ...)` | 文件里的 `AH.fn("<name>", ...)` |
 | 页面上出现某个属性 | `[data-ah-tooltip]`、`[data-ah-open]`、`[data-ah-validate]` | 文件头的注释 `// ah-load: <选择器>` |
 
-运行时在启动时、以及每次 DOM 变化后检查这些条件，加载缺的代码块，再注册控制器。共用代码 `_lib_*.js` 由组件 `import`，打包工具会自动拆出共享代码块。第三方库由组件直接 import：echarts、xlsx、jspdf、jspdf-autotable 用动态 `import()`，各成一个代码块 `vendor-<库>-<hash>.js`，用到时才下载，`AH.vendor(name)` 给页面脚本取得同一份库；ProseMirror 和 markdown-it 只有 markdown_editor 用、挂载就要用，所以静态 import，打进 markdown_editor 的代码块（少一次请求，也不需要单独的入口文件和全局变量）。
+运行时在启动时、以及每次 DOM 变化后检查这些条件，加载缺的代码块，再注册控制器。共用代码 `_lib_*.ts` 由组件 `import`，打包工具会自动拆出共享代码块。第三方库由组件直接 import：echarts、xlsx、jspdf、jspdf-autotable 用动态 `import()`，各成一个代码块 `vendor-<库>-<hash>.js`，用到时才下载，`AH.vendor(name)` 给页面脚本取得同一份库；ProseMirror 和 markdown-it 只有 markdown_editor 用、挂载就要用，所以静态 import，打进 markdown_editor 的代码块（少一次请求，也不需要单独的入口文件和全局变量）。
 
 ## 迁移步骤
 
@@ -73,3 +88,10 @@ apps/aihtml/priv/static/js/
    - datagrid 远程模式首页总在服务端渲染，挂载时不再请求。
    - 第三方库从 `priv/static/vendor` 的预构建文件改为 Vite 代码块（动态 `import()`），构建时生成许可证清单。之后 ProseMirror 去掉了单独的入口 `prosemirror.entry.js`、`AH.vendor("prosemirror")` 和全局变量 `window.AHProseMirror`，改由 markdown_editor 按需静态 import。
    - **验收**：460 个演示比对，变化只在图表（数据表、角色）和带 `href` 的导航演示；1423 个 EUnit、445 个浏览器测试通过；演示站 112 个组件页无脚本错误。
+5. **TypeScript（已完成）**：
+   - 运行时拆成 `runtime/` 下的类（Behaviours、Controller、Swapper、Actions、PushStream、Fetcher、FloatingPopup、Theme），`core.ts` 把它们接成 `AH` 对象（`AHApi` 接口）；服务端的 DOM 操作是类型化的联合类型 `Op`。
+   - 110 个组件文件改成 `components/<name>.ts`：每个行为一个具名控制器类，状态是私有字段，内部逻辑是私有方法，事件 detail 是导出的接口；几个组件共用的有状态部分成了 lib 里的类（`ButtonMenu`、`OverlayLayer`、`Drag`、`TableFrame`、`PickerPopup`……），纯计算保留为带类型的导出函数。`AH.lib` 只留下测试和页面脚本要用的 `values`、`chart`。
+   - `tsconfig.json` 开 `strict`，不用 `any` 和 `@ts-ignore`；`npm run typecheck`，`npm test` 先跑它。`types/catalog.d.ts` 由 `aihtml_catalog` 生成，`AH.register` 按它检查每个控制器有没有服务端会调用的方法。组件给 `AHApi` 加的东西（`AH.notify`、`AH.toast`）用 `declare module "../core.ts"` 声明。
+   - 构建目标改为 es2022，`#私有字段` 原样输出（es2020 要转成 WeakMap 辅助函数，更大也更慢）。
+   - **验收**：服务端 HTML 不变（460 个演示比对，只有一处有意改的演示文字）；444 个浏览器测试不改动全部通过；1423 个 EUnit 通过；演示站 112 页无脚本错误。入口 gzip 后 23.7 KB。
+   - 浏览器测试仍是 JS，只通过 DOM、事件和 `AH.invoke` 测行为。

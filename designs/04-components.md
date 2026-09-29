@@ -44,7 +44,7 @@
 ```
 apps/aihtml/src/aihtml_button.erl                     构建函数、render/1、fields/1、catalog/0（一条）、facade_extras/0（有辅助函数时）
 apps/aihtml/include/aihtml_button.hrl                 record #ah_button{}（只有 record，字段类型引用模块导出的类型）
-apps/aihtml/assets/js/components/button.js            行为（有时）
+apps/aihtml/assets/js/components/button.ts            行为（有时）
 apps/aihtml/priv/css/extra/button.css                 aihtml 的补充样式（有时）
 apps/aihtml/templates/button_*.mustache               共享模板（有时）
 apps/aihtml/test/aihtml_button_tests.erl              EUnit
@@ -52,12 +52,12 @@ apps/aihtml/test/js/button.test.js                    浏览器测试（有时�
 apps/aihtml_example/src/aihtml_example_demo_button.erl  演示
 ```
 
-- **共享代码**：几个组件共用的代码放在内部模块 `aihtml_lib_<主题>.erl`，JS 放在 `components/_lib_<主题>.js`（挂在 `AH.lib.<主题>` 上；文件名以下划线开头，构建时排在组件文件之前），CSS 放在 `extra/lib_<主题>.css`。例如 `aihtml_lib_rrule`（calendar 与 scheduler 共用的重复规则展开）、`aihtml_lib_table`（treegrid 与 datatable 共用的列模型）、`_lib_chart.js`（六种图表共用的 echarts 加载、主题和缩放）。几行的小函数直接复制，不必抽出。组件之间也可以直接复用：例如 repeat_button 的 `render/1` 返回一个 `#ah_button{}`，由 `aihtml_button` 渲染成按钮。
+- **共享代码**：几个组件共用的代码放在内部模块 `aihtml_lib_<主题>.erl`，TypeScript 放在 `components/_lib_<主题>.ts`（具名导出，组件 import），CSS 放在 `extra/lib_<主题>.css`。例如 `aihtml_lib_rrule`（calendar 与 scheduler 共用的重复规则展开）、`aihtml_lib_table`（treegrid 与 datatable 共用的列模型）、`_lib_chart.ts`（六种图表共用的 echarts 加载、主题和缩放）。几行的小函数直接复制，不必抽出。组件之间也可以直接复用：例如 repeat_button 的 `render/1` 返回一个 `#ah_button{}`，由 `aihtml_button` 渲染成按钮。
 - **多个组件共用的模板**在它们的 lib 模块里声明；只有一个组件用的模板跟着组件走。
 - **演示共用的数据**放在 `apps/aihtml_example/src/aihtml_example_fixture_<主题>.erl`。
 - **生成的文件不要手改**：`aihtml.erl` 的组件部分、`aihtml.hrl` 的导入、`aihtml_records.hrl` 由 `scripts/gen-facade.escript` 生成；`priv/css/extra/index.css` 由 `scripts/gen-css-index.mjs` 生成。
 - **sigil 样式已统一移植**到 `apps/aihtml/priv/css/sigil/components/*.css`，由 `scripts/port-sigil.mjs` 导入，`sigil-` 已改为 `ah-`。组件应输出与 sigil 相同的 DOM 结构和类名，这样这些样式能直接生效；修正写在组件自己的 `extra/<name>.css` 里。
-- **共享文件由集成者修改**：`aihtml_catalog.erl`（新组件要加进 `?COMPONENTS`）、`aihtml_html.erl`、`aihtml_element.erl`、`core.js`、`aihtml.css`、`components.css`。
+- **共享文件由集成者修改**：`aihtml_catalog.erl`（新组件要加进 `?COMPONENTS`）、`aihtml_html.erl`、`aihtml_element.erl`、`core.ts` 和 `runtime/`、`aihtml.css`、`components.css`。
 - **组件模块不要 include `aihtml.hrl`**：它会导入所有组件函数，与模块里的同名定义冲突。标签请用 `aihtml_html:el/4` 和 `aihtml_html:void/3`；record 只 include 自己的头文件。
 
 ## Erlang 约定
@@ -111,38 +111,47 @@ apps/aihtml_example/src/aihtml_example_demo_button.erl  演示
 3. **值改变**时，行为同步更新 `data-ah-value` 和隐藏 input，并在根元素上触发 `change` 事件；拖动等连续变化中触发 `input`。这样 `on(change, {M, A, Args})` 写在根元素的 Attrs 上就能收到事件，`Event.value` 取的就是 `data-ah-value`。
 4. **原生控件**（checkbox、radio、input）直接把 Attrs 写到原生 `<input>` 上，保持原生事件。
 
-## JS 约定
+## TypeScript 约定
 
-文件结构：
+每个组件一个 TypeScript 模块 `components/<name>.ts`，由 Vite 打包成一个按需加载的代码块（见 [06-bundling.md](06-bundling.md)）。行为是原生 Stimulus 控制器，写成类，不用 jQuery。样板是 `components/rating_group.ts` 和它的测试 `test/js/rating_group.test.js`：
 
-每个组件一个 ES 模块 `components/<name>.js`，由 Vite 打包成一个按需加载的代码块（见 [06-bundling.md](06-bundling.md)）。行为是原生 Stimulus 控制器，不用 jQuery；样板是 `components/rating_group.js` 和它的测试 `test/js/rating_group.test.js`：
-
-```js
-import AH from "../core.js";
-import "./_lib_values.js";                // 用到的共享代码
+```ts
+import AH from "../core.ts";              // 只能这样写：构建时改成 window.AH（06-bundling.md）
+import type { FloatHandle } from "../core.ts";   // 类型随便引
+import { split, join } from "./_lib_values.ts";  // 共享代码：具名导出
 import "virtual:ah-tpl/slider_marks";     // 用到的共享模板（注册到 AH.tpl）
 
-AH.register("slider", class extends AH.Controller {
-  setup() {                               // 元素进入页面时运行一次
+/** ah:slide 的 detail（事件数据的类型写成接口并导出） */
+export interface SlideEvent { value: number; }
+
+class SliderController extends AH.Controller {
+  #popup: FloatHandle | null = null;      // 状态是带类型的私有字段
+  override setup(): void {                // 元素进入页面时运行一次
     this.delegate("click", ".ah-slider-thumb", (e, thumb) => { ... });
     this.listen(document, "keydown", (e) => { ... });   // 卸载时自动解绑
   }
-  teardown() { /* 元素真正离开页面时运行一次 */ }
-  setValue(v) { ...; }                    // 公开方法：服务端 call/4 与 AH.invoke 可调用
-  getValue() { ... }
-  commit(v) { ...; this.fire("change"); } // 原生事件，详情放在 e.detail
-});
-AH.fn("toast", (opts) => { ... });        // 页面级函数
+  override teardown(): void { /* 元素真正离开页面时运行一次 */ }
+  setValue(v: number): void { ... }       // 公开方法：服务端 call/4 与 AH.invoke 可调用
+  getValue(): number { ... }
+  private commit(v: number): void { ...; this.fire<SlideEvent>("ah:slide", { value: v }); }
+}
+AH.register("slider", SliderController);  // 按目录检查：目录里列出的方法缺一个，tsc 就报错
+AH.fn("toast", (opts: ToastOptions) => { ... });   // 页面级函数
 ```
 
+- **类型检查**：`npm run typecheck`（`tsconfig.json`，`strict`）。Vite 编译时只去掉类型、不检查，所以类型检查单独跑；`scripts/test-js.mjs` 会先跑它。不写 `any`、`@ts-ignore`、`@ts-expect-error`；不确定的数据用 `unknown` 再收窄。从 `data-*` 属性、JSON 读来的结构写成接口，解析时做检查。
+- **面向对象**：每个元素的状态是控制器的私有字段（`#x` 或 `private`），内部逻辑是私有方法，公开方法就是服务端能调用的那些。几个组件共用、有状态的东西（弹层、拖放会话、停靠布局）写成 lib 里的类。纯计算（日期、布局、查询、格式化）写成带类型的导出函数，不必硬塞进类。
+- **服务端调用的方法**：`types/catalog.d.ts` 由 `escript scripts/gen-ts-catalog.escript` 从 `aihtml_catalog` 生成，列出每个行为的方法名；`AH.register` 按它检查控制器类。目录里的 `methods` 改了就重新生成（`typecheck` 会检查它是不是最新的）。
+- **共享代码**：`_lib_<topic>.ts` 用具名导出，组件直接 import。页面脚本和测试要用的（`values`、`chart`）另外挂在 `AH.lib` 上。
 - **挂载**：根元素写 `data-ah="<behavior>"`，它就是 Stimulus 控制器。页面上出现这个组件时加载代码块并连接控制器。元素被移动（形变替换、`preserve()`）时控制器保留，`setup`/`teardown` 不会重复运行。
 - **`AH.Controller` 提供的工具**：`this.listen(target, type, handler)`（卸载时自动解绑，document、window 上的也一样）；`this.delegate(type, selector, handler)`（委托监听，mouseenter/mouseleave 要用 mouseover/mouseout 代替）；`this.fire(type, detail)`（冒泡、可取消的原生 CustomEvent）；`this.signal`（给 fetch 用的 AbortSignal）。每个元素的状态放在控制器实例上；几个组件共享、按元素保存的状态放在 lib 里的 `WeakMap`。
 - **事件**：组件之间、组件和服务端 action 之间都用原生事件，数据放在 `e.detail`；在文件头注释里写明每个事件的 detail 结构。
-- **按需加载的条件**：构建时扫描组件文件得到。`AH.register("名字")`、`AH.fn("名字")` 自动识别；通过辅助函数注册、名字是算出来的行为，在文件里写 `// ah-define: 名字`；不靠 `data-ah` 根元素、而是作用于某个属性的文件（tooltip、浮层开关、表单校验），写 `// ah-load: 选择器`。`aihtml_tests` 会检查目录里的每个行为名都能在 JS 源码里找到。
+- **按需加载的条件**：构建时扫描 `components/*.ts` 得到。`AH.register("名字")`、`AH.fn("名字")` 自动识别；通过辅助函数注册、名字是算出来的行为，在文件里写 `// ah-define: 名字`；不靠 `data-ah` 根元素、而是作用于某个属性的文件（tooltip、浮层开关、表单校验），写 `// ah-load: 选择器`。`aihtml_tests` 会检查目录里的每个行为名都能在 JS 源码里找到。
 - **服务端驱动**：控制器的公开方法可由服务端 `aihtml_action:call(Ctx, Target, Method, Args)` 调用，客户端用 `AH.invoke(el, method, ...)`；组件还没加载或还没连接时，调用会排队。页面级函数用 `AH.fn`，服务端写 `call(Ctx, global, Name, Args)`。
 - **浏览器测试**：用原生事件（`T.fire(el, type, init)`、`T.key(el, "Enter")`），插入 fixture 后 `await T.ready(fx)`；检查卸载结果前要等 `setTimeout 0`（卸载推迟一个微任务执行）。每个组件至少测试主要交互、取值与 `change`、一个服务端可调用的方法，以及移除后重新插入仍能工作。
 - **还原 sigil 的交互**：键盘操作、ARIA、焦点管理、点击外部关闭等，对照 sigil 的 cljs 实现。
-- **不引入新的依赖**，只用浏览器的原生 API。
+- **不引入新的依赖**，只用浏览器的原生 API（第三方库见 README「第三方库」）。
+- **浏览器测试仍是 JS**（`test/js/*.test.js`）：只通过 DOM、事件和 `AH.invoke` 测行为，不依赖源码里的类型。
 
 ## 验证
 
@@ -165,7 +174,7 @@ erlc -o $OUT/ebin -pa $OUT/ebin $PA -I $OUT/facade $FLAGS apps/aihtml_example/sr
 erl -noshell -pa $OUT/ebin -pz _build/default/lib/*/ebin \
     -eval 'case eunit:test(aihtml_'$N'_tests) of ok -> halt(0); _ -> halt(1) end.'
 
-node --check apps/aihtml/assets/js/components/$N.js
+npm run -s typecheck
 node scripts/test-js.mjs "$N:"          # 过滤条件匹配测试名
 
 # 预览：渲染演示，构建 CSS/JS，截图并收集控制台错误

@@ -7,7 +7,7 @@
 %%% being edited); `name' goes to a hidden input. The server renders the
 %%% complete first state (the number in its radix), so nothing needs to be
 %%% laid out in the browser before it is shown. The behaviour lives in
-%%% assets/js/components/formatted_input.js.
+%%% assets/js/components/formatted_input.ts.
 %%%
 %%% formatted_input/3 builds an #ah_formatted_input{}
 %%% (include/aihtml_formatted_input.hrl) and render/1 turns it into HTML,

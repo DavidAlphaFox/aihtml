@@ -2,7 +2,8 @@
 // -> apps/aihtml/priv/static/js, ES modules with content hashes, one chunk
 // per component, the optional third-party libraries (AH.vendor) as lazily
 // loaded vendor-<name> chunks, THIRD-PARTY-LICENSES.txt, and
-// .vite/manifest.json for aihtml_page. `npm run js`.
+// .vite/manifest.json for aihtml_page. No chunk imports the entry, so a
+// change renames only the chunks it touches (ahRuntimeGlobal). `npm run js`.
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -31,7 +32,7 @@ function ahTemplates() {
       const name = s.slice(prefix.length + 1);
       const file = join(templates, name + ".mustache");
       this.addWatchFile(file);
-      return `import AH from ${JSON.stringify(join(lib, "assets/js/core.js"))};\n` +
+      return `const AH = window.AH;\n` +
         `import { R } from "${runtime}";\n` +
         `AH.tpl = AH.tpl || {};\n` +
         `AH.tpl[${JSON.stringify(name)}] = ${compile(templateSource(readFileSync(file, "utf8")), name + ".mustache")};\n`;
@@ -39,10 +40,39 @@ function ahTemplates() {
   };
 }
 
+// Component code reaches the runtime through window.AH (main.ts sets it
+// before it loads any component) instead of importing core.ts: the source
+// says `import AH from "../core.ts";` (for the types), the bundle
+// `const AH = window.AH;`. A chunk
+// importing the entry names the entry's hash, and the entry names every
+// chunk (the registry's loaders): so one changed component, or any change
+// to the runtime, renamed every chunk. Now a change renames its own chunk
+// and the entry.
+function ahRuntimeGlobal() {
+  const dir = components + "/";
+  return {
+    name: "ah-runtime-global",
+    enforce: "pre",
+    transform(code, id) {
+      if (!id.startsWith(dir)) { return null; }
+      const out = code.replace(/^import AH from "\.\.\/core\.ts";$/m, "const AH = window.AH;");
+      // type-only imports and augmentations of AHApi (erased by the
+      // compiler) are fine
+      const rest = out.replace(/^import type [^;]*;$/gm, "").replace(/^declare module "\.\.\/core\.ts"/gm, "");
+      if (/["']\.\.\/core(\.[jt]s)?["']/.test(rest)) {
+        this.error(`${id}: import the runtime only as \`import AH from "../core.ts";\` ` +
+                   "(and `import type` for its types)");
+      }
+      return out === code ? null : { code: out, map: null };
+    },
+  };
+}
+
 // virtual:ah-registry -> which chunk to load for what, read from the
-// component files: AH.register("<name>", Class) / AH.define("<name>") behaviours (or "// ah-define: <name>"
-// for a behaviour registered through a helper), AH.fn("<name>") page
-// functions (deduplicated), and "// ah-load: <selector>" attribute triggers.
+// component files (components/*.ts): AH.register("<name>", Class)
+// behaviours (or "// ah-define: <name>" for a behaviour registered through
+// a helper), AH.fn("<name>") page functions (deduplicated), and
+// "// ah-load: <selector>" attribute triggers.
 function ahRegistry() {
   const id = "virtual:ah-registry", rid = "\0" + id;
   return {
@@ -50,20 +80,20 @@ function ahRegistry() {
     resolveId: (s) => (s === id ? rid : null),
     load(s) {
       if (s !== rid) { return null; }
-      const files = readdirSync(components).filter((f) => f.endsWith(".js")).sort();
+      const files = readdirSync(components).filter((f) => f.endsWith(".ts")).sort();
       const out = { behaviours: [], fns: [], triggers: [] };
       const loaders = [];
       files.forEach((f, i) => {
         const src = readFileSync(join(components, f), "utf8");
         this.addWatchFile(join(components, f));
         const uses = [];
-        for (const m of src.matchAll(/AH\.(?:define|register)\(\s*"([a-z][a-z0-9-]*)"/g)) { uses.push(1); out.behaviours.push([m[1], i]); }
+        for (const m of src.matchAll(/AH\.register\(\s*"([a-z][a-z0-9-]*)"/g)) { uses.push(1); out.behaviours.push([m[1], i]); }
         for (const m of src.matchAll(/AH\.fn\(\s*"([A-Za-z][A-Za-z0-9]*)"/g)) {
           uses.push(1);
           if (!out.fns.some(([n]) => n === m[1])) { out.fns.push([m[1], i]); }
         }
-        // behaviours a file registers through a helper (AH.define(name, ...)
-        // with a computed name) are declared with "// ah-define: <name>"
+        // behaviours a file registers through a helper (a computed name)
+        // are declared with "// ah-define: <name>"
         for (const m of src.matchAll(/^\/\/ ah-define: ([a-z][a-z0-9-]*)$/gm)) { uses.push(1); out.behaviours.push([m[1], i]); }
         for (const m of src.matchAll(/^\/\/ ah-load: (.+)$/gm)) { uses.push(1); out.triggers.push([m[1].trim(), i]); }
         loaders.push(uses.length ? `() => import(${JSON.stringify(join(components, f))})` : "null");
@@ -157,24 +187,35 @@ export default defineConfig(({ mode }) => ({
   base: "./",
   publicDir: false,
   logLevel: "warn",
-  plugins: [ahTemplates(), ahRegistry(), thirdPartyLicences()],
+  plugins: [ahRuntimeGlobal(), ahTemplates(), ahRegistry(), thirdPartyLicences()],
   build: {
     outDir: process.env.AH_JS_OUT || join(lib, "priv/static/js"),
     emptyOutDir: true,
     manifest: true,
     assetsDir: "",
-    target: "es2020",
+    // native class fields and #private members (the controllers use them)
+    target: "es2022",
     sourcemap: mode === "development",
     minify: mode !== "development",
     // the echarts chunk is ~1.1 MB (the chart component takes any echarts
     // option, so every series type is in); it loads only on chart pages
     chunkSizeWarningLimit: 1200,
     rollupOptions: {
-      input: join(lib, "assets/js/main.js"),
+      input: join(lib, "assets/js/main.ts"),
       output: {
         chunkFileNames,
         // licences are collected into THIRD-PARTY-LICENSES.txt instead
         comments: { legal: false },
+        // small shared modules in chunks of their own, so the chunks using
+        // them do not import the entry (see ahRuntimeGlobal): Vite's helper
+        // that preloads a dynamic import's dependencies, and the runtime of
+        // the compiled templates
+        codeSplitting: {
+          groups: [
+            { name: "preload", test: /vite\/preload-helper/ },
+            { name: "tpl_runtime", test: /ah-tpl-runtime/ },
+          ],
+        },
       },
     },
   },

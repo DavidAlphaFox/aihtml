@@ -78,7 +78,7 @@
 
 -import(aihtml_html, [el/4, void/3]).
 
-%% Applies the theme the viewer saved (see core.js, AH.theme) before the
+%% Applies the theme the viewer saved (assets/js/runtime/theme.ts) before the
 %% stylesheet paints, so a reload never flashes the server default.
 -define(BOOT,
         <<"(function(){try{var t=JSON.parse(localStorage.getItem('aihtml.theme')||'{}'),"

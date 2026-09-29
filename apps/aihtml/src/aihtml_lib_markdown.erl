@@ -1968,7 +1968,7 @@ merge_text([]) -> [].
 %%%===================================================================
 
 %% A bullet list whose direct items all start with "[ ]" or "[x]" becomes
-%% a task list (sigil's install-task-list-rule!, as in markdown_editor.js).
+%% a task list (sigil's install-task-list-rule!, as in markdown_editor.ts).
 task_lists(T) -> task_lists(T, 1).
 
 task_lists(T, I) when I > tuple_size(T) -> T;

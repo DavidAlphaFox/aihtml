@@ -1,0 +1,23 @@
+{
+  // Type checking of the browser runtime (apps/aihtml/assets/js, see
+  // designs/06-bundling.md). Vite compiles the TypeScript itself (it only
+  // strips the types); `npm run typecheck` runs tsc to check them.
+  "compilerOptions": {
+    "target": "es2022",
+    "lib": ["es2022", "dom", "dom.iterable"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "strict": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "skipLibCheck": true,
+    "types": []
+  },
+  "include": ["apps/aihtml/assets/js/**/*.ts"]
+}

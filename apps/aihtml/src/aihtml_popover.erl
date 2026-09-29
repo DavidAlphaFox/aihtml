@@ -12,7 +12,7 @@
 %%%
 %%% Literal (binary) classes in `Css' go on the popover. A record's
 %%% postback fires on `ah:close'. Behaviour:
-%%% assets/js/components/popover.js. popover/3 builds an #ah_popover{}
+%%% assets/js/components/popover.ts. popover/3 builds an #ah_popover{}
 %%% (include/aihtml_popover.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end

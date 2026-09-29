@@ -8,7 +8,7 @@
 %%% validate/1 lives here because its messages show in field/4 rows (and
 %%% form_layout/4 rows, which share the markup, see aihtml_lib_form); the
 %%% aihtml facade re-exports it. The validator behaviour is in
-%%% assets/js/components/field.js.
+%%% assets/js/components/field.ts.
 %%%
 %%% == validate/1 rules ==
 %%%

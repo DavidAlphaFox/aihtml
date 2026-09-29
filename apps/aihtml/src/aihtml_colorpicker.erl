@@ -13,7 +13,7 @@
 %%%
 %%% By default it renders a trigger that opens the sigil panel in a popup;
 %%% the `inline' flag renders the panel alone, as sigil does. The
-%%% behaviour is `colorpicker' (assets/js/components/colorpicker.js).
+%%% behaviour is `colorpicker' (assets/js/components/colorpicker.ts).
 %%%
 %%% colorpicker/3 builds an #ah_colorpicker{} (include/aihtml_colorpicker.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record

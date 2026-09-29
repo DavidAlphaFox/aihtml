@@ -7,7 +7,7 @@
 %% backslash inside a value is escaped with a backslash (`\,' and `\\'),
 %% so values without them are written as before (`a,b,c').
 %%
-%% The browser side is `AH.lib.values' (components/_lib_values.js), with
+%% The browser side is `AH.lib.values' (components/_lib_values.ts), with
 %% the same rules.
 -module(aihtml_value).
 

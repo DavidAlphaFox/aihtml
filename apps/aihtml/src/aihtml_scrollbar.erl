@@ -11,7 +11,7 @@
 %%% A standalone bar keeps its value in `data-ah-value' on the root, a
 %%% `name' renders a hidden input, and `change' fires on the root when the
 %%% user changes the value (designs/04-components.md). The behaviour is in
-%%% assets/js/components/scrollbar.js.
+%%% assets/js/components/scrollbar.ts.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_scrollbar).

@@ -8,7 +8,7 @@
 %%% defined in include/aihtml_responsive_panel.hrl) and render/1 turns it
 %%% into HTML, so pages may also write the record directly
 %%% (designs/05-records.md). The behaviour is in
-%%% assets/js/components/responsive_panel.js.
+%%% assets/js/components/responsive_panel.ts.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_responsive_panel).

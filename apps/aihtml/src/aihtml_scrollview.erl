@@ -11,7 +11,7 @@
 %%% The value is kept in `data-ah-value' on the root, a `name' renders a
 %%% hidden input, and `change' fires on the root when the user changes
 %%% the page (designs/04-components.md). The behaviour is in
-%%% assets/js/components/scrollview.js.
+%%% assets/js/components/scrollview.ts.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_scrollview).

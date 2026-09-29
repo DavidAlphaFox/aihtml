@@ -1134,7 +1134,7 @@ pager_view(Page0, PageSize, Total, #{sizes := Sizes, labels := L} = Opts) ->
 
 %% The grid's `href' with the view filled in but `{page}': `{size}', `{sort}'
 %% (`field:dir,...') and `{search}', URL-encoded as encodeURIComponent
-%% does (datagrid.js linkTemplate/1 builds the same).
+%% does (datagrid.ts linkTemplate/1 builds the same).
 link_template(#{href := T}, PageSize, Sort, Search) ->
     SortText = lists:join(<<",">>, [[uri(F), <<":">>, atom_to_binary(D)] || {F, D} <- Sort]),
     lists:foldl(fun({K, V}, Acc) -> binary:replace(Acc, K, iolist_to_binary(V), [global]) end, T,

@@ -3,7 +3,7 @@
 %%% search field over grouped commands with keyboard navigation, inline
 %%% or in a centred ⌘K overlay. DOM and class names are the ones sigil
 %%% renders, so the styles in priv/css/sigil apply unchanged; the
-%%% behaviour is in assets/js/components/command.js.
+%%% behaviour is in assets/js/components/command.ts.
 %%%
 %%%   command(Items, Css, Attrs)               a command palette (⌘K)
 %%%   set_command_items(Ctx, Target, Items)    (in an action) replace a

@@ -1,12 +1,14 @@
 {
   "name": "aihtml-assets",
   "private": true,
-  "description": "Asset build for aihtml: the Vite-bundled browser runtime, Tailwind CSS v4 and vendored jQuery",
+  "description": "Asset build for aihtml: the Vite-bundled TypeScript browser runtime, Tailwind CSS v4 and vendored jQuery",
   "license": "Apache-2.0",
   "scripts": {
     "build": "npm run vendor && npm run js && npm run css",
     "js": "vite build",
     "js:dev": "vite build --mode development --watch",
+    "typecheck": "escript scripts/gen-ts-catalog.escript --check && tsc -p .",
+    "types:catalog": "escript scripts/gen-ts-catalog.escript",
     "test": "node scripts/test-js.mjs",
     "vendor": "node scripts/vendor.mjs",
     "css": "npm run css:index && npm run css:lib && npm run css:example",
@@ -37,6 +39,7 @@
     "prosemirror-transform": "^1.12.2",
     "prosemirror-view": "^1.42.6",
     "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.1",
     "xlsx": "^0.18.5"
   }

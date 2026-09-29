@@ -2,7 +2,7 @@
 %%% @doc The activity bar, ported from sigil (layout/activity_bar): a VS
 %%% Code-style vertical rail of icon buttons. DOM and class names are the
 %%% ones sigil renders, so the styles in priv/css/sigil apply unchanged;
-%%% the behaviour is in assets/js/components/activity_bar.js.
+%%% the behaviour is in assets/js/components/activity_bar.ts.
 %%%
 %%% The value (the active item) is in `data-ah-value' on the root, a
 %%% `name' renders a hidden input, and user changes fire `change' on the

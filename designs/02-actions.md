@@ -74,7 +74,7 @@ AG-UI 的做法是每次交互一个请求，状态由数据层负责。本模�
 
 ## 借鉴 htmx 的补充能力
 
-这些能力借鉴 htmx 的设计，但由 `core.js` 自行实现，不依赖 htmx。
+这些能力借鉴 htmx 的设计，但由运行时（`runtime/swap.ts`、`actions.ts`、`requests.ts`）自行实现，不依赖 htmx。
 
 - **形变替换与焦点保留**：替换方式增加 `morph` 和 `morph_inner`；所有替换方式都会按 id 恢复焦点和选区。
 - **元素保留**：带 `data-ah-preserve` 且有 id 的元素在替换时移动而不重建。浏览器支持时用 `moveBefore`，不支持时用 `insertBefore`。形变替换会跳过这类元素。

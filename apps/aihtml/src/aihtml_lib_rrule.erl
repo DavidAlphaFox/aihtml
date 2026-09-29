@@ -5,7 +5,7 @@
 %%% An iCalendar RRULE subset: FREQ (daily, weekly, monthly, yearly),
 %%% INTERVAL, COUNT, UNTIL, BYDAY, BYMONTHDAY, BYMONTH; other parts are
 %%% ignored. Times are minutes since gregorian day 0 (aihtml_lib_date).
-%%% The browser twin is AH.lib.rrule (assets/js/components/_lib_rrule.js).
+%%% The browser twin is AH.lib.rrule (assets/js/components/_lib_rrule.ts).
 %%%
 %%% A malformed rule raises `error({aihtml, {bad_rrule, Part}})'.
 %%% @end

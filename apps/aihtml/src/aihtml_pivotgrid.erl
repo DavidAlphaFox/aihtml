@@ -21,7 +21,7 @@
 %%%
 %%% By default (local mode) the rows are also written into the root as a
 %%% JSON data island (`<script type="application/json" class="ah-pg-data">')
-%%% and the `pivotgrid' behaviour (assets/js/components/pivotgrid.js)
+%%% and the `pivotgrid' behaviour (assets/js/components/pivotgrid.ts)
 %%% re-aggregates in the browser when the user expands or collapses a
 %%% member, sorts, or moves fields between the areas of the field list.
 %%% The browser runs the same algorithm and renders the same shared
@@ -525,7 +525,7 @@ cell(L) when is_list(L) ->
 cell(Other) -> error({aihtml, {bad_pivot_value, Other}}).
 
 %%%===================================================================
-%%% Engine: the same steps as pgEngine in pivotgrid.js
+%%% Engine: the same steps as pgEngine in pivotgrid.ts
 %%%===================================================================
 
 %% The measures shown: the layout's, or a count of the records when
@@ -674,7 +674,7 @@ views(M, Rows) ->
     {Grid, fields_view(M1), M1}.
 
 %%%===================================================================
-%%% Views (the data of the shared templates; pivotgrid.js builds the same)
+%%% Views (the data of the shared templates; pivotgrid.ts builds the same)
 %%%===================================================================
 
 grid_view(M, Vs, Accs, RowList, ColList, CKids, CExp, CSort) ->
@@ -949,7 +949,7 @@ raw(V) ->
     end.
 
 %%%===================================================================
-%%% Number format (formatValue in pivotgrid.js)
+%%% Number format (formatValue in pivotgrid.ts)
 %%%===================================================================
 
 format_value(null, _, _) -> <<>>;

@@ -25,7 +25,7 @@
 %%% Windows the JSON does not mention (added to the page later) stay in
 %%% their own panel.
 %%%
-%%% Behaviour: assets/js/components/docking.js. docking/3 builds an
+%%% Behaviour: assets/js/components/docking.ts. docking/3 builds an
 %%% #ah_docking{} (include/aihtml_docking.hrl) and render/1 turns it into
 %%% HTML.
 %%% @end

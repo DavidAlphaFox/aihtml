@@ -18,7 +18,7 @@
 %%%
 %%% ribbon/4 builds an #ah_ribbon{} (include/aihtml_ribbon.hrl) and
 %%% render/1 turns it into HTML (designs/05-records.md). Behaviour:
-%%% assets/js/components/ribbon.js.
+%%% assets/js/components/ribbon.ts.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_ribbon).

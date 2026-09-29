@@ -467,7 +467,7 @@ pager_view(Page, PageSize, Total, Sizes, Texts) ->
 %% @doc Like pager_view/5; with `Href' (the `href' template, its {sort}
 %% and {search} already filled in, see link_base/3) prev, next and the
 %% other pages are links, {page} and {size} filled in per link.
-%% datatable.js builds the same (pagerView).
+%% datatable.ts builds the same (pagerView).
 -spec pager_view(pos_integer(), pos_integer(), non_neg_integer(), [pos_integer()],
                  #{atom() => unicode:chardata()}, undefined | binary()) -> map().
 pager_view(Page, PageSize, Total, Sizes, Texts, Href) ->

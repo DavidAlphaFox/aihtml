@@ -8,7 +8,7 @@
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
 %%% `data-ah-value' and fires `change'; `name' goes to a hidden input. The
-%%% behaviour is `calendar' (assets/js/components/calendar.js).
+%%% behaviour is `calendar' (assets/js/components/calendar.ts).
 %%%
 %%% The value is the date the view shows. The server renders the toolbar
 %%% and the first view; navigating (prev, next, today, the view buttons)
@@ -220,7 +220,7 @@ nav_url(#{href := Href, cur := Cur, today := Today, view := View, agenda := Agen
     B = binary:replace(text(Href), <<"{date}">>, ?D:iso_date(D), [global]),
     binary:replace(B, <<"{view}">>, atom_to_binary(V), [global]).
 
-%% The day prev (-1) or next (1) shows (the twin of calStep in calendar.js).
+%% The day prev (-1) or next (1) shows (the twin of calStep in calendar.ts).
 step(month, D, Dir, _) -> ?D:add_months(D, Dir);
 step(week, D, Dir, _) -> D + 7 * Dir;
 step(day, D, Dir, _) -> D + Dir;
@@ -348,7 +348,7 @@ in_range(Insts, From, To) ->
     [I || #{s := S, e := E} = I <- Insts, S < To, E > From].
 
 %%%-------------------------------------------------------------------
-%%% Views (the Erlang twin of calView in calendar.js)
+%%% Views (the Erlang twin of calView in calendar.ts)
 %%%-------------------------------------------------------------------
 
 %% The visible range [RS, RE) in days and the title of a view.

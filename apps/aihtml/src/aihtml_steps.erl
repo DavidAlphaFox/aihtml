@@ -2,7 +2,7 @@
 %%% @doc A step indicator (sigil's steps), optionally with panels and prev /
 %%% next buttons. The value, the current index, is in `data-ah-value' on
 %%% the root and a user change fires `change' there. The indicators use
-%%% the shared template steps_indicator, which steps.js re-renders.
+%%% the shared template steps_indicator, which steps.ts re-renders.
 %%%
 %%% steps/4 builds an element record (#ah_steps{}, defined in
 %%% include/aihtml_steps.hrl) and render/1 turns it into HTML, so pages

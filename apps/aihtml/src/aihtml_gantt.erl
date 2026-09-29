@@ -7,7 +7,7 @@
 %%%
 %%% Everything is rendered here, on the server: the rows, bars, summary
 %%% bars and the dependency lines (SVG paths). The behaviour
-%%% (assets/js/components/gantt.js) handles scrolling, keyboard, drag and
+%%% (assets/js/components/gantt.ts) handles scrolling, keyboard, drag and
 %%% drop and collapsing rows; after a local change it moves the existing
 %%% elements and recomputes the lines, but never builds HTML.
 %%%

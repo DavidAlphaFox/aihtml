@@ -9,7 +9,7 @@
 %%% `data-ah-value' (the path joined with commas by aihtml_value, a comma
 %%% inside a value escaped as `\,') and fires `change';
 %%% `name' goes to a hidden input. The behaviour lives in
-%%% assets/js/components/cascader.js.
+%%% assets/js/components/cascader.ts.
 %%%
 %%% Everything is rendered here: the menu columns (all of them, the
 %%% behaviour shows the ones on the open path) and the search panel. The

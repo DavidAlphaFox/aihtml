@@ -6,7 +6,7 @@
 %%%   markdown_editor(Value, Css, Attrs)      Value is the Markdown text
 %%%
 %%% The editor is ProseMirror with markdown-it, imported by the
-%%% `markdown-editor' behaviour (assets/js/components/markdown_editor.js)
+%%% `markdown-editor' behaviour (assets/js/components/markdown_editor.ts)
 %%% and so part of its lazily loaded chunk. Typing Markdown formats in place
 %%% (`# ' a heading, `**bold**', `- ' a list, `> ' a quote, ``` a code
 %%% block, `[text](url)' a link ...); `/' on an empty line opens the block

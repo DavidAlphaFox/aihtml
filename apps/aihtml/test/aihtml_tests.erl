@@ -188,17 +188,16 @@ behaviour_names_test() ->
     ?assertEqual([], Bad).
 
 %% every behaviour of the catalog is defined in the browser runtime, so the
-%% bundle's lazy loader can find it: AH.register/define("<name>") in a component
-%% file (or core.js), or "// ah-define: <name>" for a helper-registered one
+%% bundle's lazy loader can find it: AH.register("<name>") in a component
+%% file (or core.ts), or "// ah-define: <name>" for a helper-registered one
 behaviours_are_defined_in_js_test() ->
     %% the sources: priv and src are symlinked into _build, assets is not
     Js = filename:join([code:lib_dir(aihtml), "src", "..", "assets", "js"]),
     Src = iolist_to_binary([element(2, file:read_file(F))
-                            || F <- [filename:join(Js, "core.js") |
-                                     filelib:wildcard(filename:join(Js, "components/*.js"))]]),
+                            || F <- [filename:join(Js, "core.ts") |
+                                     filelib:wildcard(filename:join(Js, "components/*.ts"))]]),
     Missing = [B || #{behavior := B} <- aihtml_catalog:prefabs(), B =/= none,
-                    binary:match(Src, [<<"define(\"", B/binary, "\"">>,
-                                       <<"register(\"", B/binary, "\"">>,
+                    binary:match(Src, [<<"register(\"", B/binary, "\"">>,
                                        <<"// ah-define: ", B/binary, "\n">>]) =:= nomatch],
     ?assertEqual([], Missing).
 

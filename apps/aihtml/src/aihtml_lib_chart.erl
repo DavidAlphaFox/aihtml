@@ -5,7 +5,7 @@
 %%% "Readable data" below), sizes, the common option parts of the
 %%% convenience charts (title, legend, tooltip, grid, palette), series
 %%% normalisation, the catalog docs and methods, and small checks. The
-%%% browser side is assets/js/components/_lib_chart.js (the `chart'
+%%% browser side is assets/js/components/_lib_chart.ts (the `chart'
 %%% behaviour every one of them mounts).
 %%% @end
 %%%-------------------------------------------------------------------
@@ -144,7 +144,7 @@ check_option(O) ->
 %% just the caption, in a paragraph; without a caption either, nothing
 %% (`{[], undefined}'). `Id' is the root's id plus "-data" (or a
 %% generated one), for the root's aria-describedby. The browser applies
-%% the same rules (dataText in _lib_chart.js) when data changes there.
+%% the same rules (dataText in _lib_chart.ts) when data changes there.
 -spec data_text(aihtml_element:element(), option()) -> {html(), binary() | undefined}.
 data_text(R, Option) ->
     #{id := RootId, attrs := Attrs} = ?E:base(R),

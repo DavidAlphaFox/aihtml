@@ -2,7 +2,7 @@
 %%% @doc Application side navigation, ported from sigil's sidenav and
 %%% nav-tree (DOM and class names are sigil's, so the ported styles under
 %%% priv/css/sigil/components apply unchanged). The behaviour is in
-%%% assets/js/components/sidenav.js, aihtml's additions in
+%%% assets/js/components/sidenav.ts, aihtml's additions in
 %%% priv/css/extra/sidenav.css.
 %%%
 %%% Items take the shape of `aihtml_lib_nav:item()'. Selecting an item

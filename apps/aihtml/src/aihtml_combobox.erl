@@ -8,7 +8,7 @@
 %%% A value-bearing component: `Attrs' go to the root, which carries
 %%% `data-ah-value' and fires `change'; `name' goes to a hidden input. The
 %%% popup is rendered inside the root and driven by the `combobox'
-%%% behaviour (assets/js/components/combobox.js).
+%%% behaviour (assets/js/components/combobox.ts).
 %%%
 %%% == Server-side search ==
 %%%

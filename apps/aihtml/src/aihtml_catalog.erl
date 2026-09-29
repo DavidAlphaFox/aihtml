@@ -32,7 +32,7 @@
 %%   classes   #{Modifier => [binary()]}: classes to write instead of
 %%             <root>-<modifier> (for sigil names that do not follow it)
 %%   options   [atom()]: keys taken out of Attrs as component options
-%%   behavior  the data-ah value aihtml.js attaches to, or none
+%%   behavior  the data-ah value the browser runtime attaches to, or none
 %%   events    DOM events the component fires (for on/2 and docs)
 %%   doc       one or two sentences
 %%   option_docs  #{Option | Flag => binary()}: what each option / flag does

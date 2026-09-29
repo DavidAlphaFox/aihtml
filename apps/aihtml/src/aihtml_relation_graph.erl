@@ -4,7 +4,7 @@
 %%% series, force, circular, fixed or tree layout) in a panel with a
 %%% toolbar, a detail card and loading / error / empty states. The graph
 %%% is drawn by a nested chart (see aihtml_chart and aihtml_lib_chart);
-%%% the panel's behaviour is assets/js/components/relation_graph.js.
+%%% the panel's behaviour is assets/js/components/relation_graph.ts.
 %%% Beside the canvas (which is aria-hidden) a visually hidden table lists
 %%% the nodes, their category and the nodes they link to, for screen
 %%% readers and search engines (aihtml_lib_chart:data_text/2); the root

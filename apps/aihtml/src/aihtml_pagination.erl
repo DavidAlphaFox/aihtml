@@ -2,7 +2,7 @@
 %%% @doc Page navigation (sigil's pagination). The value, the current page, is
 %%% in `data-ah-value' on the root and a user change fires `change' there.
 %%% The page list is rendered with the shared template pagination_items,
-%%% which the behaviour (pagination.js) re-renders in the browser.
+%%% which the behaviour (pagination.ts) re-renders in the browser.
 %%%
 %%%
 %%% == Links ==
@@ -77,7 +77,7 @@ render(#ah_pagination{total = Total, value = Page, href = Href} = R) ->
               S -> 2 * S + 5
           end,
     L = maps:merge(labels(), R#ah_pagination.labels),
-    %% What the page list depends on besides the state; pagination.js
+    %% What the page list depends on besides the state; pagination.ts
     %% reads it to re-render the list with the same template.
     Cfg = #{labels => maps:map(fun(_, V) -> bin(V) end,
                               maps:with([prev, next, first, last, page_info], L)),
@@ -138,7 +138,7 @@ labels() ->
 
 %% @doc The view data of templates/pagination_items.mustache: the entries
 %% of the page list (first/prev navs, pages and gaps or the simple-mode
-%% info, next/last navs). pagination.js has the same function (pgView).
+%% info, next/last navs). pagination.ts has the same function (pgView).
 -spec pagination_view(pos_integer(), pos_integer(), pos_integer(), pos_integer(), map()) ->
           #{entries := [map()]}.
 pagination_view(Cur, Pages, Max, Size, #{labels := L, first_last := FL, simple := Simple,

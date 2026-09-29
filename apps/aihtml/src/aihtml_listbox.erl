@@ -9,7 +9,7 @@
 %%% `data-ah-value' (with `multiple' the values joined by aihtml_value:join/1)
 %%% and fires `change'; `name'
 %%% goes to a hidden input. The rows are rendered here; the behaviour
-%%% (assets/js/components/listbox.js) shows, hides and marks them.
+%%% (assets/js/components/listbox.ts) shows, hides and marks them.
 %%%
 %%% == Server-side search ==
 %%%
