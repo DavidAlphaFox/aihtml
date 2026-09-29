@@ -10,7 +10,7 @@ has(Needle, Html) ->
     binary:match(r(Html), Needle) =/= nomatch.
 
 %%%===================================================================
-%%% Catalog and examples
+%%% Catalog
 %%%===================================================================
 
 catalog_names_are_exported_test() ->
@@ -20,10 +20,14 @@ catalog_names_are_exported_test() ->
     [?assert(lists:member(C, [form, layout, overlay, data, media, text]))
      || #{category := C} <- ?D:catalog()].
 
-every_component_has_an_example_test() ->
-    Ex = ?D:examples(),
-    [?assert(lists:keymember(N, 1, Ex)) || #{name := N} <- ?D:catalog()],
-    [?assert(is_binary(r(H))) || {_, _, H} <- Ex].
+api_docs_cover_options_and_flags_test() ->
+    [begin
+         Docs = maps:keys(OD),
+         [?assert(lists:member(K, Docs)) || K <- maps:get(options, E, [])],
+         [?assert(is_binary(D)) || D <- maps:values(OD)],
+         [?assertMatch(#{name := _, args := _, doc := _}, M) || M <- Ms]
+     end || #{option_docs := OD, methods := Ms} = E <- ?D:catalog()],
+    ?assertEqual(16, length([E || #{option_docs := _} = E <- ?D:catalog()])).
 
 unknown_modifier_fails_test() ->
     ?assertError({aihtml, {unknown_modifier, avatar, huge, _}}, ?D:avatar(<<"A">>, [huge], [])),

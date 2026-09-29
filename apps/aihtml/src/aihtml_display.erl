@@ -18,7 +18,7 @@
 -export([avatar/3, badge/3, chip/3, aspect_ratio/3, kbd/3, time_ago/3,
          expandable_text/3, progressbar/3, progress_circle/3, meter/3,
          statistic/3, kpi_card/3, timeline/3, ranking_list/3, tag_cloud/3,
-         alert/3, catalog/0, examples/0]).
+         alert/3, catalog/0]).
 
 -define(H, aihtml_html).
 -define(COLORS, [primary, secondary, success, warning, error, info]).
@@ -777,6 +777,9 @@ hex6(<<R:2/binary, G:2/binary, B:2/binary>>, C) ->
 
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
+    [maps:merge(E, api(N)) || #{name := N} = E <- entries()].
+
+entries() ->
     [#{name => avatar, category => media, root => <<"ah-avatar">>,
        signature => <<"avatar(Content, Css, Attrs)">>,
        groups => #{size => {[sm, md, lg, xl], md},
@@ -914,165 +917,139 @@ catalog() ->
 
 none_for(Mods) -> maps:from_list([{M, []} || M <- Mods]).
 
-%%%===================================================================
-%%% Examples
-%%%===================================================================
+m(Name, Args, Doc) -> #{name => Name, args => Args, doc => Doc}.
 
--spec examples() -> [{atom(), binary(), aihtml_html:html()}].
-examples() ->
-    Row = fun(Items) -> ?H:el('div', Items, [<<"flex flex-wrap items-center gap-4">>], []) end,
-    Col = fun(Items) -> ?H:el('div', Items, [<<"flex flex-col gap-3">>], []) end,
-    Img = <<"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'>"
-            "<rect width='40' height='40' fill='%2360a5fa'/><circle cx='20' cy='16' r='7' fill='white'/>"
-            "<rect x='8' y='26' width='24' height='14' rx='7' fill='white'/></svg>">>,
-    Now = erlang:system_time(second),
-    Long = <<"aihtml renders every page on the server as Erlang function calls; "
-             "jQuery only adds behaviour. This paragraph is long enough to be cut "
-             "at the threshold and shows a toggle to read the rest.">>,
-    [{avatar, <<"sizes, shapes, colours, image and broken image">>,
-      Col([Row([avatar(<<"SG">>, [S], []) || S <- [sm, md, lg, xl]]),
-           Row([avatar(<<"AB">>, [square], []), avatar(<<"CD">>, [rounded, success], []),
-                avatar(<<"EF">>, [warning], []), avatar(<<"GH">>, [error], []),
-                avatar(<<"IJ">>, [info], []), avatar(<<"KL">>, [secondary], []),
-                avatar(undefined, [], [])]),
-           Row([avatar(<<"IM">>, [lg], [{src, Img}, {alt, <<"User">>}]),
-                avatar(<<"BR">>, [lg], [{src, <<"data:image/png;base64,AAAA">>}, {alt, <<"Broken">>}])])])},
-     {badge, <<"counts, max, dot, status, corners, standalone">>,
-      Row([badge(avatar(<<"A">>, [square], []), [], [{count, 5}]),
-           badge(avatar(<<"B">>, [square], []), [error], [{count, 120}]),
-           badge(avatar(<<"C">>, [square], []), [success, show_zero], [{count, 0}]),
-           badge(avatar(<<"D">>, [square], []), [dot, warning], []),
-           badge(avatar(<<"E">>, [], []), [online, circular, bottom], []),
-           badge(avatar(<<"F">>, [], []), [busy, circular, bottom], []),
-           badge(avatar(<<"G">>, [], []), [away, circular, bottom], []),
-           badge(avatar(<<"H">>, [], []), [offline, circular, bottom, left], []),
-           badge(avatar(<<"I">>, [square], []), [info, bottom, left], [{count, <<"new">>}]),
-           badge(undefined, [secondary], [{count, 42}]),
-           badge(undefined, [success], [{count, <<"beta">>}])])},
-     {chip, <<"variants × colours, sizes, avatar, removable, clickable, disabled"/utf8>>,
-      Col([Row([chip(atom_to_binary(C), [V, C], [])
-                || C <- [default, primary, success, warning, error, info]])
-           || V <- [filled, outlined, soft]] ++
-          [Row([chip(<<"Small">>, [small, primary], []),
-                chip(<<"Jane Doe">>, [soft, primary], [{avatar, <<"JD">>}]),
-                chip(<<"Removable">>, [removable, outlined, info], [{id, <<"chip-remove">>}]),
-                chip(<<"Clickable">>, [clickable, soft, success], []),
-                chip(<<"Disabled">>, [disabled, primary], [])])])},
-     {aspect_ratio, <<"16/9, 4:3 and 1/1">>,
-      Row([?H:el('div', aspect_ratio(?H:el('div', R, [<<"w-full h-full flex items-center justify-center "
-                                                          "bg-primary/15 text-primary">>], []),
-                                     [], [{ratio, R}]),
-                 [<<"w-48">>], []) || R <- [<<"16/9">>, <<"4:3">>, <<"1/1">>]])},
-     {kbd, <<"keys, sizes and combinations">>,
-      Row([kbd(<<"Esc">>, [], []), kbd(<<"⌘"/utf8>>, [], []), kbd(<<"Enter">>, [lg], []),
-           kbd([<<"Ctrl">>, <<"Shift">>, <<"P">>], [], []),
-           kbd([<<"⌘"/utf8>>, <<"K">>], [lg], [])])},
-     {time_ago, <<"just now, minutes, hours, days, months, custom labels">>,
-      Row([time_ago(Now - S, [], [{id, Id}]) || {Id, S} <- [{<<"ta-now">>, 5}, {<<"ta-min">>, 180},
-                                                             {<<"ta-h">>, 7200}, {<<"ta-d">>, 3 * 86400},
-                                                             {<<"ta-mo">>, 90 * 86400}]] ++
-          [time_ago(Now - 600, [], [{labels, #{minutes => <<"{n} 分钟前"/utf8>>}}]),
-           time_ago({{2026, 1, 1}, {0, 0, 0}}, [<<"text-muted">>], [{live, false}])])},
-     {expandable_text, <<"collapsed, expanded, short">>,
-      Col([expandable_text(Long, [], [{threshold, 60}, {id, <<"et-demo">>}]),
-           expandable_text(Long, [], [{threshold, 60}, {expanded, true},
-                                      {expand_label, <<"Show more">>},
-                                      {collapse_label, <<"Show less">>}]),
-           expandable_text(<<"Short text is shown as is.">>, [], [])])},
-     {progressbar, <<"values, text, colours, ranges, stripes, indeterminate, vertical">>,
-      Col([progressbar(35, [show_text], [{id, <<"pb-demo">>}]),
-           progressbar(70, [success, striped, animated, show_text], []),
-           progressbar(90, [warning, show_text], [{text, <<"9 of 10 files">>}]),
-           progressbar(80, [show_text], [{color_ranges, [{30, success}, {60, warning}, {100, error}]}]),
-           progressbar(40, [reverse, info], []),
-           progressbar(undefined, [indeterminate], [{aria_label, <<"Loading">>}]),
-           progressbar(50, [disabled, show_text], []),
-           Row([progressbar(V, [vertical, show_text], [{style, <<"height: 120px">>}])
-                || V <- [20, 60]] ++
-               [progressbar(60, [vertical, reverse, error, show_text],
-                            [{style, <<"height: 120px">>}])])])},
-     {progress_circle, <<"sizes, colours, label, indeterminate, disabled">>,
-      Row([progress_circle(25, [sm], []), progress_circle(50, [], [{id, <<"pc-demo">>}]),
-           progress_circle(75, [lg, success], [{label, <<"Uploaded">>}]),
-           progress_circle(40, [warning], []), progress_circle(90, [error], []),
-           progress_circle(60, [info], [{show_value, false}, {label, <<"No value">>}]),
-           progress_circle(undefined, [indeterminate], [{label, <<"Working">>}]),
-           progress_circle(30, [disabled], [])])},
-     {meter, <<"optimum, low, high, sizes, helper text">>,
-      Col([meter(62, [], [{low, 25}, {high, 75}, {label, <<"Usage">>}, {show_value, true}]),
-           meter(15, [sm], [{low, 25}, {high, 75}, {label, <<"Battery">>}, {show_value, true},
-                            {optimum, 90}, {helper_text, <<"Low: charge soon">>}]),
-           meter(88, [lg], [{low, 25}, {high, 75}, {label, <<"CPU">>}, {show_value, true}])])},
-     {statistic, <<"prefix, suffix, precision, delta, colours, loading">>,
-      Row([statistic(1284500, [primary], [{title, <<"Revenue">>}, {prefix, <<"¥"/utf8>>}]),
-           statistic(98.456, [success], [{title, <<"Uptime">>}, {suffix, <<"%">>},
-                                         {precision, 2}, {delta, 0.4}]),
-           statistic(-3250.5, [error], [{title, <<"Balance">>}, {precision, 1}, {delta, -120}]),
-           statistic(42, [], [{title, <<"Tickets">>}, {delta, 0}]),
-           statistic(0, [loading], [{title, <<"Loading">>}])])},
-     {kpi_card, <<"colours, trends, icons">>,
-      ?H:el('div',
-            [kpi_card(<<"12,480">>, [], [{title, <<"Active users">>}, {trend, 5.2},
-                                         {trend_label, <<"vs last month">>}, {icon, users},
-                                         {id, <<"kpi-demo">>}]),
-             kpi_card(<<"3,210">>, [success], [{title, <<"Downloads">>}, {trend, 12},
-                                               {icon, download}]),
-             kpi_card(<<"845">>, [warning], [{title, <<"Installs">>}, {trend, -3.5},
-                                             {trend_label, <<"vs last week">>}, {icon, install}]),
-             kpi_card(<<"4.8">>, [error], [{title, <<"Rating">>}, {icon, star}]),
-             kpi_card(<<"—"/utf8>>, [info, disabled], [{title, <<"Disabled">>}])],
-            [<<"grid grid-cols-3 gap-4">>], [])},
-     {timeline, <<"both sides, near, horizontal">>,
-      Col([timeline(timeline_items(), [], [{id, <<"tl-demo">>}]),
-           timeline(lists:sublist(timeline_items(), 2), [near], []),
-           timeline(timeline_items(), [horizontal], [{collapsible, false}])])},
-     {ranking_list, <<"flags, tags, medals, dense, clickable">>,
-      ?H:el('div',
-            [ranking_list(ranking_items(), [], [{title, <<"Top countries">>}]),
-             ranking_list(ranking_items(), [dense, clickable],
-                          [{title, <<"Dense, clickable, max 3">>}, {max_items, 3},
-                           {flag_style, none}])],
-            [<<"grid grid-cols-2 gap-4">>], [])},
-     {tag_cloud, <<"weights, gradient, sorting, values">>,
-      Col([tag_cloud(tag_items(), [], [{id, <<"tc-demo">>}]),
-           tag_cloud(tag_items(), [], [{min_color, <<"#93c5fd">>}, {max_color, <<"#1e3a8a">>},
-                                       {max_font_size, 32}, {sort_by, value},
-                                       {sort_order, descending}]),
-           tag_cloud(tag_items(), [], [{display_value, true}, {text_case, all_upper},
-                                       {display_limit, 4}, {take_top_weighted, true}])])},
-     {alert, <<"variants, title, dismissible">>,
-      Col([alert(<<"A new version is available.">>, [], [{id, <<"alert-demo">>}]),
-           alert(<<"Your changes were saved.">>, [success, dismissible],
-                 [{title, <<"Saved">>}, {id, <<"alert-dismiss">>}]),
-           alert(<<"Your trial ends in 3 days.">>, [warning, dismissible],
-                 [{title, <<"Heads up">>}]),
-           alert([<<"Could not reach the server. ">>, ?H:el(a, <<"Retry">>, [<<"underline">>],
-                                                            [{href, <<"#">>}])],
-                 [error], [{title, <<"Connection failed">>}]),
-           alert(<<"No icon, plain message.">>, [], [{icon, false}])])}].
-
-timeline_items() ->
-    [#{date => <<"2026-01">>, title => <<"Project start">>, subtitle => <<"Kick-off">>,
-       description => <<"Scope agreed, team formed.">>},
-     #{date => <<"2026-03">>, title => <<"Alpha">>, dot => success,
-       description => <<"First internal release.">>, expanded => true},
-     #{date => <<"2026-06">>, title => <<"Beta">>, dot => warning},
-     #{date => <<"2026-09">>, title => <<"Launch">>, dot => danger, subtitle => <<"GA">>}].
-
-ranking_items() ->
-    [#{name => <<"Germany">>, code => de, value => <<"12,300">>, sub_value => <<"+4%">>,
-       tag => <<"Free">>},
-     #{name => <<"United States">>, code => us, value => <<"9,870">>, tag => <<"Paid">>},
-     #{name => <<"Japan">>, code => jp, value => <<"7,450">>, secondary => <<"Asia">>,
-       tag => <<"Progress">>},
-     #{name => <<"Brazil">>, code => br, value => <<"3,120">>, tag => <<"Out of date">>},
-     #{name => <<"<Other>">>, value => <<"980">>}].
-
-tag_items() ->
-    [#{label => <<"Erlang">>, value => 40}, #{label => <<"jQuery">>, value => 25},
-     #{label => <<"CSS">>, value => 15}, #{label => <<"sigil">>, value => 30},
-     #{label => <<"OTP">>, value => 35, url => <<"#otp">>}, #{label => <<"html">>, value => 8},
-     #{label => <<"Tailwind">>, value => 20}].
+%% The API tab of the docs page: options, flags and client methods.
+api(avatar) ->
+    #{option_docs => #{src => <<"Image URL; the fallback shows when it is missing or fails to load.">>,
+                       alt => <<"Alt text of the image; without an image it becomes the aria-label.">>},
+      methods => []};
+api(badge) ->
+    #{option_docs => #{count => <<"Number or text in the indicator; numbers above max show \"max+\".">>,
+                       max => <<"Largest count shown as is (default 99).">>,
+                       show_zero => <<"Keep the indicator visible when count is 0.">>},
+      methods => [m(setCount, <<"(Count)">>, <<"Change the count, applying max and show_zero.">>)]};
+api(chip) ->
+    #{option_docs => #{avatar => <<"Initials shown in a small circle before the label.">>,
+                       icon => <<"HTML (e.g. an SVG) shown before the label.">>,
+                       value => <<"data-ah-value carried by change; defaults to a binary Content.">>,
+                       removable => <<"Show a remove button (also Backspace / Delete): fires ah:remove, "
+                                      "then change, then removes the chip unless ah:remove was cancelled.">>,
+                       clickable => <<"Pointer cursor, role=button, focusable, Enter / Space click.">>,
+                       disabled => <<"Dimmed and inert.">>},
+      methods => [m(remove, <<"()">>, <<"Remove the chip as if its remove button were clicked.">>)]};
+api(aspect_ratio) ->
+    #{option_docs => #{ratio => <<"\"16/9\" (default), \"4:3\", a number such as 1.5, or {W, H}.">>},
+      methods => []};
+api(kbd) ->
+    #{option_docs => #{separator => <<"Text between the keys of a combination (default \"+\").">>},
+      methods => []};
+api(time_ago) ->
+    #{option_docs => #{now => <<"Unix seconds to render against (default: the current time).">>,
+                       labels => <<"Map overriding just_now, minutes, hours, days, months; "
+                                   "\"{n}\" is the number.">>,
+                       live => <<"Refresh every 60 s in the browser (default true).">>,
+                       title => <<"Show the absolute time on hover (default true).">>},
+      methods => [m(setDate, <<"(IsoOrMillis)">>, <<"Point at another time and re-render.">>),
+                  m(refresh, <<"()">>, <<"Re-render against the current time.">>)]};
+api(expandable_text) ->
+    #{option_docs => #{threshold => <<"Characters shown before the cut (default 100).">>,
+                       expanded => <<"Start expanded.">>,
+                       expand_label => <<"Toggle text when collapsed (default 展开)."/utf8>>,
+                       collapse_label => <<"Toggle text when expanded (default 收起)."/utf8>>},
+      methods => [m(toggle, <<"()">>, <<"Expand or collapse; fires ah:toggle.">>),
+                  m(expand, <<"()">>, <<"Show the full text.">>),
+                  m(collapse, <<"()">>, <<"Show the cut text.">>)]};
+api(alert) ->
+    #{option_docs => #{title => <<"Bold first line.">>,
+                       icon => <<"true (the variant's icon, default), false, or custom HTML.">>,
+                       dismissible => <<"Close button: fires ah:dismiss (cancellable), then removes "
+                                        "the alert.">>},
+      methods => [m(dismiss, <<"()">>, <<"Dismiss as if the close button were clicked.">>)]};
+api(progressbar) ->
+    #{option_docs => #{min => <<"Lower bound (default 0).">>,
+                       max => <<"Upper bound (default 100).">>,
+                       text => <<"Label shown instead of the percentage.">>,
+                       color_ranges => <<"[{Stop, Color}]: bands filled up to each stop; Color is a "
+                                         "theme colour atom or a CSS colour.">>,
+                       show_text => <<"Show the percentage (or text) on the bar.">>,
+                       disabled => <<"Dimmed.">>,
+                       indeterminate => <<"Unknown progress: a sliding bar, no aria-valuenow.">>,
+                       striped => <<"Diagonal stripes on the fill.">>,
+                       animated => <<"Move the stripes.">>},
+      methods => [m(setValue, <<"(Value[, Text])">>, <<"Set the value (clamped); fires change, and "
+                                                       "ah:complete at max.">>),
+                  m(getValue, <<"()">>, <<"Return the current value.">>)]};
+api(progress_circle) ->
+    #{option_docs => #{label => <<"Text under the ring, also the aria-label.">>,
+                       show_value => <<"Show the percentage in the ring (default true).">>,
+                       disabled => <<"Dimmed.">>,
+                       indeterminate => <<"Spinning arc, no value.">>},
+      methods => [m(setValue, <<"(Value)">>, <<"Set 0..100; fires change, and ah:complete at 100.">>),
+                  m(getValue, <<"()">>, <<"Return the current value.">>)]};
+api(meter) ->
+    #{option_docs => #{min => <<"Lower bound (default 0).">>,
+                       max => <<"Upper bound (default 100).">>,
+                       low => <<"Below this the value is low.">>,
+                       high => <<"Above this the value is high.">>,
+                       optimum => <<"Best value: decides whether the low or the high zone is good.">>,
+                       label => <<"Label above the track.">>,
+                       helper_text => <<"Small text under the track.">>,
+                       show_value => <<"Show the value above the track.">>},
+      methods => []};
+api(statistic) ->
+    #{option_docs => #{title => <<"Caption above the number.">>,
+                       prefix => <<"Text before the number, e.g. a currency sign.">>,
+                       suffix => <<"Text after the number, e.g. %.">>,
+                       precision => <<"Decimal places.">>,
+                       group_separator => <<"Thousands separators (default true).">>,
+                       delta => <<"Change shown with ▲ (> 0), ▼ (< 0) or — (0)."/utf8>>,
+                       loading => <<"Skeleton shimmer instead of the text.">>},
+      methods => []};
+api(kpi_card) ->
+    #{option_docs => #{title => <<"Metric name.">>,
+                       trend => <<"Percent change; > 0 is up (green), otherwise down (red).">>,
+                       trend_label => <<"Small text after the trend, e.g. \"vs last month\".">>,
+                       icon => <<"users, download, install, star, trending_up, trending_down, "
+                                 "or HTML.">>,
+                       disabled => <<"Dimmed and inert.">>},
+      methods => [m(setValue, <<"(Text)">>, <<"Replace the value.">>),
+                  m(setTrend, <<"(Percent)">>, <<"Replace the trend and its direction.">>)]};
+api(timeline) ->
+    #{option_docs => #{collapsible => <<"Cards with a description expand on click / Enter "
+                                        "(default true).">>,
+                       horizontal => <<"Lay the axis out horizontally.">>,
+                       disabled => <<"Dimmed and inert.">>},
+      methods => []};
+api(ranking_list) ->
+    #{option_docs => #{title => <<"Heading above the list.">>,
+                       max_items => <<"Show only the first N rows.">>,
+                       show_rank => <<"Rank circles, gold / silver / bronze for 1-3 (default true).">>,
+                       flag_style => <<"emoji (default), flag_icons (needs the flag-icons CSS) or none.">>,
+                       tag_colors => <<"#{Tag => success | warning | error | info}.">>,
+                       dense => <<"Tighter rows.">>,
+                       disabled => <<"Dimmed and inert.">>,
+                       clickable => <<"Rows are buttons firing ah:item-click with {index}.">>},
+      methods => []};
+api(tag_cloud) ->
+    #{option_docs => #{min_font_size => <<"Size of the lightest tag (default 10).">>,
+                       max_font_size => <<"Size of the heaviest tag (default 24).">>,
+                       font_size_unit => <<"px (default), em, rem, pt or %.">>,
+                       url_base => <<"Prefix for each tag's url.">>,
+                       display_value => <<"Append \" (value)\" to each label.">>,
+                       sort_by => <<"none (default), label or value.">>,
+                       sort_order => <<"ascending (default) or descending.">>,
+                       text_case => <<"none, all_lower, all_upper, first_upper or title_case.">>,
+                       text_color => <<"One colour for all tags.">>,
+                       min_color => <<"#RRGGBB of the lightest tag (with max_color: a gradient).">>,
+                       max_color => <<"#RRGGBB of the heaviest tag.">>,
+                       min_value => <<"Hide tags below this value (0: no limit).">>,
+                       max_value => <<"Hide tags above this value (0: no limit).">>,
+                       display_limit => <<"Show at most N tags.">>,
+                       take_top_weighted => <<"With display_limit, keep the heaviest tags.">>,
+                       disabled => <<"Dimmed and inert.">>},
+      methods => [m(hideItem, <<"(Index)">>, <<"Hide a tag.">>),
+                  m(showItem, <<"(Index)">>, <<"Show a hidden tag.">>)]}.
 
 %%%===================================================================
 %%% Internal
