@@ -164,9 +164,21 @@ page_test() ->
                    " data-palette=\"green\"", _/binary>>, H),
     ?assertMatch({_, _}, binary:match(H, <<"<title>T</title>">>)),
     ?assertMatch({_, _}, binary:match(H, <<"<link rel=\"stylesheet\" href=\"/aihtml/aihtml.css\">">>)),
+    %% the runtime is the bundle's entry module, found in its manifest
+    #{file := Entry, imports := Imports} = aihtml_assets:entry(),
     ?assertMatch({_, _}, binary:match(H, <<"<body class=\"ah-body\" data-ah-action=\"/aihtml/action\" data-ah-events=\"/aihtml/events\"><p>x</p>"
-                                           "<script src=\"/aihtml/vendor/jquery.min.js\"></script>"
-                                           "<script src=\"/aihtml/aihtml.js\"></script></body>">>)).
+                                           "<script type=\"module\" src=\"/aihtml/js/", Entry/binary, "\"></script></body>">>)),
+    [?assertMatch({_, _}, binary:match(H, <<"<link rel=\"modulepreload\" href=\"/aihtml/js/", I/binary, "\">">>))
+     || I <- Imports],
+    ?assertEqual(nomatch, binary:match(H, <<"jquery">>)),
+    %% options: another mount point, jQuery for the page's own scripts,
+    %% deferred extra scripts, no runtime
+    H2 = iolist_to_binary(aihtml:page(p(<<"x">>), #{assets => <<"/static/ah/">>,
+                                                    jquery => <<"/j.js">>, js => [<<"/app.js">>]})),
+    ?assertMatch({_, _}, binary:match(H2, <<"<script src=\"/j.js\"></script><script type=\"module\" src=\"/static/ah/js/",
+                                            Entry/binary, "\"></script><script src=\"/app.js\" defer></script>">>)),
+    H3 = iolist_to_binary(aihtml:page(p(<<"x">>), #{runtime => false})),
+    ?assertEqual(nomatch, binary:match(H3, <<"<script type=\"module\"">>)).
 
 %% data-ah behaviour names are lower-case words joined by hyphens
 behaviour_names_test() ->
@@ -174,3 +186,17 @@ behaviour_names_test() ->
                      B =/= none,
                      re:run(B, <<"^[a-z]+(-[a-z]+)*$">>) =:= nomatch],
     ?assertEqual([], Bad).
+
+%% every behaviour of the catalog is defined in the browser runtime, so the
+%% bundle's lazy loader can find it: AH.define("<name>") in a component
+%% file (or core.js), or "// ah-define: <name>" for a helper-registered one
+behaviours_are_defined_in_js_test() ->
+    %% the sources: priv and src are symlinked into _build, assets is not
+    Js = filename:join([code:lib_dir(aihtml), "src", "..", "assets", "js"]),
+    Src = iolist_to_binary([element(2, file:read_file(F))
+                            || F <- [filename:join(Js, "core.js") |
+                                     filelib:wildcard(filename:join(Js, "components/*.js"))]]),
+    Missing = [B || #{behavior := B} <- aihtml_catalog:prefabs(), B =/= none,
+                    binary:match(Src, [<<"define(\"", B/binary, "\"">>,
+                                       <<"// ah-define: ", B/binary, "\n">>]) =:= nomatch],
+    ?assertEqual([], Missing).
