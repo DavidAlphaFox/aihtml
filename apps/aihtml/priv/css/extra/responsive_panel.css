@@ -1,0 +1,9 @@
+/* aihtml additions for the responsive_panel component
+   (aihtml_responsive_panel). sigil styles live in ../sigil/components. */
+
+/* ---- responsive panel -------------------------------------------------- */
+
+.ah-responsive-panel-toggle:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 2px;
+}
