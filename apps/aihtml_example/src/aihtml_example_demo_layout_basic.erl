@@ -15,6 +15,7 @@
          breadcrumbs_basic/0, breadcrumbs_separators/0, breadcrumbs_collapsed/0,
          pagination_basic/0, pagination_full/0, pagination_siblings/0,
          pagination_simple/0, pagination_links/0, pagination_disabled/0,
+         pagination_record/0,
          steps_basic/0, steps_wizard/0, steps_vertical/0,
          skeleton_text/0, skeleton_shapes/0,
          loader_overlay/0, loader_positions/0, loader_inline/0, loader_hidden/0,
@@ -61,7 +62,8 @@ demos() ->
                  {<<"当前页两侧各两页"/utf8>>, pagination_siblings},
                  {<<"简洁模式"/utf8>>, pagination_simple},
                  {<<"链接模式：不需要脚本"/utf8>>, pagination_links},
-                 {<<"禁用"/utf8>>, pagination_disabled}]},
+                 {<<"禁用"/utf8>>, pagination_disabled},
+                 {<<"record 写法"/utf8>>, pagination_record}]},
      #{component => steps, title => <<"Steps">>,
        summary => <<"分步流程指示，值为当前步骤的序号。"/utf8>>,
        demos => [{<<"步骤与说明"/utf8>>, steps_basic},
@@ -265,6 +267,12 @@ pagination_links() ->
 -spec pagination_disabled() -> aihtml:html().
 pagination_disabled() ->
     pagination(50, 2, [disabled], [{show_size_selector, false}]).
+
+-spec pagination_record() -> aihtml:html().
+pagination_record() ->
+    #ah_pagination{total = 480, value = 6, page_size = 20, siblings = 1,
+                   show_total = true, show_first_last = true, show_size_selector = false,
+                   labels = #{total => <<"{0} orders">>}, name = page}.
 
 %%% Steps
 

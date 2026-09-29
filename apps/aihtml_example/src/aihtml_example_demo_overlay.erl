@@ -14,7 +14,7 @@
          sheet_form/0, sheet_sides/0, sheet_from_server/0,
          toast_variants/0, toast_options/0, toast_from_server/0,
          notification_variants/0, notification_sticky/0, notify_from_server/0,
-         window_dialog/0, window_tool/0, window_from_server/0]).
+         window_dialog/0, window_tool/0, window_from_server/0, window_record/0]).
 
 -spec demos() -> [map()].
 demos() ->
@@ -52,7 +52,8 @@ demos() ->
        summary => <<"可拖拽、可调整大小的窗口，也可作模态对话框。"/utf8>>,
        demos => [{<<"模态对话框"/utf8>>, window_dialog},
                  {<<"工具窗口：折叠、拖拽、缩放"/utf8>>, window_tool},
-                 {<<"由服务端打开"/utf8>>, window_from_server}]}].
+                 {<<"由服务端打开"/utf8>>, window_from_server},
+                 {<<"record 写法"/utf8>>, window_record}]}].
 
 %%%===================================================================
 %%% Tooltip
@@ -259,6 +260,18 @@ window_from_server() ->
            window(p(<<"Opened with aihtml_overlay:open/2 from an action.">>),
                   [], [{id, <<"win-server">>}, {title, <<"From the server">>}, {width, 360}])]).
 
+-spec window_record() -> aihtml:html().
+window_record() ->
+    'div'([button(<<"Rename file">>, undefined, [outlined], opens({id, <<"win-rename">>})),
+           #ah_window{id = <<"win-rename">>, title = <<"Rename">>, modal = true, width = 360,
+                      resizable = false,
+                      body = input(<<"report.pdf">>, [], [{name, file_name}]),
+                      footer = [button(<<"Cancel">>, undefined, [default], closes()),
+                                button(<<"Rename">>, undefined, [primary],
+                                       closes(closest, ok))],
+                      %% fires when the window closes, handled by action/4 below
+                      postback = window_closed}]).
+
 %%%===================================================================
 %%% Actions
 %%%===================================================================
@@ -269,6 +282,8 @@ action(open, #{target := Id}, _Ev, Ctx) ->
 action(save, _, _Ev, Ctx) ->
     toast(Ctx, <<"Saved on the server">>,
           #{variant => success, description => <<"Rendered by toast/3.">>});
+action(window_closed, _, _Ev, Ctx) ->
+    toast(Ctx, <<"The window was closed">>, #{description => <<"Sent by its postback.">>});
 action(import, _, _Ev, Ctx) ->
     aihtml_overlay:notify(Ctx, #{content => [strong(<<"Import finished. ">>),
                                              <<"128 rows added.">>],

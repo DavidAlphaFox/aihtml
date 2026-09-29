@@ -18,7 +18,7 @@
          circle_sizes/0, circle_colors/0, circle_states/0,
          meter_states/0, meter_sizes/0,
          statistic_basic/0, statistic_delta/0,
-         kpi_trends/0, kpi_colors/0,
+         kpi_trends/0, kpi_colors/0, kpi_record/0,
          timeline_both/0, timeline_near/0, timeline_horizontal/0,
          ranking_basic/0, ranking_dense/0,
          tag_cloud_weights/0, tag_cloud_gradient/0, tag_cloud_values/0]).
@@ -82,7 +82,8 @@ demos() ->
      #{component => kpi_card, title => <<"KpiCard">>,
        summary => <<"指标卡：一个数字加环比趋势。"/utf8>>,
        demos => [{<<"趋势与图标"/utf8>>, kpi_trends},
-                 {<<"颜色与禁用"/utf8>>, kpi_colors}]},
+                 {<<"颜色与禁用"/utf8>>, kpi_colors},
+                 {<<"record 写法"/utf8>>, kpi_record}]},
      #{component => timeline, title => <<"Timeline">>,
        summary => <<"按时间排列的事件轴，卡片可展开。"/utf8>>,
        demos => [{<<"两侧交替"/utf8>>, timeline_both},
@@ -352,6 +353,13 @@ kpi_colors() ->
           kpi_card(<<"96%">>, [info], [{title, <<"SLA">>}, {trend, 0.4}]),
           kpi_card(<<"7">>, [error], [{title, <<"Incidents">>}, {trend, -30}]),
           kpi_card(<<"—"/utf8>>, [disabled], [{title, <<"Disabled">>}])]).
+
+-spec kpi_record() -> aihtml:html().
+kpi_record() ->
+    grid([#ah_kpi_card{value = <<"1,024">>, color = success, icon = users,
+                       title = <<"Signups">>, trend = 8.5, trend_label = <<"vs last week">>},
+          #ah_kpi_card{value = <<"37">>, color = error, css = [<<"shadow-sm">>],
+                       title = <<"Churned">>, trend = -2.1}]).
 
 %%% Timeline
 

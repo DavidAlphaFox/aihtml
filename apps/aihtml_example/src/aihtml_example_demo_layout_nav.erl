@@ -8,6 +8,7 @@
 -export([demos/0]).
 -export([menubar/0, menu_vertical/0, menu_columns/0, context_menu/0, menu_responsive/0,
          navbar_basic/0, navbar_vertical/0, navbar_minimized/0, navbar_links/0,
+         navbar_record/0,
          sidenav_groups/0, sidenav_collapsed/0, sidenav_links/0,
          toolbar_editor/0, toolbar_overflow/0,
          splitter_columns/0, splitter_rows/0, splitter_nested/0,
@@ -28,7 +29,8 @@ demos() ->
        demos => [{<<"品牌、导航项、右侧按钮"/utf8>>, navbar_basic},
                  {<<"竖排"/utf8>>, navbar_vertical},
                  {<<"折叠：汉堡按钮加弹出列表"/utf8>>, navbar_minimized},
-                 {<<"链接与自定义列宽"/utf8>>, navbar_links}]},
+                 {<<"链接与自定义列宽"/utf8>>, navbar_links},
+                 {<<"record 写法"/utf8>>, navbar_record}]},
      #{component => sidenav, title => <<"SideNav">>,
        summary => <<"应用左侧导航：品牌区、分组树、底部插槽，可收窄。"/utf8>>,
        demos => [{<<"分组与当前项"/utf8>>, sidenav_groups},
@@ -142,6 +144,17 @@ navbar_links() ->
             #{key => api, label => <<"API">>, href => <<"#api">>},
             #{key => faq, label => <<"FAQ">>, href => <<"#faq">>}],
            overview, [], [{columns, [<<"50%">>, <<"30%">>, <<"20%">>]}]).
+
+-spec navbar_record() -> aihtml:html().
+navbar_record() ->
+    #ah_navbar{items = [{home, <<"Home">>}, {products, <<"Products">>},
+                        {pricing, <<"Pricing">>}],
+               value = home,
+               brand = strong(<<"Acme">>),
+               extra = button(<<"Sign in">>, undefined, [sm], []),
+               title = <<"Acme">>,
+               minimize_width = 480,
+               name = section}.
 
 %%%-------------------------------------------------------------------
 %%% sidenav
