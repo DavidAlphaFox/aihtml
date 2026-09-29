@@ -1,0 +1,11 @@
+/* aihtml additions shared by the overlay components: the notification
+   card of toasts and notifications (aihtml_toast, aihtml_notification);
+   sigil styles live in ../sigil/components. */
+
+/* Dark appearance: sigil's notification cards use the *-lighter tokens,
+   which the default palette keeps light, so light text on a pale card.
+   Tint the paper colour with the accent instead. */
+[data-theme="dark"] .ah-notify {
+  background: color-mix(in srgb, var(--ah-notify-accent, var(--ah-color-grey-500)) 16%,
+                        var(--ah-color-bg-paper));
+}
