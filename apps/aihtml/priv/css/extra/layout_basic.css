@@ -1,0 +1,192 @@
+/* aihtml additions for the layout_basic components (designs/04-components.md).
+   Owned by that group; sigil styles live in ../sigil/components. */
+
+/* ---- card: media, subtitle, extra, flush ---------------------------- */
+
+.ah-card-media > img,
+.ah-card-media > video {
+  display: block;
+  width: 100%;
+  object-fit: cover;
+}
+
+.ah-card-header:has(> .ah-card-extra) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--ah-spacing-md);
+}
+
+.ah-card-header > .ah-card-extra {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+}
+
+.ah-card-subtitle {
+  margin: 2px 0 0;
+  font-size: var(--ah-font-size-sm);
+  color: var(--ah-color-text-secondary);
+}
+
+.ah-card.ah-card-flush > .ah-card-body {
+  padding: 0;
+}
+
+/* ---- panel: native scrolling instead of sigil's scrollbar widget ---- */
+
+.ah-panel > .ah-panel-wrapper {
+  height: auto;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ah-color-grey-400, var(--ah-color-border)) transparent;
+}
+
+.ah-panel > .ah-panel-wrapper > .ah-panel-content {
+  position: static;
+  min-width: 100%;
+}
+
+.ah-panel.ah-panel-has-header {
+  display: flex;
+  flex-direction: column;
+}
+
+.ah-panel.ah-panel-bordered {
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-md);
+  background: var(--ah-color-bg-paper);
+}
+
+.ah-panel-header {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm);
+  flex: none;
+  padding: var(--ah-spacing-sm) var(--ah-spacing-md);
+  background: var(--ah-color-bg-subtle);
+  border-bottom: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+.ah-panel-collapsed > .ah-panel-header {
+  border-bottom-color: transparent;
+}
+
+.ah-panel-title {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--ah-font-size-sm);
+  font-weight: var(--ah-font-weight-semibold);
+  color: var(--ah-color-text);
+}
+
+.ah-panel-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-xs);
+}
+
+.ah-panel-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text-secondary);
+  cursor: pointer;
+  transition: transform var(--ah-transition-fast), background var(--ah-transition-fast);
+}
+
+.ah-panel-toggle:hover { background: var(--ah-color-bg-hover, var(--ah-color-grey-100)); }
+.ah-panel-toggle[aria-expanded="false"] { transform: rotate(-90deg); }
+.ah-panel-toggle:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: 1px;
+}
+
+/* ---- tabs: scrollable header with sticky scroll buttons -------------- */
+
+.ah-tabs-scrollable > .ah-tabs-header {
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ah-tabs-scrollable > .ah-tabs-header::-webkit-scrollbar { display: none; }
+
+.ah-tabs-scrollable .ah-tabs-scroll-btn {
+  position: sticky;
+  z-index: 1;
+  background: var(--ah-color-bg-paper);
+}
+
+.ah-tabs-scrollable .ah-tabs-scroll-left { left: 0; }
+.ah-tabs-scrollable .ah-tabs-scroll-right { right: 0; }
+
+.ah-tabs-item:focus-visible,
+.ah-tab-bar__tab:focus-visible,
+.ah-pagination-item:focus-visible,
+.ah-pagination-nav:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+
+.ah-steps-item-clickable:focus-visible { outline: none; }
+
+/* ---- pagination: link mode ------------------------------------------ */
+
+.ah-pagination-li { display: contents; }
+
+a.ah-pagination-item,
+a.ah-pagination-nav {
+  text-decoration: none;
+}
+
+/* ---- loader: text positions (sigil set them on the wrong element),
+        inline variant ---------------------------------------------- */
+
+.ah-loader.ah-loader-text-top > .ah-loader-text { order: -1; }
+.ah-loader.ah-loader-text-left { flex-direction: row-reverse; }
+.ah-loader.ah-loader-text-right { flex-direction: row; }
+
+.ah-loader.ah-loader-inline {
+  position: static;
+  display: inline-flex;
+  margin: 0;
+  padding: var(--ah-spacing-sm);
+  background: transparent;
+}
+
+.ah-loader.ah-loader-inline.ah-loader-hidden,
+.ah-loader.ah-loader-hidden { display: none; }
+
+.ah-loader-modal.ah-loader-hidden { display: none; }
+
+/* ---- empty: compact ------------------------------------------------- */
+
+.ah-empty.ah-empty-compact {
+  padding: 16px 12px;
+  gap: 4px;
+}
+
+/* ---- skeleton: a rect defaults to the full width of its container
+        (sigil's inline-flex/auto width collapsed a 100% shape to 0) --- */
+
+.ah-skeleton[data-variant="rect"] {
+  display: flex;
+  width: 100%;
+}
+
+/* ---- breadcrumbs: icon and label side by side inside a link -------- */
+
+.ah-breadcrumbs__link:has(> .ah-breadcrumbs__icon),
+.ah-breadcrumbs__text:has(> .ah-breadcrumbs__icon) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
