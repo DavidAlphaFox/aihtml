@@ -11,7 +11,8 @@ site_test_() ->
      [{"every component has demos", fun every_component_has_demos/0},
       {"every demo renders and shows its source", fun demos_render/0},
       {"every docs page renders", fun docs_pages_render/0},
-      {"the home page renders", fun home_renders/0}]}.
+      {"the home page renders", fun home_renders/0},
+      {"the API tab shows each component's record", fun records_shown/0}]}.
 
 components() ->
     [N || #{name := N} <- aihtml_example_site:components()].
@@ -41,3 +42,22 @@ home_renders() ->
     Html = aihtml:render_binary(aihtml_example_home:render()),
     [?assertMatch({_, _}, binary:match(Html, <<"/components/", (atom_to_binary(N))/binary, "\"">>))
      || N <- components()].
+
+%% Components without an element record: the theme switcher and toast
+%% (an action, not an element).
+-define(NO_RECORD, [theme_switcher, toast]).
+
+records_shown() ->
+    [case lists:member(N, ?NO_RECORD) of
+         true ->
+             ?assertEqual(undefined, aihtml_example_records:record(N));
+         false ->
+             #{record := Rec, header := <<"aihtml_", _/binary>>, doc := Doc,
+               fields := Fields} = aihtml_example_records:record(N),
+             ?assertNotEqual(<<>>, Doc),
+             ?assertNotEqual([], Fields),
+             [?assertNot(lists:member(F, aihtml_example_records:base_fields()))
+              || #{name := F} <- Fields],
+             Html = aihtml:render_binary(aihtml_example_docs:render(N)),
+             ?assertMatch({_, _}, binary:match(Html, <<"#", (atom_to_binary(Rec))/binary, "{}">>))
+     end || N <- components()].
