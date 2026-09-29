@@ -7,7 +7,7 @@
 
   var NS = AH.NS;
   var LIST = AH.lib.list;
-  var ensureId = LIST.ensureId, publish = LIST.publish, split = LIST.split,
+  var ensureId = LIST.ensureId, publish = LIST.publish, split = LIST.split, join = LIST.join,
     shown = LIST.shown, enabled = LIST.enabled, scrollInto = LIST.scrollInto;
 
   // ==================================================================
@@ -42,7 +42,7 @@
     var st = lbState(el);
     st.selected = st.multi ? values.slice() : values.slice(0, 1);
     lbMark(el);
-    publish(el, $el, st.selected.join(","), fire);
+    publish(el, $el, join(st.selected, !st.multi), fire);
   }
 
   function lbCursor(el, li) {
@@ -185,10 +185,10 @@
         $filter: $el.find(".ah-listbox-filter-input"),
         checkboxes: $el.hasClass("ah-listbox-checkboxes"),
         remote: $el.hasClass("ah-listbox-remote"),
-        selected: split(el.getAttribute("data-ah-value")),
         cursor: null, anchor: null, typed: ""
       };
       st.multi = st.checkboxes || $el.hasClass("ah-listbox-multiple");
+      st.selected = split(el.getAttribute("data-ah-value"), !st.multi);
       $.data(el, "ah-lb", st);
       var blocked = function () { return $el.hasClass("ah-listbox-disabled"); };
       $el.on("mousedown" + NS, ".ah-listbox-item, .ah-listbox-check-all", function (e) {
@@ -218,7 +218,7 @@
     },
     methods: {
       // A value or a list (multiple); no change event (the server set it).
-      setValue: function (el, $el, v) { lbSet(el, $el, split(v), false); },
+      setValue: function (el, $el, v) { lbSet(el, $el, split(v, !lbState(el).multi), false); },
       getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
       clear: function (el, $el) { lbSet(el, $el, [], true); },
       filter: function (el, $el, text) {

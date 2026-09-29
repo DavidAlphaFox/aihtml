@@ -213,7 +213,7 @@
     } else {
       st.$input.val(st.selected.length ? cbLabel(st, st.selected[0]) : "");
     }
-    publish(el, $el, st.selected.join(","), fire);
+    publish(el, $el, AH.lib.list.join(st.selected, !st.multi), fire);
   }
 
   // popup.cljs select-single-item! / toggle-multi-item!
@@ -317,7 +317,7 @@
   function cbSetValue(el, $el, v, fire) {
     var st = cbState(el);
     if (v == null || v === "") { v = []; }
-    if (!Array.isArray(v)) { v = st.multi ? String(v).split(",") : [String(v)]; }
+    if (!Array.isArray(v)) { v = AH.lib.list.split(v, !st.multi); }
     st.selected = v.map(String).slice(0, st.multi ? v.length : 1);
     st.query = "";
     cbSync(el, $el, fire);
@@ -351,7 +351,7 @@
         if (!(v in st.labels)) { st.labels[v] = $(this).siblings(".ah-combobox-tag-text").text(); }
       });
       var v = el.getAttribute("data-ah-value") || "";
-      st.selected = v === "" ? [] : (st.multi ? v.split(",") : [v]);
+      st.selected = AH.lib.list.split(v, !st.multi);
       if (!st.multi && st.selected.length && !(st.selected[0] in st.labels)) {
         st.labels[st.selected[0]] = st.$input.val();
       }

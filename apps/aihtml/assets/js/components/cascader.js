@@ -7,7 +7,7 @@
 
   var NS = AH.NS;
   var LIST = AH.lib.list;
-  var ensureId = LIST.ensureId, publish = LIST.publish, split = LIST.split,
+  var ensureId = LIST.ensureId, publish = LIST.publish, split = LIST.split, join = LIST.join,
     shown = LIST.shown, enabled = LIST.enabled, scrollInto = LIST.scrollInto;
   var seq = 0;
 
@@ -39,7 +39,7 @@
   // The column holding the children of `path` (an array); the last one
   // wins when a lazy level was loaded twice.
   function csColumn(st, path) {
-    var key = path.join(",");
+    var key = join(path);
     return csColumns(st).filter(function () {
       return this.getAttribute("data-parent") === key;
     }).last();
@@ -147,7 +147,7 @@
     st.display = csLabels(st, path).join(st.sep);
     if (!st.query) { st.$input.val(st.display); }
     st.$clear.prop("hidden", !path.length);
-    publish(el, $el, path.join(","), fire);
+    publish(el, $el, join(path), fire);
   }
 
   function csRows($col) {
@@ -174,10 +174,10 @@
     } else if (li.hasAttribute("data-lazy") && st.$loader.length) {
       csShow(el);
       csCursor(el, li);
-      st.pending = { path: path.join(","), kbd: kbd };
+      st.pending = { path: join(path), kbd: kbd };
       st.$menus.append($('<div class="ah-cascader-loading"></div>').text("Loading…"));
       csPosition(el);
-      st.$loader.attr("data-ah-value", path.join(",")).trigger("ah:load");
+      st.$loader.attr("data-ah-value", join(path)).trigger("ah:load");
     } else {
       csLeaf(li);
       csChoose(el, $el, li, kbd);
@@ -388,7 +388,7 @@
       childrenLoaded: function (el, $el, path) {
         var st = csState(el);
         var p = split(path);
-        var key = p.join(",");
+        var key = join(p);
         var pending = st.pending && st.pending.path === key ? st.pending : null;
         if (pending) { st.pending = null; st.$menus.children(".ah-cascader-loading").remove(); }
         var $cols = csColumns(st).filter(function () { return this.getAttribute("data-parent") === key; });
@@ -400,7 +400,7 @@
           if (pending && st.isOpen && li) { csChoose(el, $el, li, pending.kbd); }
           return;
         }
-        if (st.isOpen && st.open.join(",") === key) {
+        if (st.isOpen && join(st.open) === key) {
           csShow(el);
           if (pending && pending.kbd) { csCursor(el, csRows($cols.last())[0]); }
         }

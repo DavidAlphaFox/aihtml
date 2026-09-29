@@ -6,7 +6,7 @@
 
   var NS = AH.NS;
   var LIST = AH.lib.list;
-  var ensureId = LIST.ensureId, publish = LIST.publish, split = LIST.split,
+  var ensureId = LIST.ensureId, publish = LIST.publish, split = LIST.split, join = LIST.join,
     shown = LIST.shown, enabled = LIST.enabled, scrollInto = LIST.scrollInto;
 
   // ==================================================================
@@ -49,9 +49,9 @@
 
   function trPublish(el, fire) {
     var st = trState(el);
-    publish(el, st.$el, trItems(st.$target).map(function (li) {
+    publish(el, st.$el, join(trItems(st.$target).map(function (li) {
       return li.getAttribute("data-value");
-    }).join(","), fire);
+    })), fire);
   }
 
   function idx(li) { return parseInt(li.getAttribute("data-idx"), 10) || 0; }
