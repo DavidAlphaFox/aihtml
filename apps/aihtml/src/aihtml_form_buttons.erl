@@ -14,6 +14,10 @@
 %%% root, render a hidden input when `Attrs' has a `name', and fire
 %%% `change' on the root (designs/04-components.md).
 %%%
+%%% Each function builds an element record (#ah_button{} ..., defined in
+%%% include/aihtml_form_buttons.hrl) and render/1 turns it into HTML, so
+%%% pages may also write the records directly (designs/05-records.md).
+%%%
 %%% Items (button_group, segmented_control, menus) are
 %%%   Label | {Value, Label} | {Value, Label, ItemAttrs}
 %%% and a menu also takes `divider'. `ItemAttrs' are HTML attributes of
@@ -21,113 +25,136 @@
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_form_buttons).
+-behaviour(aihtml_element).
+
+-include("aihtml_form_buttons.hrl").
 
 -export([button/4, link_button/4, toggle_button/4, button_group/4,
          segmented_control/4, dropdown_button/4, split_button/4,
-         catalog/0]).
+         render/1, fields/1, catalog/0]).
 
--export_type([item/0]).
+-export_type([item/0, element/0]).
 
 -define(H, aihtml_html).
+-define(E, aihtml_element).
 
 -type html() :: aihtml_html:html().
 -type css() :: aihtml_html:css().
 -type attrs() :: aihtml_html:attrs().
--type element() :: aihtml_html:element().
--type item() :: html() | {term(), html()} | {term(), html(), attrs()} | divider.
+-type item() :: ah_btn_item().
+-type element() :: #ah_button{} | #ah_link_button{} | #ah_toggle_button{}
+                 | #ah_button_group{} | #ah_segmented_control{}
+                 | #ah_dropdown_button{} | #ah_split_button{}.
 
 -define(BTN_VARIANTS, [primary, secondary, outlined, success, warning, error,
                        info, default, borderless]).
 
 %%%===================================================================
-%%% button, link_button, toggle_button
+%%% Builders
 %%%===================================================================
 
 %% @doc A native `<button type="button">'. `Value' becomes its `value'
 %% attribute (`undefined' leaves it out). Options: `icon' (HTML shown
 %% beside the text), `img' (an image URL, 16px), `icon_position' (left |
 %% right | top | bottom).
--spec button(html(), term(), css(), attrs()) -> element().
-button(Content, Value, Css, Attrs0) ->
-    E = entry(button),
-    {Opts, Attrs} = aihtml_catalog:split_options(E, Attrs0),
-    Disabled = is_disabled(Attrs),
-    {Body, ImgCls} = with_icon(Content, Opts),
-    ?H:el(button, Body,
-          [aihtml_catalog:classes(E, Css), ImgCls, [<<"ah-btn-disabled">> || Disabled]],
-          [[{type, button}, {value, value_attr(Value)}], Attrs]).
+-spec button(html(), term(), css(), attrs()) -> #ah_button{}.
+button(Content, Value, Css, Attrs) ->
+    build(#ah_button{body = Content, value = Value}, Css, Attrs).
 
 %% @doc An `<a href=Href>' with button styling. `{disabled, true}' in
 %% `Attrs' removes the href and marks it `aria-disabled'.
--spec link_button(html(), iodata() | undefined, css(), attrs()) -> element().
-link_button(Content, Href, Css, Attrs0) ->
-    E = entry(link_button),
-    {Disabled, Attrs} = take_flag(<<"disabled">>, Attrs0),
-    State = case Disabled of
-                true  -> [{aria_disabled, <<"true">>}, {tabindex, <<"-1">>}];
-                false -> [{href, Href}]
-            end,
-    ?H:el(a, Content,
-          [aihtml_catalog:classes(E, Css), <<"ah-link-btn">>,
-           [<<"ah-btn-disabled">> || Disabled]],
-          [[{role, link} | State], Attrs]).
+-spec link_button(html(), iodata() | undefined, css(), attrs()) -> #ah_link_button{}.
+link_button(Content, Href, Css, Attrs) ->
+    build(#ah_link_button{body = Content, href = Href}, Css, Attrs).
 
 %% @doc A button with two states. `Value' is `true' (pressed) or `false';
 %% `data-ah-value' and the button's own `value' are "true" / "false" and
 %% a click toggles them and fires `change'. A `name' in `Attrs' goes to a
 %% hidden input.
--spec toggle_button(html(), boolean(), css(), attrs()) -> element().
-toggle_button(Content, Value, Css, Attrs0) when is_boolean(Value) ->
-    E = entry(toggle_button),
-    {Opts, Attrs1} = aihtml_catalog:split_options(E, Attrs0),
-    {Name, Attrs} = take(<<"name">>, Attrs1),
-    Disabled = is_disabled(Attrs),
-    V = atom_to_binary(Value, utf8),
-    {Body, ImgCls} = with_icon(Content, Opts),
-    ?H:el(button, [Body, hidden_input(Name, V)],
-          [aihtml_catalog:classes(E, Css), ImgCls,
-           [<<"ah-btn-toggled">> || Value], [<<"ah-btn-disabled">> || Disabled]],
-          [[{type, button}, {value, V}, {aria_pressed, V},
-            {data_ah, <<"toggle-button">>}, {data_ah_value, V}], Attrs]).
-
-with_icon(Content, Opts) ->
-    Pos = maps:get(icon_position, Opts, left),
-    lists:member(Pos, [left, right, top, bottom])
-        orelse error({aihtml, {bad_option, icon_position, Pos}}),
-    Icon = case Opts of
-               #{img := Src} ->
-                   ?H:void(img, [<<"ah-btn-img">>],
-                           [{src, Src}, {width, 16}, {height, 16}, {alt, <<>>}]);
-               #{icon := I} ->
-                   ?H:el(span, I, [<<"ah-btn-img">>], [{aria_hidden, <<"true">>}]);
-               #{} -> none
-           end,
-    case Icon of
-        none -> {Content, []};
-        _ ->
-            Text = ?H:el(span, Content, [<<"ah-btn-text">>], []),
-            Body = case Pos of
-                       P when P =:= left; P =:= top -> [Icon, Text];
-                       _ -> [Text, Icon]
-                   end,
-            {Body, [<<"ah-btn-img-", (atom_to_binary(Pos, utf8))/binary>>]}
-    end.
-
-%%%===================================================================
-%%% button_group
-%%%===================================================================
+-spec toggle_button(html(), boolean(), css(), attrs()) -> #ah_toggle_button{}.
+toggle_button(Content, Value, Css, Attrs) when is_boolean(Value) ->
+    build(#ah_toggle_button{body = Content, value = Value}, Css, Attrs).
 
 %% @doc Joined buttons. In `radio' mode `Value' is the selected item's
 %% value; in `checkbox' mode a list of values (or "a,b"). In the default
 %% mode `Value' is ignored and each button is a plain button whose own
 %% `value' is the item value, so `ItemAttrs' can carry `on(click, ...)'.
--spec button_group([item()], term(), css(), attrs()) -> element().
-button_group(Items0, Value, Css, Attrs0) ->
-    E = entry(button_group),
-    Classes = aihtml_catalog:classes(E, Css),
-    Mode = pick(Css, [radio, checkbox], default),
-    {Disabled, Attrs1} = take_flag(<<"disabled">>, Attrs0),
-    {Name, Attrs} = take(<<"name">>, Attrs1),
+-spec button_group([item()], term(), css(), attrs()) -> #ah_button_group{}.
+button_group(Items, Value, Css, Attrs) ->
+    build(#ah_button_group{items = Items, value = Value}, Css, Attrs).
+
+%% @doc Mutually exclusive segments (role tablist, as in sigil). `Value'
+%% is the selected item's value.
+-spec segmented_control([item()], term(), css(), attrs()) -> #ah_segmented_control{}.
+segmented_control(Items, Value, Css, Attrs) ->
+    build(#ah_segmented_control{items = Items, value = Value}, Css, Attrs).
+
+%% @doc A button that opens a menu. Choosing an item sets `data-ah-value'
+%% on the root and fires `change'. Options: `value' (the initially
+%% selected item), `auto_open' (open on hover).
+-spec dropdown_button(html(), [item()], css(), attrs()) -> #ah_dropdown_button{}.
+dropdown_button(Content, Items, Css, Attrs) ->
+    build(#ah_dropdown_button{body = Content, items = Items}, Css, Attrs).
+
+%% @doc A main action and an arrow that opens a menu. A click on the main
+%% half reaches the root (so `on(click, ...)' there is the main action);
+%% clicks on the arrow and the menu do not. Choosing an item sets
+%% `data-ah-value' and fires `change'. Options: `value', `menu_align'
+%% (start | end, default end).
+-spec split_button(html(), [item()], css(), attrs()) -> #ah_split_button{}.
+split_button(Content, Items, Css, Attrs) ->
+    build(#ah_split_button{body = Content, items = Items}, Css, Attrs).
+
+build(R, Css, Attrs) ->
+    Tag = element(1, R),
+    ?E:build(R, fields(Tag), entry(name(Tag)), Css, Attrs).
+
+%% @doc The field names of one of this group's records.
+-spec fields(atom()) -> [atom()].
+fields(ah_button) -> record_info(fields, ah_button);
+fields(ah_link_button) -> record_info(fields, ah_link_button);
+fields(ah_toggle_button) -> record_info(fields, ah_toggle_button);
+fields(ah_button_group) -> record_info(fields, ah_button_group);
+fields(ah_segmented_control) -> record_info(fields, ah_segmented_control);
+fields(ah_dropdown_button) -> record_info(fields, ah_dropdown_button);
+fields(ah_split_button) -> record_info(fields, ah_split_button).
+
+%%%===================================================================
+%%% Rendering
+%%%===================================================================
+
+-spec render(element()) -> html().
+render(#ah_button{body = Content, value = Value, disabled = Disabled} = B) ->
+    {Body, ImgCls} = with_icon(Content, B#ah_button.icon, B#ah_button.img,
+                               B#ah_button.icon_position),
+    ?H:el(button, Body,
+          [classes(B), ImgCls, [<<"ah-btn-disabled">> || Disabled]],
+          [[{type, button}, {value, value_attr(Value)}, {disabled, Disabled}],
+           ?E:root_attrs(B, click)]);
+
+render(#ah_link_button{body = Content, href = Href, disabled = Disabled} = B) ->
+    State = case Disabled of
+                true  -> [{aria_disabled, <<"true">>}, {tabindex, <<"-1">>}];
+                false -> [{href, Href}]
+            end,
+    ?H:el(a, Content,
+          [classes(B), <<"ah-link-btn">>, [<<"ah-btn-disabled">> || Disabled]],
+          [[{role, link} | State], ?E:root_attrs(B, click)]);
+
+render(#ah_toggle_button{body = Content, value = Value, name = Name,
+                         disabled = Disabled} = B) when is_boolean(Value) ->
+    V = atom_to_binary(Value, utf8),
+    {Body, ImgCls} = with_icon(Content, B#ah_toggle_button.icon, B#ah_toggle_button.img,
+                               B#ah_toggle_button.icon_position),
+    ?H:el(button, [Body, hidden_input(Name, V)],
+          [classes(B), ImgCls,
+           [<<"ah-btn-toggled">> || Value], [<<"ah-btn-disabled">> || Disabled]],
+          [[{type, button}, {value, V}, {aria_pressed, V},
+            {data_ah, <<"toggle-button">>}, {data_ah_value, V}, {disabled, Disabled}],
+           ?E:root_attrs(B, change)]);
+
+render(#ah_button_group{items = Items0, value = Value, name = Name, mode = Mode,
+                        disabled = Disabled} = B) ->
     Items = [item(I) || I <- Items0],
     Selected = case Mode of
                    radio -> [bin(Value) || Value =/= undefined];
@@ -167,25 +194,14 @@ button_group(Items0, Value, Css, Attrs0) ->
                  end,
     ?H:el('div',
           [Buttons, [hidden_input(Name, Joined) || Mode =/= default]],
-          [Classes, [<<"ah-btn-group-disabled">> || Disabled]],
+          [classes(B), [<<"ah-btn-group-disabled">> || Disabled]],
           [[{role, case Mode of radio -> radiogroup; _ -> group end},
             {aria_disabled, Disabled andalso <<"true">>},
-            {data_ah, <<"button-group">>} | ValueAttrs], Attrs]).
+            {data_ah, <<"button-group">>} | ValueAttrs],
+           ?E:root_attrs(B, case Mode of default -> click; _ -> change end)]);
 
-%%%===================================================================
-%%% segmented_control
-%%%===================================================================
-
-%% @doc Mutually exclusive segments (role tablist, as in sigil). `Value'
-%% is the selected item's value.
--spec segmented_control([item()], term(), css(), attrs()) -> element().
-segmented_control(Items0, Value, Css, Attrs0) ->
-    E = entry(segmented_control),
-    Classes = aihtml_catalog:classes(E, Css),
-    Size = pick(Css, [sm, md, lg], md),
-    Full = lists:member(full_width, aihtml_catalog:flags(E, Css)),
-    {Disabled, Attrs1} = take_flag(<<"disabled">>, Attrs0),
-    {Name, Attrs} = take(<<"name">>, Attrs1),
+render(#ah_segmented_control{items = Items0, value = Value, name = Name, size = Size,
+                             full_width = Full, disabled = Disabled} = B) ->
     Items = [item(I) || I <- Items0],
     Current = case Value of undefined -> undefined; _ -> bin(Value) end,
     Focus = roving_focus(true, Items, [Current], Disabled),
@@ -204,34 +220,22 @@ segmented_control(Items0, Value, Css, Attrs0) ->
                     IA])
          end || {V, Label, IA} <- Items],
     Cur = case Current of undefined -> <<>>; _ -> Current end,
-    ?H:el('div', [Buttons, hidden_input(Name, Cur)], Classes,
+    ?H:el('div', [Buttons, hidden_input(Name, Cur)], classes(B),
           [[{role, tablist},
             {data_size, Size},
             {data_full_width, atom_to_binary(Full, utf8)},
             {data_disabled, atom_to_binary(Disabled, utf8)},
             {aria_disabled, Disabled andalso <<"true">>},
             {data_ah, <<"segmented-control">>},
-            {data_ah_value, Cur}], Attrs]).
+            {data_ah_value, Cur}],
+           ?E:root_attrs(B, change)]);
 
-%%%===================================================================
-%%% dropdown_button
-%%%===================================================================
-
-%% @doc A button that opens a menu. Choosing an item sets `data-ah-value'
-%% on the root and fires `change'. Options: `value' (the initially
-%% selected item), `auto_open' (open on hover).
--spec dropdown_button(html(), [item()], css(), attrs()) -> element().
-dropdown_button(Content, Items0, Css, Attrs0) ->
-    E = entry(dropdown_button),
-    Classes = aihtml_catalog:classes(E, Css),
-    {Opts, Attrs1} = aihtml_catalog:split_options(E, Attrs0),
-    {Disabled, Attrs2} = take_flag(<<"disabled">>, Attrs1),
-    {Name, Attrs} = take(<<"name">>, Attrs2),
-    Cur = case maps:get(value, Opts, undefined) of
+render(#ah_dropdown_button{body = Content, items = Items0, value = Value, name = Name,
+                           auto_open = AutoOpen, disabled = Disabled} = B) ->
+    Cur = case Value of
               undefined -> <<>>;
               V0 -> bin(V0)
           end,
-    AutoOpen = maps:get(auto_open, Opts, false) =:= true,
     Menu = [case I of
                 divider ->
                     ?H:el('div', [], [<<"ah-dropdown-btn-divider">>], [{role, separator}]);
@@ -256,33 +260,19 @@ dropdown_button(Content, Items0, Css, Attrs0) ->
           [Trigger,
            ?H:el('div', Menu, [<<"ah-dropdown-btn-popup">>], [{role, menu}, {hidden, true}]),
            hidden_input(Name, Cur)],
-          [Classes, [<<"ah-dropdown-btn-disabled">> || Disabled],
+          [classes(B), [<<"ah-dropdown-btn-disabled">> || Disabled],
            [<<"ah-dropdown-btn-auto-open">> || AutoOpen]],
           [[{aria_disabled, Disabled andalso <<"true">>},
-            {data_ah, <<"dropdown-button">>}, {data_ah_value, Cur}], Attrs]).
+            {data_ah, <<"dropdown-button">>}, {data_ah_value, Cur}],
+           ?E:root_attrs(B, change)]);
 
-%%%===================================================================
-%%% split_button
-%%%===================================================================
-
-%% @doc A main action and an arrow that opens a menu. A click on the main
-%% half reaches the root (so `on(click, ...)' there is the main action);
-%% clicks on the arrow and the menu do not. Choosing an item sets
-%% `data-ah-value' and fires `change'. Options: `value', `menu_align'
-%% (start | end, default end).
--spec split_button(html(), [item()], css(), attrs()) -> element().
-split_button(Content, Items0, Css, Attrs0) ->
-    E = entry(split_button),
-    Classes = aihtml_catalog:classes(E, Css),
-    Variant = pick(Css, [primary, secondary, success, warning, error, info, outlined], primary),
-    Size = pick(Css, [sm, md, lg], md),
-    {Opts, Attrs1} = aihtml_catalog:split_options(E, Attrs0),
-    {Disabled, Attrs2} = take_flag(<<"disabled">>, Attrs1),
-    {Name, Attrs} = take(<<"name">>, Attrs2),
-    Align = maps:get(menu_align, Opts, 'end'),
+render(#ah_split_button{body = Content, items = Items0, value = Value, name = Name,
+                        variant = Variant, size = Size, menu_align = Align,
+                        disabled = Disabled} = B) ->
     lists:member(Align, [start, 'end'])
         orelse error({aihtml, {bad_option, menu_align, Align}}),
-    Cur = case maps:get(value, Opts, undefined) of
+    Classes = classes(B),
+    Cur = case Value of
               undefined -> <<>>;
               V0 -> bin(V0)
           end,
@@ -315,7 +305,34 @@ split_button(Content, Items0, Css, Attrs0) ->
           [[{data_variant, Variant}, {data_size, Size},
             {data_disabled, atom_to_binary(Disabled, utf8)},
             {data_menu_align, Align}, {data_open, <<"false">>},
-            {data_ah, <<"split-button">>}, {data_ah_value, Cur}], Attrs]).
+            {data_ah, <<"split-button">>}, {data_ah_value, Cur}],
+           ?E:root_attrs(B, click)]).
+
+classes(R) ->
+    Tag = element(1, R),
+    ?E:classes(R, fields(Tag), entry(name(Tag))).
+
+with_icon(Content, Icon0, Img, Pos) ->
+    lists:member(Pos, [left, right, top, bottom])
+        orelse error({aihtml, {bad_option, icon_position, Pos}}),
+    Icon = if
+               Img =/= undefined ->
+                   ?H:void(img, [<<"ah-btn-img">>],
+                           [{src, Img}, {width, 16}, {height, 16}, {alt, <<>>}]);
+               Icon0 =/= undefined ->
+                   ?H:el(span, Icon0, [<<"ah-btn-img">>], [{aria_hidden, <<"true">>}]);
+               true -> none
+           end,
+    case Icon of
+        none -> {Content, []};
+        _ ->
+            Text = ?H:el(span, Content, [<<"ah-btn-text">>], []),
+            Body = case Pos of
+                       P when P =:= left; P =:= top -> [Icon, Text];
+                       _ -> [Text, Icon]
+                   end,
+            {Body, [<<"ah-btn-img-", (atom_to_binary(Pos, utf8))/binary>>]}
+    end.
 
 menu_icon(_Cls, undefined) -> [];
 menu_icon(Cls, Icon) -> ?H:el(span, Icon, [Cls], [{aria_hidden, <<"true">>}]).
@@ -423,19 +440,10 @@ catalog() ->
 
 entry(Name) -> aihtml_catalog:entry(?MODULE, Name).
 
-%% The first of Choices present in Css (already validated by classes/2).
-pick(Css, Choices, Default) ->
-    case [M || M <- flatten(Css), lists:member(M, Choices)] of
-        [M | _] -> M;
-        [] -> Default
-    end.
-
-flatten(L) when is_list(L) ->
-    case L =/= [] andalso io_lib:printable_unicode_list(L) of
-        true -> [L];
-        false -> lists:flatmap(fun flatten/1, L)
-    end;
-flatten(X) -> [X].
+%% ah_button -> button
+name(Tag) ->
+    <<"ah_", Name/binary>> = atom_to_binary(Tag, utf8),
+    binary_to_existing_atom(Name, utf8).
 
 item({V, Label, IA}) -> {bin(V), Label, IA};
 item({V, Label}) -> {bin(V), Label, []};
@@ -458,10 +466,6 @@ take(Key, Attrs) ->
         {value, {_, V}, Rest} -> {V, Rest};
         false -> {undefined, N}
     end.
-
-take_flag(Key, Attrs) ->
-    {V, Rest} = take(Key, Attrs),
-    {V =/= undefined, Rest}.
 
 is_disabled(Attrs) ->
     lists:keymember(<<"disabled">>, 1, ?H:attrs(Attrs)).

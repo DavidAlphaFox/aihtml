@@ -1,6 +1,10 @@
 -module(aihtml_form_buttons_tests).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("aihtml/include/aihtml_form_buttons.hrl").
+
+-behaviour(aihtml_element).
+-export([render/1, action/4]).
 
 -define(M, aihtml_form_buttons).
 
@@ -51,8 +55,9 @@ button_icon_test() ->
     ?hasnt(<<"icon">>, binary:replace(H, <<"ah-btn-img">>, <<>>, [global])),
     I = r(?M:button(<<"Go">>, undefined, [], [{img, <<"/a.png">>}])),
     ?has(<<"<img class=\"ah-btn-img\" src=\"/a.png\" width=\"16\" height=\"16\" alt=\"\">">>, I),
+    %% field values are checked when rendering
     ?assertError({aihtml, {bad_option, icon_position, middle}},
-                 ?M:button(<<"Go">>, undefined, [], [{icon, <<"*">>}, {icon_position, middle}])).
+                 r(?M:button(<<"Go">>, undefined, [], [{icon, <<"*">>}, {icon_position, middle}]))).
 
 button_modifier_validation_test() ->
     ?assertError({aihtml, {unknown_modifier, button, huge, _}},
@@ -251,7 +256,7 @@ split_button_disabled_test() ->
     ?has(<<"data-disabled=\"true\"">>, H),
     ?assertEqual(2, length(binary:matches(H, <<" disabled">>))),
     ?assertError({aihtml, {bad_option, menu_align, middle}},
-                 ?M:split_button(<<"Go">>, [], [], [{menu_align, middle}])),
+                 r(?M:split_button(<<"Go">>, [], [], [{menu_align, middle}]))),
     ?assertError({aihtml, {conflicting_modifiers, split_button, variant, _}},
                  ?M:split_button(<<"Go">>, [], [primary, error], [])).
 
@@ -281,3 +286,118 @@ catalog_docs_test() ->
          [#{name := _, args := <<"(", _/binary>>, doc := _} = X || X <- Ms],
          ?assertEqual(maps:get(behavior, E, none) =/= none, Ms =/= [])
      end || E <- ?M:catalog()].
+
+%%% element records (designs/05-records.md)
+
+%% A test element that renders through this module.
+-record(test_badge, {?AH_BASE(?MODULE), text = <<>>}).
+
+-spec render(tuple()) -> aihtml_html:html().
+render(#test_badge{text = T} = R) ->
+    aihtml_html:el(span, T, [<<"badge">> | R#test_badge.css],
+                   aihtml_element:root_attrs(R, none));
+%% wraps the default rendering of a button
+render(#ah_button{} = B) ->
+    aihtml_html:el(span, ?M:render(B#ah_button{module = ?M}), [<<"wrap">>], []).
+
+-spec action(atom(), term(), map(), term()) -> ok.
+action(_, _, _, _) -> ok.
+
+record_equals_builder_test() ->
+    ?assertEqual(r(?M:button(<<"Save">>, save, [outlined, lg, round, <<"mt-2">>],
+                             [{disabled, true}, {id, s}, {title, <<"t">>}])),
+                 r(#ah_button{body = <<"Save">>, value = save, variant = outlined, size = lg,
+                              round = true, css = [<<"mt-2">>], disabled = true, id = s,
+                              attrs = [{title, <<"t">>}]})),
+    ?assertEqual(r(?M:button_group(?ITEMS, [list], [checkbox, vertical], [{name, v}])),
+                 r(#ah_button_group{items = ?ITEMS, value = [list], mode = checkbox,
+                                    orientation = vertical, name = v})),
+    ?assertEqual(r(?M:dropdown_button(<<"A">>, ?MENU, [sm], [{value, draft}, {auto_open, true}])),
+                 r(#ah_dropdown_button{body = <<"A">>, items = ?MENU, size = sm,
+                                       value = draft, auto_open = true})).
+
+builder_fills_fields_test() ->
+    B = ?M:toggle_button(<<"B">>, true, [secondary, <<"x">>],
+                         [{name, bold}, {disabled, true}, {icon, <<"*">>}, {title, <<"t">>},
+                          on(change)]),
+    ?assertMatch(#ah_toggle_button{value = true, variant = secondary, size = md,
+                                   name = bold, disabled = true, icon = <<"*">>,
+                                   css = [<<"x">>]}, B),
+    [{title, <<"t">>}, {<<"data-ah-on">>, _} | _] = B#ah_toggle_button.attrs,
+    ?assertError({aihtml, {record_only_field, ah_button, postback}},
+                 ?M:button(<<"x">>, undefined, [], [{postback, save}])).
+
+postback_test() ->
+    Token = fun(Html) ->
+                    {match, [T]} = re:run(r(Html), <<"data-ah-on=\"([a-z]+:[^\"]+)\"">>,
+                                          [{capture, all_but_first, binary}]),
+                    [Ev, Tok] = binary:split(T, <<":">>),
+                    {ok, Ref} = aihtml_action:unsign(Tok),
+                    {Ev, Ref}
+            end,
+    ?assertEqual({<<"click">>, {?MODULE, save, #{id => 7}}},
+                 Token(#ah_button{body = <<"Save">>, postback = {save, #{id => 7}}})),
+    ?assertEqual({<<"change">>, {?MODULE, pick, #{}}},
+                 Token(#ah_segmented_control{items = ?ITEMS, postback = pick})),
+    ?assertEqual({<<"click">>, {other_mod, go, 1}},
+                 Token(#ah_split_button{body = <<"Go">>, postback = {go, 1},
+                                        delegate = other_mod})),
+    %% button_group: click in default mode, change in radio mode
+    ?assertMatch({<<"click">>, _}, Token(#ah_button_group{items = ?ITEMS, postback = a})),
+    ?assertMatch({<<"change">>, _}, Token(#ah_button_group{items = ?ITEMS, mode = radio,
+                                                           postback = a})),
+    H = r(#ah_button{postback = {save, #{}, #{debounce => 300, confirm => <<"Sure?">>}}}),
+    ?has(<<"data-ah-confirm=\"Sure?\"">>, H),
+    ?assertMatch({match, _}, re:run(H, <<"data-ah-on=\"click:[^\":]+:300\"">>)),
+    ?assertError({aihtml, {bad_postback, ah_button, "save"}},
+                 r(#ah_button{postback = "save"})).
+
+field_validation_test() ->
+    ?assertError({aihtml, {bad_modifier, button, variant, huge, _}},
+                 r(#ah_button{variant = huge})),
+    ?assertError({aihtml, {bad_modifier, button, size, primary, _}},
+                 r(#ah_button{size = primary})),
+    ?assertError({aihtml, {bad_flag, button, round, yes}}, r(#ah_button{round = yes})),
+    ?assertError({aihtml, {modifier_in_css, button, primary}},
+                 r(#ah_button{css = [primary]})),
+    %% a group without a default may stay undefined
+    ?has(<<"class=\"ah-dropdown-btn\"">>,
+         r(#ah_dropdown_button{})).
+
+custom_module_test() ->
+    %% an element of another module, nested in a component
+    H = r(#ah_button{body = #test_badge{text = <<"<3">>, css = [<<"ml-1">>], id = b}}),
+    ?has(<<"<span class=\"badge ml-1\" id=\"b\">&lt;3</span></button>">>, H),
+    ?assertError({aihtml, {no_postback_event, test_badge}},
+                 r(#test_badge{postback = x})),
+    %% one button rendered by another module
+    ?assertEqual(<<"<span class=\"wrap\">", (r(#ah_button{body = <<"x">>}))/binary, "</span>">>,
+                 r(#ah_button{module = ?MODULE, body = <<"x">>})),
+    ?assertError({aihtml, {no_render, no_such_module, ah_button}},
+                 r(#ah_button{module = no_such_module})).
+
+records_match_catalog_test() ->
+    Base = [module, id, css, attrs, postback, delegate],
+    [begin
+         Tag = list_to_atom("ah_" ++ atom_to_list(N)),
+         Fields = ?M:fields(Tag),
+         ?assertEqual(Base, lists:sublist(Fields, 6)),
+         Defaults = maps:from_list(lists:zip(Fields, tl(tuple_to_list(default(Tag))))),
+         [?assertEqual({N, G, case D of none -> undefined; _ -> D end},
+                       {N, G, maps:get(G, Defaults)})
+          || {G, {_, D}} <- maps:to_list(maps:get(groups, E, #{}))],
+         [?assertEqual({N, F, false}, {N, F, maps:get(F, Defaults)})
+          || F <- maps:get(flags, E, [])],
+         [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
+         ?assertEqual(?M, maps:get(module, Defaults))
+     end || #{name := N} = E <- ?M:catalog()].
+
+default(ah_button) -> #ah_button{};
+default(ah_link_button) -> #ah_link_button{};
+default(ah_toggle_button) -> #ah_toggle_button{};
+default(ah_button_group) -> #ah_button_group{};
+default(ah_segmented_control) -> #ah_segmented_control{};
+default(ah_dropdown_button) -> #ah_dropdown_button{};
+default(ah_split_button) -> #ah_split_button{}.
+
+on(Event) -> aihtml:on(Event, {?MODULE, x, #{}}).
