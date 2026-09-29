@@ -9,106 +9,13 @@
   "use strict";
 
   var NS = AH.NS;
-  var seq = 0;
+  var P = AH.lib.picker;
+  var uid = P.uid, clamp = P.clamp, round2 = P.round2, disabled = P.disabled,
+    fenceNativeEvents = P.fenceNativeEvents, openPopup = P.openPopup,
+    closePopup = P.closePopup, stopFloat = P.stopFloat, pointerXY = P.pointerXY, drag = P.drag;
 
-  function uid(prefix) {
-    seq += 1;
-    return prefix + seq + "-" + Math.random().toString(36).slice(2, 7);
-  }
-
-  function clamp(v, lo, hi) {
-    return Math.max(lo, Math.min(hi, v));
-  }
-
-  function disabled(el) {
-    return el.getAttribute("aria-disabled") === "true";
-  }
-
-  // Keep the inner fields' native events inside the component.
-  function fenceNativeEvents($el) {
-    $el.on("input" + NS + " change" + NS, "input", function (e) {
-      e.stopPropagation();
-    });
-  }
-
-  // ------------------------------------------------------------------
-  // Popup (as in the colour picker): a field toggles a panel placed by AH.float
-  // (below, above when there is no room), closed by Escape or a press
-  // outside.
-  // ------------------------------------------------------------------
-
-  function popupOf($el) {
-    return $el.children(".ah-timepicker-popup").first();
-  }
-
-  function isOpen($el) {
-    var $p = popupOf($el);
-    return $p.length > 0 && !$p.prop("hidden");
-  }
-
-  function openPopup(el, $el, cls, $opener, onOpen) {
-    var $p = popupOf($el);
-    if (!$p.length || !$p.prop("hidden") || disabled(el)) { return; }
-    if (onOpen) { onOpen(); }
-    $p.prop("hidden", false);
-    $el.addClass(cls + "-open");
-    $opener.attr("aria-expanded", "true");
-    // Fixed positioning at the field (the input area or the trigger), so
-    // an overflow:hidden ancestor such as a card does not clip it; flips
-    // above when there is no room below and follows scrolling.
-    $.data(el, "ah-float", AH.float($p[0], $el.children().first()[0],
-                                    { placement: "bottom", align: "start", offset: 4 }));
-    var ns = ".ahpop" + el.getAttribute("data-ah-uid");
-    $(document).off(ns).on("mousedown" + ns + " touchstart" + ns + " focusin" + ns, function (e) {
-      if (!$.contains(el, e.target) && e.target !== el) {
-        closePopup(el, $el, cls, $opener, false);
-      }
-    });
-  }
-
-  function closePopup(el, $el, cls, $opener, refocus) {
-    var $p = popupOf($el);
-    stopFloat(el);
-    if (!$p.length || $p.prop("hidden")) { return; }
-    $p.prop("hidden", true);
-    $el.removeClass(cls + "-open");
-    $opener.attr("aria-expanded", "false");
-    if (refocus) { $opener.trigger("focus"); }
-  }
-
-  function stopFloat(el) {
-    $(document).off(".ahpop" + el.getAttribute("data-ah-uid"));
-    var h = $.data(el, "ah-float");
-    if (h) { h.stop(); $.removeData(el, "ah-float"); }
-  }
-
-  function pointerXY(e) {
-    var oe = e.originalEvent || e;
-    var t = oe.touches && oe.touches[0] ? oe.touches[0] : oe;
-    return { x: t.clientX, y: t.clientY };
-  }
-
-  // Pointer drag on one element: start(e), move(e), end(e). Uses pointer
-  // capture, so nothing is bound on document.
-  function drag($target, el, start, move, end) {
-    $target.on("pointerdown" + NS, function (e) {
-      if (disabled(el) || (e.button !== undefined && e.button !== 0)) { return; }
-      if (start(e) === false) { return; }
-      e.preventDefault();
-      var node = this;
-      var id = e.originalEvent && e.originalEvent.pointerId;
-      if (id !== undefined && node.setPointerCapture) {
-        try { node.setPointerCapture(id); } catch (err) { /* synthetic event */ }
-      }
-      node.focus && node.focus({ preventScroll: true });
-      var $n = $(node);
-      $n.on("pointermove" + NS + "drag", function (m) { move(m); });
-      $n.on("pointerup" + NS + "drag pointercancel" + NS + "drag", function (u) {
-        $n.off(NS + "drag");
-        end(u);
-      });
-    });
-  }
+  function popupOf($el) { return P.popupOf($el, TP); }
+  function isOpen($el) { return P.isOpen($el, TP); }
 
   // ------------------------------------------------------------------
   // timepicker (sigil timepicker, timepicker/math, timepicker/svg)
@@ -136,7 +43,6 @@
     return { x: CX + r * Math.sin(angle), y: CY - r * Math.cos(angle) };
   }
 
-  function round2(n) { return Math.round(n * 100) / 100; }
 
   // "14:30", "14:30:00", "2:30 pm", "2 pm", "1430" -> minutes of the day
   function parseTime(s) {
@@ -363,7 +269,7 @@
 
   AH.define("timepicker", {
     init: function (el, $el) {
-      el.setAttribute("data-ah-uid", ++seq);
+      el.setAttribute("data-ah-uid", P.nextId());
       var lo = parseTime(el.getAttribute("data-min"));
       var hi = parseTime(el.getAttribute("data-max"));
       var st = {
