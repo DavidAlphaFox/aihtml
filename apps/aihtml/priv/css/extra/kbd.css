@@ -1,0 +1,17 @@
+/* aihtml additions for kbd (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- kbd: key combination ---- */
+.ah-kbd-combo {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+}
+.ah-kbd-combo__sep {
+  font-size: 12px;
+  color: var(--ah-color-text-muted);
+}
