@@ -193,7 +193,7 @@ tag_input_action_on_root_test() ->
     H = r(?M:tag_input([<<"x">>], [], [{<<"data-ah-on">>, {actions, [{<<"change">>, <<"T">>, #{}}]}}])),
     has(H, <<"data-chip-variant=\"soft\" data-ah-on=\"change:T\">">>).
 
-%%% catalog / examples
+%%% catalog
 
 catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
@@ -203,11 +203,14 @@ catalog_test() ->
          ?assertEqual(form, C)
      end || #{name := N, signature := S, category := C} <- ?M:catalog()].
 
-examples_render_test() ->
-    Ex = ?M:examples(),
-    ?assertEqual(lists:sort([N || #{name := N} <- ?M:catalog()]),
-                 lists:usort([N || {N, _, _} <- Ex])),
-    [?assert(byte_size(r(H)) > 0) || {_, _, H} <- Ex].
+catalog_docs_test() ->
+    [begin
+         Documented = maps:keys(maps:get(option_docs, E)),
+         Keys = maps:get(options, E, []) ++ maps:get(flags, E, [])
+             ++ lists:append([Ms || {Ms, _} <- maps:values(maps:get(groups, E, #{}))]),
+         ?assertEqual([], Keys -- Documented),
+         ?assert(is_list(maps:get(methods, E)))
+     end || E <- ?M:catalog()].
 
 arity(Sig) ->
     [_, Args] = binary:split(Sig, <<"(">>),

@@ -21,7 +21,7 @@
 
 -export([input/3, textarea/3, password_input/3, number_input/3,
          input_otp/4, tag_input/3,
-         catalog/0, examples/0]).
+         catalog/0]).
 
 -define(H, aihtml_html).
 
@@ -439,6 +439,13 @@ family(Prefix, Mods) ->
 
 -define(SIZES, {[sm, lg], none}).
 -define(STATES, {[invalid, valid], none}).
+-define(M(Name, Args, Doc), #{name => Name, args => Args, doc => Doc}).
+-define(FIELD_DOCS,
+        #{sm => <<"Small field.">>, lg => <<"Large field.">>,
+          invalid => <<"Error border; sets aria-invalid=\"true\" on the control.">>,
+          valid => <<"Success border.">>,
+          disabled => <<"Disable the native control.">>,
+          label => <<"Floating label text; it replaces the placeholder.">>}).
 
 %%%===================================================================
 %%% Catalog
@@ -457,7 +464,18 @@ catalog() ->
        behavior => <<"input">>,
        events => [<<"input">>, <<"change">>],
        doc => <<"Text input with sizes, valid/invalid states, prefix/suffix "
-                "addons, a clear button and a floating label.">>},
+                "addons, a clear button and a floating label.">>,
+       option_docs => maps:merge(?FIELD_DOCS,
+                                 #{no_rounded => <<"Square corners.">>,
+                                   clearable => <<"A clear button (and Escape) empties the field, "
+                                                  "firing input and change.">>,
+                                   prefix => <<"HTML before the input: text or an icon.">>,
+                                   suffix => <<"HTML after the input.">>}),
+       methods => [?M(getValue, <<"()">>, <<"Return the value.">>),
+                   ?M(setValue, <<"(Value)">>, <<"Set the value without firing events.">>),
+                   ?M(clear, <<"()">>, <<"Empty the field, firing input and change.">>),
+                   ?M(focus, <<"()">>, <<"Focus the input.">>),
+                   ?M(selectAll, <<"()">>, <<"Focus the input and select its text.">>)]},
      #{name => textarea, category => form,
        signature => <<"textarea(Value, Css, Attrs)">>,
        root => <<"ah-textarea-group">>,
@@ -467,7 +485,12 @@ catalog() ->
        options => [label],
        behavior => <<"input">>,
        events => [<<"input">>, <<"change">>],
-       doc => <<"Multi-line text input styled like input.">>},
+       doc => <<"Multi-line text input styled like input.">>,
+       option_docs => maps:merge(?FIELD_DOCS, #{no_rounded => <<"Square corners.">>}),
+       methods => [?M(getValue, <<"()">>, <<"Return the value.">>),
+                   ?M(setValue, <<"(Value)">>, <<"Set the value without firing events.">>),
+                   ?M(clear, <<"()">>, <<"Empty the field, firing input and change.">>),
+                   ?M(focus, <<"()">>, <<"Focus the textarea.">>)]},
      #{name => password_input, category => form,
        signature => <<"password_input(Value, Css, Attrs)">>,
        root => <<"ah-pwd-group">>,
@@ -478,7 +501,17 @@ catalog() ->
        behavior => <<"password-input">>,
        events => [<<"input">>, <<"change">>],
        doc => <<"Password field with a show/hide toggle and an optional "
-                "strength meter.">>},
+                "strength meter.">>,
+       option_docs => maps:merge(?FIELD_DOCS,
+                                 #{toggle => <<"Show the eye button that reveals the password "
+                                               "(default true).">>,
+                                   strength => <<"Show a strength bar and label under the field "
+                                                 "(default false).">>}),
+       methods => [?M(getValue, <<"()">>, <<"Return the value.">>),
+                   ?M(setValue, <<"(Value)">>, <<"Set the value and update the strength meter.">>),
+                   ?M(toggle, <<"([Show])">>, <<"Reveal (true) or hide (false) the password; "
+                                               "flips it without an argument.">>),
+                   ?M(focus, <<"()">>, <<"Focus the input.">>)]},
      #{name => number_input, category => form,
        signature => <<"number_input(Value, Css, Attrs)">>,
        root => <<"ah-numinput-group">>,
@@ -490,7 +523,25 @@ catalog() ->
        behavior => <<"number-input">>,
        events => [<<"input">>, <<"change">>],
        doc => <<"Numeric field with spin buttons, arrow keys and the mouse "
-                "wheel, clamped to min/max.">>},
+                "wheel, clamped to min/max.">>,
+       option_docs => maps:merge(?FIELD_DOCS,
+                                 #{readonly => <<"Read only; hides the spin buttons.">>,
+                                   min => <<"Lowest value; input is clamped to it.">>,
+                                   max => <<"Highest value; input is clamped to it.">>,
+                                   step => <<"Amount per spin, arrow key or wheel notch (default 1); "
+                                             "PageUp/PageDown step ten times.">>,
+                                   decimals => <<"Digits after the point (default: those of step).">>,
+                                   spin => <<"Show the spin buttons (default true).">>,
+                                   symbol => <<"Text shown beside the field, e.g. $ or %.">>,
+                                   symbol_position => <<"left (default) or right.">>,
+                                   allow_null => <<"Keep a blank field blank (default true); "
+                                                   "false turns it into 0.">>}),
+       methods => [?M(getValue, <<"()">>, <<"Return the number, or null when blank.">>),
+                   ?M(setValue, <<"(Number)">>, <<"Set, clamp and format; fires change if it differs.">>),
+                   ?M(stepUp, <<"()">>, <<"Add one step, firing input and change.">>),
+                   ?M(stepDown, <<"()">>, <<"Subtract one step, firing input and change.">>),
+                   ?M(clear, <<"()">>, <<"Blank the field (or 0 without allow_null).">>),
+                   ?M(focus, <<"()">>, <<"Focus the input.">>)]},
      #{name => input_otp, category => form,
        signature => <<"input_otp(Length, Value, Css, Attrs)">>,
        root => <<"ah-input-otp">>,
@@ -500,7 +551,18 @@ catalog() ->
        behavior => <<"input-otp">>,
        events => [<<"change">>, <<"ah:complete">>],
        doc => <<"One-time code entry, one box per character; paste fills "
-                "every box.">>},
+                "every box.">>,
+       option_docs => #{disabled => <<"Disable every box and the hidden input.">>,
+                        pattern => <<"digit (default) or alphanumeric.">>,
+                        separator_at => <<"Put a dash after this many boxes.">>,
+                        name => <<"Name of the hidden input that submits the code.">>},
+       methods => [?M(getValue, <<"()">>, <<"Return the code typed so far.">>),
+                   ?M(setValue, <<"(Code)">>, <<"Fill the boxes; fires change (and ah:complete "
+                                                 "when full) if it differs.">>),
+                   ?M(clear, <<"()">>, <<"Empty every box, firing change.">>),
+                   ?M(focus, <<"()">>, <<"Focus the first empty box.">>),
+                   ?M(invalid, <<"([On])">>, <<"Mark the code wrong (red boxes) until the "
+                                                "next edit; false clears it.">>)]},
      #{name => tag_input, category => form,
        signature => <<"tag_input(Tags, Css, Attrs)">>,
        root => <<"ah-tag-input">>,
@@ -510,72 +572,19 @@ catalog() ->
        behavior => <<"tag-input">>,
        events => [<<"change">>],
        doc => <<"Chips plus a text field: Enter or comma adds a tag, "
-                "Backspace removes the last.">>}].
-
-%%%===================================================================
-%%% Examples
-%%%===================================================================
-
--spec examples() -> [{atom(), binary(), aihtml_html:html()}].
-examples() ->
-    Row = fun(Items) -> ?H:el('div', Items, [<<"flex flex-wrap items-start gap-4">>], []) end,
-    Col = fun(Items) -> ?H:el('div', Items, [<<"flex flex-col gap-3">>], []) end,
-    Search = {safe, <<"<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" "
-                      "stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\">"
-                      "<circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"m20 20-3.5-3.5\"/></svg>">>},
-    [{input, <<"Sizes, states and addons">>,
-      Col([Row([input(undefined, [sm, <<"w-56">>], [{placeholder, <<"Small">>}]),
-                input(undefined, [<<"w-56">>], [{placeholder, <<"Medium">>}, {name, q}]),
-                input(undefined, [lg, <<"w-56">>], [{placeholder, <<"Large">>}])]),
-           Row([input(<<"not-an-email">>, [invalid, <<"w-56">>], []),
-                input(<<"ada@example.com">>, [valid, <<"w-56">>], []),
-                input(<<"Disabled">>, [disabled, <<"w-56">>], [])]),
-           Row([input(undefined, [<<"w-56">>], [{prefix, <<"https://">>},
-                                                {placeholder, <<"example.com">>}]),
-                input(<<"42">>, [<<"w-40">>], [{suffix, <<"kg">>}]),
-                input(undefined, [clearable, <<"w-56">>], [{prefix, Search},
-                                                          {placeholder, <<"Search">>}]),
-                input(<<"Clear me">>, [clearable, <<"w-48">>], [{id, <<"ex-clear">>}])]),
-           Row([input(undefined, [<<"w-56">>], [{label, <<"Floating label">>}]),
-                input(<<"Filled <b>&</b>">>, [<<"w-56">>], [{label, <<"With value">>}]),
-                input(undefined, [no_rounded, <<"w-56">>], [{placeholder, <<"No rounding">>}])])])},
-     {textarea, <<"Multi-line">>,
-      Row([textarea(undefined, [<<"w-72">>], [{placeholder, <<"Write something...">>}]),
-           textarea(<<"Line one\nLine </textarea> two">>, [invalid, <<"w-72">>], [{rows, 4}]),
-           textarea(undefined, [sm, <<"w-60">>], [{label, <<"Notes">>}]),
-           textarea(<<"Read only">>, [disabled, <<"w-60">>], [])])},
-     {password_input, <<"Reveal toggle and strength">>,
-      Col([Row([password_input(<<"secret123">>, [<<"w-60">>], [{name, password}]),
-                password_input(undefined, [<<"w-60">>],
-                               [{strength, true}, {placeholder, <<"New password">>}]),
-                password_input(undefined, [<<"w-60">>], [{label, <<"Password">>}])]),
-           Row([password_input(<<"x">>, [sm, invalid, <<"w-60">>], []),
-                password_input(undefined, [lg, <<"w-60">>], [{toggle, false},
-                                                            {placeholder, <<"No toggle">>}]),
-                password_input(<<"hunter2">>, [disabled, <<"w-60">>], [])])])},
-     {number_input, <<"Spin buttons, min/max/step, symbols">>,
-      Col([Row([number_input(5, [<<"w-40">>], [{min, 0}, {max, 10}, {name, qty},
-                                               {id, <<"ex-num">>}]),
-                number_input(<<"19.5">>, [<<"w-44">>], [{step, 0.5}, {symbol, <<"$">>}]),
-                number_input(75, [<<"w-40">>], [{min, 0}, {max, 100},
-                                                {symbol, <<"%">>}, {symbol_position, right}]),
-                number_input(undefined, [<<"w-40">>], [{spin, false},
-                                                       {placeholder, <<"No spin">>}])]),
-           Row([number_input(1, [sm, <<"w-32">>], []),
-                number_input(2, [lg, <<"w-40">>], []),
-                number_input(200, [invalid, <<"w-40">>], [{max, 100}]),
-                number_input(3, [readonly, <<"w-32">>], []),
-                number_input(4, [disabled, <<"w-32">>], []),
-                number_input(undefined, [<<"w-40">>], [{label, <<"Amount">>}])])])},
-     {input_otp, <<"Digits, separator, alphanumeric">>,
-      Col([input_otp(6, undefined, [], [{name, code}, {id, <<"ex-otp">>}]),
-           input_otp(6, <<"123456">>, [], [{separator_at, 3}]),
-           input_otp(4, <<"A1">>, [], [{pattern, alphanumeric}]),
-           input_otp(4, <<"12">>, [disabled], [])])},
-     {tag_input, <<"Add with Enter or comma, Backspace removes">>,
-      Col([tag_input([<<"erlang">>, <<"jquery">>, <<"<tailwind>">>], [<<"w-96">>],
-                     [{name, tags}, {id, <<"ex-tags">>}]),
-           tag_input([<<"red">>], [<<"w-96">>], [{chip_color, error}, {chip_variant, filled},
-                                                 {max_tags, 3},
-                                                 {placeholder, <<"Up to 3 tags">>}]),
-           tag_input([<<"locked">>], [disabled, <<"w-96">>], [])])}].
+                "Backspace removes the last.">>,
+       option_docs => #{disabled => <<"Read-only chips; the hidden input is disabled too.">>,
+                        placeholder => <<"Placeholder of the text field (default \"Add tag...\").">>,
+                        max_tags => <<"Ignore new tags past this count.">>,
+                        allow_duplicates => <<"Keep repeated tags (default false).">>,
+                        chip_color => <<"Chip colour: primary (default), secondary, success, "
+                                        "warning, error or info.">>,
+                        chip_variant => <<"Chip style: soft (default), filled or outlined.">>,
+                        name => <<"Name of the hidden input; its value is the tags joined "
+                                  "with commas.">>},
+       methods => [?M(getTags, <<"()">>, <<"Return the tags as an array.">>),
+                   ?M(setTags, <<"(Tags)">>, <<"Replace the tags, firing change.">>),
+                   ?M(add, <<"(Tag)">>, <<"Add a tag (subject to max_tags and duplicates).">>),
+                   ?M(remove, <<"(Tag)">>, <<"Remove the first tag equal to Tag.">>),
+                   ?M(clear, <<"()">>, <<"Remove every tag, firing change.">>),
+                   ?M(focus, <<"()">>, <<"Focus the text field.">>)]}].
