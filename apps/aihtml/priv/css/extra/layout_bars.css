@@ -1,0 +1,16 @@
+/* aihtml additions for the layout_bars group (aihtml_layout_bars). */
+
+/* navigationbar with a fixed height (single_fit_height): the open body is
+   sized to fill the rest, so its content scrolls instead of being cut. */
+.ah-navigationbar[data-fit] > .ah-navigationbar-item > .ah-navigationbar-body {
+  overflow-y: auto;
+}
+
+/* command palette overlay: closed until opened (display:flex would
+   otherwise beat the hidden attribute). */
+.ah-command-overlay[hidden] { display: none; }
+
+/* filtered-out commands and emptied groups */
+.ah-command__item[hidden],
+.ah-command__group[hidden],
+.ah-command__empty[hidden] { display: none; }
