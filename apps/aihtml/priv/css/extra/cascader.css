@@ -1,0 +1,35 @@
+/* aihtml additions for cascader (aihtml_cascader); sigil styles live in
+   ../sigil/components. */
+
+/* Parts the behaviours show and hide with the hidden attribute; sigil's
+   rules give them a display that would win over the UA stylesheet. */
+.ah-cascader-menu-column[hidden],
+.ah-cascader-menus[hidden],
+.ah-cascader-search-panel[hidden],
+.ah-cascader-clear[hidden],
+.ah-cascader-loader {
+  display: none;
+}
+
+/* The keyboard cursor of the cascader menus (sigil styles :focus-visible
+   rows; here the focus stays in the text field). */
+.ah-cascader-menu li[data-value].ah-cascader-menu-item-focused {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+  border-radius: 2px;
+}
+
+/* A lazily loaded level while its action runs. */
+.ah-cascader-menus > .ah-cascader-loading {
+  border-left: var(--ah-border-width) solid var(--ah-color-border);
+}
+
+/* Search results: the path wraps instead of widening the popup forever. */
+.ah-cascader-search-panel {
+  max-width: 480px;
+}
+
+.ah-cascader-search-item[aria-disabled="true"] {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
