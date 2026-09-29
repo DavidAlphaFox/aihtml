@@ -1,0 +1,55 @@
+/* aihtml additions for the datepicker (aihtml_datepicker).
+   Sigil styles live in ../sigil/components. */
+
+/* Year buttons next to sigil's month buttons: « ‹ title › » */
+.ah-datepicker-nav-group {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.ah-datepicker-nav-year {
+  font-size: 14px;
+}
+
+/* Clear button (clearable), before the calendar trigger */
+.ah-datepicker-clear {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  margin-right: 4px;
+  border: none;
+  border-radius: var(--ah-radius-sm);
+  background: transparent;
+  color: var(--ah-color-text-secondary);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ah-datepicker-clearable:not([data-ah-value=""]) .ah-datepicker-clear {
+  display: inline-flex;
+}
+
+.ah-datepicker-clear:hover {
+  color: var(--ah-color-text);
+  background: var(--ah-color-grey-100);
+}
+
+.ah-datepicker-disabled .ah-datepicker-input,
+.ah-datepicker-disabled .ah-datepicker-trigger {
+  cursor: not-allowed;
+}
+
+.ah-datepicker-readonly .ah-datepicker-trigger {
+  cursor: default;
+}
+
+/* inline: the month grid sits under the field, always shown */
+.ah-datepicker-inline .ah-datepicker-popup {
+  position: static;
+  display: block;
+  z-index: auto;       /* a flex item keeps its z-index: do not cover real popups */
+  margin-top: 4px;
+  box-shadow: none;
+}
