@@ -25,7 +25,7 @@
 
 -export([timepicker/3, colorpicker/3,
          normalize_time/1, normalize_color/2,
-         catalog/0, examples/0]).
+         catalog/0]).
 
 -define(H, aihtml_html).
 
@@ -566,7 +566,7 @@ clear_button(Cls, Hidden) ->
            {hidden, Hidden}]).
 
 %%%===================================================================
-%%% Catalog and examples
+%%% Catalog
 %%%===================================================================
 
 -spec catalog() -> [aihtml_catalog:entry()].
@@ -580,6 +580,28 @@ catalog() ->
        options => [format, minute_step, auto_switch, min, max, placeholder, footer],
        behavior => <<"timepicker">>,
        events => [<<"change">>],
+       option_docs =>
+           #{portrait => <<"Header above the clock (sigil's default view).">>,
+             landscape => <<"Header beside the clock.">>,
+             inline => <<"Render the clock panel in place instead of a field with a popup.">>,
+             disabled => <<"No interaction; the hidden input is disabled too.">>,
+             clearable => <<"A clear button in the field that empties the value.">>,
+             format => <<"'12h' (default, with AM/PM) or '24h' (two rings).">>,
+             minute_step => <<"Minute granularity, 1..30 (default 5).">>,
+             auto_switch => <<"Go to the minutes after an hour is picked (default true).">>,
+             min => <<"Earliest selectable time, same forms as Value.">>,
+             max => <<"Latest selectable time, same forms as Value.">>,
+             placeholder => <<"Field text when empty.">>,
+             footer => <<"HTML under the clock.">>},
+       methods =>
+           [#{name => getValue, args => <<"()">>, doc => <<"Return \"HH:MM\" or \"\".">>},
+            #{name => setValue, args => <<"(Time)">>,
+              doc => <<"Set \"HH:MM\" (or \"\" to clear) without firing change.">>},
+            #{name => clear, args => <<"()">>, doc => <<"Empty the value and fire change.">>},
+            #{name => open, args => <<"()">>, doc => <<"Open the popup and focus the clock.">>},
+            #{name => close, args => <<"()">>, doc => <<"Close the popup.">>},
+            #{name => setMode, args => <<"(hours | minutes)">>,
+              doc => <<"Show the hour or the minute face.">>}],
        doc => <<"Clock-face time picker (12h/24h, minute step, min/max) in a popup "
                 "field, or inline. Value \"HH:MM\".">>},
      #{name => colorpicker, category => form,
@@ -590,62 +612,24 @@ catalog() ->
        options => [swatches, placeholder, width, height, clear_label],
        behavior => <<"colorpicker">>,
        events => [<<"input">>, <<"change">>],
+       option_docs =>
+           #{inline => <<"Render the panel in place instead of a trigger with a popup.">>,
+             disabled => <<"No interaction; the hidden input is disabled too.">>,
+             clearable => <<"A link under the panel that empties the value.">>,
+             alpha => <<"Alpha bar and input; the value may be #rrggbbaa.">>,
+             no_inputs => <<"Hide the hex and RGB inputs.">>,
+             no_preview => <<"Hide the preview square beside the hex input.">>,
+             swatches => <<"List of preset colours shown under the inputs.">>,
+             placeholder => <<"Trigger text when empty (default \"No color\").">>,
+             width => <<"Panel width: pixels or a CSS length.">>,
+             height => <<"Height of the colour area and bars: pixels or a CSS length.">>,
+             clear_label => <<"Text of the clear link (default \"Clear\").">>},
+       methods =>
+           [#{name => getValue, args => <<"()">>, doc => <<"Return the hex value or \"\".">>},
+            #{name => setValue, args => <<"(Hex)">>,
+              doc => <<"Set a colour (or \"\" to clear) without firing events.">>},
+            #{name => clear, args => <<"()">>, doc => <<"Empty the value and fire change.">>},
+            #{name => open, args => <<"()">>, doc => <<"Open the popup.">>},
+            #{name => close, args => <<"()">>, doc => <<"Close the popup.">>}],
        doc => <<"HSV colour picker: saturation/value area, hue and alpha bars, hex and "
                 "RGB inputs, swatches; in a popup field or inline. Value \"#rrggbb[aa]\".">>}].
-
--spec examples() -> [{atom(), binary(), aihtml_html:html()}].
-examples() ->
-    Row = fun(Items) -> ?H:el('div', Items, [<<"flex flex-wrap items-start gap-6">>], []) end,
-    Col = fun(Items) -> ?H:el('div', Items, [<<"flex flex-col gap-4">>], []) end,
-    Cap = fun(Text, Html) ->
-                  ?H:el('div', [?H:el('div', Text, [<<"text-xs text-muted mb-1">>], []), Html],
-                        [], [])
-          end,
-    Palette = [<<"#ef4444">>, <<"#f97316">>, <<"#eab308">>, <<"#22c55e">>, <<"#06b6d4">>,
-               <<"#3b82f6">>, <<"#8b5cf6">>, <<"#ec4899">>, <<"#111827">>, <<"#ffffff">>],
-    [{timepicker, <<"Popup fields, 12h and 24h, inline panels">>,
-      Col([Row([Cap(<<"12h, name=start">>,
-                    timepicker(<<"14:30">>, [<<"w-48">>],
-                               [{name, start}, {id, <<"ex-tp-12">>}])),
-                Cap(<<"24h, 15 minute step, clearable">>,
-                    timepicker({9, 45}, [clearable, <<"w-48">>],
-                               [{format, '24h'}, {minute_step, 15}, {name, meeting},
-                                {id, <<"ex-tp-24">>}])),
-                Cap(<<"Empty, placeholder, 09:00-17:30">>,
-                    timepicker(undefined, [clearable, <<"w-48">>],
-                               [{placeholder, <<"Pick a time">>}, {min, <<"09:00">>},
-                                {max, <<"17:30">>}, {id, <<"ex-tp-empty">>}])),
-                Cap(<<"Disabled">>, timepicker(<<"07:05">>, [disabled, <<"w-48">>], []))]),
-           Row([Cap(<<"Inline 12h">>,
-                    timepicker(<<"08:20">>, [inline], [{id, <<"ex-tp-inline">>}])),
-                Cap(<<"Inline 24h, footer">>,
-                    timepicker(<<"21:00">>, [inline],
-                               [{format, '24h'},
-                                {footer, ?H:el(span, <<"Times are <local>">>,
-                                               [<<"text-xs text-muted">>], [])}])),
-                Cap(<<"Inline landscape">>,
-                    timepicker(<<"00:10">>, [inline, landscape], [])),
-                Cap(<<"Inline disabled">>,
-                    timepicker(<<"12:00">>, [inline, disabled], [{format, '24h'}]))])])},
-     {colorpicker, <<"Popup fields, alpha, swatches, inline panels">>,
-      Col([Row([Cap(<<"Popup, swatches, name=brand">>,
-                    colorpicker(<<"#3B82F6">>, [],
-                                [{name, brand}, {swatches, Palette}, {id, <<"ex-cp">>}])),
-                Cap(<<"Alpha, clearable">>,
-                    colorpicker(<<"#22c55e80">>, [alpha, clearable],
-                                [{id, <<"ex-cp-alpha">>}, {swatches, [<<"#00000000">>,
-                                                                      <<"#ef444480">>]}])),
-                Cap(<<"Empty">>,
-                    colorpicker(undefined, [clearable],
-                                [{placeholder, <<"Pick a colour">>}, {id, <<"ex-cp-empty">>}])),
-                Cap(<<"Disabled">>, colorpicker(<<"#f97316">>, [disabled], []))]),
-           Row([Cap(<<"Inline (sigil default)">>,
-                    colorpicker(<<"ff0000">>, [inline], [{id, <<"ex-cp-inline">>}])),
-                Cap(<<"Inline, alpha, swatches">>,
-                    colorpicker({139, 92, 246, 200}, [inline, alpha],
-                                [{swatches, Palette}])),
-                Cap(<<"No inputs, 200x120">>,
-                    colorpicker(<<"#0ea5e9">>, [inline, no_inputs],
-                                [{width, 200}, {height, 120}])),
-                Cap(<<"Inline disabled">>,
-                    colorpicker(<<"#ec4899">>, [inline, disabled, no_preview], []))])])}].

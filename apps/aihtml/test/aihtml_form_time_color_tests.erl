@@ -241,16 +241,15 @@ colorpicker_escaping_test() ->
     ?assert(has(H, <<"aria-label=\"a&quot;b\"">>)).
 
 %%%-------------------------------------------------------------------
-%%% catalog and examples
+%%% catalog
 %%%-------------------------------------------------------------------
 
 catalog_test() ->
     [T, C] = ?M:catalog(),
     ?assertMatch(#{name := timepicker, behavior := <<"timepicker">>}, T),
     ?assertMatch(#{name := colorpicker, behavior := <<"colorpicker">>}, C),
-    [?assert(erlang:function_exported(?M, N, 3)) || #{name := N} <- [T, C]].
-
-examples_render_test() ->
-    Ex = ?M:examples(),
-    ?assertEqual([timepicker, colorpicker], [N || {N, _, _} <- Ex]),
-    [?assert(is_binary(r(Html))) || {_, _, Html} <- Ex].
+    [?assert(erlang:function_exported(?M, N, 3)) || #{name := N} <- [T, C]],
+    %% every option and flag is documented
+    [?assertEqual([], (Opts ++ Flags) -- maps:keys(Docs))
+     || #{options := Opts, flags := Flags, option_docs := Docs} <- [T, C]],
+    [?assertNotEqual([], Ms) || #{methods := Ms} <- [T, C]].
