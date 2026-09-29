@@ -128,9 +128,10 @@ api(#{name := Name, root := Root, behavior := Behavior, events := Events} = E) -
     Methods = maps:get(methods, E, []),
     ['div'([h3(<<"签名"/utf8>>, [<<"api-h">>], []),
             code(maps:get(signature, E), [<<"font-mono">>], []),
-            p([<<"最后两个参数固定为 Css 和 Attrs。Css 里的原子是下表的修饰符，binary 是字面类名（通常是 Tailwind 工具类）；"
+            p([<<"函数写法的最后两个参数固定为 Css 和 Attrs。Css 里的原子是下表的修饰符，binary 是字面类名（通常是 Tailwind 工具类）；"
                  "Attrs 是 HTML 属性，其中下表列出的键是组件选项。"/utf8>>],
               [<<"mt-2 text-sm text-muted">>], [])], [], []),
+     record_section(aihtml_example_records:record(Name), E),
      modifiers(E),
      table_section(<<"选项（Attrs 中的键）"/utf8>>, [<<"名称"/utf8>>, <<"说明"/utf8>>],
                    [[code(atom_to_binary(O), [<<"api-name">>], []), maps:get(O, OptionDocs, <<"—"/utf8>>)]
@@ -157,6 +158,53 @@ api(#{name := Name, root := Root, behavior := Behavior, events := Events} = E) -
                                                end],
                     [<<"函数"/utf8>>, code([<<"aihtml:">>, atom_to_binary(Name), <<"/">>,
                                            integer_to_binary(arity(E))], [<<"api-name">>], [])]])].
+
+%% The component's element record: the same component written with named
+%% fields (designs/05-records.md).
+record_section(undefined, _E) -> [];
+record_section(#{record := Rec, header := Header, doc := Doc, fields := Fields}, E) ->
+    #{groups := Groups} = E,
+    Docs = maps:get(option_docs, E, #{}),
+    Rows = [[code(atom_to_binary(F), [<<"api-name">>], []),
+             code(T, [<<"font-mono text-xs">>], []),
+             code(D, [<<"font-mono text-xs">>], []),
+             case {Docs, maps:is_key(F, Groups)} of
+                 {#{F := Text}, _} -> Text;
+                 {_, true} -> <<"修饰符组，取值见下方修饰符表"/utf8>>;
+                 _ -> <<"—"/utf8>>
+             end]
+            || #{name := F, type := T, default := D} <- Fields],
+    'div'([h3(<<"record 写法"/utf8>>, [<<"api-h">>], []),
+           p([<<"页面模块 include "/utf8>>, code(<<"aihtml.hrl">>, [<<"font-mono">>], []),
+              <<" 后可以直接写 "/utf8>>,
+              code([<<"#">>, atom_to_binary(Rec), <<"{}">>], [<<"font-mono">>], []),
+              <<"（定义在 "/utf8>>, code(Header, [<<"font-mono">>], []),
+              <<"），与上面的函数写法得到同一个元素。修饰符、标志和选项都是字段："
+                "字段名写错会编译失败，取值由 dialyzer 和渲染时检查；没写的字段取默认值。"
+                "类型里 ah_ 开头的名字也定义在这个头文件中。"/utf8>>],
+             [<<"mt-2 text-sm text-muted">>], []),
+           [p(doc_text(Doc), [<<"mt-2 text-sm">>], []) || Doc =/= <<>>],
+           table([thead(tr([th(H, [], []) || H <- [<<"字段"/utf8>>, <<"类型"/utf8>>,
+                                                    <<"默认值"/utf8>>, <<"说明"/utf8>>]])),
+                  tbody([tr([td(C, [], []) || C <- Row]) || Row <- Rows])],
+                 [<<"api-table mt-3">>], []),
+           p([<<"所有 record 还有公共字段 "/utf8>>,
+              lists:join(<<"、"/utf8>>, [code(atom_to_binary(F), [<<"font-mono">>], [])
+                                         || F <- aihtml_example_records:base_fields()]),
+              <<"：css 只放字面类名，attrs 是 HTML 属性，postback 写成 "/utf8>>,
+              code(<<"Action | {Action, Args}">>, [<<"font-mono">>], []),
+              <<"，调用当前模块的 action/4。"/utf8>>],
+             [<<"mt-2 text-sm text-muted">>], [])],
+          [<<"mb-8">>], []).
+
+%% Header comments quote names as `name'; show those as code.
+doc_text(Doc) ->
+    Parts = re:split(Doc, <<"`([^`']*)'">>, [{return, binary}]),
+    doc_parts(Parts, text).
+
+doc_parts([], _) -> [];
+doc_parts([P | Rest], text) -> [P | doc_parts(Rest, code)];
+doc_parts([P | Rest], code) -> [code(P, [<<"font-mono">>], []) | doc_parts(Rest, text)].
 
 modifiers(#{groups := Groups, flags := Flags} = E) ->
     Docs = maps:get(option_docs, E, #{}),
