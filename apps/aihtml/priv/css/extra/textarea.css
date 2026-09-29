@@ -1,0 +1,14 @@
+/* aihtml additions for the textarea component (designs/04-components.md).
+   sigil styles live in ../sigil/components. */
+
+/* ---- textarea: sigil's input surface, a2ui textarea metrics ---- */
+.ah-textarea {
+  display: block;
+  min-height: 4.5em;
+  resize: vertical;
+  line-height: 1.5;
+}
+.ah-textarea-group .ah-input-label { top: calc(var(--ah-spacing-sm) + 0.75em); }
+.ah-textarea-group .ah-input-label-float { top: 0; }
+.ah-input-sm.ah-textarea-group .ah-input-label { top: calc(var(--ah-spacing-xs) + 0.75em); }
+.ah-input-sm.ah-textarea-group .ah-input-label-float { top: 0; }
