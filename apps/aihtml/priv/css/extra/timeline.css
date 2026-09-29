@@ -1,0 +1,8 @@
+/* aihtml additions for timeline (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- keyboard focus for clickable cards ---- */
+.ah-timeline-item[ah-collapsible]:focus-visible .ah-timeline-item-content {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 2px;
+}
