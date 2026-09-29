@@ -15,13 +15,16 @@
 
 -spec init(cowboy_req:req(), term()) -> {ok, cowboy_req:req(), term()}.
 init(Req, State) ->
-    {ok, aihtml_cowboy:reply(Req, page(), #{title => <<"aihtml actions">>,
-                                            css => [<<"/static/example.css">>]}),
+    %% ?view=processes|system: the URL the load buttons push into the
+    %% history renders the same content, so back/forward and bookmarks work.
+    View = proplists:get_value(<<"view">>, cowboy_req:parse_qs(Req)),
+    {ok, aihtml_cowboy:reply(Req, page(View), #{title => <<"aihtml actions">>,
+                                                css => [<<"/static/example.css">>]}),
      State}.
 
-page() ->
+page(View) ->
     'div'([top_bar(),
-           main(['div'([counter_card(), greeting_card(), data_card(), include_card(),
+           main(['div'([counter_card(), greeting_card(), data_card(View), include_card(),
                         todos_card()],
                        [<<"grid gap-6 md:grid-cols-2">>], [])],
                 [<<"mx-auto max-w-5xl px-4 py-8">>], [])],
@@ -63,14 +66,23 @@ greeting_card() ->
                 [<<"flex flex-col gap-3">>], [])],
          [], [{title, <<"Input events">>}]).
 
-data_card() ->
+%% The buttons show a spinner (indicator) and are disabled while their
+%% request runs; the two share one queue (sync_scope), so a second click
+%% waits for the first. Each load pushes ?view=... into the history.
+data_card(View) ->
+    Req = #{indicator => <<"#data-spin">>, disable => <<"#data-card button">>,
+            sync => queue, sync_scope => <<"#data-card">>},
     card([row([button(<<"Load processes">>, load, [outlined],
-                      [on(click, {?MODULE, load_processes, #{}})]),
+                      [on(click, {?MODULE, load_processes, #{}}, Req)]),
                button(<<"Load system info">>, info, [borderless],
-                      [on(click, {?MODULE, load_system, #{}})])]),
-          'div'(p(<<"Nothing loaded yet.">>, [<<"text-muted text-sm">>], []),
-                [<<"mt-4">>], [{id, data}])],
-         [], [{title, <<"Load data, progressively">>}]).
+                      [on(click, {?MODULE, load_system, #{}}, Req)]),
+               span(<<"Loading…"/utf8>>, [<<"ah-indicator text-sm text-muted">>], [{id, <<"data-spin">>}])]),
+          'div'(data_view(View), [<<"mt-4">>], [{id, data}])],
+         [], [{id, <<"data-card">>}, {title, <<"Load data, progressively">>}]).
+
+data_view(<<"processes">>) -> processes_table();
+data_view(<<"system">>) -> system_info();
+data_view(_) -> p(<<"Nothing loaded yet.">>, [<<"text-muted text-sm">>], []).
 
 %% The browser sends the values of other controls along with the event.
 include_card() ->
@@ -135,32 +147,12 @@ action(greet, _, #{value := V}, Ctx) ->
     aihtml_action:html(Ctx, {id, greeting}, Html);
 action(load_processes, _, _Ev, Ctx) ->
     loading(Ctx),
-    Top = lists:sublist(
-            lists:reverse(lists:keysort(2, [{P, M} || P <- erlang:processes(),
-                                                     {memory, M} <- [erlang:process_info(P, memory)]])),
-            8),
-    Rows = [tr([td(pid_to_list(P), [<<"font-mono py-1">>], []),
-                td(proc_name(P), [<<"py-1">>], []),
-                td(M div 1024, [<<"py-1 text-right">>], [])])
-            || {P, M} <- Top],
-    aihtml_action:html(Ctx, {id, data},
-                       table([thead(tr([th(<<"pid">>, [<<"text-left">>], []),
-                                        th(<<"name">>, [<<"text-left">>], []),
-                                        th(<<"KiB">>, [<<"text-right">>], [])])),
-                              tbody(Rows)],
-                             [<<"w-full text-sm">>], []));
+    aihtml_action:html(Ctx, {id, data}, processes_table()),
+    aihtml_action:push_url(Ctx, <<"/?view=processes">>);
 action(load_system, _, _Ev, Ctx) ->
     loading(Ctx),
-    Items = [{<<"Node">>, node()},
-             {<<"OTP">>, erlang:system_info(otp_release)},
-             {<<"Schedulers">>, erlang:system_info(schedulers_online)},
-             {<<"Processes">>, erlang:system_info(process_count)},
-             {<<"Memory (MiB)">>, erlang:memory(total) div (1024 * 1024)},
-             {<<"Request process">>, pid_to_list(self())}],
-    aihtml_action:html(Ctx, {id, data},
-                       dl([[dt(K, [<<"text-muted">>], []), dd(V, [<<"font-mono">>], [])]
-                           || {K, V} <- Items],
-                          [<<"grid grid-cols-2 gap-y-1 text-sm">>], []));
+    aihtml_action:html(Ctx, {id, data}, system_info()),
+    aihtml_action:push_url(Ctx, <<"/?view=system">>);
 action(sum, _, #{values := Vs}, Ctx) ->
     Html = try
                binary_to_integer(maps:get(<<"a">>, Vs)) + binary_to_integer(maps:get(<<"b">>, Vs))
@@ -221,6 +213,31 @@ loading(Ctx) ->
 %%%===================================================================
 %%% Helpers
 %%%===================================================================
+
+processes_table() ->
+    Top = lists:sublist(
+            lists:reverse(lists:keysort(2, [{P, M} || P <- erlang:processes(),
+                                                     {memory, M} <- [erlang:process_info(P, memory)]])),
+            8),
+    Rows = [tr([td(pid_to_list(P), [<<"font-mono py-1">>], []),
+                td(proc_name(P), [<<"py-1">>], []),
+                td(M div 1024, [<<"py-1 text-right">>], [])])
+            || {P, M} <- Top],
+    table([thead(tr([th(<<"pid">>, [<<"text-left">>], []),
+                     th(<<"name">>, [<<"text-left">>], []),
+                     th(<<"KiB">>, [<<"text-right">>], [])])),
+           tbody(Rows)],
+          [<<"w-full text-sm">>], []).
+
+system_info() ->
+    Items = [{<<"Node">>, node()},
+             {<<"OTP">>, erlang:system_info(otp_release)},
+             {<<"Schedulers">>, erlang:system_info(schedulers_online)},
+             {<<"Processes">>, erlang:system_info(process_count)},
+             {<<"Memory (MiB)">>, erlang:memory(total) div (1024 * 1024)},
+             {<<"Request process">>, pid_to_list(self())}],
+    dl([[dt(K, [<<"text-muted">>], []), dd(V, [<<"font-mono">>], [])] || {K, V} <- Items],
+       [<<"grid grid-cols-2 gap-y-1 text-sm">>], []).
 
 todo_dom(Id) -> <<"todo-", (integer_to_binary(Id))/binary>>.
 
