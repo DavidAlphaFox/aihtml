@@ -1,0 +1,8 @@
+## Node name; the start script substitutes ${VAR:-default} at boot.
+-sname ${NODE_NAME:-aihtml_example}
+
+## No -setcookie here: the VM and the start script both use
+## ~/.erlang.cookie, so give every node of a cluster the same file.
+
+## Heartbeat interval for distribution (seconds)
+-kernel net_ticktime 30

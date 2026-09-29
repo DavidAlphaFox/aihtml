@@ -1,0 +1,17 @@
+%% Release configuration. The start script substitutes ${VAR} and
+%% ${VAR:-default} from the environment when the release boots.
+%%
+%%   AIHTML_SECRET  required, at least 32 bytes, the same on every node:
+%%                  it signs action and topic tokens
+%%   PORT           HTTP port, default 8080
+%%   DB_STORAGE     disc_copies (default) or ram_copies
+%%   DB_JOIN        node to join, e.g. aihtml_example@host1; empty on the
+%%                  first node
+%%   MNESIA_DIR     Mnesia directory, default data/mnesia (relative to the
+%%                  release root)
+[{aihtml, [{secret, <<"${AIHTML_SECRET}">>}]},
+ {aihtml_example, [{port, ${PORT:-8080}},
+                   {db_storage, ${DB_STORAGE:-disc_copies}},
+                   {db_join, "${DB_JOIN:-}"}]},
+ {mnesia, [{dir, "${MNESIA_DIR:-data/mnesia}"}]},
+ {kernel, [{logger_level, notice}]}].
