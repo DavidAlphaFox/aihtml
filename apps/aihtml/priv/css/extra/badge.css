@@ -1,0 +1,11 @@
+/* aihtml additions for badge (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- badge: standalone (no anchor) ---- */
+.ah-badge-root--standalone .ah-badge-indicator {
+  position: static;
+  transform: none;
+}
+.ah-badge-root--standalone .ah-badge-indicator[data-invisible="true"] {
+  transform: scale(0);
+}
