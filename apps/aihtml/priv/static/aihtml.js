@@ -13,6 +13,10 @@
  * whose CUSTOM "aihtml.ui" events carry DOM operations. The server keeps
  * no state between requests.
  *
+ * Push: elements with data-ah-subscribe="token" make the page open one
+ * EventSource to <body data-ah-events>; published operations arrive as
+ * the same AG-UI events.
+ *
  * Round trips: an element with data-ah-fetch="get|post|..." sends a
  * request to data-ah-url when data-ah-trigger fires (default: submit for
  * forms, change for inputs, click otherwise). The response is HTML that
@@ -437,7 +441,10 @@
   function onAgui(el, ev) {
     switch (ev.type) {
       case "CUSTOM":
-        if (ev.name === "aihtml.ui") { applyOps(ev.value); }
+        if (ev.name === "aihtml.ui") {
+          applyOps(ev.value);
+          syncStream();          // new content may follow other topics
+        }
         break;
       case "RUN_ERROR":
         $(el).trigger("ah:error", [{ message: ev.message, code: ev.code }]);
@@ -474,6 +481,7 @@
 
   function runAction(el, spec, e) {
     var url = document.body.getAttribute("data-ah-action") || "/aihtml/action";
+    var payload = eventPayload(el, e);          // also gives el an id
     var key = el.id + "/" + spec.event;
     if (LATEST_WINS[spec.event] && inflight[key]) {
       inflight[key].abort();
@@ -492,7 +500,7 @@
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "text/event-stream" },
       body: JSON.stringify({ threadId: threadId, runId: newId(), action: spec.token,
-                             event: eventPayload(el, e) }),
+                             event: payload, streamId: stream.id }),
       signal: ctrl.signal
     }).then(function (resp) {
       if (!resp.ok) {
@@ -534,8 +542,78 @@
     });
   });
 
+  // ------------------------------------------------------------------
+  // Push (aihtml_push): one EventSource per page for all its topics
+  // ------------------------------------------------------------------
+  //
+  // Elements carry data-ah-subscribe="TOKEN" (a signed topic) and maybe
+  // data-ah-refresh="TOKEN" (an action). The page keeps one stream to
+  // <body data-ah-events>?t=...; it is reopened whenever the set of
+  // subscribed topics on the page changes. Pushed events are the same
+  // CUSTOM "aihtml.ui" events actions return. After a reconnect (not the
+  // first connect) every refresh action runs, since pushes sent while the
+  // page was away are lost.
+
+  var stream = { es: null, key: "", id: null, opened: false };
+
+  function syncStream() {
+    var tokens = [];
+    $("[data-ah-subscribe]").each(function () {
+      var t = this.getAttribute("data-ah-subscribe");
+      if (tokens.indexOf(t) < 0) { tokens.push(t); }
+    });
+    tokens.sort();
+    var key = tokens.join(" ");
+    if (key === stream.key || !window.EventSource) {
+      return;
+    }
+    if (stream.es) {
+      stream.es.close();
+    }
+    stream = { es: null, key: key, id: null, opened: false };
+    if (!tokens.length) {
+      return;
+    }
+    var base = document.body.getAttribute("data-ah-events") || "/aihtml/events";
+    var es = new EventSource(base + "?" + tokens.map(function (t) {
+      return "t=" + encodeURIComponent(t);
+    }).join("&"));
+    stream.es = es;
+    es.onopen = function () {
+      if (stream.es !== es) { return; }
+      if (stream.opened) {
+        refreshAll();
+      }
+      stream.opened = true;
+    };
+    es.onmessage = function (m) {
+      if (stream.es !== es) { return; }
+      var ev = JSON.parse(m.data);
+      if (ev.type === "CUSTOM" && ev.name === "aihtml.stream") {
+        stream.id = ev.value.id;
+      } else {
+        onAgui(document.body, ev);
+      }
+    };
+    es.onerror = function () {
+      // EventSource retries by itself; CLOSED means the server refused the
+      // topics (e.g. a secret the server no longer has).
+      if (es.readyState === 2) {
+        $(document).trigger("ah:error", [{ stream: true }]);
+      }
+    };
+  }
+
+  function refreshAll() {
+    $("[data-ah-refresh]").each(function () {
+      runAction(this, { event: "refresh", token: this.getAttribute("data-ah-refresh") },
+                { type: "refresh" });
+    });
+  }
+
   $(function () {
     mount(document);
+    syncStream();
   });
 
   var api = {

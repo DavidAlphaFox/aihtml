@@ -2,12 +2,14 @@
 
 用 Erlang 函数直接编写 HTML 页面。页面由"预制件"拼装而成，预制件直接映射到 jQuery 行为和 TailwindCSS 样式上。
 
-参照 [CLOG](../clog)，按钮的点击可以直接由 Erlang 代码响应：
+按钮的点击直接由 Erlang 函数响应，每个事件一次无状态请求，响应按 [AG-UI](https://docs.ag-ui.com) 事件流返回：
 
 ```erlang
-button(<<"加载">>, load, [], [on(click, fun(Win, _Ev) ->
-    aihtml_live:html(Win, {id, out}, load_rows())
-end)])
+button(<<"删除">>, Id, [ghost], [on(click, {?MODULE, delete, #{id => Id}})])
+
+action(delete, #{id := Id}, _Event, Ctx) ->
+    ok = todo_db:delete(Id),
+    aihtml_action:remove(Ctx, {id, [<<"todo-">>, integer_to_binary(Id)]}).
 ```
 
 ```erlang
@@ -22,7 +24,7 @@ login() ->
 ```
 
 - 渲染依赖 [beamai_render](https://github.com/TTalkPro/beamai_render)：转义使用 `beamai_html_escape`，`{safe, iodata()}` 与 beamai_jinja 的安全标记一致，渲染结果可直接放进 Jinja 模板。
-- 前端基础：jQuery 4 与 Tailwind CSS v4（Tailwind CLI 构建）。需要 OTP 27 以上，live 模式使用 OTP 自带的 `json` 模块。
+- 前端基础：jQuery 4 与 Tailwind CSS v4（Tailwind CLI 构建）。需要 OTP 27 以上，因为用到 OTP 自带的 `json` 模块。
 - 主题借鉴 [sigil](../sigil) 的四轴设计：外观、配色、排版、外形。
 
 ## 仓库结构
@@ -32,8 +34,8 @@ login() ->
 | `apps/aihtml` | 类库本体，其它项目只依赖它 |
 | `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
 | `apps/aihtml/priv/static` | 预构建产物：`aihtml.css`、`aihtml.js`、`vendor/jquery.min.js` |
-| `apps/aihtml_cowboy` | live 模式的 cowboy 传输层：启动页、WebSocket、静态资源路由 |
-| `apps/aihtml_example` | cowboy 示例，`/` 是 live 模式，`/fetch` 是无状态片段模式 |
+| `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
+| `apps/aihtml_example` | cowboy 示例，`/` 是 action 模式，`/fetch` 是 URL 片段模式 |
 | `designs/` | 设计文档 |
 
 ## 调用约定
@@ -58,41 +60,68 @@ login() ->
 
 ## 交互模型
 
-服务端渲染全部 HTML。浏览器端有两种模式，可以混用。
+服务端渲染全部 HTML，页面由普通 HTTP handler 输出。浏览器端有两种交互方式，都是无状态的。
 
-### live 模式（CLOG 风格）
+### action 模式
 
-每个浏览器窗口经 WebSocket 连到一个 Erlang 会话进程：
+参照 AG-UI：每个事件发一次 POST，响应是 SSE 事件流。服务端在请求之间不保存任何东西，状态全部在数据层。请求可以落到任意节点，负载均衡不需要粘性，服务器重启后已打开的页面照常可用。
 
-- **事件处理器写在 Attrs 里**：`on(Event, fun(Win, Ev) -> ... end)`，也可以加防抖，`on(input, Fun, #{debounce => 150})`。点击、输入、提交等事件发生时，这个 fun 在会话进程里执行。
-- **Ev 带上常用数据**：元素 `id`、`value`、`checked`、`key`、所在表单的全部字段 `form`、`data-*` 属性 `data`。多数处理器不需要再向浏览器查询。
-- **推送 DOM 操作**：`aihtml_live:html/3,4`、`remove/2`、`attr/4`、`add_class/3`、`set_value/3`、`focus/2`、`title/2`、`redirect/2`、`js/2`。一个处理器里的操作合并成一帧发送。
-- **读取浏览器**：`aihtml_live:query(Win, <<"return window.innerWidth">>)` 同步返回 `{ok, Value}`，对应 CLOG 的 js-query。
-- **服务端主动推送**：会话收到的普通消息交给可选回调 `handle_info/2`，例如定时器。其它进程也可以直接调用这些操作，它们会被转发到会话里执行。
-- **窗口状态**放在会话进程里，可以用闭包或进程字典。
-- **断线重连后恢复原会话**，与 CLOG 相同。断线后会话继续运行，默认保留 60 秒。页面带着会话令牌和最后应用的帧号重连，会话补发断线期间的帧。页面、处理器和状态都原样延续。只有超时、或缺失的帧已超出重放缓冲，才会重新开始。刷新页面总是开始一个新会话。
+- **绑定**：`on(Event, {Module, Action, Args})`，可加选项 `#{debounce => Ms, include => [选择器], confirm => 提问}`。
+- **签名**：`{Module, Action, Args}` 用应用密钥做 HMAC 签名后写进 HTML。浏览器无法伪造 action，也改不了参数。Args 只签名不加密，页面能看到内容，所以只放 id 这类数据。
+- **执行**：`Module:action(Action, Args, Event, Ctx)` 在请求进程中运行。只有声明了 `-behaviour(aihtml_action)` 的模块才能被调用。
+- **Event**：包含元素 `id`、`value`、`checked`、`key`、所在表单的全部字段 `form`、`include` 指定的其它控件值 `values`、`data-*` 属性 `data`。
+- **页面操作**：`aihtml_action:html/3,4`、`remove/2`、`attr/4`、`add_class/3`、`remove_class/3`、`set_value/3`、`focus/2`、`title/2`、`redirect/2`、`js/2`。操作先缓冲，action 返回时一起发送。`flush/1` 可以提前发送，用来先显示加载状态、再显示数据。
+- **事件流**：依次是 `RUN_STARTED`、若干 `CUSTOM "aihtml.ui"`（值为 DOM 操作列表）、`RUN_FINISHED`。action 崩溃时以 `RUN_ERROR` 结束，只记日志，不向浏览器泄露细节。
+- **并发**：同一元素的 click、submit 在请求进行中会忽略重复触发。input、change 等事件以最新一次为准，旧请求会被取消。
+- **授权**：认证与授权在 action 里做，请求可以从 `aihtml_action:meta(Ctx)` 取得，cowboy 下是 `#{req => Req}`。
 
 ```erlang
--module(hello).
--behaviour(aihtml_live).
+-module(todo_page).
+-behaviour(aihtml_action).
 -include_lib("aihtml/include/aihtml.hrl").
--export([mount/2]).
+-export([init/2, action/4]).
 
-mount(Win, _Params) ->
-    aihtml_live:render(Win,
-        'div'([button(<<"点我">>, go, [],
-                      [on(click, fun(W, _) -> aihtml_live:html(W, {id, out}, <<"来自 Erlang">>) end)]),
-               'div'([], [], [{id, out}])], [], [])).
+init(Req, State) ->                       %% GET /，普通 cowboy handler
+    {ok, aihtml_cowboy:reply(Req, view(todo_db:all()), #{title => <<"Todos">>}), State}.
 
-%% cowboy 路由
-Routes = aihtml_cowboy:routes(hello, #{path => "/", page => #{title => <<"Hello">>}}).
+action(toggle, #{id := Id}, #{checked := Done}, Ctx) ->
+    ok = todo_db:set_done(Id, Done),
+    aihtml_action:html(Ctx, {id, dom_id(Id)}, item(todo_db:get(Id)), outer).
 ```
 
-处理器只能出现在会话渲染的 HTML 里，静态渲染包含处理器会直接报错。WebSocket 默认只接受同源连接。
+**密钥**：在 aihtml 应用环境中配置 `secret`，至少 32 字节，所有节点相同：
 
-### fetch 模式（无状态）
+```erlang
+%% sys.config
+[{aihtml, [{secret, <<"...至少 32 字节的随机值...">>}]}].
+```
 
-`fetch/3,4` 生成的属性让元素通过普通 HTTP 请求 HTML 片段，再替换到目标位置，不需要会话：
+不配置时每个节点随机生成一个密钥，只适合开发环境：重启或换节点后，已打开页面的 action 会被拒绝，返回 403。
+
+### 服务端推送
+
+页面订阅主题，服务端向订阅者推送与 action 相同的 DOM 操作。推送同样不需要业务状态：
+
+```erlang
+%% 页面：这个列表跟随 todos 主题；断线重连后运行 refresh 补齐
+ul(Items, [], [{id, todo_list},
+               subscribe(todos, #{refresh => {?MODULE, refresh_todos, #{}}})])
+
+%% 任意节点、任意进程，通常在 action 写完数据层之后
+aihtml_push:publish(todos, fun(C) ->
+    aihtml_action:html(C, {id, todo_list}, item(Todo), append)
+end, #{except => Ctx})     %% 跳过发起者，它已经通过 action 响应更新过了
+```
+
+- **一条流**：每个页面只开一个 EventSource，访问 `GET /aihtml/events?t=...`，带上页面上所有主题的签名令牌。页面内容变化导致订阅集合改变时，自动重开。
+- **跨节点分发**：连接进程加入 OTP `pg` 进程组，只负责转发，不保存业务状态。`pg` 覆盖所有已连接的节点，任意节点发布，全集群的订阅者都会收到。
+- **至多一次送达**：断线期间的推送会丢失。EventSource 会自动重连，重连后运行订阅上的 `refresh` action，从数据层补齐。
+- **主题**可以是任意纯数据，比如 `todos`、`{room, 42}`。主题同样签名，页面只能订阅服务端为它渲染的主题，所以按用户决定渲染哪些主题即可实现权限控制。主题名对页面可见。
+- **需要运行 aihtml 应用**，由它启动 `pg` scope。把 `aihtml` 写进你的应用的 `applications` 列表即可。
+
+### fetch 模式
+
+`fetch/3,4` 生成的属性让元素请求开发者自己路由的 URL，返回的 HTML 片段替换到目标位置。适合已有 REST 路由的场景：
 
 ```erlang
 button(<<"更多">>, more, [outline],
@@ -119,21 +148,24 @@ button(<<"更多">>, more, [outline],
 ```erlang
 {deps, [{aihtml, {git_subdir, "https://github.com/DavidAlphaFox/aihtml.git",
                   {branch, "master"}, "apps/aihtml"}},
-        %% 只有 live 模式需要
+        %% 可选：cowboy 的 action 端点
         {aihtml_cowboy, {git_subdir, "https://github.com/DavidAlphaFox/aihtml.git",
                          {branch, "master"}, "apps/aihtml_cowboy"}}]}.
 ```
 
-live 模式需要运行 aihtml 应用，它负责会话注册表和会话监督树。把 `aihtml` 写进你的应用的 `applications` 列表即可自动启动。
+`aihtml_cowboy:routes/1` 提供三条路由：action 端点 `/aihtml/action`、推送流 `/aihtml/events`、静态资源 `/aihtml/[...]`。前两者默认只接受同源请求。推送流在 HTTP/1.1 下关闭了空闲超时，并每 25 秒发送一次心跳。
 
-核心库不依赖 cowboy。其它服务器只需实现一个传输进程：
-- 用 `aihtml_live:connect/4` 取得会话，重连时带上 `resume` 和 `last`。
-- 把 `{aihtml_send, iodata()}` 发给浏览器，收到 `{aihtml_close, Code, Reason}` 时关闭连接。
-- 把收到的 JSON 帧交给 `aihtml_live:incoming/2`。
+核心库不依赖 cowboy。其它服务器需要实现两个端点：
+- **action 端点（POST）**
+  1. 用 `aihtml_action:verify/1` 校验请求体里的 `action`。
+  2. 用 `aihtml_action:execute/3` 执行，`emit` 函数把每个事件写成一行 `data: JSON` 的 SSE。
+- **推送端点（GET，长连接）**
+  1. 用 `aihtml_push:verify/1` 校验令牌。
+  2. 用 `aihtml_push:join/1` 加入主题。
+  3. 第一条事件发送 `aihtml.stream` 流 id。
+  4. 之后把收到的 `{aihtml_push, Except, Json}` 写出，但 `Except` 等于自己的流 id 时跳过。
 
-`aihtml_cowboy:routes/2` 的 `resume_timeout` 和 `replay_limit` 选项分别设置会话等待重连的时间和重放缓冲的帧数。
-
-**静态资源**：把 aihtml 的 `priv/static` 挂到 `/aihtml/`，cowboy 写法如下：
+**静态资源**：不用 `aihtml_cowboy` 时，把 aihtml 的 `priv/static` 挂到 `/aihtml/`，cowboy 写法如下：
 
 ```erlang
 {"/aihtml/[...]", cowboy_static, {priv_dir, aihtml, "static"}}
