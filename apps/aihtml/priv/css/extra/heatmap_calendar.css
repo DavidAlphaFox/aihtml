@@ -1,0 +1,8 @@
+/* aihtml additions for the heatmap_calendar component
+   (aihtml_heatmap_calendar). */
+
+/* HeatmapCalendar: the tooltip is placed by AH.float (top-left corner),
+   not by sigil's centring transform. */
+.ah-heatmap-calendar__tooltip {
+  transform: none;
+}
