@@ -1,0 +1,8 @@
+/* aihtml additions for chip (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- chip: focus ring for keyboard use ---- */
+.ah-chip:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 2px;
+}
