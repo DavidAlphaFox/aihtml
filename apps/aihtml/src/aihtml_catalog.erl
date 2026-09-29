@@ -34,6 +34,9 @@
 %%   behavior  the data-ah value aihtml.js attaches to, or none
 %%   events    DOM events the component fires (for on/2 and docs)
 %%   doc       one or two sentences
+%%   option_docs  #{Option | Flag => binary()}: what each option / flag does
+%%   methods   [#{name := atom(), args := binary(), doc := binary()}]: the
+%%             behaviour methods aihtml_action:call/4 and AH.invoke reach
 -type entry() :: #{name := atom(),
                    category := atom(),
                    signature := binary(),
@@ -44,7 +47,9 @@
                    options => [atom()],
                    behavior => binary() | none,
                    events => [binary()],
-                   doc => binary()}.
+                   doc => binary(),
+                   option_docs => #{atom() => binary()},
+                   methods => [#{name := atom(), args := binary(), doc := binary()}]}.
 
 %% Component group modules, in catalog order. A module that is not there
 %% (yet) is skipped.
