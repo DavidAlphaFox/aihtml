@@ -1,11 +1,11 @@
 #!/usr/bin/env escript
 %%! -noshell
-%% Renders a demo module's demos/0 (aihtml_example_demo_<group>) into
+%% Renders a demo module's demos/0 (aihtml_example_demo_<name>) into
 %% OutDir/index.html together
 %% with the assets it needs (Tailwind CSS built from the current sources,
 %% aihtml.js, jQuery), so the page opens from file:// in any browser.
 %%
-%%   escript scripts/preview-group.escript aihtml_example_demo_form_buttons OutDir [ExtraEbinDir]
+%%   escript scripts/preview-group.escript aihtml_example_demo_button OutDir [ExtraEbinDir]
 %%
 %% ExtraEbinDir goes first in the code path (freshly compiled modules).
 main([Mod | [OutDir | Rest]]) ->
