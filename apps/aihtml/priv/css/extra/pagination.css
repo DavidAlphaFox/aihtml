@@ -1,0 +1,16 @@
+/* aihtml additions for pagination; sigil styles live in ../sigil/components. */
+
+.ah-pagination-item:focus-visible,
+.ah-pagination-nav:focus-visible {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: -2px;
+}
+
+/* ---- pagination: link mode ------------------------------------------ */
+
+.ah-pagination-li { display: contents; }
+
+a.ah-pagination-item,
+a.ah-pagination-nav {
+  text-decoration: none;
+}
