@@ -1,0 +1,12 @@
+/* aihtml additions for the tooltip (aihtml_tooltip); sigil styles live in
+   ../sigil/components. */
+
+/* tooltip/4 wraps its trigger in a host span, measured for positioning */
+.ah-tooltip-host {
+  display: inline-block;
+}
+
+/* the bubble is positioned by tooltip.js with position: fixed */
+.ah-tooltip-content {
+  display: block;
+}
