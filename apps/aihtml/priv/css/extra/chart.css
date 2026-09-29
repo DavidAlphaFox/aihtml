@@ -1,0 +1,5 @@
+/* aihtml additions for chart (aihtml_chart), shared by every chart
+   component: their roots, and the canvas of relation_graph, are .ah-chart. */
+
+/* The option's data island never shows. */
+.ah-chart > script.ah-chart-data { display: none; }
