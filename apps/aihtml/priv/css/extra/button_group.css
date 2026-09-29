@@ -1,0 +1,7 @@
+/* aihtml additions for button_group (designs/04-components.md). Owned by that
+   component; sigil styles live in ../sigil/components. */
+
+/* ---- button group: native disabled buttons ---- */
+.ah-btn-group-btn:disabled {
+  cursor: default;
+}
