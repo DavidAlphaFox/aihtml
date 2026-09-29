@@ -1,0 +1,25 @@
+/* aihtml additions for the scrollview component (aihtml_scrollview).
+   sigil styles live in ../sigil/components. */
+
+/* ---- scrollview ------------------------------------------------------- */
+
+/* Pages are as wide as the view and the wrapper moves in percent, so no
+   measuring is needed (sigil sets pixel widths from JS). */
+.ah-scrollview-page {
+  width: 100%;
+}
+
+.ah-scrollview-wrapper {
+  width: 100%; /* else a negative margin widens it */
+  height: 100%;
+  touch-action: pan-y;
+}
+
+.ah-scrollview-dragging .ah-scrollview-wrapper {
+  cursor: grabbing;
+}
+
+.ah-scrollview:focus-visible {
+  outline: 2px solid var(--ah-color-primary);
+  outline-offset: 2px;
+}
