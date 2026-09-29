@@ -19,6 +19,7 @@ aihtml_page       完整文档
 aihtml_action     action：令牌签名与校验、执行、AG-UI 事件流、DOM 操作
 aihtml_push       推送：主题令牌、pg 分发
 aihtml_html       元素树、class 与属性归一化、渲染
+aihtml_element    元素 record：行为、构建、渲染分发
 beamai_render     beamai_html_escape：转义与值格式化
 ```
 
@@ -26,7 +27,7 @@ beamai_render     beamai_html_escape：转义与值格式化
 
 ## 元素树
 
-元素是不透明记录 `#el{tag, attrs, children}`，属性已归一化为 `[{binary(), binary() | true}]`。选择元素树而不是直接输出 iodata，有两个原因：
+普通标签生成记录 `#el{tag, attrs, children}`，属性已归一化为 `[{binary(), binary() | true}]`。组件则生成带 `ah_` 前缀的元素 record（如 `#ah_button{}`），渲染时交给所属模块的 `render/1`，详见 [05-records.md](05-records.md)。选择元素树而不是直接输出 iodata，有两个原因：
 
 - 预制件可以合并使用者传入的属性，并按规则覆盖。
 - 测试可以断言结构，预制件内部也可以安全地嵌套。
