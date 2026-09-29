@@ -1,743 +1,168 @@
 # aihtml
 
-[English](README.md) · [中文](README.zh-CN.md)
+用 Erlang 函数直接编写 HTML 页面。页面由"预制件"拼装而成，预制件直接映射到 jQuery 行为和 TailwindCSS 样式上。
 
-Template engines for Erlang that compile templates into Erlang modules.
-Mustache and **Jinja2**, side by side.
-
-Templates are turned into `.erl` files at build time by a rebar3 plugin, so at
-run time rendering is a plain function call: no process, no ETS table, no
-lookup of any kind.
-
-- Passes all 136 cases of the six required [mustache spec](https://github.com/mustache/spec) modules
-- Zero dependencies: the library and its test suite need nothing but OTP
-- Static template text lives in the module's literal pool and is shared across
-  processes by reference
-
-## Two engines
-
-| | mustache | jinja |
-|---|---|---|
-| Suffix / prefix | `.mustache` / `view_` | `.j2` / `j2_` |
-| Provider | `rebar3 mustache` | `rebar3 jinja` |
-| Options | `mustache_opts` | `jinja_opts` |
-| Conformance | the 136 official spec cases | 520 fixtures generated from CPython jinja2 3.1 |
-| Documentation | this README | [docs/jinja.md](docs/jinja.md) |
-
-They are peers, not alternatives. One project can use both, sharing a `views`
-directory and an `out_dir`; each generated file names its engine, and each
-provider only collects its own orphans.
-
-**The two languages disagree, and it is worth knowing where:**
-
-| | mustache | jinja |
-|---|---|---|
-| Variable lookup | dynamic, walks the context stack | lexical scope |
-| `0` and `#{}` | true | **false** |
-| Turning escaping off | `{{{x}}}` | `\|safe` |
-| Reuse | `{{> p}}` | include / extends / macro / import |
-| `true` prints as | `true` | `True` |
-| A list prints as | its characters | `[1, 2]` |
+参照 [CLOG](../clog)，按钮的点击可以直接由 Erlang 代码响应：
 
 ```erlang
-{provider_hooks, [{pre, [{compile, mustache}, {compile, jinja}]}]}.
-{mustache_opts, [{views, "views"}, {prefix, "view_"}]}.
-{jinja_opts,    [{views, "views"}, {suffix, ".j2"}, {prefix, "j2_"}]}.
+button(<<"加载">>, load, [], [on(click, fun(Win, _Ev) ->
+    aihtml_live:html(Win, {id, out}, load_rows())
+end)])
 ```
 
----
+```erlang
+-include_lib("aihtml/include/aihtml.hrl").
 
-## What is new in 0.5.0
+login() ->
+    'div'([checkbox(<<"记住我">>, yes, [], [{name, remember}]),
+           button(<<"保存">>, save, [primary, <<"mt-4">>], [{type, submit}])],
+          [<<"flex flex-col gap-2">>], [{id, login}]).
 
-The Jinja2 engine, `rebar3 jinja`, `ai_jinja_transform` and a shared layer
-underneath both engines. Mustache behaviour is unchanged. Full notes in
-[CHANGELOG.md](CHANGELOG.md); the engine itself is documented in
-[docs/jinja.md](docs/jinja.md).
-
----
-
-## Incompatible Changes in 0.4.0
-
-0.4.0 is a full rewrite. Templates and calling code both need changes.
-
-### Standard context stack semantics
-
-Previously a template used a flat context with full-path lookups. It now uses
-the standard Mustache context stack, which is what every other Mustache
-implementation does.
-
-```diff
-- {{#user}}{{user.name}}{{/user}}
-+ {{#user}}{{name}}{{/user}}
-
-- {{#items}}{{+ items.current}}<li>{{items.name}}</li>{{/ items.current}}{{/items}}
-+ {{#items}}{{+ current}}<li>{{name}}</li>{{/ current}}{{/items}}
+%% aihtml:render(login()) -> iodata()
 ```
 
-The rule: inside `{{#X}}`, drop the `X.` prefix from references to `X`'s own
-fields. `rebar3 mustache migrate` does the mechanical part and reports what it
-could not decide.
+- 渲染依赖 [beamai_render](https://github.com/TTalkPro/beamai_render)：转义使用 `beamai_html_escape`，`{safe, iodata()}` 与 beamai_jinja 的安全标记一致，渲染结果可直接放进 Jinja 模板。
+- 前端基础：jQuery 4 与 Tailwind CSS v4（Tailwind CLI 构建）。需要 OTP 27 以上，live 模式使用 OTP 自带的 `json` 模块。
+- 主题借鉴 [sigil](../sigil) 的四轴设计：外观、配色、排版、外形。
 
-There is deliberately no compatibility switch. Supporting both would fork the
-compiler's scope resolution, which costs more over time than migrating once.
+## 仓库结构
 
-### The API
-
-| Removed | Replacement |
+| 路径 | 内容 |
 |---|---|
-| `ai_mustache:bootstrap/0,1` | nothing -- templates are compiled by the build |
-| `ai_mustache:reload/0` | `ai_mustache_dev:reload/1` (dev only) |
-| `ai_mustache:render(Name, Ctx)` where `Name` is a string | `view_name:render(Ctx)`, or `ai_mustache:render(view_name, Ctx)` |
-| `application:start(aihtml)` | nothing -- aihtml is a library application |
-| `ai_dom_node`, `ai_dom_render` | removed; they were unrelated to Mustache |
+| `apps/aihtml` | 类库本体，其它项目只依赖它 |
+| `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
+| `apps/aihtml/priv/static` | 预构建产物：`aihtml.css`、`aihtml.js`、`vendor/jquery.min.js` |
+| `apps/aihtml_cowboy` | live 模式的 cowboy 传输层：启动页、WebSocket、静态资源路由 |
+| `apps/aihtml_example` | cowboy 示例，`/` 是 live 模式，`/fetch` 是无状态片段模式 |
+| `designs/` | 设计文档 |
 
-### HTML escaping now covers five characters, not eight
+## 调用约定
 
-`&` `<` `>` `"` `'` are escaped. `/`, `=` and `` ` `` are **not**.
+所有构建函数都返回元素树，最后由 `aihtml:render/1` 输出 iodata。
 
-The old set corrupted URLs: `href="/a/b"` came out as `href="&#x2F;a&#x2F;b"`.
-The old `&` replacement was also missing its semicolon, producing `&amp`
-instead of `&amp;`; that is fixed.
-
-### Partial indentation applies to every line
-
-When `{{> partial}}` sits alone on an indented line, that indent is applied to
-every line the partial emits, as the spec requires. The old implementation
-indented only the first line.
-
-### ailib is no longer a dependency
-
-Everything aihtml used from it is now implemented in `ai_mustache_rt`, which
-depends only on OTP.
-
-### Other fixed behaviour
-
-- `{{.}}`, the implicit iterator, works. It previously always resolved to nothing.
-- `{{> a.b}}` and other partial paths containing dots no longer crash the parser.
-- `{{#a.b}}` no longer discards `a`'s other keys while iterating.
-
----
-
-## How it works
-
-```
-views/index.mustache
-   |
-   +- ai_mustache_scanner     lexer: text and tag tokens, standalone lines, delimiters
-   +- ai_mustache_parser      recursive descent -> AST
-   +- ai_mustache_ast         merge text, drop empty bodies, resolve partials
-   |
-   +- ai_mustache_compiler    AST -> Erlang abstract forms      (the only such implementation)
-         |
-         +- rebar3_aihtml     erl_prettypr -> _gen/view_index.erl -> .beam
-         +- parse_transform   forms injected into the calling module
-```
-
-`views/index.mustache` becomes roughly this:
-
-```erlang
--module(view_index).
-
--mustache_source(#{path => <<"views/index.mustache">>, stamp => <<...>>,
-                   mtime => 1757203845, vsn => 1, opts => #{...}}).
-
--export([render/1, render_iolist/1, render_stack/1, render_stack/2, partials/0]).
-
-render(Ctx) -> erlang:iolist_to_binary(render_stack([Ctx], <<>>)).
-partials()  -> [view_shared_item].
-
-render_stack(S, I) ->
-    [I, <<"<h1>">>,
-     ai_mustache_rt:escape(ai_mustache_rt:lookup([header], S)),
-     <<"</h1>\n">>,
-     sec_1(S, I)].
-
-sec_1(S, I) ->
-    case ai_mustache_rt:lookup([items], S) of
-        []                       -> [];
-        L when is_list(L)        -> [sec_1_body([E | S], I) || E <- L];
-        M when is_map(M)         -> sec_1_body([M | S], I);
-        true                     -> sec_1_body(S, I);
-        F when is_function(F, 2) -> F(erlang:iolist_to_binary(sec_1_body(S, I)), hd(S));
-        F when is_function(F, 1) -> ai_mustache_rt:section(F(hd(S)), fun sec_1_body/2, S, I);
-        V                        -> ai_mustache_rt:section(V, fun sec_1_body/2, S, I)
-    end.
-
-sec_1_body(S, I) -> [<<"  ">>, view_shared_item:render_stack(S, I)].
-```
-
-Three consequences worth naming:
-
-**Static text is a literal.** It goes into the module's literal pool and is
-shared between processes by reference. The previous design kept the parsed
-template in ETS, and every `ets:lookup/2` deep-copied the whole tree into the
-calling process.
-
-**A partial is a cross-module call.** Editing a partial therefore does not
-require recompiling the templates that include it, and two templates may
-include each other -- the old tree-walking interpreter would have recursed
-forever.
-
-**Iterating a section pushes onto a list.** `[Item | Stack]` allocates one
-cons cell. The old runner built a fresh context with `maps:merge/2` on every
-iteration, which copied the whole map and, for a dotted section name, silently
-dropped the sibling keys.
-
----
-
-## Installation
-
-You need **two** entries: the plugin, which compiles the templates at build
-time, and the `aihtml` dependency, whose `ai_mustache_rt` the generated
-modules call at run time.
-
-```erlang
-%% rebar.config -- the whole of it, for a single-app project
-{erl_opts, [debug_info, {src_dirs, ["src", "_gen"]}]}.
-
-{deps, [{aihtml, {git, "https://github.com/DavidAlphaFox/aihtml.git",
-                  {tag, "v0.4.0"}}}]}.
-
-{plugins, [{rebar3_aihtml, {git_subdir, "https://github.com/DavidAlphaFox/aihtml.git",
-                            {tag, "v0.4.0"}, "rebar3_aihtml"}}]}.
-
-{provider_hooks, [{pre, [{compile, mustache}]}]}.
-```
-
-That is genuinely all of it -- there is no `mustache_opts` above because every
-option has a working default. The plugin lives in a subdirectory of the aihtml
-repository, hence `git_subdir` rather than `git`.
-
-Add `_gen/` to `.gitignore`; it is build output.
-
-### Project layout
-
-```
-myapp/
-  rebar.config
-  src/
-    myapp.app.src
-    myapp.erl              %% calls view_index:render/1
-  views/                   %% <- {views, "views"}, the default
-    index.mustache         %% -> view_index
-    layout/
-      head.mustache        %% -> view_layout_head
-    shared/
-      post.mustache        %% -> view_shared_post
-  _gen/                    %% generated, gitignored
-    view_index.erl
-    view_layout_head.erl
-    view_shared_post.erl
-```
-
-`{src_dirs, ["src", "_gen"]}` is the one line that is easy to forget: without
-it rebar3 never compiles the generated modules and `view_index` is undefined.
-
-Partials are named by their path under `views/`, without the suffix:
-
-```mustache
-{{> layout/head}}
-{{> shared/post}}
-```
-
-### Overriding the defaults
-
-```erlang
-{mustache_opts, [
-    {views,    "views"},        % template root, relative to the app
-    {suffix,   ".mustache"},
-    {out_dir,  "_gen"},         % where the generated .erl files go
-    {prefix,   "view_"},        % module name prefix
-    {line_map, true},           % map generated line numbers back to the template
-    {extensions, []},           % custom tag modules, see parse_transform below
-    {ext_opts, #{}},            % configuration passed to those modules
-    {warnings_as_errors, false}
-]}.
-```
-
-An unrecognised key is reported rather than ignored, so a typo does not
-silently do nothing.
-
-### Umbrella projects
-
-Put the plugin, the dep and the hook at the project root; each application
-keeps its own `views/` and generates into its own `_gen/`.
-
-```
-myproject/
-  rebar.config             %% plugins, deps, provider_hooks, shared mustache_opts
-  apps/
-    web/
-      rebar.config         %% {erl_opts, [{src_dirs, ["src", "_gen"]}]} + any overrides
-      views/ ...
-      _gen/ ...
-    admin/
-      rebar.config
-      views/ ...
-      _gen/ ...
-```
-
-Two things to know:
-
-- **`{src_dirs, ["src", "_gen"]}` has to be in each application's own
-  `rebar.config`**, not just the root one.
-- **Give each application its own `prefix`** if they have templates with the
-  same path. `web/views/index.mustache` and `admin/views/index.mustache` both
-  map to `view_index`, which is one module name for two modules. The plugin
-  detects the clash across applications and tells you which prefixes are
-  involved; `{prefix, "admin_"}` in one of them resolves it, and the module
-  generated under the old name is collected as an orphan on the next build.
-
-`rebar3 compile` now runs the `mustache` provider first. It only recompiles
-templates whose content, options or compiler version actually changed -- the
-check reads the `-mustache_source` attribute out of the previously generated
-`.erl`, so there is no cache file to go stale.
-
-### Why generate `.erl` rather than `.beam` directly
-
-The generated source is readable, greppable and visible to dialyzer, and stack
-traces from a template error point at real line numbers.
-
-### Module names
-
-```
-views/index.mustache          ->  view_index
-views/shared/item.mustache    ->  view_shared_item
-views/layout/default.mustache ->  view_layout_default
-```
-
-`/`, `-` and `.` all become `_`, so `shared/item.mustache` and
-`shared_item.mustache` would collide. The plugin detects that and fails rather
-than silently overwriting one with the other.
-
-### Migrating 0.3.x templates
-
-```sh
-rebar3 mustache migrate           # print a diff
-rebar3 mustache migrate --write   # apply it
-```
-
-It rewrites in place, preserving comments, whitespace and custom delimiters.
-Anything it cannot decide -- a reference to a sibling section's variable, say
--- is left alone and listed in the report for you to handle.
-
-### erlang.mk
-
-```makefile
-BUILD_DEPS = rebar3_aihtml
-DEP_PLUGINS = rebar3_aihtml
-dep_rebar3_aihtml = git https://github.com/DavidAlphaFox/aihtml.git v0.4.0
-```
-
-Supported, but not the primary path; CI builds with rebar3.
-
----
-
-## Rendering
-
-```erlang
-view_index:render(Ctx)         -> binary().
-view_index:render_iolist(Ctx)  -> iolist().
-
-%% When the template is only known at run time -- picking a layout by route:
-ai_mustache:render(view_index, Ctx)         -> binary().
-ai_mustache:render_iolist(view_index, Ctx)  -> iolist().
-
-%% An inline template (see parse_transform below):
-ai_mustache:inline(~"Hello {{name}}!", #{name => Name}) -> binary().
-```
-
-`render_iolist/1` can go straight into a cowboy response body, which skips
-building the flat binary entirely.
-
-The context may be any term, not just a map: the spec has a case whose entire
-data is the integer `85`, reachable as `{{.}}`.
-
-### Non-ASCII in your own Erlang code
-
-Template files are read as UTF-8 and need nothing special. But a literal in
-your own source does:
-
-```erlang
-%% WRONG: each codepoint is truncated to 8 bits and the text is destroyed
-#{title => <<"我的博客">>}
-
-%% Right
-#{title => <<"我的博客"/utf8>>}
-```
-
-This is ordinary Erlang, not something aihtml introduces, but it is the most
-common way to end up with mojibake in a page whose templates are fine.
-
-### Development-time reloading
-
-```erlang
-ai_mustache_dev:check()          % one-shot environment self-test
-ai_mustache_dev:stale(view_index)
-ai_mustache_dev:reload(view_index)
-ai_mustache_dev:reload(all)
-```
-
-**`check/0` is not a switch.** This module holds no state at all -- no ETS, no
-persistent_term, no process, no cache file -- so there is nowhere for an
-"enabled" flag to live. Nothing watches your files. You call `reload/1`
-yourself, from a dev-only middleware, an editor hook, or the top of a request
-handler.
-
-Staleness is decided by hashing the file, never by its mtime: POSIX mtime has
-one-second resolution and the edit-then-refresh loop happens well inside one
-second.
-
----
-
-## Template semantics
-
-Keys are **atoms**, in the context and in the template:
-
-```erlang
-#{user => #{name => <<"David Gao">>, level => 1}, stars => 10}
-```
-
-Template bodies and paths are **UTF-8 binaries**. An entry point will accept
-any `unicode:chardata()` and normalise it once, but a template that is not
-valid UTF-8 is rejected with `{invalid_utf8, ByteOffset}` rather than passed
-through as bytes -- that failure is much easier to diagnose at the door than
-as mangled output from a generated module later. Paths are normalised but
-never rejected, since a non-UTF-8 filesystem can still hand back a path that
-names a real file.
-
-### Name resolution
-
-`{{name}}` walks the context stack from the top outwards and takes the value
-from the first frame that has that key.
-
-`{{a.b}}` resolves `a` by walking the stack, then takes `b` **strictly inside**
-`a`. If `a` has no `b`, the result is empty; it does not keep searching
-outwards.
-
-`{{.}}` is the implicit iterator: the value on top of the stack.
-
-### Falsy values
-
-Exactly five: `undefined`, `false`, `[]`, `<<>>`, `null`.
-
-### 0 is truthy. So is `#{}`.
-
-This trips people up, so it is worth being explicit:
-
-```erlang
-%% {{#count}}You have {{.}} messages{{/count}}
-#{count => 0}   %% the section RUNS and renders "You have 0 messages"
-#{count => []}  %% the section is skipped
-```
-
-If you want "zero means hide", test it in your code and pass a boolean.
-
-### Section dispatch
-
-`{{#x}}` behaves according to the run-time type of `x`:
-
-| `x` | Behaviour | Pushes a scope |
-|---|---|---|
-| `[]` | skipped | -- |
-| non-empty list | body runs once per element | yes, per element |
-| map | body runs once | yes |
-| `true` | body runs once | no |
-| `fun/2` | called as `F(RenderedBody, CurrentFrame)` | no |
-| `fun/1` | called as `F(CurrentFrame)`, result dispatched again | depends on the result |
-| falsy | skipped | -- |
-| anything else | body runs once | yes, so `{{.}}` works |
-
-`{{^x}}` runs the body when `x` is falsy and never pushes a scope.
-
----
-
-## `{{#}}` versus `{{+}}`
-
-Both look like conditionals. The difference is scope.
-
-```mustache
-{{#user}}{{name}}{{/user}}        renders the user's name -- {{#}} pushes user onto the stack
-{{+user}}{{user.name}}{{/user}}   renders the same thing -- {{+}} does not push, so the full path is needed
-```
-
-`{{#}}` means *with* / *for each*: it enters a scope and iterates lists.
-`{{+}}` means *if*: it tests truthiness and runs the body once, in the
-surrounding scope. `{{-}}` is `{{+}}` negated.
-
-Use `{{+}}` when you want a condition without changing what the names inside
-refer to:
-
-```mustache
-{{#items}}
-  {{+ current}}<li class="on">{{name}}</li>{{/ current}}
-  {{- current}}<li>{{name}}</li>{{/ current}}
-{{/items}}
-```
-
-`{{name}}` refers to the item in both branches. With `{{#current}}` it would
-refer to whatever is inside `current`.
-
-Both accept a `fun/1`, called with the current frame:
-
-```erlang
-#{has_friends => fun(Frame) -> maps:get(friends, Frame, []) =/= [] end}
-```
-
----
-
-## Rendering a partial conditionally
-
-`{{> x}}` is unconditional on its own; wrap it in a section:
-
-```mustache
-{{#user}}
-  {{> shared/card}}
-{{/user}}
-
-{{+is_admin}}
-  {{> shared/panel}}
-{{/is_admin}}
-
-{{^items}}
-  {{> shared/empty}}
-{{/items}}
-```
-
-Which section you choose decides how names resolve inside the partial:
-`{{#}}` pushes a scope, `{{+}}` does not.
-
-**Give the partial a line of its own.** Squeezed onto one line it is not
-standalone and loses its indentation:
-
-```mustache
-{{#show}}
-  {{> row}}          correct: every line of row gets the 2-space indent
-{{/show}}
-
-{{#show}}{{> row}}{{/show}}   indentation lost, plus a stray blank line
-```
-
-To choose *which* partial at run time (the spec's Dynamic Names are not
-implemented): mutually exclusive sections, or a lambda calling the module
-directly -- partials compile to real modules, so Erlang can call them:
-
-```erlang
-Pick = fun(Frame) ->
-    Mod = case maps:get(kind, Frame) of
-              text  -> view_shared_text;
-              image -> view_shared_image
-          end,
-    Mod:render_iolist(Frame)     %% an iolist, and not escaped
-end.
-```
-
-The template says `{{*body}}`.
-
----
-
-## Lambdas
-
-`{{*name}}` is an aihtml extension. Its output is **not** escaped -- producing
-markup is the point.
-
-```erlang
-%% fun/1: receives the current frame
-#{yield => fun(Frame) -> render_something(Frame) end}
-
-%% fun/2 plus a value: called as Fun(Value, Frame)
-#{yield => [fun render_layout/2, <<"index">>]}
-```
-
-Since 0.4.0 the fun receives the **top of the stack**, not a flat global
-context. A lambda at the top level of a template still sees the root context,
-but move it inside a section and it will not. Pass what you need through the
-`fun/2` form rather than relying on where the tag sits.
-
----
-
-## Partials
-
-```mustache
-{{> shared/user}}
-```
-
-resolves to `view_shared_user` and is compiled into a direct call. Partials
-render with the **current stack**, so a partial used inside `{{#items}}` sees
-the item:
-
-```mustache
-{{! views/index.mustache }}
-<ul>{{#items}}{{> shared/row}}{{/items}}</ul>
-
-{{! views/shared/row.mustache }}
-<li>{{name}}</li>
-```
-
-A partial alone on an indented line has that indent applied to every line it
-emits. Interpolated values are not re-indented, so a value containing newlines
-keeps its own shape.
-
----
-
-## parse_transform
-
-Full guide: **[docs/parse-transform.md](docs/parse-transform.md)**.
-
-```erlang
--module(my_views).
--compile({parse_transform, ai_mustache_transform}).
-
-%% (a) declare a custom tag; see below
--mustache_tag({$@, my_i18n}).
-
-%% (b) inline template, expanded at compile time
-greet(Name) -> ai_mustache:inline(~"Hello {{name}}!", #{name => Name}).
-
-%% (c) compile a template file into index/1 and index_iolist/1
--mustache_template({index, "views/index.mustache"}).
-```
-
-### There is no `~mustache` sigil
-
-Erlang's sigils are a fixed set; a custom one does not lex. Inline templates
-are therefore recognised as calls to `ai_mustache:inline/2` whose first
-argument is a binary literal. `~"..."` is OTP 27's ordinary string sigil and
-produces exactly that.
-
-If the transform is not applied, or the first argument is not a literal, the
-call still works -- it falls back to compiling at run time. Same output, just
-slower. The one exception is custom tags: those are expanded by compile-time
-callbacks and cannot run in the fallback path.
-
-A non-literal first argument warns, since writing `inline` usually means you
-wanted the zero-cost version; `nowarn_mustache_inline` in `erl_opts` turns that
-off. Inline templates cannot use `{{> partial}}` -- there is no views directory
-to resolve one against -- and that is a compile error.
-
-### Custom tags
-
-```erlang
--module(my_i18n).
--behaviour(ai_mustache_ext).
--export([markers/0, compile_tag/4]).
-
-markers() -> [$@].
-
-compile_tag($@, [Key], _Body, Opts) ->
-    %% Return an abstract expression evaluating to iodata()
-    ...
-```
-
-`# ^ / > ! = & { } + - *` are taken; a custom marker must be something else,
-and two extensions may not claim the same character.
-
-`-mustache_tag` **declares and checks**; it does not wire anything up. A
-parse_transform only sees one module, so the module compiling your templates
-cannot learn about the declaration from it. Actual registration goes in
-`rebar.config`:
-
-```erlang
-{mustache_opts, [{extensions, [my_i18n]},
-                 {ext_opts,   #{my_i18n => #{default_locale => en}}}]}.
-```
-
-What the attribute buys you is that a mistake -- a module that does not
-implement the behaviour, or a marker it does not claim -- becomes a compile
-error in the module that declared it instead of a puzzling failure later.
-
-There is one exception to "declares but does not wire up": forms (b) and (c)
-compile inside the very module that carries the attribute, so a `-mustache_tag`
-there **is** used for that module's own inline and `-mustache_template`
-templates. It still says nothing about `.mustache` files the plugin compiles.
-If `extensions` is configured and a declared module is missing from it, the
-transform warns.
-
-### Known limitation of form (c)
-
-rebar3 cannot see that `my_views.erl` depends on `views/index.mustache`; a
-parse_transform has no way to register an extra file dependency. The plugin
-compensates by scanning for `-mustache_template` attributes and touching the
-`.erl` when the template changes. Forms (a) and (b) are unaffected.
-
----
-
-## Differences from the spec
-
-The required modules -- Comments, Delimiters, Interpolation, Inverted,
-Partials, Sections -- all pass. These are deliberate deviations:
-
-| | |
+| 形式 | 例子 |
 |---|---|
-| `{{+x}}` / `{{-x}}` | aihtml extensions; the spec has no such tags |
-| `{{*x}}` | aihtml extension |
-| Key type | atoms, where the spec uses strings |
-| Lambdas | return values are not re-parsed as templates |
-| Dynamic Names, Blocks | not implemented (optional spec modules) |
-| `'` escaping | escaped as `&#39;`, which the spec does not require |
+| 通用标签 | `p(Children)`、`p(Children, Css, Attrs)`；`div` 是 Erlang 保留字，写作 `'div'` |
+| 空元素 | `img(Css, Attrs)`、`hr(Css, Attrs)`、`br()` |
+| 表单预制件 | `button(Content, Value, Css, Attrs)`、`checkbox/4`、`radio/4`、`switch/4`、`select(Options, Value, Css, Attrs)` |
+| 其它预制件 | `input/3`、`textarea/3`、`field/4`、`card/3`、`alert/3`、`badge/3`、`tabs/4`、`theme_switcher/2` |
+| 任意标签 | `aihtml:el(Tag, Children, Css, Attrs)`、`aihtml:void(Tag, Css, Attrs)` |
 
----
+**Children**：binary、数字、原子和可打印字符串都作为文本转义输出；其它列表是子节点序列；`safe(IoData)` 原样输出。
 
-## Performance
+**Css**：原子是预制件的语义修饰符，由 `aihtml_catalog` 校验，未知或冲突的修饰符会直接报错；binary 是字面 class，通常是 Tailwind 工具类，排在语义 class 之后。
 
-`bench/run.sh` compares against v0.3.7 on a page both versions render
-byte-identically -- the harness refuses to report timings if the outputs ever
-diverge. Median of seven runs on OTP 28, Linux x86-64:
+**Attrs**：proplist 或 map，可以嵌套列表。`true` 输出布尔属性，`false`、`undefined` 会被省略，`aria_label` 写成 `aria-label`，`{data, #{k => v}}` 展开为 `data-k`。后出现的同名属性覆盖前面的，`class` 则累加。checkbox、radio、switch 的 Attrs 作用在内部的 `<input>` 上。
 
-| Page | v0.3.7 | 0.4.0 `render/1` | 0.4.0 `render_iolist/1` |
+预制件清单、修饰符、选项和事件都在 `aihtml_catalog:prefabs/0` 中。
+
+## 交互模型
+
+服务端渲染全部 HTML。浏览器端有两种模式，可以混用。
+
+### live 模式（CLOG 风格）
+
+每个浏览器窗口经 WebSocket 连到一个 Erlang 会话进程：
+
+- **事件处理器写在 Attrs 里**：`on(Event, fun(Win, Ev) -> ... end)`，也可以加防抖，`on(input, Fun, #{debounce => 150})`。点击、输入、提交等事件发生时，这个 fun 在会话进程里执行。
+- **Ev 带上常用数据**：元素 `id`、`value`、`checked`、`key`、所在表单的全部字段 `form`、`data-*` 属性 `data`。多数处理器不需要再向浏览器查询。
+- **推送 DOM 操作**：`aihtml_live:html/3,4`、`remove/2`、`attr/4`、`add_class/3`、`set_value/3`、`focus/2`、`title/2`、`redirect/2`、`js/2`。一个处理器里的操作合并成一帧发送。
+- **读取浏览器**：`aihtml_live:query(Win, <<"return window.innerWidth">>)` 同步返回 `{ok, Value}`，对应 CLOG 的 js-query。
+- **服务端主动推送**：会话收到的普通消息交给可选回调 `handle_info/2`，例如定时器。其它进程也可以直接调用这些操作，它们会被转发到会话里执行。
+- **窗口状态**放在会话进程里，可以用闭包或进程字典。
+- **断线重连后恢复原会话**，与 CLOG 相同。断线后会话继续运行，默认保留 60 秒。页面带着会话令牌和最后应用的帧号重连，会话补发断线期间的帧。页面、处理器和状态都原样延续。只有超时、或缺失的帧已超出重放缓冲，才会重新开始。刷新页面总是开始一个新会话。
+
+```erlang
+-module(hello).
+-behaviour(aihtml_live).
+-include_lib("aihtml/include/aihtml.hrl").
+-export([mount/2]).
+
+mount(Win, _Params) ->
+    aihtml_live:render(Win,
+        'div'([button(<<"点我">>, go, [],
+                      [on(click, fun(W, _) -> aihtml_live:html(W, {id, out}, <<"来自 Erlang">>) end)]),
+               'div'([], [], [{id, out}])], [], [])).
+
+%% cowboy 路由
+Routes = aihtml_cowboy:routes(hello, #{path => "/", page => #{title => <<"Hello">>}}).
+```
+
+处理器只能出现在会话渲染的 HTML 里，静态渲染包含处理器会直接报错。WebSocket 默认只接受同源连接。
+
+### fetch 模式（无状态）
+
+`fetch/3,4` 生成的属性让元素通过普通 HTTP 请求 HTML 片段，再替换到目标位置，不需要会话：
+
+```erlang
+button(<<"更多">>, more, [outline],
+       [fetch(get, <<"/items?page=2">>, <<"#items">>, #{swap => append})])
+```
+
+### 预制件行为
+
+带 `data-ah` 的根元素在加载时挂载 jQuery 行为，例如 tabs 切换、alert 关闭。
+
+## 四轴主题
+
+| 轴 | `<html>` 属性 | 取值 | 只负责 |
 |---|---|---|---|
-| 20 items, 1843 bytes | 632.5 us | 11.8 us (**53x**) | 10.0 us |
-| 100 items, 8885 bytes | 3235.0 us | 51.9 us (**62x**) | 46.0 us |
+| appearance | `data-theme` | light, dark | 中性色 |
+| palette | `data-palette` | indigo, emerald, rose, amber | 强调色 |
+| typography | `data-typography` | sans, serif, mono | 字体 |
+| skin | `data-skin` | soft, sharp, pill, brutal | 圆角、边框、阴影 |
 
-The gap grows with the number of section iterations: the old runner rebuilt
-the context with `maps:merge/2` for every element, which copies a map whose
-size does not shrink, while pushing onto the stack is one cons cell.
+服务端通过 `aihtml:page(Body, #{theme => #{...}})` 设置初始值。浏览器端用 `AH.theme.set(Axis, Value)` 切换，选择保存在 localStorage，首屏绘制前恢复。Tailwind 的 `bg-primary`、`text-muted`、`rounded-control` 等工具类同样跟随四轴变化。
 
-See [bench/README.md](bench/README.md) for the methodology and where the rest
-of the difference comes from.
+## 作为依赖使用
 
----
-
-## A worked example
-
-`examples/` is a complete project: templates under `examples/views/`, a driver
-in `examples/src/complex.erl`, and the plugin wired up in
-`examples/rebar.config`.
-
-```sh
-sh examples/run.sh
+```erlang
+{deps, [{aihtml, {git_subdir, "https://github.com/DavidAlphaFox/aihtml.git",
+                  {branch, "master"}, "apps/aihtml"}},
+        %% 只有 live 模式需要
+        {aihtml_cowboy, {git_subdir, "https://github.com/DavidAlphaFox/aihtml.git",
+                         {branch, "master"}, "apps/aihtml_cowboy"}}]}.
 ```
 
-It builds in a temporary copy, because aihtml and rebar3_aihtml have to reach
-the example through `_checkouts` (rebar3 has no `path` resource) and
-symlinking the repository root into a directory inside that repository would
-be circular. The script prints the generated module list and the rendered
-page.
+live 模式需要运行 aihtml 应用，它负责会话注册表和会话监督树。把 `aihtml` 写进你的应用的 `applications` 列表即可自动启动。
 
-The example is deliberately dense: it covers partial indentation, `{{+}}` and
-`{{-}}`, a `true` section that does not push a scope, an inverted section, a
-`0` that is truthy, `{{.}}`, and a `fun/2` lambda. `test/examples_tests.erl`
-pins its output byte for byte.
+核心库不依赖 cowboy。其它服务器只需实现一个传输进程：
+- 用 `aihtml_live:connect/4` 取得会话，重连时带上 `resume` 和 `last`。
+- 把 `{aihtml_send, iodata()}` 发给浏览器，收到 `{aihtml_close, Code, Reason}` 时关闭连接。
+- 把收到的 JSON 帧交给 `aihtml_live:incoming/2`。
 
-## Projects using aihtml
+`aihtml_cowboy:routes/2` 的 `resume_timeout` 和 `replay_limit` 选项分别设置会话等待重连的时间和重放缓冲的帧数。
 
-- [aiwiki](https://github.com/DavidAlphaFox/aiwiki) -- a very simple blog.
-  Its templates predate 0.4.0 and need migrating.
+**静态资源**：把 aihtml 的 `priv/static` 挂到 `/aihtml/`，cowboy 写法如下：
 
----
+```erlang
+{"/aihtml/[...]", cowboy_static, {priv_dir, aihtml, "static"}}
+```
 
-## Documentation
+**样式**：只用预制件时直接用预构建的 `aihtml.css`。自己写 Tailwind 工具类时，在自己的入口 CSS 里引入源样式并扫描 Erlang 源码：
 
-- [Using the parse_transform](docs/parse-transform.md) -- extension tags, inline templates, file templates
-- [Benchmark](bench/README.md) -- methodology and results
-- [Design notes](designs/README.md) -- why the engine is built this way
+```css
+@import "tailwindcss" source(none);
+@import "../_build/default/lib/aihtml/priv/css/aihtml.css";
+@source "../_build/default/lib/aihtml/src";
+@source "../src";
+```
 
-## Credit
+Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字面量，不能在运行时拼接。
 
-The scanner's tag-splitting logic derives from
-[bbmustache](https://github.com/soranoba/bbmustache) by Hinagiku Soranoba,
-used under the MIT licence.
+## 开发
 
-## Licence
+```sh
+rebar3 compile
+rebar3 eunit --app aihtml
+rebar3 dialyzer && rebar3 xref
 
-MIT. See [LICENSE](LICENSE).
+npm install
+npm run build          # 复制 jQuery，构建 aihtml.css 与 example.css
+
+rebar3 shell           # 启动示例：http://localhost:8080/ 与 /fetch
+```
+
+## 许可证
+
+Apache-2.0

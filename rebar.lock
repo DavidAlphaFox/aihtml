@@ -1,1 +1,18 @@
-[].
+{"1.2.0",
+[{<<"beamai_render">>,
+  {git,"https://github.com/TTalkPro/beamai_render.git",
+       {ref,"528d36b524d7e6234c44024bb5de9102c143f6f0"}},
+  0},
+ {<<"cowboy">>,{pkg,<<"cowboy">>,<<"2.13.0">>},0},
+ {<<"cowlib">>,{pkg,<<"cowlib">>,<<"2.16.1">>},1},
+ {<<"ranch">>,{pkg,<<"ranch">>,<<"2.2.0">>},1}]}.
+[
+{pkg_hash,[
+ {<<"cowboy">>, <<"09D770DD5F6A22CC60C071F432CD7CB87776164527F205C5A6B0F24FF6B38990">>},
+ {<<"cowlib">>, <<"318D385D55F657E9A5005838C4E426E13DCD724A691438384B6165A69687E531">>},
+ {<<"ranch">>, <<"25528F82BC8D7C6152C57666CA99EC716510FE0925CB188172F41CE93117B1B0">>}]},
+{pkg_hash_ext,[
+ {<<"cowboy">>, <<"E724D3A70995025D654C1992C7B11DBFEA95205C047D86FF9BF1CDA92DDC5614">>},
+ {<<"cowlib">>, <<"58F1E425A9E04176F1D30E20116F57C4E90EF0E187552E9741C465BDF4044F70">>},
+ {<<"ranch">>, <<"FA0B99A1780C80218A4197A59EA8D3BDAE32FBFF7E88527D7D8A4787EFF4F8E7">>}]}
+].
