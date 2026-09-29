@@ -1,0 +1,81 @@
+/* aihtml additions for the sidenav component (aihtml_sidenav).
+   Sigil styles live in ../sigil/components. */
+
+/* nav-tree (used by sidenav): sigil styles in ../sigil/components/nav_tree.css;
+   only the disabled item state is added here. */
+
+
+/* ==========================================================================
+   sidenav: head row with the collapse toggle, collapsed (icon-only) form
+   ========================================================================== */
+.ah-sidenav {
+  transition: width .2s ease, padding .2s ease;
+}
+.ah-sidenav__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ah-sidenav__head > .ah-sidenav__brand { min-width: 0; }
+.ah-sidenav__toggle {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-top: 8px;
+  padding: 0;
+  border: var(--ah-border-width) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text-secondary);
+  cursor: pointer;
+  transition: background-color var(--ah-transition-fast), transform .2s ease;
+}
+.ah-sidenav__toggle:hover { background: var(--ah-color-grey-100); color: var(--ah-color-text); }
+.ah-sidenav__toggle:focus-visible,
+.ah-nav-tree__item:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-primary);
+  outline-offset: -2px;
+}
+.ah-nav-tree__item--disabled {
+  opacity: var(--ah-state-disabled-opacity);
+  pointer-events: none;
+}
+.ah-nav-tree__icon > img { width: 20px; height: 20px; }
+.ah-sidenav__brand-mark > img { width: 100%; height: 100%; object-fit: contain; }
+
+.ah-sidenav.ah-sidenav-collapsed {
+  --ah-ssn-width: 72px;
+  --ah-ssn-padding: 16px 10px;
+  overflow-x: hidden;
+}
+.ah-sidenav-collapsed .ah-sidenav__head {
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding-bottom: 12px;
+}
+.ah-sidenav-collapsed .ah-sidenav__brand { padding: 4px 0; }
+.ah-sidenav-collapsed .ah-sidenav__toggle { transform: rotate(180deg); margin-top: 0; }
+.ah-sidenav-collapsed .ah-sidenav__brand-name,
+.ah-sidenav-collapsed .ah-nav-tree__label,
+.ah-sidenav-collapsed .ah-nav-tree__caret,
+.ah-sidenav-collapsed .ah-nav-tree__children,
+.ah-sidenav-collapsed .ah-sidenav__footer {
+  display: none;
+}
+.ah-sidenav-collapsed .ah-nav-tree__group-label {
+  height: 1px;
+  padding: 0;
+  margin: 4px 8px;
+  overflow: hidden;
+  color: transparent;
+  background: var(--ah-color-border);
+}
+.ah-sidenav-collapsed .ah-nav-tree__item { justify-content: center; padding: 11px 0; }
+.ah-sidenav-collapsed .ah-nav-tree__node:has(.ah-is-active) > .ah-nav-tree__item--parent {
+  color: var(--ah-snt-accent-dark);
+  background: var(--ah-snt-accent-soft-strong);
+}
