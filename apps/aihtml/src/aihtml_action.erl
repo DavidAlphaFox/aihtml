@@ -48,7 +48,7 @@
 %% Rendering and transports.
 -export([token/1, verify/1, execute/3]).
 %% Shared with aihtml_push.
--export([sign/1, unsign/1, render_ops/1, stream_id/1, plain/1]).
+-export([sign/1, unsign/1, render_ops/1, stream_id/1, plain/1, check_secret/0]).
 %% Operations inside an action.
 -export([html/3, html/4, remove/2, attr/4, add_class/3, remove_class/3,
          set_value/3, focus/2, title/2, redirect/2, js/2, flush/1, meta/1]).
@@ -315,6 +315,18 @@ plain(_) -> true.
 plain_list([H | T]) -> plain(H) andalso plain_list(T);
 plain_list([]) -> true;
 plain_list(T) -> plain(T).
+
+%% @doc Validate the configured secret, if any: at least 32 bytes.
+-spec check_secret() -> ok | {error, {secret_too_short, string()} | {bad_secret, term()}}.
+check_secret() ->
+    case application:get_env(aihtml, secret) of
+        undefined -> ok;
+        {ok, Bin} when is_binary(Bin), byte_size(Bin) >= 32 -> ok;
+        {ok, Bin} when is_binary(Bin) ->
+            {error, {secret_too_short, "aihtml secret must be at least 32 bytes"}};
+        {ok, Other} ->
+            {error, {bad_secret, Other}}
+    end.
 
 mac(Payload) -> crypto:mac(hmac, sha256, secret(), Payload).
 
