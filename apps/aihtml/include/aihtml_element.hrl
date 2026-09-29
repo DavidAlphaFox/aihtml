@@ -1,6 +1,6 @@
 %% The fields every aihtml element record starts with (designs/05-records.md).
 %%
-%%   -record(ah_button, {?AH_BASE(aihtml_form_buttons), body = [], ...}).
+%%   -record(ah_button, {?AH_BASE(aihtml_button), body = [], ...}).
 %%
 %% Their positions are part of the contract: the renderer reads `module'
 %% at position 2 and aihtml_element:base/1 reads the others by position,

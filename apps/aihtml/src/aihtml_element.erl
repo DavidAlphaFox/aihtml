@@ -14,8 +14,8 @@
 %%%-------------------------------------------------------------------
 -module(aihtml_element).
 
--export([is_element/1, render/1, base/1, build/5, classes/3, root_attrs/2,
-         component_name/1]).
+-export([is_element/1, render/1, base/1, build/4, build/5, classes/2, classes/3,
+         root_attrs/2, component_name/1]).
 
 -export_type([element/0, postback/0]).
 
@@ -57,6 +57,20 @@ render(R) ->
                            delegate := module()}.
 base(R) ->
     maps:from_list(lists:zip(?BASE, [element(I, R) || I <- lists:seq(2, ?BASE_SIZE)])).
+
+%% @doc build/5 for a component module: `Mod:fields/1' gives the record's
+%% fields and `Mod:catalog/0' its entry, found by the record's name
+%% (ah_button -> button). Builders write `build(?MODULE, #ah_x{...}, Css, Attrs)'.
+-spec build(module(), element(), aihtml_html:css(), aihtml_html:attrs()) -> element().
+build(Mod, R, Css, Attrs) ->
+    Tag = element(1, R),
+    build(R, Mod:fields(Tag), aihtml_catalog:entry(Mod, component_name(Tag)), Css, Attrs).
+
+%% @doc classes/3 for a component module, as build/4.
+-spec classes(module(), element()) -> aihtml_html:css().
+classes(Mod, R) ->
+    Tag = element(1, R),
+    classes(R, Mod:fields(Tag), aihtml_catalog:entry(Mod, component_name(Tag))).
 
 %% @doc Fill a record from builder arguments. `Fields' is the record's
 %% `record_info(fields, _)'. Modifier atoms in `Css' set the field named
