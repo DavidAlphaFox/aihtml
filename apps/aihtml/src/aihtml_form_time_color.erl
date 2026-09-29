@@ -16,18 +16,29 @@
 %%% By default each renders a field that opens the sigil panel in a popup;
 %%% the `inline' flag renders the panel alone, as sigil does.
 %%%
-%%% Values are validated here: a malformed value raises
+%%% Each function builds an element record (#ah_timepicker{},
+%%% #ah_colorpicker{}, defined in include/aihtml_form_time_color.hrl) and
+%%% render/1 turns it into HTML, so pages may also write the records
+%%% directly (designs/05-records.md).
+%%%
+%%% Values are validated when rendering: a malformed value raises
 %%% `error({aihtml, {bad_value, Component, Value}})'; `undefined' and
 %%% `<<>>' mean empty.
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_form_time_color).
+-behaviour(aihtml_element).
+
+-include("aihtml_form_time_color.hrl").
 
 -export([timepicker/3, colorpicker/3,
          normalize_time/1, normalize_color/2,
-         catalog/0]).
+         render/1, fields/1, catalog/0]).
+
+-export_type([element/0]).
 
 -define(H, aihtml_html).
+-define(E, aihtml_element).
 
 %% Shared templates (see aihtml_tpl): also compiled to AH.tpl.* for the
 %% browser, which redraws the clock header and numbers on mode changes.
@@ -44,9 +55,10 @@
 -define(SELECT_R, 18).
 
 -type time() :: {0..23, 0..59}.
+-type element() :: #ah_timepicker{} | #ah_colorpicker{}.
 
 %%%===================================================================
-%%% timepicker
+%%% Builders
 %%%===================================================================
 
 %% @doc A time picker. `Value' is `<<"HH:MM">>' (24h), `<<"HH:MM:SS">>'
@@ -59,35 +71,63 @@
 %% (times, same forms as Value; out-of-range numbers are disabled),
 %% `placeholder', `footer' (html under the clock).
 -spec timepicker(binary() | string() | tuple() | undefined,
-                 aihtml_html:css(), aihtml_html:attrs()) -> aihtml_html:element().
-timepicker(Value0, Css, Attrs0) ->
-    Entry = aihtml_catalog:entry(?MODULE, timepicker),
-    {Opts, Attrs1} = aihtml_catalog:split_options(Entry, Attrs0),
-    {Name, Attrs} = take_name(Attrs1),
-    Classes = aihtml_catalog:classes(Entry, Css),
-    Flags = aihtml_catalog:flags(Entry, Css),
-    Inline = lists:member(inline, Flags),
-    Disabled = lists:member(disabled, Flags),
-    Clearable = lists:member(clearable, Flags),
-    Landscape = lists:member(<<"ah-timepicker-field-landscape">>, Classes),
+                 aihtml_html:css(), aihtml_html:attrs()) -> #ah_timepicker{}.
+timepicker(Value, Css, Attrs) ->
+    build(#ah_timepicker{value = Value}, Css, Attrs).
+
+%% @doc A colour picker. `Value' is `<<"#RRGGBB">>' (also without `#' or
+%% in the 3-digit form), `{R, G, B}', `undefined' or `<<>>'; with the
+%% `alpha' flag also `<<"#RRGGBBAA">>', `#RGBA' or `{R, G, B, A}' (0..255).
+%% The value is written lowercase as "#rrggbb", or "#rrggbbaa" when alpha
+%% is below ff.
+%%
+%% Options: `swatches' (a list of colours shown under the inputs),
+%% `placeholder' (trigger text when empty), `width', `height' (sigil's
+%% sizes, pixels or a CSS length), `clear_label' (default "Clear").
+-spec colorpicker(binary() | string() | tuple() | undefined,
+                  aihtml_html:css(), aihtml_html:attrs()) -> #ah_colorpicker{}.
+colorpicker(Value, Css, Attrs) ->
+    build(#ah_colorpicker{value = Value}, Css, Attrs).
+
+build(R, Css, Attrs) ->
+    Tag = element(1, R),
+    ?E:build(R, fields(Tag), entry(?E:component_name(Tag)), Css, Attrs).
+
+%% @doc The field names of one of this group's records.
+-spec fields(atom()) -> [atom()].
+fields(ah_timepicker) -> record_info(fields, ah_timepicker);
+fields(ah_colorpicker) -> record_info(fields, ah_colorpicker).
+
+%%%===================================================================
+%%% Rendering
+%%%===================================================================
+
+-spec render(element()) -> aihtml_html:html().
+render(#ah_timepicker{value = Value0, name = Name, inline = Inline, disabled = Disabled,
+                      clearable = Clearable} = T) ->
+    Classes = classes(T),
+    Landscape = T#ah_timepicker.view =:= landscape,
     Value = normalize_time(Value0),
-    Format = time_format(maps:get(format, Opts, '12h')),
-    Step = case maps:get(minute_step, Opts, 5) of
+    Format = time_format(T#ah_timepicker.format),
+    Step = case T#ah_timepicker.minute_step of
                S when is_integer(S), S >= 1, S =< 30 -> S;
                S -> error({aihtml, {bad_option, timepicker, minute_step, S}})
            end,
-    Min = range_opt(min, maps:get(min, Opts, undefined)),
-    Max = range_opt(max, maps:get(max, Opts, undefined)),
-    AutoSwitch = maps:get(auto_switch, Opts, true) =/= false,
+    Min = range_opt(min, T#ah_timepicker.min),
+    Max = range_opt(max, T#ah_timepicker.max),
+    AutoSwitch = T#ah_timepicker.auto_switch =/= false,
     {H, M} = case Value of
                  undefined -> {12, 0};
                  _ -> Value
              end,
     ValueBin = time_bin(Value),
     Panel = time_panel(H, M, Format, Step, Min, Max, Landscape, Disabled,
-                       maps:get(footer, Opts, undefined), Inline),
-    Placeholder = maps:get(placeholder, Opts,
-                           case Format of '12h' -> <<"--:-- --">>; '24h' -> <<"--:--">> end),
+                       T#ah_timepicker.footer, Inline),
+    Placeholder = case T#ah_timepicker.placeholder of
+                      undefined when Format =:= '12h' -> <<"--:-- --">>;
+                      undefined -> <<"--:--">>;
+                      P -> P
+                  end,
     Body = case Inline of
                true -> Panel;
                false ->
@@ -112,7 +152,52 @@ timepicker(Value0, Css, Attrs0) ->
             {data_min, time_bin(Min)}, {data_max, time_bin(Max)},
             {data_auto_switch, not AutoSwitch andalso <<"false">>},
             {aria_disabled, Disabled andalso <<"true">>}],
-           Attrs]).
+           ?E:root_attrs(T, change)]);
+
+render(#ah_colorpicker{value = Value0, name = Name, inline = Inline, disabled = Disabled,
+                       alpha = Alpha} = C) ->
+    Classes = classes(C),
+    Value = normalize_color(Value0, Alpha),
+    ValueBin = color_bin(Value),
+    {R, G, B, A} = case Value of undefined -> {255, 0, 0, 255}; _ -> Value end,
+    Swatches = [normalize_color(S, Alpha) || S <- C#ah_colorpicker.swatches],
+    [error({aihtml, {bad_option, colorpicker, swatches, S}}) || S <- Swatches, S =:= undefined],
+    Panel = color_panel({R, G, B, A}, Value, Swatches, C),
+    Body = case Inline of
+               true -> Panel;
+               false ->
+                   Placeholder = C#ah_colorpicker.placeholder,
+                   [?H:el(button,
+                          [?H:el(span, [], [<<"ah-colorpicker-trigger-swatch">>,
+                                            [<<"ah-colorpicker-trigger-empty">>
+                                             || Value =:= undefined]],
+                                 [{style, swatch_style(Value)}]),
+                           ?H:el(span, case Value of
+                                           undefined -> Placeholder;
+                                           _ -> ValueBin
+                                       end,
+                                 [<<"ah-colorpicker-trigger-text">>], [])],
+                          [<<"ah-colorpicker-trigger">>],
+                          [{type, button}, {aria_haspopup, dialog},
+                           {aria_expanded, <<"false">>}, {disabled, Disabled},
+                           {data_placeholder, Placeholder}]),
+                    ?H:el('div', Panel, [<<"ah-colorpicker-popup">>],
+                          [{role, dialog}, {aria_label, <<"Choose color">>}, {hidden, true}])]
+           end,
+    ?H:el('div', [Body, hidden_input(Name, ValueBin, Disabled)],
+          Classes,
+          [[{data_ah, <<"colorpicker">>}, {data_ah_value, ValueBin},
+            {data_alpha, Alpha andalso <<"true">>},
+            {aria_disabled, Disabled andalso <<"true">>}],
+           ?E:root_attrs(C, change)]).
+
+classes(R) ->
+    Tag = element(1, R),
+    ?E:classes(R, fields(Tag), entry(?E:component_name(Tag))).
+
+%%%===================================================================
+%%% timepicker
+%%%===================================================================
 
 %% @doc Normalise a time value to `{H, M}' or `undefined'.
 -spec normalize_time(term()) -> time() | undefined.
@@ -283,60 +368,6 @@ clock_icon() ->
 %%% colorpicker
 %%%===================================================================
 
-%% @doc A colour picker. `Value' is `<<"#RRGGBB">>' (also without `#' or
-%% in the 3-digit form), `{R, G, B}', `undefined' or `<<>>'; with the
-%% `alpha' flag also `<<"#RRGGBBAA">>', `#RGBA' or `{R, G, B, A}' (0..255).
-%% The value is written lowercase as "#rrggbb", or "#rrggbbaa" when alpha
-%% is below ff.
-%%
-%% Options: `swatches' (a list of colours shown under the inputs),
-%% `placeholder' (trigger text when empty), `width', `height' (sigil's
-%% sizes, pixels or a CSS length), `clear_label' (default "Clear").
--spec colorpicker(binary() | string() | tuple() | undefined,
-                  aihtml_html:css(), aihtml_html:attrs()) -> aihtml_html:element().
-colorpicker(Value0, Css, Attrs0) ->
-    Entry = aihtml_catalog:entry(?MODULE, colorpicker),
-    {Opts, Attrs1} = aihtml_catalog:split_options(Entry, Attrs0),
-    {Name, Attrs} = take_name(Attrs1),
-    Flags = aihtml_catalog:flags(Entry, Css),
-    Has = fun(F) -> lists:member(F, Flags) end,
-    Alpha = Has(alpha),
-    Inline = Has(inline),
-    Disabled = Has(disabled),
-    Value = normalize_color(Value0, Alpha),
-    ValueBin = color_bin(Value),
-    {R, G, B, A} = case Value of undefined -> {255, 0, 0, 255}; _ -> Value end,
-    Swatches = [normalize_color(S, Alpha) || S <- maps:get(swatches, Opts, [])],
-    [error({aihtml, {bad_option, colorpicker, swatches, S}}) || S <- Swatches, S =:= undefined],
-    Panel = color_panel({R, G, B, A}, Value, Swatches, Opts, Has),
-    Body = case Inline of
-               true -> Panel;
-               false ->
-                   Placeholder = maps:get(placeholder, Opts, <<"No color">>),
-                   [?H:el(button,
-                          [?H:el(span, [], [<<"ah-colorpicker-trigger-swatch">>,
-                                            [<<"ah-colorpicker-trigger-empty">>
-                                             || Value =:= undefined]],
-                                 [{style, swatch_style(Value)}]),
-                           ?H:el(span, case Value of
-                                           undefined -> Placeholder;
-                                           _ -> ValueBin
-                                       end,
-                                 [<<"ah-colorpicker-trigger-text">>], [])],
-                          [<<"ah-colorpicker-trigger">>],
-                          [{type, button}, {aria_haspopup, dialog},
-                           {aria_expanded, <<"false">>}, {disabled, Disabled},
-                           {data_placeholder, Placeholder}]),
-                    ?H:el('div', Panel, [<<"ah-colorpicker-popup">>],
-                          [{role, dialog}, {aria_label, <<"Choose color">>}, {hidden, true}])]
-           end,
-    ?H:el('div', [Body, hidden_input(Name, ValueBin, Disabled)],
-          aihtml_catalog:classes(Entry, Css),
-          [[{data_ah, <<"colorpicker">>}, {data_ah_value, ValueBin},
-            {data_alpha, Alpha andalso <<"true">>},
-            {aria_disabled, Disabled andalso <<"true">>}],
-           Attrs]).
-
 %% @doc Normalise a colour to `{R, G, B, A}' or `undefined'. `Alpha' says
 %% whether an alpha channel is accepted.
 -spec normalize_color(term(), boolean()) ->
@@ -419,24 +450,21 @@ fmod(X, Y) ->
     case M < 0 of true -> M + Y; false -> M end.
 
 %% The sigil panel plus aihtml's alpha bar and swatches.
-color_panel({R, G, B, A}, Value, Swatches, Opts, Has) ->
+color_panel({R, G, B, A}, Value, Swatches,
+            #ah_colorpicker{alpha = Alpha, disabled = Disabled} = C) ->
     {H, S, V} = rgb_to_hsv(R, G, B),
     Bright = 0.299 * R + 0.587 * G + 0.114 * B > 150,
-    Size = fun(K) -> case maps:get(K, Opts, undefined) of
-                         undefined -> undefined;
-                         N when is_integer(N) -> <<(integer_to_binary(N))/binary, "px">>;
-                         L -> iolist_to_binary(L)
-                     end
+    Size = fun(undefined) -> undefined;
+              (N) when is_integer(N) -> <<(integer_to_binary(N))/binary, "px">>;
+              (L) -> iolist_to_binary(L)
            end,
-    Height = Size(height),
+    Height = Size(C#ah_colorpicker.height),
     HeightStyle = case Height of undefined -> undefined;
                       _ -> <<"height: ", Height/binary>>
                   end,
     Style = iolist_to_binary(lists:join(<<"; ">>,
-              [<<"width: ", W/binary>> || W <- [Size(width)], W =/= undefined])),
+              [<<"width: ", W/binary>> || W <- [Size(C#ah_colorpicker.width)], W =/= undefined])),
     Hex6 = color_bin({R, G, B, 255}),
-    Alpha = Has(alpha),
-    Disabled = Has(disabled),
     Map = ?H:el('div',
                 [?H:el('div', [], [<<"ah-colorpicker-map-overlay">>], []),
                  ?H:el('div', [], [<<"ah-colorpicker-map-pointer">>,
@@ -484,7 +512,7 @@ color_panel({R, G, B, A}, Value, Swatches, Opts, Has) ->
                                          [{type, number}, {min, 0}, {max, 255}])],
                         [<<"ah-colorpicker-label">>], [])
           end,
-    Inputs = case Has(no_inputs) of
+    Inputs = case C#ah_colorpicker.no_inputs of
                  true -> [];
                  false ->
                      HexText = case Alpha andalso A < 255 of
@@ -496,7 +524,7 @@ color_panel({R, G, B, A}, Value, Swatches, Opts, Has) ->
                                   [[?H:el('div', [], [<<"ah-colorpicker-preview">>],
                                           [{style, <<"background-color: ",
                                                      (color_bin({R, G, B, A}))/binary>>}])
-                                    || not Has(no_preview)],
+                                    || not C#ah_colorpicker.no_preview],
                                    ?H:el(span, <<"#">>, [<<"ah-colorpicker-hash">>], []),
                                    Field(<<"ah-colorpicker-hex-input">>, HexText, <<"Hex">>,
                                          [{type, text}, {spellcheck, <<"false">>},
@@ -529,10 +557,10 @@ color_panel({R, G, B, A}, Value, Swatches, Opts, Has) ->
                                [<<"ah-colorpicker-swatches">>],
                                [{role, group}, {aria_label, <<"Swatches">>}])
                 end,
-    Clear = [?H:el('div', ?H:el(a, maps:get(clear_label, Opts, <<"Clear">>), [],
+    Clear = [?H:el('div', ?H:el(a, C#ah_colorpicker.clear_label, [],
                                 [{href, <<"#">>}, {role, button}]),
                    [<<"ah-colorpicker-transparent">>], [])
-             || Has(clearable)],
+             || C#ah_colorpicker.clearable],
     ?H:el('div',
           [?H:el('div', [Map, Bar, AlphaBar], [<<"ah-colorpicker-body">>], []),
            Inputs, SwatchRow, Clear],
@@ -548,13 +576,6 @@ sv_text(S, V) ->
 %%%===================================================================
 %%% Shared
 %%%===================================================================
-
-take_name(Attrs) ->
-    Norm = ?H:attrs(Attrs),
-    case lists:keytake(<<"name">>, 1, Norm) of
-        {value, {_, Name}, Rest} -> {Name, Rest};
-        false -> {undefined, Norm}
-    end.
 
 hidden_input(Name, Value, Disabled) ->
     ?H:void(input, [], [{type, hidden}, {name, Name}, {value, Value},
@@ -633,3 +654,9 @@ catalog() ->
             #{name => close, args => <<"()">>, doc => <<"Close the popup.">>}],
        doc => <<"HSV colour picker: saturation/value area, hue and alpha bars, hex and "
                 "RGB inputs, swatches; in a popup field or inline. Value \"#rrggbb[aa]\".">>}].
+
+%%%===================================================================
+%%% Internal
+%%%===================================================================
+
+entry(Name) -> aihtml_catalog:entry(?MODULE, Name).

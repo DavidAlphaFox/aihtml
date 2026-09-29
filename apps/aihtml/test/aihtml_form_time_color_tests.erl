@@ -1,6 +1,9 @@
 -module(aihtml_form_time_color_tests).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("aihtml/include/aihtml_form_time_color.hrl").
+
+-export([action/4]).
 
 -define(M, aihtml_form_time_color).
 
@@ -114,10 +117,10 @@ timepicker_range_test() ->
     ?assertEqual([<<"6">>, <<"7">>, <<"8">>, <<"9">>, <<"10">>, <<"11">>], Disabled).
 
 timepicker_options_test() ->
-    ?assertEqual(bad_option, bad(fun() -> ?M:timepicker(undefined, [], [{format, '36h'}]) end)),
-    ?assertEqual(bad_option, bad(fun() -> ?M:timepicker(undefined, [], [{minute_step, 0}]) end)),
-    ?assertEqual(bad_option, bad(fun() -> ?M:timepicker(undefined, [], [{min, <<"9">>}]) end)),
-    ?assertEqual(bad_value, bad(fun() -> ?M:timepicker(<<"nope">>, [], []) end)),
+    ?assertEqual(bad_option, bad(fun() -> r(?M:timepicker(undefined, [], [{format, '36h'}])) end)),
+    ?assertEqual(bad_option, bad(fun() -> r(?M:timepicker(undefined, [], [{minute_step, 0}])) end)),
+    ?assertEqual(bad_option, bad(fun() -> r(?M:timepicker(undefined, [], [{min, <<"9">>}])) end)),
+    ?assertEqual(bad_value, bad(fun() -> r(?M:timepicker(<<"nope">>, [], [])) end)),
     H = r(?M:timepicker(<<"10:00">>, [], [{auto_switch, false}])),
     ?assert(has(H, <<"data-auto-switch=\"false\"">>)).
 
@@ -230,9 +233,9 @@ colorpicker_modifiers_test() ->
     Hw = r(?M:colorpicker(<<"#fff">>, [inline], [])),
     ?assert(has(Hw, <<"ah-colorpicker-map-pointer-dark">>)),
     ?assertEqual(unknown_modifier, bad(fun() -> ?M:colorpicker(undefined, [primary], []) end)),
-    ?assertEqual(bad_value, bad(fun() -> ?M:colorpicker(<<"#12345678">>, [], []) end)),
+    ?assertEqual(bad_value, bad(fun() -> r(?M:colorpicker(<<"#12345678">>, [], [])) end)),
     ?assertEqual(bad_value,
-                 bad(fun() -> ?M:colorpicker(undefined, [], [{swatches, [<<"x">>]}]) end)).
+                 bad(fun() -> r(?M:colorpicker(undefined, [], [{swatches, [<<"x">>]}])) end)).
 
 colorpicker_escaping_test() ->
     H = r(?M:colorpicker(<<"#000">>, [clearable],
@@ -253,3 +256,108 @@ catalog_test() ->
     [?assertEqual([], (Opts ++ Flags) -- maps:keys(Docs))
      || #{options := Opts, flags := Flags, option_docs := Docs} <- [T, C]],
     [?assertNotEqual([], Ms) || #{methods := Ms} <- [T, C]].
+
+%%%-------------------------------------------------------------------
+%%% element records (designs/05-records.md)
+%%%-------------------------------------------------------------------
+
+-spec action(atom(), term(), map(), term()) -> ok.
+action(_, _, _, _) -> ok.
+
+record_equals_builder_test() ->
+    ?assertEqual(r(?M:timepicker(<<"14:30">>, [landscape, clearable, <<"w-48">>],
+                                 [{name, start}, {id, t1}, {format, '24h'},
+                                  {minute_step, 15}, {min, <<"09:00">>},
+                                  {auto_switch, false}, {title, <<"t">>}])),
+                 r(#ah_timepicker{value = <<"14:30">>, view = landscape, clearable = true,
+                                  css = [<<"w-48">>], name = start, id = t1,
+                                  format = '24h', minute_step = 15, min = <<"09:00">>,
+                                  auto_switch = false, attrs = [{title, <<"t">>}]})),
+    ?assertEqual(r(?M:timepicker(undefined, [inline, disabled], [{footer, <<"f">>}])),
+                 r(#ah_timepicker{inline = true, disabled = true, footer = <<"f">>})),
+    ?assertEqual(r(?M:colorpicker(<<"#22c55e80">>, [alpha, clearable, no_preview],
+                                  [{name, overlay}, {id, c1},
+                                   {swatches, [<<"#fff">>, {1, 2, 3}]},
+                                   {width, 200}, {height, <<"8rem">>},
+                                   {clear_label, <<"None">>}])),
+                 r(#ah_colorpicker{value = <<"#22c55e80">>, alpha = true, clearable = true,
+                                   no_preview = true, name = overlay, id = c1,
+                                   swatches = [<<"#fff">>, {1, 2, 3}], width = 200,
+                                   height = <<"8rem">>, clear_label = <<"None">>})),
+    ?assertEqual(r(?M:colorpicker(undefined, [inline, no_inputs, disabled],
+                                  [{placeholder, <<"x">>}])),
+                 r(#ah_colorpicker{inline = true, no_inputs = true, disabled = true,
+                                   placeholder = <<"x">>})).
+
+builder_fills_fields_test() ->
+    T = ?M:timepicker({9, 5}, [portrait, inline, <<"x">>],
+                      [{name, at}, {format, '24h'}, {placeholder, <<"p">>},
+                       {title, <<"t">>}]),
+    ?assertMatch(#ah_timepicker{value = {9, 5}, view = portrait, inline = true,
+                                disabled = false, name = at, format = '24h',
+                                minute_step = 5, auto_switch = true,
+                                placeholder = <<"p">>, css = [<<"x">>],
+                                attrs = [{title, <<"t">>}]}, T),
+    C = ?M:colorpicker(<<"#abc">>, [alpha], [{swatches, [<<"#000">>]}, {id, c}]),
+    ?assertMatch(#ah_colorpicker{value = <<"#abc">>, alpha = true, id = c,
+                                 swatches = [<<"#000">>], placeholder = <<"No color">>,
+                                 clear_label = <<"Clear">>, attrs = []}, C),
+    ?assertError({aihtml, {record_only_field, ah_colorpicker, postback}},
+                 ?M:colorpicker(undefined, [], [{postback, pick}])).
+
+postback_test() ->
+    Token = fun(Html) ->
+                    {match, [Tk]} = re:run(r(Html), <<"data-ah-on=\"([a-z]+:[^\"]+)\"">>,
+                                           [{capture, all_but_first, binary}]),
+                    [Ev, Tok] = binary:split(Tk, <<":">>),
+                    {ok, Ref} = aihtml_action:unsign(Tok),
+                    {Ev, Ref}
+            end,
+    ?assertEqual({<<"change">>, {?MODULE, pick_time, #{id => 7}}},
+                 Token(#ah_timepicker{postback = {pick_time, #{id => 7}}})),
+    ?assertEqual({<<"change">>, {other_mod, pick_color, #{}}},
+                 Token(#ah_colorpicker{postback = pick_color, delegate = other_mod})).
+
+field_validation_test() ->
+    ?assertError({aihtml, {bad_modifier, timepicker, view, sideways, _}},
+                 r(#ah_timepicker{view = sideways})),
+    ?assertError({aihtml, {bad_flag, timepicker, inline, yes}},
+                 r(#ah_timepicker{inline = yes})),
+    ?assertError({aihtml, {bad_value, timepicker, <<"25:00">>}},
+                 r(#ah_timepicker{value = <<"25:00">>})),
+    ?assertError({aihtml, {bad_option, timepicker, format, '36h'}},
+                 r(#ah_timepicker{format = '36h'})),
+    ?assertError({aihtml, {bad_option, timepicker, minute_step, 45}},
+                 r(#ah_timepicker{minute_step = 45})),
+    ?assertError({aihtml, {bad_option, timepicker, max, <<"9">>}},
+                 r(#ah_timepicker{max = <<"9">>})),
+    ?assertError({aihtml, {bad_flag, colorpicker, alpha, 1}},
+                 r(#ah_colorpicker{alpha = 1})),
+    ?assertError({aihtml, {modifier_in_css, colorpicker, inline}},
+                 r(#ah_colorpicker{css = [inline]})),
+    %% an alpha value needs the alpha flag
+    ?assertError({aihtml, {bad_value, colorpicker, <<"#22c55e80">>}},
+                 r(#ah_colorpicker{value = <<"#22c55e80">>})),
+    ?assertError({aihtml, {bad_value, colorpicker, <<"x">>}},
+                 r(#ah_colorpicker{swatches = [<<"x">>]})),
+    %% the view group has no default
+    ?assert(has(r(#ah_timepicker{}), <<"class=\"ah-timepicker-field\"">>)).
+
+records_match_catalog_test() ->
+    Base = [module, id, css, attrs, postback, delegate],
+    [begin
+         Tag = list_to_atom("ah_" ++ atom_to_list(N)),
+         Fields = ?M:fields(Tag),
+         ?assertEqual(Base, lists:sublist(Fields, 6)),
+         Defaults = maps:from_list(lists:zip(Fields, tl(tuple_to_list(default(Tag))))),
+         [?assertEqual({N, G, case D of none -> undefined; _ -> D end},
+                       {N, G, maps:get(G, Defaults)})
+          || {G, {_, D}} <- maps:to_list(maps:get(groups, E, #{}))],
+         [?assertEqual({N, F, false}, {N, F, maps:get(F, Defaults)})
+          || F <- maps:get(flags, E, [])],
+         [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
+         ?assertEqual(?M, maps:get(module, Defaults))
+     end || #{name := N} = E <- ?M:catalog()].
+
+default(ah_timepicker) -> #ah_timepicker{};
+default(ah_colorpicker) -> #ah_colorpicker{}.
