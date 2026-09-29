@@ -1200,8 +1200,12 @@
   }
 };
   AH.tpl = AH.tpl || {};
+  AH.tpl["calendar_list"] = function(d){var S=[d],o="";o+="<div class=\"ah-calendar-list\">";o+="\n";var v0=R.lookup(S,["empty"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-calendar-list-empty\"><div class=\"ah-calendar-list-empty-icon\">📅</div><div>";o+=R.esc(R.lookup(S,["no_events"]));o+="</div><div class=\"ah-calendar-list-empty-hint\">";o+=R.esc(R.lookup(S,["no_events_hint"]));o+="</div></div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-calendar-list-empty\"><div class=\"ah-calendar-list-empty-icon\">📅</div><div>";o+=R.esc(R.lookup(S,["no_events"]));o+="</div><div class=\"ah-calendar-list-empty-hint\">";o+=R.esc(R.lookup(S,["no_events_hint"]));o+="</div></div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-calendar-list-empty\"><div class=\"ah-calendar-list-empty-icon\">📅</div><div>";o+=R.esc(R.lookup(S,["no_events"]));o+="</div><div class=\"ah-calendar-list-empty-hint\">";o+=R.esc(R.lookup(S,["no_events_hint"]));o+="</div></div>";S.shift();}}o+="\n";var v0=R.lookup(S,["groups"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-calendar-list-day-group\"><div class=\"ah-calendar-list-day-header\"><span class=\"ah-calendar-list-day-name\">";o+=R.esc(R.lookup(S,["name"]));o+="</span><span class=\"ah-calendar-list-day-date\">";o+=R.esc(R.lookup(S,["date"]));o+="</span></div><div class=\"ah-calendar-list-day-events\">";var v1=R.lookup(S,["events"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-list-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_status"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}o+="<div class=\"ah-calendar-list-event-dot\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\"></div><div class=\"ah-calendar-list-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div><div class=\"ah-calendar-list-event-title\">";var v2=R.lookup(S,["recurring"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}o+=R.esc(R.lookup(S,["title"]));o+="</div></div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-list-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_status"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}o+="<div class=\"ah-calendar-list-event-dot\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\"></div><div class=\"ah-calendar-list-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div><div class=\"ah-calendar-list-event-title\">";var v2=R.lookup(S,["recurring"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}o+=R.esc(R.lookup(S,["title"]));o+="</div></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-list-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_status"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}o+="<div class=\"ah-calendar-list-event-dot\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\"></div><div class=\"ah-calendar-list-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div><div class=\"ah-calendar-list-event-title\">";var v2=R.lookup(S,["recurring"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}o+=R.esc(R.lookup(S,["title"]));o+="</div></div>";S.shift();}}o+="</div></div>";o+="\n";S.shift();}}else if(v0===true){o+="<div class=\"ah-calendar-list-day-group\"><div class=\"ah-calendar-list-day-header\"><span class=\"ah-calendar-list-day-name\">";o+=R.esc(R.lookup(S,["name"]));o+="</span><span class=\"ah-calendar-list-day-date\">";o+=R.esc(R.lookup(S,["date"]));o+="</span></div><div class=\"ah-calendar-list-day-events\">";var v1=R.lookup(S,["events"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-list-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_status"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}o+="<div class=\"ah-calendar-list-event-dot\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\"></div><div class=\"ah-calendar-list-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div><div class=\"ah-calendar-list-event-title\">";var v2=R.lookup(S,["recurring"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}o+=R.esc(R.lookup(S,["title"]));o+="</div></div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-list-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_status"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}o+="<div class=\"ah-calendar-list-event-dot\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\"></div><div class=\"ah-calendar-list-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div><div class=\"ah-calendar-list-event-title\">";var v2=R.lookup(S,["recurring"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}o+=R.esc(R.lookup(S,["title"]));o+="</div></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-list-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_status"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}o+="<div class=\"ah-calendar-list-event-dot\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\"></div><div class=\"ah-calendar-list-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div><div class=\"ah-calendar-list-event-title\">";var v2=R.lookup(S,["recurring"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}o+=R.esc(R.lookup(S,["title"]));o+="</div></div>";S.shift();}}o+="</div></div>";o+="\n";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-calendar-list-day-group\"><div class=\"ah-calendar-list-day-header\"><span class=\"ah-calendar-list-day-name\">";o+=R.esc(R.lookup(S,["name"]));o+="</span><span class=\"ah-calendar-list-day-date\">";o+=R.esc(R.lookup(S,["date"]));o+="</span></div><div class=\"ah-calendar-list-day-events\">";var v1=R.lookup(S,["events"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-list-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_status"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}o+="<div class=\"ah-calendar-list-event-dot\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\"></div><div class=\"ah-calendar-list-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div><div class=\"ah-calendar-list-event-title\">";var v2=R.lookup(S,["recurring"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}o+=R.esc(R.lookup(S,["title"]));o+="</div></div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-list-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_status"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}o+="<div class=\"ah-calendar-list-event-dot\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\"></div><div class=\"ah-calendar-list-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div><div class=\"ah-calendar-list-event-title\">";var v2=R.lookup(S,["recurring"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}o+=R.esc(R.lookup(S,["title"]));o+="</div></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-list-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_status"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-list-event-status\" style=\"background:";o+=R.esc(R.lookup(S,["status_color"]));o+=";\"></div>";S.shift();}}o+="<div class=\"ah-calendar-list-event-dot\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\"></div><div class=\"ah-calendar-list-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div><div class=\"ah-calendar-list-event-title\">";var v2=R.lookup(S,["recurring"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-recurring-icon\">↻ </span>";S.shift();}}o+=R.esc(R.lookup(S,["title"]));o+="</div></div>";S.shift();}}o+="</div></div>";o+="\n";S.shift();}}o+="</div>";return o;};
+  AH.tpl["calendar_month"] = function(d){var S=[d],o="";o+="<div class=\"ah-calendar-daygrid\">";o+="\n";o+="<div class=\"ah-calendar-daygrid-header\">";var v0=R.lookup(S,["headers"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-calendar-daygrid-header-cell\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-calendar-daygrid-header-cell\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-calendar-daygrid-header-cell\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}o+="</div>";o+="\n";o+="<div class=\"ah-calendar-daygrid-body\">";o+="\n";var v0=R.lookup(S,["weeks"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-calendar-week-row\"><div class=\"ah-calendar-week-bg\">";var v1=R.lookup(S,["days"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"";o+=R.esc(R.lookup(S,["bg_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"></div>";S.shift();}}else if(v1===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["bg_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"";o+=R.esc(R.lookup(S,["bg_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"></div>";S.shift();}}o+="</div><div class=\"ah-calendar-week-content\">";var v1=R.lookup(S,["days"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"";o+=R.esc(R.lookup(S,["num_cls"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:1;\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["num_cls"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:1;\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"";o+=R.esc(R.lookup(S,["num_cls"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:1;\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}var v1=R.lookup(S,["events"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["sc"]));o+="/";o+=R.esc(R.lookup(S,["ec"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_time"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}o+="<span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}else if(v1===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["sc"]));o+="/";o+=R.esc(R.lookup(S,["ec"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_time"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}o+="<span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["sc"]));o+="/";o+=R.esc(R.lookup(S,["ec"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_time"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}o+="<span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}var v1=R.lookup(S,["more"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-day-more\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";\" role=\"button\" tabindex=\"0\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-day-more\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";\" role=\"button\" tabindex=\"0\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-day-more\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";\" role=\"button\" tabindex=\"0\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}o+="</div></div>";o+="\n";S.shift();}}else if(v0===true){o+="<div class=\"ah-calendar-week-row\"><div class=\"ah-calendar-week-bg\">";var v1=R.lookup(S,["days"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"";o+=R.esc(R.lookup(S,["bg_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"></div>";S.shift();}}else if(v1===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["bg_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"";o+=R.esc(R.lookup(S,["bg_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"></div>";S.shift();}}o+="</div><div class=\"ah-calendar-week-content\">";var v1=R.lookup(S,["days"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"";o+=R.esc(R.lookup(S,["num_cls"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:1;\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["num_cls"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:1;\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"";o+=R.esc(R.lookup(S,["num_cls"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:1;\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}var v1=R.lookup(S,["events"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["sc"]));o+="/";o+=R.esc(R.lookup(S,["ec"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_time"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}o+="<span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}else if(v1===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["sc"]));o+="/";o+=R.esc(R.lookup(S,["ec"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_time"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}o+="<span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["sc"]));o+="/";o+=R.esc(R.lookup(S,["ec"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_time"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}o+="<span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}var v1=R.lookup(S,["more"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-day-more\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";\" role=\"button\" tabindex=\"0\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-day-more\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";\" role=\"button\" tabindex=\"0\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-day-more\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";\" role=\"button\" tabindex=\"0\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}o+="</div></div>";o+="\n";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-calendar-week-row\"><div class=\"ah-calendar-week-bg\">";var v1=R.lookup(S,["days"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"";o+=R.esc(R.lookup(S,["bg_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"></div>";S.shift();}}else if(v1===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["bg_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"";o+=R.esc(R.lookup(S,["bg_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"></div>";S.shift();}}o+="</div><div class=\"ah-calendar-week-content\">";var v1=R.lookup(S,["days"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"";o+=R.esc(R.lookup(S,["num_cls"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:1;\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["num_cls"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:1;\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"";o+=R.esc(R.lookup(S,["num_cls"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:1;\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}var v1=R.lookup(S,["events"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["sc"]));o+="/";o+=R.esc(R.lookup(S,["ec"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_time"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}o+="<span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}else if(v1===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["sc"]));o+="/";o+=R.esc(R.lookup(S,["ec"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_time"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}o+="<span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["sc"]));o+="/";o+=R.esc(R.lookup(S,["ec"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\">";var v2=R.lookup(S,["has_time"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}else if(v2===true){o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<span class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</span>";S.shift();}}o+="<span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}var v1=R.lookup(S,["more"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-day-more\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";\" role=\"button\" tabindex=\"0\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-day-more\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";\" role=\"button\" tabindex=\"0\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-day-more\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"grid-column:";o+=R.esc(R.lookup(S,["col"]));o+=";grid-row:";o+=R.esc(R.lookup(S,["row"]));o+=";\" role=\"button\" tabindex=\"0\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}o+="</div></div>";o+="\n";S.shift();}}o+="</div>";o+="\n";o+="</div>";return o;};
+  AH.tpl["calendar_timegrid"] = function(d){var S=[d],o="";o+="<div class=\"ah-calendar-timegrid\">";o+="\n";o+="<div class=\"ah-calendar-timegrid-header\"><div class=\"ah-calendar-timegrid-gutter-header\"></div>";var v0=R.lookup(S,["days"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"";o+=R.esc(R.lookup(S,["head_cls"]));o+="\"><span class=\"ah-calendar-timegrid-header-day\">";o+=R.esc(R.lookup(S,["dow"]));o+="</span><span class=\"ah-calendar-timegrid-header-date\">";o+=R.esc(R.lookup(S,["num"]));o+="</span></div>";S.shift();}}else if(v0===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["head_cls"]));o+="\"><span class=\"ah-calendar-timegrid-header-day\">";o+=R.esc(R.lookup(S,["dow"]));o+="</span><span class=\"ah-calendar-timegrid-header-date\">";o+=R.esc(R.lookup(S,["num"]));o+="</span></div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"";o+=R.esc(R.lookup(S,["head_cls"]));o+="\"><span class=\"ah-calendar-timegrid-header-day\">";o+=R.esc(R.lookup(S,["dow"]));o+="</span><span class=\"ah-calendar-timegrid-header-date\">";o+=R.esc(R.lookup(S,["num"]));o+="</span></div>";S.shift();}}o+="</div>";o+="\n";o+="<div class=\"ah-calendar-timegrid-allday-row\"><div class=\"ah-calendar-timegrid-gutter\">";o+=R.esc(R.lookup(S,["all_day"]));o+="</div><div class=\"ah-calendar-timegrid-allday\">";var v0=R.lookup(S,["days"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-calendar-timegrid-allday-cell\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\">";var v1=R.lookup(S,["allday"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-event ah-calendar-allday-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-event ah-calendar-allday-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-event ah-calendar-allday-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}o+="</div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-calendar-timegrid-allday-cell\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\">";var v1=R.lookup(S,["allday"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-event ah-calendar-allday-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-event ah-calendar-allday-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-event ah-calendar-allday-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}o+="</div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-calendar-timegrid-allday-cell\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\">";var v1=R.lookup(S,["allday"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-event ah-calendar-allday-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-event ah-calendar-allday-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-event ah-calendar-allday-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><span class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</span></div>";S.shift();}}o+="</div>";S.shift();}}o+="</div></div>";o+="\n";o+="<div class=\"ah-calendar-timegrid-scroll\"><div class=\"ah-calendar-timegrid-body\">";o+="\n";o+="<div class=\"ah-calendar-timegrid-gutter\">";var v0=R.lookup(S,["slots"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-calendar-timegrid-slot\" style=\"height:";o+=R.esc(R.lookup(S,["slot_height"]));o+="px;\"><div class=\"ah-calendar-timegrid-slot-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</div><div class=\"ah-calendar-timegrid-slot-line\"></div></div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-calendar-timegrid-slot\" style=\"height:";o+=R.esc(R.lookup(S,["slot_height"]));o+="px;\"><div class=\"ah-calendar-timegrid-slot-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</div><div class=\"ah-calendar-timegrid-slot-line\"></div></div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-calendar-timegrid-slot\" style=\"height:";o+=R.esc(R.lookup(S,["slot_height"]));o+="px;\"><div class=\"ah-calendar-timegrid-slot-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</div><div class=\"ah-calendar-timegrid-slot-line\"></div></div>";S.shift();}}o+="</div>";o+="\n";o+="<div class=\"ah-calendar-timegrid-cols\">";var v0=R.lookup(S,["days"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"";o+=R.esc(R.lookup(S,["col_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"position:relative;height:";o+=R.esc(R.lookup(S,["col_height"]));o+="px;\">";var v1=R.lookup(S,["timed"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-event ah-calendar-timegrid-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"position:absolute;top:";o+=R.esc(R.lookup(S,["top"]));o+="px;height:";o+=R.esc(R.lookup(S,["height"]));o+="px;left:";o+=R.esc(R.lookup(S,["left"]));o+=";width:";o+=R.esc(R.lookup(S,["width"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><div class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div>";var v2=R.lookup(S,["resizable"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-event ah-calendar-timegrid-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"position:absolute;top:";o+=R.esc(R.lookup(S,["top"]));o+="px;height:";o+=R.esc(R.lookup(S,["height"]));o+="px;left:";o+=R.esc(R.lookup(S,["left"]));o+=";width:";o+=R.esc(R.lookup(S,["width"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><div class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div>";var v2=R.lookup(S,["resizable"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-event ah-calendar-timegrid-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"position:absolute;top:";o+=R.esc(R.lookup(S,["top"]));o+="px;height:";o+=R.esc(R.lookup(S,["height"]));o+="px;left:";o+=R.esc(R.lookup(S,["left"]));o+=";width:";o+=R.esc(R.lookup(S,["width"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><div class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div>";var v2=R.lookup(S,["resizable"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}o+="</div>";S.shift();}}o+="</div>";S.shift();}}else if(v0===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["col_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"position:relative;height:";o+=R.esc(R.lookup(S,["col_height"]));o+="px;\">";var v1=R.lookup(S,["timed"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-event ah-calendar-timegrid-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"position:absolute;top:";o+=R.esc(R.lookup(S,["top"]));o+="px;height:";o+=R.esc(R.lookup(S,["height"]));o+="px;left:";o+=R.esc(R.lookup(S,["left"]));o+=";width:";o+=R.esc(R.lookup(S,["width"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><div class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div>";var v2=R.lookup(S,["resizable"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-event ah-calendar-timegrid-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"position:absolute;top:";o+=R.esc(R.lookup(S,["top"]));o+="px;height:";o+=R.esc(R.lookup(S,["height"]));o+="px;left:";o+=R.esc(R.lookup(S,["left"]));o+=";width:";o+=R.esc(R.lookup(S,["width"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><div class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div>";var v2=R.lookup(S,["resizable"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-event ah-calendar-timegrid-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"position:absolute;top:";o+=R.esc(R.lookup(S,["top"]));o+="px;height:";o+=R.esc(R.lookup(S,["height"]));o+="px;left:";o+=R.esc(R.lookup(S,["left"]));o+=";width:";o+=R.esc(R.lookup(S,["width"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><div class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div>";var v2=R.lookup(S,["resizable"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}o+="</div>";S.shift();}}o+="</div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"";o+=R.esc(R.lookup(S,["col_cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" style=\"position:relative;height:";o+=R.esc(R.lookup(S,["col_height"]));o+="px;\">";var v1=R.lookup(S,["timed"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-calendar-event ah-calendar-timegrid-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"position:absolute;top:";o+=R.esc(R.lookup(S,["top"]));o+="px;height:";o+=R.esc(R.lookup(S,["height"]));o+="px;left:";o+=R.esc(R.lookup(S,["left"]));o+=";width:";o+=R.esc(R.lookup(S,["width"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><div class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div>";var v2=R.lookup(S,["resizable"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-calendar-event ah-calendar-timegrid-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"position:absolute;top:";o+=R.esc(R.lookup(S,["top"]));o+="px;height:";o+=R.esc(R.lookup(S,["height"]));o+="px;left:";o+=R.esc(R.lookup(S,["left"]));o+=";width:";o+=R.esc(R.lookup(S,["width"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><div class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div>";var v2=R.lookup(S,["resizable"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-calendar-event ah-calendar-timegrid-event\" data-eventid=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" style=\"position:absolute;top:";o+=R.esc(R.lookup(S,["top"]));o+="px;height:";o+=R.esc(R.lookup(S,["height"]));o+="px;left:";o+=R.esc(R.lookup(S,["left"]));o+=";width:";o+=R.esc(R.lookup(S,["width"]));o+=";background:";o+=R.esc(R.lookup(S,["color"]));o+=";\" title=\"";o+=R.esc(R.lookup(S,["title"]));o+="\" role=\"button\" tabindex=\"0\"><div class=\"ah-calendar-event-title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-calendar-event-time\">";o+=R.esc(R.lookup(S,["time"]));o+="</div>";var v2=R.lookup(S,["resizable"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-calendar-timegrid-resize-handle\"></div>";S.shift();}}o+="</div>";S.shift();}}o+="</div>";S.shift();}}o+="</div>";o+="\n";o+="<div class=\"ah-calendar-timegrid-now-indicator\" style=\"display:none;\"></div>";o+="\n";o+="</div></div>";o+="\n";o+="</div>";return o;};
   AH.tpl["combobox_tag"] = function(d){var S=[d],o="";o+="<span class=\"ah-combobox-tag\"><span class=\"ah-combobox-tag-text\">";o+=R.esc(R.lookup(S,["label"]));o+="</span><span class=\"ah-combobox-tag-close\" data-value=\"";o+=R.esc(R.lookup(S,["value"]));o+="\" role=\"button\" aria-label=\"Remove ";o+=R.esc(R.lookup(S,["label"]));o+="\">&times;</span></span>";return o;};
   AH.tpl["datepicker_month"] = function(d){var S=[d],o="";o+="<div class=\"ah-datepicker-calendar\">";o+="\n";o+="<div class=\"ah-datepicker-header\"><div class=\"ah-datepicker-nav-group\"><button type=\"button\" tabindex=\"-1\" class=\"ah-datepicker-nav-prev ah-datepicker-nav-year\" data-nav=\"-12\" aria-label=\"";o+=R.esc(R.lookup(S,["prev_year"]));o+="\">&laquo;</button><button type=\"button\" tabindex=\"-1\" class=\"ah-datepicker-nav-prev\" data-nav=\"-1\" aria-label=\"";o+=R.esc(R.lookup(S,["prev_month"]));o+="\">&lsaquo;</button></div><div class=\"ah-datepicker-title\" id=\"";o+=R.esc(R.lookup(S,["title_id"]));o+="\" aria-live=\"polite\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-datepicker-nav-group\"><button type=\"button\" tabindex=\"-1\" class=\"ah-datepicker-nav-next\" data-nav=\"1\" aria-label=\"";o+=R.esc(R.lookup(S,["next_month"]));o+="\">&rsaquo;</button><button type=\"button\" tabindex=\"-1\" class=\"ah-datepicker-nav-next ah-datepicker-nav-year\" data-nav=\"12\" aria-label=\"";o+=R.esc(R.lookup(S,["next_year"]));o+="\">&raquo;</button></div></div>";o+="\n";o+="<div class=\"ah-datepicker-week-header\" aria-hidden=\"true\">";var v0=R.lookup(S,["week_numbers"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-datepicker-week-num-header\">Wk</div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-datepicker-week-num-header\">Wk</div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-datepicker-week-num-header\">Wk</div>";S.shift();}}var v0=R.lookup(S,["weekdays"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-datepicker-weekday\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-datepicker-weekday\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-datepicker-weekday\">";o+=R.esc(R.lookup(S,["label"]));o+="</div>";S.shift();}}o+="</div>";o+="\n";o+="<div class=\"ah-datepicker-body\" role=\"grid\" aria-labelledby=\"";o+=R.esc(R.lookup(S,["title_id"]));o+="\">";o+="\n";var v0=R.lookup(S,["weeks"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-datepicker-week\" role=\"row\">";var v1=R.lookup(S,["week_numbers"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-datepicker-week-num\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-datepicker-week-num\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-datepicker-week-num\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}var v1=R.lookup(S,["days"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);var v2=R.lookup(S,["empty"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}if(R.falsy(R.lookup(S,["empty"]))){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" role=\"gridcell\" id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" aria-selected=\"";o+=R.esc(R.lookup(S,["selected"]));o+="\" aria-disabled=\"";o+=R.esc(R.lookup(S,["disabled"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-datepicker-day-text\">";o+=R.esc(R.lookup(S,["day"]));o+="</span></div>";}S.shift();}}else if(v1===true){var v2=R.lookup(S,["empty"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}if(R.falsy(R.lookup(S,["empty"]))){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" role=\"gridcell\" id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" aria-selected=\"";o+=R.esc(R.lookup(S,["selected"]));o+="\" aria-disabled=\"";o+=R.esc(R.lookup(S,["disabled"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-datepicker-day-text\">";o+=R.esc(R.lookup(S,["day"]));o+="</span></div>";}}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);var v2=R.lookup(S,["empty"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}if(R.falsy(R.lookup(S,["empty"]))){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" role=\"gridcell\" id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" aria-selected=\"";o+=R.esc(R.lookup(S,["selected"]));o+="\" aria-disabled=\"";o+=R.esc(R.lookup(S,["disabled"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-datepicker-day-text\">";o+=R.esc(R.lookup(S,["day"]));o+="</span></div>";}S.shift();}}o+="</div>";o+="\n";S.shift();}}else if(v0===true){o+="<div class=\"ah-datepicker-week\" role=\"row\">";var v1=R.lookup(S,["week_numbers"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-datepicker-week-num\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-datepicker-week-num\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-datepicker-week-num\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}var v1=R.lookup(S,["days"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);var v2=R.lookup(S,["empty"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}if(R.falsy(R.lookup(S,["empty"]))){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" role=\"gridcell\" id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" aria-selected=\"";o+=R.esc(R.lookup(S,["selected"]));o+="\" aria-disabled=\"";o+=R.esc(R.lookup(S,["disabled"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-datepicker-day-text\">";o+=R.esc(R.lookup(S,["day"]));o+="</span></div>";}S.shift();}}else if(v1===true){var v2=R.lookup(S,["empty"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}if(R.falsy(R.lookup(S,["empty"]))){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" role=\"gridcell\" id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" aria-selected=\"";o+=R.esc(R.lookup(S,["selected"]));o+="\" aria-disabled=\"";o+=R.esc(R.lookup(S,["disabled"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-datepicker-day-text\">";o+=R.esc(R.lookup(S,["day"]));o+="</span></div>";}}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);var v2=R.lookup(S,["empty"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}if(R.falsy(R.lookup(S,["empty"]))){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" role=\"gridcell\" id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" aria-selected=\"";o+=R.esc(R.lookup(S,["selected"]));o+="\" aria-disabled=\"";o+=R.esc(R.lookup(S,["disabled"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-datepicker-day-text\">";o+=R.esc(R.lookup(S,["day"]));o+="</span></div>";}S.shift();}}o+="</div>";o+="\n";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-datepicker-week\" role=\"row\">";var v1=R.lookup(S,["week_numbers"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<div class=\"ah-datepicker-week-num\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}else if(v1===true){o+="<div class=\"ah-datepicker-week-num\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<div class=\"ah-datepicker-week-num\">";o+=R.esc(R.lookup(S,["num"]));o+="</div>";S.shift();}}var v1=R.lookup(S,["days"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);var v2=R.lookup(S,["empty"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}if(R.falsy(R.lookup(S,["empty"]))){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" role=\"gridcell\" id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" aria-selected=\"";o+=R.esc(R.lookup(S,["selected"]));o+="\" aria-disabled=\"";o+=R.esc(R.lookup(S,["disabled"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-datepicker-day-text\">";o+=R.esc(R.lookup(S,["day"]));o+="</span></div>";}S.shift();}}else if(v1===true){var v2=R.lookup(S,["empty"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}if(R.falsy(R.lookup(S,["empty"]))){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" role=\"gridcell\" id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" aria-selected=\"";o+=R.esc(R.lookup(S,["selected"]));o+="\" aria-disabled=\"";o+=R.esc(R.lookup(S,["disabled"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-datepicker-day-text\">";o+=R.esc(R.lookup(S,["day"]));o+="</span></div>";}}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);var v2=R.lookup(S,["empty"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}else if(v2===true){o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<div class=\"ah-datepicker-day ah-datepicker-day-empty\" role=\"gridcell\"></div>";S.shift();}}if(R.falsy(R.lookup(S,["empty"]))){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" role=\"gridcell\" id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" aria-selected=\"";o+=R.esc(R.lookup(S,["selected"]));o+="\" aria-disabled=\"";o+=R.esc(R.lookup(S,["disabled"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-datepicker-day-text\">";o+=R.esc(R.lookup(S,["day"]));o+="</span></div>";}S.shift();}}o+="</div>";o+="\n";S.shift();}}o+="</div>";o+="\n";o+="<div class=\"ah-datepicker-footer\"><button type=\"button\" tabindex=\"-1\" class=\"ah-datepicker-today-btn\">";o+=R.esc(R.lookup(S,["today"]));o+="</button></div>";o+="\n";o+="</div>";return o;};
+  AH.tpl["datetime_input_calendar"] = function(d){var S=[d],o="";o+="<div class=\"ah-dti-cal-nav\"><div class=\"ah-dti-cal-prev\" data-action=\"prev-month\" role=\"button\" aria-label=\"";o+=R.esc(R.lookup(S,["prev_month"]));o+="\">◀</div><div class=\"ah-dti-cal-title\" aria-live=\"polite\">";o+=R.esc(R.lookup(S,["title"]));o+="</div><div class=\"ah-dti-cal-next\" data-action=\"next-month\" role=\"button\" aria-label=\"";o+=R.esc(R.lookup(S,["next_month"]));o+="\">▶</div></div>";o+="\n";o+="<div class=\"ah-dti-cal-header\" aria-hidden=\"true\">";var v0=R.lookup(S,["weekdays"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<span>";o+=R.esc(R.lookup(S,["label"]));o+="</span>";S.shift();}}else if(v0===true){o+="<span>";o+=R.esc(R.lookup(S,["label"]));o+="</span>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<span>";o+=R.esc(R.lookup(S,["label"]));o+="</span>";S.shift();}}o+="</div>";o+="\n";o+="<div class=\"ah-dti-cal-grid\">";var v0=R.lookup(S,["days"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" role=\"button\" aria-label=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"";var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v1===true){o+=" aria-disabled=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-disabled=\"true\"";S.shift();}}var v1=R.lookup(S,["selected"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-pressed=\"true\"";S.shift();}}else if(v1===true){o+=" aria-pressed=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-pressed=\"true\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["day"]));o+="</div>";S.shift();}}else if(v0===true){o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" role=\"button\" aria-label=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"";var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v1===true){o+=" aria-disabled=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-disabled=\"true\"";S.shift();}}var v1=R.lookup(S,["selected"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-pressed=\"true\"";S.shift();}}else if(v1===true){o+=" aria-pressed=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-pressed=\"true\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["day"]));o+="</div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-date=\"";o+=R.esc(R.lookup(S,["date"]));o+="\" role=\"button\" aria-label=\"";o+=R.esc(R.lookup(S,["date"]));o+="\"";var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v1===true){o+=" aria-disabled=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-disabled=\"true\"";S.shift();}}var v1=R.lookup(S,["selected"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-pressed=\"true\"";S.shift();}}else if(v1===true){o+=" aria-pressed=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-pressed=\"true\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["day"]));o+="</div>";S.shift();}}o+="</div>";o+="\n";var v0=R.lookup(S,["show_time"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-dti-time-row\"><span class=\"ah-dti-time-label\">";o+=R.esc(R.lookup(S,["time_label"]));o+="</span><input class=\"ah-dti-time-input\" data-field=\"hours\" type=\"text\" inputmode=\"numeric\" maxlength=\"2\" value=\"";o+=R.esc(R.lookup(S,["hours"]));o+="\" aria-label=\"Hours\"><span class=\"ah-dti-time-sep\">:</span><input class=\"ah-dti-time-input\" data-field=\"minutes\" type=\"text\" inputmode=\"numeric\" maxlength=\"2\" value=\"";o+=R.esc(R.lookup(S,["minutes"]));o+="\" aria-label=\"Minutes\"></div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-dti-time-row\"><span class=\"ah-dti-time-label\">";o+=R.esc(R.lookup(S,["time_label"]));o+="</span><input class=\"ah-dti-time-input\" data-field=\"hours\" type=\"text\" inputmode=\"numeric\" maxlength=\"2\" value=\"";o+=R.esc(R.lookup(S,["hours"]));o+="\" aria-label=\"Hours\"><span class=\"ah-dti-time-sep\">:</span><input class=\"ah-dti-time-input\" data-field=\"minutes\" type=\"text\" inputmode=\"numeric\" maxlength=\"2\" value=\"";o+=R.esc(R.lookup(S,["minutes"]));o+="\" aria-label=\"Minutes\"></div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-dti-time-row\"><span class=\"ah-dti-time-label\">";o+=R.esc(R.lookup(S,["time_label"]));o+="</span><input class=\"ah-dti-time-input\" data-field=\"hours\" type=\"text\" inputmode=\"numeric\" maxlength=\"2\" value=\"";o+=R.esc(R.lookup(S,["hours"]));o+="\" aria-label=\"Hours\"><span class=\"ah-dti-time-sep\">:</span><input class=\"ah-dti-time-input\" data-field=\"minutes\" type=\"text\" inputmode=\"numeric\" maxlength=\"2\" value=\"";o+=R.esc(R.lookup(S,["minutes"]));o+="\" aria-label=\"Minutes\"></div>";S.shift();}}return o;};
   AH.tpl["notification"] = function(d){var S=[d],o="";o+="<div class=\"ah-notify ah-notify-";o+=R.esc(R.lookup(S,["variant"]));var v0=R.lookup(S,["clickable"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+=" ah-notify-clickable";S.shift();}}else if(v0===true){o+=" ah-notify-clickable";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+=" ah-notify-clickable";S.shift();}}o+="\" role=\"alert\"";var v0=R.lookup(S,["width"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+=" style=\"width:";o+=R.esc(R.lookup(S,["width"]));o+="\"";S.shift();}}else if(v0===true){o+=" style=\"width:";o+=R.esc(R.lookup(S,["width"]));o+="\"";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+=" style=\"width:";o+=R.esc(R.lookup(S,["width"]));o+="\"";S.shift();}}o+="><span class=\"ah-notify-icon\">";var v0=R.lookup(S,["info"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"/></svg>";S.shift();}}else if(v0===true){o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"/></svg>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"16\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"8\" x2=\"12.01\" y2=\"8\"/></svg>";S.shift();}}var v0=R.lookup(S,["success"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/></svg>";S.shift();}}else if(v0===true){o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/></svg>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/></svg>";S.shift();}}var v0=R.lookup(S,["warning"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg>";S.shift();}}else if(v0===true){o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg>";S.shift();}}var v0=R.lookup(S,["error"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"/><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"/></svg>";S.shift();}}else if(v0===true){o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"/><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"/></svg>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"15\" y1=\"9\" x2=\"9\" y2=\"15\"/><line x1=\"9\" y1=\"9\" x2=\"15\" y2=\"15\"/></svg>";S.shift();}}o+="</span><div class=\"ah-notify-content\">";o+=R.str(R.lookup(S,["content"]));o+="</div>";var v0=R.lookup(S,["closable"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<span class=\"ah-notify-close\" role=\"button\" tabindex=\"0\" aria-label=\"Close\"></span>";S.shift();}}else if(v0===true){o+="<span class=\"ah-notify-close\" role=\"button\" tabindex=\"0\" aria-label=\"Close\"></span>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<span class=\"ah-notify-close\" role=\"button\" tabindex=\"0\" aria-label=\"Close\"></span>";S.shift();}}o+="</div>";return o;};
   AH.tpl["pagination_items"] = function(d){var S=[d],o="";var v0=R.lookup(S,["entries"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);var v1=R.lookup(S,["gap"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<li class=\"ah-pagination-ellipsis\" aria-hidden=\"true\">…</li>";S.shift();}}else if(v1===true){o+="<li class=\"ah-pagination-ellipsis\" aria-hidden=\"true\">…</li>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<li class=\"ah-pagination-ellipsis\" aria-hidden=\"true\">…</li>";S.shift();}}var v1=R.lookup(S,["info"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<li class=\"ah-pagination-simple-info\">";o+=R.esc(R.lookup(S,["text"]));o+="</li>";S.shift();}}else if(v1===true){o+="<li class=\"ah-pagination-simple-info\">";o+=R.esc(R.lookup(S,["text"]));o+="</li>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<li class=\"ah-pagination-simple-info\">";o+=R.esc(R.lookup(S,["text"]));o+="</li>";S.shift();}}var v1=R.lookup(S,["item"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</li>";}S.shift();}}else if(v1===true){var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</li>";}}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</li>";}S.shift();}}var v1=R.lookup(S,["nav"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-nav-disabled";S.shift();}}else if(v3===true){o+=" ah-pagination-nav-disabled";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-nav-disabled";S.shift();}}o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"";var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v3===true){o+=" aria-disabled=\"true\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-disabled=\"true\"";S.shift();}}o+="><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></li>";}S.shift();}}else if(v1===true){var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-nav-disabled";S.shift();}}else if(v3===true){o+=" ah-pagination-nav-disabled";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-nav-disabled";S.shift();}}o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"";var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v3===true){o+=" aria-disabled=\"true\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-disabled=\"true\"";S.shift();}}o+="><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></li>";}}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-nav-disabled";S.shift();}}else if(v3===true){o+=" ah-pagination-nav-disabled";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-nav-disabled";S.shift();}}o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"";var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v3===true){o+=" aria-disabled=\"true\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-disabled=\"true\"";S.shift();}}o+="><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></li>";}S.shift();}}S.shift();}}else if(v0===true){var v1=R.lookup(S,["gap"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<li class=\"ah-pagination-ellipsis\" aria-hidden=\"true\">…</li>";S.shift();}}else if(v1===true){o+="<li class=\"ah-pagination-ellipsis\" aria-hidden=\"true\">…</li>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<li class=\"ah-pagination-ellipsis\" aria-hidden=\"true\">…</li>";S.shift();}}var v1=R.lookup(S,["info"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<li class=\"ah-pagination-simple-info\">";o+=R.esc(R.lookup(S,["text"]));o+="</li>";S.shift();}}else if(v1===true){o+="<li class=\"ah-pagination-simple-info\">";o+=R.esc(R.lookup(S,["text"]));o+="</li>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<li class=\"ah-pagination-simple-info\">";o+=R.esc(R.lookup(S,["text"]));o+="</li>";S.shift();}}var v1=R.lookup(S,["item"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</li>";}S.shift();}}else if(v1===true){var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</li>";}}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</li>";}S.shift();}}var v1=R.lookup(S,["nav"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-nav-disabled";S.shift();}}else if(v3===true){o+=" ah-pagination-nav-disabled";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-nav-disabled";S.shift();}}o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"";var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v3===true){o+=" aria-disabled=\"true\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-disabled=\"true\"";S.shift();}}o+="><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></li>";}S.shift();}}else if(v1===true){var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-nav-disabled";S.shift();}}else if(v3===true){o+=" ah-pagination-nav-disabled";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-nav-disabled";S.shift();}}o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"";var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v3===true){o+=" aria-disabled=\"true\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-disabled=\"true\"";S.shift();}}o+="><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></li>";}}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-nav-disabled";S.shift();}}else if(v3===true){o+=" ah-pagination-nav-disabled";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-nav-disabled";S.shift();}}o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"";var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v3===true){o+=" aria-disabled=\"true\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-disabled=\"true\"";S.shift();}}o+="><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></li>";}S.shift();}}}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);var v1=R.lookup(S,["gap"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<li class=\"ah-pagination-ellipsis\" aria-hidden=\"true\">…</li>";S.shift();}}else if(v1===true){o+="<li class=\"ah-pagination-ellipsis\" aria-hidden=\"true\">…</li>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<li class=\"ah-pagination-ellipsis\" aria-hidden=\"true\">…</li>";S.shift();}}var v1=R.lookup(S,["info"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="<li class=\"ah-pagination-simple-info\">";o+=R.esc(R.lookup(S,["text"]));o+="</li>";S.shift();}}else if(v1===true){o+="<li class=\"ah-pagination-simple-info\">";o+=R.esc(R.lookup(S,["text"]));o+="</li>";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="<li class=\"ah-pagination-simple-info\">";o+=R.esc(R.lookup(S,["text"]));o+="</li>";S.shift();}}var v1=R.lookup(S,["item"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</li>";}S.shift();}}else if(v1===true){var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</li>";}}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-item";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-item-active";S.shift();}}else if(v3===true){o+=" ah-pagination-item-active";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-item-active";S.shift();}}o+="\" data-page=\"";o+=R.esc(R.lookup(S,["number"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"Page ";o+=R.esc(R.lookup(S,["number"]));o+="\"";var v3=R.lookup(S,["active"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-current=\"page\"";S.shift();}}else if(v3===true){o+=" aria-current=\"page\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-current=\"page\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["number"]));o+="</li>";}S.shift();}}var v1=R.lookup(S,["nav"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-nav-disabled";S.shift();}}else if(v3===true){o+=" ah-pagination-nav-disabled";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-nav-disabled";S.shift();}}o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"";var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v3===true){o+=" aria-disabled=\"true\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-disabled=\"true\"";S.shift();}}o+="><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></li>";}S.shift();}}else if(v1===true){var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-nav-disabled";S.shift();}}else if(v3===true){o+=" ah-pagination-nav-disabled";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-nav-disabled";S.shift();}}o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"";var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v3===true){o+=" aria-disabled=\"true\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-disabled=\"true\"";S.shift();}}o+="><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></li>";}}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);var v2=R.lookup(S,["link"]);if(!R.falsy(v2)){if(Array.isArray(v2)){for(var i2=0;i2<v2.length;i2++){S.unshift(v2[i2]);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}else if(v2===true){o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";}else if(typeof v2==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v2);o+="<li class=\"ah-pagination-li\"><a class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}o+="\" href=\"";o+=R.esc(R.lookup(S,["href"]));o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></a></li>";S.shift();}}if(R.falsy(R.lookup(S,["link"]))){o+="<li class=\"ah-pagination-nav";var v3=R.lookup(S,["first_last"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-first-last";S.shift();}}else if(v3===true){o+=" ah-pagination-first-last";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-first-last";S.shift();}}var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" ah-pagination-nav-disabled";S.shift();}}else if(v3===true){o+=" ah-pagination-nav-disabled";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" ah-pagination-nav-disabled";S.shift();}}o+="\" data-type=\"";o+=R.esc(R.lookup(S,["type"]));o+="\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["label"]));o+="\"";var v3=R.lookup(S,["disabled"]);if(!R.falsy(v3)){if(Array.isArray(v3)){for(var i3=0;i3<v3.length;i3++){S.unshift(v3[i3]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v3===true){o+=" aria-disabled=\"true\"";}else if(typeof v3==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v3);o+=" aria-disabled=\"true\"";S.shift();}}o+="><span class=\"ah-pagination-nav-icon\" aria-hidden=\"true\">";o+=R.esc(R.lookup(S,["icon"]));o+="</span><span class=\"ah-pagination-nav-label\">";o+=R.esc(R.lookup(S,["label"]));o+="</span></li>";}S.shift();}}S.shift();}}return o;};
   AH.tpl["steps_indicator"] = function(d){var S=[d],o="";var v0=R.lookup(S,["check"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<span class=\"ah-steps-check\">✓</span>";S.shift();}}else if(v0===true){o+="<span class=\"ah-steps-check\">✓</span>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<span class=\"ah-steps-check\">✓</span>";S.shift();}}var v0=R.lookup(S,["error"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<span class=\"ah-steps-error-icon\">✕</span>";S.shift();}}else if(v0===true){o+="<span class=\"ah-steps-error-icon\">✕</span>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<span class=\"ah-steps-error-icon\">✕</span>";S.shift();}}var v0=R.lookup(S,["plain"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+=R.esc(R.lookup(S,["number"]));S.shift();}}else if(v0===true){o+=R.esc(R.lookup(S,["number"]));}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+=R.esc(R.lookup(S,["number"]));S.shift();}}return o;};
@@ -1209,7 +1213,336 @@
   AH.tpl["timepicker_header"] = function(d){var S=[d],o="";o+="<span class=\"ah-timepicker-header-hours";var v0=R.lookup(S,["hours_active"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+=" ah-timepicker-header-active";S.shift();}}else if(v0===true){o+=" ah-timepicker-header-active";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+=" ah-timepicker-header-active";S.shift();}}o+="\" data-action=\"select-hours\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-pressed=\"";var v0=R.lookup(S,["hours_active"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="true";S.shift();}}else if(v0===true){o+="true";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="true";S.shift();}}if(R.falsy(R.lookup(S,["hours_active"]))){o+="false";}o+="\" aria-label=\"Hours\"";var v0=R.lookup(S,["disabled"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v0===true){o+=" aria-disabled=\"true\"";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+=" aria-disabled=\"true\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["hours"]));o+="</span><span class=\"ah-timepicker-header-sep\">:</span><span class=\"ah-timepicker-header-minutes";var v0=R.lookup(S,["minutes_active"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+=" ah-timepicker-header-active";S.shift();}}else if(v0===true){o+=" ah-timepicker-header-active";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+=" ah-timepicker-header-active";S.shift();}}o+="\" data-action=\"select-minutes\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-pressed=\"";var v0=R.lookup(S,["minutes_active"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="true";S.shift();}}else if(v0===true){o+="true";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="true";S.shift();}}if(R.falsy(R.lookup(S,["minutes_active"]))){o+="false";}o+="\" aria-label=\"Minutes\"";var v0=R.lookup(S,["disabled"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v0===true){o+=" aria-disabled=\"true\"";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+=" aria-disabled=\"true\"";S.shift();}}o+=">";o+=R.esc(R.lookup(S,["minutes"]));o+="</span>";var v0=R.lookup(S,["twelve"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<span class=\"ah-timepicker-header-period\"><span class=\"ah-timepicker-header-am";var v1=R.lookup(S,["am"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-header-am-active";S.shift();}}else if(v1===true){o+=" ah-timepicker-header-am-active";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-header-am-active";S.shift();}}o+="\" data-action=\"set-am\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-pressed=\"";var v1=R.lookup(S,["am"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="true";S.shift();}}else if(v1===true){o+="true";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="true";S.shift();}}if(R.falsy(R.lookup(S,["am"]))){o+="false";}o+="\" aria-label=\"AM\"";var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v1===true){o+=" aria-disabled=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-disabled=\"true\"";S.shift();}}o+=">AM</span><span class=\"ah-timepicker-header-pm";var v1=R.lookup(S,["pm"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-header-pm-active";S.shift();}}else if(v1===true){o+=" ah-timepicker-header-pm-active";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-header-pm-active";S.shift();}}o+="\" data-action=\"set-pm\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-pressed=\"";var v1=R.lookup(S,["pm"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="true";S.shift();}}else if(v1===true){o+="true";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="true";S.shift();}}if(R.falsy(R.lookup(S,["pm"]))){o+="false";}o+="\" aria-label=\"PM\"";var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v1===true){o+=" aria-disabled=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-disabled=\"true\"";S.shift();}}o+=">PM</span></span>";S.shift();}}else if(v0===true){o+="<span class=\"ah-timepicker-header-period\"><span class=\"ah-timepicker-header-am";var v1=R.lookup(S,["am"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-header-am-active";S.shift();}}else if(v1===true){o+=" ah-timepicker-header-am-active";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-header-am-active";S.shift();}}o+="\" data-action=\"set-am\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-pressed=\"";var v1=R.lookup(S,["am"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="true";S.shift();}}else if(v1===true){o+="true";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="true";S.shift();}}if(R.falsy(R.lookup(S,["am"]))){o+="false";}o+="\" aria-label=\"AM\"";var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v1===true){o+=" aria-disabled=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-disabled=\"true\"";S.shift();}}o+=">AM</span><span class=\"ah-timepicker-header-pm";var v1=R.lookup(S,["pm"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-header-pm-active";S.shift();}}else if(v1===true){o+=" ah-timepicker-header-pm-active";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-header-pm-active";S.shift();}}o+="\" data-action=\"set-pm\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-pressed=\"";var v1=R.lookup(S,["pm"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="true";S.shift();}}else if(v1===true){o+="true";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="true";S.shift();}}if(R.falsy(R.lookup(S,["pm"]))){o+="false";}o+="\" aria-label=\"PM\"";var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v1===true){o+=" aria-disabled=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-disabled=\"true\"";S.shift();}}o+=">PM</span></span>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<span class=\"ah-timepicker-header-period\"><span class=\"ah-timepicker-header-am";var v1=R.lookup(S,["am"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-header-am-active";S.shift();}}else if(v1===true){o+=" ah-timepicker-header-am-active";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-header-am-active";S.shift();}}o+="\" data-action=\"set-am\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-pressed=\"";var v1=R.lookup(S,["am"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="true";S.shift();}}else if(v1===true){o+="true";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="true";S.shift();}}if(R.falsy(R.lookup(S,["am"]))){o+="false";}o+="\" aria-label=\"AM\"";var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v1===true){o+=" aria-disabled=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-disabled=\"true\"";S.shift();}}o+=">AM</span><span class=\"ah-timepicker-header-pm";var v1=R.lookup(S,["pm"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-header-pm-active";S.shift();}}else if(v1===true){o+=" ah-timepicker-header-pm-active";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-header-pm-active";S.shift();}}o+="\" data-action=\"set-pm\" role=\"button\" tabindex=\"";o+=R.esc(R.lookup(S,["tabindex"]));o+="\" aria-pressed=\"";var v1=R.lookup(S,["pm"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+="true";S.shift();}}else if(v1===true){o+="true";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+="true";S.shift();}}if(R.falsy(R.lookup(S,["pm"]))){o+="false";}o+="\" aria-label=\"PM\"";var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" aria-disabled=\"true\"";S.shift();}}else if(v1===true){o+=" aria-disabled=\"true\"";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" aria-disabled=\"true\"";S.shift();}}o+=">PM</span></span>";S.shift();}}return o;};
   AH.tpl["timepicker_numbers"] = function(d){var S=[d],o="";var v0=R.lookup(S,["numbers"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<text class=\"ah-timepicker-number";var v1=R.lookup(S,["inner"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-number-inner";S.shift();}}else if(v1===true){o+=" ah-timepicker-number-inner";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-number-inner";S.shift();}}var v1=R.lookup(S,["selected"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-number-selected";S.shift();}}else if(v1===true){o+=" ah-timepicker-number-selected";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-number-selected";S.shift();}}var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-number-disabled";S.shift();}}else if(v1===true){o+=" ah-timepicker-number-disabled";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-number-disabled";S.shift();}}o+="\" x=\"";o+=R.esc(R.lookup(S,["x"]));o+="\" y=\"";o+=R.esc(R.lookup(S,["y"]));o+="\" data-val=\"";o+=R.esc(R.lookup(S,["val"]));o+="\">";o+=R.esc(R.lookup(S,["label"]));o+="</text>";S.shift();}}else if(v0===true){o+="<text class=\"ah-timepicker-number";var v1=R.lookup(S,["inner"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-number-inner";S.shift();}}else if(v1===true){o+=" ah-timepicker-number-inner";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-number-inner";S.shift();}}var v1=R.lookup(S,["selected"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-number-selected";S.shift();}}else if(v1===true){o+=" ah-timepicker-number-selected";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-number-selected";S.shift();}}var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-number-disabled";S.shift();}}else if(v1===true){o+=" ah-timepicker-number-disabled";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-number-disabled";S.shift();}}o+="\" x=\"";o+=R.esc(R.lookup(S,["x"]));o+="\" y=\"";o+=R.esc(R.lookup(S,["y"]));o+="\" data-val=\"";o+=R.esc(R.lookup(S,["val"]));o+="\">";o+=R.esc(R.lookup(S,["label"]));o+="</text>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<text class=\"ah-timepicker-number";var v1=R.lookup(S,["inner"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-number-inner";S.shift();}}else if(v1===true){o+=" ah-timepicker-number-inner";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-number-inner";S.shift();}}var v1=R.lookup(S,["selected"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-number-selected";S.shift();}}else if(v1===true){o+=" ah-timepicker-number-selected";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-number-selected";S.shift();}}var v1=R.lookup(S,["disabled"]);if(!R.falsy(v1)){if(Array.isArray(v1)){for(var i1=0;i1<v1.length;i1++){S.unshift(v1[i1]);o+=" ah-timepicker-number-disabled";S.shift();}}else if(v1===true){o+=" ah-timepicker-number-disabled";}else if(typeof v1==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v1);o+=" ah-timepicker-number-disabled";S.shift();}}o+="\" x=\"";o+=R.esc(R.lookup(S,["x"]));o+="\" y=\"";o+=R.esc(R.lookup(S,["y"]));o+="\" data-val=\"";o+=R.esc(R.lookup(S,["val"]));o+="\">";o+=R.esc(R.lookup(S,["label"]));o+="</text>";S.shift();}}return o;};
   AH.tpl["toast"] = function(d){var S=[d],o="";var v0=R.lookup(S,["has_title"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-toast__title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-toast__title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-toast__title\">";o+=R.esc(R.lookup(S,["title"]));o+="</div>";S.shift();}}var v0=R.lookup(S,["has_description"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-toast__description\">";o+=R.esc(R.lookup(S,["description"]));o+="</div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-toast__description\">";o+=R.esc(R.lookup(S,["description"]));o+="</div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-toast__description\">";o+=R.esc(R.lookup(S,["description"]));o+="</div>";S.shift();}}return o;};
+  AH.tpl["upload_item"] = function(d){var S=[d],o="";o+="<div class=\"";o+=R.esc(R.lookup(S,["cls"]));o+="\" data-file-id=\"";o+=R.esc(R.lookup(S,["id"]));o+="\"><div class=\"ah-upload-item-icon ah-upload-item-icon-";o+=R.esc(R.lookup(S,["icon"]));o+="\" aria-hidden=\"true\"></div><div class=\"ah-upload-item-info\"><div class=\"ah-upload-item-name-row\"><span class=\"ah-upload-item-name\" title=\"";o+=R.esc(R.lookup(S,["name"]));o+="\">";o+=R.esc(R.lookup(S,["name"]));o+="</span><span class=\"ah-upload-item-size\">";o+=R.esc(R.lookup(S,["size"]));o+="</span></div>";var v0=R.lookup(S,["uploading"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-upload-item-progress\" role=\"progressbar\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"";o+=R.esc(R.lookup(S,["percent"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["name"]));o+="\"><div class=\"ah-upload-item-progress-bar\" style=\"width:";o+=R.esc(R.lookup(S,["percent"]));o+="%\"></div></div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-upload-item-progress\" role=\"progressbar\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"";o+=R.esc(R.lookup(S,["percent"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["name"]));o+="\"><div class=\"ah-upload-item-progress-bar\" style=\"width:";o+=R.esc(R.lookup(S,["percent"]));o+="%\"></div></div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-upload-item-progress\" role=\"progressbar\" aria-valuemin=\"0\" aria-valuemax=\"100\" aria-valuenow=\"";o+=R.esc(R.lookup(S,["percent"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["name"]));o+="\"><div class=\"ah-upload-item-progress-bar\" style=\"width:";o+=R.esc(R.lookup(S,["percent"]));o+="%\"></div></div>";S.shift();}}var v0=R.lookup(S,["has_error"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+="<div class=\"ah-upload-item-error\" role=\"alert\">";o+=R.esc(R.lookup(S,["error"]));o+="</div>";S.shift();}}else if(v0===true){o+="<div class=\"ah-upload-item-error\" role=\"alert\">";o+=R.esc(R.lookup(S,["error"]));o+="</div>";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+="<div class=\"ah-upload-item-error\" role=\"alert\">";o+=R.esc(R.lookup(S,["error"]));o+="</div>";S.shift();}}o+="</div><div class=\"ah-upload-item-actions\"><button type=\"button\" class=\"ah-upload-item-remove\" title=\"";o+=R.esc(R.lookup(S,["remove"]));o+="\" aria-label=\"";o+=R.esc(R.lookup(S,["remove"]));o+=" ";o+=R.esc(R.lookup(S,["name"]));o+="\"";var v0=R.lookup(S,["disabled"]);if(!R.falsy(v0)){if(Array.isArray(v0)){for(var i0=0;i0<v0.length;i0++){S.unshift(v0[i0]);o+=" disabled";S.shift();}}else if(v0===true){o+=" disabled";}else if(typeof v0==="function"){throw new Error("lambdas are not supported");}else{S.unshift(v0);o+=" disabled";S.shift();}}o+=">&times;</button></div></div>";return o;};
 })(window.AH);
+
+/* ---- components/data_tree.js ---- */
+/* Behaviours of the data_tree components (designs/04-components.md).
+ *
+ * Ported from sigil (data/tree, layout/nav_tree, data/heatmap_calendar;
+ * data/diff needs no behaviour). The server renders every node, link and
+ * cell; this file only moves state around in that DOM:
+ *
+ *   tree              expand / collapse (slide), single selection, keyboard
+ *                     (roving tabindex, arrows, Home/End, Enter/Space, *,
+ *                     type-ahead), lazy nodes loaded through the tree's
+ *                     load action (data-load: a signed token), which
+ *                     answers with set_children/3 -> childrenLoaded
+ *   nav-tree          active link, open nodes, change on navigation
+ *   heatmap-calendar  hover tooltip (AH.float), ah:select on click
+ *
+ * Value-bearing roots keep their value in data-ah-value, mirror it into a
+ * hidden input and fire "change" when the user changes it; methods called
+ * by the server (AH.invoke / aihtml_action:call) do not fire it.
+ */
+(function ($, AH) {
+  "use strict";
+
+  var NS = AH.NS;
+
+  // ------------------------------------------------------------------
+  // Tree
+  // ------------------------------------------------------------------
+
+  function items(el) {
+    return $(el).find("li[role=treeitem]");
+  }
+
+  function own(el, node) {
+    return $(node).closest(".ah-tree")[0] === el;
+  }
+
+  function byValue(el, v) {
+    if (v === null || v === undefined) { return null; }
+    v = String(v);
+    var found = null;
+    items(el).each(function () {
+      if (this.getAttribute("data-value") === v) { found = this; return false; }
+    });
+    return found;
+  }
+
+  function expandable(li) { return li.hasAttribute("aria-expanded"); }
+  function isOpen(li) { return li.getAttribute("aria-expanded") === "true"; }
+  function isDisabled(li) { return li.getAttribute("aria-disabled") === "true"; }
+  function group(li) { return $(li).children("ul.ah-tree-list"); }
+  function parentItem(el, li) {
+    var p = $(li).parent().closest("li[role=treeitem]")[0];
+    return p && $.contains(el, p) ? p : null;
+  }
+  function label(li) {
+    return $(li).children(".ah-tree-row").find(".ah-tree-label").first().text();
+  }
+  function info(li) {
+    return { value: li.getAttribute("data-value"), label: label(li), id: li.id };
+  }
+
+  // Items whose ancestors are all open, in document order.
+  function visible(el) {
+    return items(el).filter(function () {
+      for (var p = parentItem(el, this); p; p = parentItem(el, p)) {
+        if (!isOpen(p)) { return false; }
+      }
+      return true;
+    }).toArray();
+  }
+
+  function treeOff(el) {
+    return el.getAttribute("aria-disabled") === "true" || $(el).hasClass("ah-tree-disabled");
+  }
+
+  // Roving tabindex: exactly one item is in the tab order.
+  function focusItem(el, li, move) {
+    if (!li) { return; }
+    items(el).attr("tabindex", "-1");
+    li.setAttribute("tabindex", "0");
+    if (move) { li.focus(); }
+  }
+
+  function setOpen(el, li, open, animate) {
+    if (!li || !expandable(li) || isOpen(li) === open) { return; }
+    if (open && li.getAttribute("data-lazy") === "true") {
+      load(el, li);
+      return;
+    }
+    li.setAttribute("aria-expanded", String(open));
+    $(li).children(".ah-tree-row").children(".ah-tree-toggle").toggleClass("ah-tree-toggle-open", open);
+    // collapsing hides the focused item: the node itself takes the tab stop
+    if (!open && $(li).find("li[tabindex='0']").length) { focusItem(el, li, $.contains(li, document.activeElement)); }
+    var $ul = group(li);
+    var done = function () { $(el).trigger(open ? "ah:expand" : "ah:collapse", [info(li)]); };
+    if (animate !== false && el.getAttribute("data-animation") !== "none" && $.fn.slideDown) {
+      $ul.stop(true, true)[open ? "slideDown" : "slideUp"](200, done);
+    } else {
+      $ul.css("display", open ? "" : "none");
+      done();
+    }
+  }
+
+  // A lazy node asks the server for its children: the tree's load token is
+  // bound to the node (ah:load), so each node has its own request.
+  function load(el, li) {
+    if ($(li).hasClass("ah-tree-item-loading")) { return; }
+    $(li).addClass("ah-tree-item-loading").attr("aria-busy", "true");
+    var token = el.getAttribute("data-load");
+    if (token && !li.hasAttribute("data-ah-on")) {
+      li.setAttribute("data-ah-on", "ah:load:" + token);
+      AH.mount(li);                 // registers the ah:load listener
+    }
+    $(li).trigger("ah:load", [info(li)]);
+  }
+
+  function childrenLoaded(el, li) {
+    if (!li) { return; }
+    $(li).removeClass("ah-tree-item-loading").removeAttr("aria-busy")
+      .removeAttr("data-lazy").removeAttr("data-ah-on");
+    if (!group(li).children("li").length) {
+      li.removeAttribute("aria-expanded");
+      $(li).addClass("ah-tree-item-leaf");
+      $(li).children(".ah-tree-row").children(".ah-tree-toggle").addClass("ah-tree-toggle-leaf");
+      return;
+    }
+    var sel = byValue(el, el.getAttribute("data-ah-value"));
+    if (sel && $.contains(li, sel)) { mark(el, sel); }
+    setOpen(el, li, true);
+  }
+
+  function mark(el, li) {
+    items(el).filter("[aria-selected]").removeAttr("aria-selected")
+      .children(".ah-tree-row").removeClass("ah-tree-row-selected");
+    if (li) {
+      li.setAttribute("aria-selected", "true");
+      $(li).children(".ah-tree-row").addClass("ah-tree-row-selected");
+    }
+  }
+
+  function writeValue(el, v) {
+    el.setAttribute("data-ah-value", v);
+    $(el).children("input[type=hidden]").val(v);
+  }
+
+  function select(el, li, user) {
+    if (!li || isDisabled(li)) { return; }
+    var prev = el.getAttribute("data-ah-value");
+    var v = li.getAttribute("data-value");
+    mark(el, li);
+    writeValue(el, v);
+    focusItem(el, li, false);
+    if (user && prev !== v) { $(el).trigger("change"); }
+  }
+
+  function ensureVisible(el, li) {
+    for (var p = parentItem(el, li); p; p = parentItem(el, p)) { setOpen(el, p, true, false); }
+  }
+
+  function typeahead(el, current, ch) {
+    var vis = visible(el);
+    var start = vis.indexOf(current);
+    for (var i = 1; i <= vis.length; i++) {
+      var li = vis[(start + i) % vis.length];
+      if (label(li).trim().toLowerCase().indexOf(ch) === 0) { return li; }
+    }
+    return null;
+  }
+
+  function keydown(el, e) {
+    var li = $(e.target).closest("li[role=treeitem]")[0];
+    if (!li || !own(el, li) || treeOff(el) || e.altKey || e.ctrlKey || e.metaKey) { return; }
+    var vis = visible(el);
+    var i = vis.indexOf(li);
+    var to = null;
+    switch (e.key) {
+      case "ArrowDown": to = vis[Math.min(i + 1, vis.length - 1)]; break;
+      case "ArrowUp": to = vis[Math.max(i - 1, 0)]; break;
+      case "Home": to = vis[0]; break;
+      case "End": to = vis[vis.length - 1]; break;
+      case "ArrowRight":
+        if (expandable(li) && !isOpen(li)) { setOpen(el, li, true); }
+        else if (isOpen(li)) { to = group(li).children("li")[0] || null; }
+        break;
+      case "ArrowLeft":
+        if (isOpen(li)) { setOpen(el, li, false); } else { to = parentItem(el, li); }
+        break;
+      case "Enter":
+      case " ":
+        select(el, li, true);
+        break;
+      case "*":
+        $(li).siblings("li[aria-expanded]").addBack().each(function () { setOpen(el, this, true); });
+        break;
+      default:
+        if (e.key && e.key.length === 1 && /\S/.test(e.key)) {
+          to = typeahead(el, li, e.key.toLowerCase());
+          if (!to) { return; }
+        } else {
+          return;
+        }
+    }
+    e.preventDefault();
+    if (to) { focusItem(el, to, true); }
+  }
+
+  function rowClick(el, e, dbl) {
+    var li = $(e.target).closest("li[role=treeitem]")[0];
+    if (!li || !own(el, li) || isDisabled(li) || treeOff(el)) { return; }
+    var onToggle = $(e.target).closest(".ah-tree-toggle").length > 0;
+    var mode = el.getAttribute("data-toggle-mode") || "click";
+    if (dbl) {
+      if (mode === "dblclick" && !onToggle) { setOpen(el, li, !isOpen(li)); }
+      return;
+    }
+    $(el).trigger("ah:item-click", [info(li)]);
+    select(el, li, true);
+    focusItem(el, li, true);
+    if (expandable(li) && (onToggle || mode === "click")) { setOpen(el, li, !isOpen(li)); }
+  }
+
+  AH.define("tree", {
+    init: function (el, $el) {
+      $el.on("click" + NS, ".ah-tree-row", function (e) { rowClick(el, e, false); });
+      $el.on("dblclick" + NS, ".ah-tree-row", function (e) { rowClick(el, e, true); });
+      $el.on("keydown" + NS, function (e) { keydown(el, e); });
+      if (!items(el).filter("[tabindex='0']").length) { focusItem(el, visible(el)[0], false); }
+    },
+    methods: {
+      setValue: function (el, $el, v) {
+        var li = byValue(el, v);
+        if (!li) {
+          mark(el, null);
+          writeValue(el, "");
+          return;
+        }
+        ensureVisible(el, li);
+        select(el, li, false);
+      },
+      getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
+      expand: function (el, $el, v) { setOpen(el, byValue(el, v), true); },
+      collapse: function (el, $el, v) { setOpen(el, byValue(el, v), false); },
+      expandAll: function (el) {
+        items(el).filter("[aria-expanded]").not("[data-lazy]").each(function () { setOpen(el, this, true); });
+      },
+      collapseAll: function (el) {
+        items(el).filter("[aria-expanded]").each(function () { setOpen(el, this, false); });
+      },
+      ensureVisible: function (el, $el, v) {
+        var li = byValue(el, v);
+        if (li) { ensureVisible(el, li); }
+      },
+      childrenLoaded: function (el, $el, id) { childrenLoaded(el, document.getElementById(id)); }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // NavTree: the server renders links and <details>; this keeps the
+  // active link and fires change when the user follows one
+  // ------------------------------------------------------------------
+
+  function navActivate(el, route) {
+    var $el = $(el);
+    $el.find(".ah-nav-tree__item.ah-is-active").removeClass("ah-is-active").removeAttr("aria-current");
+    var $a = $el.find("a.ah-nav-tree__item").filter(function () {
+      return this.getAttribute("data-route") === route;
+    }).first();
+    $a.addClass("ah-is-active").attr("aria-current", "page");
+    // as sigil re-renders: the nodes around the active link are open, others closed
+    $el.find("details.ah-nav-tree__node").each(function () {
+      var hit = $a.length > 0 && $.contains(this, $a[0]);
+      this.open = hit;
+      $(this).children("summary").toggleClass("ah-is-open", hit);
+    });
+    el.setAttribute("data-ah-value", route || "");
+  }
+
+  AH.define("nav-tree", {
+    init: function (el, $el) {
+      $el.on("click" + NS, "a.ah-nav-tree__item[data-route]", function () {
+        var route = this.getAttribute("data-route");
+        var prev = el.getAttribute("data-ah-value");
+        navActivate(el, route);
+        if (route !== prev) { $el.trigger("change"); }
+      });
+    },
+    methods: {
+      setValue: function (el, $el, route) { navActivate(el, route === null || route === undefined ? "" : String(route)); },
+      getValue: function (el) { return el.getAttribute("data-ah-value") || ""; }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // HeatmapCalendar: tooltip and select; the grid is server-rendered
+  // ------------------------------------------------------------------
+
+  AH.define("heatmap-calendar", {
+    init: function (el, $el) {
+      var tip = $el.children(".ah-heatmap-calendar__tooltip")[0];
+      var fmt = el.getAttribute("data-tip") || "{value} · {date}";
+      var st = { float: null };
+      $.data(el, "ah-heatmap", st);
+      function hide() {
+        if (st.float) { st.float.stop(); st.float = null; }
+        if (tip) { tip.setAttribute("data-visible", "false"); }
+      }
+      $el.on("mouseenter" + NS, ".ah-heatmap-calendar__cell", function () {
+        if (!tip) { return; }
+        hide();
+        tip.textContent = fmt.split("{date}").join(this.getAttribute("data-date"))
+                             .split("{value}").join(this.getAttribute("data-value"));
+        tip.setAttribute("data-visible", "true");
+        st.float = AH.float(tip, this, { placement: "top", align: "center", offset: 6 });
+      });
+      $el.on("mouseleave" + NS, ".ah-heatmap-calendar__cell", hide);
+      $el.on("click" + NS, ".ah-heatmap-calendar__cell", function () {
+        var date = this.getAttribute("data-date");
+        el.setAttribute("data-ah-value", date);
+        $el.trigger("ah:select", [{ date: date, value: parseFloat(this.getAttribute("data-value")) }]);
+      });
+    },
+    destroy: function (el) {
+      var st = $.data(el, "ah-heatmap");
+      if (st && st.float) { st.float.stop(); }
+    }
+  });
+})(window.jQuery, window.AH);
 
 /* ---- components/display.js ---- */
 /* Behaviours of the display components (designs/04-components.md):
@@ -1991,6 +2324,1355 @@
   });
 })(window.jQuery, window.AH);
 
+/* ---- components/form_calendar.js ---- */
+/* Behaviours of the form_calendar components (designs/04-components.md).
+ * Ported from sigil: form/calendar (+ daygrid, timegrid, list, shared,
+ * recurrence, util) and form/datetime_input (+ format, editor, dropdown).
+ *
+ * Dates are day numbers (days since 1970-01-01) and times minutes since
+ * day 0, computed with UTC arithmetic: event times are local wall times
+ * without a zone, so there is no DST or zone shifting. The view builders
+ * (calMonth, calTimegrid, calList) are the twins of month_view/4,
+ * timegrid_view/4 and list_view/4 in aihtml_form_calendar.erl: both feed
+ * the same templates (calendar_month, calendar_timegrid, calendar_list). */
+(function ($, AH) {
+  "use strict";
+
+  var NS = AH.NS;
+  var DAY = 1440;
+  var MAX_ITERS = 5000;
+  var seq = 0;
+
+  function ensureId(el, prefix) {
+    if (!el.id) { el.id = prefix + (++seq); }
+    return el.id;
+  }
+
+  function outside(el, e) {
+    return e.target.isConnected !== false && !$.contains(el, e.target) && e.target !== el;
+  }
+
+  // ------------------------------------------------------------------
+  // Day numbers
+  // ------------------------------------------------------------------
+
+  function dnum(y, m, d) { return Math.round(Date.UTC(y, m - 1, d) / 864e5); }   // m 1..12
+  function ymd(n) {
+    var d = new Date(n * 864e5);
+    return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()];
+  }
+  function dow(n) { return ((n + 4) % 7 + 7) % 7; }                               // 0 = Sunday
+  function sow(n, first) { return n - (dow(n) - first + 7) % 7; }
+  function lastDay(y, m) { return new Date(Date.UTC(y, m, 0)).getUTCDate(); }
+  // date-fns addMonths: the day clamped to the target month's length
+  function addMonths(n, k) {
+    var p = ymd(n), t = p[0] * 12 + (p[1] - 1) + k;
+    var y = Math.floor(t / 12), m = t - y * 12 + 1;
+    return dnum(y, m, Math.min(p[2], lastDay(y, m)));
+  }
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function pad4(n) { return ("000" + n).slice(-4); }
+  function isoDate(n) { var p = ymd(n); return pad4(p[0]) + "-" + pad(p[1]) + "-" + pad(p[2]); }
+  function todayNum() { var t = new Date(); return dnum(t.getFullYear(), t.getMonth() + 1, t.getDate()); }
+  function validYmd(y, m, d) { return m >= 1 && m <= 12 && d >= 1 && d <= lastDay(y, m); }
+  function parseDate(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+    return m && validYmd(+m[1], +m[2], +m[3]) ? dnum(+m[1], +m[2], +m[3]) : null;
+  }
+  // ISO date or date-time -> { t: minutes, dateOnly }
+  function parseTime(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2}))?/.exec(String(s || ""));
+    if (!m || !validYmd(+m[1], +m[2], +m[3])) { return null; }
+    var t = dnum(+m[1], +m[2], +m[3]) * DAY;
+    if (m[4] === undefined) { return { t: t, dateOnly: true }; }
+    if (+m[4] > 23 || +m[5] > 59) { return null; }
+    return { t: t + (+m[4]) * 60 + (+m[5]), dateOnly: false };
+  }
+  function isoTime(t, allDay) {
+    var d = Math.floor(t / DAY), r = t - d * DAY;
+    if (allDay && r === 0) { return isoDate(d); }
+    return isoDate(d) + "T" + pad(Math.floor(r / 60)) + ":" + pad(r % 60);
+  }
+
+  // Display formats: yyyy yy MMMM MMM MM M dd d EEEE EEE (fmt/3 in Erlang).
+  function fmtDate(n, f, L) {
+    var p = ymd(n);
+    return f.replace(/yyyy|yy|MMMM|MMM|MM|M|dd|d|EEEE|EEE/g, function (t) {
+      switch (t) {
+        case "yyyy": return String(p[0]);
+        case "yy": return pad(p[0] % 100);
+        case "MMMM": return L.months[p[1] - 1];
+        case "MMM": return L.months_short[p[1] - 1];
+        case "MM": return pad(p[1]);
+        case "M": return String(p[1]);
+        case "dd": return pad(p[2]);
+        case "d": return String(p[2]);
+        case "EEEE": return L.weekdays[dow(n)];
+        default: return L.weekdays_short[dow(n)];
+      }
+    });
+  }
+
+  function readJson(el, attr, dflt) {
+    try { return JSON.parse(el.getAttribute(attr) || "null") || dflt; } catch (err) { return dflt; }
+  }
+
+  // ==================================================================
+  // calendar
+  // ==================================================================
+
+  var CAL_LABELS = {
+    today: "Today", prev: "Previous", next: "Next",
+    month: "Month", week: "Week", day: "Day", list: "Agenda",
+    all_day: "All day", all_day_short: "all-day", more: "+{n} more",
+    no_events: "No events in this period",
+    no_events_hint: "Try navigating to a different date range",
+    am: "AM", pm: "PM",
+    months: ["January", "February", "March", "April", "May", "June", "July",
+             "August", "September", "October", "November", "December"],
+    months_short: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    weekdays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    weekdays_short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+    title_month: "MMMM yyyy", title_day: "EEEE, MMMM d, yyyy",
+    range_start: "MMM d", range_end: "MMM d, yyyy", list_date: "MMMM d, yyyy"
+  };
+  var DEFAULT_COLOR = "var(--ah-color-primary)";
+  var COLOR_RE = /^[#a-zA-Z0-9(),.%\s-]+$/;
+  var STATUS_COLORS = { confirmed: "var(--ah-color-success)", tentative: "var(--ah-color-warning)",
+                        cancelled: "var(--ah-color-error)" };
+
+  // An event as the server sends it (normalize_event/2), from any event
+  // object a page passes: start required, end and allDay defaulted.
+  function calNormalize(e, n) {
+    var s = parseTime(e.start);
+    if (!s) { throw new Error("calendar: bad event start " + e.start); }
+    var allDayFlag = e.allDay === true || e.all_day === true || s.dateOnly;
+    var end = e.end !== undefined && e.end !== null ? parseTime(e.end) : null;
+    var et = end ? end.t : s.t + (allDayFlag ? DAY : 60);
+    var allDay = allDayFlag || (s.t % DAY === 0 && et % DAY === 0 && s.t !== et);
+    var out = {
+      id: e.id !== undefined && e.id !== null ? String(e.id) : "ev" + n,
+      title: e.title === undefined || e.title === null ? "" : String(e.title),
+      start: isoTime(s.t, allDay), end: isoTime(et, allDay), allDay: allDay
+    };
+    if (e.color && COLOR_RE.test(e.color)) { out.color = String(e.color); }
+    if (e.rrule) { out.rrule = String(e.rrule); }
+    if (e.exdates) { out.exdates = e.exdates.slice(); }
+    if (e.status) { out.status = String(e.status); }
+    return out;
+  }
+
+  // ---- recurrence (sigil's calendar/recurrence.cljs) ----
+
+  var RDAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+
+  function parseRRule(str) {
+    var r = {};
+    String(str).replace(/^RRULE:/, "").split(";").forEach(function (part) {
+      if (!part) { return; }
+      var i = part.indexOf("=");
+      var k = part.slice(0, i).toUpperCase(), v = part.slice(i + 1);
+      switch (k) {
+        case "FREQ": r.freq = v.toLowerCase(); break;
+        case "INTERVAL": r.interval = parseInt(v, 10); break;
+        case "COUNT": r.count = parseInt(v, 10); break;
+        case "UNTIL": {
+          var m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2}))?/.exec(v);
+          if (m) { r.until = dnum(+m[1], +m[2], +m[3]) * DAY + (m[4] ? +m[4] * 60 + (+m[5]) : 0); }
+          break;
+        }
+        case "BYDAY": r.byday = v.split(",").map(function (d) { return RDAYS.indexOf(d.toUpperCase()); }); break;
+        case "BYMONTHDAY": r.bymonthday = v.split(",").map(function (d) { return parseInt(d, 10); }); break;
+        case "BYMONTH": r.bymonth = v.split(",").map(function (d) { return parseInt(d, 10); }); break;
+        default: break;
+      }
+    });
+    return r;
+  }
+
+  function advance(c, freq, i) {
+    var d = Math.floor(c / DAY), r = c - d * DAY;
+    switch (freq) {
+      case "weekly": return c + 7 * i * DAY;
+      case "monthly": return addMonths(d, i) * DAY + r;
+      case "yearly": return addMonths(d, 12 * i) * DAY + r;
+      default: return c + i * DAY;
+    }
+  }
+
+  function matches(c, rule) {
+    var d = Math.floor(c / DAY), p = ymd(d);
+    return (!rule.byday || rule.byday.indexOf(dow(d)) >= 0) &&
+      (!rule.bymonthday || rule.bymonthday.indexOf(p[2]) >= 0) &&
+      (!rule.bymonth || rule.bymonth.indexOf(p[1]) >= 0);
+  }
+
+  // The occurrences [start, end] of a series overlapping [rs, re), minutes.
+  function expand(s, e, rule, rs, re, ex) {
+    if (!rule.freq) { return []; }
+    var dur = e - s, I = rule.interval || 1, out = [], iter = 0, count = 0;
+    var countOk = function () { return rule.count === undefined || count < rule.count; };
+    var untilOk = function (t) { return rule.until === undefined || t <= rule.until; };
+    var add = function (c) {
+      if (ex.indexOf(isoDate(Math.floor(c / DAY))) < 0 && c < re && c + dur > rs) { out.push([c, c + dur]); }
+    };
+    if (rule.freq === "weekly" && rule.byday && rule.byday.length) {
+      var byday = rule.byday.slice().sort(function (a, b) { return a - b; });
+      var offset = s % DAY;
+      for (var w = sow(Math.floor(s / DAY), 1);
+           iter < MAX_ITERS && w * DAY < re && untilOk(w * DAY) && countOk(); w += 7 * I) {
+        var wd = dow(w);
+        var cands = byday.map(function (d) { return (w + (d - wd + 7) % 7) * DAY + offset; })
+          .sort(function (a, b) { return a - b; });
+        for (var k = 0; k < cands.length; k++) {
+          var c = cands[k];
+          if (countOk() && iter < MAX_ITERS && c >= s && untilOk(c) && c < re) {
+            iter++; count++; add(c);
+          }
+        }
+      }
+    } else {
+      for (var t = s; iter < MAX_ITERS && t < re && untilOk(t) && countOk(); t = advance(t, rule.freq, I)) {
+        iter++;
+        if (matches(t, rule)) { count++; add(t); }
+      }
+    }
+    return out;
+  }
+
+  function stamp(t) {
+    var d = Math.floor(t / DAY), p = ymd(d), r = t - d * DAY;
+    return pad4(p[0]) + pad(p[1]) + pad(p[2]) + "T" + pad(Math.floor(r / 60)) + pad(r % 60) + "00";
+  }
+
+  // Instances overlapping [rs, re), in event order.
+  function instances(events, rs, re) {
+    var out = [];
+    events.forEach(function (ev) {
+      var s = parseTime(ev.start).t, e = parseTime(ev.end).t;
+      if (!ev.rrule) {
+        if (s < re && e > rs) { out.push({ id: ev.id, src: ev, s: s, e: e, allDay: ev.allDay }); }
+        return;
+      }
+      expand(s, e, parseRRule(ev.rrule), rs, re, ev.exdates || []).forEach(function (p) {
+        out.push({ id: ev.id + "_" + stamp(p[0]), src: ev, s: p[0], e: p[1], allDay: ev.allDay });
+      });
+    });
+    return out;
+  }
+
+  function inRange(insts, from, to) {
+    return insts.filter(function (i) { return i.s < to && i.e > from; });
+  }
+
+  // ---- views ----
+
+  function cls(base, opts) {
+    return base + opts.filter(function (o) { return o[0]; }).map(function (o) { return " " + o[1]; }).join("");
+  }
+
+  function h12(h) { return h === 0 ? 12 : (h > 12 ? h - 12 : h); }
+  function fmtClock(t, st) {
+    var r = ((t % DAY) + DAY) % DAY, h = Math.floor(r / 60), m = pad(r % 60);
+    return st.hour24 ? pad(h) + ":" + m : h12(h) + ":" + m + " " + (h < 12 ? st.L.am : st.L.pm);
+  }
+  function srcColor(src) { return src.color || DEFAULT_COLOR; }
+
+  // [rs, re) in days and the title
+  function calProfile(st) {
+    var L = st.L, cur = st.cur, p;
+    switch (st.view) {
+      case "week":
+        p = sow(cur, st.first);
+        return [p, p + 7, fmtDate(p, L.range_start, L) + " – " + fmtDate(p + 6, L.range_end, L)];
+      case "day":
+        return [cur, cur + 1, fmtDate(cur, L.title_day, L)];
+      case "list":
+        return [cur, cur + st.agendaDays,
+                fmtDate(cur, L.range_start, L) + " – " + fmtDate(cur + st.agendaDays - 1, L.range_end, L)];
+      default: {
+        var y = ymd(cur);
+        return [sow(dnum(y[0], y[1], 1), st.first), sow(dnum(y[0], y[1], lastDay(y[0], y[1])), st.first) + 7,
+                fmtDate(cur, L.title_month, L)];
+      }
+    }
+  }
+
+  // sigil's compute-week-segments (week_segments/2 in Erlang)
+  function weekSegments(w, insts) {
+    var segs = inRange(insts, w * DAY, (w + 7) * DAY).map(function (i, n) {
+      var vs = Math.floor(i.s / DAY);
+      var ve = i.allDay ? Math.max(vs + 1, Math.floor((i.e + DAY - 1) / DAY)) : vs + 1;
+      var cs = Math.max(vs, w), ce = Math.min(ve, w + 7);
+      return { inst: i, sc: cs - w + 1, ec: ce - w + 1, span: ce - cs, multi: ve - vs > 1,
+               cont: vs < w, conts: ve > w + 7, n: n };
+    }).filter(function (g) { return g.span > 0; });
+    segs.sort(function (a, b) {
+      return ((a.multi ? 0 : 1) - (b.multi ? 0 : 1)) || (b.span - a.span) ||
+        (a.inst.s % DAY - b.inst.s % DAY) || (a.n - b.n);
+    });
+    var rows = [];
+    segs.forEach(function (g) {
+      var r = 0;
+      for (; r < rows.length; r++) {
+        if (!rows[r].some(function (x) { return g.sc < x[1] && g.ec > x[0]; })) { break; }
+      }
+      if (r === rows.length) { rows.push([]); }
+      rows[r].push([g.sc, g.ec]);
+      g.row = r;
+    });
+    return segs;
+  }
+
+  function calMonth(st, rs, re, insts) {
+    var L = st.L, today = todayNum(), curM = ymd(st.cur)[1], max = st.maxEvents;
+    var headers = [];
+    for (var i = 0; i < 7; i++) { headers.push({ label: L.weekdays_short[(st.first + i) % 7] }); }
+    var weeks = [];
+    for (var w = rs; w < re; w += 7) {
+      var segs = weekSegments(w, insts), over = {};
+      segs.forEach(function (g) {
+        if (g.row >= max) { for (var c = g.sc; c < g.ec; c++) { over[c] = (over[c] || 0) + 1; } }
+      });
+      var days = [];
+      for (var k = 0; k < 7; k++) {
+        var d = w + k, p = ymd(d), other = p[1] !== curM;
+        days.push({
+          bg_cls: cls("ah-calendar-day", [[d === today, "ah-calendar-day-today"], [other, "ah-calendar-day-other"]]),
+          num_cls: cls("ah-calendar-day-num", [[d === today, "ah-calendar-day-num-today"],
+                                               [other, "ah-calendar-day-num-other"]]),
+          date: isoDate(d), col: String(k + 1), num: String(p[2])
+        });
+      }
+      weeks.push({
+        days: days,
+        events: segs.filter(function (g) { return g.row < max; }).map(function (g) {
+          return {
+            cls: cls("ah-calendar-event ah-calendar-daygrid-event",
+                     [[g.multi, "ah-calendar-daygrid-event-multi"], [g.cont, "ah-calendar-daygrid-event-start"],
+                      [g.conts, "ah-calendar-daygrid-event-end"]]),
+            id: g.inst.id, sc: String(g.sc), ec: String(g.ec), row: String(g.row + 2),
+            color: srcColor(g.inst.src), title: g.inst.src.title,
+            has_time: !g.inst.allDay && !g.multi, time: fmtClock(g.inst.s, st)
+          };
+        }),
+        more: Object.keys(over).map(Number).sort(function (a, b) { return a - b; })
+          .filter(function (c) { return over[c] > 0; }).map(function (c) {
+            return { date: isoDate(w + c - 1), col: String(c), row: String(max + 2),
+                     label: L.more.split("{n}").join(String(over[c])) };
+          })
+      });
+    }
+    return { headers: headers, weeks: weeks };
+  }
+
+  // sigil's assign-columns (columns/2 in Erlang)
+  function columns(d, insts) {
+    var items = insts.map(function (i, n) {
+      var ts = Math.max(i.s - d * DAY, 0), te = Math.min(i.e - d * DAY, DAY);
+      return { inst: i, ts: ts, te: te <= ts ? ts + 30 : te, n: n };
+    });
+    items.sort(function (a, b) { return (a.ts - b.ts) || (a.n - b.n); });
+    var cols = [];
+    items.forEach(function (it) {
+      var k = 0;
+      for (; k < cols.length; k++) {
+        if (!cols[k].some(function (o) { return it.ts < o[1] && it.te > o[0]; })) { break; }
+      }
+      if (k === cols.length) { cols.push([]); }
+      cols[k].push([it.ts, it.te]);
+      it.col = k;
+    });
+    items.forEach(function (it) { it.cols = cols.length; });
+    return items;
+  }
+
+  function calTimegrid(st, rs, re, insts) {
+    var L = st.L, today = todayNum(), dur = st.slotDur, sh = st.slotH;
+    var total = Math.round(DAY * sh / dur);
+    var slots = [];
+    for (var h = 0; h < 24; h++) {
+      slots.push({ slot_height: String(Math.round(60 * sh / dur)),
+                   label: st.hour24 ? pad(h) + ":00" : h12(h) + " " + (h < 12 ? L.am : L.pm) });
+    }
+    var days = [];
+    for (var d = rs; d < re; d++) {
+      var dayI = inRange(insts, d * DAY, (d + 1) * DAY);
+      days.push({
+        date: isoDate(d), dow: L.weekdays_short[dow(d)], num: String(ymd(d)[2]),
+        head_cls: cls("ah-calendar-timegrid-header-cell", [[d === today, "ah-calendar-timegrid-header-today"]]),
+        col_cls: cls("ah-calendar-timegrid-day-col", [[d === today, "ah-calendar-timegrid-day-today"]]),
+        col_height: String(total),
+        allday: dayI.filter(function (i) { return i.allDay; }).map(function (i) {
+          return { id: i.id, color: srcColor(i.src), title: i.src.title };
+        }),
+        timed: columns(d, dayI.filter(function (i) { return !i.allDay; })).map(function (it) {
+          return {
+            id: it.inst.id, color: srcColor(it.inst.src), title: it.inst.src.title,
+            top: String(Math.round(it.ts * sh / dur)), height: String(Math.round((it.te - it.ts) * sh / dur)),
+            left: "calc(100% * " + it.col + " / " + it.cols + ")", width: "calc(100% / " + it.cols + ")",
+            time: fmtClock(it.inst.s, st) + " – " + fmtClock(it.inst.e, st),
+            resizable: st.editable
+          };
+        })
+      });
+    }
+    return { all_day: L.all_day_short, slots: slots, days: days };
+  }
+
+  function calList(st, rs, re, insts) {
+    var L = st.L, groups = [];
+    for (var d = rs; d < re; d++) {
+      var evs = inRange(insts, d * DAY, (d + 1) * DAY).map(function (i, n) { return [i, n]; });
+      evs.sort(function (a, b) { return (a[0].s - b[0].s) || (a[1] - b[1]); });
+      if (!evs.length) { continue; }
+      groups.push({
+        name: L.weekdays[dow(d)], date: fmtDate(d, L.list_date, L),
+        events: evs.map(function (p) {
+          var i = p[0], src = i.src;
+          return {
+            id: i.id, color: srcColor(src), title: src.title,
+            time: i.allDay ? L.all_day : fmtClock(i.s, st) + " – " + fmtClock(i.e, st),
+            recurring: !!src.rrule, has_status: src.status !== undefined,
+            status_color: STATUS_COLORS[src.status] || "var(--ah-color-grey-300)"
+          };
+        })
+      });
+    }
+    return { empty: !groups.length, no_events: L.no_events, no_events_hint: L.no_events_hint,
+             groups: groups };
+  }
+
+  // The view HTML of the current state (calView), as the server renders it.
+  function calView(st) {
+    var p = calProfile(st);
+    var insts = instances(st.events, p[0] * DAY, p[1] * DAY);
+    var html = st.view === "month" ? AH.tpl.calendar_month(calMonth(st, p[0], p[1], insts))
+      : st.view === "list" ? AH.tpl.calendar_list(calList(st, p[0], p[1], insts))
+      : AH.tpl.calendar_timegrid(calTimegrid(st, p[0], p[1], insts));
+    return { rs: p[0], re: p[1], title: p[2], insts: insts, html: html };
+  }
+
+  // ---- behaviour ----
+
+  function calState(el) { return $.data(el, "ah-cal"); }
+
+  function calRender(el, $el) {
+    var st = calState(el);
+    var $scroll = st.$container.find(".ah-calendar-timegrid-scroll");
+    var scroll = $scroll.length && st.renderedView === st.view ? $scroll[0].scrollTop : null;
+    var v = calView(st);
+    st.insts = {};
+    v.insts.forEach(function (i) { st.insts[i.id] = i; });
+    st.range = [v.rs, v.re];
+    st.$container.html(v.html);
+    st.$title.text(v.title);
+    $el.find(".ah-calendar-view-btn").each(function () {
+      var on = this.getAttribute("data-view") === st.view;
+      $(this).toggleClass("ah-calendar-view-btn-active", on).attr("aria-pressed", String(on));
+    });
+    var iso = isoDate(st.cur);
+    el.setAttribute("data-ah-value", iso);
+    $el.children("input[type=hidden]").val(iso);
+    el.setAttribute("data-view", st.view);
+    el.setAttribute("data-start", isoDate(v.rs));
+    el.setAttribute("data-end", isoDate(v.re));
+    clearInterval(st.timer);
+    st.timer = null;
+    $scroll = st.$container.find(".ah-calendar-timegrid-scroll");
+    if ($scroll.length) {
+      // keep the scroll position while the view stays, else show the morning
+      $scroll[0].scrollTop = scroll !== null ? scroll : Math.max(Math.round(7 * 60 * st.slotH / st.slotDur) - 10, 0);
+      calNow(el);
+      st.timer = setInterval(function () { calNow(el); }, 60000);
+    }
+    st.renderedView = st.view;
+  }
+
+  // The current time line, when today is in the visible range.
+  function calNow(el) {
+    var st = calState(el);
+    var $ind = st.$container.find(".ah-calendar-timegrid-now-indicator");
+    var now = new Date(), t = todayNum();
+    if (t >= st.range[0] && t < st.range[1]) {
+      $ind.css({ display: "block",
+                 top: Math.round((now.getHours() * 60 + now.getMinutes()) * st.slotH / st.slotDur) + "px" });
+    } else {
+      $ind.css({ display: "none" });
+    }
+  }
+
+  // Navigation re-renders and fires change when the date or view changed.
+  function calGo(el, $el, cur, view) {
+    var st = calState(el);
+    var changed = cur !== st.cur || view !== st.view;
+    st.cur = cur;
+    st.view = view;
+    calRender(el, $el);
+    if (changed) { $el.trigger("change"); }
+  }
+
+  function calStep(el, $el, dir) {
+    var st = calState(el), c = st.cur;
+    switch (st.view) {
+      case "month": c = addMonths(c, dir); break;
+      case "week": c += 7 * dir; break;
+      case "day": c += dir; break;
+      default: c += st.agendaDays * dir; break;
+    }
+    calGo(el, $el, c, st.view);
+  }
+
+  // Details of an interaction as data-* on the root (Event.data of a
+  // postback), then the component event.
+  var DETAIL_ATTRS = ["data-event", "data-from", "data-to", "data-days", "data-all-day", "data-date"];
+  function calFire(el, $el, name, detail) {
+    DETAIL_ATTRS.forEach(function (a) { el.removeAttribute(a); });
+    $.each(detail, function (k, v) {
+      if (k === "raw") { return; }
+      el.setAttribute("data-" + k.replace(/[A-Z]/g, function (c) { return "-" + c.toLowerCase(); }), String(v));
+    });
+    var ev = $.Event(name);
+    $el.trigger(ev, [detail]);
+    return ev;
+  }
+
+  function calSource(st, instId) {
+    var inst = st.insts[instId];
+    return inst ? inst.src : null;
+  }
+
+  function calEventClick(el, $el, target) {
+    var st = calState(el);
+    var inst = st.insts[target.getAttribute("data-eventid")];
+    if (!inst) { return; }
+    calFire(el, $el, "ah:event-click", { event: inst.src.id, raw: $.extend({}, inst.src,
+      { start: isoTime(inst.s, inst.allDay), end: isoTime(inst.e, inst.allDay) }) });
+  }
+
+  function calMore(el, $el, target) {
+    var st = calState(el);
+    var date = target.getAttribute("data-date");
+    var ev = calFire(el, $el, "ah:more-click", { date: date });
+    if (!ev.isDefaultPrevented() && st.views.indexOf("day") >= 0) {
+      calGo(el, $el, parseDate(date), "day");
+    }
+  }
+
+  // Shift an event (the whole series for a recurring one) and re-render.
+  function calMove(el, $el, src, dStart, dEnd, name, days) {
+    var st = calState(el);
+    var s = parseTime(src.start).t + dStart, e = parseTime(src.end).t + dEnd;
+    if (e <= s) { return; }
+    var allDay = src.allDay && s % DAY === 0 && e % DAY === 0;
+    src.start = isoTime(s, allDay);
+    src.end = isoTime(e, allDay);
+    src.allDay = allDay;
+    calRender(el, $el);
+    var detail = { event: src.id, from: src.start, to: src.end, allDay: allDay };
+    if (days !== undefined) { detail.days = days; }
+    calFire(el, $el, name, detail);
+    st.justDragged = true;
+  }
+
+  // Hit testing by rectangles (the event layer covers the day cells).
+  function cellAt($cells, x, y) {
+    var hit = null;
+    $cells.each(function () {
+      var r = this.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && (y === null || (y >= r.top && y <= r.bottom))) { hit = this; return false; }
+    });
+    return hit;
+  }
+
+  function slotMinutes(st, col, y) {
+    var rel = y - col.getBoundingClientRect().top;
+    var m = Math.min(Math.max(Math.round(rel / st.slotH * st.slotDur), 0), DAY);
+    return Math.round(m / st.slotDur) * st.slotDur;
+  }
+
+  function ghost(evEl, e) {
+    var r = evEl.getBoundingClientRect();
+    var $g = $(evEl).clone().addClass("ah-calendar-event-ghost").removeAttr("tabindex role")
+      .css({ position: "fixed", zIndex: 9999, opacity: 0.7, pointerEvents: "none", margin: 0,
+             width: r.width + "px", height: r.height + "px", left: r.left + "px", top: r.top + "px" })
+      .appendTo(document.body);
+    return { $g: $g, dx: e.clientX - r.left, dy: e.clientY - r.top };
+  }
+
+  // One drag at a time: mousedown decides the mode, document mousemove
+  // and mouseup (namespaced per calendar) carry it out.
+  function calDragStart(el, $el, e) {
+    var st = calState(el);
+    if (e.which !== 1) { return; }
+    var $t = $(e.target), $c = st.$container;
+    var evEl = $t.closest(".ah-calendar-daygrid-event, .ah-calendar-timegrid-event, .ah-calendar-allday-event")[0];
+    var d = null;
+    if ($t.hasClass("ah-calendar-timegrid-resize-handle") && st.editable) {
+      var rEv = $t.closest(".ah-calendar-timegrid-event")[0];
+      d = { mode: "resize", ev: rEv, inst: st.insts[rEv.getAttribute("data-eventid")],
+            col: $t.closest(".ah-calendar-timegrid-day-col")[0] };
+    } else if (evEl && st.editable) {
+      var kind = $(evEl).hasClass("ah-calendar-daygrid-event") ? "month"
+        : ($(evEl).hasClass("ah-calendar-allday-event") ? "allday" : "timed");
+      d = { mode: "move", kind: kind, ev: evEl, inst: st.insts[evEl.getAttribute("data-eventid")],
+            x0: e.clientX, y0: e.clientY, started: false };
+      if (kind === "month") {
+        var c0 = cellAt($c.find(".ah-calendar-day"), e.clientX, e.clientY);
+        d.origin = c0 ? parseDate(c0.getAttribute("data-date")) : Math.floor(d.inst.s / DAY);
+      } else if (kind === "allday") {
+        d.origin = parseDate($(evEl).closest(".ah-calendar-timegrid-allday-cell").attr("data-date"));
+      }
+    } else if (!evEl && st.selectable && $t.closest(".ah-calendar-daygrid-body").length &&
+               !$t.closest(".ah-calendar-day-more").length) {
+      var cell = cellAt($c.find(".ah-calendar-day"), e.clientX, e.clientY);
+      if (cell) { d = { mode: "select", from: parseDate(cell.getAttribute("data-date")) }; d.to = d.from; }
+    } else if (!evEl && st.selectable && $t.closest(".ah-calendar-timegrid-day-col").length) {
+      var col = $t.closest(".ah-calendar-timegrid-day-col")[0];
+      var m0 = Math.min(slotMinutes(st, col, e.clientY), DAY - st.slotDur);
+      d = { mode: "create", col: col, day: parseDate(col.getAttribute("data-date")), m0: m0,
+            top: m0, bot: m0 + st.slotDur,
+            $ph: $('<div class="ah-calendar-timegrid-create-placeholder"></div>')
+              .css({ left: 0, right: 0 }).appendTo(col) };
+    }
+    if (!d || !d.inst && (d.mode === "move" || d.mode === "resize")) { return; }
+    e.preventDefault();
+    st.drag = d;
+    calDragPaint(el, e);
+    $(document).on("mousemove" + st.ns, function (me) { calDragPaint(el, me); })
+      .on("mouseup" + st.ns, function (ue) { calDragEnd(el, $el, ue); })
+      .on("keydown" + st.ns, function (ke) {
+        if (ke.key === "Escape") { calDragCancel(el); }
+      });
+  }
+
+  function calDragPaint(el, e) {
+    var st = calState(el), d = st.drag, $c = st.$container;
+    if (!d) { return; }
+    switch (d.mode) {
+      case "move":
+        if (!d.started) {
+          if (Math.abs(e.clientX - d.x0) + Math.abs(e.clientY - d.y0) < 4) { return; }
+          d.started = true;
+          d.g = ghost(d.ev, e);
+        }
+        d.g.$g.css({ left: e.clientX - d.g.dx + "px", top: e.clientY - d.g.dy + "px" });
+        break;
+      case "resize": {
+        var m = Math.max(slotMinutes(st, d.col, e.clientY), d.inst.s % DAY + st.slotDur);
+        d.end = m;
+        $(d.ev).css("height", Math.round((m - d.inst.s % DAY) * st.slotH / st.slotDur) + "px");
+        break;
+      }
+      case "select": {
+        var cell = cellAt($c.find(".ah-calendar-day"), e.clientX, e.clientY);
+        if (cell) { d.to = parseDate(cell.getAttribute("data-date")); }
+        var a = Math.min(d.from, d.to), b = Math.max(d.from, d.to);
+        $c.find(".ah-calendar-day").each(function () {
+          var n = parseDate(this.getAttribute("data-date"));
+          $(this).toggleClass("ah-calendar-day-selected", n >= a && n <= b);
+        });
+        break;
+      }
+      case "create": {
+        var cur = slotMinutes(st, d.col, e.clientY);
+        d.top = Math.min(d.m0, cur);
+        d.bot = Math.min(Math.max(d.m0 + st.slotDur, cur + st.slotDur), DAY);
+        d.$ph.css({ top: Math.round(d.top * st.slotH / st.slotDur) + "px",
+                    height: Math.round((d.bot - d.top) * st.slotH / st.slotDur) + "px" });
+        break;
+      }
+      default: break;
+    }
+  }
+
+  function calDragCancel(el) {
+    var st = calState(el), d = st.drag;
+    $(document).off(st.ns);
+    st.drag = null;
+    if (!d) { return; }
+    if (d.g) { d.g.$g.remove(); }
+    if (d.$ph) { d.$ph.remove(); }
+    st.$container.find(".ah-calendar-day-selected").removeClass("ah-calendar-day-selected");
+    if (d.mode === "resize") { calRender(el, $(el)); }
+  }
+
+  function calDragEnd(el, $el, e) {
+    var st = calState(el), d = st.drag, $c = st.$container;
+    calDragCancel(el);
+    if (!d) { return; }
+    var src = d.inst ? d.inst.src : null;
+    switch (d.mode) {
+      case "move": {
+        if (!d.started) { return; }                    // a click
+        st.justDragged = true;
+        if (d.kind === "timed") {
+          var col = cellAt($c.find(".ah-calendar-timegrid-day-col"), e.clientX, null);
+          if (!col) { return; }
+          var day = parseDate(col.getAttribute("data-date"));
+          var top = e.clientY - d.g.dy;                // the ghost's top edge
+          var start = day * DAY + Math.min(slotMinutes(st, col, top), DAY - st.slotDur);
+          var delta = start - d.inst.s;
+          if (delta) {
+            calMove(el, $el, src, delta, delta, "ah:event-drop", day - Math.floor(d.inst.s / DAY));
+          }
+        } else {
+          var sel = d.kind === "month" ? ".ah-calendar-day" : ".ah-calendar-timegrid-allday-cell";
+          var cell = cellAt($c.find(sel), e.clientX, d.kind === "month" ? e.clientY : null);
+          if (!cell) { return; }
+          var days = parseDate(cell.getAttribute("data-date")) - d.origin;
+          if (days) { calMove(el, $el, src, days * DAY, days * DAY, "ah:event-drop", days); }
+        }
+        break;
+      }
+      case "resize": {
+        st.justDragged = true;
+        var end = Math.floor(d.inst.s / DAY) * DAY + (d.end === undefined ? d.inst.e % DAY : d.end);
+        if (d.end !== undefined && end !== d.inst.e) {
+          calMove(el, $el, src, 0, end - d.inst.e, "ah:event-resize");
+        }
+        break;
+      }
+      case "select": {
+        var a = Math.min(d.from, d.to), b = Math.max(d.from, d.to);
+        calFire(el, $el, "ah:select", { from: isoDate(a), to: isoDate(b + 1), allDay: true });
+        break;
+      }
+      case "create":
+        st.justDragged = true;
+        calFire(el, $el, "ah:select", { from: isoTime(d.day * DAY + d.top, false),
+                                        to: isoTime(d.day * DAY + d.bot, false), allDay: false });
+        break;
+      default: break;
+    }
+  }
+
+  function calFind(st, id) {
+    for (var i = 0; i < st.events.length; i++) {
+      if (st.events[i].id === String(id)) { return i; }
+    }
+    return -1;
+  }
+
+  AH.define("calendar", {
+    init: function (el, $el) {
+      ensureId(el, "ah-cal");
+      var num = function (a, dflt) {
+        var n = parseInt(el.getAttribute(a) || "", 10);
+        return n > 0 || (n === 0 && dflt === 0) ? n : dflt;
+      };
+      var st = {
+        ns: ".ahcal" + (++seq),
+        $container: $el.children(".ah-calendar-view-container"),
+        $title: $el.find(".ah-calendar-title"),
+        events: readJson(el, "data-ah-events", []).map(calNormalize),
+        view: el.getAttribute("data-ah-view") || "month",
+        views: $el.find(".ah-calendar-view-btn").map(function () {
+          return this.getAttribute("data-view"); }).get(),
+        cur: parseDate(el.getAttribute("data-ah-value")) || todayNum(),
+        first: Math.min(num("data-ah-first-day", 0), 6),
+        agendaDays: num("data-ah-agenda-days", 30),
+        maxEvents: num("data-ah-day-max-events", 3),
+        slotDur: num("data-ah-slot-duration", 30),
+        slotH: num("data-ah-slot-height", 20),
+        hour24: el.getAttribute("data-ah-hour-format") === "24",
+        L: $.extend({}, CAL_LABELS, readJson(el, "data-ah-labels", {})),
+        editable: $el.hasClass("ah-calendar-editable"),
+        selectable: $el.hasClass("ah-calendar-selectable"),
+        insts: {}, range: [0, 0], timer: null, drag: null, justDragged: false
+      };
+      $.data(el, "ah-cal", st);
+      // the server rendered the same view; render again for the browser's today
+      calRender(el, $el);
+
+      $el.on("click" + NS, ".ah-calendar-btn-prev", function () { calStep(el, $el, -1); })
+        .on("click" + NS, ".ah-calendar-btn-next", function () { calStep(el, $el, 1); })
+        .on("click" + NS, ".ah-calendar-btn-today", function () { calGo(el, $el, todayNum(), st.view); })
+        .on("click" + NS, ".ah-calendar-view-btn", function () {
+          calGo(el, $el, st.cur, this.getAttribute("data-view"));
+        })
+        .on("click" + NS, ".ah-calendar-event, .ah-calendar-list-event", function (e) {
+          e.stopPropagation();
+          if (st.justDragged) { st.justDragged = false; return; }
+          calEventClick(el, $el, this);
+        })
+        .on("click" + NS, ".ah-calendar-day-more", function (e) {
+          e.stopPropagation();
+          calMore(el, $el, this);
+        })
+        .on("keydown" + NS, ".ah-calendar-event, .ah-calendar-list-event, .ah-calendar-day-more", function (e) {
+          if (e.key !== "Enter" && e.key !== " ") { return; }
+          e.preventDefault();
+          if ($(this).hasClass("ah-calendar-day-more")) { calMore(el, $el, this); } else { calEventClick(el, $el, this); }
+        });
+      st.$container.on("mousedown" + NS, function (e) {
+        st.justDragged = false;
+        calDragStart(el, $el, e);
+      });
+    },
+    destroy: function (el) {
+      var st = calState(el);
+      if (!st) { return; }
+      if (st.drag) { calDragCancel(el); }
+      $(document).off(st.ns);
+      clearInterval(st.timer);
+    },
+    methods: {
+      prev: function (el, $el) { calStep(el, $el, -1); },
+      next: function (el, $el) { calStep(el, $el, 1); },
+      today: function (el, $el) { calGo(el, $el, todayNum(), calState(el).view); },
+      changeView: function (el, $el, v) {
+        if (["month", "week", "day", "list"].indexOf(v) >= 0) { calGo(el, $el, calState(el).cur, v); }
+      },
+      setValue: function (el, $el, v) {
+        var d = parseDate(String(v || "").slice(0, 10));
+        if (d !== null) { calState(el).cur = d; calRender(el, $el); }
+      },
+      getValue: function (el) { return el.getAttribute("data-ah-value"); },
+      setEvents: function (el, $el, evs) {
+        calState(el).events = (evs || []).map(calNormalize);
+        calRender(el, $el);
+      },
+      addEvent: function (el, $el, ev) {
+        var st = calState(el), n = calNormalize(ev, st.events.length + 1), i = calFind(st, n.id);
+        if (i >= 0) { st.events[i] = n; } else { st.events.push(n); }
+        calRender(el, $el);
+      },
+      updateEvent: function (el, $el, id, changes) {
+        var st = calState(el), i = calFind(st, id);
+        if (i < 0) { return; }
+        var merged = $.extend({}, st.events[i], changes || {});
+        if (changes && (changes.start || changes.end) && changes.allDay === undefined) { delete merged.allDay; }
+        st.events[i] = calNormalize(merged, i + 1);
+        calRender(el, $el);
+      },
+      removeEvent: function (el, $el, id) {
+        var st = calState(el), i = calFind(st, id);
+        if (i >= 0) { st.events.splice(i, 1); calRender(el, $el); }
+      },
+      getEvents: function (el) {
+        return calState(el).events.map(function (e) { return $.extend({}, e); });
+      }
+    }
+  });
+
+  // ==================================================================
+  // datetime_input
+  // ==================================================================
+
+  var DTI_LABELS = {
+    months: CAL_LABELS.months,
+    weekdays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
+    title: "MMMM yyyy", time: "Time",
+    prev_month: "Previous month", next_month: "Next month"
+  };
+  // [pattern, type, min, max]; single letters are two digits wide, as in
+  // segments/1 of the Erlang side.
+  var TOKENS = [["yyyy", "year", 1900, 2100], ["yy", "year2", 0, 99], ["MM", "month", 1, 12],
+                ["M", "month", 1, 12], ["dd", "day", 1, 31], ["d", "day", 1, 31],
+                ["HH", "hour", 0, 23], ["H", "hour", 0, 23], ["hh", "hour12", 1, 12],
+                ["h", "hour12", 1, 12], ["mm", "minute", 0, 59], ["m", "minute", 0, 59],
+                ["ss", "second", 0, 59], ["s", "second", 0, 59], ["aa", "ampm", 0, 1],
+                ["a", "ampm", 0, 1]];
+  var SEG_NAMES = { year: "Year", year2: "Year", month: "Month", day: "Day", hour: "Hour",
+                    hour12: "Hour", minute: "Minute", second: "Second", ampm: "AM/PM" };
+
+  // format.cljs parse-format: [{type, start, end, len, min, max, editable}]
+  function dtiSegments(f) {
+    var segs = [], pos = 0, i = 0;
+    while (i < f.length) {
+      var tok = null;
+      for (var k = 0; k < TOKENS.length; k++) {
+        if (f.substr(i, TOKENS[k][0].length) === TOKENS[k][0]) { tok = TOKENS[k]; break; }
+      }
+      if (tok) {
+        var len = tok[1] === "year" ? 4 : 2;
+        segs.push({ type: tok[1], start: pos, end: pos + len, len: len, min: tok[2], max: tok[3],
+                    editable: true });
+        pos += len;
+        i += tok[0].length;
+      } else {
+        var last = segs[segs.length - 1];
+        if (last && !last.editable) { last.text += f[i]; last.end++; last.len++; } else {
+          segs.push({ type: "literal", text: f[i], start: pos, end: pos + 1, len: 1, editable: false });
+        }
+        pos++;
+        i++;
+      }
+    }
+    return segs;
+  }
+
+  function dtiKind(segs) {
+    var date = false, time = false, sec = false;
+    segs.forEach(function (s) {
+      if (/^(year|year2|month|day)$/.test(s.type)) { date = true; }
+      if (/^(hour|hour12|minute|second|ampm)$/.test(s.type)) { time = true; }
+      if (s.type === "second") { sec = true; }
+    });
+    return { date: date || !time, time: time, sec: sec };
+  }
+
+  // values are {y, mo, d, h, mi, s}
+  function dtiParse(s, kind) {
+    s = String(s || "");
+    var m = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2}))?)?$/.exec(s);
+    if (m && validYmd(+m[1], +m[2], +m[3])) {
+      return { y: +m[1], mo: +m[2], d: +m[3], h: +(m[4] || 0), mi: +(m[5] || 0), s: +(m[6] || 0) };
+    }
+    m = /^(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(s);
+    if (m && kind.time) {
+      var t = ymd(todayNum());
+      return { y: t[0], mo: t[1], d: t[2], h: +m[1], mi: +m[2], s: +(m[3] || 0) };
+    }
+    return null;
+  }
+
+  function dtiIso(v, kind) {
+    if (!v) { return ""; }
+    var date = pad4(v.y) + "-" + pad(v.mo) + "-" + pad(v.d);
+    var time = pad(v.h) + ":" + pad(v.mi) + (kind.sec ? ":" + pad(v.s) : "");
+    return !kind.time ? date : (kind.date ? date + "T" + time : time);
+  }
+
+  // A number that orders values of this kind.
+  function dtiOrd(v, kind) {
+    var t = v.h * 3600 + v.mi * 60 + v.s, d = dnum(v.y, v.mo, v.d);
+    return !kind.time ? d : (kind.date ? d * 86400 + t : t);
+  }
+
+  function segValue(v, seg) {
+    switch (seg.type) {
+      case "year": return v.y;
+      case "year2": return v.y % 100;
+      case "month": return v.mo;
+      case "day": return v.d;
+      case "hour": return v.h;
+      case "hour12": return h12(v.h);
+      case "minute": return v.mi;
+      case "second": return v.s;
+      case "ampm": return v.h < 12 ? 0 : 1;
+      default: return null;
+    }
+  }
+
+  // The day is clamped to the month's length (sigil's js/Date rolls over).
+  function setSeg(v0, seg, val) {
+    var v = $.extend({}, v0);
+    switch (seg.type) {
+      case "year": v.y = val; break;
+      case "year2": v.y = Math.floor(v.y / 100) * 100 + val; break;
+      case "month": v.mo = val; break;
+      case "day": v.d = val; break;
+      case "hour": v.h = val; break;
+      case "hour12": {
+        var pm = v.h >= 12;
+        v.h = pm ? (val === 12 ? 12 : val + 12) : (val === 12 ? 0 : val);
+        break;
+      }
+      case "minute": v.mi = val; break;
+      case "second": v.s = val; break;
+      case "ampm": v.h = val === 0 ? (v.h >= 12 ? v.h - 12 : v.h) : (v.h < 12 ? v.h + 12 : v.h); break;
+      default: break;
+    }
+    v.d = Math.min(v.d, lastDay(v.y, v.mo));
+    return v;
+  }
+
+  function segText(v, seg) {
+    if (!seg.editable) { return seg.text; }
+    if (seg.type === "ampm") { return v.h < 12 ? "AM" : "PM"; }
+    var n = segValue(v, seg);
+    return seg.len === 4 ? pad4(n) : pad(n);
+  }
+
+  function segMax(v, seg) { return seg.type === "day" ? lastDay(v.y, v.mo) : seg.max; }
+
+  function dtiState(el) { return $.data(el, "ah-dti"); }
+
+  function dtiEditable(st) { return st.segs.map(function (s, i) { return s.editable ? i : -1; })
+    .filter(function (i) { return i >= 0; }); }
+
+  function dtiDisplay(st) {
+    return st.value ? st.segs.map(function (s) { return segText(st.value, s); }).join("") : "";
+  }
+
+  function dtiSelect(st) {
+    var seg = st.segs[st.active];
+    if (!seg || !st.value || document.activeElement !== st.input) { return; }
+    try { st.input.setSelectionRange(seg.start, seg.end); } catch (err) { /* not focused */ }
+  }
+
+  // Show the value, publish it (data-ah-value, hidden input) and fire
+  // `input' when it changed; `change' fires on leaving (dtiCommit).
+  function dtiShow(el, $el) {
+    var st = dtiState(el);
+    st.input.value = dtiDisplay(st);
+    dtiSelect(st);
+    var iso = dtiIso(st.value, st.kind), old = el.getAttribute("data-ah-value") || "";
+    el.setAttribute("data-ah-value", iso);
+    $el.children("input[type=hidden]").val(iso);
+    $el.find(".ah-dti-label").toggleClass("ah-dti-label-float", !!st.value || $el.hasClass("ah-dti-focused"));
+    if (iso !== old) { $el.trigger("input"); }
+    if (st.open) { dtiRenderCal(el); }
+  }
+
+  function dtiClamp(st, v) {
+    if (!v) { return v; }
+    var k = dtiOrd(v, st.kind);
+    if (st.min && k < dtiOrd(st.min, st.kind)) { return $.extend({}, st.min); }
+    if (st.max && k > dtiOrd(st.max, st.kind)) { return $.extend({}, st.max); }
+    return v;
+  }
+
+  function dtiCommit(el, $el) {
+    var st = dtiState(el);
+    dtiFlush(st);
+    st.value = dtiClamp(st, st.value);
+    dtiShow(el, $el);
+    var iso = dtiIso(st.value, st.kind);
+    if (iso !== st.committed) {
+      st.committed = iso;
+      $el.trigger("change");
+    }
+  }
+
+  function dtiEnsure(st) {
+    if (!st.value) {
+      var n = new Date();
+      st.value = { y: n.getFullYear(), mo: n.getMonth() + 1, d: n.getDate(),
+                   h: n.getHours(), mi: n.getMinutes(), s: 0 };
+    }
+  }
+
+  function dtiFlush(st) {
+    if (st.active === null || !st.buf) { return; }
+    var seg = st.segs[st.active], n = parseInt(st.buf, 10);
+    st.buf = "";
+    if (st.value && !isNaN(n)) { st.value = setSeg(st.value, seg, Math.max(seg.min, Math.min(seg.max, n))); }
+  }
+
+  function dtiFocusSeg(el, $el, i) {
+    var st = dtiState(el);
+    dtiFlush(st);
+    st.active = i;
+    dtiShow(el, $el);
+  }
+
+  function dtiAnnounce(el, $el) {
+    var st = dtiState(el), seg = st.segs[st.active];
+    if (seg && st.value) { $el.find(".ah-dti-live").text(SEG_NAMES[seg.type] + " " + segText(st.value, seg)); }
+  }
+
+  // editor.cljs handle-digit!: buffer until the part is full, then commit
+  // and move on
+  function dtiDigit(el, $el, ch) {
+    var st = dtiState(el), seg = st.segs[st.active];
+    if (!seg || !seg.editable || seg.type === "ampm") { return; }
+    dtiEnsure(st);
+    st.buf += ch;
+    if (st.buf.length >= seg.len) {
+      var n = parseInt(st.buf, 10);
+      st.buf = "";
+      st.value = setSeg(st.value, seg, Math.max(seg.min, Math.min(segMax(st.value, seg), n)));
+      var next = dtiEditable(st).filter(function (i) { return i > st.active; })[0];
+      if (next !== undefined) { st.active = next; }
+      dtiShow(el, $el);
+    } else {
+      // preview: the typed digits right-aligned in the part
+      var shown = dtiDisplay(st), p = (new Array(seg.len - st.buf.length + 1)).join(" ") + st.buf;
+      st.input.value = shown.slice(0, seg.start) + p + shown.slice(seg.end);
+      dtiSelect(st);
+    }
+  }
+
+  function dtiStep(el, $el, delta, big) {
+    var st = dtiState(el), seg = st.segs[st.active];
+    if (!seg || !seg.editable) { return; }
+    dtiEnsure(st);
+    dtiFlush(st);
+    var v = st.value;
+    if (seg.type === "ampm") {
+      st.value = setSeg(v, seg, segValue(v, seg) ? 0 : 1);
+    } else {
+      var mn = seg.min, mx = segMax(v, seg), cur = segValue(v, seg), n;
+      if (big) {
+        n = mn + (((cur - mn + delta) % (mx - mn + 1)) + (mx - mn + 1)) % (mx - mn + 1);
+      } else {
+        n = cur + delta;
+        n = n < mn ? mx : (n > mx ? mn : n);
+      }
+      st.value = setSeg(v, seg, n);
+    }
+    dtiShow(el, $el);
+    dtiAnnounce(el, $el);
+  }
+
+  function dtiMoveSeg(el, $el, dir) {
+    var st = dtiState(el), eds = dtiEditable(st);
+    var next = dir > 0 ? eds.filter(function (i) { return i > st.active; })[0]
+      : eds.filter(function (i) { return i < st.active; }).pop();
+    if (next === undefined) { dtiFlush(st); return false; }
+    dtiFocusSeg(el, $el, next);
+    return true;
+  }
+
+  function dtiBlocked($el) { return $el.hasClass("ah-dti-disabled") || $el.hasClass("ah-dti-readonly"); }
+
+  // editor.cljs on-keydown
+  function dtiKey(el, $el, e) {
+    var st = dtiState(el), k = e.key;
+    if (k === "Tab") {
+      if (!dtiBlocked($el) && dtiMoveSeg(el, $el, e.shiftKey ? -1 : 1)) { e.preventDefault(); } else { dtiClose(el, $el); }
+      return;
+    }
+    if (e.ctrlKey || e.metaKey) { return; }
+    if (k === "Escape") {
+      if (st.open) { e.preventDefault(); dtiClose(el, $el); }
+      return;
+    }
+    e.preventDefault();
+    if (dtiBlocked($el)) { return; }
+    if ((k === "ArrowDown" && e.altKey) || k === "F4") {
+      if (st.open) { dtiClose(el, $el); } else { dtiOpen(el, $el); }
+      return;
+    }
+    if (/^[0-9]$/.test(k)) { dtiDigit(el, $el, k); return; }
+    var eds = dtiEditable(st), seg = st.segs[st.active];
+    switch (k) {
+      case "ArrowUp": dtiStep(el, $el, 1, false); break;
+      case "ArrowDown": dtiStep(el, $el, -1, false); break;
+      case "PageUp": dtiStep(el, $el, 10, true); break;
+      case "PageDown": dtiStep(el, $el, -10, true); break;
+      case "ArrowLeft": dtiMoveSeg(el, $el, -1); break;
+      case "ArrowRight": dtiMoveSeg(el, $el, 1); break;
+      case "Home": dtiFocusSeg(el, $el, eds[0]); break;
+      case "End": dtiFocusSeg(el, $el, eds[eds.length - 1]); break;
+      case "Backspace":
+      case "Delete":
+        if (seg && seg.editable && st.value) {
+          st.buf = "";
+          st.value = setSeg(st.value, seg, seg.min);
+          dtiShow(el, $el);
+        }
+        break;
+      case "a": case "A": case "p": case "P":
+        if (seg && seg.type === "ampm" && st.value) {
+          st.value = setSeg(st.value, seg, /a/i.test(k) ? 0 : 1);
+          dtiShow(el, $el);
+        }
+        break;
+      default: break;
+    }
+  }
+
+  // format.cljs segment-at-cursor: the part under the caret, or the nearest
+  function dtiSegAt(st, pos) {
+    var eds = dtiEditable(st), best = eds[0], dist = Infinity;
+    for (var i = 0; i < eds.length; i++) {
+      var s = st.segs[eds[i]];
+      if (pos >= s.start && pos < s.end) { return eds[i]; }
+      var dd = Math.min(Math.abs(pos - s.start), Math.abs(pos - s.end));
+      if (dd < dist) { dist = dd; best = eds[i]; }
+    }
+    return best;
+  }
+
+  // ---- drop-down calendar ----
+
+  function dtiCalView(st) {
+    var L = st.L, y = st.navY, m = st.navM, today = todayNum();
+    var start = sow(dnum(y, m, 1), st.first);
+    var sel = st.value ? dnum(st.value.y, st.value.mo, st.value.d) : null;
+    var min = st.min && st.kind.date ? dnum(st.min.y, st.min.mo, st.min.d) : null;
+    var max = st.max && st.kind.date ? dnum(st.max.y, st.max.mo, st.max.d) : null;
+    var days = [];
+    for (var i = 0; i < 42; i++) {
+      var d = start + i, p = ymd(d);
+      var dis = (min !== null && d < min) || (max !== null && d > max);
+      days.push({
+        cls: cls("ah-dti-cal-day", [[d === today, "ah-dti-cal-day-today"], [d === sel, "ah-dti-cal-day-selected"],
+                                    [p[1] !== m, "ah-dti-cal-day-other"], [dis, "ah-dti-cal-day-disabled"]]),
+        date: isoDate(d), day: String(p[2]), disabled: dis, selected: d === sel
+      });
+    }
+    var weekdays = [];
+    for (var k = 0; k < 7; k++) { weekdays.push({ label: L.weekdays[(st.first + k) % 7] }); }
+    var title = L.title.replace(/yyyy|MMMM|MM|M/g, function (t) {
+      return t === "yyyy" ? String(y) : t === "MMMM" ? L.months[m - 1] : t === "MM" ? pad(m) : String(m);
+    });
+    return { title: title, prev_month: L.prev_month, next_month: L.next_month, weekdays: weekdays,
+             days: days, show_time: st.showTime && !!st.value, time_label: L.time,
+             hours: st.value ? pad(st.value.h) : "", minutes: st.value ? pad(st.value.mi) : "" };
+  }
+
+  function dtiRenderCal(el) {
+    var st = dtiState(el);
+    var focused = document.activeElement;
+    var field = focused && $.contains(st.$dd[0], focused) ? focused.getAttribute("data-field") : null;
+    st.$dd.html(AH.tpl.datetime_input_calendar(dtiCalView(st)));
+    if (field) { st.$dd.find('[data-field="' + field + '"]').trigger("focus"); }
+    if (st.float) { st.float.update(); }
+  }
+
+  function dtiOpen(el, $el) {
+    var st = dtiState(el);
+    if (st.open || !st.$dd.length || dtiBlocked($el)) { return; }
+    var v = st.value;
+    var t = ymd(todayNum());
+    st.navY = v ? v.y : t[0];
+    st.navM = v ? v.mo : t[1];
+    st.open = true;
+    st.$dd.prop("hidden", false);
+    dtiRenderCal(el);
+    st.float = AH.float(st.$dd[0], $el.children(".ah-dti-row")[0], { offset: 2 });
+    $(st.input).attr("aria-expanded", "true");
+    $(document).on("mousedown" + st.ns, function (e) { if (outside(el, e)) { dtiClose(el, $el); } });
+    $el.trigger("ah:open");
+  }
+
+  function dtiClose(el, $el) {
+    var st = dtiState(el);
+    if (!st.open) { return; }
+    st.open = false;
+    st.$dd.prop("hidden", true).empty();
+    if (st.float) { st.float.stop(); st.float = null; }
+    $(st.input).attr("aria-expanded", "false");
+    $(document).off(st.ns);
+    $el.trigger("ah:close");
+  }
+
+  // dropdown.cljs on-day-click: keep the time, clamp, fire change
+  function dtiPickDay(el, $el, iso) {
+    var st = dtiState(el), d = parseDate(iso);
+    if (d === null) { return; }
+    var p = ymd(d), v = st.value || { h: 0, mi: 0, s: 0 };
+    st.value = dtiClamp(st, { y: p[0], mo: p[1], d: p[2], h: v.h, mi: v.mi, s: v.s });
+    st.navY = st.value.y;
+    st.navM = st.value.mo;
+    dtiShow(el, $el);
+    dtiCommit(el, $el);
+    if (!st.showTime) { dtiClose(el, $el); st.input.focus(); }
+  }
+
+  function dtiSpinStop(st) { clearTimeout(st.spin); st.spin = null; }
+
+  AH.define("datetime_input", {
+    init: function (el, $el) {
+      ensureId(el, "ah-dti");
+      var segs = dtiSegments(el.getAttribute("data-ah-format") || "yyyy-MM-dd");
+      var kind = dtiKind(segs);
+      var first = parseInt(el.getAttribute("data-ah-first-day") || "0", 10);
+      var st = {
+        ns: ".ahdti" + (++seq),
+        segs: segs, kind: kind,
+        input: $el.find("input.ah-dti-input")[0],
+        $dd: $el.children(".ah-dti-dropdown"),
+        value: dtiParse(el.getAttribute("data-ah-value"), kind),
+        min: dtiParse(el.getAttribute("data-ah-min"), kind),
+        max: dtiParse(el.getAttribute("data-ah-max"), kind),
+        first: first >= 0 && first <= 6 ? first : 0,
+        showTime: el.hasAttribute("data-ah-show-time"),
+        L: $.extend({}, DTI_LABELS, readJson(el, "data-ah-labels", {})),
+        active: null, buf: "", open: false, float: null, spin: null
+      };
+      st.committed = dtiIso(st.value, kind);
+      $.data(el, "ah-dti", st);
+      var $in = $(st.input);
+      $in.on("focus" + NS, function () {
+        $el.addClass("ah-dti-focused");
+        if (st.active === null) { st.active = dtiEditable(st)[0]; }
+        $el.find(".ah-dti-label").addClass("ah-dti-label-float");
+        setTimeout(function () { dtiSelect(st); }, 0);
+      }).on("mouseup" + NS, function () {
+        if (!st.value) { return; }
+        dtiFocusSeg(el, $el, dtiSegAt(st, st.input.selectionStart || 0));
+      }).on("keydown" + NS, function (e) { dtiKey(el, $el, e); })
+        // the text field is internal: only the root reports changes
+        .on("change" + NS + " input" + NS, function (e) { e.stopPropagation(); });
+      // leaving the component (the time fields of the drop-down are inside)
+      $el.on("focusout" + NS, function (e) {
+        if (e.relatedTarget && $.contains(el, e.relatedTarget)) { return; }
+        setTimeout(function () {
+          if ($.contains(el, document.activeElement)) { return; }
+          $el.removeClass("ah-dti-focused");
+          dtiCommit(el, $el);
+          dtiClose(el, $el);
+        }, 0);
+      });
+      $el.on("click" + NS, ".ah-dti-cal-btn", function () {
+        if (dtiBlocked($el)) { return; }
+        st.input.focus();
+        if (st.open) { dtiClose(el, $el); } else { dtiOpen(el, $el); }
+      });
+      $el.on("mousedown" + NS, ".ah-dti-cal-btn", function (e) { e.preventDefault(); });
+      // spinner: step, then repeat after 400ms every 120ms while held
+      $el.on("mousedown" + NS, ".ah-dti-spin", function (e) {
+        e.preventDefault();
+        if (dtiBlocked($el)) { return; }
+        var delta = $(this).hasClass("ah-dti-spin-up") ? 1 : -1;
+        if (st.active === null) { st.active = dtiEditable(st)[0]; }
+        st.input.focus();
+        dtiSpinStop(st);
+        dtiStep(el, $el, delta, false);
+        var rep = function () { dtiStep(el, $el, delta, false); st.spin = setTimeout(rep, 120); };
+        st.spin = setTimeout(rep, 400);
+      }).on("mouseup" + NS + " mouseleave" + NS, ".ah-dti-spin", function () { dtiSpinStop(st); });
+      // drop-down: keep the focus in the field, except for the time inputs
+      st.$dd.on("mousedown" + NS, function (e) {
+        if (!$(e.target).is("input")) { e.preventDefault(); }
+      }).on("click" + NS, ".ah-dti-cal-day", function () {
+        if (!$(this).hasClass("ah-dti-cal-day-disabled")) { dtiPickDay(el, $el, this.getAttribute("data-date")); }
+      }).on("click" + NS, "[data-action]", function () {
+        var n = dnum(st.navY, st.navM, 1);
+        var t = ymd(addMonths(n, this.getAttribute("data-action") === "prev-month" ? -1 : 1));
+        st.navY = t[0];
+        st.navM = t[1];
+        dtiRenderCal(el);
+      }).on("change" + NS, ".ah-dti-time-input", function (e) {
+        e.stopPropagation();
+        var n = parseInt(this.value, 10);
+        if (isNaN(n)) { return; }
+        dtiEnsure(st);
+        st.value = $.extend({}, st.value);
+        if (this.getAttribute("data-field") === "hours") { st.value.h = Math.max(0, Math.min(23, n)); }
+        else { st.value.mi = Math.max(0, Math.min(59, n)); }
+        dtiShow(el, $el);
+        dtiCommit(el, $el);
+      }).on("input" + NS, ".ah-dti-time-input", function (e) { e.stopPropagation(); })
+        .on("keydown" + NS, ".ah-dti-time-input", function (e) {
+          if (e.key === "Escape") { e.preventDefault(); dtiClose(el, $el); st.input.focus(); }
+          if (e.key === "Enter") { e.preventDefault(); $(this).trigger("change"); }
+        });
+    },
+    destroy: function (el, $el) {
+      var st = dtiState(el);
+      if (!st) { return; }
+      dtiSpinStop(st);
+      dtiClose(el, $el);
+    },
+    methods: {
+      setValue: function (el, $el, v) {
+        var st = dtiState(el);
+        st.value = v ? dtiParse(v, st.kind) : null;
+        st.buf = "";
+        st.committed = dtiIso(st.value, st.kind);
+        dtiShow(el, $el);
+      },
+      getValue: function (el) { return el.getAttribute("data-ah-value"); },
+      clear: function (el, $el) {
+        var st = dtiState(el);
+        st.value = null;
+        st.buf = "";
+        dtiShow(el, $el);
+        dtiCommit(el, $el);
+      },
+      open: function (el, $el) { dtiOpen(el, $el); },
+      close: function (el, $el) { dtiClose(el, $el); }
+    }
+  });
+})(window.jQuery, window.AH);
+
 /* ---- components/form_choice.js ---- */
 /* Behaviours of the form_choice components (designs/04-components.md).
  *
@@ -2361,6 +4043,1705 @@
     methods: {
       setValue: function (el, $el, v) { setRating(el, $el, v, false); },
       getValue: function (el) { return ratingState(el).value; }
+    }
+  });
+})(window.jQuery, window.AH);
+
+/* ---- components/form_entry.js ---- */
+/* Behaviours of the form_entry components (designs/04-components.md),
+ * after sigil's form/masked_input, formatted_input, range_selector and
+ * repeat_button.
+ *
+ *   masked-input     only characters that fit the mask are typed, deleted
+ *                    or pasted; input on each edit, change on blur
+ *   formatted-input  an integer (BigInt) typed in radix 2/8/10/16; arrow
+ *                    keys and the spin buttons (held: repeat) step it; a
+ *                    radix menu (AH.float); data-ah-value stays decimal
+ *   range-selector   drag a marker or the bar between them; the markers
+ *                    are ARIA sliders; input while dragging, change after
+ *   repeat-button    click on press, then every interval ms after delay ms
+ *                    while held; the browser's click on release is dropped
+ *
+ * Value-bearing roots keep data-ah-value and their hidden input in step
+ * and fire "input" / "change" on the root. The server renders the whole
+ * first state, so init only binds events.
+ */
+(function ($, AH) {
+  "use strict";
+
+  var NS = AH.NS;
+  var seq = 0;
+
+  function docNS(el) {
+    var ns = $.data(el, "ah-docns");
+    if (!ns) {
+      ns = NS + "e" + (++seq);
+      $.data(el, "ah-docns", ns);
+    }
+    return ns;
+  }
+
+  function setValue($el, v) {
+    $el.attr("data-ah-value", v);
+    $el.children("input[type=hidden]").val(v);
+  }
+
+  // ------------------------------------------------------------------
+  // masked-input
+  // ------------------------------------------------------------------
+  //
+  // The mask is a list of positions {re, ch} (editable, ch null when
+  // empty) or {lit} (a literal), parsed as aihtml_form_entry:parse_mask.
+
+  var MASK_RE = { "9": "\\d", "0": "\\d", "#": "[\\d|+|-]", "A": "\\w", "a": "\\w",
+                  "L": "[a-zA-Z]", "l": "[a-zA-Z]", "c": ".", "C": "." };
+
+  function maskParse(mask) {
+    var items = [], chars = Array.from(mask || ""), i, j;
+    for (i = 0; i < chars.length; i++) {
+      if (chars[i] === "[") {
+        j = chars.indexOf("]", i);
+        if (j < 0) { j = chars.length - 1; }
+        items.push({ re: new RegExp("^(?:(" + chars.slice(i, j + 1).join("") + "))$", "i"), ch: null });
+        i = j;
+      } else if (MASK_RE[chars[i]]) {
+        items.push({ re: new RegExp("^(?:" + MASK_RE[chars[i]] + ")$", "i"), ch: null });
+      } else {
+        items.push({ lit: chars[i] });
+      }
+    }
+    return items;
+  }
+
+  // Fill the editable positions from text, as the server does.
+  function maskFill(items, text) {
+    var cs = Array.from(text == null ? "" : String(text)), k = 0;
+    items.forEach(function (it) {
+      if (it.lit != null) {
+        if (cs[k] === it.lit) { k++; }
+        return;
+      }
+      it.ch = null;
+      while (k < cs.length && !it.re.test(cs[k])) { k++; }
+      if (k < cs.length) { it.ch = cs[k++]; }
+    });
+    return items;
+  }
+
+  function maskState(el) { return $.data(el, "ah-mask"); }
+
+  function maskDisplay(st) {
+    return st.items.map(function (it) {
+      return it.lit != null ? it.lit : (it.ch == null ? st.prompt : it.ch);
+    }).join("");
+  }
+
+  function maskRaw(st) {
+    return st.items.map(function (it) { return it.lit == null && it.ch != null ? it.ch : ""; }).join("");
+  }
+
+  function maskValue(st) {
+    var raw = maskRaw(st);
+    return st.literals ? (raw ? maskDisplay(st) : "") : raw;
+  }
+
+  function editable(st, i) { return i >= 0 && i < st.items.length && st.items[i].lit == null; }
+  function nextEditable(st, i) { for (; i < st.items.length; i++) { if (editable(st, i)) { return i; } } return -1; }
+  function prevEditable(st, i) { for (i--; i >= 0; i--) { if (editable(st, i)) { return i; } } return -1; }
+  function firstEmpty(st) {
+    for (var i = 0; i < st.items.length; i++) { if (editable(st, i) && st.items[i].ch == null) { return i; } }
+    return -1;
+  }
+
+  // Positions are characters; the input's selection counts UTF-16 units.
+  function unitsTo(st, pos) {
+    var n = 0;
+    for (var i = 0; i < pos && i < st.items.length; i++) {
+      var it = st.items[i];
+      n += (it.lit != null ? it.lit : (it.ch == null ? st.prompt : it.ch)).length;
+    }
+    return n;
+  }
+  function posOf(st, units) {
+    var n = 0;
+    for (var i = 0; i < st.items.length; i++) {
+      if (n >= units) { return i; }
+      var it = st.items[i];
+      n += (it.lit != null ? it.lit : (it.ch == null ? st.prompt : it.ch)).length;
+    }
+    return st.items.length;
+  }
+  function selection(st) {
+    var inp = st.input;
+    return { start: posOf(st, inp.selectionStart), end: posOf(st, inp.selectionEnd) };
+  }
+  function setCursor(st, pos) {
+    var u = unitsTo(st, Math.max(0, Math.min(pos, st.items.length)));
+    try { st.input.setSelectionRange(u, u); } catch (e) { /* not focused */ }
+  }
+
+  function clearRange(st, a, b) {
+    for (var i = a; i < b; i++) { if (editable(st, i)) { st.items[i].ch = null; } }
+  }
+
+  // What the field shows: the mask, or nothing for an empty field with a
+  // floating label (the label stands there) while it has no focus.
+  function maskText(st) {
+    return st.$label.length && document.activeElement !== st.input && maskRaw(st) === ""
+      ? "" : maskDisplay(st);
+  }
+
+  // Show the items; fire input when the value changed.
+  function maskShow(el, $el, cursor, fire) {
+    var st = maskState(el), old = $el.attr("data-ah-value"), v = maskValue(st);
+    st.input.value = maskText(st);
+    setValue($el, v);
+    if (cursor != null) { setCursor(st, cursor); }
+    if (st.$label.length && document.activeElement !== st.input) {
+      st.$label.toggleClass("ah-masked-input-label-float", maskRaw(st) !== "");
+    }
+    if (fire && v !== old) { $el.trigger("input", [v]); }
+  }
+
+  // Type one character (sigil's do-insert-char!: into the next editable
+  // position if it fits, else jump past the literal it names) or paste a
+  // text (sigil's do-paste!: characters that do not fit are skipped).
+  function maskInsert(el, $el, text) {
+    var st = maskState(el), sel = selection(st), chars = Array.from(text), pos = sel.start, i, j;
+    var cleared = sel.end > sel.start;
+    if (cleared) { clearRange(st, sel.start, sel.end); }
+    if (chars.length === 1) {
+      i = nextEditable(st, pos);
+      if (i >= 0 && st.items[i].re.test(chars[0])) {
+        st.items[i].ch = chars[0];
+        j = nextEditable(st, i + 1);
+        maskShow(el, $el, j < 0 ? st.items.length : j, true);
+        return;
+      }
+      for (j = pos; j < st.items.length; j++) {
+        if (st.items[j].lit === chars[0]) {
+          if (cleared) { maskShow(el, $el, j + 1, true); } else { setCursor(st, j + 1); }
+          return;
+        }
+      }
+      if (cleared) { maskShow(el, $el, sel.start, true); }
+      return;
+    }
+    var k = 0;
+    while (k < chars.length && pos < st.items.length) {
+      if (!editable(st, pos)) { pos++; continue; }
+      if (st.items[pos].re.test(chars[k])) { st.items[pos].ch = chars[k]; pos++; }
+      k++;
+    }
+    i = firstEmpty(st);
+    maskShow(el, $el, i < 0 ? st.items.length : i, true);
+  }
+
+  function maskDelete(el, $el, back) {
+    var st = maskState(el), sel = selection(st), i;
+    if (sel.end > sel.start) {
+      clearRange(st, sel.start, sel.end);
+      maskShow(el, $el, sel.start, true);
+    } else if (back) {
+      i = prevEditable(st, sel.start);
+      if (i >= 0) { st.items[i].ch = null; maskShow(el, $el, i, true); }
+    } else {
+      i = nextEditable(st, sel.start);
+      if (i >= 0) { st.items[i].ch = null; maskShow(el, $el, sel.start, true); }
+    }
+  }
+
+  function maskBlocked(st) { return st.input.disabled || st.input.readOnly; }
+
+  AH.define("masked-input", {
+    init: function (el, $el) {
+      var $in = $el.children("input.ah-masked-input");
+      var st = {
+        input: $in[0],
+        $label: $el.children(".ah-masked-input-label"),
+        prompt: el.getAttribute("data-ah-prompt") || "_",
+        literals: el.hasAttribute("data-ah-literals"),
+        items: maskParse(el.getAttribute("data-ah-mask")),
+        focusValue: null
+      };
+      $.data(el, "ah-mask", st);
+      // the server filled the mask: read the positions back
+      Array.from($in.val()).forEach(function (c, i) {
+        if (editable(st, i) && c !== st.prompt) { st.items[i].ch = c; }
+      });
+
+      $in.on("keydown" + NS, function (e) {
+        var k = e.key || "";
+        if (e.keyCode === 229) { return; }                       // IME: beforeinput
+        if (e.ctrlKey || e.metaKey || e.altKey) {
+          if ((k === "x" || k === "X") && !maskBlocked(st)) {
+            var sel = selection(st);
+            // after the browser copied the selection
+            setTimeout(function () {
+              if (st.input.value === maskDisplay(st) && sel.end > sel.start) {
+                clearRange(st, sel.start, sel.end);
+                maskShow(el, $el, sel.start, true);
+              }
+            }, 10);
+          }
+          return;
+        }
+        if (k === "Backspace" || k === "Delete") {
+          e.preventDefault();
+          if (!maskBlocked(st)) { maskDelete(el, $el, k === "Backspace"); }
+        } else if (k.length > 0 && Array.from(k).length === 1) {
+          e.preventDefault();
+          if (!maskBlocked(st)) { maskInsert(el, $el, k); }
+        }
+      });
+      $in.on("beforeinput" + NS, function (je) {
+        var e = je.originalEvent;
+        if (!e) { return; }
+        switch (e.inputType) {
+          case "insertText": case "insertReplacementText": case "insertCompositionText":
+            e.preventDefault();
+            if (e.data && !maskBlocked(st)) { maskInsert(el, $el, e.data); }
+            break;
+          case "insertFromPaste": case "insertFromDrop":
+            e.preventDefault();                              // the paste handler
+            break;
+          case "deleteContentBackward": case "deleteByCut":
+            e.preventDefault();
+            if (!maskBlocked(st)) { maskDelete(el, $el, true); }
+            break;
+          case "deleteContentForward":
+            e.preventDefault();
+            if (!maskBlocked(st)) { maskDelete(el, $el, false); }
+            break;
+        }
+      });
+      $in.on("paste" + NS, function (je) {
+        var e = je.originalEvent, text = e && e.clipboardData && e.clipboardData.getData("text/plain");
+        je.preventDefault();
+        if (text && !maskBlocked(st)) { maskInsert(el, $el, text); }
+      });
+      // safety net: whatever got through, show the items again
+      $in.on("input" + NS, function () {
+        var s = selection(st);
+        if (st.input.value !== maskText(st)) {
+          st.input.value = maskText(st);
+          setCursor(st, s.start);
+        }
+      });
+      // sigil's snap-to-editable: a click lands on an editable position
+      $in.on("mouseup" + NS, function () {
+        if (maskBlocked(st)) { return; }
+        var s = selection(st), n = s.start, e = firstEmpty(st);
+        if (s.start !== s.end) { return; }
+        // not past the first empty position
+        if (e >= 0 && n > e) { setCursor(st, e); return; }
+        if (editable(st, n)) { return; }
+        n = n >= st.items.length ? prevEditable(st, st.items.length) : nextEditable(st, n);
+        if (n < 0) { n = prevEditable(st, s.start); }
+        setCursor(st, n < 0 ? 0 : n);
+      });
+      $in.on("focus" + NS, function () {
+        $el.addClass("ah-masked-input-focused");
+        st.$label.addClass("ah-masked-input-label-float");
+        st.input.value = maskDisplay(st);
+        st.focusValue = $el.attr("data-ah-value");
+        setTimeout(function () {
+          if (document.activeElement !== st.input) { return; }
+          var e = firstEmpty(st);
+          if (e >= 0) { setCursor(st, e); }
+        }, 0);
+      });
+      $in.on("blur" + NS, function () {
+        $el.removeClass("ah-masked-input-focused");
+        st.$label.toggleClass("ah-masked-input-label-float", maskRaw(st) !== "");
+        st.input.value = maskText(st);
+        var v = $el.attr("data-ah-value");
+        if (st.focusValue !== null && v !== st.focusValue) { $el.trigger("change", [v]); }
+        st.focusValue = null;
+      });
+    },
+    methods: {
+      setValue: function (el, $el, v) {
+        var st = maskState(el);
+        maskFill(st.items, v);
+        maskShow(el, $el, null, false);
+        if (st.focusValue !== null) { st.focusValue = $el.attr("data-ah-value"); }
+      },
+      getValue: function (el, $el) { return $el.attr("data-ah-value"); },
+      getMaskedValue: function (el) { return maskDisplay(maskState(el)); },
+      isComplete: function (el) {
+        return maskState(el).items.every(function (it) { return it.lit != null || it.ch != null; });
+      },
+      clear: function (el, $el) {
+        var st = maskState(el), old = $el.attr("data-ah-value");
+        maskFill(st.items, "");
+        maskShow(el, $el, null, false);
+        if (old !== "") { $el.trigger("change", [""]); }
+      },
+      setMask: function (el, $el, mask) {
+        var st = maskState(el), raw = maskRaw(st);
+        st.items = maskFill(maskParse(mask), raw);
+        $el.attr("data-ah-mask", mask);
+        maskShow(el, $el, null, false);
+      },
+      focus: function (el) { maskState(el).input.focus(); }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // formatted-input
+  // ------------------------------------------------------------------
+
+  var RADIX_PREFIX = { 2: "0b", 8: "0o", 10: "", 16: "0x" };
+  var RADIX_CHARS = { 2: /^[01]$/, 8: /^[0-7]$/, 10: /^[0-9]$/, 16: /^[0-9a-f]$/i };
+
+  // Text in a radix -> BigInt; empty or invalid -> 0n.
+  function bigParse(s, radix) {
+    s = String(s == null ? "" : s).trim();
+    if (!s) { return BigInt(0); }
+    var neg = s.charAt(0) === "-";
+    if (neg) { s = s.slice(1); }
+    if (!s) { s = "0"; }
+    try {
+      var b = BigInt(RADIX_PREFIX[radix] + s);
+      return neg ? -b : b;
+    } catch (e) {
+      return BigInt(0);
+    }
+  }
+
+  function bigText(b, radix, upper, expo) {
+    var s = b.toString(radix);
+    if (upper) { s = s.toUpperCase(); }
+    if (expo && radix === 10) {
+      var neg = s.charAt(0) === "-", abs = neg ? s.slice(1) : s;
+      if (abs.length > 1) { s = (neg ? "-" : "") + abs.charAt(0) + "." + abs.slice(1) + "e+" + (abs.length - 1); }
+    }
+    return s;
+  }
+
+  function fmtState(el) { return $.data(el, "ah-fmt"); }
+
+  function fmtClamp(st, b) {
+    if (st.min !== null && b < st.min) { return st.min; }
+    if (st.max !== null && b > st.max) { return st.max; }
+    return b;
+  }
+
+  // Show the value in the radix (plain while the field has focus).
+  function fmtShow(st) {
+    var editing = document.activeElement === st.$input[0];
+    var t = bigText(st.value, st.radix, st.upper, st.expo && !editing);
+    st.$input.val(t).attr({ "aria-valuenow": st.value.toString(), "aria-valuetext": t });
+  }
+
+  // Set the value (clamped); fire change when asked and it changed.
+  function fmtSet(el, $el, b, fire) {
+    var st = fmtState(el), old = $el.attr("data-ah-value");
+    st.value = fmtClamp(st, b);
+    fmtShow(st);
+    var v = st.value.toString();
+    setValue($el, v);
+    if (fire && v !== old) { $el.trigger("change", [v]); }
+  }
+
+  function fmtStep(el, $el, dir) {
+    var st = fmtState(el);
+    if (st.$input[0].disabled) { return; }
+    fmtSet(el, $el, st.value + st.step * BigInt(dir), true);
+    if (st.editing) { st.focusValue = $el.attr("data-ah-value"); }
+  }
+
+  function fmtItems(st) { return st.$popup.children(".ah-fmt-popup-item"); }
+
+  function fmtActive(st, $item) {
+    fmtItems(st).removeClass("ah-fmt-popup-item-hover");
+    $item.addClass("ah-fmt-popup-item-hover");
+    st.$input.attr("aria-activedescendant", $item.attr("id"));
+  }
+
+  function fmtOpen(el, $el) {
+    var st = fmtState(el);
+    if (st.open || !st.$popup.length || st.$input[0].disabled) { return; }
+    st.open = true;
+    st.$popup.addClass("ah-fmt-popup-open");
+    st.float = AH.float(st.$popup[0], $el.children(".ah-fmt-input-row")[0], { placement: "bottom", align: "end" });
+    st.$btn.attr("aria-expanded", "true");
+    fmtActive(st, fmtItems(st).filter(".ah-fmt-popup-item-active"));
+    $(document).on("mousedown" + st.ns + "p", function (e) {
+      if (!$.contains(el, e.target) && e.target !== el) { fmtClose(el, $el); }
+    });
+    $el.trigger("ah:open");
+  }
+
+  function fmtClose(el, $el) {
+    var st = fmtState(el);
+    if (!st.open) { return; }
+    st.open = false;
+    st.$popup.removeClass("ah-fmt-popup-open");
+    if (st.float) { st.float.stop(); st.float = null; }
+    st.$btn.attr("aria-expanded", "false");
+    st.$input.removeAttr("aria-activedescendant");
+    fmtItems(st).removeClass("ah-fmt-popup-item-hover");
+    $(document).off("mousedown" + st.ns + "p");
+    $el.trigger("ah:close");
+  }
+
+  function fmtRadix(el, $el, radix) {
+    var st = fmtState(el), old = st.radix;
+    radix = parseInt(radix, 10);
+    if (!RADIX_CHARS[radix]) { return; }
+    fmtClose(el, $el);
+    if (radix === old) { return; }
+    st.radix = radix;
+    $el.attr("data-ah-radix", String(radix));
+    fmtItems(st).each(function () {
+      var on = this.getAttribute("data-radix") === String(radix);
+      $(this).toggleClass("ah-fmt-popup-item-active", on).attr("aria-selected", String(on));
+    });
+    fmtShow(st);
+    $el.trigger("ah:radix-change", [radix, old]);
+  }
+
+  function stopRepeat(st) {
+    if (st.timer) { clearTimeout(st.timer); st.timer = null; }
+    if (st.iv) { clearInterval(st.iv); st.iv = null; }
+  }
+
+  function startRepeat(st, f, delay, interval) {
+    stopRepeat(st);
+    f();
+    st.timer = setTimeout(function () {
+      st.timer = null;
+      st.iv = setInterval(f, interval);
+    }, delay);
+  }
+
+  AH.define("formatted-input", {
+    init: function (el, $el) {
+      var min = el.getAttribute("data-ah-min"), max = el.getAttribute("data-ah-max");
+      var st = {
+        ns: docNS(el),
+        $input: $el.find("input.ah-fmt-input"),
+        $popup: $el.children(".ah-fmt-popup"),
+        $btn: $el.find(".ah-fmt-dropdown-btn"),
+        radix: parseInt(el.getAttribute("data-ah-radix"), 10) || 10,
+        min: min === null ? null : BigInt(min),
+        max: max === null ? null : BigInt(max),
+        step: BigInt(el.getAttribute("data-ah-step") || "1"),
+        upper: el.hasAttribute("data-ah-upper"),
+        expo: el.getAttribute("data-ah-notation") === "exponential",
+        value: BigInt(el.getAttribute("data-ah-value") || "0"),
+        open: false, editing: false, focusValue: null
+      };
+      $.data(el, "ah-fmt", st);
+      var $in = st.$input;
+
+      $in.on("keydown" + NS, function (e) {
+        var k = e.key || "", $items, idx;
+        if (st.open && (k === "ArrowDown" || k === "ArrowUp")) {
+          e.preventDefault();
+          $items = fmtItems(st);
+          idx = $items.index($items.filter(".ah-fmt-popup-item-hover"));
+          idx = (idx + (k === "ArrowDown" ? 1 : -1) + $items.length) % $items.length;
+          fmtActive(st, $items.eq(idx));
+          return;
+        }
+        if (st.open && (k === "Enter" || k === " ")) {
+          e.preventDefault();
+          fmtRadix(el, $el, fmtItems(st).filter(".ah-fmt-popup-item-hover").attr("data-radix"));
+          return;
+        }
+        if (k === "Escape") {
+          if (st.open) { e.preventDefault(); fmtClose(el, $el); }
+          return;
+        }
+        if (e.altKey && (k === "ArrowDown" || k === "ArrowUp")) {
+          e.preventDefault();
+          if (k === "ArrowDown") { fmtOpen(el, $el); } else { fmtClose(el, $el); }
+          return;
+        }
+        if (e.ctrlKey || e.metaKey || e.altKey) { return; }
+        if (k === "ArrowUp" || k === "ArrowDown") {
+          e.preventDefault();
+          fmtSet(el, $el, bigParse($in.val(), st.radix), false);   // what was typed so far
+          fmtStep(el, $el, k === "ArrowUp" ? 1 : -1);
+          return;
+        }
+        if (k === "-") {
+          if (this.selectionStart !== 0 || $in.val().charAt(0) === "-" && this.selectionEnd === 0) {
+            e.preventDefault();
+          }
+          return;
+        }
+        if (k.length === 1 && !RADIX_CHARS[st.radix].test(k)) { e.preventDefault(); }
+      });
+      $in.on("input" + NS, function () {
+        var b = bigParse($in.val(), st.radix), v = b.toString();
+        st.value = b;
+        if (v !== $el.attr("data-ah-value")) {
+          setValue($el, v);
+          $el.trigger("input", [v]);
+        }
+      });
+      $in.on("focus" + NS, function () {
+        $el.addClass("ah-fmt-input-focused");
+        st.editing = true;
+        st.focusValue = $el.attr("data-ah-value");
+        if (st.expo) { fmtShow(st); }
+      });
+      $in.on("blur" + NS, function () {
+        $el.removeClass("ah-fmt-input-focused");
+        st.editing = false;
+        var before = st.focusValue;
+        st.focusValue = null;
+        fmtSet(el, $el, bigParse($in.val(), st.radix), false);
+        var v = $el.attr("data-ah-value");
+        if (before !== null && v !== before) { $el.trigger("change", [v]); }
+      });
+
+      $el.on("mousedown" + NS, ".ah-fmt-spin-up, .ah-fmt-spin-down", function (e) {
+        if (e.button !== 0 || $in[0].disabled) { return; }
+        e.preventDefault();
+        var dir = $(this).hasClass("ah-fmt-spin-up") ? 1 : -1;
+        if (st.editing) { fmtSet(el, $el, bigParse($in.val(), st.radix), false); }
+        startRepeat(st, function () { fmtStep(el, $el, dir); }, 400, 75);
+        $(document).on("mouseup" + st.ns + "s", function () {
+          stopRepeat(st);
+          $(document).off("mouseup" + st.ns + "s");
+        });
+      });
+      $el.on("mousedown" + NS, ".ah-fmt-dropdown-btn", function (e) {
+        e.preventDefault();
+        if (st.open) { fmtClose(el, $el); } else { fmtOpen(el, $el); }
+      });
+      st.$popup.on("mousedown" + NS, ".ah-fmt-popup-item", function (e) {
+        e.preventDefault();
+        fmtRadix(el, $el, this.getAttribute("data-radix"));
+      });
+    },
+    destroy: function (el) {
+      var st = fmtState(el);
+      if (!st) { return; }
+      stopRepeat(st);
+      if (st.float) { st.float.stop(); st.float = null; }
+      st.$popup.off(NS);
+      $(document).off(st.ns + "p").off(st.ns + "s");
+    },
+    methods: {
+      setValue: function (el, $el, v) {
+        var st = fmtState(el);
+        fmtSet(el, $el, bigParse(String(v), 10), false);
+        if (st.editing) { st.focusValue = $el.attr("data-ah-value"); }
+      },
+      getValue: function (el, $el) { return $el.attr("data-ah-value"); },
+      setRadix: function (el, $el, radix) { fmtRadix(el, $el, radix); },
+      getRadix: function (el) { return fmtState(el).radix; },
+      open: function (el, $el) { fmtOpen(el, $el); },
+      close: function (el, $el) { fmtClose(el, $el); }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // range-selector
+  // ------------------------------------------------------------------
+
+  var MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  function erlRound(v) { return v < 0 ? -Math.round(-v) : Math.round(v); }
+
+  // The same formats as aihtml_form_entry:format/2.
+  function rsFormat(v, f) {
+    var d, h, s;
+    switch (f.f) {
+      case "fixed": s = v.toFixed(f.n); break;
+      case "currency":
+        d = erlRound(v);
+        s = "$" + (d < 0 ? "-" : "") + String(Math.abs(d)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        break;
+      case "date":
+        d = new Date(Math.floor(v));
+        s = (d.getUTCMonth() + 1) + "/" + d.getUTCDate() + "/" + d.getUTCFullYear();
+        break;
+      case "month": s = MONTHS[new Date(Math.floor(v)).getUTCMonth()]; break;
+      case "time":
+        d = new Date(Math.floor(v));
+        h = d.getUTCHours();
+        s = ((h % 12) || 12) + ":" + (d.getUTCMinutes() < 10 ? "0" : "") + d.getUTCMinutes() +
+          (h >= 12 ? " PM" : " AM");
+        break;
+      default:
+        s = Math.abs(v - erlRound(v)) < 0.001 ? String(erlRound(v)) : v.toFixed(2);
+    }
+    return (f.p || "") + s + (f.s || "");
+  }
+
+  function tidy(v) { return parseFloat(v.toFixed(9)); }
+
+  function rsState(el) { return $.data(el, "ah-rs"); }
+
+  function rsSnap(st, v) {
+    v = st.min + Math.round((v - st.min) / st.step) * st.step;
+    return tidy(Math.max(st.min, Math.min(st.max, v)));
+  }
+
+  function pct(st, v) { return tidy((v - st.min) / (st.max - st.min) * 100); }
+
+  function rsLayout(el, $el) {
+    var st = rsState(el), a = pct(st, st.lo), b = pct(st, st.hi);
+    st.$slider.css({ left: a + "%", width: tidy(b - a) + "%" });
+    st.$shutL.css({ width: a + "%" });
+    st.$shutR.css({ left: b + "%", width: tidy(100 - b) + "%" });
+    [[st.$mL, st.lo, a], [st.$mR, st.hi, b]].forEach(function (m) {
+      var t = rsFormat(m[1], st.format);
+      m[0].css("left", m[2] + "%").attr({ "aria-valuenow": String(m[1]), "aria-valuetext": t });
+      m[0].children(".ah-range-selector-marker-value").text(t);
+    });
+    setValue($el, st.lo + "," + st.hi);
+  }
+
+  // Set lo / hi (already bounded); input when it changed, change if asked.
+  function rsSet(el, $el, lo, hi, change) {
+    var st = rsState(el), old = $el.attr("data-ah-value");
+    st.lo = lo; st.hi = hi;
+    rsLayout(el, $el);
+    var v = $el.attr("data-ah-value");
+    if (v !== old) { $el.trigger("input", [v]); }
+    if (change && v !== st.committed) {
+      st.committed = v;
+      $el.trigger("change", [v]);
+    }
+  }
+
+  // Move one end to v, kept min_span away from the other.
+  function rsMoveEnd(el, $el, left, v, change) {
+    var st = rsState(el);
+    v = rsSnap(st, v);
+    if (left) {
+      rsSet(el, $el, Math.max(st.min, Math.min(v, tidy(st.hi - st.minSpan))), st.hi, change);
+    } else {
+      rsSet(el, $el, st.lo, Math.min(st.max, Math.max(v, tidy(st.lo + st.minSpan))), change);
+    }
+  }
+
+  function pointX(e) {
+    var o = e.originalEvent, t = o && (o.touches && o.touches[0] || o.changedTouches && o.changedTouches[0]);
+    return (t || e).clientX;
+  }
+
+  function rsValueAt(st, x) {
+    var r = st.$track[0].getBoundingClientRect();
+    var p = r.width > 0 ? Math.max(0, Math.min(1, (x - r.left) / r.width)) : 0;
+    return st.min + p * (st.max - st.min);
+  }
+
+  function rsDisabled($el) { return $el.hasClass("ah-range-selector-disabled"); }
+
+  function rsDrag(el, $el, e, move) {
+    var st = rsState(el);
+    if (e.type === "mousedown") {
+      if (e.button !== 0) { return; }
+      e.preventDefault();
+    }
+    $(document).off(st.ns);
+    $(document).on("mousemove" + st.ns + " touchmove" + st.ns, function (me) {
+      if (me.type === "mousemove") { me.preventDefault(); }
+      move(pointX(me));
+    }).on("mouseup" + st.ns + " touchend" + st.ns + " touchcancel" + st.ns, function () {
+      $(document).off(st.ns);
+      $el.removeClass("ah-range-selector-dragging");
+      rsSet(el, $el, st.lo, st.hi, true);
+    });
+    $el.addClass("ah-range-selector-dragging");
+  }
+
+  AH.define("range-selector", {
+    init: function (el, $el) {
+      var num = function (a) { return parseFloat(el.getAttribute(a)); };
+      var v = (el.getAttribute("data-ah-value") || "").split(",");
+      var st = {
+        ns: docNS(el),
+        min: num("data-ah-min"), max: num("data-ah-max"), step: num("data-ah-step") || 1,
+        page: num("data-ah-page") || 10, minSpan: num("data-ah-min-span") || 0,
+        format: JSON.parse(el.getAttribute("data-ah-format") || "{}"),
+        lo: parseFloat(v[0]), hi: parseFloat(v[1]),
+        committed: el.getAttribute("data-ah-value"),
+        $track: $el.children(".ah-range-selector-track")
+      };
+      st.$slider = st.$track.children(".ah-range-selector-slider");
+      st.$shutL = st.$track.children(".ah-range-selector-shutter-left");
+      st.$shutR = st.$track.children(".ah-range-selector-shutter-right");
+      st.$mL = st.$track.children(".ah-range-selector-marker-left");
+      st.$mR = st.$track.children(".ah-range-selector-marker-right");
+      $.data(el, "ah-rs", st);
+
+      st.$track.on("mousedown" + NS + " touchstart" + NS, ".ah-range-selector-marker", function (e) {
+        if (rsDisabled($el)) { return; }
+        var left = $(this).hasClass("ah-range-selector-marker-left");
+        this.focus();
+        rsDrag(el, $el, e, function (x) { rsMoveEnd(el, $el, left, rsValueAt(st, x), false); });
+      });
+      st.$slider.on("mousedown" + NS + " touchstart" + NS, function (e) {
+        if (rsDisabled($el)) { return; }
+        var span = tidy(st.hi - st.lo), grab = rsValueAt(st, pointX(e)) - st.lo;
+        rsDrag(el, $el, e, function (x) {
+          var lo = rsSnap(st, Math.max(st.min, Math.min(st.max - span, rsValueAt(st, x) - grab)));
+          rsSet(el, $el, lo, Math.min(st.max, tidy(lo + span)), false);
+        });
+      });
+      st.$track.on("keydown" + NS, ".ah-range-selector-marker", function (e) {
+        if (rsDisabled($el)) { return; }
+        var left = $(this).hasClass("ah-range-selector-marker-left"), cur = left ? st.lo : st.hi, to;
+        switch (e.key) {
+          case "ArrowRight": case "ArrowUp": to = cur + st.step; break;
+          case "ArrowLeft": case "ArrowDown": to = cur - st.step; break;
+          case "PageUp": to = cur + st.page; break;
+          case "PageDown": to = cur - st.page; break;
+          case "Home": to = st.min; break;
+          case "End": to = st.max; break;
+          default: return;
+        }
+        e.preventDefault();
+        rsMoveEnd(el, $el, left, to, true);
+      });
+    },
+    destroy: function (el) {
+      var st = rsState(el);
+      if (st) { $(document).off(st.ns); }
+    },
+    methods: {
+      setValue: function (el, $el, v) {
+        var st = rsState(el);
+        if (typeof v === "string") { v = v.split(","); }
+        var lo = rsSnap(st, parseFloat(v[0])), hi = rsSnap(st, parseFloat(v[1]));
+        if (lo > hi) { var t = lo; lo = hi; hi = t; }
+        st.lo = lo; st.hi = hi;
+        rsLayout(el, $el);
+        st.committed = $el.attr("data-ah-value");
+      },
+      getValue: function (el) { var st = rsState(el); return [st.lo, st.hi]; }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // repeat-button
+  // ------------------------------------------------------------------
+
+  function rbState(el) { return $.data(el, "ah-rb"); }
+
+  function rbRelease(el) {
+    var st = rbState(el);
+    if (!st || !st.active) { return; }
+    st.active = false;
+    stopRepeat(st);
+    $(el).removeClass("ah-btn-pressed");
+    // the click the browser sends for this release is not another repetition
+    st.swallow = true;
+    setTimeout(function () { st.swallow = false; }, 0);
+  }
+
+  AH.define("repeat-button", {
+    init: function (el, $el) {
+      var st = { active: false, swallow: false, timer: null, iv: null };
+      $.data(el, "ah-rb", st);
+      var delay = parseInt(el.getAttribute("data-ah-delay"), 10);
+      var interval = parseInt(el.getAttribute("data-ah-interval"), 10) || 50;
+      if (isNaN(delay)) { delay = 300; }
+      function press() {
+        if (el.disabled || st.active) { return; }
+        st.active = true;
+        $el.addClass("ah-btn-pressed");
+        startRepeat(st, function () {
+          if (el.disabled) { rbRelease(el); return; }
+          $el.trigger("click");
+        }, delay, interval);
+      }
+      $el.on("mousedown" + NS, function (e) { if (e.button === 0) { press(); } });
+      $el.on("touchstart" + NS, function (e) {
+        e.preventDefault();                   // no emulated mouse events, no click
+        press();
+      });
+      $el.on("mouseup" + NS + " mouseleave" + NS + " touchend" + NS + " touchcancel" + NS +
+             " blur" + NS, function () { rbRelease(el); });
+      $el.on("keydown" + NS, function (e) {
+        if (e.key !== "Enter" && e.key !== " ") { return; }
+        e.preventDefault();
+        press();                              // auto-repeated keydowns are ignored
+      });
+      $el.on("keyup" + NS, function (e) {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); rbRelease(el); }
+      });
+      $el.on("click" + NS, function (e) {
+        if (!e.isTrigger && (st.swallow || st.active)) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+        }
+      });
+    },
+    destroy: function (el) {
+      var st = rbState(el);
+      if (st) { st.active = false; stopRepeat(st); }
+    },
+    methods: {
+      stop: function (el) { rbRelease(el); }
+    }
+  });
+})(window.jQuery, window.AH);
+
+/* ---- components/form_lists.js ---- */
+/* Behaviours of the form_lists components (designs/04-components.md).
+ * Ported from sigil: form/cascader, form/listbox and form/transfer. All
+ * rows, columns and lists are rendered on the server
+ * (aihtml_form_lists); the behaviours show, hide, mark and move them. */
+(function ($, AH) {
+  "use strict";
+
+  var NS = AH.NS;
+  var seq = 0;
+
+  function ensureId(el, prefix) {
+    if (!el.id) { el.id = prefix + (++seq); }
+    return el.id;
+  }
+
+  // A mousedown outside the component.
+  function outside(el, e) {
+    return e.target.isConnected !== false && !$.contains(el, e.target) && e.target !== el;
+  }
+
+  // Value-bearing contract: data-ah-value + hidden input, then `change`.
+  function publish(el, $el, value, fire) {
+    var old = el.getAttribute("data-ah-value") || "";
+    el.setAttribute("data-ah-value", value);
+    $el.children("input[type=hidden]").val(value);
+    if (fire && old !== value) { $el.trigger("change"); }
+  }
+
+  function split(v) {
+    if (v == null || v === "") { return []; }
+    return Array.isArray(v) ? v.map(String) : String(v).split(",");
+  }
+
+  // The first case-insensitive occurrence of the query in <b>, as DOM
+  // nodes (combobox's highlight).
+  function highlight(node, text, q) {
+    var i = q ? text.toLowerCase().indexOf(q.toLowerCase()) : -1;
+    node.textContent = i < 0 ? text : text.slice(0, i);
+    if (i < 0) { return; }
+    var b = document.createElement("b");
+    b.textContent = text.slice(i, i + q.length);
+    node.appendChild(b);
+    node.appendChild(document.createTextNode(text.slice(i + q.length)));
+  }
+
+  function shown(li) { return li.style.display !== "none"; }
+  function enabled(li) { return li.getAttribute("aria-disabled") !== "true"; }
+
+  // Keep a row visible in its scrolling container.
+  function scrollInto(box, item) {
+    if (!box || !item) { return; }
+    var top = item.getBoundingClientRect().top - box.getBoundingClientRect().top - box.clientTop +
+      box.scrollTop;
+    var bottom = top + item.offsetHeight;
+    if (top < box.scrollTop) { box.scrollTop = top; }
+    if (bottom > box.scrollTop + box.clientHeight) { box.scrollTop = bottom - box.clientHeight; }
+  }
+
+  // ==================================================================
+  // cascader
+  // ==================================================================
+
+  function csState(el) { return $.data(el, "ah-cs"); }
+
+  function csColumns(st) { return st.$menus.children(".ah-cascader-menu-column"); }
+
+  // The column holding the children of `path` (an array); the last one
+  // wins when a lazy level was loaded twice.
+  function csColumn(st, path) {
+    var key = path.join(",");
+    return csColumns(st).filter(function () {
+      return this.getAttribute("data-parent") === key;
+    }).last();
+  }
+
+  function csItem($col, v) {
+    return $col.find("li[data-value]").filter(function () {
+      return this.getAttribute("data-value") === v;
+    })[0] || null;
+  }
+
+  function csLabel(li) {
+    return $(li).children(".ah-cascader-menu-item-label").text();
+  }
+
+  // The labels along a path; values without a row show as themselves.
+  function csLabels(st, path) {
+    var out = [];
+    for (var i = 0; i < path.length; i++) {
+      var li = csItem(csColumn(st, path.slice(0, i)), path[i]);
+      out.push(li ? csLabel(li) : path[i]);
+    }
+    return out;
+  }
+
+  function csPathOf(li) {
+    var $col = $(li).closest(".ah-cascader-menu-column");
+    return split($col.attr("data-parent")).concat([li.getAttribute("data-value")]);
+  }
+
+  function csBranch(li) { return $(li).hasClass("has-children"); }
+
+  // Show the columns of the open path and mark its rows active.
+  function csShow(el) {
+    var st = csState(el);
+    csColumns(st).attr("hidden", "hidden");
+    st.$menus.find("li.active").removeClass("active").attr("aria-selected", "false");
+    var $col = csColumn(st, []);
+    for (var i = 0; $col.length; i++) {
+      $col.removeAttr("hidden");
+      var li = i < st.open.length ? csItem($col, st.open[i]) : null;
+      if (!li) { break; }
+      $(li).addClass("active").attr("aria-selected", "true");
+      if (!csBranch(li)) { break; }
+      $col = csColumn(st, st.open.slice(0, i + 1));
+    }
+    csPosition(el);
+  }
+
+  function csCursor(el, li) {
+    var st = csState(el);
+    st.$menus.find(".ah-cascader-menu-item-focused").removeClass("ah-cascader-menu-item-focused");
+    st.cursor = li || null;
+    if (!li) { st.$input.removeAttr("aria-activedescendant"); return; }
+    ensureId(li, el.id + "-o");
+    $(li).addClass("ah-cascader-menu-item-focused");
+    st.$input.attr("aria-activedescendant", li.id);
+    scrollInto($(li).closest(".ah-cascader-menu")[0], li);
+  }
+
+  function csPosition(el) {
+    var st = csState(el);
+    if (!st.isOpen) { return; }
+    if (st.float) { st.float.update(); } else { st.float = AH.float(st.$popup[0], el); }
+  }
+
+  function csBlocked($el) { return $el.hasClass("ah-cascader-disabled"); }
+
+  function csOpen(el, $el) {
+    var st = csState(el);
+    if (st.isOpen || csBlocked($el)) { return; }
+    st.isOpen = true;
+    st.open = st.value.slice();
+    st.$popup.addClass("ah-cascader-popup-open");
+    csShow(el);
+    var last = st.value.length ? csItem(csColumn(st, st.value.slice(0, -1)), st.value[st.value.length - 1]) : null;
+    csCursor(el, last || csRows(csColumn(st, []))[0]);
+    $el.addClass("ah-cascader-open");
+    st.$input.attr("aria-expanded", "true");
+    $(document).on("mousedown" + st.ns, function (e) {
+      if (outside(el, e)) { csClose(el, $el); }
+    });
+    $el.trigger("ah:open");
+  }
+
+  function csClose(el, $el) {
+    var st = csState(el);
+    if (!st.isOpen) { return; }
+    st.isOpen = false;
+    st.$popup.removeClass("ah-cascader-popup-open");
+    if (st.float) { st.float.stop(); st.float = null; }
+    $el.removeClass("ah-cascader-open");
+    st.$input.attr("aria-expanded", "false");
+    csCursor(el, null);
+    st.$menus.children(".ah-cascader-loading").remove();
+    if (st.query) { csQuery(el, ""); }
+    st.$input.val(st.display);
+    $(document).off(st.ns);
+    $el.trigger("ah:close");
+  }
+
+  function csSet(el, $el, path, fire) {
+    var st = csState(el);
+    st.value = path.slice();
+    st.display = csLabels(st, path).join(st.sep);
+    if (!st.query) { st.$input.val(st.display); }
+    st.$clear.prop("hidden", !path.length);
+    publish(el, $el, path.join(","), fire);
+  }
+
+  function csRows($col) {
+    return $col.find("li[data-value]").filter(function () { return enabled(this); }).get();
+  }
+
+  // Open a branch: its column (loaded or not), or a leaf: pick it.
+  function csChoose(el, $el, li, kbd) {
+    var st = csState(el);
+    if (!li || !enabled(li)) { return; }
+    var path = csPathOf(li);
+    if (!csBranch(li)) {
+      csSet(el, $el, path, true);
+      csClose(el, $el);
+      return;
+    }
+    st.open = path;
+    if (st.cos) { csSet(el, $el, path, true); }
+    var $col = csColumn(st, path);
+    st.$menus.children(".ah-cascader-loading").remove();
+    if ($col.length) {
+      csShow(el);
+      csCursor(el, kbd ? csRows($col)[0] : li);
+    } else if (li.hasAttribute("data-lazy") && st.$loader.length) {
+      csShow(el);
+      csCursor(el, li);
+      st.pending = { path: path.join(","), kbd: kbd };
+      st.$menus.append($('<div class="ah-cascader-loading"></div>').text("Loading…"));
+      csPosition(el);
+      st.$loader.attr("data-ah-value", path.join(",")).trigger("ah:load");
+    } else {
+      csLeaf(li);
+      csChoose(el, $el, li, kbd);
+    }
+  }
+
+  function csLeaf(li) {
+    $(li).removeClass("has-children").removeAttr("data-lazy aria-haspopup")
+      .children(".ah-cascader-menu-item-arrow").remove();
+  }
+
+  function csMove(el, dir, edge) {
+    var st = csState(el);
+    var $col = st.cursor ? $(st.cursor).closest(".ah-cascader-menu-column") : csColumn(st, []);
+    var rows = csRows($col);
+    if (!rows.length) { return; }
+    var i = rows.indexOf(st.cursor);
+    if (edge) { i = dir > 0 ? rows.length - 1 : 0; } else if (i < 0) { i = 0; } else {
+      i = (i + dir + rows.length) % rows.length;
+    }
+    // moving within a column closes the columns to its right
+    var level = parseInt($col.attr("data-level"), 10) || 0;
+    if (st.open.length > level) { st.open = st.open.slice(0, level); csShow(el); }
+    csCursor(el, rows[i]);
+  }
+
+  // Search (filterable): the server-rendered path list, filtered here.
+  function csQuery(el, q) {
+    var st = csState(el);
+    st.query = q;
+    st.$popup.children(".ah-cascader-empty").remove();
+    if (!q) {
+      st.$search.attr("hidden", "hidden");
+      st.$menus.removeAttr("hidden");
+      st.searchActive = -1;
+      csPosition(el);
+      return;
+    }
+    st.$menus.attr("hidden", "hidden");
+    st.$search.removeAttr("hidden");
+    var lower = q.toLowerCase(), any = false;
+    st.$search.children("li").each(function () {
+      var label = this.getAttribute("data-label");
+      var hit = label.toLowerCase().indexOf(lower) >= 0;
+      this.style.display = hit ? "" : "none";
+      if (hit) { any = true; highlight(this.firstChild, label, q); }
+    });
+    if (!any) {
+      st.$search.attr("hidden", "hidden");
+      st.$popup.append($('<div class="ah-cascader-empty"></div>').text(st.empty));
+    }
+    csSearchActive(el, -1);
+    csPosition(el);
+  }
+
+  function csSearchRows(st) {
+    return st.$search.children("li").filter(function () { return shown(this) && enabled(this); }).get();
+  }
+
+  function csSearchActive(el, i) {
+    var st = csState(el);
+    var rows = csSearchRows(st);
+    st.$search.children(".active").removeClass("active").attr("aria-selected", "false");
+    st.searchActive = rows[i] ? i : -1;
+    if (!rows[i]) { st.$input.removeAttr("aria-activedescendant"); return; }
+    ensureId(rows[i], el.id + "-s");
+    $(rows[i]).addClass("active").attr("aria-selected", "true");
+    st.$input.attr("aria-activedescendant", rows[i].id);
+    scrollInto(st.$search[0], rows[i]);
+  }
+
+  function csSearchPick(el, $el, li) {
+    if (!li || !enabled(li)) { return; }
+    csState(el).query = "";
+    csSet(el, $el, split(li.getAttribute("data-path")), true);
+    csClose(el, $el);
+  }
+
+  function csKey(el, $el, e) {
+    var st = csState(el);
+    if (csBlocked($el)) { return; }
+    var k = e.key;
+    if (!st.isOpen) {
+      if (k === "ArrowDown" || k === "ArrowUp" || k === "Enter" || (k === " " && !st.filterable)) {
+        e.preventDefault();
+        csOpen(el, $el);
+      }
+      return;
+    }
+    if (st.query) {
+      var rows = csSearchRows(st);
+      switch (k) {
+        case "ArrowDown": e.preventDefault(); csSearchActive(el, (st.searchActive + 1) % Math.max(rows.length, 1)); return;
+        case "ArrowUp": e.preventDefault(); csSearchActive(el, st.searchActive <= 0 ? rows.length - 1 : st.searchActive - 1); return;
+        case "Enter": e.preventDefault(); csSearchPick(el, $el, rows[st.searchActive] || (rows.length === 1 ? rows[0] : null)); return;
+        case "Escape": e.preventDefault(); st.$input.val(""); csQuery(el, ""); return;
+        case "Tab": csClose(el, $el); return;
+        default: return;
+      }
+    }
+    switch (k) {
+      case "ArrowDown": e.preventDefault(); csMove(el, 1); break;
+      case "ArrowUp": e.preventDefault(); csMove(el, -1); break;
+      case "Home": if (!st.filterable) { e.preventDefault(); csMove(el, -1, true); } break;
+      case "End": if (!st.filterable) { e.preventDefault(); csMove(el, 1, true); } break;
+      case "ArrowRight":
+        if (st.cursor && csBranch(st.cursor)) { e.preventDefault(); csChoose(el, $el, st.cursor, true); }
+        break;
+      case "ArrowLeft":
+        var $col = st.cursor ? $(st.cursor).closest(".ah-cascader-menu-column") : $();
+        var level = parseInt($col.attr("data-level"), 10) || 0;
+        if (level > 0) {
+          e.preventDefault();
+          var parent = split($col.attr("data-parent"));
+          st.open = parent.slice(0, -1);
+          csShow(el);
+          csCursor(el, csItem(csColumn(st, parent.slice(0, -1)), parent[parent.length - 1]));
+        }
+        break;
+      case " ":
+        if (st.filterable) { break; }
+        e.preventDefault(); csChoose(el, $el, st.cursor, true); break;
+      case "Enter": e.preventDefault(); csChoose(el, $el, st.cursor, true); break;
+      case "Escape": e.preventDefault(); csClose(el, $el); break;
+      case "Tab": csClose(el, $el); break;
+      default: break;
+    }
+  }
+
+  AH.define("cascader", {
+    init: function (el, $el) {
+      ensureId(el, "ah-cs");
+      var $popup = $el.children(".ah-cascader-popup");
+      var st = {
+        ns: ".ahcs" + (++seq),
+        $input: $el.find("input.ah-cascader-input"),
+        $clear: $el.find(".ah-cascader-clear"),
+        $popup: $popup,
+        $menus: $popup.children(".ah-cascader-menus"),
+        $search: $popup.children(".ah-cascader-search-panel"),
+        $loader: $el.children(".ah-cascader-loader"),
+        sep: el.getAttribute("data-ah-separator") || " / ",
+        empty: el.getAttribute("data-ah-empty") || "No results found",
+        cos: el.hasAttribute("data-ah-change-on-select"),
+        filterable: $el.hasClass("ah-cascader-filterable"),
+        value: split(el.getAttribute("data-ah-value")),
+        open: [], isOpen: false, cursor: null, query: "", searchActive: -1, pending: null
+      };
+      $.data(el, "ah-cs", st);
+      st.display = String(st.$input.val());
+      st.$input
+        .on("focus" + NS, function () { $el.addClass("ah-cascader-focused"); })
+        .on("blur" + NS, function () {
+          $el.removeClass("ah-cascader-focused");
+          setTimeout(function () {
+            if (document.activeElement !== st.$input[0]) { csClose(el, $el); }
+          }, 150);
+        })
+        .on("click" + NS, function (e) {
+          e.preventDefault();
+          if (st.isOpen && !st.filterable) { csClose(el, $el); } else { csOpen(el, $el); }
+        })
+        .on("input" + NS, function () {
+          if (!st.filterable) { return; }
+          csOpen(el, $el);
+          csQuery(el, String(st.$input.val()));
+        })
+        .on("keydown" + NS, function (e) { csKey(el, $el, e); })
+        // the text field is internal: only the root reports changes
+        .on("change" + NS, function (e) { e.stopPropagation(); });
+      $el.on("mousedown" + NS, ".ah-cascader-arrow, .ah-cascader-clear", function (e) {
+        e.preventDefault();
+      });
+      $el.on("click" + NS, ".ah-cascader-arrow", function (e) {
+        e.preventDefault();
+        st.$input.trigger("focus");
+        if (st.isOpen) { csClose(el, $el); } else { csOpen(el, $el); }
+      });
+      $el.on("click" + NS, ".ah-cascader-clear", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (csBlocked($el)) { return; }
+        csSet(el, $el, [], true);
+        csClose(el, $el);
+      });
+      // the loader's request failed: drop the loading message
+      st.$loader.on("ah:error" + NS, function () {
+        st.pending = null;
+        st.$menus.children(".ah-cascader-loading").remove();
+      });
+      $popup.on("mousedown" + NS, function (e) { e.preventDefault(); })
+        .on("click" + NS, ".ah-cascader-menu li[data-value]", function (e) {
+          e.preventDefault();
+          csChoose(el, $el, this, false);
+        })
+        .on("click" + NS, ".ah-cascader-search-item", function () { csSearchPick(el, $el, this); });
+    },
+    destroy: function (el) {
+      var st = csState(el);
+      if (st) {
+        if (st.float) { st.float.stop(); st.float = null; }
+        $(document).off(st.ns);
+      }
+    },
+    methods: {
+      // Called by aihtml_form_lists:cascader_children/3 after it appended
+      // the column(s) of `path`; no column means the node is a leaf.
+      childrenLoaded: function (el, $el, path) {
+        var st = csState(el);
+        var p = split(path);
+        var key = p.join(",");
+        var pending = st.pending && st.pending.path === key ? st.pending : null;
+        if (pending) { st.pending = null; st.$menus.children(".ah-cascader-loading").remove(); }
+        var $cols = csColumns(st).filter(function () { return this.getAttribute("data-parent") === key; });
+        $cols.slice(0, -1).remove();
+        var li = csItem(csColumn(st, p.slice(0, -1)), p[p.length - 1]);
+        if (li) { li.removeAttribute("data-lazy"); }
+        if (!$cols.length) {
+          if (li) { csLeaf(li); }
+          if (pending && st.isOpen && li) { csChoose(el, $el, li, pending.kbd); }
+          return;
+        }
+        if (st.isOpen && st.open.join(",") === key) {
+          csShow(el);
+          if (pending && pending.kbd) { csCursor(el, csRows($cols.last())[0]); }
+        }
+      },
+      // A path "a,b,c" or ["a", "b", "c"]; no change event.
+      setValue: function (el, $el, v) { csSet(el, $el, split(v), false); },
+      getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
+      getLabels: function (el) { var st = csState(el); return csLabels(st, st.value); },
+      clear: function (el, $el) { csSet(el, $el, [], true); },
+      open: function (el, $el) { csOpen(el, $el); },
+      close: function (el, $el) { csClose(el, $el); }
+    }
+  });
+
+  // ==================================================================
+  // listbox
+  // ==================================================================
+
+  function lbState(el) { return $.data(el, "ah-lb"); }
+
+  function lbItems(st) { return st.$list.children(".ah-listbox-item").get(); }
+  // Rows keyboard and check-all work on: shown and enabled.
+  function lbRows(st) { return lbItems(st).filter(function (li) { return shown(li) && enabled(li); }); }
+
+  function lbMark(el) {
+    var st = lbState(el);
+    lbItems(st).forEach(function (li) {
+      var sel = st.selected.indexOf(li.getAttribute("data-value")) >= 0;
+      $(li).toggleClass("ah-listbox-item-selected", sel).attr("aria-selected", String(sel))
+        .children(".ah-listbox-checkbox").toggleClass("ah-listbox-checkbox-checked", sel);
+    });
+    if (st.$checkAll.length) {
+      var rows = lbRows(st);
+      var n = rows.filter(function (li) { return st.selected.indexOf(li.getAttribute("data-value")) >= 0; }).length;
+      var all = rows.length > 0 && n === rows.length;
+      st.$checkAll.attr("aria-pressed", all ? "true" : (n ? "mixed" : "false"))
+        .children(".ah-listbox-checkbox")
+        .toggleClass("ah-listbox-checkbox-checked", all)
+        .toggleClass("ah-listbox-checkbox-indeterminate", n > 0 && !all);
+    }
+  }
+
+  function lbSet(el, $el, values, fire) {
+    var st = lbState(el);
+    st.selected = st.multi ? values.slice() : values.slice(0, 1);
+    lbMark(el);
+    publish(el, $el, st.selected.join(","), fire);
+  }
+
+  function lbCursor(el, li) {
+    var st = lbState(el);
+    $(lbItems(st)).removeClass("ah-listbox-item-focused");
+    st.cursor = li || null;
+    if (!li) { $(el).removeAttr("aria-activedescendant"); return; }
+    $(li).addClass("ah-listbox-item-focused");
+    el.setAttribute("aria-activedescendant", li.id);
+    scrollInto(st.$content[0], li);
+  }
+
+  function lbValue(li) { return li.getAttribute("data-value"); }
+
+  function lbRange(st, a, b) {
+    var rows = lbRows(st), i = rows.indexOf(a), j = rows.indexOf(b);
+    if (i < 0) { i = j; }
+    return rows.slice(Math.min(i, j), Math.max(i, j) + 1).map(lbValue);
+  }
+
+  function lbToggle(el, $el, li) {
+    var st = lbState(el);
+    var v = lbValue(li), next = st.selected.slice(), i = next.indexOf(v);
+    if (i >= 0) { next.splice(i, 1); } else { next.push(v); }
+    lbSet(el, $el, next, true);
+  }
+
+  // A click: sigil's select-item! (single, Ctrl toggle, Shift range) and
+  // toggle-checkbox! (check boxes).
+  function lbClick(el, $el, li, e) {
+    var st = lbState(el);
+    if (!enabled(li)) { return; }
+    if (st.checkboxes || (st.multi && (e.ctrlKey || e.metaKey))) {
+      lbToggle(el, $el, li);
+      st.anchor = li;
+    } else if (st.multi && e.shiftKey && st.anchor) {
+      var add = lbRange(st, st.anchor, li);
+      lbSet(el, $el, st.selected.concat(add.filter(function (v) { return st.selected.indexOf(v) < 0; })), true);
+    } else {
+      lbSet(el, $el, [lbValue(li)], true);
+      st.anchor = li;
+    }
+    lbCursor(el, li);
+  }
+
+  // Arrow keys and friends: move the cursor and select like sigil (a
+  // single row), or extend (Shift) or only move (Ctrl, check boxes).
+  function lbGo(el, $el, li, e) {
+    var st = lbState(el);
+    if (!li) { return; }
+    var from = st.anchor || st.cursor || li;
+    lbCursor(el, li);
+    if (st.checkboxes || (st.multi && (e.ctrlKey || e.metaKey))) { return; }
+    if (st.multi && e.shiftKey) {
+      st.anchor = from;
+      lbSet(el, $el, lbRange(st, from, li), true);
+      return;
+    }
+    st.anchor = li;
+    lbSet(el, $el, [lbValue(li)], true);
+  }
+
+  function lbKey(el, $el, e) {
+    var st = lbState(el);
+    var inFilter = e.target !== el;
+    var rows = lbRows(st);
+    if (!rows.length) { return; }
+    var i = rows.indexOf(st.cursor);
+    var PAGE = 10;
+    switch (e.key) {
+      case "ArrowDown": e.preventDefault(); lbGo(el, $el, rows[Math.min(i + 1, rows.length - 1)], e); break;
+      case "ArrowUp": e.preventDefault(); lbGo(el, $el, rows[Math.max(i - 1, 0)], e); break;
+      case "PageDown": e.preventDefault(); lbGo(el, $el, rows[Math.min(Math.max(i, 0) + PAGE, rows.length - 1)], e); break;
+      case "PageUp": e.preventDefault(); lbGo(el, $el, rows[Math.max(i - PAGE, 0)], e); break;
+      case "Home": if (!inFilter) { e.preventDefault(); lbGo(el, $el, rows[0], e); } break;
+      case "End": if (!inFilter) { e.preventDefault(); lbGo(el, $el, rows[rows.length - 1], e); } break;
+      case " ":
+        if (inFilter || !st.cursor) { break; }
+        e.preventDefault();
+        if (st.multi) { lbToggle(el, $el, st.cursor); st.anchor = st.cursor; } else { lbSet(el, $el, [lbValue(st.cursor)], true); }
+        break;
+      case "Enter":
+        if (!st.cursor) { break; }
+        e.preventDefault();
+        if (st.checkboxes) { lbToggle(el, $el, st.cursor); } else if (!st.multi) { lbSet(el, $el, [lbValue(st.cursor)], true); }
+        break;
+      default:
+        if (inFilter) { break; }
+        if ((e.key === "a" || e.key === "A") && (e.ctrlKey || e.metaKey) && st.multi) {
+          e.preventDefault();
+          lbSet(el, $el, rows.map(lbValue), true);
+          break;
+        }
+        // sigil's incremental search: typed letters within 800 ms
+        if (e.key && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+          var now = Date.now();
+          st.typed = (now - (st.typedAt || 0) > 800 ? "" : st.typed) + e.key.toLowerCase();
+          st.typedAt = now;
+          var hit = rows.filter(function (li) {
+            return $(li).children(".ah-listbox-label").text().toLowerCase().indexOf(st.typed) === 0;
+          })[0];
+          if (hit) { e.preventDefault(); lbGo(el, $el, hit, {}); }
+        }
+    }
+  }
+
+  // sigil's filter-items!: hide rows without the text, and empty groups.
+  function lbFilter(el, text) {
+    var st = lbState(el);
+    var q = String(text || "").trim().toLowerCase();
+    if (!st.remote) {
+      lbItems(st).forEach(function (li) {
+        var hit = !q || $(li).children(".ah-listbox-label").text().toLowerCase().indexOf(q) >= 0;
+        li.style.display = hit ? "" : "none";
+      });
+    }
+    lbGroups(el);
+  }
+
+  function lbGroups(el) {
+    var st = lbState(el);
+    st.$list.children(".ah-listbox-group").each(function () {
+      var $rows = $(this).nextUntil(".ah-listbox-group");
+      this.style.display = $rows.filter(function () { return shown(this); }).length ? "" : "none";
+    });
+    var any = lbItems(st).some(shown);
+    st.$empty.prop("hidden", any);
+    if (st.cursor && (!st.cursor.isConnected || !shown(st.cursor))) { lbCursor(el, null); }
+    lbMark(el);
+  }
+
+  AH.define("listbox", {
+    init: function (el, $el) {
+      ensureId(el, "ah-lb");
+      var st = {
+        $list: $el.find(".ah-listbox-list"),
+        $content: $el.children(".ah-listbox-content"),
+        $empty: $el.find(".ah-listbox-empty"),
+        $checkAll: $el.children(".ah-listbox-check-all"),
+        $filter: $el.find(".ah-listbox-filter-input"),
+        checkboxes: $el.hasClass("ah-listbox-checkboxes"),
+        remote: $el.hasClass("ah-listbox-remote"),
+        selected: split(el.getAttribute("data-ah-value")),
+        cursor: null, anchor: null, typed: ""
+      };
+      st.multi = st.checkboxes || $el.hasClass("ah-listbox-multiple");
+      $.data(el, "ah-lb", st);
+      var blocked = function () { return $el.hasClass("ah-listbox-disabled"); };
+      $el.on("mousedown" + NS, ".ah-listbox-item, .ah-listbox-check-all", function (e) {
+        if (e.shiftKey) { e.preventDefault(); }  // no text selection on Shift+click
+      });
+      $el.on("click" + NS, ".ah-listbox-item", function (e) {
+        if (!blocked()) { lbClick(el, $el, this, e); }
+      });
+      $el.on("click" + NS, ".ah-listbox-check-all", function () {
+        if (blocked()) { return; }
+        var rows = lbRows(st).map(lbValue);
+        var all = rows.length && rows.every(function (v) { return st.selected.indexOf(v) >= 0; });
+        var rest = st.selected.filter(function (v) { return rows.indexOf(v) < 0; });
+        lbSet(el, $el, all ? rest : rest.concat(rows), true);
+      });
+      $el.on("keydown" + NS, function (e) { if (!blocked()) { lbKey(el, $el, e); } });
+      $el.on("focus" + NS, function () {
+        if (!st.cursor) {
+          var rows = lbRows(st);
+          var sel = rows.filter(function (li) { return st.selected.indexOf(lbValue(li)) >= 0; })[0];
+          if (sel || rows[0]) { lbCursor(el, sel || rows[0]); }
+        }
+      });
+      st.$filter
+        .on("input" + NS, function () { lbFilter(el, this.value); })
+        .on("change" + NS, function (e) { e.stopPropagation(); });
+    },
+    methods: {
+      // A value or a list (multiple); no change event (the server set it).
+      setValue: function (el, $el, v) { lbSet(el, $el, split(v), false); },
+      getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
+      clear: function (el, $el) { lbSet(el, $el, [], true); },
+      filter: function (el, $el, text) {
+        lbState(el).$filter.val(text);
+        lbFilter(el, text);
+      },
+      // Called by aihtml_form_lists:listbox_items/3 after it morphed the
+      // server-rendered rows into the list.
+      itemsLoaded: function (el) {
+        lbState(el).anchor = null;
+        lbGroups(el);
+      }
+    }
+  });
+
+  // ==================================================================
+  // transfer
+  // ==================================================================
+
+  function trState(el) { return $.data(el, "ah-tr"); }
+
+  function trList(st, side) { return side === "source" ? st.$source : st.$target; }
+  function trItems($list) { return $list.children(".ah-transfer-item").get(); }
+  function trRows($list) {
+    return trItems($list).filter(function (li) { return shown(li) && enabled(li); });
+  }
+  function trSelected($list) {
+    return trRows($list).filter(function (li) { return $(li).hasClass("ah-transfer-item-selected"); });
+  }
+
+  function trSelect(li, on) {
+    $(li).toggleClass("ah-transfer-item-selected", on).attr("aria-selected", String(on));
+  }
+
+  // Counts, move buttons, filters.
+  function trSync(el) {
+    var st = trState(el);
+    ["source", "target"].forEach(function (side) {
+      var $list = trList(st, side);
+      var $panel = $list.closest(".ah-transfer-panel");
+      $panel.find(".ah-transfer-panel-count").text(trItems($list).length);
+      var q = String($panel.find(".ah-transfer-filter-input").val() || "").trim().toLowerCase();
+      trItems($list).forEach(function (li) {
+        var hit = !q || $(li).children(".ah-transfer-item-label").text().toLowerCase().indexOf(q) >= 0;
+        li.style.display = hit ? "" : "none";
+        if (!hit) { trSelect(li, false); }
+      });
+      var btn = st.$el.find(side === "source" ? ".ah-transfer-btn-to-target" : ".ah-transfer-btn-to-source");
+      var off = st.disabled || !trSelected($list).length;
+      btn.toggleClass("ah-transfer-btn-disabled", off).prop("disabled", off);
+    });
+  }
+
+  function trPublish(el, fire) {
+    var st = trState(el);
+    publish(el, st.$el, trItems(st.$target).map(function (li) {
+      return li.getAttribute("data-value");
+    }).join(","), fire);
+  }
+
+  function idx(li) { return parseInt(li.getAttribute("data-idx"), 10) || 0; }
+
+  // Back to the source: in the order of the items.
+  function trInsert($list, li) {
+    var after = trItems($list).filter(function (x) { return idx(x) < idx(li); }).pop();
+    if (after) { $(li).insertAfter(after); } else { $list.prepend(li); }
+  }
+
+  function trMove(el, from) {
+    var st = trState(el);
+    if (st.disabled) { return; }
+    var moving = trSelected(trList(st, from));
+    if (!moving.length) { return; }
+    var to = from === "source" ? "target" : "source";
+    var $to = trList(st, to);
+    moving.forEach(function (li) {
+      trSelect(li, false);
+      $(li).removeClass("ah-transfer-item-focused").attr("data-source", to);
+      if (to === "target") { $to.append(li); } else { trInsert($to, li); }
+    });
+    if (st.cursor && moving.indexOf(st.cursor) >= 0) { trCursor(el, null); }
+    trSync(el);
+    trPublish(el, true);
+  }
+
+  function trCursor(el, li) {
+    var st = trState(el);
+    st.$el.find(".ah-transfer-item-focused").removeClass("ah-transfer-item-focused");
+    st.$source.add(st.$target).removeAttr("aria-activedescendant");
+    st.cursor = li || null;
+    if (!li) { return; }
+    $(li).addClass("ah-transfer-item-focused");
+    var list = li.parentNode;
+    list.setAttribute("aria-activedescendant", li.id);
+    scrollInto(list.parentNode, li);
+  }
+
+  function trKey(el, $list, e) {
+    var st = trState(el);
+    if (st.disabled) { return; }
+    var rows = trRows($list), side = $list.attr("data-panel");
+    var i = rows.indexOf(st.cursor);
+    switch (e.key) {
+      case "ArrowDown": e.preventDefault(); trCursor(el, rows[Math.min(i + 1, rows.length - 1)]); break;
+      case "ArrowUp": e.preventDefault(); trCursor(el, rows[Math.max(i - 1, 0)]); break;
+      case "Home": e.preventDefault(); trCursor(el, rows[0]); break;
+      case "End": e.preventDefault(); trCursor(el, rows[rows.length - 1]); break;
+      case " ":
+        e.preventDefault();
+        if (st.cursor && rows.indexOf(st.cursor) >= 0) {
+          trSelect(st.cursor, !$(st.cursor).hasClass("ah-transfer-item-selected"));
+          trSync(el);
+        }
+        break;
+      case "Enter":
+        e.preventDefault();
+        if (!trSelected($list).length && st.cursor && rows.indexOf(st.cursor) >= 0) { trSelect(st.cursor, true); }
+        var next = rows.filter(function (li) { return !$(li).hasClass("ah-transfer-item-selected"); })[0];
+        trMove(el, side);
+        if (next) { trCursor(el, next); }
+        break;
+      default:
+        if ((e.key === "a" || e.key === "A") && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+          rows.forEach(function (li) { trSelect(li, true); });
+          trSync(el);
+        }
+    }
+  }
+
+  AH.define("transfer", {
+    init: function (el, $el) {
+      ensureId(el, "ah-tr");
+      var st = {
+        $el: $el,
+        $source: $el.find(".ah-transfer-list[data-panel=source]"),
+        $target: $el.find(".ah-transfer-list[data-panel=target]"),
+        disabled: $el.hasClass("ah-transfer-disabled"),
+        cursor: null
+      };
+      $.data(el, "ah-tr", st);
+      $el.on("mousedown" + NS, ".ah-transfer-item", function (e) {
+        if (e.shiftKey || e.detail > 1) { e.preventDefault(); }  // no text selection
+      });
+      $el.on("click" + NS, ".ah-transfer-item", function () {
+        if (st.disabled || !enabled(this)) { return; }
+        trSelect(this, !$(this).hasClass("ah-transfer-item-selected"));
+        trCursor(el, this);
+        trSync(el);
+      });
+      $el.on("dblclick" + NS, ".ah-transfer-item", function () {
+        if (st.disabled || !enabled(this)) { return; }
+        trSelect(this, true);
+        trMove(el, this.parentNode.getAttribute("data-panel"));
+      });
+      $el.on("click" + NS, ".ah-transfer-btn", function (e) {
+        e.preventDefault();
+        trMove(el, this.getAttribute("data-direction") === "to-target" ? "source" : "target");
+      });
+      $el.on("keydown" + NS, ".ah-transfer-list", function (e) { trKey(el, $(this), e); });
+      $el.on("focus" + NS, ".ah-transfer-list", function () {
+        if (!st.cursor || st.cursor.parentNode !== this) { trCursor(el, trRows($(this))[0]); }
+      });
+      $el.on("input" + NS, ".ah-transfer-filter-input", function () { trSync(el); })
+        .on("change" + NS, ".ah-transfer-filter-input", function (e) { e.stopPropagation(); });
+      trSync(el);
+    },
+    methods: {
+      // The keys of the right list, in order; no change event.
+      setValue: function (el, $el, v) {
+        var st = trState(el), keys = split(v);
+        var all = trItems(st.$source).concat(trItems(st.$target));
+        all.sort(function (a, b) { return idx(a) - idx(b); });
+        all.forEach(function (li) { trSelect(li, false); });
+        keys.forEach(function (k) {
+          var li = all.filter(function (x) { return x.getAttribute("data-value") === k; })[0];
+          if (li) { $(li).attr("data-source", "target"); st.$target.append(li); }
+        });
+        all.forEach(function (li) {
+          if (keys.indexOf(li.getAttribute("data-value")) < 0) {
+            $(li).attr("data-source", "source");
+            st.$source.append(li);
+          }
+        });
+        trCursor(el, null);
+        trSync(el);
+        trPublish(el, false);
+      },
+      getValue: function (el) { return el.getAttribute("data-ah-value") || ""; },
+      moveToTarget: function (el) { trMove(el, "source"); },
+      moveToSource: function (el) { trMove(el, "target"); },
+      selectAll: function (el, $el, side) {
+        trRows(trList(trState(el), side || "source")).forEach(function (li) { trSelect(li, true); });
+        trSync(el);
+      },
+      clearSelection: function (el, $el, side) {
+        trItems(trList(trState(el), side || "source")).forEach(function (li) { trSelect(li, false); });
+        trSync(el);
+      }
     }
   });
 })(window.jQuery, window.AH);
@@ -5550,6 +8931,863 @@
   });
 })(window.jQuery, window.AH);
 
+/* ---- components/form_upload.js ---- */
+/* Upload behaviour (form_upload.js), ported from sigil form/upload and its
+ * upload.core, drop-zone and picker helpers (designs/04-components.md).
+ *
+ * The root carries the configuration rendered by aihtml_form_upload:
+ * data-ah-url (absent: native file input mode), data-ah-field,
+ * data-ah-max-size, data-ah-max-count, data-ah-manual (no auto upload),
+ * data-ah-headers / data-ah-extra / data-ah-labels (JSON),
+ * data-ah-credentials. The value is a JSON array in data-ah-value (and the
+ * hidden input): the server's answers for the uploaded files, or in
+ * native mode {name, size, type} of the selected files. List rows come
+ * from the shared template AH.tpl.upload_item. */
+(function ($, AH) {
+  "use strict";
+
+  var NS = AH.NS;
+  var seq = 0;
+
+  function json(el, attr, dflt) {
+    var s = el.getAttribute(attr);
+    if (!s) { return dflt; }
+    try { return JSON.parse(s); } catch (e) { return dflt; }
+  }
+
+  function intAttr(el, attr) {
+    var n = parseInt(el.getAttribute(attr), 10);
+    return isNaN(n) ? null : n;
+  }
+
+  // sigil upload.core/format-size
+  function formatSize(bytes) {
+    if (bytes == null) { return ""; }
+    if (bytes < 1024) { return bytes + " B"; }
+    if (bytes < 1024 * 1024) { return (bytes / 1024).toFixed(1) + " KB"; }
+    return (bytes / (1024 * 1024)).toFixed(1) + " MB";
+  }
+
+  function iconKind(type) {
+    var m = /^(image|video|audio)\//.exec(type || "");
+    return m ? m[1] : "file";
+  }
+
+  // sigil upload.core/file-accepted?: "image/*", "image/png", ".pdf"
+  function accepted(file, accept) {
+    if (!accept || accept === "*" || accept === "*/*") { return true; }
+    var type = file.type || "", name = (file.name || "").toLowerCase();
+    return accept.split(",").some(function (p) {
+      p = p.trim().toLowerCase();
+      if (!p) { return false; }
+      if (p === "*" || p === "*/*") { return true; }
+      if (p.charAt(0) === ".") { return name.slice(-p.length) === p; }
+      if (/\/\*$/.test(p)) { return type.toLowerCase().indexOf(p.slice(0, -1)) === 0; }
+      return type.toLowerCase() === p;
+    });
+  }
+
+  // A value entry as shown in the list: a name, or an object with name/size/type.
+  function describe(v) {
+    if (v !== null && typeof v === "object") {
+      return { name: v.name == null ? "" : String(v.name),
+               size: typeof v.size === "number" ? v.size : null,
+               type: v.type ? String(v.type) : "" };
+    }
+    return { name: v == null ? "" : String(v), size: null, type: "" };
+  }
+
+  function st(el) { return $.data(el, "ahUpload"); }
+
+  function cfg(el) { return st(el).cfg; }
+
+  function view(el, f) {
+    var s = st(el);
+    var uploading = f.status === "uploading";
+    return {
+      cls: "ah-upload-item ah-upload-item-" + f.status,
+      id: f.id, icon: iconKind(f.type), name: f.name, size: formatSize(f.size),
+      uploading: uploading, percent: Math.round(f.percent || 0),
+      has_error: f.status === "error", error: f.error || "",
+      remove: s.cfg.labels.remove || "Remove", disabled: s.disabled
+    };
+  }
+
+  function $list(el) { return $(el).children(".ah-upload-list"); }
+
+  function rowOf(el, id) {
+    return $list(el).children().filter(function () {
+      return this.getAttribute("data-file-id") === id;
+    });
+  }
+
+  function renderRow(el, f) {
+    var $l = $list(el);
+    if (!$l.length) { return; }
+    var html = AH.tpl.upload_item(view(el, f));
+    var $row = rowOf(el, f.id);
+    if ($row.length) { $row.replaceWith(html); } else { $l.append(html); }
+  }
+
+  function renderAll(el) {
+    var s = st(el), $l = $list(el);
+    if (!$l.length) { return; }
+    $l.html(s.files.map(function (f) { return AH.tpl.upload_item(view(el, f)); }).join(""));
+  }
+
+  function find(el, id) {
+    var files = st(el).files;
+    for (var i = 0; i < files.length; i++) { if (files[i].id === id) { return files[i]; } }
+    return null;
+  }
+
+  // ------------------------------------------------------------------
+  // Value
+  // ------------------------------------------------------------------
+
+  function valueOf(el) {
+    var s = st(el);
+    var out = [];
+    s.files.forEach(function (f) {
+      if (f.status === "success") { out.push(f.value); }
+      else if (s.cfg.native && f.status === "pending") {
+        out.push({ name: f.name, size: f.size, type: f.type });
+      }
+    });
+    return out;
+  }
+
+  // Native mode: the file input holds the selected files, for the form.
+  function syncInput(el) {
+    var s = st(el);
+    if (!s.cfg.native || typeof DataTransfer === "undefined") { return; }
+    try {
+      var dt = new DataTransfer();
+      s.files.forEach(function (f) { if (f.file && f.status === "pending") { dt.items.add(f.file); } });
+      s.input.files = dt.files;
+    } catch (e) { /* old browsers: the input keeps the last pick */ }
+  }
+
+  // Writes data-ah-value and the hidden input; fires change when it moved.
+  function commit(el, silent) {
+    var v = JSON.stringify(valueOf(el));
+    syncInput(el);
+    if (v === el.getAttribute("data-ah-value")) { return; }
+    el.setAttribute("data-ah-value", v);
+    $(el).children("input[type=hidden]").val(v);
+    if (!silent) { $(el).trigger("change"); }
+  }
+
+  // ------------------------------------------------------------------
+  // Adding files (sigil add-files! and upload.core/validate-files)
+  // ------------------------------------------------------------------
+
+  function addFiles(el, list) {
+    var s = st(el), c = s.cfg;
+    if (s.disabled) { return; }
+    var files = Array.prototype.slice.call(list || []);
+    if (!files.length) { return; }
+    if (!c.multiple) {
+      files = files.slice(0, 1);
+      s.files.slice().forEach(function (f) { drop(el, f); });
+    }
+    var kept = s.files.filter(function (f) { return f.status !== "error"; }).length;
+    var valid = [], added = [];
+    files.forEach(function (file) {
+      var reason = null;
+      if (!accepted(file, c.accept)) { reason = "type_mismatch"; }
+      else if (c.maxSize && file.size > c.maxSize) { reason = "too_large"; }
+      else if (c.maxCount && kept + valid.length >= c.maxCount) { reason = "too_many"; }
+      var f = { id: "f" + (++seq), file: file, name: file.name, size: file.size,
+                type: file.type, status: reason ? "error" : "pending", percent: 0,
+                error: reason ? (c.labels[reason] || reason) : "", value: null, xhr: null };
+      s.files.push(f);
+      added.push(f);
+      if (reason) {
+        $(el).trigger("ah:upload-error", [{ id: f.id, name: f.name, reason: reason }]);
+      } else {
+        valid.push(f);
+      }
+    });
+    added.forEach(function (f) { renderRow(el, f); });
+    if (valid.length) {
+      $(el).trigger("ah:select", [{ files: valid.map(function (f) { return f.file; }) }]);
+    }
+    commit(el);
+    if (!c.native && !c.manual) { valid.forEach(function (f) { start(el, f); }); }
+  }
+
+  // ------------------------------------------------------------------
+  // XHR upload (sigil upload.core/upload!)
+  // ------------------------------------------------------------------
+
+  function start(el, f) {
+    var c = cfg(el);
+    if (c.native || f.status !== "pending") { return; }
+    var xhr = new XMLHttpRequest();
+    var data = new FormData();
+    data.append(c.field, f.file, f.name);
+    $.each(c.extra, function (k, v) { data.append(k, v); });
+    f.xhr = xhr;
+    f.status = "uploading";
+    f.percent = 0;
+    renderRow(el, f);
+    xhr.upload.onprogress = function (e) {
+      if (!e.lengthComputable || f.xhr !== xhr) { return; }
+      f.percent = e.total ? (e.loaded / e.total) * 100 : 0;
+      rowOf(el, f.id).find(".ah-upload-item-progress")
+        .attr("aria-valuenow", Math.round(f.percent))
+        .children(".ah-upload-item-progress-bar").css("width", f.percent + "%");
+      $(el).trigger("ah:upload-progress", [{ id: f.id, percent: f.percent,
+                                             loaded: e.loaded, total: e.total }]);
+    };
+    xhr.onload = function () {
+      if (f.xhr !== xhr) { return; }
+      f.xhr = null;
+      var body = null;
+      try { body = JSON.parse(xhr.responseText); } catch (e) { body = null; }
+      if (xhr.status >= 200 && xhr.status <= 299) {
+        f.status = "success";
+        f.percent = 100;
+        f.value = body !== null && typeof body === "object"
+          ? body : { name: f.name, size: f.size, type: f.type };
+        renderRow(el, f);
+        $(el).trigger("ah:upload-success", [{ id: f.id, response: f.value }]);
+        commit(el);
+      } else {
+        var msg = body && typeof body === "object" && (body.error || body.message);
+        fail(el, f, typeof msg === "string" && msg ? msg : c.labels.upload_failed,
+             { status: xhr.status, response: body });
+      }
+    };
+    xhr.onerror = function () {
+      if (f.xhr !== xhr) { return; }
+      f.xhr = null;
+      fail(el, f, c.labels.network_error, { status: 0 });
+    };
+    xhr.open("POST", c.url, true);
+    if (c.credentials) { xhr.withCredentials = true; }
+    $.each(c.headers, function (k, v) { xhr.setRequestHeader(k, v); });
+    xhr.send(data);
+  }
+
+  function fail(el, f, message, detail) {
+    f.status = "error";
+    f.error = message || "Upload failed";
+    renderRow(el, f);
+    $(el).trigger("ah:upload-error", [$.extend({ id: f.id, name: f.name, message: f.error },
+                                               detail)]);
+  }
+
+  // Take a row out of the state (aborting its upload), without committing.
+  function drop(el, f) {
+    var s = st(el);
+    if (f.xhr) { var x = f.xhr; f.xhr = null; x.abort(); }
+    s.files = s.files.filter(function (g) { return g !== f; });
+    rowOf(el, f.id).remove();
+  }
+
+  function remove(el, id) {
+    var f = find(el, id);
+    if (!f) { return; }
+    drop(el, f);
+    commit(el);
+  }
+
+  // ------------------------------------------------------------------
+  // Picker and drop zone
+  // ------------------------------------------------------------------
+
+  function open(el) {
+    var s = st(el);
+    if (s.disabled) { return; }
+    // native mode keeps the selection in the input (a cancelled dialog
+    // must not lose it); XHR mode empties it so the same file can be re-picked
+    if (!s.cfg.native) { s.input.value = ""; }
+    s.input.click();
+  }
+
+  function setDisabled(el, $el, off) {
+    var s = st(el);
+    s.disabled = !!off;
+    $el.toggleClass("ah-upload-disabled", s.disabled);
+    if (s.disabled) { $el.attr("aria-disabled", "true"); } else { $el.removeAttr("aria-disabled"); }
+    $el.children(".ah-upload-dragger").attr("tabindex", s.disabled ? "-1" : "0")
+      .attr("aria-disabled", s.disabled ? "true" : null);
+    s.input.disabled = s.disabled;
+    $list(el).find(".ah-upload-item-remove").prop("disabled", s.disabled);
+  }
+
+  function initialFiles(el, values) {
+    var ids = $list(el).children().map(function () {
+      return this.getAttribute("data-file-id");
+    }).get();
+    return values.map(function (v, i) {
+      var d = describe(v);
+      return { id: ids[i] || "s" + i, file: null, name: d.name, size: d.size, type: d.type,
+               status: "success", percent: 100, error: "", value: v, xhr: null };
+    });
+  }
+
+  AH.define("upload", {
+    init: function (el, $el) {
+      var url = el.getAttribute("data-ah-url");
+      var input = $el.children("input.ah-upload-input")[0];
+      var s = {
+        input: input,
+        disabled: $el.hasClass("ah-upload-disabled"),
+        drag: 0,
+        cfg: {
+          url: url, native: !url,
+          field: el.getAttribute("data-ah-field") || "file",
+          accept: input.getAttribute("accept") || "",
+          multiple: input.multiple,
+          maxSize: intAttr(el, "data-ah-max-size"),
+          maxCount: intAttr(el, "data-ah-max-count"),
+          manual: el.hasAttribute("data-ah-manual"),
+          credentials: el.hasAttribute("data-ah-credentials"),
+          headers: json(el, "data-ah-headers", {}),
+          extra: json(el, "data-ah-extra", {}),
+          labels: json(el, "data-ah-labels", {})
+        },
+        files: []
+      };
+      $.data(el, "ahUpload", s);
+      s.files = initialFiles(el, json(el, "data-ah-value", []));
+
+      var $dragger = $el.children(".ah-upload-dragger");
+      $dragger.on("click" + NS, function (e) {
+        e.preventDefault();
+        open(el);
+      }).on("keydown" + NS, function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          open(el);
+        }
+      });
+      // The input's own change is not the component's.
+      $(input).on("change" + NS, function (e) {
+        e.stopPropagation();
+        var picked = Array.prototype.slice.call(input.files || []);
+        addFiles(el, picked);
+        if (!s.cfg.native) { input.value = ""; }
+      }).on("click" + NS, function (e) { e.stopPropagation(); });
+
+      // sigil drop-zone: a counter for nested dragenter/dragleave.
+      $el.on("dragenter" + NS, function (e) {
+        e.preventDefault();
+        if (s.disabled) { return; }
+        if (++s.drag === 1) { $dragger.addClass("ah-upload-dragger-active"); }
+      }).on("dragover" + NS, function (e) {
+        e.preventDefault();
+        var dt = e.originalEvent && e.originalEvent.dataTransfer;
+        if (dt) { dt.dropEffect = s.disabled ? "none" : "copy"; }
+      }).on("dragleave" + NS, function (e) {
+        e.preventDefault();
+        if (--s.drag <= 0) {
+          s.drag = 0;
+          $dragger.removeClass("ah-upload-dragger-active");
+        }
+      }).on("drop" + NS, function (e) {
+        e.preventDefault();
+        s.drag = 0;
+        $dragger.removeClass("ah-upload-dragger-active");
+        var dt = e.originalEvent && e.originalEvent.dataTransfer;
+        if (dt && dt.files && dt.files.length) { addFiles(el, dt.files); }
+      });
+
+      $el.on("click" + NS, ".ah-upload-item-remove", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (s.disabled) { return; }
+        var $row = $(this).closest(".ah-upload-item");
+        var $next = $row.next().find(".ah-upload-item-remove");
+        if (!$next.length) { $next = $row.prev().find(".ah-upload-item-remove"); }
+        remove(el, $row.attr("data-file-id"));
+        ($next.length ? $next : $dragger).trigger("focus");
+      });
+    },
+    destroy: function (el) {
+      var s = st(el);
+      if (!s) { return; }
+      s.files.forEach(function (f) { if (f.xhr) { var x = f.xhr; f.xhr = null; x.abort(); } });
+      $.removeData(el, "ahUpload");
+    },
+    methods: {
+      getValue: function (el) { return valueOf(el); },
+      setValue: function (el, $el, files) {
+        var s = st(el);
+        s.files.slice().forEach(function (f) { if (f.status === "success") { drop(el, f); } });
+        s.files = (files || []).map(function (v) {
+          var d = describe(v);
+          return { id: "f" + (++seq), file: null, name: d.name, size: d.size, type: d.type,
+                   status: "success", percent: 100, error: "", value: v, xhr: null };
+        }).concat(s.files);
+        renderAll(el);
+        commit(el, true);
+      },
+      getFiles: function (el) {
+        return st(el).files.map(function (f) {
+          return { id: f.id, name: f.name, size: f.size, type: f.type, status: f.status,
+                   percent: f.percent, value: f.value, error: f.error || null, file: f.file };
+        });
+      },
+      uploadAll: function (el) {
+        st(el).files.slice().forEach(function (f) { start(el, f); });
+      },
+      upload: function (el, $el, id) {
+        var f = find(el, id);
+        if (f) { start(el, f); }
+      },
+      remove: function (el, $el, id) { remove(el, id); },
+      clear: function (el) {
+        st(el).files.slice().forEach(function (f) { drop(el, f); });
+        commit(el);
+      },
+      open: function (el) { open(el); },
+      enable: function (el, $el) { setDisabled(el, $el, false); },
+      disable: function (el, $el) { setDisabled(el, $el, true); }
+    }
+  });
+})(window.jQuery, window.AH);
+
+/* ---- components/layout_bars.js ---- */
+/* Behaviours of the layout_bars components (designs/04-components.md):
+ * activity-bar, navigationbar and command, ported from sigil's
+ * layout/activity_bar, layout/navigationbar and overlay/command.
+ *
+ * activity-bar and navigationbar keep their value in data-ah-value on the
+ * root (the active item; the expanded indexes "0,2"), mirror it into a
+ * hidden input and fire "change" when the user changes it. Methods called
+ * by the server (AH.invoke / aihtml_action:call) do not fire "change".
+ *
+ * command filters the commands the server rendered by hiding the ones that
+ * do not match; with a search action (data-ah-remote) the server renders
+ * the results instead. It builds no HTML.
+ */
+(function ($, AH) {
+  "use strict";
+
+  var NS = AH.NS;
+
+  function setValue(el, v) {
+    el.setAttribute("data-ah-value", v);
+    $(el).children("input[type=hidden]").val(v);
+  }
+
+  // ------------------------------------------------------------------
+  // ActivityBar: a vertical tablist of icon buttons
+  // ------------------------------------------------------------------
+
+  function barItems(el) {
+    return $(el).children(".ah-activity-bar__item");
+  }
+
+  function barActivate(el, id) {
+    barItems(el).each(function () {
+      var on = this.getAttribute("data-id") === String(id);
+      this.setAttribute("data-active", String(on));
+      this.setAttribute("aria-selected", String(on));
+      this.setAttribute("tabindex", on ? "0" : "-1");
+    });
+    // keep one item reachable with Tab when nothing is active
+    var $items = barItems(el);
+    if (!$items.filter("[tabindex=0]").length) {
+      $items.not("[data-disabled=true]").first().attr("tabindex", "0");
+    }
+    setValue(el, id == null ? "" : String(id));
+  }
+
+  function barChoose(el, $el, item) {
+    if (item.getAttribute("data-disabled") === "true") { return; }
+    var id = item.getAttribute("data-id");
+    var changed = el.getAttribute("data-ah-value") !== id;
+    barActivate(el, id);
+    $el.trigger("ah:select", [id]);
+    if (changed) { $el.trigger("change"); }
+  }
+
+  AH.define("activity-bar", {
+    init: function (el, $el) {
+      $el.on("click" + NS, ".ah-activity-bar__item", function () {
+        barChoose(el, $el, this);
+      });
+      // WAI-ARIA tabs: arrows move and activate, Home / End jump
+      $el.on("keydown" + NS, ".ah-activity-bar__item", function (e) {
+        var $en = barItems(el).not("[data-disabled=true]");
+        var i = $en.index(this);
+        var next;
+        switch (e.key) {
+          case "ArrowDown": case "ArrowRight": next = (i + 1) % $en.length; break;
+          case "ArrowUp": case "ArrowLeft": next = (i - 1 + $en.length) % $en.length; break;
+          case "Home": next = 0; break;
+          case "End": next = $en.length - 1; break;
+          default: return;
+        }
+        e.preventDefault();
+        var t = $en[next];
+        if (t) {
+          t.focus();
+          barChoose(el, $el, t);
+        }
+      });
+    },
+    methods: {
+      setValue: function (el, $el, v) { barActivate(el, v); },
+      getValue: function (el) { return el.getAttribute("data-ah-value"); }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // NavigationBar: collapsible sections
+  // ------------------------------------------------------------------
+
+  function navItems(el) {
+    return $(el).children(".ah-navigationbar-item");
+  }
+
+  function navHeader(el, i) {
+    return navItems(el).eq(i).children(".ah-navigationbar-header");
+  }
+
+  function navExpanded(el) {
+    return (el.getAttribute("data-ah-value") || "").split(",").filter(function (s) {
+      return s !== "";
+    }).map(Number);
+  }
+
+  function navStore(el, list) {
+    var uniq = list.filter(function (v, i) { return list.indexOf(v) === i; });
+    uniq.sort(function (a, b) { return a - b; });
+    setValue(el, uniq.join(","));
+  }
+
+  function navMode(el) {
+    return el.getAttribute("data-expand-mode") || "single_fit_height";
+  }
+
+  // single_fit_height with a fixed height: the open body fills what the
+  // headers leave (sigil's sync-content-height!).
+  function navFit(el) {
+    if (!el.hasAttribute("data-fit")) { return; }
+    var used = 0;
+    navItems(el).each(function () {
+      var $it = $(this);
+      used += $it.children(".ah-navigationbar-header").outerHeight() +
+        ($it.outerHeight() - $it.innerHeight());
+    });
+    var h = Math.max(0, $(el).innerHeight() - used);
+    navItems(el).children(".ah-navigationbar-body").each(function () {
+      if (this.style.display !== "none") { $(this).css("height", h + "px"); }
+    });
+  }
+
+  function navAnimate(el, $el, i, open) {
+    var $h = navHeader(el, i);
+    var $body = navItems(el).eq(i).children(".ah-navigationbar-body");
+    var anim = el.getAttribute("data-animation") || "slide";
+    var ms = parseInt(el.getAttribute(open ? "data-expand-duration" : "data-collapse-duration"), 10);
+    if (isNaN(ms)) { ms = 250; }
+    $h.toggleClass("ah-navigationbar-header-expanded", open).attr("aria-expanded", String(open));
+    $h.children(".ah-navigationbar-arrow").toggleClass("ah-navigationbar-arrow-up", open);
+    var done = function () {
+      if (open) {
+        $body.show();
+        navFit(el);
+      } else {
+        $body.hide();
+      }
+      $el.trigger(open ? "ah:expand" : "ah:collapse", [{ index: i }]);
+    };
+    $body.stop(true, true);
+    if (anim === "slide") {
+      $body[open ? "slideDown" : "slideUp"]({ duration: ms, complete: done });
+    } else if (anim === "fade") {
+      $body[open ? "fadeIn" : "fadeOut"]({ duration: ms, complete: done });
+    } else {
+      done();
+    }
+  }
+
+  function navValid(el, i) {
+    return typeof i === "number" && i >= 0 && i < navItems(el).length;
+  }
+
+  function navDisabled(el, i) {
+    return navHeader(el, i).hasClass("ah-navigationbar-disabled");
+  }
+
+  function navCollapse(el, $el, i) {
+    var cur = navExpanded(el);
+    if (!navValid(el, i) || cur.indexOf(i) < 0) { return false; }
+    navStore(el, cur.filter(function (x) { return x !== i; }));
+    navAnimate(el, $el, i, false);
+    return true;
+  }
+
+  function navExpand(el, $el, i) {
+    var cur = navExpanded(el);
+    if (!navValid(el, i) || navDisabled(el, i) || cur.indexOf(i) >= 0) { return false; }
+    if (navMode(el) !== "multiple") {
+      cur.forEach(function (x) { navCollapse(el, $el, x); });
+    }
+    navStore(el, navExpanded(el).concat([i]));
+    navAnimate(el, $el, i, true);
+    return true;
+  }
+
+  // A user toggle, as sigil's compute-proposed-indexes: single modes never
+  // close the open section, none never changes.
+  function navUserToggle(el, $el, i) {
+    var mode = navMode(el);
+    if (el.classList.contains("ah-navigationbar-disabled") || navDisabled(el, i) ||
+        mode === "none") {
+      return;
+    }
+    var changed;
+    if (navExpanded(el).indexOf(i) >= 0) {
+      changed = (mode === "single" || mode === "single_fit_height") ? false
+        : navCollapse(el, $el, i);
+    } else {
+      changed = navExpand(el, $el, i);
+    }
+    if (changed) { $el.trigger("change"); }
+  }
+
+  function navIndex(el, header) {
+    return navItems(el).children(".ah-navigationbar-header").index(header);
+  }
+
+  AH.define("navigationbar", {
+    init: function (el, $el) {
+      var mode = el.getAttribute("data-toggle-mode") || "click";
+      var own = function (h) { return $(h).closest(".ah-navigationbar")[0] === el; };
+      if (mode !== "none") {
+        $el.on(mode + NS, ".ah-navigationbar-header", function () {
+          if (own(this)) { navUserToggle(el, $el, navIndex(el, this)); }
+        });
+      }
+      $el.on("keydown" + NS, ".ah-navigationbar-header", function (e) {
+        if (!own(this)) { return; }
+        var $hs = navItems(el).children(".ah-navigationbar-header").filter("[tabindex=0]");
+        var i = $hs.index(this);
+        var t;
+        switch (e.key) {
+          case "Enter": case " ":
+            e.preventDefault();
+            if (mode !== "none") { navUserToggle(el, $el, navIndex(el, this)); }
+            return;
+          case "ArrowDown": t = $hs[(i + 1) % $hs.length]; break;
+          case "ArrowUp": t = $hs[(i - 1 + $hs.length) % $hs.length]; break;
+          case "Home": t = $hs[0]; break;
+          case "End": t = $hs[$hs.length - 1]; break;
+          default: return;
+        }
+        e.preventDefault();
+        if (t) { t.focus(); }
+      });
+      navFit(el);
+    },
+    methods: {
+      expand: function (el, $el, i) { navExpand(el, $el, Number(i)); },
+      collapse: function (el, $el, i) { navCollapse(el, $el, Number(i)); },
+      toggle: function (el, $el, i) {
+        i = Number(i);
+        if (navExpanded(el).indexOf(i) >= 0) { navCollapse(el, $el, i); } else { navExpand(el, $el, i); }
+      },
+      setValue: function (el, $el, v) {
+        var want = (Array.isArray(v) ? v : String(v == null ? "" : v).split(","))
+          .filter(function (s) { return s !== ""; }).map(Number);
+        navExpanded(el).forEach(function (i) {
+          if (want.indexOf(i) < 0) { navCollapse(el, $el, i); }
+        });
+        want.forEach(function (i) {
+          if (navExpanded(el).indexOf(i) < 0 && navValid(el, i)) {
+            // setValue may open several sections whatever the mode
+            navStore(el, navExpanded(el).concat([i]));
+            navAnimate(el, $el, i, true);
+          }
+        });
+      },
+      getValue: function (el) { return navExpanded(el); },
+      enable: function (el, $el, i) {
+        navHeader(el, Number(i)).removeClass("ah-navigationbar-disabled")
+          .removeAttr("aria-disabled").attr("tabindex", "0");
+      },
+      disable: function (el, $el, i) {
+        navHeader(el, Number(i)).addClass("ah-navigationbar-disabled")
+          .attr({ "aria-disabled": "true", tabindex: "-1" });
+      }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // Command: search field + filtered list + keyboard navigation
+  // ------------------------------------------------------------------
+
+  var hotkeySeq = 0;
+
+  function cmdInput($el) { return $el.find(".ah-command__input"); }
+  function cmdVisible($el) { return $el.find(".ah-command__item").not("[hidden]"); }
+  function cmdOverlay($el) { return $el.parent(".ah-command-overlay"); }
+
+  function cmdActive(el, $el) {
+    return cmdVisible($el).index($el.find(".ah-command__item[data-active=true]"));
+  }
+
+  function cmdSetActive(el, $el, i, scroll) {
+    var $v = cmdVisible($el);
+    var $input = cmdInput($el);
+    $el.find(".ah-command__item[data-active=true]")
+      .attr({ "data-active": "false", "aria-selected": "false" });
+    if (!$v.length) {
+      $input.removeAttr("aria-activedescendant");
+      return;
+    }
+    i = ((i % $v.length) + $v.length) % $v.length;
+    var it = $v[i];
+    it.setAttribute("data-active", "true");
+    it.setAttribute("aria-selected", "true");
+    if (it.id) { $input.attr("aria-activedescendant", it.id); }
+    if (scroll && it.scrollIntoView) { it.scrollIntoView({ block: "nearest" }); }
+  }
+
+  // sigil's match?: a case-insensitive substring of value, label or
+  // description.
+  function cmdFilter(el, $el) {
+    if (el.hasAttribute("data-ah-remote")) { return; }
+    var q = String(cmdInput($el).val() || "").trim().toLowerCase();
+    $el.find(".ah-command__item").each(function () {
+      var $it = $(this);
+      var hay = [this.getAttribute("data-value") || "",
+                 $it.find(".ah-command__item-label").text(),
+                 $it.find(".ah-command__item-desc").text()].join("\n").toLowerCase();
+      this.hidden = q !== "" && hay.indexOf(q) < 0;
+    });
+    var any = false;
+    $el.find(".ah-command__group").each(function () {
+      var shown = $(this).children(".ah-command__item").not("[hidden]").length > 0;
+      this.hidden = !shown;
+      any = any || shown;
+    });
+    $el.find(".ah-command__empty").prop("hidden", any);
+    cmdSetActive(el, $el, 0, true);
+  }
+
+  function cmdFocus($el) {
+    var inp = cmdInput($el)[0];
+    if (inp) {
+      inp.focus();
+      var n = inp.value.length;
+      try { inp.setSelectionRange(n, n); } catch (e) { /* not a text field */ }
+    }
+  }
+
+  function cmdSelect(el, $el, it) {
+    if (!it || it.getAttribute("data-disabled") === "true") { return; }
+    var v = it.getAttribute("data-value");
+    el.setAttribute("data-ah-value", v);
+    $el.trigger("ah:select", [v]);
+    if (cmdOverlay($el).length && el.getAttribute("data-close-on-select") !== "false") {
+      cmdClose(el, $el);
+    }
+    var href = it.getAttribute("data-href");
+    if (href) { window.location.href = href; }
+  }
+
+  function cmdOpen(el, $el) {
+    var ov = cmdOverlay($el)[0];
+    if (!ov || !ov.hidden) { return; }
+    $.data(el, "ah-cmd-return", document.activeElement);
+    if (!el.hasAttribute("data-ah-remote")) {
+      cmdInput($el).val(el.getAttribute("data-ah-query") || "");
+      cmdFilter(el, $el);
+    }
+    ov.hidden = false;
+    cmdFocus($el);
+    $el.trigger("ah:open");
+  }
+
+  function cmdClose(el, $el) {
+    var ov = cmdOverlay($el)[0];
+    if (!ov || ov.hidden) { return; }
+    ov.hidden = true;
+    var back = $.data(el, "ah-cmd-return");
+    $.removeData(el, "ah-cmd-return");
+    if (back && back.focus && document.contains(back)) { back.focus(); }
+    $el.trigger("ah:close");
+  }
+
+  AH.define("command", {
+    init: function (el, $el) {
+      $el.on("input" + NS, ".ah-command__input", function () {
+        cmdFilter(el, $el);
+        $el.trigger("ah:query", [this.value]);
+      });
+      $el.on("keydown" + NS, ".ah-command__input", function (e) {
+        var act = cmdActive(el, $el);
+        switch (e.key) {
+          case "ArrowDown": e.preventDefault(); cmdSetActive(el, $el, act + 1, true); break;
+          case "ArrowUp": e.preventDefault(); cmdSetActive(el, $el, act - 1, true); break;
+          case "Home": if (e.ctrlKey) { e.preventDefault(); cmdSetActive(el, $el, 0, true); } break;
+          case "End": if (e.ctrlKey) { e.preventDefault(); cmdSetActive(el, $el, -1, true); } break;
+          case "Enter":
+            e.preventDefault();
+            cmdSelect(el, $el, cmdVisible($el)[act]);
+            break;
+          case "Escape":
+            e.preventDefault();
+            if (cmdOverlay($el).length) { cmdClose(el, $el); } else { $el.trigger("ah:close"); }
+            break;
+        }
+      });
+      $el.on("mouseenter" + NS, ".ah-command__item", function () {
+        cmdSetActive(el, $el, cmdVisible($el).index(this), false);
+      });
+      $el.on("click" + NS, ".ah-command__item", function () {
+        cmdSelect(el, $el, this);
+      });
+      var $ov = cmdOverlay($el);
+      $ov.on("mousedown" + NS, function (e) {
+        if (e.target === e.currentTarget) { cmdClose(el, $el); }
+      });
+      var key = (el.getAttribute("data-hotkey") || "").toLowerCase();
+      if (key) {
+        var ns = ".ahcmd" + (++hotkeySeq);
+        $.data(el, "ah-cmd-hotkey", ns);
+        $(document).on("keydown" + ns, function (e) {
+          if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === key) {
+            e.preventDefault();
+            if ($ov.length && !$ov[0].hidden) { cmdClose(el, $el); } else { cmdOpen(el, $el); }
+          }
+        });
+      }
+      cmdFilter(el, $el);
+      if (el.hasAttribute("data-auto-focus") && !$ov.length) {
+        setTimeout(function () { cmdFocus($el); }, 0);
+      }
+    },
+    destroy: function (el, $el) {
+      var ns = $.data(el, "ah-cmd-hotkey");
+      if (ns) { $(document).off(ns); }
+      cmdOverlay($el).off(NS);
+    },
+    methods: {
+      open: function (el, $el) { cmdOpen(el, $el); },
+      close: function (el, $el) { cmdClose(el, $el); },
+      toggle: function (el, $el) {
+        var ov = cmdOverlay($el)[0];
+        if (ov && !ov.hidden) { cmdClose(el, $el); } else { cmdOpen(el, $el); }
+      },
+      setQuery: function (el, $el, q) {
+        cmdInput($el).val(q == null ? "" : String(q)).trigger("input");
+      },
+      focus: function (el, $el) { cmdFocus($el); },
+      itemsLoaded: function (el, $el) { cmdSetActive(el, $el, 0, true); }
+    }
+  });
+})(window.jQuery, window.AH);
+
 /* ---- components/layout_basic.js ---- */
 /* Behaviours of the layout_basic components (designs/04-components.md).
  *
@@ -6245,6 +10483,756 @@
         $el.attr("aria-label", t);
       },
       isOpen: function (el, $el) { return !$el.hasClass("ah-loader-hidden"); }
+    }
+  });
+})(window.jQuery, window.AH);
+
+/* ---- components/layout_dnd.js ---- */
+/* Behaviours of the layout_dnd components (designs/04-components.md).
+ * Ported from sigil: layout/sortable (+ sortable/geometry) and
+ * layout/dragdrop. Pointer events (mouse, pen, touch) instead of sigil's
+ * mouse + touch sequence; one drag at a time, tracked on the document
+ * with its own namespace and unbound when the drag ends or the
+ * component is destroyed.
+ *
+ *   sortable   reorder by dragging (or from the keyboard); the value is
+ *              the order of the item keys (data-value), change after a
+ *              drop that changed it; lists with the same data-ah-group
+ *              exchange items
+ *   dragdrop   [data-ah-drag] items dropped on [data-ah-drop] zones fire
+ *              ah:drop on the zone; the root carries data-drag, data-drop
+ *              and data-from for the action payload
+ */
+(function ($, AH) {
+  "use strict";
+
+  var NS = AH.NS;
+  var DOC_NS = ".ahdnd";
+  var DISTANCE = 5;            // px of movement before a press becomes a drag
+  var EDGE = 20, SPEED = 10;   // auto scroll: edge width and px per frame
+
+  // ------------------------------------------------------------------
+  // Shared
+  // ------------------------------------------------------------------
+
+  // The drag in progress (one per page): {kind, el, pointerId, ...}
+  var drag = null;
+
+  function pageRect(el) {
+    var r = el.getBoundingClientRect();
+    var sx = window.pageXOffset, sy = window.pageYOffset;
+    return { left: r.left + sx, top: r.top + sy, right: r.right + sx, bottom: r.bottom + sy,
+             width: r.width, height: r.height };
+  }
+
+  // Page coordinates of a pointer event (from clientX, which every
+  // pointer event has, synthetic ones included).
+  function px(e) { return e.clientX + window.pageXOffset; }
+  function py(e) { return e.clientY + window.pageYOffset; }
+
+  function inside(x, y, r) {
+    return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+  }
+
+  // The copy that follows the pointer lives in <body>, outside the scope of
+  // the custom properties it inherited (skins, a themed container), so they
+  // are copied onto it, as sigil does.
+  function copyVars(src, dst) {
+    var cs = window.getComputedStyle(src);
+    for (var i = 0; i < cs.length; i++) {
+      var p = cs.item(i);
+      if (p && p.indexOf("--") === 0) { dst.style.setProperty(p, cs.getPropertyValue(p)); }
+    }
+  }
+
+  function floatingCopy(el, cls, opacity) {
+    var r = pageRect(el);
+    var copy = el.cloneNode(true);
+    copy.removeAttribute("id");
+    $(copy).find("[id]").removeAttr("id");
+    copy.removeAttribute("tabindex");
+    copy.setAttribute("aria-hidden", "true");
+    copy.className += " " + cls;
+    copyVars(el, copy);
+    $(copy).css({ position: "absolute", margin: 0, boxSizing: "border-box",
+                  width: r.width + "px", height: r.height + "px",
+                  left: r.left + "px", top: r.top + "px", opacity: opacity,
+                  zIndex: 999999, pointerEvents: "none" });
+    document.body.appendChild(copy);
+    return copy;
+  }
+
+  function scrollParent(el) {
+    for (var cur = el.parentElement; cur && cur !== document.body; cur = cur.parentElement) {
+      var s = window.getComputedStyle(cur);
+      if ((/auto|scroll/.test(s.overflowY) && cur.scrollHeight > cur.clientHeight) ||
+          (/auto|scroll/.test(s.overflowX) && cur.scrollWidth > cur.clientWidth)) {
+        return cur;
+      }
+    }
+    return null;
+  }
+
+  // Scroll the nearest scrollable ancestor (or the window) when the
+  // pointer is near its edge.
+  function autoScroll(box, cx, cy) {
+    if (box) {
+      var r = box.getBoundingClientRect();
+      if (cy - r.top < EDGE) { box.scrollTop -= SPEED; }
+      else if (r.bottom - cy < EDGE) { box.scrollTop += SPEED; }
+      if (cx - r.left < EDGE) { box.scrollLeft -= SPEED; }
+      else if (r.right - cx < EDGE) { box.scrollLeft += SPEED; }
+    }
+    if (cy < EDGE) { window.scrollBy(0, -SPEED); }
+    else if (window.innerHeight - cy < EDGE) { window.scrollBy(0, SPEED); }
+  }
+
+  // Swallow the click that follows a drag (items may be links).
+  function swallowClick() {
+    var stop = function (e) { e.stopPropagation(); e.preventDefault(); };
+    document.addEventListener("click", stop, true);
+    setTimeout(function () { document.removeEventListener("click", stop, true); }, 0);
+  }
+
+  function editable(t) {
+    return $(t).closest("input, textarea, select, [contenteditable=''], [contenteditable=true]").length > 0;
+  }
+
+  function announce($live, text) {
+    $live.text("");
+    setTimeout(function () { $live.text(text); }, 20);
+  }
+
+  function label(el) {
+    return el.getAttribute("aria-label") || $(el).text().trim().replace(/\s+/g, " ").slice(0, 60);
+  }
+
+  // Document listeners for one drag; `move', `end' and `cancel' get the
+  // pointer event (or nothing for a cancel from the keyboard).
+  function track(d, move, end, cancel) {
+    drag = d;
+    var $doc = $(document);
+    $doc.on("pointermove" + DOC_NS, function (e) {
+      if (e.pointerId === d.pointerId) { move(e); }
+    });
+    $doc.on("pointerup" + DOC_NS, function (e) {
+      if (e.pointerId === d.pointerId) { untrack(); end(e); }
+    });
+    $doc.on("pointercancel" + DOC_NS, function (e) {
+      if (e.pointerId === d.pointerId) { untrack(); cancel(); }
+    });
+    $doc.on("keydown" + DOC_NS, function (e) {
+      if (e.key === "Escape") { e.preventDefault(); untrack(); cancel(); }
+    });
+    d.cancel = function () { untrack(); cancel(); };
+  }
+
+  function untrack() {
+    $(document).off(DOC_NS);
+    if (drag && drag.raf) { cancelAnimationFrame(drag.raf); }
+    drag = null;
+  }
+
+  // Cancel the drag in progress if it belongs to el.
+  function cancelFor(el) {
+    if (drag && drag.el === el) { drag.cancel(); }
+  }
+
+  // ==================================================================
+  // sortable
+  // ==================================================================
+
+  function soItems(list) {
+    return $(list).children(".ah-sortable-item").get();
+  }
+
+  function soKey(item) { return item.getAttribute("data-value") || ""; }
+
+  function soOrder(list) {
+    return soItems(list).map(soKey).join(",");
+  }
+
+  function soDisabled(list) {
+    return $(list).hasClass("ah-sortable-disabled");
+  }
+
+  function soPublish(list, fire) {
+    var v = soOrder(list);
+    var old = list.getAttribute("data-ah-value") || "";
+    list.setAttribute("data-ah-value", v);
+    $(list).children("input[type=hidden]").val(v);
+    if (fire && v !== old) { $(list).trigger("change"); }
+  }
+
+  // Roving tabindex: `item' (or the first item) is the one in the tab order.
+  function soRove(list, item) {
+    var items = soItems(list);
+    if (!item || items.indexOf(item) < 0) {
+      item = $(items).filter("[tabindex=0]")[0] || items[0];
+    }
+    var off = soDisabled(list);
+    $(items).attr("tabindex", "-1");
+    if (item && !off) { item.setAttribute("tabindex", "0"); }
+  }
+
+  function soLayout(list) {
+    var $l = $(list);
+    return $l.hasClass("ah-sortable-grid") ? "grid"
+      : $l.hasClass("ah-sortable-horizontal") ? "horizontal" : "vertical";
+  }
+
+  // Where the placeholder goes for the pointer at (x, y): the item to insert
+  // before, or null for the end. Vertical lists compare with the middle
+  // of each item; horizontal lists and grids go in reading order (sigil's
+  // find-grid-insertion), which also handles wrapped rows.
+  function soInsertion(items, layout, x, y) {
+    for (var i = 0; i < items.length; i++) {
+      var r = pageRect(items[i]);
+      if (layout === "vertical") {
+        if (y < r.top + r.height / 2) { return items[i]; }
+      } else if (y < r.top || (y <= r.bottom && x < r.left + r.width / 2)) {
+        return items[i];
+      }
+    }
+    return null;
+  }
+
+  // Put `node' before `ref', or after the last item of the list.
+  function soPlace(list, node, ref) {
+    if (ref) {
+      if (ref.previousSibling !== node) { list.insertBefore(node, ref); }
+      return;
+    }
+    var items = $(list).children(".ah-sortable-item, .ah-sortable-placeholder").get()
+      .filter(function (n) { return n !== node && n.style.display !== "none"; });
+    var last = items[items.length - 1];
+    var after = last ? last.nextSibling : list.firstChild;
+    if (after !== node) { list.insertBefore(node, after); }
+  }
+
+  // Connected lists under the pointer: the innermost (smallest) one wins,
+  // as in sigil's check-connected-containers!.
+  function soTarget(d, x, y) {
+    var group = d.el.getAttribute("data-ah-group");
+    if (!group) { return d.list; }
+    var best = null, area = Infinity;
+    $(".ah-sortable[data-ah-group]").each(function () {
+      if (this.getAttribute("data-ah-group") !== group || (soDisabled(this) && this !== d.el)) {
+        return;
+      }
+      var r = pageRect(this);
+      if (inside(x, y, r) && r.width * r.height < area) { best = this; area = r.width * r.height; }
+    });
+    return best || d.list;
+  }
+
+  function soStart(d) {
+    var item = d.item;
+    var r = pageRect(item);
+    var cs = window.getComputedStyle(item);
+    var ph = document.createElement(item.tagName);
+    ph.className = "ah-sortable-placeholder";
+    $(ph).css({ width: r.width + "px", height: r.height + "px", margin: cs.margin,
+                flex: "none" });
+    d.helper = floatingCopy(item, "ah-sortable-helper", 0.85);
+    d.offX = d.x0 - r.left;
+    d.offY = d.y0 - r.top;
+    d.ph = ph;
+    d.index = soItems(d.el).indexOf(item);
+    d.next = item.nextSibling;
+    d.list = d.el;
+    d.box = scrollParent(d.el);
+    d.started = true;
+    item.parentNode.insertBefore(ph, item.nextSibling);
+    d.display = item.style.display;
+    item.style.display = "none";
+    $(d.el).addClass("ah-sortable-active");
+    $("body").addClass("ah-disableselect");
+    $(d.el).trigger("ah:sort-start", [{ key: soKey(item), index: d.index }]);
+  }
+
+  function soMove(d, e) {
+    d.px = px(e); d.py = py(e); d.cx = e.clientX; d.cy = e.clientY;
+    if (d.raf) { return; }
+    d.raf = requestAnimationFrame(function () {
+      d.raf = 0;
+      if (drag !== d) { return; }
+      $(d.helper).css({ left: (d.px - d.offX) + "px", top: (d.py - d.offY) + "px" });
+      autoScroll(d.box, d.cx, d.cy);
+      var target = soTarget(d, d.px, d.py);
+      if (target !== d.list) {
+        $(d.list).removeClass("ah-sortable-receiving");
+        if (d.list !== d.el) { $(d.list).removeClass("ah-sortable-active"); }
+        $(d.list).trigger("ah:sort-remove", [{ key: soKey(d.item) }]);
+        d.list = target;
+        if (target !== d.el) { $(target).addClass("ah-sortable-receiving ah-sortable-active"); }
+        $(target).trigger("ah:sort-receive", [{ key: soKey(d.item) }]);
+      }
+      var items = soItems(d.list).filter(function (n) { return n !== d.item; });
+      var ref = soInsertion(items, soLayout(d.list), d.px, d.py);
+      var before = d.ph.nextSibling, parent = d.ph.parentNode;
+      soPlace(d.list, d.ph, ref);
+      if (d.ph.nextSibling !== before || d.ph.parentNode !== parent) {
+        $(d.list).trigger("ah:sort-change", [{ key: soKey(d.item) }]);
+      }
+    });
+  }
+
+  function soCleanup(d) {
+    d.item.style.display = d.display;
+    $(d.ph).remove();
+    $(d.helper).remove();
+    $(d.el).add(d.list).removeClass("ah-sortable-active ah-sortable-receiving");
+    $("body").removeClass("ah-disableselect");
+  }
+
+  function soEnd(d) {
+    var item = d.item, from = d.el, to = d.list;
+    to.insertBefore(item, d.ph);
+    soCleanup(d);
+    swallowClick();
+    soRove(to, item);
+    if (from !== to) { soRove(from, null); }
+    var index = soItems(to).indexOf(item);
+    $(to).trigger("ah:sort-stop", [{ key: soKey(item), index: index }]);
+    soPublish(from, true);
+    if (from !== to) { soPublish(to, true); }
+    try { item.focus({ preventScroll: true }); } catch (err) { /* detached */ }
+  }
+
+  function soCancel(d) {
+    if (!d.started) { return; }
+    soCleanup(d);
+    $(d.el).trigger("ah:sort-cancel", [{ key: soKey(d.item) }]);
+  }
+
+  // ---- keyboard: a picked-up item moves with the arrows ----
+
+  function soState(list) {
+    var st = $.data(list, "ahSortable");
+    if (!st) { st = { grabbed: null, order: null }; $.data(list, "ahSortable", st); }
+    return st;
+  }
+
+  function soPos(list, item) {
+    var items = soItems(list);
+    return (items.indexOf(item) + 1) + " of " + items.length;
+  }
+
+  // Move `item' by `delta' places (or to the start / end for -/+Infinity)
+  // by moving its neighbours, so the item itself keeps the focus.
+  function soShift(list, item, delta) {
+    var moved = false;
+    while (delta < 0) {
+      var prev = $(item).prevAll(".ah-sortable-item")[0];
+      if (!prev) { break; }
+      list.insertBefore(prev, item.nextSibling);
+      moved = true; delta++;
+    }
+    while (delta > 0) {
+      var next = $(item).nextAll(".ah-sortable-item")[0];
+      if (!next) { break; }
+      list.insertBefore(next, item);
+      moved = true; delta--;
+    }
+    return moved;
+  }
+
+  function soSetOrder(list, keys) {
+    var items = soItems(list);
+    var byKey = {};
+    items.forEach(function (it) { byKey[soKey(it)] = it; });
+    var named = [];
+    keys.forEach(function (k) {
+      if (byKey[k] && named.indexOf(byKey[k]) < 0) { named.push(byKey[k]); }
+    });
+    var rest = items.filter(function (it) { return named.indexOf(it) < 0; });
+    var anchor = $(list).children(".ah-sortable-item").last()[0];
+    anchor = anchor ? anchor.nextSibling : list.firstChild;
+    named.concat(rest).forEach(function (it) {
+      if (it !== anchor) { list.insertBefore(it, anchor); } else { anchor = it.nextSibling; }
+    });
+  }
+
+  function soGrab(list, item) {
+    var st = soState(list);
+    st.grabbed = item;
+    st.order = soOrder(list);
+    $(item).addClass("ah-sortable-item-grabbed").attr("aria-pressed", "true");
+    announce($(list).children(".ah-sortable-live"),
+             "Picked up " + label(item) + ", position " + soPos(list, item) +
+             ". Arrow keys move it, Space drops it, Escape cancels.");
+  }
+
+  function soRelease(list, commit) {
+    var st = soState(list), item = st.grabbed;
+    if (!item) { return; }
+    st.grabbed = null;
+    $(item).removeClass("ah-sortable-item-grabbed").removeAttr("aria-pressed");
+    var $live = $(list).children(".ah-sortable-live");
+    if (commit) {
+      announce($live, label(item) + " dropped at position " + soPos(list, item) + ".");
+      soPublish(list, true);
+    } else {
+      soSetOrder(list, st.order.split(","));
+      item.focus();
+      announce($live, "Cancelled, " + label(item) + " is back at position " + soPos(list, item) + ".");
+    }
+  }
+
+  function soKeys(layout) {
+    return layout === "vertical" ? { prev: ["ArrowUp"], next: ["ArrowDown"] }
+      : layout === "horizontal" ? { prev: ["ArrowLeft"], next: ["ArrowRight"] }
+      : { prev: ["ArrowLeft", "ArrowUp"], next: ["ArrowRight", "ArrowDown"] };
+  }
+
+  function soKeydown(list, item, e) {
+    var st = soState(list);
+    var keys = soKeys(soLayout(list));
+    var dir = keys.prev.indexOf(e.key) >= 0 ? -1 : keys.next.indexOf(e.key) >= 0 ? 1
+      : e.key === "Home" ? -Infinity : e.key === "End" ? Infinity : 0;
+    var off = soDisabled(list);
+    if (st.grabbed === item) {
+      if (dir) {
+        e.preventDefault();
+        if (soShift(list, item, dir)) {
+          announce($(list).children(".ah-sortable-live"),
+                   label(item) + ", position " + soPos(list, item) + ".");
+        }
+      } else if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        soRelease(list, true);
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        soRelease(list, false);
+      }
+      return;
+    }
+    if (dir && e.altKey && !off) {
+      e.preventDefault();
+      if (soShift(list, item, dir)) { soPublish(list, true); }
+      return;
+    }
+    if (dir) {
+      e.preventDefault();
+      var items = soItems(list), i = items.indexOf(item);
+      var j = dir === -Infinity ? 0 : dir === Infinity ? items.length - 1
+        : Math.max(0, Math.min(items.length - 1, i + dir));
+      soRove(list, items[j]);
+      items[j].focus();
+    } else if ((e.key === " " || e.key === "Enter") && !off) {
+      e.preventDefault();
+      soGrab(list, item);
+    }
+  }
+
+  AH.define("sortable", {
+    init: function (el, $el) {
+      soRove(el, null);
+      $el.on("pointerdown" + NS, ".ah-sortable-item", function (e) {
+        var item = this;
+        if (item.parentNode !== el || drag || soDisabled(el) ||
+            (e.pointerType === "mouse" && e.button !== 0) || editable(e.target)) {
+          return;
+        }
+        if ($(item).hasClass("ah-sortable-handle-mode") &&
+            !$(e.target).closest(".ah-sortable-handle").length) {
+          return;
+        }
+        e.preventDefault();
+        soRelease(el, true);
+        soRove(el, item);
+        try { item.focus({ preventScroll: true }); } catch (err) { /* ignore */ }
+        var d = { kind: "sortable", el: el, item: item, pointerId: e.pointerId,
+                  x0: px(e), y0: py(e), started: false };
+        track(d, function (me) {
+          if (!d.started) {
+            if (Math.abs(px(me) - d.x0) + Math.abs(py(me) - d.y0) <= DISTANCE) { return; }
+            soStart(d);
+          }
+          soMove(d, me);
+        }, function () {
+          if (d.started) { soEnd(d); }
+        }, function () {
+          soCancel(d);
+        });
+      });
+      $el.on("keydown" + NS, ".ah-sortable-item", function (e) {
+        if (e.target === this && this.parentNode === el) { soKeydown(el, this, e); }
+      });
+      $el.on("focusout" + NS, ".ah-sortable-item", function () {
+        var item = this;
+        // a Tab away (or a click elsewhere) drops the picked-up item
+        setTimeout(function () {
+          if (soState(el).grabbed === item && document.activeElement !== item) {
+            soRelease(el, true);
+          }
+        }, 0);
+      });
+      $el.on("focusin" + NS, ".ah-sortable-item", function () {
+        if (this.parentNode === el && !soDisabled(el)) { soRove(el, this); }
+      });
+    },
+    destroy: function (el) {
+      cancelFor(el);
+      $.removeData(el, "ahSortable");
+    },
+    methods: {
+      getValue: function (el) { return soOrder(el); },
+      setValue: function (el, $el, order) {
+        var keys = Array.isArray(order) ? order.map(String)
+          : String(order || "").split(",").filter(Boolean);
+        soSetOrder(el, keys);
+        soPublish(el, false);
+      },
+      enable: function (el, $el) {
+        $el.removeClass("ah-sortable-disabled").removeAttr("aria-disabled");
+        soRove(el, null);
+      },
+      disable: function (el, $el) {
+        cancelFor(el);
+        soRelease(el, true);
+        $el.addClass("ah-sortable-disabled").attr("aria-disabled", "true");
+        soRove(el, null);
+      },
+      cancel: function (el) {
+        cancelFor(el);
+        if (soState(el).grabbed) { soRelease(el, false); }
+      }
+    }
+  });
+
+  // ==================================================================
+  // dragdrop
+  // ==================================================================
+
+  function ddScope(el, node) {
+    return $(node).closest("[data-ah=dragdrop]")[0] === el;
+  }
+
+  function ddUsable(el, item) {
+    return !$(el).hasClass("ah-dragdrop-disabled") && !$(item).hasClass("ah-draggable-disabled");
+  }
+
+  // The zones of this scope that take `item' (its data-ah-drag-type must
+  // be in a zone's data-ah-drop-accept, when the zone has one).
+  function ddZones(el, item) {
+    var type = item.getAttribute("data-ah-drag-type") || "";
+    return $(el).find("[data-ah-drop]").get().filter(function (z) {
+      if (!ddScope(el, z) || z.getAttribute("data-ah-drop-disabled") === "true" ||
+          $.contains(item, z) || z === item) {
+        return false;
+      }
+      var accept = z.getAttribute("data-ah-drop-accept");
+      return !accept || accept.split(",").indexOf(type) >= 0;
+    });
+  }
+
+  // sigil's hit-test: the last zone (in document order, so an inner zone
+  // beats its container) that the copy overlaps (intersect), lies in
+  // (fit), or that the pointer is on (pointer).
+  function ddHit(d, x, y) {
+    var tol = d.el.getAttribute("data-ah-tolerance") || "intersect";
+    var f = pageRect(d.copy), hit = null;
+    d.zones.forEach(function (z) {
+      var r = pageRect(z);
+      var ok = tol === "pointer" ? inside(x, y, r)
+        : tol === "fit" ? f.left >= r.left && f.right <= r.right && f.top >= r.top && f.bottom <= r.bottom
+        : f.left < r.right && f.right > r.left && f.top < r.bottom && f.bottom > r.top;
+      if (ok) { hit = z; }
+    });
+    return hit;
+  }
+
+  function ddTarget(d, zone) {
+    if (zone === d.target) { return; }
+    if (d.target) {
+      $(d.target).removeClass("ah-drop-target-active").trigger("ah:drop-target-leave");
+    }
+    d.target = zone;
+    if (zone) {
+      $(zone).addClass("ah-drop-target-active").trigger("ah:drop-target-enter");
+    }
+  }
+
+  function ddBegin(d) {
+    var item = d.item;
+    d.zones = ddZones(d.el, item);
+    var from = $(item).parent().closest("[data-ah-drop]")[0];
+    d.from = from && ddScope(d.el, from) ? from.getAttribute("data-ah-drop") : "";
+    d.target = null;
+    $(item).addClass("ah-dragging");
+    $(d.zones).addClass("ah-drop-zone-accepting");
+    $(d.el).addClass("ah-dragdrop-active");
+    $(item).trigger("ah:drag-start", [{ key: item.getAttribute("data-ah-drag") }]);
+  }
+
+  function ddFinish(d, dropped) {
+    var item = d.item;
+    $(item).removeClass("ah-dragging");
+    $(d.zones).removeClass("ah-drop-zone-accepting ah-drop-target-active");
+    $(d.el).removeClass("ah-dragdrop-active");
+    $("body").removeClass("ah-disableselect");
+    var copy = d.copy;
+    if (copy) {
+      if (!dropped && d.el.hasAttribute("data-ah-revert") && d.orig) {
+        $(copy).css("transition", "left .2s ease, top .2s ease")
+          .css({ left: d.orig.left + "px", top: d.orig.top + "px" });
+        setTimeout(function () { $(copy).remove(); }, 220);
+      } else {
+        $(copy).remove();
+      }
+    }
+    $(item).trigger("ah:drag-end");
+  }
+
+  function ddDrop(d) {
+    var zone = d.target, item = d.item, el = d.el;
+    var key = item.getAttribute("data-ah-drag");
+    var dest = zone.getAttribute("data-ah-drop");
+    var focused = document.activeElement === item;
+    $(zone).removeClass("ah-drop-target-active");
+    if (el.hasAttribute("data-ah-move") && item.parentNode !== zone) {
+      zone.appendChild(item);
+      if (focused) { item.focus(); }
+    }
+    ddFinish(d, true);
+    el.setAttribute("data-drag", key);
+    el.setAttribute("data-drop", dest);
+    el.setAttribute("data-from", d.from);
+    $(zone).trigger("ah:drop", [{ drag: key, drop: dest, from: d.from }]);
+    announce(ddLive(el), label(item) + " dropped on " + label(zone) + ".");
+  }
+
+  function ddCancel(d) {
+    ddTarget(d, null);
+    ddFinish(d, false);
+    $(d.item).trigger("ah:drag-cancel");
+  }
+
+  function ddLive(el) {
+    var $live = $(el).children(".ah-dnd-live");
+    if (!$live.length) {
+      $live = $('<span class="ah-sortable-live ah-dnd-live" aria-live="assertive" aria-atomic="true"></span>')
+        .appendTo(el);
+    }
+    return $live;
+  }
+
+  // Keyboard: Space/Enter picks up, arrows walk the zones, Space/Enter
+  // drops, Escape (or leaving the item) cancels.
+  function ddKeydown(el, item, e) {
+    var d = drag && drag.kind === "dragdrop-key" && drag.item === item ? drag : null;
+    var pick = e.key === " " || e.key === "Enter";
+    if (!d) {
+      if (pick && !drag && ddUsable(el, item)) {
+        e.preventDefault();
+        d = { kind: "dragdrop-key", el: el, item: item };
+        ddBegin(d);
+        if (!d.zones.length) {
+          ddFinish(d, false);
+          announce(ddLive(el), "No drop zone takes " + label(item) + ".");
+          return;
+        }
+        drag = d;
+        d.cancel = function () { drag = null; ddCancel(d); };
+        d.pos = -1;
+        announce(ddLive(el), "Picked up " + label(item) + ". Arrow keys choose one of " +
+                 d.zones.length + " drop zones, Space drops, Escape cancels.");
+      }
+      return;
+    }
+    var n = d.zones.length;
+    if (/^Arrow/.test(e.key)) {
+      e.preventDefault();
+      var step = e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 1;
+      d.pos = d.pos < 0 ? (step > 0 ? 0 : n - 1) : (d.pos + step + n) % n;
+      ddTarget(d, d.zones[d.pos]);
+      announce(ddLive(el), label(d.zones[d.pos]) + ", drop zone " + (d.pos + 1) + " of " + n + ".");
+    } else if (pick) {
+      e.preventDefault();
+      drag = null;
+      if (d.target) { ddDrop(d); } else { ddCancel(d); }
+    } else if (e.key === "Escape") {
+      e.preventDefault();
+      d.cancel();
+      announce(ddLive(el), "Cancelled.");
+    }
+  }
+
+  AH.define("dragdrop", {
+    init: function (el, $el) {
+      $el.on("pointerdown" + NS, "[data-ah-drag]", function (e) {
+        var item = this;
+        if (drag || !ddScope(el, item) || !ddUsable(el, item) ||
+            (e.pointerType === "mouse" && e.button !== 0) || editable(e.target)) {
+          return;
+        }
+        if ($(e.target).closest("[data-ah-drag]")[0] !== item) { return; }
+        e.preventDefault();
+        try { item.focus({ preventScroll: true }); } catch (err) { /* ignore */ }
+        var d = { kind: "dragdrop", el: el, item: item, pointerId: e.pointerId,
+                  x0: px(e), y0: py(e), started: false };
+        track(d, function (me) {
+          if (!d.started) {
+            if (Math.abs(px(me) - d.x0) + Math.abs(py(me) - d.y0) <= DISTANCE) { return; }
+            d.started = true;
+            var r = pageRect(item);
+            d.orig = { left: r.left, top: r.top };
+            d.offX = d.x0 - r.left;
+            d.offY = d.y0 - r.top;
+            d.box = scrollParent(el);
+            d.copy = floatingCopy(item, "ah-drag-feedback", 0.6);
+            $("body").addClass("ah-disableselect");
+            ddBegin(d);
+          }
+          d.px = px(me); d.py = py(me); d.cx = me.clientX; d.cy = me.clientY;
+          if (d.raf) { return; }
+          d.raf = requestAnimationFrame(function () {
+            d.raf = 0;
+            if (drag !== d) { return; }
+            $(d.copy).css({ left: (d.px - d.offX) + "px", top: (d.py - d.offY) + "px" });
+            autoScroll(d.box, d.cx, d.cy);
+            ddTarget(d, ddHit(d, d.px, d.py));
+            $(item).trigger("ah:dragging", [{ pageX: d.px, pageY: d.py }]);
+          });
+        }, function (ue) {
+          if (!d.started) { return; }
+          swallowClick();
+          // the last frame may not have run: test where the pointer let go
+          $(d.copy).css({ left: (px(ue) - d.offX) + "px", top: (py(ue) - d.offY) + "px" });
+          ddTarget(d, ddHit(d, px(ue), py(ue)));
+          if (d.target) { ddDrop(d); } else { ddFinish(d, false); }
+        }, function () {
+          if (d.started) { ddCancel(d); }
+        });
+      });
+      $el.on("keydown" + NS, "[data-ah-drag]", function (e) {
+        if (e.target === this && ddScope(el, this)) { ddKeydown(el, this, e); }
+      });
+      $el.on("focusout" + NS, "[data-ah-drag]", function () {
+        var item = this;
+        setTimeout(function () {
+          if (drag && drag.kind === "dragdrop-key" && drag.item === item &&
+              document.activeElement !== item) {
+            drag.cancel();
+          }
+        }, 0);
+      });
+    },
+    destroy: function (el, $el) {
+      cancelFor(el);
+      $el.children(".ah-dnd-live").remove();
+    },
+    methods: {
+      enable: function (el, $el) {
+        $el.removeClass("ah-dragdrop-disabled").removeAttr("aria-disabled");
+      },
+      disable: function (el, $el) {
+        cancelFor(el);
+        $el.addClass("ah-dragdrop-disabled").attr("aria-disabled", "true");
+      },
+      cancel: function (el) { cancelFor(el); }
     }
   });
 })(window.jQuery, window.AH);
@@ -7567,6 +12555,680 @@
         var h = $.data(this, "ah-float");
         if (h) { h.stop(); }
       });
+    }
+  });
+})(window.jQuery, window.AH);
+
+/* ---- components/layout_scroll.js ---- */
+/* Behaviours of the layout_scroll components (designs/04-components.md).
+ *
+ * Ported from sigil's scrollview, scrollbar and responsive-panel (cljs +
+ * jQuery). The scrollview and the standalone scrollbar keep their value in
+ * data-ah-value on the root, mirror it into a hidden input when there is
+ * one, and fire "change" on the root when the user changes it. Methods
+ * called by the server (AH.invoke / aihtml_action:call) update the value
+ * without firing "change".
+ *
+ * Drags use pointer capture, so nothing is bound on document except the
+ * responsive panel's click-outside listener, which destroy removes.
+ */
+(function ($, AH) {
+  "use strict";
+
+  var NS = AH.NS;
+  var seq = 0;
+
+  function setValue(el, $el, v) {
+    el.setAttribute("data-ah-value", v);
+    $el.children("input[type=hidden]").val(v);
+  }
+
+  function num(el, name, dflt) {
+    var v = parseFloat(el.getAttribute(name));
+    return isNaN(v) ? dflt : v;
+  }
+
+  function capture(node, e) {
+    var id = e.originalEvent && e.originalEvent.pointerId;
+    if (id !== undefined && node.setPointerCapture) {
+      try { node.setPointerCapture(id); } catch (err) { /* synthetic event */ }
+    }
+  }
+
+  // ------------------------------------------------------------------
+  // ScrollView: a horizontal pager (sigil layout/scrollview)
+  // ------------------------------------------------------------------
+  //
+  // Pages are 100% wide and the wrapper moves by margin-left in percent,
+  // so the layout follows the container without measuring; drags move it
+  // in pixels and the page change animates back to a percentage.
+
+  var SV = "ah-scrollview";
+  var SV_DEAD_ZONE = 15;
+
+  function svState(el) {
+    var st = $.data(el, "ahScrollview");
+    if (!st) {
+      st = { timer: null, anim: null, paused: false };
+      $.data(el, "ahScrollview", st);
+    }
+    return st;
+  }
+
+  function svWrapper($el) { return $el.children("." + SV + "-wrapper"); }
+  function svPages($el) { return svWrapper($el).children("." + SV + "-page"); }
+  function svIndex(el) { return parseInt(el.getAttribute("data-ah-value"), 10) || 0; }
+  function svDisabled($el) { return $el.hasClass(SV + "-disabled"); }
+
+  function svDuration(el) { return num(el, "data-duration", 300); }
+
+  // Turn the transition on for one move and off again when it ends.
+  function svAnimate(el, $el) {
+    var st = svState(el);
+    $el.addClass(SV + "-animating");
+    clearTimeout(st.anim);
+    st.anim = setTimeout(function () {
+      st.anim = null;
+      $el.removeClass(SV + "-animating");
+    }, svDuration(el) + 50);
+  }
+
+  function svPlace($el, idx) {
+    svWrapper($el)[0].style.marginLeft = idx ? (-idx * 100) + "%" : "";
+  }
+
+  function svMark($el, idx) {
+    svPages($el).each(function (i) {
+      var on = i === idx;
+      if (on) {
+        this.removeAttribute("aria-hidden");
+        this.removeAttribute("inert");
+      } else {
+        this.setAttribute("aria-hidden", "true");
+        this.setAttribute("inert", "");
+      }
+    });
+    $el.children("." + SV + "-buttons").children("." + SV + "-button").each(function (i) {
+      var on = i === idx;
+      $(this).toggleClass(SV + "-button-active", on);
+      if (on) { this.setAttribute("aria-current", "true"); } else { this.removeAttribute("aria-current"); }
+    });
+  }
+
+  // how: "user" fires change, "api" and "auto" only ah:page-changed.
+  function svGo(el, $el, idx, how) {
+    var cnt = svPages($el).length;
+    if (!cnt) { return; }
+    idx = Math.max(0, Math.min(cnt - 1, idx));
+    var old = svIndex(el);
+    svAnimate(el, $el);
+    svPlace($el, idx);
+    if (idx === old) { return; }
+    svMark($el, idx);
+    setValue(el, $el, String(idx));
+    $el.trigger("ah:page-changed", [{ page: idx, old: old }]);
+    if (how === "user") { $el.trigger("change"); }
+  }
+
+  function svStart(el, $el) {
+    var st = svState(el);
+    if (st.timer) { return; }
+    st.timer = setInterval(function () {
+      if (st.paused || svDisabled($el)) { return; }
+      var cnt = svPages($el).length, cur = svIndex(el);
+      svGo(el, $el, cur + 1 >= cnt ? 0 : cur + 1, "auto");
+    }, num(el, "data-slide-duration", 3000));
+  }
+
+  function svStop(el) {
+    var st = svState(el);
+    clearInterval(st.timer);
+    st.timer = null;
+  }
+
+  AH.define("scrollview", {
+    init: function (el, $el) {
+      var st = svState(el);
+      var $w = svWrapper($el);
+      var drag = null;
+      svMark($el, svIndex(el));
+
+      $w.on("pointerdown" + NS, function (e) {
+        if (svDisabled($el) || (e.button !== undefined && e.button !== 0)) { return; }
+        $el.removeClass(SV + "-animating");
+        drag = { x: e.clientX, ml: parseFloat(getComputedStyle(this).marginLeft) || 0,
+                 moving: false, node: this, e: e };
+      });
+      $w.on("pointermove" + NS, function (e) {
+        if (!drag) { return; }
+        var dx = e.clientX - drag.x;
+        if (!drag.moving) {
+          if (Math.abs(dx) <= SV_DEAD_ZONE) { return; }
+          drag.moving = true;
+          capture(drag.node, drag.e);
+          $el.addClass(SV + "-dragging");
+        }
+        e.preventDefault();
+        var cw = $el.width(), cnt = svPages($el).length;
+        var ml = drag.ml + dx;
+        if (el.getAttribute("data-bounce") === "false") {
+          ml = Math.max(-(cnt - 1) * cw, Math.min(0, ml));
+        }
+        this.style.marginLeft = ml + "px";
+      });
+      $w.on("pointerup" + NS + " pointercancel" + NS, function () {
+        if (!drag) { return; }
+        var d = drag;
+        drag = null;
+        if (!d.moving) { return; }
+        $el.removeClass(SV + "-dragging");
+        // swallow the click that ends a drag, so links in a page stay put
+        $w.one("click" + NS, function (c) { c.preventDefault(); c.stopPropagation(); });
+        setTimeout(function () { $w.off("click" + NS); }, 0);
+        var dx = (parseFloat(this.style.marginLeft) || 0) - d.ml;
+        var cw = $el.width(), threshold = num(el, "data-threshold", 0.5) * cw;
+        var cur = svIndex(el), target = cur;
+        if (dx < -threshold) { target = cur + 1; } else if (dx > threshold) { target = cur - 1; }
+        svGo(el, $el, target, "user");
+      });
+      $w.on("dragstart" + NS, function (e) { e.preventDefault(); });
+
+      $el.on("click" + NS, "." + SV + "-button", function () {
+        if ($(this).closest("." + SV)[0] !== el || svDisabled($el)) { return; }
+        svGo(el, $el, $(this).index(), "user");
+      });
+
+      $el.on("keydown" + NS, function (e) {
+        if (e.target !== el || svDisabled($el)) { return; }
+        var cur = svIndex(el), cnt = svPages($el).length, to = null;
+        switch (e.key) {
+          case "ArrowLeft": case "ArrowUp": case "PageUp": to = cur - 1; break;
+          case "ArrowRight": case "ArrowDown": case "PageDown": to = cur + 1; break;
+          case "Home": to = 0; break;
+          case "End": to = cnt - 1; break;
+          default: return;
+        }
+        e.preventDefault();
+        svGo(el, $el, to, "user");
+      });
+
+      // the slide show waits while the pointer or the focus is inside
+      $el.on("mouseenter" + NS + " focusin" + NS, function () { st.paused = true; });
+      $el.on("mouseleave" + NS + " focusout" + NS, function (e) {
+        if (e.type === "focusout" && e.relatedTarget && $.contains(el, e.relatedTarget)) { return; }
+        st.paused = false;
+      });
+      if (el.hasAttribute("data-slide-show")) { svStart(el, $el); }
+    },
+    destroy: function (el) {
+      var st = svState(el);
+      svStop(el);
+      clearTimeout(st.anim);
+      $.removeData(el, "ahScrollview");
+    },
+    methods: {
+      setValue: function (el, $el, v) { svGo(el, $el, parseInt(v, 10) || 0, "api"); },
+      getValue: function (el) { return svIndex(el); },
+      forward: function (el, $el) {
+        var cur = svIndex(el);
+        if (cur + 1 < svPages($el).length) { svGo(el, $el, cur + 1, "api"); }
+      },
+      back: function (el, $el) {
+        var cur = svIndex(el);
+        if (cur > 0) { svGo(el, $el, cur - 1, "api"); }
+      },
+      startSlideShow: function (el, $el) { svStart(el, $el); },
+      stopSlideShow: function (el) { svStop(el); },
+      refresh: function (el, $el) {
+        var cnt = svPages($el).length, cur = Math.min(svIndex(el), Math.max(0, cnt - 1));
+        setValue(el, $el, String(cur));
+        svPlace($el, cur);
+        svMark($el, cur);
+      }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // Scrollbar (sigil layout/scrollbar, and the bars of sigil's panel)
+  // ------------------------------------------------------------------
+  //
+  // One bar is .ah-scrollbar with five parts: up button, track before the
+  // thumb, thumb, track after it, down button. sbLayout sizes them from a
+  // value in [min, max] exactly as sigil's arrange! does.
+
+  var SB = "ah-scrollbar";
+  var SB_BTN = 14;
+
+  function sbParts(bar) {
+    var $b = $(bar);
+    return {
+      up: $b.children("." + SB + "-btn-up")[0],
+      tu: $b.children("." + SB + "-track-up")[0],
+      thumb: $b.children("." + SB + "-thumb")[0],
+      td: $b.children("." + SB + "-track-down")[0],
+      down: $b.children("." + SB + "-btn-down")[0]
+    };
+  }
+
+  function sbVertical(bar) { return $(bar).hasClass(SB + "-vertical"); }
+
+  // Geometry of a bar for a value: track length, thumb size and position.
+  function sbGeom(bar, o) {
+    var vert = sbVertical(bar);
+    var total = vert ? bar.clientHeight : bar.clientWidth;
+    var track = Math.max(0, total - (o.buttons ? 2 * SB_BTN : 0));
+    var range = o.max - o.min;
+    var ts = range <= 0 ? track : Math.max(o.thumbMin, track * track / (track + range));
+    ts = Math.min(ts, track);
+    var tp = range <= 0 ? 0 : (o.value - o.min) / range * (track - ts);
+    return { vert: vert, track: track, ts: ts, tp: tp };
+  }
+
+  function sbLayout(bar, o) {
+    var g = sbGeom(bar, o), p = sbParts(bar), dim = g.vert ? "height" : "width";
+    p.up.style.display = p.down.style.display = o.buttons ? "" : "none";
+    p.tu.style[dim] = g.tp + "px";
+    p.thumb.style[dim] = g.ts + "px";
+    p.td.style[dim] = Math.max(0, g.track - g.ts - g.tp) + "px";
+    return g;
+  }
+
+  function sbPosToValue(bar, o, pos) {
+    var g = sbGeom(bar, o), free = g.track - g.ts;
+    return free <= 0 ? o.min : o.min + Math.max(0, Math.min(free, pos)) / free * (o.max - o.min);
+  }
+
+  // Repeat fn while a button is held: once now, again after 300ms, then
+  // every 50ms (sigil util/start-repeat-timer!).
+  function sbRepeat(node, e, fn) {
+    fn();
+    var iv = null;
+    var t = setTimeout(function () { iv = setInterval(fn, 50); }, 300);
+    capture(node, e);
+    $(node).on("pointerup.ahrep pointercancel.ahrep lostpointercapture.ahrep", function () {
+      clearTimeout(t);
+      clearInterval(iv);
+      $(node).off(".ahrep");
+    });
+  }
+
+  // Wire one bar. api: {opts(), set(value, phase), start()} where phase is
+  // "input" while dragging, "change" otherwise and "end" when a drag ends.
+  function sbBind(bar, api) {
+    var p = sbParts(bar);
+    $(p.up).add(p.down).on("pointerdown" + NS, function (e) {
+      if (e.button !== undefined && e.button !== 0) { return; }
+      e.preventDefault();
+      var dir = this === p.up ? -1 : 1;
+      sbRepeat(this, e, function () { var o = api.opts(); api.set(o.value + dir * o.step, "change"); });
+    });
+    $(p.tu).add(p.td).on("pointerdown" + NS, function (e) {
+      if (e.button !== undefined && e.button !== 0) { return; }
+      e.preventDefault();
+      var o = api.opts();
+      api.set(o.value + (this === p.tu ? -1 : 1) * o.large, "change");
+    });
+    var drag = null;
+    $(p.thumb).on("pointerdown" + NS, function (e) {
+      if (e.button !== undefined && e.button !== 0) { return; }
+      e.preventDefault();
+      var o = api.opts(), g = sbGeom(bar, o);
+      drag = { start: g.vert ? e.clientY : e.clientX, pos: g.tp, vert: g.vert, value: o.value };
+      capture(this, e);
+      $(this).addClass(SB + "-thumb-pressed");
+      if (api.start) { api.start(); }
+    });
+    $(p.thumb).on("pointermove" + NS, function (e) {
+      if (!drag) { return; }
+      var cur = drag.vert ? e.clientY : e.clientX;
+      api.set(sbPosToValue(bar, api.opts(), drag.pos + cur - drag.start), "input");
+    });
+    $(p.thumb).on("pointerup" + NS + " pointercancel" + NS, function () {
+      if (!drag) { return; }
+      var before = drag.value;
+      drag = null;
+      $(this).removeClass(SB + "-thumb-pressed");
+      api.set(api.opts().value, "end", before);
+    });
+  }
+
+  function sbObserve(el, targets, fn) {
+    var st = $.data(el, "ahScrollbar");
+    if (window.ResizeObserver) {
+      st.ro = new ResizeObserver(function () { fn(); });
+      targets.forEach(function (t) { if (t) { st.ro.observe(t); } });
+    } else {
+      st.ns = ".ahsb" + (++seq);
+      $(window).on("resize" + st.ns, fn);
+    }
+  }
+
+  // --- standalone bar ---------------------------------------------------
+
+  function sbOpts(el) {
+    return {
+      min: num(el, "data-min", 0), max: num(el, "data-max", 1000),
+      value: num(el, "data-ah-value", 0),
+      step: num(el, "data-step", 10), large: num(el, "data-large-step", 50),
+      thumbMin: num(el, "data-thumb-min", 10),
+      buttons: el.getAttribute("data-buttons") !== "false"
+    };
+  }
+
+  function sbIntegral(o) {
+    return o.min % 1 === 0 && o.max % 1 === 0 && o.step % 1 === 0 && o.large % 1 === 0;
+  }
+
+  function sbBar($el) { return $el.children("." + SB)[0]; }
+
+  function sbSet(el, $el, v, event) {
+    var o = sbOpts(el);
+    v = Math.max(o.min, Math.min(o.max, +v || 0));
+    if (sbIntegral(o)) { v = Math.round(v); }
+    var changed = v !== o.value;
+    if (changed) {
+      setValue(el, $el, String(v));
+      el.setAttribute("aria-valuenow", String(v));
+    }
+    o.value = v;
+    sbLayout(sbBar($el), o);
+    if (changed && event) { $el.trigger(event); }
+    return changed;
+  }
+
+  function sbStandalone(el, $el) {
+    var bar = sbBar($el);
+    var disabled = function () { return $el.hasClass(SB + "-disabled"); };
+    sbBind(bar, {
+      opts: function () { return sbOpts(el); },
+      set: function (v, phase, before) {
+        if (disabled()) { return; }
+        if (phase === "end") {
+          if (String(before) !== el.getAttribute("data-ah-value")) { $el.trigger("change"); }
+          return;
+        }
+        sbSet(el, $el, v, phase);
+      },
+      start: function () { el.focus({ preventScroll: true }); }
+    });
+    $el.on("keydown" + NS, function (e) {
+      if (e.target !== el || disabled()) { return; }
+      var o = sbOpts(el), vert = sbVertical(bar), to;
+      switch (e.key) {
+        case "ArrowLeft": if (vert) { return; } to = o.value - o.step; break;
+        case "ArrowRight": if (vert) { return; } to = o.value + o.step; break;
+        case "ArrowUp": if (!vert) { return; } to = o.value - o.step; break;
+        case "ArrowDown": if (!vert) { return; } to = o.value + o.step; break;
+        case "PageUp": to = o.value - o.large; break;
+        case "PageDown": to = o.value + o.large; break;
+        case "Home": to = o.min; break;
+        case "End": to = o.max; break;
+        default: return;
+      }
+      e.preventDefault();
+      sbSet(el, $el, to, "change");
+    });
+    var relayout = function () { sbLayout(bar, sbOpts(el)); };
+    sbObserve(el, [el], relayout);
+    relayout();
+  }
+
+  // --- scroll area --------------------------------------------------------
+
+  function saParts($el) {
+    return {
+      vp: $el.children("." + SB + "-viewport")[0],
+      v: $el.children("." + SB + "-vertical")[0],
+      h: $el.children("." + SB + "-horizontal")[0]
+    };
+  }
+
+  function saOpts(el, vp, vert) {
+    var max = vert ? vp.scrollHeight - vp.clientHeight : vp.scrollWidth - vp.clientWidth;
+    var page = vert ? vp.clientHeight : vp.clientWidth;
+    return {
+      min: 0, max: Math.max(0, max),
+      value: vert ? vp.scrollTop : vp.scrollLeft,
+      step: num(el, "data-step", 10) * 3, large: Math.max(10, page * 0.9),
+      thumbMin: num(el, "data-thumb-min", 10),
+      buttons: el.getAttribute("data-buttons") !== "false"
+    };
+  }
+
+  // Which bars the content needs: showing one narrows the viewport, which
+  // may make the other one necessary, so settle it in two passes.
+  function saLayout(el, $el) {
+    var p = saParts($el), vp = p.vp;
+    var needV = false, needH = false;
+    for (var i = 0; i < 2; i++) {
+      $el.toggleClass(SB + "-area-v", needV).toggleClass(SB + "-area-h", needH);
+      needV = vp.scrollHeight > vp.clientHeight + 1;
+      needH = vp.scrollWidth > vp.clientWidth + 1;
+    }
+    $el.toggleClass(SB + "-area-v", needV).toggleClass(SB + "-area-h", needH);
+    if (needV) { sbLayout(p.v, saOpts(el, vp, true)); }
+    if (needH) { sbLayout(p.h, saOpts(el, vp, false)); }
+  }
+
+  function saSync(el, $el) {
+    var p = saParts($el);
+    if ($el.hasClass(SB + "-area-v")) { sbLayout(p.v, saOpts(el, p.vp, true)); }
+    if ($el.hasClass(SB + "-area-h")) { sbLayout(p.h, saOpts(el, p.vp, false)); }
+  }
+
+  function saArea(el, $el) {
+    var p = saParts($el);
+    [[p.v, true], [p.h, false]].forEach(function (b) {
+      var vert = b[1];
+      sbBind(b[0], {
+        opts: function () { return saOpts(el, p.vp, vert); },
+        set: function (v, phase) {
+          if (phase === "end" || $el.hasClass(SB + "-disabled")) { return; }
+          if (vert) { p.vp.scrollTop = v; } else { p.vp.scrollLeft = v; }
+          saSync(el, $el);
+        }
+      });
+    });
+    $(p.vp).on("scroll" + NS, function () { saSync(el, $el); });
+    var content = $(p.vp).children("." + SB + "-content")[0];
+    sbObserve(el, [p.vp, content], function () { saLayout(el, $el); });
+    saLayout(el, $el);
+  }
+
+  AH.define("scrollbar", {
+    init: function (el, $el) {
+      $.data(el, "ahScrollbar", {});
+      if (el.hasAttribute("data-area")) { saArea(el, $el); } else { sbStandalone(el, $el); }
+    },
+    destroy: function (el) {
+      var st = $.data(el, "ahScrollbar") || {};
+      if (st.ro) { st.ro.disconnect(); }
+      if (st.ns) { $(window).off(st.ns); }
+      $.removeData(el, "ahScrollbar");
+    },
+    methods: {
+      setValue: function (el, $el, v) {
+        if (!el.hasAttribute("data-area")) { sbSet(el, $el, v, null); }
+      },
+      getValue: function (el) { return num(el, "data-ah-value", 0); },
+      setMax: function (el, $el, max) {
+        el.setAttribute("data-max", String(max));
+        el.setAttribute("aria-valuemax", String(max));
+        sbSet(el, $el, num(el, "data-ah-value", 0), null);
+        sbLayout(sbBar($el), sbOpts(el));
+      },
+      scrollTo: function (el, $el, x, y) {
+        var vp = saParts($el).vp;
+        if (vp) {
+          vp.scrollLeft = x || 0;
+          vp.scrollTop = y || 0;
+        }
+      },
+      refresh: function (el, $el) {
+        if (el.hasAttribute("data-area")) { saLayout(el, $el); } else { sbLayout(sbBar($el), sbOpts(el)); }
+      }
+    }
+  });
+
+  // ------------------------------------------------------------------
+  // Responsive panel (sigil layout/responsive_panel)
+  // ------------------------------------------------------------------
+  //
+  // Folded when the parent is at most data-breakpoint px wide: the content
+  // then floats below the toggle (AH.float) while open.
+
+  var RP = "ah-responsive-panel";
+
+  function rpState(el) { return $.data(el, "ahRpanel"); }
+  function rpToggle($el) { return $el.children("." + RP + "-toggle"); }
+  function rpContent($el) { return $el.children("." + RP + "-content"); }
+  function rpDisabled($el) { return $el.hasClass(RP + "-disabled"); }
+
+  function rpLoad($el) {
+    var st = rpState($el[0]), $c = rpContent($el);
+    if (st.loaded) { return; }
+    st.loaded = true;
+    if (/(^|\s)ah:load:/.test($c.attr("data-ah-on") || "")) { $c.trigger("ah:load"); }
+  }
+
+  function rpSpeed(el, name) { return num(el, name, 200); }
+
+  function rpClearStyles($c) {
+    $c.stop(true, true).css({ display: "", opacity: "", width: "" });
+  }
+
+  function rpOpen(el, $el) {
+    var st = rpState(el);
+    if (!st.collapsed || st.open || rpDisabled($el)) { return; }
+    var $c = rpContent($el), $t = rpToggle($el);
+    var anim = el.getAttribute("data-animation") || "fade", speed = rpSpeed(el, "data-show-duration");
+    var cw = el.getAttribute("data-collapse-width");
+    rpClearStyles($c);
+    if (cw) { $c.css("width", /^\d+(\.\d+)?$/.test(cw) ? cw + "px" : cw); }
+    st.open = true;
+    $el.addClass(RP + "-open");
+    $t.attr("aria-expanded", "true");
+    st.float = AH.float($c[0], $t[0], { placement: "bottom", align: "start", offset: 4 });
+    var shown = function () {
+      if (st.float) { st.float.update(); }
+      $el.trigger("ah:open");
+    };
+    if (anim === "fade") {
+      $c.css("opacity", 0).animate({ opacity: 1 }, speed, shown);
+    } else if (anim === "slide") {
+      $c.hide().slideDown(speed, shown);
+    } else {
+      shown();
+    }
+    rpLoad($el);
+  }
+
+  function rpClose(el, $el, instant) {
+    var st = rpState(el);
+    if (!st.open) { return; }
+    var $c = rpContent($el), $t = rpToggle($el);
+    var anim = instant ? "none" : (el.getAttribute("data-animation") || "fade");
+    var speed = rpSpeed(el, "data-hide-duration");
+    st.open = false;
+    $t.attr("aria-expanded", "false");
+    if ($.contains($c[0], document.activeElement)) { $t[0].focus(); }
+    var hidden = function () {
+      $el.removeClass(RP + "-open");
+      if (st.float) { st.float.stop(); st.float = null; }
+      $c.css({ display: "", opacity: "" });
+      if (!instant) { $el.trigger("ah:close"); }
+    };
+    $c.stop(true, true);
+    if (anim === "fade") { $c.fadeOut(speed, hidden); }
+    else if (anim === "slide") { $c.slideUp(speed, hidden); }
+    else { hidden(); }
+  }
+
+  function rpCheck(el, $el) {
+    var st = rpState(el);
+    var bp = num(el, "data-breakpoint", 1000);
+    var pw = $el.parent().width();
+    if (!st.collapsed && pw <= bp) {
+      if (st.open) { rpClose(el, $el, true); }
+      st.collapsed = true;
+      $el.addClass(RP + "-collapsed");
+      $el.trigger("ah:collapse");
+    } else if (st.collapsed && pw > bp) {
+      rpClose(el, $el, true);
+      st.collapsed = false;
+      $el.removeClass(RP + "-collapsed " + RP + "-open");
+      rpClearStyles(rpContent($el));
+      $el.trigger("ah:expand");
+      rpLoad($el);
+    }
+  }
+
+  function rpFlip(el, $el) {
+    if (rpState(el).open) { rpClose(el, $el); } else { rpOpen(el, $el); }
+  }
+
+  AH.define("responsive-panel", {
+    init: function (el, $el) {
+      var st = { collapsed: false, open: false, loaded: false, float: null,
+                 ns: ".ahrp" + (++seq), ro: null, $ext: $() };
+      $.data(el, "ahRpanel", st);
+      var $t = rpToggle($el);
+      $t.on("click" + NS, function () {
+        if (!rpDisabled($el)) { rpFlip(el, $el); }
+      });
+      $t.on("keydown" + NS, function (e) {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (!rpDisabled($el)) { rpFlip(el, $el); }
+        }
+      });
+      $el.on("keydown" + NS, function (e) {
+        if (e.key === "Escape" && st.open) {
+          e.stopPropagation();
+          rpClose(el, $el);
+          $t[0].focus();
+        }
+      });
+      var sel = el.getAttribute("data-toggle-button");
+      if (sel) {
+        st.$ext = $(sel).on("click" + st.ns, function () {
+          if (!rpDisabled($el)) { rpFlip(el, $el); }
+        });
+      }
+      $(document).on("click" + st.ns, function (e) {
+        if (st.open && el.getAttribute("data-auto-close") !== "false" &&
+            !$.contains(el, e.target) && e.target !== el &&
+            !st.$ext.filter(function () { return this === e.target || $.contains(this, e.target); }).length) {
+          rpClose(el, $el);
+        }
+      });
+      var check = function () { rpCheck(el, $el); };
+      if (window.ResizeObserver && el.parentNode) {
+        st.ro = new ResizeObserver(check);
+        st.ro.observe(el.parentNode);
+      }
+      $(window).on("resize" + st.ns, check);
+      check();
+      if (!st.collapsed) { rpLoad($el); }
+    },
+    destroy: function (el, $el) {
+      var st = rpState(el);
+      if (!st) { return; }
+      if (st.float) { st.float.stop(); }
+      if (st.ro) { st.ro.disconnect(); }
+      rpContent($el).stop(true, true);
+      $(document).off(st.ns);
+      $(window).off(st.ns);
+      st.$ext.off(st.ns);
+      $.removeData(el, "ahRpanel");
+    },
+    methods: {
+      open: function (el, $el) { rpOpen(el, $el); },
+      close: function (el, $el) { rpClose(el, $el); },
+      toggle: function (el, $el) { if (rpState(el).collapsed) { rpFlip(el, $el); } },
+      refresh: function (el, $el) { rpCheck(el, $el); },
+      isCollapsed: function (el) { return !!rpState(el).collapsed; },
+      isOpen: function (el) { return !!rpState(el).open; }
     }
   });
 })(window.jQuery, window.AH);
