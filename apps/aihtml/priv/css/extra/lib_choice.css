@@ -1,0 +1,81 @@
+/* aihtml additions shared by the choice components (checkbox, radiobutton,
+   switch_button, checkbox_group, radiobutton_group, radio_cards;
+   designs/04-components.md). Sigil styles live in ../sigil/components.
+
+   sigil draws these controls as <div role=checkbox>; aihtml keeps a real
+   <input> inside a <label>, hidden visually but focusable, so the focus
+   ring, hover and pressed states are drawn from the input and the label
+   here instead of the JS-toggled -focused / -hover / -pressed classes. */
+
+/* ---- the native input ---- */
+.ah-checkbox,
+.ah-radiobutton,
+.ah-switch,
+.ah-radio-cards__card {
+  position: relative;
+}
+
+.ah-choice-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.ah-choice-input:focus-visible + .ah-checkbox-box,
+.ah-choice-input:focus-visible + .ah-radiobutton-box,
+.ah-choice-input:focus-visible + .ah-switch-track {
+  outline: var(--ah-state-focus-outline-width) solid var(--ah-color-text);
+  outline-offset: var(--ah-state-focus-outline-offset);
+}
+
+/* ---- checkbox / radio: sizes (sigil's box-size, default 16px) ---- */
+.ah-checkbox-box,
+.ah-radiobutton-box {
+  width: 16px;
+  height: 16px;
+}
+
+.ah-checkbox-sm .ah-checkbox-box,
+.ah-radiobutton-sm .ah-radiobutton-box {
+  width: 14px;
+  height: 14px;
+}
+
+.ah-checkbox-lg .ah-checkbox-box,
+.ah-radiobutton-lg .ah-radiobutton-box {
+  width: 20px;
+  height: 20px;
+}
+
+.ah-checkbox-sm,
+.ah-radiobutton-sm,
+.ah-switch-sm {
+  font-size: var(--ah-font-size-xs);
+}
+
+.ah-checkbox-lg,
+.ah-radiobutton-lg,
+.ah-switch-lg {
+  font-size: var(--ah-font-size-base);
+}
+
+.ah-checkbox:active:not(.ah-checkbox-disabled) .ah-checkbox-box,
+.ah-radiobutton:active:not(.ah-radiobutton-disabled) .ah-radiobutton-box {
+  transform: scale(0.95);
+}
+
+/* Inside a group the inner control has no label of its own. */
+.ah-checkbox-group-item .ah-checkbox,
+.ah-radiobutton-group-item .ah-radiobutton {
+  gap: 0;
+}
