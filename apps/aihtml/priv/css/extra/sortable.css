@@ -1,0 +1,60 @@
+/* aihtml additions for sortable (aihtml_sortable). sigil styles live in
+   ../sigil/components/sortable.css; sigil leaves the list layout and the
+   item look to the page, aihtml renders the list itself, so both are
+   added here. The item look uses :where() so that Tailwind classes on an
+   item always win. Rules shared with dragdrop: lib_dnd.css. */
+
+/* ---- sortable: layouts ---- */
+
+.ah-sortable-vertical { display: flex; flex-direction: column; gap: var(--ah-spacing-xs, 4px); }
+.ah-sortable-horizontal { display: flex; flex-wrap: wrap; align-items: stretch; gap: var(--ah-spacing-sm, 8px); }
+.ah-sortable-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(6rem, 1fr));
+  gap: var(--ah-spacing-sm, 8px);
+}
+.ah-sortable-grid > .ah-sortable-placeholder { width: auto !important; }
+.ah-sortable-vertical > .ah-sortable-placeholder { width: auto !important; }
+
+/* connected lists stay a drop target when empty */
+.ah-sortable[data-ah-group] { min-height: 2.75rem; }
+
+/* ---- sortable: items ---- */
+
+:where(.ah-sortable-item) {
+  display: flex;
+  align-items: center;
+  gap: var(--ah-spacing-sm, 8px);
+  padding: 8px 12px;
+  border: var(--ah-border-width, 1px) solid var(--ah-color-border);
+  border-radius: var(--ah-radius-sm);
+  background: var(--ah-color-bg);
+  color: var(--ah-color-text);
+  font-size: var(--ah-font-size-sm);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ah-sortable-item { touch-action: none; }
+.ah-sortable-item.ah-sortable-handle-mode { touch-action: auto; user-select: text; }
+.ah-sortable-item:focus-visible {
+  outline: var(--ah-state-focus-outline-width, 2px) solid var(--ah-color-primary);
+  outline-offset: 2px;
+}
+.ah-sortable-item-grabbed {
+  outline: 2px dashed var(--ah-color-primary);
+  outline-offset: 2px;
+  box-shadow: var(--ah-shadow-md);
+}
+
+.ah-sortable-handle {
+  flex: none;
+  touch-action: none;
+  color: var(--ah-color-text-secondary);
+  font-size: 1rem;
+  line-height: 1;
+  padding: 2px;
+  border-radius: var(--ah-radius-sm);
+}
+.ah-sortable-handle:hover { color: var(--ah-color-text); background: var(--ah-color-grey-100); }
+.ah-sortable-disabled .ah-sortable-item,
+.ah-sortable-disabled .ah-sortable-handle { cursor: default; }
