@@ -1,1 +1,0 @@
-import{t as e}from"./main-C7ceD3Hf.js";import"./_lib_display-StvGidcL.js";e.register(`alert`,class extends e.Controller{setup(){this.delegate(`click`,`.ah-alert-close`,()=>{this.dismiss()})}dismiss(){this.fire(`ah:dismiss`)&&e.lib.display.drop(this.element)}});

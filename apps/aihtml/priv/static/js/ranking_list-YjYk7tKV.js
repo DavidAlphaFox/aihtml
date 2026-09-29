@@ -1,0 +1,1 @@
+import{t as e}from"./main-gayJiH3Z.js";import"./_lib_display-BhsyF6gT.js";var t=e.lib.display,n=`.ah-ranking-list__item--clickable`;e.register(`ranking-list`,class extends e.Controller{setup(){this.delegate(`click`,n,(e,n)=>{this.fire(`ah:item-click`,{index:t.num(n.getAttribute(`data-idx`),0)})}),this.delegate(`keydown`,n,t.keyClick)}});

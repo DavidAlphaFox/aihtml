@@ -915,7 +915,7 @@ The Apache Software Foundation (https://www.apache.org/).
 
 ==============================================================================
 entities 4.5.0 (BSD-2-Clause)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (c) Felix Böhm
@@ -1097,7 +1097,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================
 linkify-it 5.0.2 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (c) 2015 Vitaly Puzrin.
@@ -1125,7 +1125,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================
 markdown-it 14.3.2 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (c) 2014 Vitaly Puzrin, Alex Kocharin.
@@ -1153,7 +1153,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================
 mdurl 2.1.0 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (c) 2015 Vitaly Puzrin, Alex Kocharin.
@@ -1204,7 +1204,7 @@ IN THE SOFTWARE.
 
 ==============================================================================
 orderedmap 2.1.1 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2016 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1269,7 +1269,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 ==============================================================================
 prosemirror-commands 1.7.2 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1294,7 +1294,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-dropcursor 1.8.4 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1319,7 +1319,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-gapcursor 1.4.1 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1344,7 +1344,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-history 1.5.0 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1369,7 +1369,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-inputrules 1.5.1 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1394,7 +1394,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-keymap 1.2.3 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1419,7 +1419,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-markdown 1.13.8 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1444,7 +1444,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-model 1.25.12 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1469,7 +1469,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-schema-list 1.5.1 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1494,7 +1494,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-state 1.4.4 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1519,7 +1519,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-tables 1.8.5 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2016 by Marijn Haverbeke <marijnh@gmail.com> and others
@@ -1544,7 +1544,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-transform 1.12.2 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1569,7 +1569,7 @@ THE SOFTWARE.
 
 ==============================================================================
 prosemirror-view 1.42.6 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2015-2017 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
@@ -1594,7 +1594,7 @@ THE SOFTWARE.
 
 ==============================================================================
 punycode.js 2.3.1 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright Mathias Bynens <https://mathiasbynens.be/>
@@ -1665,7 +1665,7 @@ Please either apply this, the MIT license, or the license in './FEEL-FREE.md'
 
 ==============================================================================
 rope-sequence 1.3.4 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2016 by Marijn Haverbeke <marijn@haverbeke.berlin>
@@ -1762,7 +1762,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 ==============================================================================
 uc.micro 2.1.0 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright Mathias Bynens <https://mathiasbynens.be/>
@@ -1788,7 +1788,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 ==============================================================================
 w3c-keyname 2.2.8 (MIT)
-in: vendor-prosemirror.js
+in: markdown_editor.js
 ==============================================================================
 
 Copyright (C) 2016 by Marijn Haverbeke <marijn@haverbeke.berlin> and others
