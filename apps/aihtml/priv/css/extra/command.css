@@ -1,0 +1,10 @@
+/* aihtml additions for command (aihtml_command). */
+
+/* command palette overlay: closed until opened (display:flex would
+   otherwise beat the hidden attribute). */
+.ah-command-overlay[hidden] { display: none; }
+
+/* filtered-out commands and emptied groups */
+.ah-command__item[hidden],
+.ah-command__group[hidden],
+.ah-command__empty[hidden] { display: none; }
