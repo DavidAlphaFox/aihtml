@@ -38,6 +38,8 @@
 -export([fetch/3, fetch/4]).
 %% Browser events that call Erlang actions (see aihtml_action).
 -export([on/2, on/3]).
+%% Server push (see aihtml_push).
+-export([subscribe/1, subscribe/2]).
 %% Prefabs.
 -export([button/4, checkbox/4, radio/4, switch/4,
          input/3, textarea/3, select/4, field/4,
@@ -256,6 +258,7 @@ void(Tag, Css, Attrs) -> aihtml_html:void(Tag, Css, Attrs).
 %% values that would otherwise be read as children, such as a list of
 %% integers.
 -spec text(term()) -> binary().
+text(V) when is_list(V) -> unicode:characters_to_binary(V);
 text(V) -> beamai_html_escape:to_binary(V, aihtml).
 
 %% @doc Trusted HTML, written without escaping. Never pass user input.
@@ -312,7 +315,7 @@ on(Event, Action) -> on(Event, Action, #{}).
 %% are sent along in the event's `values';
 %% `confirm' asks the user first.
 -spec on(atom() | binary(), aihtml_action:ref(),
-         #{debounce => pos_integer(), include => [iodata() | {id, iodata()}],
+         #{debounce => pos_integer(), include => [iodata() | {id, iodata() | atom()}],
            confirm => iodata()}) -> attrs().
 on(Event, Action, Opts) when is_map(Opts) ->
     E = beamai_html_escape:to_binary(Event, aihtml),
@@ -324,8 +327,22 @@ on(Event, Action, Opts) when is_map(Opts) ->
       || #{include := Sels} <- [Opts], Sels =/= []],
      {data_ah_confirm, maps:get(confirm, Opts, undefined)}].
 
-include_sel({id, Id}) -> <<"#", (iolist_to_binary(Id))/binary>>;
-include_sel(Sel) -> iolist_to_binary(Sel).
+%% @doc Follow a push topic, spliced into the Attrs of the element whose
+%% content the topic updates: `ul(Items, [], [{id, list}, subscribe(todos)])'.
+%% The page opens one event stream for all its topics. One subscription
+%% per element.
+-spec subscribe(aihtml_push:topic()) -> attrs().
+subscribe(Topic) -> subscribe(Topic, #{}).
+
+%% @doc Options: `refresh' is an action run after every reconnect of the
+%% stream (not the first connect), to reload what may have been missed.
+-spec subscribe(aihtml_push:topic(), #{refresh => aihtml_action:ref()}) -> attrs().
+subscribe(Topic, Opts) when is_map(Opts) ->
+    [{data_ah_subscribe, aihtml_push:token(Topic)},
+     [{data_ah_refresh, aihtml_action:token(Ref)} || #{refresh := Ref} <- [Opts]]].
+
+include_sel({id, Id}) -> <<"#", (text(Id))/binary>>;
+include_sel(Sel) -> text(Sel).
 
 target(this) -> <<"this">>;
 target(T) -> iolist_to_binary(T).

@@ -174,6 +174,6 @@ page_test() ->
                    " data-palette=\"rose\"", _/binary>>, H),
     ?assertMatch({_, _}, binary:match(H, <<"<title>T</title>">>)),
     ?assertMatch({_, _}, binary:match(H, <<"<link rel=\"stylesheet\" href=\"/aihtml/aihtml.css\">">>)),
-    ?assertMatch({_, _}, binary:match(H, <<"<body class=\"ah-body\"><p>x</p>"
+    ?assertMatch({_, _}, binary:match(H, <<"<body class=\"ah-body\" data-ah-action=\"/aihtml/action\" data-ah-events=\"/aihtml/events\"><p>x</p>"
                                            "<script src=\"/aihtml/vendor/jquery.min.js\"></script>"
                                            "<script src=\"/aihtml/aihtml.js\"></script></body>">>)).
