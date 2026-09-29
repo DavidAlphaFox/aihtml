@@ -71,3 +71,18 @@ AG-UI 的做法是每次交互一个请求，状态由数据层负责。本模�
 - **重启无感**：服务器重启后，已打开的页面继续可用。
 - **页面可直接渲染**：整页由普通 HTTP handler 渲染，不需要启动页和连接，搜索引擎和首屏都能直接拿到内容。
 - **兼容 AG-UI**：事件格式与 AG-UI 一致，可以与 beamai_agui 这类 AG-UI 服务共存。
+
+## 借鉴 htmx 的补充能力
+
+这些能力借鉴 htmx 的设计，但由 `core.js` 自行实现，不依赖 htmx。
+
+- **形变替换与焦点保留**：替换方式增加 `morph` 和 `morph_inner`；所有替换方式都会按 id 恢复焦点和选区。
+- **元素保留**：带 `data-ah-preserve` 且有 id 的元素在替换时移动而不重建。浏览器支持时用 `moveBefore`，不支持时用 `insertBefore`。形变替换会跳过这类元素。
+- **settle 过渡**：新加入的顶层元素带 `ah-added`，替换目标带 `ah-settling`，20 毫秒后移除。同 id 元素先沿用旧的 class、style、width、height，再换成新值。组件根元素不参与。
+- **请求协调**：按"元素加事件"协调；设置了 `data-ah-sync-scope` 时按最近的匹配祖先协调。策略有 drop、replace、queue 三种，queue 只保留最新一个等待的请求。
+- **加载状态**：请求期间元素带 `aria-busy`，元素和 `data-ah-indicator` 指向的元素带 `ah-request`，`data-ah-disable` 指向的元素被禁用。重叠的请求按计数处理。
+- **新操作**：
+  - `trigger`：在目标元素或 document 上触发事件，带 detail。
+  - `url`：push 或 replace 浏览器历史。条目的 `history.state` 带 `{ah: true}`，前进或后退到这些条目时整页重新加载，由服务端渲染该 URL，所以服务端依然不需要保存页面状态。
+
+测试见 `apps/aihtml/test/js/morph.test.js` 和 `request.test.js`。
