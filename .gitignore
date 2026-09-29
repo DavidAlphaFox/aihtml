@@ -22,3 +22,6 @@ erl_crash.dump
 rebar3.crashdump
 __pycache__/
 *.pyc
+node_modules/
+_checkouts/
+.playwright-mcp/
