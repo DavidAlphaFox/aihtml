@@ -1,0 +1,18 @@
+/* aihtml additions shared by sortable and dragdrop (the drag copy and the
+   screen reader announcements). */
+
+/* the helper copy lives in <body>: keep it from stretching */
+.ah-sortable-helper, .ah-drag-feedback { cursor: grabbing; }
+
+/* screen reader announcements (sortable, dragdrop) */
+.ah-sortable-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
