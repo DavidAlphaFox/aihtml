@@ -7,7 +7,7 @@
 
 -export([demos/0]).
 -export([time_basic/0, time_24h/0, time_range/0, time_states/0,
-         time_inline/0, time_landscape/0,
+         time_inline/0, time_landscape/0, time_records/0,
          color_basic/0, color_swatches/0, color_alpha/0, color_states/0,
          color_inline/0, color_compact/0]).
 
@@ -20,7 +20,8 @@ demos() ->
                  {<<"可选范围与占位文字"/utf8>>, time_range},
                  {<<"可清除与禁用"/utf8>>, time_states},
                  {<<"内嵌表盘"/utf8>>, time_inline},
-                 {<<"横向布局与底部内容"/utf8>>, time_landscape}]},
+                 {<<"横向布局与底部内容"/utf8>>, time_landscape},
+                 {<<"record 写法"/utf8>>, time_records}]},
      #{component => colorpicker, title => <<"ColorPicker">>,
        summary => <<"HSV 取色面板加十六进制与 RGB 输入，值为 #rrggbb。"/utf8>>,
        demos => [{<<"弹出取色面板"/utf8>>, color_basic},
@@ -63,6 +64,14 @@ time_landscape() ->
          timepicker(<<"12:00">>, [inline],
                     [{format, '24h'},
                      {footer, span(<<"Times are local">>, [<<"text-xs text-muted">>], [])}])]).
+
+-spec time_records() -> aihtml:html().
+time_records() ->
+    row([#ah_timepicker{value = <<"09:30">>, name = standup, format = '24h',
+                        minute_step = 15, min = <<"08:00">>, max = <<"18:00">>,
+                        clearable = true, css = [<<"w-48">>]},
+         #ah_timepicker{value = {18, 45}, inline = true, view = landscape,
+                        auto_switch = false}]).
 
 -spec color_basic() -> aihtml:html().
 color_basic() ->

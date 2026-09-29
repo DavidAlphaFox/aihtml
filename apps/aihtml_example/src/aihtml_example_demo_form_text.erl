@@ -9,7 +9,7 @@
 -export([input_sizes/0, input_states/0, input_addons/0, input_clearable/0,
          input_label/0, textarea_basic/0, textarea_states/0,
          password_basic/0, password_strength/0, password_states/0,
-         number_basic/0, number_symbols/0, number_states/0,
+         number_basic/0, number_symbols/0, number_states/0, number_record/0,
          otp_digits/0, otp_separator/0, otp_alphanumeric/0,
          tags_basic/0, tags_limits/0]).
 
@@ -35,7 +35,8 @@ demos() ->
        summary => <<"数值输入框，带微调按钮，支持方向键、滚轮和范围限制。"/utf8>>,
        demos => [{<<"范围与步长"/utf8>>, number_basic},
                  {<<"前缀、后缀与无按钮"/utf8>>, number_symbols},
-                 {<<"尺寸与状态"/utf8>>, number_states}]},
+                 {<<"尺寸与状态"/utf8>>, number_states},
+                 {<<"record 写法"/utf8>>, number_record}]},
      #{component => input_otp, title => <<"InputOTP">>,
        summary => <<"分段验证码输入，自动跳格，粘贴整串自动填满。"/utf8>>,
        demos => [{<<"六位数字"/utf8>>, otp_digits},
@@ -139,6 +140,13 @@ number_states() ->
          number_input(200, [invalid, <<"w-40">>], [{max, 100}]),
          number_input(3, [readonly, <<"w-32">>], []),
          number_input(4, [disabled, <<"w-32">>], [])]).
+
+-spec number_record() -> aihtml:html().
+number_record() ->
+    #ah_number_input{value = 12.5, min = 0, max = 100, step = 0.5,
+                     symbol = <<"%">>, symbol_position = right,
+                     label = <<"Discount">>, css = [<<"w-44">>],
+                     attrs = [{name, discount}]}.
 
 %%% InputOTP
 

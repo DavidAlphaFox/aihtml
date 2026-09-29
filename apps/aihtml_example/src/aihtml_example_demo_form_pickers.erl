@@ -11,7 +11,7 @@
 
 -export([demos/0, action/4]).
 -export([date_basic/0, date_range/0, date_limits/0, date_locale/0, date_inline/0,
-         date_states/0, date_change/0,
+         date_states/0, date_change/0, date_record/0,
          combo_basic/0, combo_free_text/0, combo_groups/0, combo_multiple/0,
          combo_search/0, combo_disabled/0]).
 
@@ -25,7 +25,8 @@ demos() ->
                  {<<"周一开头、中文标签、显示格式"/utf8>>, date_locale},
                  {<<"内嵌月历"/utf8>>, date_inline},
                  {<<"禁用与只读"/utf8>>, date_states},
-                 {<<"选中后通知服务端"/utf8>>, date_change}]},
+                 {<<"选中后通知服务端"/utf8>>, date_change},
+                 {<<"record 写法"/utf8>>, date_record}]},
      #{component => combobox, title => <<"ComboBox">>,
        summary => <<"可输入过滤的下拉选择，支持分组、多选、勾选框和服务端搜索。"/utf8>>,
        demos => [{<<"输入过滤，只能选列表里的项"/utf8>>, combo_basic},
@@ -84,6 +85,16 @@ date_states() ->
 -spec date_change() -> aihtml:html().
 date_change() ->
     row([datepicker(undefined, [], [on(change, {?MODULE, date_picked, #{}})]),
+         span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"date-picked">>}])]).
+
+%% The same component as a record: options are checked field names, and
+%% the postback runs action(date_picked, ...) below on change.
+-spec date_record() -> aihtml:html().
+date_record() ->
+    row([#ah_datepicker{value = <<"2026-09-29">>, name = start, clearable = true,
+                        min = <<"2026-09-01">>, max = <<"2026-12-31">>, first_day = 1,
+                        format = <<"d MMM yyyy">>, week_numbers = true,
+                        postback = date_picked},
          span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"date-picked">>}])]).
 
 %%%===================================================================

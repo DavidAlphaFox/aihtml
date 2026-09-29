@@ -10,6 +10,7 @@
 -export([dropdown_basic/0, dropdown_templates/0, dropdown_groups/0, dropdown_states/0,
          select_basic/0, select_sizes/0, select_groups/0,
          slider_basic/0, slider_range/0, slider_ticks/0, slider_vertical/0,
+         slider_record/0,
          field_positions/0, field_help/0, field_validate/0,
          form_basic/0, form_columns/0, form_validate/0]).
 
@@ -31,7 +32,8 @@ demos() ->
        demos => [{<<"单值与提示气泡"/utf8>>, slider_basic},
                  {<<"区间选择"/utf8>>, slider_range},
                  {<<"刻度与步进按钮"/utf8>>, slider_ticks},
-                 {<<"竖向与禁用"/utf8>>, slider_vertical}]},
+                 {<<"竖向与禁用"/utf8>>, slider_vertical},
+                 {<<"record 写法"/utf8>>, slider_record}]},
      #{component => field, title => <<"Field">>,
        summary => <<"一行表单项：标签、控件，以及帮助或错误信息。"/utf8>>,
        demos => [{<<"标签位置"/utf8>>, field_positions},
@@ -120,6 +122,13 @@ slider_vertical() ->
     row([slider({0, 100}, 60, [vertical], [{ticks, 25}]),
          slider({0, 100}, {20, 80}, [vertical, secondary], []),
          slider({0, 100}, 30, [vertical, disabled], [])]).
+
+-spec slider_record() -> aihtml:html().
+slider_record() ->
+    'div'(#ah_slider{range = {0, 1000, 50}, value = {200, 600}, template = success,
+                     tooltip = true, ticks = 250, minor_ticks = 50, min_range = 100,
+                     name = price},
+          [<<"max-w-sm">>], []).
 
 %%% Field
 

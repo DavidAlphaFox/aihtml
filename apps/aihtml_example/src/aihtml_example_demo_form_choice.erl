@@ -8,7 +8,7 @@
 -export([demos/0]).
 -export([checkbox_states/0, checkbox_sizes/0, checkbox_three_states/0,
          radio_basic/0, radio_sizes/0,
-         switch_basic/0, switch_labels/0, switch_sizes/0,
+         switch_basic/0, switch_labels/0, switch_sizes/0, switch_records/0,
          checkbox_group_vertical/0, checkbox_group_layouts/0, checkbox_group_disabled/0,
          radio_group_vertical/0, radio_group_layouts/0, radio_group_disabled/0,
          radio_cards_plans/0, radio_cards_icons/0, radio_cards_disabled/0,
@@ -29,7 +29,8 @@ demos() ->
        summary => <<"滑动开关，开或关两种状态。"/utf8>>,
        demos => [{<<"开与关"/utf8>>, switch_basic},
                  {<<"轨道文字"/utf8>>, switch_labels},
-                 {<<"尺寸与自定义大小"/utf8>>, switch_sizes}]},
+                 {<<"尺寸与自定义大小"/utf8>>, switch_sizes},
+                 {<<"record 写法"/utf8>>, switch_records}]},
      #{component => checkbox_group, title => <<"CheckboxGroup">>,
        summary => <<"一组复选框，值是选中项的列表。"/utf8>>,
        demos => [{<<"竖排"/utf8>>, checkbox_group_vertical},
@@ -112,6 +113,14 @@ switch_sizes() ->
          switch_button(<<"Medium">>, undefined, [md], [{checked, true}]),
          switch_button(<<"Large">>, undefined, [lg], [{checked, true}]),
          switch_button(<<"80 x 32">>, undefined, [], [{width, 80}, {height, 32}])]).
+
+-spec switch_records() -> aihtml:html().
+switch_records() ->
+    row([#ah_switch_button{body = <<"Dark mode">>, checked = true,
+                           on_label = <<"On">>, off_label = <<"Off">>,
+                           attrs = [{name, dark}]},
+         #ah_switch_button{body = <<"Large">>, size = lg, width = 70, height = 34},
+         #ah_switch_button{body = <<"Locked">>, checked = true, locked = true}]).
 
 %% --- checkbox_group ------------------------------------------------
 
