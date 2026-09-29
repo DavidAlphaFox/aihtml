@@ -20,22 +20,37 @@
 %%% rating_group/4 is a value-bearing custom control (designs/04): the value
 %%% is in `data-ah-value', a hidden input carries it when Attrs has a
 %%% `name', and `change' fires on the root.
+%%%
+%%% Each function builds an element record (#ah_checkbox{} ..., defined in
+%%% include/aihtml_form_choice.hrl) and render/1 turns it into HTML, so
+%%% pages may also write the records directly (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
 -module(aihtml_form_choice).
+-behaviour(aihtml_element).
+
+-include("aihtml_form_choice.hrl").
 
 -export([checkbox/4, radiobutton/4, switch_button/4,
          checkbox_group/4, radiobutton_group/4, radio_cards/4,
          rating_group/4,
-         catalog/0]).
+         render/1, fields/1, catalog/0]).
 
--export_type([item/0, value/0]).
+-export_type([item/0, value/0, element/0]).
 
--type value() :: binary() | atom() | integer() | float() | string().
+-define(H, aihtml_html).
+-define(E, aihtml_element).
+
+-type html() :: aihtml_html:html().
+-type css() :: aihtml_html:css().
+-type attrs() :: aihtml_html:attrs().
+-type value() :: ah_choice_value().
 %% A group item. Opts (a map or proplist): disabled, class; radio_cards
 %% also description and icon (html).
--type item() :: value() | {value(), aihtml_html:html()}
-              | {value(), aihtml_html:html(), map() | list()}.
+-type item() :: ah_choice_item().
+-type element() :: #ah_checkbox{} | #ah_radiobutton{} | #ah_switch_button{}
+                 | #ah_checkbox_group{} | #ah_radiobutton_group{}
+                 | #ah_radio_cards{} | #ah_rating_group{}.
 
 -define(INPUT_CLASS, <<"ah-choice-input">>).
 %% Attributes of a group that go to every native input instead of the root.
@@ -47,171 +62,202 @@
                  "3.25L7 14.14 2 9.27l6.91-1.01L12 2z\"/></svg>">>}).
 
 %%%===================================================================
-%%% Single controls
+%%% Builders
 %%%===================================================================
 
 %% @doc A checkbox. `Value' is the input's form value (`undefined' keeps
 %% the browser default "on"). Options in Attrs: `indeterminate',
 %% `three_states' (click cycles checked -> mixed -> unchecked), `locked'
 %% (focusable but cannot be toggled), `box_size' (px).
--spec checkbox(aihtml_html:html(), value() | undefined, aihtml_html:css(),
-               aihtml_html:attrs()) -> aihtml_html:element().
+-spec checkbox(html(), value() | undefined, css(), attrs()) -> #ah_checkbox{}.
 checkbox(Content, Value, Css, Attrs) ->
-    Entry = entry(checkbox),
-    {Opts, Rest} = aihtml_catalog:split_options(Entry, Attrs),
-    Checked = truthy(attr(<<"checked">>, Rest)),
-    Disabled = truthy(attr(<<"disabled">>, Rest)),
-    Indet = truthy(maps:get(indeterminate, Opts, false)),
-    Input = input(checkbox, Value, Rest, []),
-    aihtml_html:el(label,
-        [Input, check_box(Checked, Indet, maps:get(box_size, Opts, undefined)),
-         label_span(<<"ah-checkbox-label">>, Content)],
-        [aihtml_catalog:classes(Entry, Css),
-         state(Disabled, <<"ah-checkbox-disabled">>),
-         state(Checked andalso not Indet, <<"ah-checkbox-checked">>),
-         state(Indet, <<"ah-checkbox-indeterminate">>)],
-        [{data_ah, <<"checkbox">>},
-         {data_ah_three_states, truthy(maps:get(three_states, Opts, false))},
-         {data_ah_locked, truthy(maps:get(locked, Opts, false))}]).
+    build(#ah_checkbox{body = Content, value = Value}, Css, Attrs).
 
 %% @doc A radio button. Radio buttons with the same `name' are exclusive
 %% (natively), and the behaviour restyles the one that was unchecked.
 %% Options: `locked', `box_size'.
--spec radiobutton(aihtml_html:html(), value() | undefined, aihtml_html:css(),
-                  aihtml_html:attrs()) -> aihtml_html:element().
+-spec radiobutton(html(), value() | undefined, css(), attrs()) -> #ah_radiobutton{}.
 radiobutton(Content, Value, Css, Attrs) ->
-    Entry = entry(radiobutton),
-    {Opts, Rest} = aihtml_catalog:split_options(Entry, Attrs),
-    Checked = truthy(attr(<<"checked">>, Rest)),
-    Disabled = truthy(attr(<<"disabled">>, Rest)),
-    aihtml_html:el(label,
-        [input(radio, Value, Rest, []),
-         radio_box(Checked, maps:get(box_size, Opts, undefined)),
-         label_span(<<"ah-radiobutton-label">>, Content)],
-        [aihtml_catalog:classes(Entry, Css),
-         state(Disabled, <<"ah-radiobutton-disabled">>),
-         state(Checked, <<"ah-radiobutton-checked">>)],
-        [{data_ah, <<"radiobutton">>},
-         {data_ah_locked, truthy(maps:get(locked, Opts, false))}]).
+    build(#ah_radiobutton{body = Content, value = Value}, Css, Attrs).
 
 %% @doc A switch: a native checkbox with `role="switch"'. Options:
 %% `on_label', `off_label' (text inside the track), `locked', and sigil's
 %% `width', `height', `thumb_size' (px) for a custom size.
--spec switch_button(aihtml_html:html(), value() | undefined, aihtml_html:css(),
-                    aihtml_html:attrs()) -> aihtml_html:element().
+-spec switch_button(html(), value() | undefined, css(), attrs()) -> #ah_switch_button{}.
 switch_button(Content, Value, Css, Attrs) ->
-    Entry = entry(switch_button),
-    {Opts, Rest} = aihtml_catalog:split_options(Entry, Attrs),
-    Checked = truthy(attr(<<"checked">>, Rest)),
-    Disabled = truthy(attr(<<"disabled">>, Rest)),
-    {TrackStyle, ThumbStyle} = switch_style(Opts),
-    Track = aihtml_html:el(span,
-        [label_span(<<"ah-switch-label ah-switch-label-on">>,
-                    maps:get(on_label, Opts, undefined)),
-         label_span(<<"ah-switch-label ah-switch-label-off">>,
-                    maps:get(off_label, Opts, undefined)),
-         aihtml_html:el(span, [], [<<"ah-switch-thumb">>], [{style, ThumbStyle}])],
-        [<<"ah-switch-track">>], [{style, TrackStyle}, {aria_hidden, <<"true">>}]),
-    aihtml_html:el(label,
-        [input(checkbox, Value, Rest, [{role, switch}]), Track,
-         label_span(<<"ah-switch-text">>, Content)],
-        [aihtml_catalog:classes(Entry, Css),
-         state(Checked, <<"ah-switch-on">>),
-         state(Disabled, <<"ah-switch-disabled">>)],
-        [{data_ah, <<"switch-button">>},
-         {data_ah_locked, truthy(maps:get(locked, Opts, false))}]).
-
-%%%===================================================================
-%%% Groups
-%%%===================================================================
+    build(#ah_switch_button{body = Content, value = Value}, Css, Attrs).
 
 %% @doc Several checkboxes; `Values' lists the checked ones.
--spec checkbox_group([item()], [value()], aihtml_html:css(), aihtml_html:attrs()) ->
-          aihtml_html:element().
+-spec checkbox_group([item()], [value()], css(), attrs()) -> #ah_checkbox_group{}.
 checkbox_group(Items, Values, Css, Attrs) ->
-    Selected = [to_bin(V) || V <- Values],
-    group(checkbox_group, <<"ah-checkbox-group">>, <<"group">>, <<"checkbox-group">>,
-          Items, fun(V) -> lists:member(V, Selected) end,
-          join_values([V || {V, _, _} <- norm_items(Items), lists:member(V, Selected)]),
-          Css, Attrs).
+    build(#ah_checkbox_group{items = Items, value = Values}, Css, Attrs).
 
 %% @doc Mutually exclusive radio buttons; `Value' is the selected one (or
 %% `undefined'). Arrow keys move the selection, as in sigil. Give the
 %% group a `name' so it is exclusive without JS too.
--spec radiobutton_group([item()], value() | undefined, aihtml_html:css(),
-                        aihtml_html:attrs()) -> aihtml_html:element().
+-spec radiobutton_group([item()], value() | undefined, css(), attrs()) ->
+          #ah_radiobutton_group{}.
 radiobutton_group(Items, Value, Css, Attrs) ->
-    Sel = opt_bin(Value),
-    group(radiobutton_group, <<"ah-radiobutton-group">>, <<"radiogroup">>,
-          <<"radiobutton-group">>, Items, fun(V) -> V =:= Sel end,
-          selected_value(Sel, Items), Css, Attrs).
+    build(#ah_radiobutton_group{items = Items, value = Value}, Css, Attrs).
 
 %% @doc Selectable cards with a title, an optional description and icon
 %% (item Opts `description', `icon'). Options in Attrs: `columns'
 %% (1 | 2 | 3 | auto) and `align' (center | start).
--spec radio_cards([item()], value() | undefined, aihtml_html:css(),
-                  aihtml_html:attrs()) -> aihtml_html:element().
+-spec radio_cards([item()], value() | undefined, css(), attrs()) -> #ah_radio_cards{}.
 radio_cards(Items, Value, Css, Attrs) ->
-    Entry = entry(radio_cards),
-    {Opts, Rest} = aihtml_catalog:split_options(Entry, Attrs),
-    {InputAttrs, RootAttrs} = split_attrs(?INPUT_ATTRS, Rest),
+    build(#ah_radio_cards{items = Items, value = Value}, Css, Attrs).
+
+%% @doc Star rating from 0 to `Max'. Options in Attrs: `name' (hidden
+%% input), `precision' (1 | 0.5), `allow_clear' (clicking the current
+%% value clears it, default true), `readonly', `disabled'.
+-spec rating_group(pos_integer(), number() | undefined, css(), attrs()) ->
+          #ah_rating_group{}.
+rating_group(Max, Value, Css, Attrs) when is_integer(Max), Max >= 1 ->
+    build(#ah_rating_group{max = Max, value = Value}, Css, Attrs);
+rating_group(Max, _Value, _Css, _Attrs) ->
+    error({aihtml, {bad_max, rating_group, Max}}).
+
+build(R, Css, Attrs) ->
+    Tag = element(1, R),
+    ?E:build(R, fields(Tag), entry(?E:component_name(Tag)), Css, Attrs).
+
+%% @doc The field names of one of this group's records.
+-spec fields(atom()) -> [atom()].
+fields(ah_checkbox) -> record_info(fields, ah_checkbox);
+fields(ah_radiobutton) -> record_info(fields, ah_radiobutton);
+fields(ah_switch_button) -> record_info(fields, ah_switch_button);
+fields(ah_checkbox_group) -> record_info(fields, ah_checkbox_group);
+fields(ah_radiobutton_group) -> record_info(fields, ah_radiobutton_group);
+fields(ah_radio_cards) -> record_info(fields, ah_radio_cards);
+fields(ah_rating_group) -> record_info(fields, ah_rating_group).
+
+%%%===================================================================
+%%% Rendering
+%%%===================================================================
+
+%% The single controls put `id', the postback and `attrs' on the native
+%% input, after its value and before `checked' / `disabled'.
+-spec render(element()) -> html().
+render(#ah_checkbox{body = Content, value = Value, checked = C, disabled = D,
+                    indeterminate = Indet0, box_size = BoxSize} = R) ->
+    {Checked, Disabled, InputAttrs} =
+        single_input(R#ah_checkbox.attrs, C, D, R#ah_checkbox{attrs = []}),
+    Indet = truthy(Indet0),
+    ?H:el(label,
+        [input(checkbox, Value, InputAttrs, []), check_box(Checked, Indet, BoxSize),
+         label_span(<<"ah-checkbox-label">>, Content)],
+        [classes(R),
+         state(Disabled, <<"ah-checkbox-disabled">>),
+         state(Checked andalso not Indet, <<"ah-checkbox-checked">>),
+         state(Indet, <<"ah-checkbox-indeterminate">>)],
+        [{data_ah, <<"checkbox">>},
+         {data_ah_three_states, truthy(R#ah_checkbox.three_states)},
+         {data_ah_locked, truthy(R#ah_checkbox.locked)}]);
+
+render(#ah_radiobutton{body = Content, value = Value, checked = C, disabled = D,
+                       box_size = BoxSize} = R) ->
+    {Checked, Disabled, InputAttrs} =
+        single_input(R#ah_radiobutton.attrs, C, D, R#ah_radiobutton{attrs = []}),
+    ?H:el(label,
+        [input(radio, Value, InputAttrs, []), radio_box(Checked, BoxSize),
+         label_span(<<"ah-radiobutton-label">>, Content)],
+        [classes(R),
+         state(Disabled, <<"ah-radiobutton-disabled">>),
+         state(Checked, <<"ah-radiobutton-checked">>)],
+        [{data_ah, <<"radiobutton">>},
+         {data_ah_locked, truthy(R#ah_radiobutton.locked)}]);
+
+render(#ah_switch_button{body = Content, value = Value, checked = C, disabled = D} = R) ->
+    {Checked, Disabled, InputAttrs} =
+        single_input(R#ah_switch_button.attrs, C, D, R#ah_switch_button{attrs = []}),
+    {TrackStyle, ThumbStyle} = switch_style(R#ah_switch_button.width,
+                                            R#ah_switch_button.height,
+                                            R#ah_switch_button.thumb_size),
+    Track = ?H:el(span,
+        [label_span(<<"ah-switch-label ah-switch-label-on">>, R#ah_switch_button.on_label),
+         label_span(<<"ah-switch-label ah-switch-label-off">>, R#ah_switch_button.off_label),
+         ?H:el(span, [], [<<"ah-switch-thumb">>], [{style, ThumbStyle}])],
+        [<<"ah-switch-track">>], [{style, TrackStyle}, {aria_hidden, <<"true">>}]),
+    ?H:el(label,
+        [input(checkbox, Value, InputAttrs, [{role, switch}]), Track,
+         label_span(<<"ah-switch-text">>, Content)],
+        [classes(R),
+         state(Checked, <<"ah-switch-on">>),
+         state(Disabled, <<"ah-switch-disabled">>)],
+        [{data_ah, <<"switch-button">>},
+         {data_ah_locked, truthy(R#ah_switch_button.locked)}]);
+
+render(#ah_checkbox_group{items = Items, value = Values} = R) ->
+    Selected = [to_bin(V) || V <- Values],
+    #ah_checkbox_group{name = N, disabled = D, required = Rq, form = F} = R,
+    {InputAttrs, Root} = group_attrs(R#ah_checkbox_group.attrs, N, D, Rq, F),
+    group(checkbox, <<"ah-checkbox-group">>, <<"group">>, <<"checkbox-group">>,
+          Items, fun(V) -> lists:member(V, Selected) end,
+          join_values([V || {V, _, _} <- norm_items(Items), lists:member(V, Selected)]),
+          R#ah_checkbox_group.size, R#ah_checkbox_group.label_before, classes(R),
+          InputAttrs, ?E:root_attrs(R#ah_checkbox_group{attrs = Root}, change));
+
+render(#ah_radiobutton_group{items = Items, value = Value} = R) ->
+    Sel = opt_bin(Value),
+    #ah_radiobutton_group{name = N, disabled = D, required = Rq, form = F} = R,
+    {InputAttrs, Root} = group_attrs(R#ah_radiobutton_group.attrs, N, D, Rq, F),
+    group(radio, <<"ah-radiobutton-group">>, <<"radiogroup">>, <<"radiobutton-group">>,
+          Items, fun(V) -> V =:= Sel end, selected_value(Sel, Items),
+          R#ah_radiobutton_group.size, R#ah_radiobutton_group.label_before, classes(R),
+          InputAttrs, ?E:root_attrs(R#ah_radiobutton_group{attrs = Root}, change));
+
+render(#ah_radio_cards{items = Items, value = Value} = R) ->
+    #ah_radio_cards{name = N, disabled = D, required = Rq, form = F} = R,
+    {InputAttrs, Root} = group_attrs(R#ah_radio_cards.attrs, N, D, Rq, F),
     GroupDisabled = truthy(attr(<<"disabled">>, InputAttrs)),
     Sel = opt_bin(Value),
-    Columns = check_opt(radio_cards, columns, to_bin(maps:get(columns, Opts, auto)),
+    Columns = check_opt(radio_cards, columns, to_bin(R#ah_radio_cards.columns),
                         [<<"1">>, <<"2">>, <<"3">>, <<"auto">>]),
-    Align = check_opt(radio_cards, align, to_bin(maps:get(align, Opts, center)),
+    Align = check_opt(radio_cards, align, to_bin(R#ah_radio_cards.align),
                       [<<"center">>, <<"start">>]),
     Cards = [begin
-                 D = GroupDisabled orelse truthy(opt(disabled, IOpts)),
+                 Off = GroupDisabled orelse truthy(opt(disabled, IOpts)),
                  On = V =:= Sel,
-                 aihtml_html:el(label,
-                     [input(radio, V, InputAttrs, [{checked, On}, {disabled, D}]),
+                 ?H:el(label,
+                     [input(radio, V, InputAttrs, [{checked, On}, {disabled, Off}]),
                       icon_span(opt(icon, IOpts)),
-                      aihtml_html:el(span,
-                          [aihtml_html:el(span, Label, [<<"ah-radio-cards__label">>], []),
+                      ?H:el(span,
+                          [?H:el(span, Label, [<<"ah-radio-cards__label">>], []),
                            desc_span(opt(description, IOpts))],
                           [<<"ah-radio-cards__text">>], [])],
                      [<<"ah-radio-cards__card">>, opt_class(IOpts)],
                      [{data_value, V}, {data_index, I - 1},
-                      {data_selected, bool(On)}, {data_disabled, bool(D)},
+                      {data_selected, bool(On)}, {data_disabled, bool(Off)},
                       {data_ah_item_disabled, truthy(opt(disabled, IOpts))}])
              end || {I, {V, Label, IOpts}} <- enumerate(norm_items(Items))],
-    aihtml_html:el('div', Cards, aihtml_catalog:classes(Entry, Css),
+    ?H:el('div', Cards, classes(R),
         [{data_ah, <<"radio-cards">>}, {role, radiogroup},
          {data_ah_value, selected_value(Sel, Items)},
          {data_columns, Columns}, {data_align, Align},
          {data_disabled, bool(GroupDisabled)},
          {aria_disabled, GroupDisabled andalso <<"true">>},
-         RootAttrs]).
+         ?E:root_attrs(R#ah_radio_cards{attrs = Root}, change)]);
 
-%%%===================================================================
-%%% Rating
-%%%===================================================================
-
-%% @doc Star rating from 0 to `Max'. Options in Attrs: `name' (hidden
-%% input), `precision' (1 | 0.5), `allow_clear' (clicking the current
-%% value clears it, default true), `readonly', `disabled'.
--spec rating_group(pos_integer(), number() | undefined, aihtml_html:css(),
-                   aihtml_html:attrs()) -> aihtml_html:element().
-rating_group(Max, Value, Css, Attrs) when is_integer(Max), Max >= 1 ->
-    Entry = entry(rating_group),
-    {Opts, Rest} = aihtml_catalog:split_options(Entry, Attrs),
-    V = case Value of undefined -> 0; _ when is_number(Value) -> Value end,
-    Precision = case maps:get(precision, Opts, 1) of
+render(#ah_rating_group{max = Max, value = Value, size = Size, color = Color} = R) ->
+    is_integer(Max) andalso Max >= 1
+        orelse error({aihtml, {bad_max, rating_group, Max}}),
+    V = case Value of
+            undefined -> 0;
+            _ when is_number(Value) -> Value;
+            _ -> error({aihtml, {bad_value, rating_group, Value}})
+        end,
+    Precision = case R#ah_rating_group.precision of
                     P when P == 1 -> <<"1">>;
                     P when P == 0.5 -> <<"0.5">>;
                     P -> error({aihtml, {bad_option, rating_group, precision, P}})
                 end,
-    Readonly = truthy(maps:get(readonly, Opts, false)),
-    Disabled = truthy(maps:get(disabled, Opts, false)),
+    Readonly = truthy(R#ah_rating_group.readonly),
+    Disabled = truthy(R#ah_rating_group.disabled),
     Static = Readonly orelse Disabled,
-    Mods = css_atoms(Css),
-    Size = pick(Mods, [sm, md, lg], md),
-    Color = pick(Mods, [warning, primary, success, error], warning),
-    Stars = [aihtml_html:el(button,
-                 [aihtml_html:el(span, ?STAR_SVG, [<<"ah-rating__empty">>], []),
-                  aihtml_html:el(span, ?STAR_SVG, [<<"ah-rating__filled">>],
-                                 [{style, [<<"width:">>, pct(fill_ratio(I, V)), <<"%;">>]}])],
+    Stars = [?H:el(button,
+                 [?H:el(span, ?STAR_SVG, [<<"ah-rating__empty">>], []),
+                  ?H:el(span, ?STAR_SVG, [<<"ah-rating__filled">>],
+                        [{style, [<<"width:">>, pct(fill_ratio(I, V)), <<"%;">>]}])],
                  [<<"ah-rating__star">>],
                  [{type, button}, {data_index, I}, {role, radio},
                   {aria_checked, bool(V >= I + 1)},
@@ -219,23 +265,40 @@ rating_group(Max, Value, Css, Attrs) when is_integer(Max), Max >= 1 ->
                   {tabindex, case Static of true -> -1; false -> 0 end},
                   {disabled, Disabled}])
              || I <- lists:seq(0, Max - 1)],
-    Hidden = case maps:get(name, Opts, undefined) of
+    Hidden = case R#ah_rating_group.name of
                  undefined -> [];
-                 Name -> aihtml_html:void(input, [], [{type, hidden}, {name, Name},
-                                                      {value, num(V)}])
+                 Name -> ?H:void(input, [], [{type, hidden}, {name, Name}, {value, num(V)}])
              end,
-    aihtml_html:el('div', [Stars, Hidden], aihtml_catalog:classes(Entry, Css),
+    ?H:el('div', [Stars, Hidden], classes(R),
         [{data_ah, <<"rating">>}, {role, radiogroup},
          {data_ah_value, num(V)}, {data_ah_max, Max},
          {data_size, Size}, {data_color, Color},
          {data_precision, Precision},
          {data_readonly, bool(Readonly)}, {data_disabled, bool(Disabled)},
-         {data_allow_clear, bool(truthy(maps:get(allow_clear, Opts, true)))},
+         {data_allow_clear, bool(truthy(R#ah_rating_group.allow_clear))},
          {aria_readonly, Readonly andalso <<"true">>},
          {aria_disabled, Disabled andalso <<"true">>},
-         Rest]);
-rating_group(Max, _Value, _Css, _Attrs) ->
-    error({aihtml, {bad_max, rating_group, Max}}).
+         ?E:root_attrs(R, change)]).
+
+classes(R) ->
+    Tag = element(1, R),
+    ?E:classes(R, fields(Tag), entry(?E:component_name(Tag))).
+
+%% The native input's attributes of a single control: the `attrs' field,
+%% then disabled / checked, then id and postback (`Bare' is the record
+%% without its attrs). A binary "checked" / "disabled" key in attrs still
+%% counts, as it did before these were fields.
+single_input(Attrs0, Checked, Disabled, Bare) ->
+    Attrs = flat(Attrs0),
+    {truthy(attr(<<"checked">>, [{checked, Checked} | Attrs])),
+     truthy(attr(<<"disabled">>, [{disabled, Disabled} | Attrs])),
+     [Attrs, {disabled, Disabled}, {checked, Checked}, ?E:root_attrs(Bare, change)]}.
+
+%% A group's attributes for every input (the name / disabled / required /
+%% form fields, then such keys left in attrs) and for the root (the rest).
+group_attrs(Attrs, Name, Disabled, Required, Form) ->
+    {Input, Root} = split_attrs(?INPUT_ATTRS, Attrs),
+    {[{name, Name}, {disabled, Disabled}, {required, Required}, {form, Form} | Input], Root}.
 
 %%%===================================================================
 %%% Catalog
@@ -422,9 +485,8 @@ box_style(N) when is_integer(N), N > 0 ->
 box_style(N) -> error({aihtml, {bad_option, box_size, N}}).
 
 %% sigil: thumb = height - 4, travel = thumb - width + 4.
-switch_style(Opts) ->
-    case {maps:get(width, Opts, undefined), maps:get(height, Opts, undefined),
-          maps:get(thumb_size, Opts, undefined)} of
+switch_style(Width, Height, ThumbSize) ->
+    case {Width, Height, ThumbSize} of
         {undefined, undefined, undefined} -> {undefined, undefined};
         {W0, H0, T0} ->
             W = default_int(W0, 50), H = default_int(H0, 24),
@@ -451,19 +513,16 @@ desc_span(D) -> aihtml_html:el(span, D, [<<"ah-radio-cards__description">>], [])
 
 %% checkbox_group and radiobutton_group: sigil's group markup, one item per
 %% option, each wrapping the inner control (without its own label) and the
-%% item label.
-group(Name, Prefix, Role, Behavior, Items, IsOn, DataValue, Css, Attrs) ->
-    Entry = entry(Name),
-    {_, Rest} = aihtml_catalog:split_options(Entry, Attrs),
-    {InputAttrs, RootAttrs} = split_attrs(?INPUT_ATTRS, Rest),
+%% item label. `Classes' are the root's catalog classes, `RootAttrs' its
+%% id, postback and attrs.
+group(Kind, Prefix, Role, Behavior, Items, IsOn, DataValue, Size, Before0, Classes,
+      InputAttrs, RootAttrs) ->
     GroupDisabled = truthy(attr(<<"disabled">>, InputAttrs)),
-    Mods = css_atoms(Css),
-    Before = lists:member(label_before, aihtml_catalog:flags(Entry, Css)),
-    Size = pick(Mods, [sm, md, lg], none),
-    {Kind, Inner} = case Name of
-                        checkbox_group -> {checkbox, <<"ah-checkbox">>};
-                        radiobutton_group -> {radio, <<"ah-radiobutton">>}
-                    end,
+    Before = Before0 =:= true,
+    Inner = case Kind of
+                checkbox -> <<"ah-checkbox">>;
+                radio -> <<"ah-radiobutton">>
+            end,
     ItemEls =
         [begin
              D = GroupDisabled orelse truthy(opt(disabled, IOpts)),
@@ -484,14 +543,15 @@ group(Name, Prefix, Role, Behavior, Items, IsOn, DataValue, Css, Attrs) ->
                   {data_ah_item_disabled, truthy(opt(disabled, IOpts))}])
          end || {I, {V, Label, IOpts}} <- enumerate(norm_items(Items))],
     aihtml_html:el('div', ItemEls,
-        [aihtml_catalog:classes(Entry, Css), state(GroupDisabled, <<Prefix/binary, "-disabled">>)],
+        [Classes, state(GroupDisabled, <<Prefix/binary, "-disabled">>)],
         [{data_ah, Behavior}, {role, Role}, {data_ah_value, DataValue},
          {data_label_position, case Before of true -> before; false -> 'after' end},
          {aria_disabled, GroupDisabled andalso <<"true">>},
          RootAttrs]).
 
-size_class(_Inner, none) -> [];
-size_class(Inner, S) -> <<Inner/binary, "-", (atom_to_binary(S, utf8))/binary>>.
+size_class(_Inner, undefined) -> [];
+size_class(Inner, S) ->
+    <<Inner/binary, "-", (atom_to_binary(S, utf8))/binary>>.
 
 %%%===================================================================
 %%% Internal: values and attributes
@@ -555,14 +615,6 @@ fill_ratio(I, V) ->
     if R >= 1 -> 1; R =< 0 -> 0; true -> R end.
 
 pct(R) -> num(R * 100).
-
-css_atoms(Css) -> [A || A <- lists:flatten([Css]), is_atom(A)].
-
-pick(Mods, Allowed, Default) ->
-    case [M || M <- Mods, lists:member(M, Allowed)] of
-        [M | _] -> M;
-        [] -> Default
-    end.
 
 %% Attribute lookup and splitting with aihtml_html's key rules ("_" is "-").
 attr(Name, Attrs) ->

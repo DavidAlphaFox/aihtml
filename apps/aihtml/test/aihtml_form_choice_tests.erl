@@ -1,6 +1,9 @@
 -module(aihtml_form_choice_tests).
 
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("aihtml/include/aihtml_form_choice.hrl").
+
+-export([action/4]).
 
 -define(M, aihtml_form_choice).
 
@@ -126,7 +129,7 @@ radio_cards_test() ->
     ?assert(has(<<"data-value=\"team\" data-index=\"2\" data-selected=\"false\" data-disabled=\"true\"">>, H)),
     ?assertEqual(3, count(<<"name=\"plan\"">>, H)),
     ?assertError({aihtml, {bad_option, radio_cards, columns, <<"4">>}},
-                 ?M:radio_cards(Items, pro, [], [{columns, 4}])),
+                 r(?M:radio_cards(Items, pro, [], [{columns, 4}]))),
     ?assertError({aihtml, {unknown_modifier, radio_cards, big, _}},
                  ?M:radio_cards(Items, pro, [big], [])).
 
@@ -157,7 +160,7 @@ rating_defaults_test() ->
     ?assertError({aihtml, {conflicting_modifiers, rating_group, size, _}},
                  ?M:rating_group(5, 1, [sm, lg], [])),
     ?assertError({aihtml, {bad_option, rating_group, precision, 0.25}},
-                 ?M:rating_group(5, 1, [], [{precision, 0.25}])),
+                 r(?M:rating_group(5, 1, [], [{precision, 0.25}]))),
     ?assertError({aihtml, {bad_max, rating_group, 0}}, ?M:rating_group(0, 1, [], [])).
 
 %% --- catalog --------------------------------------------------------
@@ -190,3 +193,120 @@ render_all_test() ->
                                        ?M:radiobutton_group(Items, a, [], []),
                                        ?M:radio_cards(Items, a, [], []),
                                        ?M:rating_group(5, 3, [], [])]].
+
+%%% element records (designs/05-records.md)
+
+-spec action(atom(), term(), map(), term()) -> ok.
+action(_, _, _, _) -> ok.
+
+record_equals_builder_test() ->
+    ?assertEqual(r(?M:checkbox(<<"Accept">>, yes, [lg, <<"mt-2">>],
+                               [{name, terms}, {checked, true}, {id, t}, {box_size, 20}])),
+                 r(#ah_checkbox{body = <<"Accept">>, value = yes, size = lg,
+                                css = [<<"mt-2">>], attrs = [{name, terms}],
+                                checked = true, id = t, box_size = 20})),
+    ?assertEqual(r(?M:switch_button(<<"Wi-Fi">>, undefined, [sm],
+                                    [{name, wifi}, {disabled, true}, {on_label, <<"On">>},
+                                     {width, 60}])),
+                 r(#ah_switch_button{body = <<"Wi-Fi">>, size = sm, attrs = [{name, wifi}],
+                                     disabled = true, on_label = <<"On">>, width = 60})),
+    ?assertEqual(r(?M:checkbox_group(items(), [a], [horizontal, label_before, sm],
+                                     [{name, f}, {id, g}, {title, <<"t">>}])),
+                 r(#ah_checkbox_group{items = items(), value = [a], layout = horizontal,
+                                      label_before = true, size = sm, name = f, id = g,
+                                      attrs = [{title, <<"t">>}]})),
+    ?assertEqual(r(?M:radio_cards(items(), b, [], [{name, plan}, {columns, 2},
+                                                   {align, start}, {disabled, true}])),
+                 r(#ah_radio_cards{items = items(), value = b, name = plan, columns = 2,
+                                   align = start, disabled = true})),
+    ?assertEqual(r(?M:rating_group(5, 2.5, [lg, error], [{name, stars}, {precision, 0.5}])),
+                 r(#ah_rating_group{max = 5, value = 2.5, size = lg, color = error,
+                                    name = stars, precision = 0.5})).
+
+builder_fills_fields_test() ->
+    C = ?M:checkbox(<<"x">>, v, [sm, <<"x">>],
+                    [{name, n}, {checked, true}, {three_states, true}, {title, <<"t">>},
+                     on(change)]),
+    ?assertMatch(#ah_checkbox{value = v, size = sm, checked = true, disabled = false,
+                              three_states = true, css = [<<"x">>]}, C),
+    [{name, n}, {title, <<"t">>}, {<<"data-ah-on">>, _} | _] = C#ah_checkbox.attrs,
+    G = ?M:radiobutton_group(items(), a, [], [{name, p}, {required, true}, {form, f}]),
+    ?assertMatch(#ah_radiobutton_group{name = p, required = true, form = f,
+                                       layout = vertical, attrs = []}, G),
+    ?assertError({aihtml, {record_only_field, ah_checkbox, postback}},
+                 ?M:checkbox(<<"x">>, undefined, [], [{postback, save}])).
+
+postback_test() ->
+    Token = fun(Html) ->
+                    {match, [T]} = re:run(r(Html), <<"data-ah-on=\"([a-z]+:[^\"]+)\"">>,
+                                          [{capture, all_but_first, binary}]),
+                    [Ev, Tok] = binary:split(T, <<":">>),
+                    {ok, Ref} = aihtml_action:unsign(Tok),
+                    {Ev, Ref}
+            end,
+    P = {save, #{id => 1}},
+    [?assertEqual({element(1, E), {<<"change">>, {?MODULE, save, #{id => 1}}}},
+                  {element(1, E), Token(E)})
+     || E <- [#ah_checkbox{postback = P}, #ah_radiobutton{postback = P},
+              #ah_switch_button{postback = P},
+              #ah_checkbox_group{items = items(), postback = P},
+              #ah_radiobutton_group{items = items(), postback = P},
+              #ah_radio_cards{items = items(), postback = P},
+              #ah_rating_group{postback = P}]],
+    %% single controls bind it on the native input, groups on the root
+    ?assertMatch({match, _}, re:run(r(#ah_checkbox{postback = P}),
+                                    <<"<input [^>]*data-ah-on=">>)),
+    ?assertMatch({match, _}, re:run(r(#ah_checkbox_group{items = items(), postback = P}),
+                                    <<"^<div [^>]*data-ah-on=">>)),
+    ?assertEqual({<<"change">>, {other_mod, rate, 3}},
+                 Token(#ah_rating_group{postback = {rate, 3}, delegate = other_mod})).
+
+field_validation_test() ->
+    ?assertError({aihtml, {bad_modifier, checkbox, size, huge, _}},
+                 r(#ah_checkbox{size = huge})),
+    ?assertError({aihtml, {bad_modifier, checkbox_group, layout, grid, _}},
+                 r(#ah_checkbox_group{layout = grid})),
+    ?assertError({aihtml, {bad_flag, radiobutton_group, label_before, yes}},
+                 r(#ah_radiobutton_group{label_before = yes})),
+    ?assertError({aihtml, {bad_modifier, rating_group, color, blue, _}},
+                 r(#ah_rating_group{color = blue})),
+    ?assertError({aihtml, {modifier_in_css, switch_button, lg}},
+                 r(#ah_switch_button{css = [lg]})),
+    ?assertError({aihtml, {bad_option, radio_cards, columns, <<"5">>}},
+                 r(#ah_radio_cards{columns = 5})),
+    ?assertError({aihtml, {bad_option, radio_cards, align, <<"end">>}},
+                 r(#ah_radio_cards{align = 'end'})),
+    ?assertError({aihtml, {bad_option, rating_group, precision, 2}},
+                 r(#ah_rating_group{precision = 2})),
+    ?assertError({aihtml, {bad_max, rating_group, 0}}, r(#ah_rating_group{max = 0})),
+    ?assertError({aihtml, {bad_value, rating_group, high}},
+                 r(#ah_rating_group{value = high})),
+    ?assertError({aihtml, {bad_option, box_size, -1}}, r(#ah_radiobutton{box_size = -1})),
+    %% groups without a default may stay undefined
+    ?assert(has(<<"class=\"ah-checkbox\"">>, r(#ah_checkbox{}))).
+
+records_match_catalog_test() ->
+    Base = [module, id, css, attrs, postback, delegate],
+    [begin
+         Tag = list_to_atom("ah_" ++ atom_to_list(N)),
+         Fields = ?M:fields(Tag),
+         ?assertEqual(Base, lists:sublist(Fields, 6)),
+         Defaults = maps:from_list(lists:zip(Fields, tl(tuple_to_list(default(Tag))))),
+         [?assertEqual({N, G, case D of none -> undefined; _ -> D end},
+                       {N, G, maps:get(G, Defaults)})
+          || {G, {_, D}} <- maps:to_list(maps:get(groups, E, #{}))],
+         [?assertEqual({N, F, false}, {N, F, maps:get(F, Defaults)})
+          || F <- maps:get(flags, E, [])],
+         [?assert(lists:member(O, Fields)) || O <- maps:get(options, E, [])],
+         ?assertEqual(?M, maps:get(module, Defaults))
+     end || #{name := N} = E <- ?M:catalog()].
+
+default(ah_checkbox) -> #ah_checkbox{};
+default(ah_radiobutton) -> #ah_radiobutton{};
+default(ah_switch_button) -> #ah_switch_button{};
+default(ah_checkbox_group) -> #ah_checkbox_group{};
+default(ah_radiobutton_group) -> #ah_radiobutton_group{};
+default(ah_radio_cards) -> #ah_radio_cards{};
+default(ah_rating_group) -> #ah_rating_group{}.
+
+on(Event) -> aihtml:on(Event, {?MODULE, x, #{}}).
