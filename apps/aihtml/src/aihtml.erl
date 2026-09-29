@@ -125,6 +125,13 @@
          dragdrop/3,
          draggable_attrs/2,
          drop_zone_attrs/2,
+         docking/3,
+         dock_layout/3,
+         docking_add_window/4,
+         dock_layout_open/3,
+         dock_layout_open/4,
+         ribbon/4,
+         tile_layout/4,
          tooltip/4,
          tooltip_attrs/2,
          popover/3,
@@ -159,7 +166,40 @@
          nav_tree/4,
          diff/4,
          heatmap_calendar/3,
-         set_children/3]).
+         set_children/3,
+         datagrid/4,
+         datagrid_query/1,
+         datagrid_rows/4,
+         datagrid_row/3,
+         datagrid_select/2,
+         pivotgrid/4,
+         pivotgrid_rows/3,
+         pivotgrid_view/1,
+         pivotgrid_cell/1,
+         treegrid/4,
+         datatable/4,
+         treegrid_children/3,
+         datatable_query/1,
+         datatable_rows/3,
+         datatable_row/4,
+         gantt/3,
+         gantt_update/3,
+         scheduler/4,
+         scheduler_range/1,
+         scheduler_update/3,
+         swimlane/3,
+         swimlane_update/3,
+         chart/3,
+         area_chart/3,
+         bar_chart/3,
+         donut_chart/3,
+         radar_chart/3,
+         relation_graph/3,
+         chart_option/1,
+         chart_update/3,
+         node_graph/3,
+         node_graph_layout/1,
+         set_node_graph/3]).
 %% END GENERATED EXPORTS
 
 -export_type([html/0, element/0, css/0, attrs/0]).
@@ -1040,6 +1080,217 @@ draggable_attrs(A1, A2) -> aihtml_layout_dnd:draggable_attrs(A1, A2).
 -spec drop_zone_attrs(term(), map()) -> aihtml_html:attrs().
 drop_zone_attrs(A1, A2) -> aihtml_layout_dnd:drop_zone_attrs(A1, A2).
 
+%% aihtml_layout_dock
+-spec docking([aihtml_layout_dock:panel()],
+              aihtml_html:css(),
+              aihtml_html:attrs()) ->
+                 #ah_docking{}.
+docking(A1, A2, A3) -> aihtml_layout_dock:docking(A1, A2, A3).
+-spec dock_layout(aihtml_layout_dock:layout(),
+                  aihtml_html:css(),
+                  aihtml_html:attrs()) ->
+                     #ah_dock_layout{}.
+dock_layout(A1, A2, A3) -> aihtml_layout_dock:dock_layout(A1, A2, A3).
+-spec docking_add_window(aihtml_action:ctx(),
+                         {id, iodata() | atom()},
+                         atom() | binary() | integer(),
+                         aihtml_layout_dock:window()) ->
+                            ok.
+docking_add_window(A1, A2, A3, A4) -> aihtml_layout_dock:docking_add_window(A1, A2, A3, A4).
+-spec dock_layout_open(aihtml_action:ctx(),
+                       {id, iodata() | atom()},
+                       aihtml_layout_dock:dl_panel()) ->
+                          ok.
+dock_layout_open(A1, A2, A3) -> aihtml_layout_dock:dock_layout_open(A1, A2, A3).
+-spec dock_layout_open(aihtml_action:ctx(),
+                       {id, iodata() | atom()},
+                       aihtml_layout_dock:dl_panel(),
+                       #{in => atom() | binary() | integer(),
+                         edge => left | right | top | bottom,
+                         float => boolean() | {number(), number()},
+                         labels =>
+                             #{auto_hide | float | dock | close =>
+                                   unicode:chardata()}}) ->
+                          ok.
+dock_layout_open(A1, A2, A3, A4) -> aihtml_layout_dock:dock_layout_open(A1, A2, A3, A4).
+
+%% aihtml_layout_tiles
+-spec ribbon([{term(),
+               aihtml_html:html(),
+               aihtml_html:html() |
+               {groups,
+                [{aihtml_html:html(),
+                  [{term(), aihtml_html:html(), aihtml_html:html()} |
+                   #{key := term(),
+                     label := aihtml_html:html(),
+                     icon => aihtml_html:html(),
+                     size => small | large,
+                     title => iodata(),
+                     disabled => boolean(),
+                     toggle => boolean(),
+                     pressed => boolean(),
+                     items =>
+                         [{term(), aihtml_html:html()} |
+                          #{key := term(),
+                            label := aihtml_html:html(),
+                            icon => aihtml_html:html(),
+                            disabled => boolean()} |
+                          divider]} |
+                   {stack, [term()]} |
+                   separator |
+                   {html, aihtml_html:html()}]} |
+                 #{label := aihtml_html:html(),
+                   items :=
+                       [{term(), aihtml_html:html(), aihtml_html:html()} |
+                        #{key := term(),
+                          label := aihtml_html:html(),
+                          icon => aihtml_html:html(),
+                          size => small | large,
+                          title => iodata(),
+                          disabled => boolean(),
+                          toggle => boolean(),
+                          pressed => boolean(),
+                          items =>
+                              [{term(), aihtml_html:html()} |
+                               #{key := term(),
+                                 label := aihtml_html:html(),
+                                 icon => aihtml_html:html(),
+                                 disabled => boolean()} |
+                               divider]} |
+                        {stack, [term()]} |
+                        separator |
+                        {html, aihtml_html:html()}]}]}} |
+              {term(),
+               aihtml_html:html(),
+               aihtml_html:html() |
+               {groups,
+                [{aihtml_html:html(),
+                  [{term(), aihtml_html:html(), aihtml_html:html()} |
+                   #{key := term(),
+                     label := aihtml_html:html(),
+                     icon => aihtml_html:html(),
+                     size => small | large,
+                     title => iodata(),
+                     disabled => boolean(),
+                     toggle => boolean(),
+                     pressed => boolean(),
+                     items =>
+                         [{term(), aihtml_html:html()} |
+                          #{key := term(),
+                            label := aihtml_html:html(),
+                            icon => aihtml_html:html(),
+                            disabled => boolean()} |
+                          divider]} |
+                   {stack, [term()]} |
+                   separator |
+                   {html, aihtml_html:html()}]} |
+                 #{label := aihtml_html:html(),
+                   items :=
+                       [{term(), aihtml_html:html(), aihtml_html:html()} |
+                        #{key := term(),
+                          label := aihtml_html:html(),
+                          icon => aihtml_html:html(),
+                          size => small | large,
+                          title => iodata(),
+                          disabled => boolean(),
+                          toggle => boolean(),
+                          pressed => boolean(),
+                          items =>
+                              [{term(), aihtml_html:html()} |
+                               #{key := term(),
+                                 label := aihtml_html:html(),
+                                 icon => aihtml_html:html(),
+                                 disabled => boolean()} |
+                               divider]} |
+                        {stack, [term()]} |
+                        separator |
+                        {html, aihtml_html:html()}]}]},
+               aihtml_html:attrs()} |
+              #{key := term(),
+                label := aihtml_html:html(),
+                icon => aihtml_html:html(),
+                disabled => boolean(),
+                content => aihtml_html:html(),
+                groups =>
+                    [{aihtml_html:html(),
+                      [{term(), aihtml_html:html(), aihtml_html:html()} |
+                       #{key := term(),
+                         label := aihtml_html:html(),
+                         icon => aihtml_html:html(),
+                         size => small | large,
+                         title => iodata(),
+                         disabled => boolean(),
+                         toggle => boolean(),
+                         pressed => boolean(),
+                         items =>
+                             [{term(), aihtml_html:html()} |
+                              #{key := term(),
+                                label := aihtml_html:html(),
+                                icon => aihtml_html:html(),
+                                disabled => boolean()} |
+                              divider]} |
+                       {stack, [term()]} |
+                       separator |
+                       {html, aihtml_html:html()}]} |
+                     #{label := aihtml_html:html(),
+                       items :=
+                           [{term(),
+                             aihtml_html:html(),
+                             aihtml_html:html()} |
+                            #{key := term(),
+                              label := aihtml_html:html(),
+                              icon => aihtml_html:html(),
+                              size => small | large,
+                              title => iodata(),
+                              disabled => boolean(),
+                              toggle => boolean(),
+                              pressed => boolean(),
+                              items =>
+                                  [{term(), aihtml_html:html()} |
+                                   #{key := term(),
+                                     label := aihtml_html:html(),
+                                     icon => aihtml_html:html(),
+                                     disabled => boolean()} |
+                                   divider]} |
+                            {stack, [term()]} |
+                            separator |
+                            {html, aihtml_html:html()}]}]}],
+             term(),
+             aihtml_html:css(),
+             aihtml_html:attrs()) ->
+                #ah_ribbon{}.
+ribbon(A1, A2, A3, A4) -> aihtml_layout_tiles:ribbon(A1, A2, A3, A4).
+-spec tile_layout({columns | rows, [term()]} |
+                  {tabs,
+                   [{term(), iodata(), aihtml_html:html()} |
+                    #{id := term(),
+                      label := iodata(),
+                      content => aihtml_html:html(),
+                      close => boolean(),
+                      drag => boolean()}]} |
+                  #{columns => [term()],
+                    rows => [term()],
+                    tabs =>
+                        [{term(), iodata(), aihtml_html:html()} |
+                         #{id := term(),
+                           label := iodata(),
+                           content => aihtml_html:html(),
+                           close => boolean(),
+                           drag => boolean()}],
+                    id => term(),
+                    content => aihtml_html:html(),
+                    label => iodata(),
+                    size => undefined | integer() | iodata(),
+                    min => non_neg_integer(),
+                    resize => boolean(),
+                    position => top | bottom | left | right,
+                    active => term()},
+                  undefined | iodata() | map(),
+                  aihtml_html:css(),
+                  aihtml_html:attrs()) ->
+                     #ah_tile_layout{}.
+tile_layout(A1, A2, A3, A4) -> aihtml_layout_tiles:tile_layout(A1, A2, A3, A4).
+
 %% aihtml_overlay
 -spec tooltip(aihtml_html:html(),
               aihtml_html:html(),
@@ -1184,5 +1435,185 @@ heatmap_calendar(A1, A2, A3) -> aihtml_data_tree:heatmap_calendar(A1, A2, A3).
                    [aihtml_data_tree:tree_item()]) ->
                       ok.
 set_children(A1, A2, A3) -> aihtml_data_tree:set_children(A1, A2, A3).
+
+%% aihtml_data_grid
+-spec datagrid([aihtml_data_grid:column()],
+               [aihtml_data_grid:row()],
+               aihtml_html:css(),
+               aihtml_html:attrs()) ->
+                  #ah_datagrid{}.
+datagrid(A1, A2, A3, A4) -> aihtml_data_grid:datagrid(A1, A2, A3, A4).
+-spec datagrid_query(aihtml_action:event()) -> aihtml_data_grid:query().
+datagrid_query(A1) -> aihtml_data_grid:datagrid_query(A1).
+-spec datagrid_rows(aihtml_action:ctx(),
+                    aihtml_action:event(),
+                    [aihtml_data_grid:row()],
+                    non_neg_integer()) ->
+                       ok.
+datagrid_rows(A1, A2, A3, A4) -> aihtml_data_grid:datagrid_rows(A1, A2, A3, A4).
+-spec datagrid_row(aihtml_action:ctx(),
+                   aihtml_action:event(),
+                   aihtml_data_grid:row()) ->
+                      ok.
+datagrid_row(A1, A2, A3) -> aihtml_data_grid:datagrid_row(A1, A2, A3).
+-spec datagrid_select(aihtml_data_grid:query(),
+                      [aihtml_data_grid:row()]) ->
+                         {[aihtml_data_grid:row()], non_neg_integer()}.
+datagrid_select(A1, A2) -> aihtml_data_grid:datagrid_select(A1, A2).
+
+%% aihtml_data_pivot
+-spec pivotgrid([aihtml_data_pivot:row()],
+                aihtml_data_pivot:layout(),
+                aihtml_html:css(),
+                aihtml_html:attrs()) ->
+                   #ah_pivotgrid{}.
+pivotgrid(A1, A2, A3, A4) -> aihtml_data_pivot:pivotgrid(A1, A2, A3, A4).
+-spec pivotgrid_rows(aihtml_action:ctx(),
+                     aihtml_action:event(),
+                     [aihtml_data_pivot:row()]) ->
+                        ok.
+pivotgrid_rows(A1, A2, A3) -> aihtml_data_pivot:pivotgrid_rows(A1, A2, A3).
+-spec pivotgrid_view(aihtml_action:event()) ->
+                        #{layout := map(), view := map()}.
+pivotgrid_view(A1) -> aihtml_data_pivot:pivotgrid_view(A1).
+-spec pivotgrid_cell(aihtml_action:event()) ->
+                        #{row := list(),
+                          col := list(),
+                          filter := map(),
+                          field := binary() | null,
+                          agg := atom(),
+                          value := number() | null,
+                          text := binary()}.
+pivotgrid_cell(A1) -> aihtml_data_pivot:pivotgrid_cell(A1).
+
+%% aihtml_data_tables
+-spec treegrid([aihtml_data_tables:column()],
+               [aihtml_data_tables:row()],
+               aihtml_html:css(),
+               aihtml_html:attrs()) ->
+                  #ah_treegrid{}.
+treegrid(A1, A2, A3, A4) -> aihtml_data_tables:treegrid(A1, A2, A3, A4).
+-spec datatable([aihtml_data_tables:column()],
+                [aihtml_data_tables:row()],
+                aihtml_html:css(),
+                aihtml_html:attrs()) ->
+                   #ah_datatable{}.
+datatable(A1, A2, A3, A4) -> aihtml_data_tables:datatable(A1, A2, A3, A4).
+-spec treegrid_children(aihtml_action:ctx(),
+                        aihtml_action:event(),
+                        #ah_treegrid{}) ->
+                           ok.
+treegrid_children(A1, A2, A3) -> aihtml_data_tables:treegrid_children(A1, A2, A3).
+-spec datatable_query(aihtml_action:event()) ->
+                         aihtml_data_tables:query().
+datatable_query(A1) -> aihtml_data_tables:datatable_query(A1).
+-spec datatable_rows(aihtml_action:ctx(),
+                     aihtml_action:event(),
+                     #ah_datatable{}) ->
+                        ok.
+datatable_rows(A1, A2, A3) -> aihtml_data_tables:datatable_rows(A1, A2, A3).
+-spec datatable_row(aihtml_action:ctx(),
+                    aihtml_action:event(),
+                    #ah_datatable{},
+                    aihtml_data_tables:row()) ->
+                       ok.
+datatable_row(A1, A2, A3, A4) -> aihtml_data_tables:datatable_row(A1, A2, A3, A4).
+
+%% aihtml_data_schedule
+-spec gantt([aihtml_data_schedule:gantt_task()],
+            aihtml_html:css(),
+            aihtml_html:attrs()) ->
+               #ah_gantt{}.
+gantt(A1, A2, A3) -> aihtml_data_schedule:gantt(A1, A2, A3).
+-spec gantt_update(aihtml_action:ctx(),
+                   aihtml_action:event(),
+                   #ah_gantt{}) ->
+                      ok.
+gantt_update(A1, A2, A3) -> aihtml_data_schedule:gantt_update(A1, A2, A3).
+-spec scheduler([aihtml_data_schedule:scheduler_event()],
+                binary() | string() | calendar:date() | undefined,
+                aihtml_html:css(),
+                aihtml_html:attrs()) ->
+                   #ah_scheduler{}.
+scheduler(A1, A2, A3, A4) -> aihtml_data_schedule:scheduler(A1, A2, A3, A4).
+-spec scheduler_range(aihtml_action:event()) ->
+                         #{view :=
+                               day | week | month | agenda |
+                               timeline_day | timeline_week |
+                               timeline_month,
+                           date := binary(),
+                           start := binary(),
+                           'end' := binary()}.
+scheduler_range(A1) -> aihtml_data_schedule:scheduler_range(A1).
+-spec scheduler_update(aihtml_action:ctx(),
+                       aihtml_action:event(),
+                       #ah_scheduler{}) ->
+                          ok.
+scheduler_update(A1, A2, A3) -> aihtml_data_schedule:scheduler_update(A1, A2, A3).
+-spec swimlane([aihtml_data_schedule:swimlane_node()],
+               aihtml_html:css(),
+               aihtml_html:attrs()) ->
+                  #ah_swimlane{}.
+swimlane(A1, A2, A3) -> aihtml_data_schedule:swimlane(A1, A2, A3).
+-spec swimlane_update(aihtml_action:ctx(),
+                      aihtml_action:event(),
+                      #ah_swimlane{}) ->
+                         ok.
+swimlane_update(A1, A2, A3) -> aihtml_data_schedule:swimlane_update(A1, A2, A3).
+
+%% aihtml_data_charts
+-spec chart(aihtml_data_charts:option(),
+            aihtml_html:css(),
+            aihtml_html:attrs()) ->
+               #ah_chart{}.
+chart(A1, A2, A3) -> aihtml_data_charts:chart(A1, A2, A3).
+-spec area_chart([aihtml_data_charts:series()],
+                 aihtml_html:css(),
+                 aihtml_html:attrs()) ->
+                    #ah_area_chart{}.
+area_chart(A1, A2, A3) -> aihtml_data_charts:area_chart(A1, A2, A3).
+-spec bar_chart([aihtml_data_charts:series()],
+                aihtml_html:css(),
+                aihtml_html:attrs()) ->
+                   #ah_bar_chart{}.
+bar_chart(A1, A2, A3) -> aihtml_data_charts:bar_chart(A1, A2, A3).
+-spec donut_chart([aihtml_data_charts:item()],
+                  aihtml_html:css(),
+                  aihtml_html:attrs()) ->
+                     #ah_donut_chart{}.
+donut_chart(A1, A2, A3) -> aihtml_data_charts:donut_chart(A1, A2, A3).
+-spec radar_chart([aihtml_data_charts:series()],
+                  aihtml_html:css(),
+                  aihtml_html:attrs()) ->
+                     #ah_radar_chart{}.
+radar_chart(A1, A2, A3) -> aihtml_data_charts:radar_chart(A1, A2, A3).
+-spec relation_graph(aihtml_data_charts:graph(),
+                     aihtml_html:css(),
+                     aihtml_html:attrs()) ->
+                        #ah_relation_graph{}.
+relation_graph(A1, A2, A3) -> aihtml_data_charts:relation_graph(A1, A2, A3).
+-spec chart_option(aihtml_data_charts:element()) ->
+                      aihtml_data_charts:option().
+chart_option(A1) -> aihtml_data_charts:chart_option(A1).
+-spec chart_update(aihtml_action:ctx(),
+                   aihtml_action:target(),
+                   aihtml_data_charts:chart()) ->
+                      ok.
+chart_update(A1, A2, A3) -> aihtml_data_charts:chart_update(A1, A2, A3).
+
+%% aihtml_data_graph
+-spec node_graph(aihtml_data_graph:graph(),
+                 aihtml_html:css(),
+                 aihtml_html:attrs()) ->
+                    #ah_node_graph{}.
+node_graph(A1, A2, A3) -> aihtml_data_graph:node_graph(A1, A2, A3).
+-spec node_graph_layout(aihtml_data_graph:graph()) ->
+                           aihtml_data_graph:graph().
+node_graph_layout(A1) -> aihtml_data_graph:node_graph_layout(A1).
+-spec set_node_graph(aihtml_action:ctx(),
+                     aihtml_action:target() | aihtml_action:event(),
+                     aihtml_data_graph:graph()) ->
+                        ok.
+set_node_graph(A1, A2, A3) -> aihtml_data_graph:set_node_graph(A1, A2, A3).
 
 %% END GENERATED COMPONENTS

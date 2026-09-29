@@ -21,5 +21,13 @@
 -include("aihtml_layout_scroll.hrl").
 -include("aihtml_layout_bars.hrl").
 -include("aihtml_layout_dnd.hrl").
+-include("aihtml_data_grid.hrl").
+-include("aihtml_data_pivot.hrl").
+-include("aihtml_data_tables.hrl").
+-include("aihtml_data_schedule.hrl").
+-include("aihtml_data_charts.hrl").
+-include("aihtml_data_graph.hrl").
+-include("aihtml_layout_dock.hrl").
+-include("aihtml_layout_tiles.hrl").
 
 -endif.
