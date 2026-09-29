@@ -1,0 +1,10 @@
+/* aihtml additions for breadcrumbs; sigil styles live in ../sigil/components. */
+
+/* ---- breadcrumbs: icon and label side by side inside a link -------- */
+
+.ah-breadcrumbs__link:has(> .ah-breadcrumbs__icon),
+.ah-breadcrumbs__text:has(> .ah-breadcrumbs__icon) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
