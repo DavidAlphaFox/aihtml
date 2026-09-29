@@ -1,0 +1,4 @@
+[
+  {"value": "apple", "label": "Apple"},
+  {"value": "a\"b", "label": "<b>&'x</b>"}
+]

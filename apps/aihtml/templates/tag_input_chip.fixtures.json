@@ -1,0 +1,4 @@
+[
+  {"variant": "soft", "color": "primary", "index": 0, "label": "erlang", "disabled": false},
+  {"variant": "filled", "color": "error", "index": 3, "label": "<b>&\"'", "disabled": true}
+]

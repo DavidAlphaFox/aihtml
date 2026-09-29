@@ -1,0 +1,21 @@
+[
+  {
+    "check": true,
+    "error": false,
+    "number": 1,
+    "plain": false
+  },
+  {
+    "check": false,
+    "error": true,
+    "number": 2,
+    "plain": false
+  },
+  {
+    "check": false,
+    "error": false,
+    "number": 12,
+    "plain": true
+  }
+]
+

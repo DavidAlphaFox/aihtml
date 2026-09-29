@@ -1,0 +1,15 @@
+[
+  {"numbers": [
+    {"label": "1", "val": 1, "x": "182.5", "y": "39.07", "inner": false, "selected": false, "disabled": false},
+    {"label": "2", "val": 2, "x": "220.93", "y": "77.5", "inner": false, "selected": true, "disabled": false},
+    {"label": "6", "val": 6, "x": "130", "y": "235", "inner": false, "selected": false, "disabled": true}
+  ]},
+  {"numbers": [
+    {"label": "00", "val": 0, "x": "130", "y": "60", "inner": true, "selected": false, "disabled": false},
+    {"label": "21", "val": 21, "x": "60", "y": "130", "inner": true, "selected": true, "disabled": true}
+  ]},
+  {"numbers": [
+    {"label": "<&\"'>", "val": 45, "x": "25", "y": "130", "inner": false, "selected": false, "disabled": false}
+  ]},
+  {"numbers": []}
+]

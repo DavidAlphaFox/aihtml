@@ -1,0 +1,6 @@
+[
+  {"has_title": true, "title": "Saved", "has_description": true, "description": "Your changes are live."},
+  {"has_title": true, "title": "<b>&\"'", "has_description": false, "description": ""},
+  {"has_title": false, "title": "", "has_description": true, "description": "Only a description"},
+  {"has_title": false, "title": null, "has_description": false, "description": null}
+]

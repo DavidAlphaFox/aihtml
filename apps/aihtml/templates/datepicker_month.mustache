@@ -1,0 +1,10 @@
+<div class="ah-datepicker-calendar">
+<div class="ah-datepicker-header"><div class="ah-datepicker-nav-group"><button type="button" tabindex="-1" class="ah-datepicker-nav-prev ah-datepicker-nav-year" data-nav="-12" aria-label="{{prev_year}}">&laquo;</button><button type="button" tabindex="-1" class="ah-datepicker-nav-prev" data-nav="-1" aria-label="{{prev_month}}">&lsaquo;</button></div><div class="ah-datepicker-title" id="{{title_id}}" aria-live="polite">{{title}}</div><div class="ah-datepicker-nav-group"><button type="button" tabindex="-1" class="ah-datepicker-nav-next" data-nav="1" aria-label="{{next_month}}">&rsaquo;</button><button type="button" tabindex="-1" class="ah-datepicker-nav-next ah-datepicker-nav-year" data-nav="12" aria-label="{{next_year}}">&raquo;</button></div></div>
+<div class="ah-datepicker-week-header" aria-hidden="true">{{#week_numbers}}<div class="ah-datepicker-week-num-header">Wk</div>{{/week_numbers}}{{#weekdays}}<div class="ah-datepicker-weekday">{{label}}</div>{{/weekdays}}</div>
+<div class="ah-datepicker-body" role="grid" aria-labelledby="{{title_id}}">
+{{#weeks}}
+<div class="ah-datepicker-week" role="row">{{#week_numbers}}<div class="ah-datepicker-week-num">{{num}}</div>{{/week_numbers}}{{#days}}{{#empty}}<div class="ah-datepicker-day ah-datepicker-day-empty" role="gridcell"></div>{{/empty}}{{^empty}}<div class="{{cls}}" role="gridcell" id="{{id}}" data-date="{{date}}" aria-selected="{{selected}}" aria-disabled="{{disabled}}" aria-label="{{label}}"><span class="ah-datepicker-day-text">{{day}}</span></div>{{/empty}}{{/days}}</div>
+{{/weeks}}
+</div>
+<div class="ah-datepicker-footer"><button type="button" tabindex="-1" class="ah-datepicker-today-btn">{{today}}</button></div>
+</div>
