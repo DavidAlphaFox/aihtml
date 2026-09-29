@@ -57,9 +57,12 @@
 -define(GROUPS, [aihtml_theme,
                  aihtml_form_buttons, aihtml_form_choice, aihtml_form_text,
                  aihtml_form_select, aihtml_form_pickers, aihtml_form_time_color,
+                 aihtml_form_calendar, aihtml_form_lists, aihtml_form_entry,
+                 aihtml_form_upload,
                  aihtml_layout_basic,
                  aihtml_layout_nav,
-                 aihtml_overlay, aihtml_display]).
+                 aihtml_layout_scroll, aihtml_layout_bars, aihtml_layout_dnd,
+                 aihtml_overlay, aihtml_display, aihtml_data_tree]).
 
 -spec groups() -> [module()].
 groups() -> ?GROUPS.
