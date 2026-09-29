@@ -1,0 +1,69 @@
+/* aihtml additions shared by the text fields input, textarea,
+   password_input and number_input (designs/04-components.md); sigil
+   styles live in ../sigil/components. sigil's inputs come in one size and
+   carry no valid/invalid styling; those are added here, in sigil's terms.
+   The sm padding-right of input and number_input lives in their own
+   stylesheets, before rules that override it. */
+
+/* ---- sizes: sm / lg (md is sigil's default) ---- */
+:is(.ah-input-sm .ah-input, .ah-pwd-sm input.ah-pwd, .ah-numinput-sm input.ah-numinput-input) {
+  padding-top: var(--ah-spacing-xs);
+  padding-bottom: var(--ah-spacing-xs);
+  padding-left: var(--ah-spacing-sm);
+  font-size: var(--ah-font-size-xs);
+}
+:is(.ah-input-sm .ah-input-addon, .ah-numinput-sm :is(.ah-numinput-prefix, .ah-numinput-suffix)) {
+  font-size: var(--ah-font-size-xs);
+}
+.ah-numinput-sm :is(.ah-numinput-spin-up, .ah-numinput-spin-down) { width: 20px; font-size: 7px; }
+.ah-input-sm .ah-input-label,
+.ah-pwd-sm .ah-pwd-label { font-size: var(--ah-font-size-xs); left: var(--ah-spacing-sm); }
+
+:is(.ah-input-lg .ah-input, .ah-pwd-lg input.ah-pwd, .ah-numinput-lg input.ah-numinput-input) {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  font-size: var(--ah-font-size-base);
+}
+:is(.ah-input-lg .ah-input-addon, .ah-numinput-lg :is(.ah-numinput-prefix, .ah-numinput-suffix)) {
+  font-size: var(--ah-font-size-base);
+  padding: 0 var(--ah-spacing-md);
+}
+.ah-numinput-lg :is(.ah-numinput-spin-up, .ah-numinput-spin-down) { width: 28px; font-size: 9px; }
+.ah-input-lg .ah-input-label,
+.ah-pwd-lg .ah-pwd-label { font-size: var(--ah-font-size-base); }
+/* a floated label keeps the small size whatever the field size */
+:is(.ah-input-label-float, .ah-pwd-label-float, .ah-numinput-label-float) {
+  font-size: var(--ah-font-size-xs) !important;
+}
+
+/* ---- states: invalid / valid ----
+   !important: the skins are unlayered and repaint input borders; a state
+   must survive a skin change (an important layered rule wins). */
+:is(.ah-input-invalid :is(.ah-input, .ah-input-addon),
+    .ah-pwd-invalid input.ah-pwd,
+    .ah-numinput-invalid :is(input.ah-numinput-input, .ah-numinput-spin,
+                              .ah-numinput-prefix, .ah-numinput-suffix)) {
+  border-color: var(--ah-color-error) !important;
+}
+:is(.ah-input-invalid .ah-input:focus, .ah-input-invalid.ah-input-focused .ah-input,
+    .ah-pwd-invalid input.ah-pwd:focus,
+    .ah-numinput-invalid.ah-numinput-focused :is(input.ah-numinput-input, .ah-numinput-spin)) {
+  border-color: var(--ah-color-error) !important;
+  outline-color: var(--ah-color-error);
+}
+:is(.ah-input-invalid, .ah-pwd-invalid, .ah-numinput-invalid) :is(.ah-input-label-float, .ah-pwd-label-float, .ah-numinput-label-float) {
+  color: var(--ah-color-error);
+}
+
+:is(.ah-input-valid :is(.ah-input, .ah-input-addon),
+    .ah-pwd-valid input.ah-pwd,
+    .ah-numinput-valid :is(input.ah-numinput-input, .ah-numinput-spin,
+                            .ah-numinput-prefix, .ah-numinput-suffix)) {
+  border-color: var(--ah-color-success) !important;
+}
+:is(.ah-input-valid .ah-input:focus, .ah-input-valid.ah-input-focused .ah-input,
+    .ah-pwd-valid input.ah-pwd:focus,
+    .ah-numinput-valid.ah-numinput-focused :is(input.ah-numinput-input, .ah-numinput-spin)) {
+  border-color: var(--ah-color-success) !important;
+  outline-color: var(--ah-color-success);
+}
