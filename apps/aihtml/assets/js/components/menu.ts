@@ -210,15 +210,16 @@ class MenuController extends AH.Controller {
     const el = this.element;
     if (el.classList.contains("ah-menu-is-minimized")) { return; }
     el.classList.add("ah-menu-is-minimized");
-    const title = el.getAttribute("data-title") || "Menu";
+    const title = el.getAttribute("data-title") || AH.t("common", "menu", "Menu");
     const drawer = document.createElement("div");
     drawer.className = "ah-menu-drawer";
     drawer.setAttribute("role", "dialog");
     drawer.setAttribute("aria-modal", "true");
     drawer.setAttribute("aria-label", title);
     drawer.innerHTML = '<div class="ah-menu-drawer-title"><span></span>' +
-      '<button type="button" class="ah-menu-drawer-close" aria-label="Close">×</button></div>' +
+      '<button type="button" class="ah-menu-drawer-close">×</button></div>' +
       '<div class="ah-menu-drawer-list"></div>';
+    drawer.querySelector(".ah-menu-drawer-close")?.setAttribute("aria-label", AH.t("common", "close", "Close"));
     const span = drawer.querySelector(".ah-menu-drawer-title > span");
     if (span) { span.textContent = title; }
     const orig = child(el, ".ah-menu-list");

@@ -59,7 +59,7 @@ render(#ah_navbar{items = Items, value = Value, minimized = Minimized,
                  [{style, [<<"height:">>, px(Height), <<";">>]},
                   {role, button}, {tabindex, 0}, {aria_haspopup, <<"true">>},
                   {aria_expanded, <<"false">>},
-                  {aria_label, text_or(Title, <<"Navigation">>)}]),
+                  {aria_label, text_or(Title, aihtml_i18n:text(common, navigation))}]),
     ItemEls = [navbar_item(I, Value, col(Columns, N))
                || {N, I} <- lists:enumerate(Norm)],
     Brand = slot(R#ah_navbar.brand, <<"ah-navbar-brand">>),

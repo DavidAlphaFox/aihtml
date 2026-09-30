@@ -81,7 +81,7 @@ render(#ah_sidenav{groups = Groups0, value = Value, collapsed = Collapsed,
                      aihtml_html:el(button, {safe, ?TOGGLE_SVG},
                                     [<<"ah-sidenav__toggle">>],
                                     [{type, button},
-                                     {aria_label, <<"Toggle navigation">>},
+                                     {aria_label, aihtml_i18n:text(common, toggle_navigation)},
                                      {aria_expanded, atom_to_binary(not Collapsed)}])
              end,
     Footer = case R#ah_sidenav.footer of

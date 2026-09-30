@@ -78,11 +78,11 @@ render(#ah_window{body = Children, title = Title, footer = Footer, width = Width
                  [?H:el('div', Title, [<<"ah-window-title">>], [{id, TitleId}]),
                   ?H:el('div',
                       [[?H:el(button, [], [<<"ah-window-collapse-btn">>],
-                              [{type, button}, {aria_label, <<"Collapse">>},
+                              [{type, button}, {aria_label, aihtml_i18n:text(common, collapse)},
                                {aria_expanded, ?L:bool(not Collapsed)}])
                         || Collapsible],
                        [?H:el(button, [], [<<"ah-window-close-btn">>],
-                              [{type, button}, {aria_label, <<"Close">>},
+                              [{type, button}, {aria_label, aihtml_i18n:text(common, close)},
                                {data_ah_close, <<>>}])
                         || Closable]],
                       [<<"ah-window-header-buttons">>], [])],

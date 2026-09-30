@@ -114,7 +114,7 @@ render(#ah_command{palette = Palette} = R0) ->
                  Classes,
                  [[{id, Id},
                    {role, Palette andalso dialog}, {aria_modal, Palette andalso <<"true">>},
-                   {aria_label, Palette andalso <<"Command palette">>},
+                   {aria_label, Palette andalso aihtml_i18n:text(command, palette)},
                    {data_ah, <<"command">>},
                    {data_ah_remote, Search =/= undefined},
                    {data_ah_query, Query},
@@ -212,9 +212,9 @@ command_item(Id, #{value := V, label := L} = It, I) ->
 -spec set_command_items(aihtml_action:ctx(), {id, iodata() | atom()} | aihtml_action:event(),
                         [entry()]) -> ok.
 set_command_items(Ctx, #{data := #{<<"command">> := Id} = Data}, Items) ->
-    set_items(Ctx, text(Id), Items, maps:get(<<"empty">>, Data, <<"No results found.">>));
+    set_items(Ctx, text(Id), Items, maps:get(<<"empty">>, Data, aihtml_i18n:text(command, empty)));
 set_command_items(Ctx, {id, Id}, Items) ->
-    set_items(Ctx, text(Id), Items, <<"No results found.">>).
+    set_items(Ctx, text(Id), Items, aihtml_i18n:text(command, empty)).
 
 set_items(Ctx, Id, Items, EmptyText) ->
     aihtml_action:html(Ctx, {id, sub_id(Id, <<"list">>)},

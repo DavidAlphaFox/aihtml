@@ -60,7 +60,7 @@ render(#ah_popover{body = Children, position = Pos, title = Title, width = Width
                            [Title,
                             [?H:el('div', [], [<<"ah-popover-close-btn">>],
                                    [{role, button}, {tabindex, 0},
-                                    {title, <<"Close">>}, {aria_label, <<"Close">>},
+                                    {title, aihtml_i18n:text(common, close)}, {aria_label, aihtml_i18n:text(common, close)},
                                     {data_ah_close, <<>>}]) || Closable]],
                            [<<"ah-popover-title">>], [])
                end,

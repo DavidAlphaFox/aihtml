@@ -69,7 +69,7 @@ render(#ah_split_button{body = Content, items = Items0, value = Value, name = Na
                        [{aria_hidden, <<"true">>}]),
                  [<<"ah-split-button__arrow">> | BtnCls],
                  [{type, button}, {aria_haspopup, menu}, {aria_expanded, <<"false">>},
-                  {aria_label, <<"Open menu">>}, {disabled, Disabled}]),
+                  {aria_label, aihtml_i18n:text(common, open_menu)}, {disabled, Disabled}]),
            ?H:el('div', Menu, [<<"ah-split-button__menu">>], [{role, menu}]),
            ?L:hidden_input(Name, Cur)],
           Classes,
