@@ -46,6 +46,10 @@ aihtml_push:call(prices, {id, <<"chart">>}, setData, [Points]),
 aihtml_push:trigger(orders, document, 'order:new', #{id => 42}, #{except => Ctx}).
 ```
 
+## 语言
+
+HTML 在发布时只渲染一次，发给所有订阅者，所以用发布时指定的语言：`aihtml_push:publish(Topic, Fun, #{lang => L})`。不写时是应用的 `default_locale`，而不是发起推送的那个 action 的语言，因为订阅同一主题的页面不一定是同一种语言。多语言站点按语言分主题（如 `{todos, <<"zh">>}`），页面订阅自己语言的主题。`call`、`trigger` 只传数据，不涉及语言。见 [07-i18n.md](07-i18n.md)。
+
 ## 主题令牌
 
 - **签名**：`aihtml_push:token(Topic)` 对 `{aihtml_topic, Topic}` 签名，使用与 action 相同的密钥和格式。

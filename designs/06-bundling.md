@@ -23,6 +23,7 @@ apps/aihtml/assets/js/
   runtime/fetch.ts        Fetcher：data-ah-fetch 往返
   runtime/float.ts        FloatingPopup：浮层定位
   runtime/theme.ts        Theme：四轴
+  runtime/i18n.ts         AH.t、AH.format：读页面的 <script id="ah-labels">，没有时用英文兜底（07-i18n.md）
   runtime/forms.ts、requests.ts、dom.ts、vendor.ts   表单取值、请求状态、元素工具、第三方库
   components/<name>.ts    一个组件的行为：控制器类，共用代码 import ./_lib_<topic>.ts
   types/catalog.d.ts      生成：每个行为服务端可调用的方法（scripts/gen-ts-catalog.escript）

@@ -12,9 +12,11 @@
 
 ```
 aihtml            门面：标签函数、预制件、render、page、fetch
-aihtml_prefab     预制件实现
+aihtml_<组件名>   每个组件一个模块：构建函数、render/1、catalog/0（04-components.md）
+aihtml_lib_*      组件共用的代码
 aihtml_catalog    预制件元数据：修饰符组、标志、选项、行为、事件
 aihtml_theme      四轴定义与校验
+aihtml_i18n       语言：渲染时的当前语言、JSON 文案（priv/i18n）与格式设置
 aihtml_page       完整文档
 aihtml_action     action：令牌签名与校验、执行、DOM 操作（响应格式由传输层决定）
 aihtml_push       推送：主题令牌、pg 分发
@@ -61,6 +63,10 @@ sigil 的原则是标记里只写语义 class，主题切换时不改 HTML。本
 | skin | data-skin | 圆角、边框宽度、阴影；颜色只能通过 `var()` 读取 |
 
 派生令牌，例如 `--ah-color-primary-soft`，定义在 `:root` 上，因此会随所有轴一起重新计算。`aihtml_theme:axes/0` 是取值的唯一来源，测试会检查每个取值在 CSS 中都有对应规则。
+
+## 语言
+
+组件的界面文字、月份和星期名称、一周起始日、数字分隔符、12 小时制时间和短日期的写法都来自 `priv/i18n/<语言>.json`（自带 en、zh），不写在代码里。当前语言是渲染进程的上下文：`aihtml:page/2` 的 `lang`、action 请求带的页面语言、`aihtml_push:publish/3` 的 `lang`，都没有时是应用的 `default_locale`。record 在渲染时才取文字，所以同一棵元素树可以按不同语言渲染。浏览器端生成界面时用的文字，由非英文页面在 `<head>` 里带上（`<script id="ah-labels">`），JS 通过 `AH.t` 取。详见 [07-i18n.md](07-i18n.md)。
 
 ## 交互模型
 
