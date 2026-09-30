@@ -106,7 +106,7 @@
     T.eq(calls, ["now"]);
   });
 
-  T.test("AH.invoke takes an element, a selector or a jQuery-like object", async function (fx) {
+  T.test("AH.invoke takes an element, a selector or an array-like object", async function (fx) {
     var seen = [];
     AH.register("t-inv", class extends AH.Controller {
       who() { seen.push(this.element.id); return this.element.id; }
@@ -115,7 +115,7 @@
     await T.ready(fx);
     T.eq(AH.invoke(document.getElementById("i1"), "who"), "i1");
     AH.invoke("#fixture i", "who");
-    AH.invoke({ jquery: "x", length: 1, 0: document.getElementById("i2") }, "who");
+    AH.invoke({ length: 1, 0: document.getElementById("i2") }, "who");
     T.eq(seen, ["i1", "i1", "i2", "i2"]);
   });
 

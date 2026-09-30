@@ -53,10 +53,10 @@
     window.scrollTo(0, 0);
     fx.style.height = "";
   });
-  T.test("it takes jQuery-like objects and places on the right, centered", function (fx) {
+  T.test("it takes array-like objects and places on the right, centered", function (fx) {
     var e = setup(fx);
     e[0].style.height = "10px";
-    var h = AH.float({ jquery: "x", length: 1, 0: e[0] }, { jquery: "x", length: 1, 0: e[1] },
+    var h = AH.float({ length: 1, 0: e[0] }, { length: 1, 0: e[1] },
                      { placement: "right", align: "center", offset: 6 });
     var a = e[1].getBoundingClientRect(), p = e[0].getBoundingClientRect();
     T.eq(e[0].getAttribute("data-ah-placement"), "right");
