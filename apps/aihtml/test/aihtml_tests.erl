@@ -179,19 +179,18 @@ page_test() ->
                                            "<script type=\"module\" src=\"/aihtml/js/", Entry/binary, "\"></script></body>">>)),
     [?assertMatch({_, _}, binary:match(H, <<"<link rel=\"modulepreload\" href=\"/aihtml/js/", I/binary, "\">">>))
      || I <- Imports],
-    ?assertEqual(nomatch, binary:match(H, <<"jquery">>)),
-    %% options: another mount point, jQuery for the page's own scripts,
-    %% deferred extra scripts, no runtime
+    %% options: another mount point, deferred extra scripts, no runtime
     H2 = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{assets => <<"/static/ah/">>,
-                                                    jquery => <<"/j.js">>, js => [<<"/app.js">>]})),
-    ?assertMatch({_, _}, binary:match(H2, <<"<script src=\"/j.js\"></script><script type=\"module\" src=\"/static/ah/js/",
-                                            Entry/binary, "\"></script><script src=\"/app.js\" defer></script>">>)),
+                                                    js => [<<"/app.js">>]})),
     %% the stylesheet follows `assets' unless `css' is given
     ?assertMatch({_, _}, binary:match(H2, <<"<link rel=\"stylesheet\" href=\"/static/ah/css/", Css/binary, "\">">>)),
+    ?assertEqual(nomatch, binary:match(H2, [<<"/aihtml/css/">>, <<"/aihtml/js/">>])),
     H4 = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{assets => <<"/static/ah/">>,
                                                     css => [<<"/app.css">>]})),
     ?assertMatch({_, _}, binary:match(H4, <<"<link rel=\"stylesheet\" href=\"/app.css\">">>)),
     ?assertEqual(nomatch, binary:match(H4, Css)),
+    ?assertMatch({_, _}, binary:match(H2, <<"<script type=\"module\" src=\"/static/ah/js/",
+                                            Entry/binary, "\"></script><script src=\"/app.js\" defer></script>">>)),
     H3 = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{runtime => false})),
     ?assertEqual(nomatch, binary:match(H3, <<"<script type=\"module\"">>)).
 

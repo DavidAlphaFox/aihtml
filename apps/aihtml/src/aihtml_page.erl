@@ -36,8 +36,6 @@
 %%%   runtime      URL of the runtime's entry module, default the bundle
 %%%                in priv/static/js (aihtml_assets), or false to leave it
 %%%                out
-%%%   jquery       a jQuery URL for the page's own scripts, default false
-%%%                (the runtime does not need it)
 %%%   js           extra script URLs, loaded (deferred) after the runtime
 %%%   head         extra `<head>' content
 %%%   body_css     Css for `<body>'
@@ -71,7 +69,6 @@
                   persist => boolean(),
                   assets => iodata(),
                   css => [iodata()],
-                  jquery => iodata() | false,
                   runtime => iodata() | false,
                   js => [iodata()],
                   head => aihtml_html:html(),
@@ -96,9 +93,7 @@ render(Body, Opts) ->
     Theme = maps:get(theme, Opts, #{}),
     Assets = iolist_to_binary(maps:get(assets, Opts, <<"/aihtml/">>)),
     {Runtime, Preload} = runtime(Assets, maps:get(runtime, Opts, default)),
-    Scripts = [[el(script, [], [], [{src, iolist_to_binary(U)}])
-                || U <- [maps:get(jquery, Opts, false)], U =/= false],
-               [el(script, [], [], [{type, module}, {src, U}]) || U <- [Runtime], U =/= false],
+    Scripts = [[el(script, [], [], [{type, module}, {src, U}]) || U <- [Runtime], U =/= false],
                [el(script, [], [], [{src, iolist_to_binary(U)}, {defer, true}])
                 || U <- maps:get(js, Opts, [])]],
     Head = el(head,
