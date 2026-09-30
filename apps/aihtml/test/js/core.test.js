@@ -152,7 +152,42 @@
     T.ok(!/\n$/.test(html), "no trailing newline");
   });
 
+  // the page's language goes with each request, for the server to render in
+  T.test("actions send the page's language", async function (fx) {
+    var html = document.documentElement, before = html.getAttribute("lang");
+    html.setAttribute("lang", "zh-CN");
+    sent = [];
+    fx.innerHTML = '<button id="lb" data-ah-on="click:' + TOKEN + '">x</button>';
+    T.fire(document.getElementById("lb"), "click");
+    await wait(20);
+    html.removeAttribute("lang");
+    T.fire(document.getElementById("lb"), "click");
+    await wait(20);
+    if (before === null) { html.removeAttribute("lang"); } else { html.setAttribute("lang", before); }
+    T.eq(sent.length, 2);
+    T.eq(sent[0].lang, "zh-CN");
+    T.eq(sent[1].lang, null);
+  });
+
   // ---- data-ah-fetch round trips (fetch) --------------------------------
+
+  T.test("fetch: the request names the page's language", async function (fx) {
+    var html = document.documentElement, before = html.getAttribute("lang");
+    fetched = [];
+    pages["/t/lang"] = { status: 200, body: "<p>ok</p>" };
+    fx.innerHTML = '<button id="fl" data-ah-fetch="get" data-ah-url="/t/lang" data-ah-target="#fo">x</button>' +
+      '<div id="fo"></div>';
+    html.setAttribute("lang", "zh-TW");
+    T.fire(document.getElementById("fl"), "click");
+    await wait(20);
+    html.removeAttribute("lang");
+    T.fire(document.getElementById("fl"), "click");
+    await wait(20);
+    if (before === null) { html.removeAttribute("lang"); } else { html.setAttribute("lang", before); }
+    T.eq(fetched.length, 2);
+    T.eq(fetched[0].init.headers["X-Aihtml-Lang"], "zh-TW");
+    T.eq(fetched[1].init.headers["X-Aihtml-Lang"], undefined);
+  });
 
   T.test("fetch: a form GETs its fields and swaps the response in", async function (fx) {
     fetched = [];
