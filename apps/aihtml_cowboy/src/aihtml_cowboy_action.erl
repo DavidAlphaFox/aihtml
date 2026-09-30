@@ -1,7 +1,8 @@
 %% @doc POST endpoint for aihtml actions (designs/02-actions.md).
 %%
-%% The body is JSON: `{"action": Token, "event": {...}, "stream": S}'
-%% (stream: the page's push stream id, if any). A bad origin, a bad body or
+%% The body is JSON: `{"action": Token, "event": {...}, "stream": S,
+%% "lang": L}' (stream: the page's push stream id, if any; lang: the page's
+%% `<html lang>', the language the action renders in). A bad origin, a bad body or
 %% an invalid token is refused with a plain status (403 / 400 / 405) before
 %% anything runs. Otherwise the action runs in this request process and the
 %% reply is its operations:
@@ -51,7 +52,8 @@ stream(Ref, In, Req0) ->
     Result = aihtml_action:execute(Ref, maps:get(<<"event">>, In, #{}),
                                    #{send => Send,
                                      meta => #{req => Req0},
-                                     stream_id => stream_id(maps:get(<<"stream">>, In, null))}),
+                                     stream_id => stream_id(maps:get(<<"stream">>, In, null)),
+                                     lang => maps:get(<<"lang">>, In, null)}),
     case {erase(aihtml_cowboy_stream), Result} of
         {undefined, {ok, Ops}} ->
             json(200, #{ops => Ops}, Req0);

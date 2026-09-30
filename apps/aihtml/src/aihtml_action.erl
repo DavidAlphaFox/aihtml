@@ -48,11 +48,11 @@
 %% Rendering and transports.
 -export([token/1, verify/1, execute/3]).
 %% Shared with aihtml_push.
--export([sign/1, unsign/1, render_ops/1, stream_id/1, plain/1, check_secret/0]).
+-export([sign/1, unsign/1, render_ops/1, render_ops/2, stream_id/1, plain/1, check_secret/0]).
 %% Operations inside an action.
 -export([html/3, html/4, remove/2, attr/4, add_class/3, remove_class/3,
          set_value/3, focus/2, title/2, redirect/2, js/2, call/4,
-         trigger/4, push_url/2, replace_url/2, flush/1, meta/1]).
+         trigger/4, push_url/2, replace_url/2, flush/1, meta/1, lang/1]).
 
 -export_type([ref/0, event/0, ctx/0, target/0, run_opts/0, op/0]).
 
@@ -69,17 +69,21 @@
                    checked := boolean() | null, key := binary() | null,
                    form := #{binary() => binary()}, values := #{binary() => term()},
                    data := #{binary() => binary()}}.
--opaque ctx() :: {aihtml_ctx, pid(), fun(([op()]) -> any()), map(), binary() | undefined}.
+-opaque ctx() :: {aihtml_ctx, pid(), fun(([op()]) -> any()), map(), binary() | undefined,
+                  binary()}.
 %% A DOM operation, as sent to the browser (JSON object).
 -type op() :: #{atom() => term()}.
 %% `send' gets the operations `flush/1' sends before the action returns
 %% (the transport then streams its reply). `meta' is handed to the action
 %% untouched (the cowboy transport puts the request there). `stream_id'
 %% names the page's push stream, so a publish can skip the page that caused
-%% it (see aihtml_push:publish/3).
+%% it (see aihtml_push:publish/3). `lang' is the page's language (the
+%% browser sends its `<html lang>'): the action runs with it as the current
+%% language, so what it renders matches the page (see aihtml_i18n).
 -type run_opts() :: #{send := fun(([op()]) -> any()),
                       meta => map(),
-                      stream_id => binary()}.
+                      stream_id => binary(),
+                      lang => aihtml_i18n:lang() | null}.
 
 -define(BUF, aihtml_action_buf).
 -define(COLLECT, aihtml_action_collect).
@@ -144,10 +148,12 @@ unsign(_) ->
 %% crashed (the crash is logged, not sent).
 -spec execute(ref(), map(), run_opts()) -> {ok, [op()]} | error.
 execute({Mod, Name, Args}, EventJson, #{send := Send} = Opts) ->
-    Ctx = {aihtml_ctx, self(), Send, maps:get(meta, Opts, #{}), maps:get(stream_id, Opts, undefined)},
+    Lang = aihtml_i18n:normalize(maps:get(lang, Opts, undefined)),
+    Ctx = {aihtml_ctx, self(), Send, maps:get(meta, Opts, #{}),
+           maps:get(stream_id, Opts, undefined), Lang},
     put(?BUF, []),
     try
-        _ = Mod:action(Name, Args, event(EventJson), Ctx),
+        _ = aihtml_i18n:with(Lang, fun() -> Mod:action(Name, Args, event(EventJson), Ctx) end),
         {ok, lists:reverse(get(?BUF))}
     catch
         C:R:St ->
@@ -255,7 +261,7 @@ replace_url(Ctx, Url) -> push(Ctx, #{op => url, mode => replace, value => text(U
 
 %% @doc Send the operations buffered so far, before the action returns.
 -spec flush(ctx()) -> ok.
-flush({aihtml_ctx, _, Send, _, _} = Ctx) ->
+flush({aihtml_ctx, _, Send, _, _, _} = Ctx) ->
     owner(Ctx),
     case put(?BUF, []) of
         [] -> ok;
@@ -267,24 +273,35 @@ flush({aihtml_ctx, _, Send, _, _} = Ctx) ->
 %% @doc What the transport passed along; the cowboy transport gives
 %% `#{req => cowboy_req:req()}' for cookies, headers and the peer.
 -spec meta(ctx()) -> map().
-meta({aihtml_ctx, _, _, Meta, _}) -> Meta.
+meta({aihtml_ctx, _, _, Meta, _, _}) -> Meta.
+
+%% @doc The language this action renders in: the page's, normalised
+%% (see aihtml_i18n:normalize/1).
+-spec lang(ctx()) -> binary().
+lang({aihtml_ctx, _, _, _, _, Lang}) -> Lang.
 
 %% @doc The push stream of the page that sent this request, or
 %% `undefined' when it has none.
 -spec stream_id(ctx()) -> binary() | undefined.
-stream_id({aihtml_ctx, _, _, _, Id}) -> Id.
+stream_id({aihtml_ctx, _, _, _, Id, _}) -> Id.
 
 %% @doc Run `Fun(Ctx)' and return the operations it produced instead of
 %% sending them: the same operation functions, rendered once, for
-%% aihtml_push to fan out. Safe to call inside an action.
+%% aihtml_push to fan out. Safe to call inside an action. Renders in the
+%% current language; see render_ops/2.
 -spec render_ops(fun((ctx()) -> any())) -> [op()].
-render_ops(Fun) ->
+render_ops(Fun) -> render_ops(Fun, aihtml_i18n:locale()).
+
+%% @doc render_ops/1 in the language `Lang'.
+-spec render_ops(fun((ctx()) -> any()), aihtml_i18n:lang()) -> [op()].
+render_ops(Fun, Lang0) ->
+    Lang = aihtml_i18n:normalize(Lang0),
     Saved = put(?BUF, []),
     put(?COLLECT, []),
     Ctx = {aihtml_ctx, self(), fun(Ops) -> put(?COLLECT, get(?COLLECT) ++ Ops) end,
-           #{}, undefined},
+           #{}, undefined, Lang},
     try
-        _ = Fun(Ctx),
+        _ = aihtml_i18n:with(Lang, fun() -> Fun(Ctx) end),
         flush(Ctx),
         get(?COLLECT)
     after
@@ -306,7 +323,7 @@ push(Ctx, Op) ->
 
 %% Operations are buffered in the request process, so they must be called
 %% from it.
-owner({aihtml_ctx, Pid, _, _, _}) when Pid =:= self() -> ok;
+owner({aihtml_ctx, Pid, _, _, _, _}) when Pid =:= self() -> ok;
 owner(_) -> error({aihtml, action_ctx_used_outside_its_request}).
 
 target({id, Id}, Op) -> Op#{id => text(Id)};

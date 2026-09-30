@@ -54,7 +54,8 @@
 %% Topics one stream may follow.
 -define(MAX_TOPICS, 32).
 
--type publish_opts() :: #{except => aihtml_action:ctx() | binary()}.
+-type publish_opts() :: #{except => aihtml_action:ctx() | binary(),
+                          lang => aihtml_i18n:lang()}.
 
 %% @doc Publish to everyone subscribed to `Topic'. `Fun' receives a ctx
 %% and uses the aihtml_action operations; the HTML is rendered once.
@@ -63,14 +64,17 @@ publish(Topic, Fun) -> publish(Topic, Fun, #{}).
 
 %% @doc Options: `except' is an action ctx (or a stream id): the page that
 %% sent that request is skipped, because the action's own response already
-%% updated it.
+%% updated it. `lang' is the language the HTML is rendered in, default the
+%% application's default language (not the calling action's: the pages
+%% following a topic may not share it); a site in several languages gives
+%% each its own topic, e.g. `{todos, <<"zh">>}'.
 -spec publish(topic(), fun((aihtml_action:ctx()) -> any()), publish_opts()) -> ok.
 publish(Topic, Fun, Opts) ->
     Except = case maps:get(except, Opts, undefined) of
                  Id when is_binary(Id); Id =:= undefined -> Id;
                  Ctx -> aihtml_action:stream_id(Ctx)
              end,
-    case aihtml_action:render_ops(Fun) of
+    case aihtml_action:render_ops(Fun, maps:get(lang, Opts, undefined)) of
         [] -> ok;
         Ops ->
             Json = iolist_to_binary(aihtml_json:encode(Ops)),

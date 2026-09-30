@@ -158,7 +158,7 @@ ctx_is_bound_to_its_request_test() ->
     {ok, Ref} = aihtml_action:verify(aihtml_action:token({?M, inc, #{n => 0}})),
     %% a ctx used from another process than its request's fails
     _ = aihtml_action:execute(Ref, #{}, #{send => fun(_) -> ok end}),
-    Ctx = {aihtml_ctx, Self, fun(_) -> ok end, #{}, undefined},
+    Ctx = {aihtml_ctx, Self, fun(_) -> ok end, #{}, undefined, <<"en">>},
     {_, R} = spawn_monitor(fun() -> aihtml_action:html(Ctx, {id, x}, <<"y">>) end),
     ?assertEqual(ok, receive {'DOWN', R, process, _, {{aihtml, action_ctx_used_outside_its_request}, _}} -> ok
                      after 1000 -> timeout end).
