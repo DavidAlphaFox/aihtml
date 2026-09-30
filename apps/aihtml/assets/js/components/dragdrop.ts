@@ -159,7 +159,7 @@ class DropDrag extends Drag {
     el.setAttribute("data-drop", dest || "");
     el.setAttribute("data-from", this.from);
     fire(zone, "ah:drop", { drag: key, drop: dest, from: this.from } satisfies DropEvent);
-    announce(ddLive(el), label(item) + " dropped on " + label(zone) + ".");
+    announce(ddLive(el), AH.t("dragdrop", "dropped", "{0} dropped on {1}.", [label(item), label(zone)]));
   }
 
   protected override cancelled(): void {
@@ -270,13 +270,14 @@ class DragdropController extends AH.Controller {
         k.begin();
         if (!k.zones.length) {
           k.finish(false);
-          announce(ddLive(el), "No drop zone takes " + label(item) + ".");
+          announce(ddLive(el), AH.t("dragdrop", "no_zone", "No drop zone takes {0}.", [label(item)]));
           return;
         }
         k.claim();
         k.pos = -1;
-        announce(ddLive(el), "Picked up " + label(item) + ". Arrow keys choose one of " +
-                 k.zones.length + " drop zones, Space drops, Escape cancels.");
+        announce(ddLive(el), AH.t("dragdrop", "picked",
+                                    "Picked up {0}. Arrow keys choose one of {1} drop zones, Space drops, Escape cancels.",
+                                    [label(item), k.zones.length]));
       }
       return;
     }
@@ -286,14 +287,14 @@ class DragdropController extends AH.Controller {
       const step = e.key === "ArrowUp" || e.key === "ArrowLeft" ? -1 : 1;
       d.pos = d.pos < 0 ? (step > 0 ? 0 : n - 1) : (d.pos + step + n) % n;
       d.setTarget(d.zones[d.pos]);
-      announce(ddLive(el), label(d.zones[d.pos]) + ", drop zone " + (d.pos + 1) + " of " + n + ".");
+      announce(ddLive(el), AH.t("dragdrop", "zone", "{0}, drop zone {1} of {2}.", [label(d.zones[d.pos]), d.pos + 1, n]));
     } else if (pick) {
       e.preventDefault();
       if (d.target) { Drag.untrack(); d.drop(); } else { d.cancel(); }
     } else if (e.key === "Escape") {
       e.preventDefault();
       d.cancel();
-      announce(ddLive(el), "Cancelled.");
+      announce(ddLive(el), AH.t("dragdrop", "cancelled", "Cancelled."));
     }
   }
 }

@@ -366,8 +366,9 @@ class SortableController extends AH.Controller {
     this.#order = soOrder(list);
     item.classList.add("ah-sortable-item-grabbed");
     item.setAttribute("aria-pressed", "true");
-    announce(soLive(list), "Picked up " + label(item) + ", position " + soPos(list, item) +
-             ". Arrow keys move it, Space drops it, Escape cancels.");
+    announce(soLive(list), AH.t("sortable", "picked",
+                                  "Picked up {0}, position {1}. Arrow keys move it, Space drops it, Escape cancels.",
+                                  [label(item), soPos(list, item)]));
   }
 
   private release(commit: boolean): void {
@@ -378,12 +379,12 @@ class SortableController extends AH.Controller {
     item.removeAttribute("aria-pressed");
     const live = soLive(list);
     if (commit) {
-      announce(live, label(item) + " dropped at position " + soPos(list, item) + ".");
+      announce(live, AH.t("sortable", "dropped", "{0} dropped at position {1}.", [label(item), soPos(list, item)]));
       soPublish(list, true);
     } else {
       soSetOrder(list, split(this.#order));
       item.focus();
-      announce(live, "Cancelled, " + label(item) + " is back at position " + soPos(list, item) + ".");
+      announce(live, AH.t("sortable", "cancelled", "Cancelled, {0} is back at position {1}.", [label(item), soPos(list, item)]));
     }
   }
 
