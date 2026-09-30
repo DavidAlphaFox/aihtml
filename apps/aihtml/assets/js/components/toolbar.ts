@@ -111,7 +111,7 @@ class ToolbarController extends AH.Controller {
     const popup = document.createElement("div");
     popup.className = "ah-toolbar-popup";
     popup.setAttribute("role", "menu");
-    popup.setAttribute("aria-label", "Overflow tools");
+    popup.setAttribute("aria-label", AH.t("toolbar", "overflow", "Overflow tools"));
     const tools = Array.from(el.querySelectorAll<HTMLElement>(":scope > .ah-toolbar-tool")).map((t) =>
       new Tool(t, popup));
     const st: Overflow = this.#st = { tools: tools, popup: popup, open: false, float: null, ro: null };

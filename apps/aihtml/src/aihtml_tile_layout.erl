@@ -197,7 +197,7 @@ render_node(RootId, Bar, #{kind := group, orient := Orient, items := Items} = N)
                       end],
                      [{role, separator},
                       {aria_orientation, case Vert of true -> vertical; false -> horizontal end},
-                      {aria_label, <<"Resize">>}, {tabindex, <<"0">>}]),
+                      {aria_label, aihtml_i18n:text(common, resize)}, {tabindex, <<"0">>}]),
     Prop = case Vert of
                true -> <<"grid-template-columns:">>;
                false -> <<"grid-template-rows:">>

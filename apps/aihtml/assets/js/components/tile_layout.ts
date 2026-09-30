@@ -138,7 +138,7 @@ function sizesOf(group: Element): number[] {
 function splitbar(v: boolean): HTMLElement {
   return div("ah-tl-splitbar " + (v ? "ah-tl-splitbar-v" : "ah-tl-splitbar-h"),
              { role: "separator", "aria-orientation": v ? "vertical" : "horizontal",
-               "aria-label": "Resize", tabindex: "0" });
+               "aria-label": AH.t("common", "resize", "Resize"), tabindex: "0" });
 }
 
 function newGroup(v: boolean): HTMLElement {

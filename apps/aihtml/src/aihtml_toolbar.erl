@@ -51,7 +51,7 @@ render(#ah_toolbar{tools = Tools} = R) ->
                                     [{role, separator}, {aria_orientation, vertical}]),
                      [tool_run(Run, Last) || {Run, Last} <- mark_last(Runs)]),
     MinBtn = aihtml_html:el('div', <<"\x{2630}"/utf8>>, [<<"ah-toolbar-minimize-btn">>],
-                            [{role, button}, {tabindex, 0}, {aria_label, <<"More tools">>},
+                            [{role, button}, {tabindex, 0}, {aria_label, aihtml_i18n:text(toolbar, more)},
                              {aria_haspopup, menu}, {aria_expanded, <<"false">>}]),
     aihtml_html:el('div', [Els, MinBtn], Classes,
                    [[{data_ah, <<"toolbar">>}, {role, toolbar},
