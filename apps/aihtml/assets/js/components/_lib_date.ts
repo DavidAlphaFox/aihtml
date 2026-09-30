@@ -5,6 +5,8 @@
  * day 0, computed with UTC arithmetic: event times are local wall times
  * without a zone, so there is no DST or zone shifting. */
 
+import AH from "../core.ts";
+
 /** A day number: days since 1970-01-01. */
 export type DayNum = number;
 /** Minutes since day 0. */
@@ -33,6 +35,11 @@ export function addMonths(n: DayNum, k: number): DayNum {
   return dnum(y, m, Math.min(p[2], lastDay(y, m)));
 }
 export function pad(n: number): string { return (n < 10 ? "0" : "") + n; }
+/** A 12-hour time with its AM / PM text, in the page language's order
+ *  ("10:00 AM", "上午10:00"; time_12h/2 in aihtml_lib_date). */
+export function time12(time: string, ampm: string): string {
+  return AH.format("time_12h", "{time} {ampm}").split("{time}").join(time).split("{ampm}").join(ampm);
+}
 export function pad4(n: number): string { return ("000" + n).slice(-4); }
 export function isoDate(n: DayNum): string { const p = ymd(n); return pad4(p[0]) + "-" + pad(p[1]) + "-" + pad(p[2]); }
 export function todayNum(): DayNum { const t = new Date(); return dnum(t.getFullYear(), t.getMonth() + 1, t.getDate()); }

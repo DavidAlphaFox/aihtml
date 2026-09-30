@@ -15,7 +15,7 @@
 
 -export([days/1, day_of/1, today/1, parse_time/1, iso_date/1, iso_time/2, dow/1,
          start_of_week/2, first_of_month/1, last_of_month/1, add_months/2, pad/1, pad4/1,
-         first_day/1]).
+         first_day/1, time_12h/2]).
 
 -export_type([days/0, minutes/0, date/0, time/0]).
 
@@ -144,3 +144,12 @@ pad4(N) -> iolist_to_binary(io_lib:format("~4..0B", [N])).
 -spec first_day(term()) -> term().
 first_day(undefined) -> aihtml_i18n:format(first_day);
 first_day(Day) -> Day.
+
+%% @doc A 12-hour time ("10:00", "10") with its AM / PM text, in the order
+%% of the current language (aihtml_i18n format time_12h: "{time} {ampm}"
+%% in English, "{ampm}{time}" in Chinese). The browser twin is time12 in
+%% _lib_date.ts.
+-spec time_12h(binary(), binary()) -> binary().
+time_12h(Time, AmPm) ->
+    P = binary:replace(aihtml_i18n:format(time_12h), <<"{time}">>, Time, [global]),
+    binary:replace(P, <<"{ampm}">>, AmPm, [global]).
