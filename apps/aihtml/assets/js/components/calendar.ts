@@ -55,22 +55,38 @@ export interface CalendarSelect { from: string; to: string; allDay: boolean; }
 
 type LabelValue = string | string[];
 
-const CAL_LABELS = {
-  today: "Today", prev: "Previous", next: "Next",
-  month: "Month", week: "Week", day: "Day", list: "Agenda",
-  all_day: "All day", all_day_short: "all-day", more: "+{n} more",
-  no_events: "No events in this period",
-  no_events_hint: "Try navigating to a different date range",
-  am: "AM", pm: "PM",
-  months: ["January", "February", "March", "April", "May", "June", "July",
-           "August", "September", "October", "November", "December"],
-  months_short: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-  weekdays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
-  weekdays_short: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-  title_month: "MMMM yyyy", title_day: "EEEE, MMMM d, yyyy",
-  range_start: "MMM d", range_end: "MMM d, yyyy", list_date: "MMMM d, yyyy"
-};
-type Labels = typeof CAL_LABELS;
+// The defaults in the page's language, overridden by data-ah-labels.
+function calLabels() {
+  return {
+    today: AH.t("calendar", "today", "Today"),
+    prev: AH.t("calendar", "prev", "Previous"),
+    next: AH.t("calendar", "next", "Next"),
+    month: AH.t("calendar", "month", "Month"),
+    week: AH.t("calendar", "week", "Week"),
+    day: AH.t("calendar", "day", "Day"),
+    list: AH.t("calendar", "list", "Agenda"),
+    all_day: AH.t("calendar", "all_day", "All day"),
+    all_day_short: AH.t("calendar", "all_day_short", "all-day"),
+    more: AH.t("calendar", "more", "+{n} more"),
+    no_events: AH.t("calendar", "no_events", "No events in this period"),
+    no_events_hint: AH.t("calendar", "no_events_hint", "Try navigating to a different date range"),
+    am: AH.format("am", "AM"),
+    pm: AH.format("pm", "PM"),
+    months: AH.format<string[]>("months", ["January", "February", "March", "April", "May", "June",
+                                    "July", "August", "September", "October", "November",
+                                    "December"]),
+    months_short: AH.format<string[]>("months_short", ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]),
+    weekdays: AH.format<string[]>("weekdays", ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]),
+    weekdays_short: AH.format<string[]>("weekdays_short", ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]),
+    title_month: AH.t("calendar", "title_month", "MMMM yyyy"),
+    title_day: AH.t("calendar", "title_day", "EEEE, MMMM d, yyyy"),
+    range_start: AH.t("calendar", "range_start", "MMM d"),
+    range_end: AH.t("calendar", "range_end", "MMM d, yyyy"),
+    list_date: AH.t("calendar", "list_date", "MMMM d, yyyy")
+  };
+}
+type Labels = ReturnType<typeof calLabels>;
 
 const DEFAULT_COLOR = "var(--ah-color-primary)";
 const COLOR_RE = /^[#a-zA-Z0-9(),.%\s-]+$/;
@@ -469,7 +485,7 @@ class CalendarController extends AH.Controller {
       slotDur: num("data-ah-slot-duration", 30),
       slotH: num("data-ah-slot-height", 20),
       hour24: el.getAttribute("data-ah-hour-format") === "24",
-      L: readLabels(el, CAL_LABELS),
+      L: readLabels(el, calLabels()),
       editable: el.classList.contains("ah-calendar-editable")
     };
     this.#selectable = el.classList.contains("ah-calendar-selectable");

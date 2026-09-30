@@ -72,7 +72,7 @@ render(#ah_scrollview{body = Pages} = R0) ->
         [?H:el(span, [], [<<"ah-scrollview-button">>,
                           [<<"ah-scrollview-button-active">> || I =:= Cur]],
                [{role, button}, {tabindex, <<"-1">>},
-                {aria_label, <<"Page ", (integer_to_binary(I + 1))/binary>>},
+                {aria_label, aihtml_i18n:text(common, page_n, [I + 1])},
                 {aria_current, I =:= Cur andalso <<"true">>}])
          || I <- lists:seq(0, N - 1)],
     Margin = case Cur of
@@ -90,7 +90,7 @@ render(#ah_scrollview{body = Pages} = R0) ->
                   {style, WrapStyle =/= <<>> andalso WrapStyle},
                   {aria_live, not Slide andalso <<"polite">>}]),
            ?H:el('div', Bullets, [<<"ah-scrollview-buttons">>],
-                 [{role, group}, {aria_label, <<"Pages">>},
+                 [{role, group}, {aria_label, aihtml_i18n:text(common, pages)},
                   {style, not Show andalso <<"display:none">>}]),
            ?L:hidden(R#ah_scrollview.name, V)],
           Classes,

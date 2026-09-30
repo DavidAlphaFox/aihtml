@@ -672,7 +672,7 @@ more_link(Col, D, N, Insts, #{max := Max, labels := L} = Cfg) ->
     Popover = [?H:el('div',
                      [?H:el(span, fmt(D * ?DAY, maps:get(popover_date, L), L), [], []),
                       ?H:el(span, <<"×"/utf8>>, [<<"ah-scheduler-more-popover-close">>],
-                            [{role, button}, {tabindex, 0}, {aria_label, <<"Close">>}])],
+                            [{role, button}, {tabindex, 0}, {aria_label, aihtml_i18n:text(common, close)}])],
                      [<<"ah-scheduler-more-popover-header">>], []),
                ?H:el('div',
                      [?H:el('div',

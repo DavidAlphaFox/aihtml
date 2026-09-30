@@ -93,7 +93,7 @@ function rsFormat(v: number, f: Format): string {
       s = (d.getUTCMonth() + 1) + "/" + d.getUTCDate() + "/" + d.getUTCFullYear();
       break;
     }
-    case "month": s = MONTHS[new Date(Math.floor(v)).getUTCMonth()]; break;
+    case "month": s = AH.format("months_short", MONTHS)[new Date(Math.floor(v)).getUTCMonth()]; break;
     case "time": {
       const d = new Date(Math.floor(v));
       const h = d.getUTCHours();
