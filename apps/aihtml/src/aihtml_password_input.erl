@@ -49,7 +49,7 @@ render(#ah_password_input{value = Value, label = Label} = R) ->
                  false -> [];
                  _ -> ?H:el(button, [eye_open(), eye_closed()], [<<"ah-pwd-toggle">>],
                             [{type, button}, {tabindex, <<"-1">>},
-                             {aria_label, <<"Show password">>},
+                             {aria_label, aihtml_i18n:text(common, show_password)},
                              {aria_pressed, <<"false">>},
                              {aria_controls, Id}])
              end,

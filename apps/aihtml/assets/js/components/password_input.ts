@@ -22,13 +22,13 @@ function strength(pw: string): Strength {
   return score < 20 ? "weak" : score < 30 ? "fair" : score < 40 ? "good" : "strong";
 }
 
-// label, meter width, meter colour
-const STRENGTH: Record<Strength, [string, string, string]> = {
-  "too-short": ["Too short", "20%", "var(--ah-color-error)"],
-  weak: ["Weak", "40%", "var(--ah-color-error)"],
-  fair: ["Fair", "60%", "var(--ah-color-warning)"],
-  good: ["Good", "80%", "var(--ah-color-info)"],
-  strong: ["Strong", "100%", "var(--ah-color-success)"]
+// label (in the page's language), meter width, meter colour
+const STRENGTH: Record<Strength, [() => string, string, string]> = {
+  "too-short": [() => AH.t("password_input", "too_short", "Too short"), "20%", "var(--ah-color-error)"],
+  weak: [() => AH.t("password_input", "weak", "Weak"), "40%", "var(--ah-color-error)"],
+  fair: [() => AH.t("password_input", "fair", "Fair"), "60%", "var(--ah-color-warning)"],
+  good: [() => AH.t("password_input", "good", "Good"), "80%", "var(--ah-color-info)"],
+  strong: [() => AH.t("password_input", "strong", "Strong"), "100%", "var(--ah-color-success)"]
 };
 
 class PasswordInputController extends AH.Controller {
@@ -86,7 +86,8 @@ class PasswordInputController extends AH.Controller {
     }
     const level = strength(pw), d = STRENGTH[level];
     fills.forEach((f) => { f.style.width = d[1]; f.style.backgroundColor = d[2]; });
-    texts.forEach((t) => { t.textContent = d[0]; });
+    const text = d[0]();
+    texts.forEach((t) => { t.textContent = text; });
     el.setAttribute("data-strength", level);
   }
 
@@ -96,7 +97,8 @@ class PasswordInputController extends AH.Controller {
     if (input) { input.setAttribute("type", show ? "text" : "password"); }
     el.querySelectorAll(".ah-pwd-toggle").forEach((b) => {
       b.setAttribute("aria-pressed", show ? "true" : "false");
-      b.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      b.setAttribute("aria-label", show ? AH.t("common", "hide_password", "Hide password")
+                                       : AH.t("common", "show_password", "Show password"));
     });
   }
 }
