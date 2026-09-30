@@ -4,13 +4,31 @@
 
 -include_lib("aihtml/include/aihtml.hrl").
 
--export([reply/4, css/0, topbar/1, categories/0, category_label/1, display_name/1,
+-export([reply/4, lang/1, css/0, topbar/1, categories/0, category_label/1, display_name/1,
          components/0, summary/1]).
 
+%% @doc Reply with a whole page of the site. `?lang=zh' renders it in that
+%% language (the README's Chinese screenshot); only languages that have a
+%% catalog are taken, anything else is ignored.
 -spec reply(cowboy_req:req(), binary(), aihtml:html(), map()) -> cowboy_req:req().
 reply(Req, Title, Body, Opts) ->
-    aihtml_cowboy:reply(Req, Body, maps:merge(#{title => Title,
-                                                css => [css()]}, Opts)).
+    aihtml_cowboy:reply(Req, Body, maps:merge(maps:merge(#{title => Title, css => [css()]},
+                                                         lang(Req)), Opts)).
+
+%% @doc #{lang => Tag} for a ?lang= naming a language with a catalog, else #{}.
+-spec lang(cowboy_req:req()) -> map().
+lang(Req) ->
+    case proplists:get_value(<<"lang">>, cowboy_req:parse_qs(Req)) of
+        Q when is_binary(Q) ->
+            Tag = aihtml_i18n:normalize(Q),
+            [Base | _] = binary:split(Tag, <<"-">>),
+            case Tag =:= string:lowercase(binary:replace(Q, <<"_">>, <<"-">>, [global]))
+                 andalso lists:member(Base, aihtml_i18n:locales()) of
+                true -> #{lang => Tag};
+                false -> #{}
+            end;
+        _ -> #{}
+    end.
 
 %% @doc URL of the site's stylesheet: css/example-<hash>.css, named in the
 %% manifest `npm run css:example' writes, or the unhashed css/example.css

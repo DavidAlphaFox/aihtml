@@ -13,10 +13,19 @@ site_test_() ->
       %% each renders every docs page (about 90), longer than eunit's 5 s
       {"every docs page renders", {timeout, 60, fun docs_pages_render/0}},
       {"the home page renders", fun home_renders/0},
+      {"?lang= picks a language with a catalog", fun lang_param/0},
       {"the API tab shows each component's record", {timeout, 60, fun records_shown/0}}]}.
 
 components() ->
     [N || #{name := N} <- aihtml_example_site:components()].
+
+lang_param() ->
+    L = fun(Qs) -> aihtml_example_site:lang(#{qs => Qs}) end,
+    ?assertEqual(#{lang => <<"zh">>}, L(<<"lang=zh">>)),
+    ?assertEqual(#{lang => <<"zh-cn">>}, L(<<"lang=zh-CN">>)),
+    ?assertEqual(#{lang => <<"en">>}, L(<<"lang=en">>)),
+    %% no catalog, malformed, or absent: the default language
+    [?assertEqual(#{}, L(Q)) || Q <- [<<"lang=fr">>, <<"lang=%3Cscript%3E">>, <<"lang=">>, <<>>, <<"x=1">>]].
 
 every_component_has_demos() ->
     Missing = [N || N <- components(), aihtml_example_demos:for(N) =:= []],
