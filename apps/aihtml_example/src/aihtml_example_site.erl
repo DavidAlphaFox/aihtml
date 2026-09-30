@@ -4,13 +4,28 @@
 
 -include_lib("aihtml/include/aihtml.hrl").
 
--export([reply/4, topbar/1, categories/0, category_label/1, display_name/1,
+-export([reply/4, css/0, topbar/1, categories/0, category_label/1, display_name/1,
          components/0, summary/1]).
 
 -spec reply(cowboy_req:req(), binary(), aihtml:html(), map()) -> cowboy_req:req().
 reply(Req, Title, Body, Opts) ->
     aihtml_cowboy:reply(Req, Body, maps:merge(#{title => Title,
-                                                css => [<<"/static/example.css">>]}, Opts)).
+                                                css => [css()]}, Opts)).
+
+%% @doc URL of the site's stylesheet: css/example-<hash>.css, named in the
+%% manifest `npm run css:example' writes, or the unhashed css/example.css
+%% while `npm run watch:example' rebuilds it during development (a full
+%% build renames that file away). Read on every page; the files are tiny.
+-spec css() -> binary().
+css() ->
+    Dir = filename:join([code:priv_dir(aihtml_example), "static", "css"]),
+    Name = case filelib:is_regular(filename:join(Dir, "example.css")) of
+               true -> <<"example.css">>;
+               false ->
+                   {ok, Bin} = file:read_file(filename:join(Dir, "manifest.json")),
+                   maps:get(<<"example.css">>, json:decode(Bin))
+           end,
+    <<"/static/css/", Name/binary>>.
 
 %% @doc The site's top bar; Active is home | components | demo | fetch.
 -spec topbar(atom()) -> aihtml:element().

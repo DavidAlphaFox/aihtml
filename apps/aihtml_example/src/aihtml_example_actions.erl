@@ -19,7 +19,7 @@ init(Req, State) ->
     %% history renders the same content, so back/forward and bookmarks work.
     View = proplists:get_value(<<"view">>, cowboy_req:parse_qs(Req)),
     {ok, aihtml_cowboy:reply(Req, page(View), #{title => <<"aihtml actions">>,
-                                                css => [<<"/static/example.css">>]}),
+                                                css => [aihtml_example_site:css()]}),
      State}.
 
 page(View) ->
