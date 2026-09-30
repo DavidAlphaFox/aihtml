@@ -295,7 +295,7 @@ function axisTable(o: unknown, series: unknown[]): Table | null {
   const labels = all(get("data", axes[0])).map(str);
   const n = Math.max(labels.length, ...cols.map((c) => c.length));
   return {
-    head: [str(get("name", axes[0])) || "Category"]
+    head: [str(get("name", axes[0])) || AH.t("chart_table", "category", "Category")]
       .concat(series.map((s, i) => seriesName(s, i + 1))),
     rows: seq(n).map((i) => [nth(i, labels, String(i))].concat(cols.map((c) => nth(i, c, ""))))
   };
@@ -315,7 +315,7 @@ function xyTable(o: unknown, series: unknown[]): Table | null {
   ok.forEach((ps, i) => {
     ps.forEach((p) => { rows.push((multi ? [seriesName(series[i], i + 1)] : []).concat(p)); });
   });
-  return { head: (multi ? ["Series"] : []).concat([axisName(get("xAxis", o), "X"),
+  return { head: (multi ? [AH.t("chart_table", "series", "Series")] : []).concat([axisName(get("xAxis", o), "X"),
                                                     axisName(get("yAxis", o), "Y")]),
            rows };
 }
@@ -341,7 +341,7 @@ function heatmapTable(o: unknown, s: unknown): Table | null {
     m.set(i + "," + j, c[0] as string);
   });
   if (!ok) { return null; }
-  return { head: [axisName(y, "Category")].concat(xs),
+  return { head: [axisName(y, AH.t("chart_table", "category", "Category"))].concat(xs),
            rows: ys.map((yl, j) => [yl].concat(xs.map((_, i) => {
              const v = m.get((i + 1) + "," + (j + 1));
              return v === undefined ? "" : v;
@@ -369,7 +369,9 @@ function pieTable(series: unknown[]): Table | null {
   parts.forEach((p, i) => {
     p.forEach((r) => { rows.push((multi ? [seriesName(series[i], i + 1)] : []).concat(r)); });
   });
-  return { head: (multi ? ["Series"] : []).concat(["Name", "Value", "Share"]), rows };
+  return { head: (multi ? [AH.t("chart_table", "series", "Series")] : [])
+    .concat([AH.t("chart_table", "name", "Name"), AH.t("chart_table", "value", "Value"),
+             AH.t("chart_table", "share", "Share")]), rows };
 }
 
 function radarTable(o: unknown, series: unknown[]): Table | null {
@@ -381,7 +383,8 @@ function radarTable(o: unknown, series: unknown[]): Table | null {
     });
   });
   if (!inds.length || items.some((it) => it[1] === null)) { return null; }
-  return { head: ["Indicator"].concat(items.map((it, i) => it[0] || "Series " + (i + 1))),
+  return { head: [AH.t("chart_table", "indicator", "Indicator")]
+             .concat(items.map((it, i) => it[0] || AH.t("chart_table", "series_n", "Series {0}", [i + 1]))),
            rows: inds.map((ind, j) => [ind].concat(items.map((it) => nth(j + 1, it[1] || [], "")))) };
 }
 
@@ -405,7 +408,8 @@ function graphTable(s: unknown): Table | null {
   const ends = links.map((l) => ({ src: index(l["source"]), tg: index(l["target"]),
                                    raw: str(l["target"]), label: str(l["value"]) }));
   return {
-    head: ["Node"].concat(cats.length ? ["Category"] : [], ["Links to"]),
+    head: [AH.t("chart_table", "node", "Node")].concat(cats.length ? [AH.t("chart_table", "category", "Category")] : [],
+                                   [AH.t("chart_table", "links_to", "Links to")]),
     rows: nodes.map((n, k) => {
       const out = ends.filter((e) => e.src === k + 1).map((e) => {
         const t = e.tg === null ? e.raw : names[e.tg - 1] || "";
@@ -442,7 +446,9 @@ function seriesTable(o: unknown, series: unknown[]): Table | null {
     if (types[0] === "graph") { return graphTable(series[0]); }
     if (types[0] === "tree") {
       const rows = treeRows(all(get("data", series[0])));
-      return rows.length ? { head: ["Node", "Children"], rows } : null;
+      return rows.length
+        ? { head: [AH.t("chart_table", "node", "Node"), AH.t("chart_table", "children", "Children")], rows }
+        : null;
     }
     if (types[0] === "heatmap") { return heatmapTable(o, series[0]); }
   }
@@ -495,7 +501,8 @@ export function dataText(option: unknown, caption: string | null | undefined): H
   });
   if (t.rows.length > MAX_ROWS) {
     body.appendChild(node("tr")).appendChild(
-      node("td", "And " + (t.rows.length - MAX_ROWS) + " more rows.", { colspan: String(w) }));
+      node("td", AH.t("chart_table", "more_rows", "And {0} more rows.", [t.rows.length - MAX_ROWS]),
+           { colspan: String(w) }));
   }
   return box;
 }

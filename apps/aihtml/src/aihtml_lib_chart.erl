@@ -275,7 +275,7 @@ axis_table(O, Series) ->
             Labels = [str(C) || C <- all(get(data, Axis))],
             N = lists:max([length(Labels) | [length(C) || C <- Cols]]),
             Name = case str(get(name, Axis)) of
-                       <<>> -> <<"Category">>;
+                       <<>> -> aihtml_i18n:text(chart_table, category);
                        Nm -> Nm
                    end,
             {[Name | [series_name(S, I) || {I, S} <- lists:enumerate(Series)]],
@@ -290,7 +290,7 @@ xy_table(O, Series) ->
         true -> none;
         false ->
             Multi = length(Series) > 1,
-            {[<<"Series">> || Multi] ++ [axis_name(get(xAxis, O), <<"X">>),
+            {[aihtml_i18n:text(chart_table, series) || Multi] ++ [axis_name(get(xAxis, O), <<"X">>),
                                          axis_name(get(yAxis, O), <<"Y">>)],
              lists:append([[[series_name(S, I) || Multi] ++ P || P <- Ps]
                            || {I, {S, Ps}} <- lists:enumerate(lists:zip(Series, Parts))])}
@@ -322,7 +322,7 @@ heatmap_table(O, S) ->
         false -> none;
         true ->
             M = maps:from_list(Cells),
-            {[axis_name(Y, <<"Category">>) | Xs],
+            {[axis_name(Y, aihtml_i18n:text(chart_table, category)) | Xs],
              [[Yl | [maps:get({I, J}, M, <<>>) || I <- lists:seq(1, length(Xs))]]
               || {J, Yl} <- lists:enumerate(Ys)]}
     end.
@@ -356,7 +356,9 @@ pie_table(Series) ->
         true -> none;
         false ->
             Multi = length(Series) > 1,
-            {[<<"Series">> || Multi] ++ [<<"Name">>, <<"Value">>, <<"Share">>],
+            {[aihtml_i18n:text(chart_table, series) || Multi] ++
+                 [aihtml_i18n:text(chart_table, name), aihtml_i18n:text(chart_table, value),
+                  aihtml_i18n:text(chart_table, share)],
              lists:append([[[series_name(S, I) || Multi] ++ Rw || Rw <- Rows]
                            || {I, {S, Rows}} <- lists:enumerate(lists:zip(Series, Parts))])}
     end.
@@ -389,7 +391,7 @@ radar_table(O, Series) ->
     case Inds =/= [] andalso not lists:any(fun({_, V}) -> V =:= error end, Items) of
         false -> none;
         true ->
-            {[<<"Indicator">> | [case N of <<>> -> series_name(#{}, I); _ -> N end
+            {[aihtml_i18n:text(chart_table, indicator) | [case N of <<>> -> series_name(#{}, I); _ -> N end
                                  || {I, {N, _}} <- lists:enumerate(Items)]],
              [[Ind | [nth(J, V, <<>>) || {_, V} <- Items]] || {J, Ind} <- lists:enumerate(Inds)]}
     end.
@@ -412,7 +414,8 @@ graph_table(S) ->
                                 || {Src, Tg, Raw, Lb} <- Ends, Src =:= I,
                                    T <- [case Tg of none -> Raw; _ -> lists:nth(Tg, Names) end]])
                   end,
-            {[<<"Node">>] ++ [<<"Category">> || Cats =/= []] ++ [<<"Links to">>],
+            {[aihtml_i18n:text(chart_table, node)] ++ [aihtml_i18n:text(chart_table, category) || Cats =/= []] ++
+                 [aihtml_i18n:text(chart_table, links_to)],
              [[Name] ++ [case get(category, N) of
                              C when is_integer(C) -> nth(C + 1, Cats, <<>>);
                              C -> str(C)
@@ -439,7 +442,7 @@ index(X, [_ | T], I) -> index(X, T, I + 1).
 tree_table(S) ->
     case tree_rows(all(get(data, S))) of
         [] -> none;
-        Rows -> {[<<"Node">>, <<"Children">>], Rows}
+        Rows -> {[aihtml_i18n:text(chart_table, node), aihtml_i18n:text(chart_table, children)], Rows}
     end.
 
 tree_rows(Nodes) ->
@@ -455,7 +458,7 @@ tree_rows(Nodes) ->
 
 series_name(S, I) ->
     case str(get(name, S)) of
-        <<>> -> <<"Series ", (integer_to_binary(I))/binary>>;
+        <<>> -> aihtml_i18n:text(chart_table, series_n, [I]);
         N -> N
     end.
 
