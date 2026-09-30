@@ -44,13 +44,6 @@
 -type labels() :: #{label_key() => unicode:chardata() | [unicode:chardata()]}.
 -type element() :: #ah_datepicker{}.
 
--define(MONTHS, [<<"January">>, <<"February">>, <<"March">>, <<"April">>, <<"May">>,
-                 <<"June">>, <<"July">>, <<"August">>, <<"September">>, <<"October">>,
-                 <<"November">>, <<"December">>]).
--define(MONTHS_SHORT, [<<"Jan">>, <<"Feb">>, <<"Mar">>, <<"Apr">>, <<"May">>, <<"Jun">>,
-                       <<"Jul">>, <<"Aug">>, <<"Sep">>, <<"Oct">>, <<"Nov">>, <<"Dec">>]).
--define(WEEKDAYS, [<<"Su">>, <<"Mo">>, <<"Tu">>, <<"We">>, <<"Th">>, <<"Fr">>, <<"Sa">>]).
-
 %% @doc A read-only text field with sigil's calendar popup. `Value' is an
 %% ISO date (`<<"2026-09-29">>'), a `calendar:date()' or `undefined'; a
 %% pair `{From, To}' (or the `range' modifier) selects a range, whose
@@ -200,11 +193,13 @@ iso(B) when is_binary(B) ->
 iso(L) when is_list(L) -> iso(unicode:characters_to_binary(L));
 iso(Other) -> error({aihtml, {bad_date, Other}}).
 
+%% The defaults are the current language's (aihtml_i18n): its month names,
+%% two-letter weekdays and the datepicker texts.
 labels(Custom) when is_map(Custom) ->
-    Defaults = #{months => ?MONTHS, months_short => ?MONTHS_SHORT, weekdays => ?WEEKDAYS,
-                 title => <<"MMMM yyyy">>, today => <<"Today">>, clear => <<"Clear">>,
-                 prev_month => <<"Previous month">>, next_month => <<"Next month">>,
-                 prev_year => <<"Previous year">>, next_year => <<"Next year">>},
+    Defaults = (aihtml_i18n:texts(datepicker))#{
+                 months => aihtml_i18n:format(months),
+                 months_short => aihtml_i18n:format(months_short),
+                 weekdays => aihtml_i18n:format(weekdays_min)},
     maps:foreach(fun(K, _) -> maps:is_key(K, Defaults)
                                   orelse error({aihtml, {bad_datepicker_label, K}})
                  end, Custom),

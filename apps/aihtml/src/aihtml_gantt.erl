@@ -45,9 +45,6 @@
 
 -define(DAY, 1440).
 -define(PRIMARY, <<"var(--ah-color-primary)">>).
--define(MONTHS_SHORT, [<<"Jan">>, <<"Feb">>, <<"Mar">>, <<"Apr">>, <<"May">>, <<"Jun">>,
-                       <<"Jul">>, <<"Aug">>, <<"Sep">>, <<"Oct">>, <<"Nov">>, <<"Dec">>]).
-
 %% A gantt task. `end' is exclusive (a task from 2026-01-05 to 2026-01-12
 %% lasts 7 days); `row' names its row when `rows' is given;
 %% `dependencies' are ids of tasks that must finish first.
@@ -88,8 +85,9 @@ fields(ah_gantt) -> record_info(fields, ah_gantt).
 render(#ah_gantt{items = Items, editable = Editable} = R0) ->
     {Id, R} = ensure_id(R0),
     Classes = ?E:classes(?MODULE, R),
-    L = labels(#{task => <<"Task">>, tasks => <<"{n} tasks">>, months_short => ?MONTHS_SHORT},
-                R#ah_gantt.labels, gantt),
+    %% the defaults are the current language's (aihtml_i18n)
+    L = labels((aihtml_i18n:texts(gantt))#{months_short => aihtml_i18n:format(months_short)},
+               R#ah_gantt.labels, gantt),
     CW = pos_int(column_width, R#ah_gantt.column_width),
     RH = pos_int(row_height, R#ah_gantt.row_height),
     SW = pos_int(sidebar_width, R#ah_gantt.sidebar_width),

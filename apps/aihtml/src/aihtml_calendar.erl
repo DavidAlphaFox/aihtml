@@ -236,25 +236,10 @@ check_pos(K, V) -> error({aihtml, {bad_option, K, V}}).
 %%% Labels
 %%%-------------------------------------------------------------------
 
+%% The texts and date names of the current language (aihtml_i18n).
 cal_label_defaults() ->
-    #{today => <<"Today">>, prev => <<"Previous">>, next => <<"Next">>,
-      month => <<"Month">>, week => <<"Week">>, day => <<"Day">>, list => <<"Agenda">>,
-      all_day => <<"All day">>, all_day_short => <<"all-day">>, more => <<"+{n} more">>,
-      no_events => <<"No events in this period">>,
-      no_events_hint => <<"Try navigating to a different date range">>,
-      am => <<"AM">>, pm => <<"PM">>,
-      months => [<<"January">>, <<"February">>, <<"March">>, <<"April">>, <<"May">>,
-                 <<"June">>, <<"July">>, <<"August">>, <<"September">>, <<"October">>,
-                 <<"November">>, <<"December">>],
-      months_short => [<<"Jan">>, <<"Feb">>, <<"Mar">>, <<"Apr">>, <<"May">>, <<"Jun">>,
-                       <<"Jul">>, <<"Aug">>, <<"Sep">>, <<"Oct">>, <<"Nov">>, <<"Dec">>],
-      weekdays => [<<"Sunday">>, <<"Monday">>, <<"Tuesday">>, <<"Wednesday">>,
-                   <<"Thursday">>, <<"Friday">>, <<"Saturday">>],
-      weekdays_short => [<<"Sun">>, <<"Mon">>, <<"Tue">>, <<"Wed">>, <<"Thu">>,
-                         <<"Fri">>, <<"Sat">>],
-      title_month => <<"MMMM yyyy">>, title_day => <<"EEEE, MMMM d, yyyy">>,
-      range_start => <<"MMM d">>, range_end => <<"MMM d, yyyy">>,
-      list_date => <<"MMMM d, yyyy">>}.
+    maps:merge(aihtml_i18n:formats([months, months_short, weekdays, weekdays_short, am, pm]),
+               aihtml_i18n:texts(calendar)).
 
 cal_labels(Custom) ->
     aihtml_lib_calendar:labels(Custom, cal_label_defaults(), bad_calendar_label,

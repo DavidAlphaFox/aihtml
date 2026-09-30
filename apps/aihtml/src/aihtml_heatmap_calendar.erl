@@ -62,9 +62,6 @@ fields(ah_heatmap_calendar) -> record_info(fields, ah_heatmap_calendar).
 render(#ah_heatmap_calendar{} = R) -> render_heatmap(R).
 
 -define(CELL_PX, 15).
--define(MONTHS, [<<"Jan">>, <<"Feb">>, <<"Mar">>, <<"Apr">>, <<"May">>, <<"Jun">>,
-                 <<"Jul">>, <<"Aug">>, <<"Sep">>, <<"Oct">>, <<"Nov">>, <<"Dec">>]).
--define(WEEKDAYS, [<<>>, <<"Mon">>, <<>>, <<"Wed">>, <<>>, <<"Fri">>, <<>>]).
 
 render_heatmap(#ah_heatmap_calendar{data = Data0, months = Months, end_date = End0,
                                     thresholds = Thr, weekday_labels = WL0,
@@ -74,8 +71,13 @@ render_heatmap(#ah_heatmap_calendar{data = Data0, months = Months, end_date = En
         orelse error({aihtml, {bad_option, months, Months}}),
     is_list(Thr) andalso lists:all(fun is_number/1, Thr) andalso lists:sort(Thr) =:= Thr
         orelse error({aihtml, {bad_option, thresholds, Thr}}),
-    WL = labels(weekday_labels, WL0, ?WEEKDAYS, 7),
-    ML = labels(month_labels, ML0, ?MONTHS, 12),
+    %% the defaults are the current language's (aihtml_i18n): short month
+    %% names, and short weekday names on Monday, Wednesday and Friday only
+    Ws = aihtml_i18n:format(weekdays_short),
+    WL = labels(weekday_labels, WL0,
+                [case I rem 2 of 1 -> lists:nth(I + 1, Ws); 0 -> <<>> end || I <- lists:seq(0, 6)],
+                7),
+    ML = labels(month_labels, ML0, aihtml_i18n:format(months_short), 12),
     Legend =:= false orelse (is_tuple(Legend) andalso tuple_size(Legend) =:= 2)
         orelse error({aihtml, {bad_option, legend, Legend}}),
     Data = heat_data(Data0),

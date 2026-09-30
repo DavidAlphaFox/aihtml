@@ -147,14 +147,11 @@ render(#ah_datetime_input{value = Value0, format = Format0, name = Name,
 nonempty(undefined) -> undefined;
 nonempty(T) -> case text(T) of <<>> -> undefined; B -> B end.
 
+%% The defaults are the current language's (aihtml_i18n): its month names,
+%% two-letter weekdays and the datetime_input texts.
 dti_labels(Custom) ->
-    Defaults = #{months => [<<"January">>, <<"February">>, <<"March">>, <<"April">>, <<"May">>,
-                            <<"June">>, <<"July">>, <<"August">>, <<"September">>,
-                            <<"October">>, <<"November">>, <<"December">>],
-                 weekdays => [<<"Su">>, <<"Mo">>, <<"Tu">>, <<"We">>, <<"Th">>, <<"Fr">>,
-                              <<"Sa">>],
-                 title => <<"MMMM yyyy">>, time => <<"Time">>,
-                 prev_month => <<"Previous month">>, next_month => <<"Next month">>},
+    Defaults = (aihtml_i18n:texts(datetime_input))#{months => aihtml_i18n:format(months),
+                                                    weekdays => aihtml_i18n:format(weekdays_min)},
     aihtml_lib_calendar:labels(Custom, Defaults, bad_datetime_label,
                                [{months, 12}, {weekdays, 7}]).
 
