@@ -36,7 +36,7 @@ login() ->
 
 ## 截图
 
-以下截图都来自仓库里的示例站（`rebar3 shell` 后打开 http://localhost:8080/），由 `npm run screenshots` 生成。每个组件文档页上方是渲染效果，下方是生成它的 Erlang 代码；右上角的四个下拉框切换外观、配色、排版、外形四个主题轴，下面几张用了不同的组合。
+以下截图都来自仓库里的示例站（`rebar3 shell` 后打开 http://localhost:8080/），由 `npm run screenshots` 生成。每个组件文档页上方是渲染效果，下方是生成它的 Erlang 代码；右上角的四个下拉框切换外观、配色、排版、外形四个主题轴，下面几张用了不同的组合。页面地址加上 `?lang=zh` 就按中文渲染（见「国际化」）。
 
 <table>
   <tr>
@@ -45,11 +45,15 @@ login() ->
   </tr>
   <tr>
     <td><img src="docs/screenshots/calendar-arctic.png" alt="Calendar，arctic 配色"><br><b>Calendar</b>：月、周、日、日程视图，可拖动（arctic 配色）</td>
-    <td><img src="docs/screenshots/bar-chart-editorial.png" alt="BarChart，editorial 配色"><br><b>BarChart</b>：echarts 按需加载，颜色取自主题（editorial 配色）</td>
+    <td><img src="docs/screenshots/calendar-zh.png" alt="Calendar，中文页面"><br><b>Calendar（中文）</b>：同一页面加上 <code>?lang=zh</code>，界面文字、日期格式、上午/下午都换成中文，一周从周一开始</td>
   </tr>
   <tr>
+    <td><img src="docs/screenshots/bar-chart-editorial.png" alt="BarChart，editorial 配色"><br><b>BarChart</b>：echarts 按需加载，颜色取自主题（editorial 配色）</td>
     <td><img src="docs/screenshots/markdown-editor-island.png" alt="MarkdownEditor，island 配色与外形"><br><b>MarkdownEditor</b>：ProseMirror 所见即所得（island 配色与外形）</td>
+  </tr>
+  <tr>
     <td><img src="docs/screenshots/live-demo.png" alt="实时演示页"><br><b>实时演示</b>：点击由 Erlang 处理，计数与待办存在数据层，并推送到所有打开的页面</td>
+    <td></td>
   </tr>
 </table>
 
@@ -555,6 +559,8 @@ $list.append(AH.tpl.my_badge({ color: "primary", label: name, count: n }));
 ```erlang
 aihtml:page(Body, #{lang => <<"zh-CN">>})   %% <html lang="zh-CN">，组件用中文
 ```
+
+示例站的首页和组件文档页可以在地址后加 `?lang=zh` 看中文效果（`aihtml_example_site:lang/1`，只接受有文案的语言），例如 http://localhost:8080/components/calendar?lang=zh 。
 
 - **默认语言**：不写 `lang` 时用应用环境的 `default_locale`（默认 `<<"en">>`）。单一语言的站点设置它就够了，页面、推送和 `aihtml:render/1` 都用它：
 
