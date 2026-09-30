@@ -102,6 +102,13 @@ apps/aihtml_example/src/aihtml_example_demo_button.erl  演示
 
 **转义**：文本一律按子节点渲染，`aihtml_html` 会转义。只有确定可信的 HTML 才用 `{safe, _}`。
 
+**界面文字**（见 [07-i18n.md](07-i18n.md)）：组件给人看的文字，包括读屏的 `aria-label`、`title`、`placeholder`，一律放进文案表，不写在代码里。
+- **放在哪里**：`apps/aihtml/priv/i18n/en.json` 和 `zh.json` 的同一个键，两份都要写。通用的文字（关闭、清除、第 N 页……）用 `common`，组件自己的文字用组件名作分组。
+- **怎么取**：渲染时用 `aihtml_i18n:text(Scope, Key)`，带占位符用 `text(Scope, Key, [Args])`（`{0}`、`{1}`……）。月份、星期、上午/下午、一周起始日、分隔符用 `aihtml_i18n:format/1`，不要在组件里另存一份。
+- **可覆盖的文字**：用户能改的文字给一个 `labels` 选项，默认值取 `aihtml_i18n:texts(Scope)`，再用 `labels` 覆盖。组件如果把整个分组编码进页面（`data-ah-labels`），不要往这个分组里加只在服务端用的键，否则会改变输出。
+- **不要在构建函数里取文字**：构建函数运行时还不知道页面语言，文字在 `render/1` 里取。
+- **检查**：`aihtml_i18n_sources_tests` 会拒绝写死在代码里的界面文字；`aihtml_i18n_tests` 要求 `zh.json` 与 `en.json` 的键和占位符一一对应。
+
 ## 取值控件的约定
 
 非原生的取值控件包括 slider、rating、dropdownlist、segmented、tag_input 等，与 action 和表单的衔接方式如下：
@@ -150,6 +157,7 @@ AH.fn("toast", (opts: ToastOptions) => { ... });   // 页面级函数
 - **服务端驱动**：控制器的公开方法可由服务端 `aihtml_action:call(Ctx, Target, Method, Args)` 调用，客户端用 `AH.invoke(el, method, ...)`；组件还没加载或还没连接时，调用会排队。页面级函数用 `AH.fn`，服务端写 `call(Ctx, global, Name, Args)`。
 - **浏览器测试**：用原生事件（`T.fire(el, type, init)`、`T.key(el, "Enter")`），插入 fixture 后 `await T.ready(fx)`；检查卸载结果前要等 `setTimeout 0`（卸载推迟一个微任务执行）。每个组件至少测试主要交互、取值与 `change`、一个服务端可调用的方法，以及移除后重新插入仍能工作。
 - **还原 sigil 的交互**：键盘操作、ARIA、焦点管理、点击外部关闭等，对照 sigil 的 cljs 实现。
+- **界面文字**：浏览器里生成的文字用 `AH.t("分组", "键", "英文")`，占位符传第四个参数；月份、上午/下午等用 `AH.format("键", 英文兜底)`。英文兜底必须与 `en.json` 相同，分组必须列在 `en.json` 的 `client` 里，`aihtml_i18n_sources_tests` 会检查。模块级的文字表写成函数（取值时才调用 `AH.t`），因为页面的文字在组件加载后才读到。
 - **不引入新的依赖**，只用浏览器的原生 API（第三方库见 README「第三方库」）。
 - **浏览器测试仍是 JS**（`test/js/*.test.js`）：只通过 DOM、事件和 `AH.invoke` 测行为，不依赖源码里的类型。
 
@@ -206,8 +214,9 @@ node scripts/preview.mjs $OUT/page/index.html $OUT/x.png --script=$OUT/interact.
    - **JS 端**：`AH.tpl.<name>(data)` 返回字符串，键是字符串。
    - **fixture**：每个模板配一个 `templates/<name>.fixtures.json`，是一个数据对象数组。`aihtml_tpl_tests` 用这些数据在两端渲染，要求字节相同。
    - **逻辑放在视图数据里**：模板没有逻辑，类名开关、日期计算等在构建视图数据时算好。
+   - **文字是变量**：模板里不写界面文字，用 `txt_` 开头的变量（如 `{{txt_close}}`），Erlang 端用 `aihtml_i18n:text/2,3` 填，JS 端用 `AH.t` 填，fixture 里也要给出。
    - **不支持**：partial、自定义分隔符、lambda。文件末尾的一个换行不计入输出。
-3. **单个外壳元素**（遮罩、弹层容器、提示气泡）可以继续用 `$('<div class="…">')` 创建，不必套模板。
+3. **单个外壳元素**（遮罩、弹层容器、提示气泡）可以直接用 `document.createElement` 创建，不必套模板；它的读屏名称等文字用 `setAttribute` 设置，取自 `AH.t`。
 
 验证方法：
 - **两端一致**：`aihtml_tpl_tests` 可以和其它 EUnit 一样用 erlc 编译运行。
