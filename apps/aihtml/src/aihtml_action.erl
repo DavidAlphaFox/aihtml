@@ -221,9 +221,8 @@ title(Ctx, Title) -> push(Ctx, #{op => title, value => text(Title)}).
 -spec redirect(ctx(), iodata()) -> ok.
 redirect(Ctx, Url) -> push(Ctx, #{op => redirect, value => text(Url)}).
 
-%% @doc Run JavaScript in the browser. `AH' is in scope (the runtime no
-%% longer includes jQuery; a page that loads it itself can use its
-%% globals). Never build the code from user input.
+%% @doc Run JavaScript in the browser. `AH' is in scope, and so are the
+%% globals of the page's own scripts. Never build the code from user input.
 -spec js(ctx(), iodata()) -> ok.
 js(Ctx, Code) -> push(Ctx, #{op => js, code => text(Code)}).
 
