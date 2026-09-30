@@ -277,7 +277,7 @@ class UploadController extends AH.Controller {
       id: f.id, icon: iconKind(f.type), name: f.name, size: formatSize(f.size),
       uploading: f.status === "uploading", percent: Math.round(f.percent || 0),
       has_error: f.status === "error", error: f.error || "",
-      remove: this.#cfg.labels["remove"] || "Remove", disabled: this.#disabled
+      remove: this.#cfg.labels["remove"] || AH.t("upload", "remove", "Remove"), disabled: this.#disabled
     };
   }
 
@@ -455,7 +455,7 @@ class UploadController extends AH.Controller {
 
   private fail(f: FileEntry, message: string | undefined, detail: { status: number; response?: unknown }): void {
     f.status = "error";
-    f.error = message || "Upload failed";
+    f.error = message || AH.t("upload", "upload_failed", "Upload failed");
     this.renderRow(f);
     this.fire<UploadError>("ah:upload-error", Object.assign({ id: f.id, name: f.name, message: f.error }, detail));
   }

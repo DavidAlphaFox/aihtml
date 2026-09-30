@@ -453,7 +453,7 @@ function linkPrompt(K: MarkdownKit, labels: Labels): Command {
     const type = K.mark("link");
     if (state.selection.empty && !markActive(state, type)) { return false; }
     if (markActive(state, type)) { return toggleMark(type)(state, dispatch, view); }
-    const href = window.prompt(labels["enter_url"] || "Enter URL:");
+    const href = window.prompt(labels["enter_url"] || AH.t("markdown_editor", "enter_url", "Enter URL:"));
     if (!href) { return true; }
     return toggleMark(type, { href: href })(state, dispatch, view);
   };
@@ -1364,7 +1364,8 @@ class EditorSession {
     }
 
     const attrs: Record<string, string> = { role: "textbox", "aria-multiline": "true",
-                                            "aria-label": this.labels["editor"] || "Markdown editor" };
+                                            "aria-label": this.labels["editor"] ||
+                                              AH.t("markdown_editor", "editor", "Markdown editor") };
     if (!editable) { attrs["aria-readonly"] = "true"; }
     if (el.getAttribute("aria-disabled") === "true") { attrs["aria-disabled"] = "true"; }
     if (this.menu || el.querySelector(".ah-pm-slash-menu")) {
@@ -1425,7 +1426,7 @@ class EditorSession {
     const from = $pos.before(1), to = $pos.after(1);
     let block: PMNode;
     if (type === "image") {
-      const src = window.prompt(this.labels["enter_image_url"] || "Image URL:");
+      const src = window.prompt(this.labels["enter_image_url"] || AH.t("markdown_editor", "enter_image_url", "Image URL:"));
       view.focus();
       if (!src) { return; }
       block = K.node("paragraph").create(null, [K.node("image").create({ src: src })]);

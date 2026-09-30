@@ -4,12 +4,16 @@ import AH from "../core.ts";
 
 type AgoKey = "just-now" | "minutes" | "hours" | "days" | "months";
 
-const AGO: Record<AgoKey, string> = { "just-now": "just now", minutes: "{n}m ago", hours: "{n}h ago",
-                                      days: "{n}d ago", months: "{n}mo ago" };
+// the defaults, in the page's language ({n}: the number)
+const AGO: Record<AgoKey, () => string> = {
+  "just-now": () => AH.t("time_ago", "just_now", "just now"), minutes: () => AH.t("time_ago", "minutes", "{n}m ago"),
+  hours: () => AH.t("time_ago", "hours", "{n}h ago"), days: () => AH.t("time_ago", "days", "{n}d ago"),
+  months: () => AH.t("time_ago", "months", "{n}mo ago")
+};
 
 function formatAgo(el: Element, t: number): string {
   const label = (k: AgoKey, n?: number): string => {
-    const s = el.getAttribute("data-ah-label-" + k) || AGO[k];
+    const s = el.getAttribute("data-ah-label-" + k) || AGO[k]();
     return n === undefined ? s : s.split("{n}").join(String(n));
   };
   const secs = Math.floor((Date.now() - t) / 1000);

@@ -65,7 +65,8 @@ type LayoutValue = NodeValue | FloatValue | AutoHideValue;
 interface Labels { auto_hide: string; float: string; dock: string; close: string; }
 
 function parseLabels(v: unknown): Labels {
-  const out: Labels = { auto_hide: "Auto Hide", float: "Float", dock: "Dock", close: "Close" };
+  const out: Labels = { auto_hide: AH.t("dock_layout", "auto_hide", "Auto Hide"), float: AH.t("dock_layout", "float", "Float"),
+                        dock: AH.t("dock_layout", "dock", "Dock"), close: AH.t("dock_layout", "close", "Close") };
   if (v && typeof v === "object") {
     const o = v as Record<string, unknown>;
     (["auto_hide", "float", "dock", "close"] as const).forEach((k) => {
