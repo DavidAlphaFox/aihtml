@@ -32,7 +32,7 @@
 import AH from "../core.ts";
 import type { FloatHandle } from "../core.ts";
 import {
-  DAY, addMonths, firstOfMonth, isoDate, isoTime, lastOfMonth, pad, parseTime, sow, todayNum
+  DAY, addMonths, firstOfMonth, isoDate, isoTime, lastOfMonth, pad, parseTime, sow, time12, todayNum
 } from "./_lib_date.ts";
 import type { DayNum, Minutes } from "./_lib_date.ts";
 
@@ -91,7 +91,7 @@ function conf(el: Element): Conf {
 function clock(t: Minutes, c: Conf): string {
   const h = Math.floor((t % DAY) / 60), m = pad(t % 60);
   if (c.hf === 24) { return pad(h) + ":" + m; }
-  return ((h % 12) || 12) + ":" + m + " " + (h < 12 ? c.am : c.pm);
+  return time12(((h % 12) || 12) + ":" + m, h < 12 ? c.am : c.pm);
 }
 
 // The visible days [start, end) of a view (twin of profile/4).

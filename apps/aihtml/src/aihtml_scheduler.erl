@@ -393,8 +393,8 @@ clock(Min, #{hf := 24}) ->
 clock(Min, #{labels := L}) ->
     H = Min rem ?DAY div 60,
     H12 = case H rem 12 of 0 -> 12; X -> X end,
-    <<(integer_to_binary(H12))/binary, ":", (?D:pad(Min rem 60))/binary, " ",
-      (maps:get(case H < 12 of true -> am; false -> pm end, L))/binary>>.
+    ?D:time_12h(<<(integer_to_binary(H12))/binary, ":", (?D:pad(Min rem 60))/binary>>,
+                maps:get(case H < 12 of true -> am; false -> pm end, L)).
 
 ev_style(#{ev := #{color := C, status := St}}) ->
     [<<"background:">>, C, <<";border-left:3px solid ">>, status_color(St), <<";">>].
@@ -497,8 +497,7 @@ day_header_cell(D, Today, L) ->
 hour_label(H, #{hf := 24}) -> <<(?D:pad(H))/binary, ":00">>;
 hour_label(H, #{labels := L}) ->
     H12 = case H rem 12 of 0 -> 12; X -> X end,
-    <<(integer_to_binary(H12))/binary, " ",
-      (maps:get(case H < 12 of true -> am; false -> pm end, L))/binary>>.
+    ?D:time_12h(integer_to_binary(H12), maps:get(case H < 12 of true -> am; false -> pm end, L)).
 
 allday_event(I, Cfg) ->
     ?H:el('div', ev_title(I, span, <<"ah-scheduler-event-title">>),
