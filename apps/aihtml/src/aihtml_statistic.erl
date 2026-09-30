@@ -80,9 +80,10 @@ format_number(V, Prec, Group) when is_number(V) ->
                          <<"-", D/binary>> -> {<<"-">>, D};
                          D -> {<<>>, D}
                      end,
+    %% the separators of the current language (aihtml_i18n format)
     {Int, Dec} = case binary:split(Digits, <<".">>) of
                      [I] -> {I, <<>>};
-                     [I, F] -> {I, <<".", F/binary>>}
+                     [I, F] -> {I, <<(aihtml_i18n:format(decimal))/binary, F/binary>>}
                  end,
     iolist_to_binary([Sign, if Group -> group3(Int); true -> Int end, Dec]);
 format_number(V, _Prec, _Group) -> V.
@@ -99,7 +100,7 @@ group3(Int) ->
             Head = N rem 3,
             <<H:Head/binary, Tail/binary>> = Int,
             Chunks = [C || <<C:3/binary>> <= Tail],
-            iolist_to_binary(lists:join(<<",">>, [H || H =/= <<>>] ++ Chunks))
+            iolist_to_binary(lists:join(aihtml_i18n:format(group), [H || H =/= <<>>] ++ Chunks))
     end.
 
 %%%===================================================================
