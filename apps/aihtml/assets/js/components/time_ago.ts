@@ -57,7 +57,8 @@ class TimeAgoController extends AH.Controller {
     if (isNaN(t)) { return; }
     el.textContent = formatAgo(el, t);
     if (el.getAttribute("data-ah-title") === "true") {
-      el.setAttribute("title", new Date(t).toLocaleString());
+      // the absolute time in the page's language (the browser's when unset)
+      el.setAttribute("title", new Date(t).toLocaleString(document.documentElement.lang || undefined));
     }
   }
 }
