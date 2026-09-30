@@ -14,7 +14,8 @@
 -module(aihtml_lib_date).
 
 -export([days/1, day_of/1, today/1, parse_time/1, iso_date/1, iso_time/2, dow/1,
-         start_of_week/2, first_of_month/1, last_of_month/1, add_months/2, pad/1, pad4/1]).
+         start_of_week/2, first_of_month/1, last_of_month/1, add_months/2, pad/1, pad4/1,
+         first_day/1]).
 
 -export_type([days/0, minutes/0, date/0, time/0]).
 
@@ -136,3 +137,10 @@ pad(N) -> integer_to_binary(N).
 %% @doc Four digits (years).
 -spec pad4(integer()) -> binary().
 pad4(N) -> iolist_to_binary(io_lib:format("~4..0B", [N])).
+
+%% @doc A component's `first_day' option: the day given (0 = Sunday .. 6),
+%% or, when it is undefined, the current language's (aihtml_i18n format
+%% first_day: 0 in English, 1 in Chinese).
+-spec first_day(term()) -> term().
+first_day(undefined) -> aihtml_i18n:format(first_day);
+first_day(Day) -> Day.
