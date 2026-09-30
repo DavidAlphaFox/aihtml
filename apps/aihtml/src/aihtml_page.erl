@@ -4,7 +4,10 @@
 %%% Options (all optional):
 %%%
 %%%   title        page title
-%%%   lang         `<html lang>', default <<"en">>
+%%%   lang         `<html lang>' and the language the page renders in (the
+%%%                components' texts and formats, see aihtml_i18n), default
+%%%                the current language (the application's default_locale,
+%%%                "en" unless configured)
 %%%
 %%% What search engines and link previews read (all written into `<head>'):
 %%%
@@ -62,7 +65,7 @@
                   meta => #{atom() | binary() => iodata()} | [{atom() | binary(), iodata()}],
                   alternates => [{iodata() | atom(), iodata()}],
                   json_ld => map() | [map()],
-                  lang => binary(),
+                  lang => binary() | atom(),
                   theme => aihtml_theme:theme(),
                   persist => boolean(),
                   assets => iodata(),
@@ -115,9 +118,10 @@ render(Body, Opts) ->
                 [{data_ah_action, iolist_to_binary(maps:get(action, Opts, <<"/aihtml/action">>))},
                  {data_ah_events, iolist_to_binary(maps:get(events, Opts, <<"/aihtml/events">>))},
                  maps:get(body_attrs, Opts, [])]),
-    Html = el(html, [Head, BodyEl], [],
-              [{lang, maps:get(lang, Opts, <<"en">>)}, aihtml_theme:attrs(Theme)]),
-    [<<"<!DOCTYPE html>\n">>, aihtml_html:render(Html)].
+    Lang = maps:get(lang, Opts, aihtml_i18n:locale()),
+    Html = el(html, [Head, BodyEl], [], [{lang, Lang}, aihtml_theme:attrs(Theme)]),
+    %% records render lazily, so the body's components see the language
+    [<<"<!DOCTYPE html>\n">>, aihtml_i18n:with(Lang, fun() -> aihtml_html:render(Html) end)].
 
 %% The entry module and the chunks it imports (modulepreload), from the
 %% bundle's manifest unless the page names its own runtime.
