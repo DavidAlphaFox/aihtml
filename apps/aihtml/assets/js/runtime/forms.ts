@@ -1,5 +1,5 @@
-// Form values, read and written the way jQuery's .val() and
-// .serializeArray() did.
+// Form values: read and write one control's value, and list a form's
+// successful controls as name/value pairs.
 
 /** A form control. */
 export type Control = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement;
@@ -23,7 +23,7 @@ export function setVal(el: Element, v: unknown): void {
   if (el instanceof HTMLSelectElement) {
     const vals = ([] as unknown[]).concat(v === null || v === undefined ? [] : v).map(String);
     let hits = Array.from(el.options).filter((o) => vals.indexOf(o.value) >= 0);
-    if (!el.multiple) { hits = hits.slice(-1); }       // the last one, as in jQuery
+    if (!el.multiple) { hits = hits.slice(-1); }       // the last one wins
     // (deselecting the chosen option of a single select selects the first
     // one again, so select the hits instead of reading back)
     Array.from(el.options).forEach((o) => { o.selected = hits.indexOf(o) >= 0; });

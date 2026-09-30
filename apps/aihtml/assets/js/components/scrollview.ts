@@ -1,5 +1,5 @@
 /* Behaviour of the scrollview component (designs/04-components.md),
- * ported from sigil's scrollview (cljs + jQuery). The value is kept in
+ * ported from sigil's scrollview (cljs). The value is kept in
  * data-ah-value on the root, mirrored into a hidden input when there is
  * one, and "change" fires on the root when the user changes it. Methods
  * called by the server (AH.invoke / aihtml_action:call) update the value
@@ -29,7 +29,7 @@ type How = "user" | "api" | "auto";
 
 interface Drag { x: number; ml: number; moving: boolean; e: PointerEvent; }
 
-// content width (jQuery's .width())
+// content width: the width without padding, border or scrollbar
 function contentWidth(el: Element): number {
   const cs = getComputedStyle(el);
   return el.clientWidth - (parseFloat(cs.paddingLeft) || 0) - (parseFloat(cs.paddingRight) || 0);

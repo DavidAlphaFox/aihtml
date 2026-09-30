@@ -13,14 +13,13 @@
  *   listKeys(e, items, cur, vertical, cls)
  *                                       the index an arrow/Home/End/Enter/
  *                                       Space key moves to, or null
- *   show(el) / hide(el)                 inline display, as jQuery's show/hide
- *   slide(el, open, ms, done)           jQuery's slideDown / slideUp
- *   fade(el, open, ms, done)            jQuery's fadeIn / fadeOut
+ *   show(el) / hide(el)                 set or clear an inline display
+ *   slide(el, open, ms, done)           slide down (open) or up, by height
+ *   fade(el, open, ms, done)            fade in (open) or out, by opacity
  *   animate(el, keyframes, ms, done)    a Web Animation that stop(el) can cut
- *                                       short (jQuery's .animate)
- *   stop(el)                            jQuery's .stop(true, true): the running
- *                                       slide/fade/animate jumps to its end and
- *                                       its callback runs now
+ *                                       short
+ *   stop(el)                            the running slide/fade/animate jumps
+ *                                       to its end and its callback runs now
  */
 
 type Done = () => void;

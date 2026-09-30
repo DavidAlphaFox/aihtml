@@ -81,8 +81,7 @@ class TreegridController extends AH.Controller {
     });
     // Inner controls (row / header boxes, filters, pager, chooser) report
     // to the table, not as its own change: stopImmediatePropagation also
-    // keeps them from listeners on the root added after this one, as
-    // jQuery's delegated stopPropagation did.
+    // keeps them from listeners on the root added after this one.
     this.listen(el, "change", (e) => {
       const t = e.target;
       if (!(t instanceof HTMLInputElement)) { return; }

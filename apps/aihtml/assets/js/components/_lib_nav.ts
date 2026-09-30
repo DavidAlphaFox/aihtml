@@ -2,7 +2,7 @@
    splitter, listmenu, tabs). Ported from sigil's components/layout/*.cljs. */
 import type { Controller } from "../core.ts";
 
-/** laid out (jQuery's :visible) */
+/** laid out: has a box (not display:none, not detached) */
 export function visible(el: HTMLElement): boolean {
   return !!(el.offsetWidth || el.offsetHeight || el.getClientRects().length);
 }
@@ -32,8 +32,8 @@ export function byKey<E extends Element = HTMLElement>(scope: Element | readonly
   return out;
 }
 
-/** Delegated mouseenter / mouseleave on root (default ctrl.element), as
- *  jQuery's .on("mouseenter", sel, fn): enter(match, e) / leave(match, e).
+/** Delegated mouseenter / mouseleave on root (default ctrl.element) for
+ *  descendants matching sel: enter(match, e) / leave(match, e).
  *  mouseover / mouseout that cross the boundary of a match are its
  *  mouseenter / mouseleave; nested matches each get theirs, innermost
  *  first. */

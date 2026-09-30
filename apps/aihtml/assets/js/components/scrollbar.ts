@@ -1,5 +1,5 @@
 /* Behaviour of the scrollbar component (designs/04-components.md),
- * ported from sigil's scrollbar (cljs + jQuery). A standalone bar keeps
+ * ported from sigil's scrollbar (cljs). A standalone bar keeps
  * its value in data-ah-value on the root, mirrors it into a hidden input
  * when there is one, and fires "change" on the root when the user changes
  * it; methods called by the server update the value without firing

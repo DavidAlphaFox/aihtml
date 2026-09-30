@@ -1,7 +1,7 @@
 // Element helpers of the runtime.
 
 /** What runtime functions accept for elements: an element (or the
- *  document), a selector, an array or NodeList, or a jQuery-like object. */
+ *  document), a selector, or an array, NodeList or other array-like. */
 export type Targets = Element | Document | string | ArrayLike<Node | null | undefined> | null | undefined;
 
 /** A subtree the runtime works on: an element or the whole document. */
@@ -45,11 +45,11 @@ export function fire<D>(target: EventTarget, type: string, detail?: D): boolean 
   return target.dispatchEvent(new CustomEvent(type, { bubbles: true, cancelable: true, detail }));
 }
 
-/** One listener on document for events on elements matching selector,
- *  like jQuery's delegated .on(type, selector, fn): handler(e, match) runs
- *  for the target and every matching ancestor, innermost first, until one
- *  stops propagation. As in jQuery, a click with a button other than the
- *  primary one, and a click on a disabled element, is not delegated. */
+/** One listener on document for events on elements matching selector:
+ *  handler(e, match) runs for the target and every matching ancestor,
+ *  innermost first, until one stops propagation. A click with a button
+ *  other than the primary one, and a click on a disabled element, is not
+ *  delegated. */
 export function delegateDocument(type: string, selector: string,
                                  handler: (e: Event, match: Element) => void): void {
   document.addEventListener(type, (e) => {

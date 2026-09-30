@@ -2,7 +2,7 @@
  * datatable.ts): selection by row keys, sorting order, roving focus, and
  * (TableFrame) the header / body scroll and gutter sync and column
  * resizing. Ported from sigil (data/treegrid, data/datatable). Native DOM:
- * every helper takes elements (arrays of rows), never jQuery objects; the
+ * every helper takes elements (arrays of rows); the
  * listeners TableFrame binds go through the AH.Controller, so teardown
  * removes them.
  */

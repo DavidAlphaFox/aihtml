@@ -93,8 +93,8 @@ export class Controller<E extends Element = HTMLElement> extends StimulusControl
   }
 
   /** A delegated listener: handler(e, match) for events on the descendants
-   *  of root (default the element) matching selector, like jQuery's
-   *  .on(type, selector, fn); `this' in a function handler is the match.
+   *  of root (default the element) matching selector; `this' in a
+   *  function handler is the match.
    *  Non-bubbling events (mouseenter, mouseleave) need mouseover/mouseout
    *  or a listener per element. */
   delegate<K extends keyof HTMLElementEventMap, M extends Element = HTMLElement>(

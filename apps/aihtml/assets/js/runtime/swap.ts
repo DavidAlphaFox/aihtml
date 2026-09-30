@@ -73,8 +73,8 @@ export class Swapper {
     return Array.from(tpl.content.childNodes);
   }
 
-  // With several targets, all but the last get a copy of the nodes (as
-  // jQuery's manipulation methods do). Returns every inserted node.
+  // With several targets, all but the last get a copy of the nodes and
+  // the last gets the nodes themselves. Returns every inserted node.
   #insert(targets: Element[], nodes: Node[], mode: string): Node[] {
     const added: Node[] = [];
     targets.forEach((t, i) => {

@@ -19,7 +19,7 @@
  *   AH.vendor(name)                   load an optional third-party library
  *
  * Functions taking elements accept an element, a selector, an array of
- * elements or a jQuery-like object (runtime/dom.ts, Targets).
+ * elements or any array-like of elements (runtime/dom.ts, Targets).
  *
  * Actions (runtime/actions.ts): elements with data-ah-on="event:token"
  * call Erlang; each event is one POST, the reply the DOM operations to

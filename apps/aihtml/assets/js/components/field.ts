@@ -181,8 +181,8 @@ function triggers(el: Element): string[] {
   return (el.getAttribute("data-ah-validate-on") || "blur").split(/\s+/);
 }
 
-// Like a delegated jQuery handler: fn(match) for every element matching
-// the selector from the target up to the document.
+// A delegated handler: fn(match) for every element matching the
+// selector from the target up to the document.
 function eachMatch(e: Event, selector: string, fn: (match: HTMLElement) => void): void {
   let n = e.target instanceof Element ? e.target.closest<HTMLElement>(selector) : null;
   while (n) {

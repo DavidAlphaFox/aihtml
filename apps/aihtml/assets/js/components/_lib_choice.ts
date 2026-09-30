@@ -111,7 +111,7 @@ export abstract class ChoiceGroupController extends AH.Controller {
     this.delegate("change", INPUT, (e) => {
       // one change per user action, fired by the root itself: the
       // input's own change goes no further (not even to the root's
-      // later listeners, as with jQuery's delegated stop before)
+      // later listeners)
       e.stopImmediatePropagation();
       this.changed();
     });

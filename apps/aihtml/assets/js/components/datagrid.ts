@@ -488,8 +488,8 @@ class DatagridController extends AH.Controller {
     // header: resize
     this.delegate("pointerdown", ".ah-dg-resize-handle", (e, h) => { this.#startResize(e, h); });
 
-    // clicks, the innermost target first (as jQuery's delegated
-    // handlers ran, with stopPropagation between them)
+    // clicks, the innermost target first, each handler able to stop
+    // the ones further out
     this.listen(el, "click", (e) => { this.#click(e); });
     this.delegate("dblclick", ".ah-dg-row", (e, row) => {
       if (row.closest(".ah-dg") !== el || this.#editing) { return; }
@@ -549,7 +549,7 @@ class DatagridController extends AH.Controller {
     // inner controls report to the grid, not as the grid's own change /
     // input; registered last so the grid's own handlers above still run,
     // and stopImmediatePropagation also keeps them from listeners added
-    // to the root later (as jQuery's delegated stopPropagation did)
+    // to the root later
     const inner = (e: Event): void => {
       const t = e.target;
       if (t !== el && t instanceof Element && t.matches("input, select, textarea")) {

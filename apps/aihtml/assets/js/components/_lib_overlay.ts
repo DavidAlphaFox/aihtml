@@ -72,8 +72,8 @@ export function fire<D>(target: EventTarget, type: string, detail?: D): boolean 
 }
 
 /** The elements from node up to the document that match selector
- *  (innermost first): what a jQuery delegated handler ran for. Throws on
- *  a bad selector. */
+ *  (innermost first): what a delegated handler runs for. Throws on a bad
+ *  selector. */
 export function matching(node: EventTarget | null, selector: string): Element[] {
   const out: Element[] = [];
   let n: Element | null = node instanceof Element ? node : node instanceof Node ? node.parentElement : null;
@@ -96,8 +96,8 @@ export function focusEl(el: Element | null, opts?: FocusOptions): void {
 }
 
 // ------------------------------------------------------------------
-// Fades (jQuery's fadeIn / fadeOut / animate({opacity}) before): one
-// running fade per element, a new one replaces it.
+// Fades: one running opacity animation per element, a new one
+// replaces it.
 // ------------------------------------------------------------------
 
 interface Fade { anim: Animation; end: () => void; }
@@ -118,7 +118,7 @@ export class Fader {
   }
 
   /** Fade el's opacity to `to' in ms, then done(). The final opacity
-   *  stays inline (as jQuery's animate left it) unless end() changes it. */
+   *  stays inline unless end() changes it. */
   fade(el: HTMLElement, to: number, ms: number, done?: () => void, end?: () => void): void {
     this.stop(el, false);
     const from = parseFloat(window.getComputedStyle(el).opacity);
