@@ -29,7 +29,7 @@
                        grand_totals = true :: boolean(),
                        format = #{} :: aihtml_pivotgrid:format(),
                        height = undefined :: undefined | pos_integer() | iodata(),
-                       locale = en :: aihtml_pivotgrid:locale(),
+                       locale :: aihtml_pivotgrid:locale() | undefined,   % undefined: the page's
                        labels = #{} :: #{atom() => unicode:chardata()},
                        source = undefined :: undefined | aihtml_action:ref()}).
 

@@ -136,7 +136,8 @@
 %% initial expanded members and sort order, as pivotgrid_view/1 returns
 %% it), `row_subtotals', `col_subtotals', `grand_totals' (default true),
 %% `format' (the default number format), `height' (px or a CSS length;
-%% the body scrolls under fixed headers), `locale' (en | zh), `labels'
+%% the body scrolls under fixed headers), `locale' (en | zh, default the
+%% page language), `labels'
 %% (texts), `source' (an action ref: remote mode, see the module doc).
 -spec ah_pivotgrid([row()], layout(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_pivotgrid{}.
 ah_pivotgrid(Rows, Layout, Css, Attrs) ->
@@ -244,7 +245,7 @@ model(#ah_pivotgrid{items = Items, value = Layout, fields = Fields0, view = View
                false -> View0
            end,
     Locale = R#ah_pivotgrid.locale,
-    lists:member(Locale, [en, zh]) orelse error({aihtml, {bad_option, locale, Locale}}),
+    lists:member(Locale, [undefined, en, zh]) orelse error({aihtml, {bad_option, locale, Locale}}),
     (layout(Layout, Fields))#{
       id => Id,
       fields => Fields,
@@ -423,9 +424,12 @@ dir(<<"desc">>) -> <<"desc">>;
 dir(Other) -> error({aihtml, {bad_option, view, Other}}).
 
 %% The defaults are the catalog's (aihtml_i18n, scope pivotgrid) in the
-%% language the `locale' option names.
+%% language the `locale' option names, else in the current language.
 labels(Locale, Custom) when is_map(Custom) ->
-    Defaults = aihtml_i18n:with(Locale, fun() -> aihtml_i18n:texts(pivotgrid) end),
+    Defaults = case Locale of
+                   undefined -> aihtml_i18n:texts(pivotgrid);
+                   _ -> aihtml_i18n:with(Locale, fun() -> aihtml_i18n:texts(pivotgrid) end)
+               end,
     maps:foreach(fun(K, _) -> maps:is_key(K, Defaults)
                                   orelse error({aihtml, {bad_option, labels, K}})
                  end, Custom),
@@ -1132,7 +1136,7 @@ catalog() ->
              format => <<"Default number format: #{decimals, thousands, decimal, prefix, "
                          "suffix}; without decimals integers show as they are, others with 2.">>,
              height => <<"Height (px or a CSS length): the body scrolls under fixed headers.">>,
-             locale => <<"en (default) or zh: the texts of totals, menus and the field list.">>,
+             locale => <<"en or zh: the texts of totals, menus and the field list (default: the page language).">>,
              labels => <<"Map overriding texts: subtotal, grand_total, empty, blank, values, "
                          "fields, rows, columns, drop, sort_*, expand_all, collapse_all, "
                          "export_xlsx, export_csv, move_*, remove, sum, count, avg, min, max, "
