@@ -6,6 +6,7 @@
  * input/change events of the inner text field are stopped at the root so
  * they are not taken for the component's own events. */
 import AH from "../core.ts";
+import { time12 } from "./_lib_date.ts";
 import { PickerPopup, clamp, disabled, drag, fenceNativeEvents, pointerXY, round2, uid } from "./_lib_picker.ts";
 import "virtual:ah-tpl/timepicker_header";
 import "virtual:ah-tpl/timepicker_numbers";
@@ -43,8 +44,17 @@ function angleXY(angle: number, r: number): { x: number; y: number } {
 }
 
 /** "14:30", "14:30:00", "2:30 pm", "2 pm", "1430" -> minutes of the day */
+// The page language's AM / PM texts (上午, 下午), before or after the time,
+// read as the "am" / "pm" parseTime knows.
+function unlocalize(s: string): string {
+  const am = AH.format("am", "AM"), pm = AH.format("pm", "PM");
+  if (am && s.indexOf(am) >= 0) { return s.split(am).join("") + " am"; }
+  if (pm && s.indexOf(pm) >= 0) { return s.split(pm).join("") + " pm"; }
+  return s;
+}
+
 function parseTime(s: string | null | undefined): number | null {
-  const m = /^\s*(\d{1,2})(?::?(\d{2}))?(?::\d{2})?\s*([ap])?\.?m?\.?\s*$/i.exec(s || "");
+  const m = /^\s*(\d{1,2})(?::?(\d{2}))?(?::\d{2})?\s*([ap])?\.?m?\.?\s*$/i.exec(unlocalize(s || ""));
   if (!m) { return null; }
   let h = parseInt(m[1], 10);
   const min = m[2] ? parseInt(m[2], 10) : 0;
@@ -237,7 +247,7 @@ class TimepickerController extends AH.Controller {
     const h = Math.floor(t / 60), m = t % 60;
     if (this.#format === "24h") { return pad2(h) + ":" + pad2(m); }
     const p = to12(h);
-    return p.h12 + ":" + pad2(m) + " " + p.period.toUpperCase();
+    return time12(p.h12 + ":" + pad2(m), p.period === "am" ? AH.format("am", "AM") : AH.format("pm", "PM"));
   }
 
   private current(): string { return pad2(this.#h) + ":" + pad2(this.#m); }
@@ -259,7 +269,10 @@ class TimepickerController extends AH.Controller {
       txt_hours: AH.t("common", "hours", "Hours"),
       txt_minutes: AH.t("common", "minutes", "Minutes"),
       txt_am: AH.format("am", "AM"),
-      txt_pm: AH.format("pm", "PM")
+      txt_pm: AH.format("pm", "PM"),
+      // the AM / PM part first when the language writes it first (上午9:30)
+      period_first: AH.format("time_12h", "{time} {ampm}").indexOf("{ampm}") <
+        AH.format("time_12h", "{time} {ampm}").indexOf("{time}")
     };
   }
 

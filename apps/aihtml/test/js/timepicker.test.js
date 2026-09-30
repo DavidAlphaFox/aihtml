@@ -42,13 +42,38 @@
     return got;
   }
 
+  // in a Chinese page the field shows 上午 / 下午 first and reads them back
+  T.test("timepicker reads and writes the page language's AM / PM", async function (fx) {
+    var cat = document.createElement("script");
+    cat.type = "application/json"; cat.id = "ah-labels";
+    cat.textContent = JSON.stringify({ format: { am: "上午", pm: "下午", time_12h: "{ampm}{time}" } });
+    document.head.appendChild(cat);
+    AH.reloadTexts();
+    try {
+      var el = await mount(fx, field("09:30").replace('data-format="24h"', 'data-format="12h"'));
+      var input = el.querySelector(".ah-timepicker-input");
+      input.value = "下午7:40";
+      T.fire(input, "change");
+      T.eq(el.getAttribute("data-ah-value"), "19:40");
+      T.eq(input.value, "下午7:40");
+      input.value = "8:05 上午";
+      T.fire(input, "change");
+      T.eq(el.getAttribute("data-ah-value"), "08:05");
+      T.eq(input.value, "上午8:05");
+    } finally {
+      cat.remove();
+      AH.reloadTexts();
+    }
+  });
+
   T.test("timepicker draws header and numbers from the shared templates", async function (fx) {
     var el = await mount(fx, clock("21:05", "24h"));
     T.eq(el.querySelector(".ah-timepicker-header").innerHTML,
          AH.tpl.timepicker_header({ hours: "21", minutes: "05", hours_active: true,
                                     minutes_active: false, twelve: false, am: false, pm: true,
                                     disabled: false, tabindex: 0,
-                                    txt_hours: "Hours", txt_minutes: "Minutes", txt_am: "AM", txt_pm: "PM" }));
+                                    txt_hours: "Hours", txt_minutes: "Minutes", txt_am: "AM", txt_pm: "PM",
+                                    period_first: false }));
     var texts = el.querySelectorAll(".ah-timepicker-numbers text");
     T.eq(texts.length, 24);
     T.eq(texts[0].namespaceURI, "http://www.w3.org/2000/svg");

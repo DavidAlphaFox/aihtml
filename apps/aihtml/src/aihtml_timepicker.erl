@@ -170,11 +170,14 @@ display_time(undefined, _) -> <<>>;
 display_time({H, M}, '24h') -> time_bin({H, M});
 display_time({H, M}, '12h') ->
     {H12, P} = to12(H),
-    <<(integer_to_binary(H12))/binary, ":", (pad2(M))/binary, " ",
-      (period_label(P))/binary>>.
+    aihtml_lib_date:time_12h(<<(integer_to_binary(H12))/binary, ":", (pad2(M))/binary>>,
+                             aihtml_i18n:format(P)).
 
-period_label(am) -> <<"AM">>;
-period_label(pm) -> <<"PM">>.
+%% The AM / PM part goes first in the header when the language writes it
+%% first (time_12h "{ampm}{time}": 上午9:30).
+period_first() ->
+    binary:match(aihtml_i18n:format(time_12h), <<"{ampm}">>) <
+        binary:match(aihtml_i18n:format(time_12h), <<"{time}">>).
 
 pad2(N) when N < 10 -> <<"0", (integer_to_binary(N))/binary>>;
 pad2(N) -> integer_to_binary(N).
@@ -220,7 +223,8 @@ time_header(H, M, Period, Format, Disabled) ->
                         tabindex => case Disabled of true -> -1; false -> 0 end,
                         txt_hours => aihtml_i18n:text(common, hours),
                         txt_minutes => aihtml_i18n:text(common, minutes),
-                        txt_am => aihtml_i18n:format(am), txt_pm => aihtml_i18n:format(pm)})).
+                        txt_am => aihtml_i18n:format(am), txt_pm => aihtml_i18n:format(pm),
+                        period_first => period_first()})).
 
 %% The clock in hours mode; the browser redraws the numbers on mode changes.
 %% Drawing order differs from sigil: the selection circle goes under the
