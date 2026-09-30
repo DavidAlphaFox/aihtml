@@ -1,6 +1,8 @@
 {
   "format": {
     "am": "上午",
+    "currency": "¥",
+    "date_short": "yyyy/M/d",
     "decimal": ".",
     "first_day": 1,
     "group": ",",

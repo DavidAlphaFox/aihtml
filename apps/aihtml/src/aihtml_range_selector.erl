@@ -27,10 +27,15 @@
 -define(E, aihtml_element).
 
 %% How a range_selector writes a value: `number' (integers as is, others
-%% with 2 decimals), `{fixed, Decimals}', `currency' ($1,234), `date'
-%% (M/D/YYYY), `month' (Jan), `time' (4:00 PM) - the last three read the
-%% value as a UTC timestamp in milliseconds - or `{Prefix, Format, Suffix}'.
--type format() :: number | {fixed, 0..20} | currency | date | month | time
+%% with 2 decimals), `{fixed, Decimals}', `{currency, Symbol}' ($1,234),
+%% `currency' (with the page language's symbol: $ in English, ¥ in
+%% Chinese; give the symbol when the amounts are in one currency), `date'
+%% (the language's short date: 9/30/2026, 2026/9/30), `month' (Jan),
+%% `time' (4:00 PM, 下午4:00) - the last three read the value as a UTC
+%% timestamp in milliseconds - or `{Prefix, Format, Suffix}'. Separators,
+%% names and orders come from the current language (aihtml_i18n).
+-type format() :: number | {fixed, 0..20} | currency | {currency, unicode:chardata()}
+                | date | month | time
                 | {unicode:chardata(), format(), unicode:chardata()}.
 
 %% @doc A range picked on a track: the selected span is a bar between two
@@ -170,6 +175,7 @@ check_format(K, F) ->
 
 valid_format(F) when F =:= number; F =:= currency; F =:= date; F =:= month; F =:= time -> true;
 valid_format({fixed, N}) -> is_integer(N) andalso N >= 0 andalso N =< 20;
+valid_format({currency, S}) -> is_binary(S) orelse (is_list(S) andalso io_lib:char_list(S));
 valid_format({_, F, _}) -> valid_format(F);
 valid_format(_) -> false.
 
@@ -177,6 +183,8 @@ valid_format(_) -> false.
 format_json({P, F, S}) ->
     (format_json(F))#{<<"p">> => text(P), <<"s">> => text(S)};
 format_json({fixed, N}) -> #{<<"f">> => <<"fixed">>, <<"n">> => N};
+%% a symbol given; without one the browser takes the page language's
+format_json({currency, S}) -> #{<<"f">> => <<"currency">>, <<"c">> => text(S)};
 format_json(F) -> #{<<"f">> => atom_to_binary(F)}.
 
 %% @doc The text of a range_selector value in a format (the browser's
@@ -188,24 +196,35 @@ format(V, number) ->
         false -> fixed(V, 2)
     end;
 format(V, {fixed, N}) -> fixed(V, N);
-format(V, currency) ->
+format(V, currency) -> format(V, {currency, aihtml_i18n:format(currency)});
+format(V, {currency, Symbol}) ->
     I = round(V),
     Digits = integer_to_binary(abs(I)),
-    <<"$", (case I < 0 of true -> <<"-">>; false -> <<>> end)/binary,
+    <<(text(Symbol))/binary, (case I < 0 of true -> <<"-">>; false -> <<>> end)/binary,
       (group3(Digits))/binary>>;
 format(V, date) ->
     {{Y, M, D}, _} = utc(V),
-    iolist_to_binary([integer_to_binary(M), $/, integer_to_binary(D), $/, integer_to_binary(Y)]);
+    short_date(aihtml_i18n:format(date_short), Y, M, D);
 format(V, month) ->
     {{_, M, _}, _} = utc(V),
     lists:nth(M, aihtml_i18n:format(months_short));
 format(V, time) ->
     {_, {H, Mi, _}} = utc(V),
     H12 = case H rem 12 of 0 -> 12; X -> X end,
-    iolist_to_binary([integer_to_binary(H12), $:, pad2(Mi), $\s,
-                      case H >= 12 of true -> aihtml_i18n:format(pm); false -> aihtml_i18n:format(am) end]).
+    aihtml_lib_date:time_12h(iolist_to_binary([integer_to_binary(H12), $:, pad2(Mi)]),
+                             case H >= 12 of true -> aihtml_i18n:format(pm); false -> aihtml_i18n:format(am) end).
 
 fixed(V, N) -> float_to_binary(float(V), [{decimals, N}]).
+
+%% The language's short date pattern (yyyy, MM, M, dd, d; anything else as
+%% is), as the browser's shortDate does.
+short_date(<<"yyyy", R/binary>>, Y, M, D) -> <<(integer_to_binary(Y))/binary, (short_date(R, Y, M, D))/binary>>;
+short_date(<<"MM", R/binary>>, Y, M, D) -> <<(pad2(M))/binary, (short_date(R, Y, M, D))/binary>>;
+short_date(<<"M", R/binary>>, Y, M, D) -> <<(integer_to_binary(M))/binary, (short_date(R, Y, M, D))/binary>>;
+short_date(<<"dd", R/binary>>, Y, M, D) -> <<(pad2(D))/binary, (short_date(R, Y, M, D))/binary>>;
+short_date(<<"d", R/binary>>, Y, M, D) -> <<(integer_to_binary(D))/binary, (short_date(R, Y, M, D))/binary>>;
+short_date(<<C/utf8, R/binary>>, Y, M, D) -> <<C/utf8, (short_date(R, Y, M, D))/binary>>;
+short_date(<<>>, _, _, _) -> <<>>.
 
 group3(Digits) ->
     case byte_size(Digits) of
@@ -249,8 +268,9 @@ catalog() ->
              show_minor_ticks => <<"Draw the minor ticks (default false).">>,
              show_labels => <<"Label the major ticks (default true).">>,
              show_markers => <<"Show the two markers (default true).">>,
-             labels_format => <<"number (default), {fixed, N}, currency, date, month, time "
-                                "(timestamps in ms, UTC) or {Prefix, Format, Suffix}.">>,
+             labels_format => <<"number (default), {fixed, N}, {currency, Symbol}, currency (the page "
+                                "language's symbol), date, month, time (timestamps in ms, UTC; in the "
+                                "page language's formats) or {Prefix, Format, Suffix}.">>,
              markers_format => <<"Format of the marker values (default: labels_format).">>,
              min_span => <<"Smallest Hi - Lo (default 0).">>},
        methods =>

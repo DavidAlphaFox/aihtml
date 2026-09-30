@@ -11,6 +11,7 @@
  * The server renders the whole first state, so setup only binds events.
  */
 import AH from "../core.ts";
+import { time12 } from "./_lib_date.ts";
 
 /** Detail of input / change: the value "lo,hi". */
 export type RangeSelectorValue = string;
@@ -23,6 +24,8 @@ interface Format {
   n?: number;
   p?: string;
   s?: string;
+  /** the currency symbol given; else the page language's */
+  c?: string;
 }
 
 /** The settings and parts read in setup, and the current range. */
@@ -57,6 +60,7 @@ function parseFormat(text: string | null): Format {
   if (typeof o.n === "number") { f.n = o.n; }
   if (typeof o.p === "string") { f.p = o.p; }
   if (typeof o.s === "string") { f.s = o.s; }
+  if (typeof o.c === "string") { f.c = o.c; }
   return f;
 }
 
@@ -78,6 +82,16 @@ const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "
 
 function erlRound(v: number): number { return v < 0 ? -Math.round(-v) : Math.round(v); }
 
+// The page language's short date pattern (yyyy, MM, M, dd, d; short_date/4
+// in Erlang).
+function shortDate(d: Date): string {
+  const two = (n: number): string => (n < 10 ? "0" : "") + n;
+  const m = d.getUTCMonth() + 1, day = d.getUTCDate();
+  return AH.format("date_short", "M/d/yyyy").replace(/yyyy|MM|M|dd|d/g, (t) =>
+    t === "yyyy" ? String(d.getUTCFullYear()) : t === "MM" ? two(m) : t === "M" ? String(m)
+      : t === "dd" ? two(day) : String(day));
+}
+
 // The same formats as aihtml_range_selector:format/2.
 function rsFormat(v: number, f: Format): string {
   let s: string;
@@ -85,20 +99,20 @@ function rsFormat(v: number, f: Format): string {
     case "fixed": s = v.toFixed(f.n); break;
     case "currency": {
       const d = erlRound(v);
-      s = "$" + (d < 0 ? "-" : "") + String(Math.abs(d)).replace(/\B(?=(\d{3})+(?!\d))/g, AH.format("group", ","));
+      s = (f.c ?? AH.format("currency", "$")) + (d < 0 ? "-" : "") +
+        String(Math.abs(d)).replace(/\B(?=(\d{3})+(?!\d))/g, AH.format("group", ","));
       break;
     }
     case "date": {
-      const d = new Date(Math.floor(v));
-      s = (d.getUTCMonth() + 1) + "/" + d.getUTCDate() + "/" + d.getUTCFullYear();
+      s = shortDate(new Date(Math.floor(v)));
       break;
     }
     case "month": s = AH.format("months_short", MONTHS)[new Date(Math.floor(v)).getUTCMonth()]; break;
     case "time": {
       const d = new Date(Math.floor(v));
       const h = d.getUTCHours();
-      s = ((h % 12) || 12) + ":" + (d.getUTCMinutes() < 10 ? "0" : "") + d.getUTCMinutes() +
-        " " + (h >= 12 ? AH.format("pm", "PM") : AH.format("am", "AM"));
+      s = time12(((h % 12) || 12) + ":" + (d.getUTCMinutes() < 10 ? "0" : "") + d.getUTCMinutes(),
+                 h >= 12 ? AH.format("pm", "PM") : AH.format("am", "AM"));
       break;
     }
     default:

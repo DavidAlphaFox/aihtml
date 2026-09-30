@@ -2,6 +2,8 @@
   "client": ["calendar", "chart_table", "common", "datepicker", "datetime_input", "datetime_parts", "dock_layout", "dragdrop", "field", "markdown_editor", "node_graph", "password_input", "ribbon", "sortable", "time_ago", "toolbar", "upload"],
   "format": {
     "am": "AM",
+    "currency": "$",
+    "date_short": "M/d/yyyy",
     "decimal": ".",
     "first_day": 0,
     "group": ",",
