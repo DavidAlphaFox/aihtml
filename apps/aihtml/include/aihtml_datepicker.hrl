@@ -22,7 +22,7 @@
                         min = undefined :: aihtml_datepicker:date(),
                         max = undefined :: aihtml_datepicker:date(),
                         disabled_dates = [] :: [aihtml_datepicker:date()],
-                        first_day = 0 :: 0..6,
+                        first_day :: 0..6 | undefined,   % undefined: the language's
                         week_numbers = false :: boolean(),
                         other_month_days = true :: boolean(),
                         weekends = false :: boolean(),

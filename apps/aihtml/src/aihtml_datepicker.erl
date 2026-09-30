@@ -55,7 +55,7 @@
 %% Options (in Attrs): `placeholder' (default "Select date..."), `format'
 %% (display format: yyyy yy MMMM MMM MM M dd d, default "yyyy-MM-dd"),
 %% `min', `max' (dates), `disabled_dates' (a list of dates),
-%% `first_day' (0 = Sunday .. 6, default 0), `week_numbers' (default
+%% `first_day' (0 = Sunday .. 6, default the language's), `week_numbers' (default
 %% false), `other_month_days' (default true), `weekends' (weekend days
 %% in the error colour, sigil's enable-weekend; default false), `labels' (a map with
 %% `months', `months_short', `weekdays' (7, from Sunday), `title' (a
@@ -72,7 +72,7 @@ fields(ah_datepicker) -> record_info(fields, ah_datepicker).
 -spec render(element()) -> aihtml_html:html().
 render(#ah_datepicker{value = Value0, name = Name, disabled = Disabled,
                       readonly = Readonly, inline = Inline,
-                      first_day = FirstDay, min = Min0, max = Max0} = R0) ->
+                      first_day = FirstDay0, min = Min0, max = Max0} = R0) ->
     {Id, R} = ensure_id(R0),
     Classes = ?E:classes(?MODULE, R),           % checks the flag fields first
     Range = R#ah_datepicker.range orelse is_range(Value0),
@@ -82,6 +82,7 @@ render(#ah_datepicker{value = Value0, name = Name, disabled = Disabled,
             end,
     Labels = labels(R#ah_datepicker.labels),
     Format = text(R#ah_datepicker.format),
+    FirstDay = aihtml_lib_date:first_day(FirstDay0),
     (is_integer(FirstDay) andalso FirstDay >= 0 andalso FirstDay =< 6)
         orelse error({aihtml, {bad_first_day, FirstDay}}),
     Min = iso_opt(Min0),
@@ -366,7 +367,7 @@ catalog() ->
              min => <<"Earliest selectable date (ISO binary or calendar:date()).">>,
              max => <<"Latest selectable date.">>,
              disabled_dates => <<"List of dates that cannot be picked.">>,
-             first_day => <<"First day of the week, 0 = Sunday (default) .. 6.">>,
+             first_day => <<"First day of the week, 0 = Sunday .. 6 (default: the page language's, Sunday in English, Monday in Chinese).">>,
              week_numbers => <<"Show a week number column.">>,
              other_month_days => <<"Show days of the neighbouring months (default true).">>,
              weekends => <<"Colour Saturdays and Sundays.">>,
