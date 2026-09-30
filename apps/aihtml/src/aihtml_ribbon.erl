@@ -156,7 +156,7 @@ render_ribbon(#ah_ribbon{items = Tabs0, value = Value, name = Name,
                            ?H:el('div', [], [<<"ah-ribbon-selection-token">>],
                                  [{aria_hidden, <<"true">>}])],
                           [<<"ah-ribbon-tabs-inner">>],
-                          [{role, tablist}, {aria_label, <<"Ribbon tabs">>},
+                          [{role, tablist}, {aria_label, aihtml_i18n:text(ribbon, tabs)},
                            {aria_orientation, case Vertical of
                                                   true -> vertical;
                                                   false -> horizontal
@@ -283,10 +283,10 @@ menu_item(Other) -> error({aihtml, {bad_ribbon_menu_item, Other}}).
 
 scroll_btn(Dir) ->
     {Glyph, Label} = case Dir of
-                         left -> {<<"◀"/utf8>>, <<"Scroll left">>};
-                         right -> {<<"▶"/utf8>>, <<"Scroll right">>};
-                         up -> {<<"▲"/utf8>>, <<"Scroll up">>};
-                         down -> {<<"▼"/utf8>>, <<"Scroll down">>}
+                         left -> {<<"◀"/utf8>>, aihtml_i18n:text(ribbon, scroll_left)};
+                         right -> {<<"▶"/utf8>>, aihtml_i18n:text(ribbon, scroll_right)};
+                         up -> {<<"▲"/utf8>>, aihtml_i18n:text(ribbon, scroll_up)};
+                         down -> {<<"▼"/utf8>>, aihtml_i18n:text(ribbon, scroll_down)}
                      end,
     ?H:el(button, Glyph,
           [<<"ah-ribbon-scroll-btn">>, <<"ah-ribbon-scroll-", (atom_to_binary(Dir, utf8))/binary>>],
@@ -300,9 +300,9 @@ collapse_btn(Collapsed) ->
                    "stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M4 10l4-4 4 4\"/>"
                    "</svg>">>},
           [<<"ah-ribbon-collapse-btn">>],
-          [{type, button}, {aria_label, <<"Collapse the ribbon">>},
+          [{type, button}, {aria_label, aihtml_i18n:text(ribbon, collapse)},
            {aria_expanded, atom_to_binary(not Collapsed, utf8)},
-           {title, <<"Collapse the ribbon (Ctrl+F1)">>}]).
+           {title, aihtml_i18n:text(ribbon, collapse_title)}]).
 
 %%%===================================================================
 %%% Catalog

@@ -288,7 +288,8 @@ class RibbonController extends AH.Controller {
     el.classList.toggle("ah-ribbon-mode-default", !on);
     el.querySelectorAll(":scope > .ah-ribbon-tabs > .ah-ribbon-collapse-btn").forEach((b) => {
       b.setAttribute("aria-expanded", String(!on));
-      b.setAttribute("aria-label", on ? "Expand the ribbon" : "Collapse the ribbon");
+      b.setAttribute("aria-label", on ? AH.t("ribbon", "expand", "Expand the ribbon")
+                                     : AH.t("ribbon", "collapse", "Collapse the ribbon"));
     });
     if (notify) { this.fire(on ? "ah:collapse" : "ah:expand"); }
   }
