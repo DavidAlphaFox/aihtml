@@ -5,7 +5,7 @@
 (function (T, AH) {
   "use strict";
 
-  var FX = {"tags":"<div class=\"ah-tag-input w-96\" data-ah=\"tag-input\" role=\"group\" data-ah-value=\"erlang,jquery,tailwind\" data-disabled=\"false\" data-chip-color=\"primary\" data-chip-variant=\"soft\"><span class=\"ah-chip ah-tag-input__chip\" data-variant=\"soft\" data-color=\"primary\" data-size=\"small\" data-index=\"0\"><span class=\"ah-chip__label\">erlang</span><button type=\"button\" class=\"ah-chip__delete\" tabindex=\"-1\" aria-label=\"Remove erlang\">×</button></span><span class=\"ah-chip ah-tag-input__chip\" data-variant=\"soft\" data-color=\"primary\" data-size=\"small\" data-index=\"1\"><span class=\"ah-chip__label\">jquery</span><button type=\"button\" class=\"ah-chip__delete\" tabindex=\"-1\" aria-label=\"Remove jquery\">×</button></span><span class=\"ah-chip ah-tag-input__chip\" data-variant=\"soft\" data-color=\"primary\" data-size=\"small\" data-index=\"2\"><span class=\"ah-chip__label\">tailwind</span><button type=\"button\" class=\"ah-chip__delete\" tabindex=\"-1\" aria-label=\"Remove tailwind\">×</button></span><input class=\"ah-tag-input__field\" type=\"text\" placeholder=\"Add tag…\" aria-label=\"Add tag\"><input type=\"hidden\" name=\"tags\" value=\"erlang,jquery,tailwind\"></div>","max":"<div class=\"ah-tag-input w-96\" data-ah=\"tag-input\" role=\"group\" data-ah-value=\"red\" data-disabled=\"false\" data-chip-color=\"error\" data-chip-variant=\"filled\" data-max-tags=\"3\"><span class=\"ah-chip ah-tag-input__chip\" data-variant=\"filled\" data-color=\"error\" data-size=\"small\" data-index=\"0\"><span class=\"ah-chip__label\">red</span><button type=\"button\" class=\"ah-chip__delete\" tabindex=\"-1\" aria-label=\"Remove red\">×</button></span><input class=\"ah-tag-input__field\" type=\"text\" placeholder=\"Up to 3 tags\" aria-label=\"Up to 3 tags\"></div>"};
+  var FX = {"tags":"<div class=\"ah-tag-input w-96\" data-ah=\"tag-input\" role=\"group\" data-ah-value=\"erlang,stimulus,tailwind\" data-disabled=\"false\" data-chip-color=\"primary\" data-chip-variant=\"soft\"><span class=\"ah-chip ah-tag-input__chip\" data-variant=\"soft\" data-color=\"primary\" data-size=\"small\" data-index=\"0\"><span class=\"ah-chip__label\">erlang</span><button type=\"button\" class=\"ah-chip__delete\" tabindex=\"-1\" aria-label=\"Remove erlang\">×</button></span><span class=\"ah-chip ah-tag-input__chip\" data-variant=\"soft\" data-color=\"primary\" data-size=\"small\" data-index=\"1\"><span class=\"ah-chip__label\">stimulus</span><button type=\"button\" class=\"ah-chip__delete\" tabindex=\"-1\" aria-label=\"Remove stimulus\">×</button></span><span class=\"ah-chip ah-tag-input__chip\" data-variant=\"soft\" data-color=\"primary\" data-size=\"small\" data-index=\"2\"><span class=\"ah-chip__label\">tailwind</span><button type=\"button\" class=\"ah-chip__delete\" tabindex=\"-1\" aria-label=\"Remove tailwind\">×</button></span><input class=\"ah-tag-input__field\" type=\"text\" placeholder=\"Add tag…\" aria-label=\"Add tag\"><input type=\"hidden\" name=\"tags\" value=\"erlang,stimulus,tailwind\"></div>","max":"<div class=\"ah-tag-input w-96\" data-ah=\"tag-input\" role=\"group\" data-ah-value=\"red\" data-disabled=\"false\" data-chip-color=\"error\" data-chip-variant=\"filled\" data-max-tags=\"3\"><span class=\"ah-chip ah-tag-input__chip\" data-variant=\"filled\" data-color=\"error\" data-size=\"small\" data-index=\"0\"><span class=\"ah-chip__label\">red</span><button type=\"button\" class=\"ah-chip__delete\" tabindex=\"-1\" aria-label=\"Remove red\">×</button></span><input class=\"ah-tag-input__field\" type=\"text\" placeholder=\"Up to 3 tags\" aria-label=\"Up to 3 tags\"></div>"};
 
   async function mount(fx, html) { fx.innerHTML = html; await T.ready(fx); return fx.firstElementChild; }
   // Take the element out (its controller tears down) and put it back.
@@ -29,18 +29,18 @@
     field.focus();
     field.value = " vite ";
     T.ok(!T.key(field, "Enter"), "handled");
-    T.eq(el.getAttribute("data-ah-value"), "erlang,jquery,tailwind,vite");
-    T.eq(el.querySelector("input[type=hidden]").value, "erlang,jquery,tailwind,vite");
+    T.eq(el.getAttribute("data-ah-value"), "erlang,stimulus,tailwind,vite");
+    T.eq(el.querySelector("input[type=hidden]").value, "erlang,stimulus,tailwind,vite");
     T.eq(el.querySelectorAll(".ah-tag-input__chip")[3].getAttribute("data-index"), "3");
     field.value = "erlang";
     T.key(field, ",");
     T.eq(AH.invoke(el, "getTags").length, 4, "no duplicates");
     el.querySelector(".ah-tag-input__chip .ah-chip__delete").click();
-    T.eq(AH.invoke(el, "getTags"), ["jquery", "tailwind", "vite"]);
+    T.eq(AH.invoke(el, "getTags"), ["stimulus", "tailwind", "vite"]);
     T.eq(document.activeElement, field);
     field.value = "";
     T.key(field, "Backspace");
-    T.eq(AH.invoke(el, "getTags"), ["jquery", "tailwind"]);
+    T.eq(AH.invoke(el, "getTags"), ["stimulus", "tailwind"]);
     T.eq(changes.length, 3);
   });
 

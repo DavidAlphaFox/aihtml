@@ -17,7 +17,7 @@ demos() ->
 
 -spec tags_basic() -> aihtml:html().
 tags_basic() ->
-    ah_tag_input([<<"erlang">>, <<"jquery">>, <<"tailwind">>], [<<"w-96">>], [{name, tags}]).
+    ah_tag_input([<<"erlang">>, <<"stimulus">>, <<"tailwind">>], [<<"w-96">>], [{name, tags}]).
 
 -spec tags_limits() -> aihtml:html().
 tags_limits() ->
