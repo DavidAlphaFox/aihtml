@@ -9,7 +9,7 @@
 
 -spec init(cowboy_req:req(), term()) -> {ok, cowboy_req:req(), term()}.
 init(Req, State) ->
-    {ok, ?SITE:reply(Req, <<"aihtml — Erlang UI"/utf8>>, page(), #{}), State}.
+    {ok, ?SITE:reply(Req, <<"aihtml — Erlang UI"/utf8>>, fun page/0, #{}), State}.
 
 %% @doc The landing page, as html (for tests and tools).
 -spec render() -> aihtml:html().

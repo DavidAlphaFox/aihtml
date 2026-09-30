@@ -18,8 +18,7 @@ init(Req, State) ->
     %% ?view=processes|system: the URL the load buttons push into the
     %% history renders the same content, so back/forward and bookmarks work.
     View = proplists:get_value(<<"view">>, cowboy_req:parse_qs(Req)),
-    {ok, aihtml_cowboy:reply(Req, page(View), #{title => <<"aihtml actions">>,
-                                                css => [aihtml_example_site:css()]}),
+    {ok, aihtml_example_site:reply(Req, <<"aihtml actions">>, fun() -> page(View) end, #{}),
      State}.
 
 page(View) ->

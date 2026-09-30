@@ -1,14 +1,10 @@
-%% @doc GET / : the demo page.
+%% @doc GET /fetch: the fetch-mode demo page (HTML fragments from plain URLs).
 -module(aihtml_example_page).
 
 -export([init/2]).
 
 -spec init(cowboy_req:req(), term()) -> {ok, cowboy_req:req(), term()}.
-init(Req0, State) ->
-    Html = aihtml:page(aihtml_example_views:index(),
-                       #{title => <<"aihtml example">>,
-                         theme => #{appearance => light},
-                         css => [aihtml_example_site:css()]}),
-    Req = cowboy_req:reply(200, #{<<"content-type">> => <<"text/html; charset=utf-8">>},
-                           Html, Req0),
-    {ok, Req, State}.
+init(Req, State) ->
+    {ok, aihtml_example_site:reply(Req, <<"aihtml example">>, fun aihtml_example_views:index/0,
+                                   #{theme => #{appearance => light}}),
+     State}.

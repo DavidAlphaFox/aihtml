@@ -22,7 +22,7 @@ init(Req0, State) ->
             put(?KEY, maps:from_list([{K, V} || {K, V} <- cowboy_req:parse_qs(Req0),
                                                 is_binary(V)])),
             Title = <<(aihtml_example_site:display_name(N))/binary, " — aihtml"/utf8>>,
-            Body = aihtml_example_docs:render(N),
+            Body = fun() -> aihtml_example_docs:render(N) end,
             {ok, aihtml_example_site:reply(Req0, Title, Body, #{}), State};
         [] ->
             {ok, cowboy_req:reply(404, #{<<"content-type">> => <<"text/plain">>},

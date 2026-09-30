@@ -17,7 +17,7 @@ init(Req0, State) ->
     case find(Name, Comps) of
         {ok, Entry} ->
             Title = <<(?SITE:display_name(maps:get(name, Entry)))/binary, " — aihtml"/utf8>>,
-            {ok, ?SITE:reply(Req0, Title, page(Entry, Comps), #{}), State};
+            {ok, ?SITE:reply(Req0, Title, fun() -> page(Entry, Comps) end, #{}), State};
         error when Name =:= undefined ->
             #{name := First} = hd(Comps),
             {ok, cowboy_req:reply(302, #{<<"location">> => <<"/components/", (atom_to_binary(First))/binary>>},
@@ -80,8 +80,11 @@ header_bar(#{name := Name, signature := Sig, category := Cat} = E) ->
                    %% 20rem, so on narrow screens the switcher moves under it
                    %% instead of squeezing the text into a thin column.
                    [<<"flex-1 min-w-[20rem] lg:min-w-0">>], []),
-            %% a 2 x 2 grid is half as wide as the default row of four
-            ah_theme_switcher([<<"shrink-0 grid grid-cols-2 gap-x-3 gap-y-2">>], [])],
+            %% the language, then the theme: a 2 x 2 grid is half as wide
+            %% as the default row of four
+            ah_div([?SITE:lang_switch(),
+                    ah_theme_switcher([<<"grid grid-cols-2 gap-x-3 gap-y-2">>], [])],
+                   [<<"shrink-0 flex flex-col items-end gap-3">>], [])],
            %% side by side from lg up; on narrow screens the switcher goes below
            [<<"flex flex-wrap lg:flex-nowrap gap-6 justify-between items-start pb-6 border-b border-line">>], []).
 
