@@ -11,7 +11,7 @@
 %%%                 or `closes(Target)' into any element's Attrs; a click on
 %%%                 it runs the target's open/close/toggle behaviour method
 %%%   server        inside an action, `open(Ctx, Target)', `close(Ctx,
-%%%                 Target)' (this module), `aihtml_toast:toast(Ctx,
+%%%                 Target)' (this module), `aihtml_toast:ah_toast(Ctx,
 %%%                 Message, Opts)', `aihtml_notification:notify(Ctx, Opts)'
 %%%   client        `AH.invoke(el, "open")', `AH.invoke(el, "close")'
 %%%
@@ -140,7 +140,7 @@ variant(<<"warning">>) -> warning;
 variant(<<"error">>) -> error;
 variant(_) -> info.
 
-%% Server-side cards: aihtml_toast:toast/3 and aihtml_notification:notify/2
+%% Server-side cards: aihtml_toast:ah_toast/3 and aihtml_notification:notify/2
 %% render the card here, with the same templates the browser uses, and
 %% send the finished HTML to AH.fn("notify") as `card'; the browser only
 %% places it in its corner (created on demand, so an html operation has no

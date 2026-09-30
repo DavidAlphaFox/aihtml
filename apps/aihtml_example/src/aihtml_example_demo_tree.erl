@@ -31,24 +31,24 @@ demos() ->
 
 -spec tree_basic() -> aihtml:html().
 tree_basic() ->
-    box(tree(files(), undefined, [], [{aria_label, <<"文件"/utf8>>}])).
+    box(ah_tree(files(), undefined, [], [{aria_label, <<"文件"/utf8>>}])).
 
 -spec tree_selected() -> aihtml:html().
 tree_selected() ->
-    box(tree(files(), <<"年度总结"/utf8>>, [], [{name, file}])).
+    box(ah_tree(files(), <<"年度总结"/utf8>>, [], [{name, file}])).
 
 -spec tree_icons() -> aihtml:html().
 tree_icons() ->
     Folder = <<"📁"/utf8>>,
     Doc = <<"📄"/utf8>>,
-    box(tree([#{label => <<"src">>, icon => Folder, expanded => true,
-                items => [#{label => <<"app.erl">>, icon => Doc},
-                          #{label => <<"sup.erl">>, icon => Doc},
-                          #{label => <<"legacy.erl">>, icon => Doc, disabled => true}]},
-              #{label => <<"priv">>, icon => Folder,
-                items => [#{label => <<"index.html">>, icon => Doc}]},
-              #{label => <<"rebar.config">>, icon => Doc}],
-             <<"app.erl">>, [], [])).
+    box(ah_tree([#{label => <<"src">>, icon => Folder, expanded => true,
+                   items => [#{label => <<"app.erl">>, icon => Doc},
+                             #{label => <<"sup.erl">>, icon => Doc},
+                             #{label => <<"legacy.erl">>, icon => Doc, disabled => true}]},
+                 #{label => <<"priv">>, icon => Folder,
+                   items => [#{label => <<"index.html">>, icon => Doc}]},
+                 #{label => <<"rebar.config">>, icon => Doc}],
+                <<"app.erl">>, [], [])).
 
 -spec tree_dblclick() -> aihtml:html().
 tree_dblclick() ->
@@ -56,22 +56,22 @@ tree_dblclick() ->
               [{a1, <<"子节点 A1"/utf8>>, [{a1a, <<"叶子 A1a"/utf8>>}, {a1b, <<"叶子 A1b"/utf8>>}]},
                {a2, <<"子节点 A2"/utf8>>}]},
              {b, <<"根节点 B"/utf8>>, [{b1, <<"子节点 B1"/utf8>>}]}],
-    row([box(tree(Items, undefined, [], [{toggle_mode, dblclick}, {animation, none}])),
-         box(tree(Items, a2, [disabled], []))]).
+    row([box(ah_tree(Items, undefined, [], [{toggle_mode, dblclick}, {animation, none}])),
+         box(ah_tree(Items, a2, [disabled], []))]).
 
 %% Expanding a lazy node runs action(children, ...) below, which answers
 %% with set_children.
 -spec tree_lazy() -> aihtml:html().
 tree_lazy() ->
-    box(tree([#{label => <<"华北"/utf8>>, value => <<"north">>, lazy => true},
-              #{label => <<"华东"/utf8>>, value => <<"east">>, lazy => true},
-              #{label => <<"海外（无下级）"/utf8>>, value => <<"abroad">>, lazy => true}],
-             undefined, [], [{load, {?MODULE, children, #{}}}])).
+    box(ah_tree([#{label => <<"华北"/utf8>>, value => <<"north">>, lazy => true},
+                 #{label => <<"华东"/utf8>>, value => <<"east">>, lazy => true},
+                 #{label => <<"海外（无下级）"/utf8>>, value => <<"abroad">>, lazy => true}],
+                undefined, [], [{load, {?MODULE, children, #{}}}])).
 
 -spec tree_change() -> aihtml:html().
 tree_change() ->
-    row([box(tree(files(), undefined, [], [on(change, {?MODULE, file_picked, #{}})])),
-         span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"file-picked">>}])]).
+    row([box(ah_tree(files(), undefined, [], [on(change, {?MODULE, file_picked, #{}})])),
+         ah_span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"file-picked">>}])]).
 
 %% The same component as a record: options are checked field names, and
 %% the postback runs action(file_picked, ...) below on change.
@@ -80,7 +80,7 @@ tree_record() ->
     row([box(#ah_tree{items = files(), value = <<"音乐"/utf8>>, name = file,
                       toggle_mode = click, animation = slide,
                       postback = file_picked}),
-         span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"file-picked">>}])]).
+         ah_span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"file-picked">>}])]).
 
 %%%===================================================================
 %%% Actions
@@ -117,7 +117,7 @@ regions(<<"east">>) -> [<<"上海"/utf8>>, <<"江苏"/utf8>>, <<"浙江"/utf8>>]
 regions(_) -> [].
 
 box(Tree) ->
-    'div'(Tree, [<<"w-80 rounded-md border border-border p-2">>], []).
+    ah_div(Tree, [<<"w-80 rounded-md border border-border p-2">>], []).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

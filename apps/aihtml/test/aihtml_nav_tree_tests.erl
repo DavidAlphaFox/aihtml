@@ -34,7 +34,7 @@ nav() ->
      {<<"Loose">>, <<"loose">>}].
 
 nav_tree_test() ->
-    H = r(?M:nav_tree(nav(), <<"user/cards">>, [<<"w-64">>], [{id, nt}])),
+    H = r(?M:ah_nav_tree(nav(), <<"user/cards">>, [<<"w-64">>], [{id, nt}])),
     ?assert(has(<<"<nav class=\"ah-nav-tree w-64\" data-ah=\"nav-tree\" data-ah-value=\"user/cards\" id=\"nt\">">>, H)),
     ?assert(has(<<"<div class=\"ah-nav-tree__group\"><div class=\"ah-nav-tree__group-label\">OVERVIEW</div>">>, H)),
     ?assert(has(<<"<a class=\"ah-nav-tree__item\" href=\"#/dashboard\" data-route=\"dashboard\">"
@@ -51,12 +51,12 @@ nav_tree_test() ->
     %% a loose item gets a group without a heading
     ?assert(has(<<"<div class=\"ah-nav-tree__group\"><a class=\"ah-nav-tree__item\" href=\"#/loose\"">>, H)),
     %% another route: nothing active, nodes closed; route prefix
-    H2 = r(?M:nav_tree(nav(), undefined, [], [{route_prefix, <<"/app/">>}])),
+    H2 = r(?M:ah_nav_tree(nav(), undefined, [], [{route_prefix, <<"/app/">>}])),
     ?assertNot(has_quiet(<<" open>">>, H2)),
     ?assertNot(has_quiet(<<"ah-is-">>, H2)),
     ?assert(has(<<"data-ah-value=\"\"">>, H2)),
     ?assert(has(<<"href=\"/app/analytics\"">>, H2)),
-    ?assertError({aihtml, {bad_nav_tree_item, 42}}, r(?M:nav_tree([42], undefined, [], []))).
+    ?assertError({aihtml, {bad_nav_tree_item, 42}}, r(?M:ah_nav_tree([42], undefined, [], []))).
 
 %%%===================================================================
 %%% Catalog
@@ -84,7 +84,7 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:nav_tree(nav(), <<"loose">>, [], [{route_prefix, <<"/">>}, {id, n}])),
+    ?assertEqual(r(?M:ah_nav_tree(nav(), <<"loose">>, [], [{route_prefix, <<"/">>}, {id, n}])),
                  r(#ah_nav_tree{items = nav(), value = <<"loose">>, route_prefix = <<"/">>, id = n})).
 
 postback_test() ->

@@ -9,7 +9,7 @@
 %%% root, a `name' renders a hidden input, and user changes fire `change'
 %%% on the root.
 %%%
-%%% navigationbar/4 builds an element record (#ah_navigationbar{},
+%%% ah_navigationbar/4 builds an element record (#ah_navigationbar{},
 %%% include/aihtml_navigationbar.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -19,7 +19,7 @@
 
 -include("aihtml_navigationbar.hrl").
 
--export([navigationbar/4, render/1, fields/1, catalog/0]).
+-export([ah_navigationbar/4, render/1, fields/1, catalog/0]).
 
 -export_type([header/0, item/0, value/0]).
 
@@ -58,8 +58,8 @@
 %% `actions') or maps `#{header, content, actions, disabled}'; a header
 %% may be `#{title, subheader, extra}'. `Value' holds the expanded
 %% indexes, 0-based: `N', `[N]', `<<"0,2">>' or `undefined'.
--spec navigationbar([item()], value(), css(), attrs()) -> #ah_navigationbar{}.
-navigationbar(Items, Value, Css, Attrs) ->
+-spec ah_navigationbar([item()], value(), css(), attrs()) -> #ah_navigationbar{}.
+ah_navigationbar(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_navigationbar{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -211,7 +211,7 @@ css_size(S) -> S.
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => navigationbar, category => layout,
-       signature => <<"navigationbar(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_navigationbar(Items, Value, Css, Attrs)">>,
        root => <<"ah-navigationbar">>,
        flags => [square, disable_gutters, no_arrow],
        classes => #{disable_gutters => [<<"ah-navigationbar-no-gutters">>], no_arrow => []},

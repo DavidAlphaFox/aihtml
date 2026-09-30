@@ -1,6 +1,6 @@
 # 05 元素 record
 
-组件的数据模型改为带统一前缀 `ah_` 的 record，`button/4` 这类函数只是构建 record 的简写。本文定下 record 的格式、渲染分发、构建函数的兼容方式和迁移步骤。迁移先以按钮组为样板，再推广到全部组件；之后每个组件拆成了自己的模块 `aihtml_<name>`（见 [04-components.md](04-components.md)）。
+组件的数据模型改为带统一前缀 `ah_` 的 record，`ah_button/4` 这类函数只是构建 record 的简写。本文定下 record 的格式、渲染分发、构建函数的兼容方式和迁移步骤。迁移先以按钮组为样板，再推广到全部组件；之后每个组件拆成了自己的模块 `aihtml_<name>`（见 [04-components.md](04-components.md)）。
 
 ## 动机
 
@@ -20,8 +20,8 @@
 ## 两种写法，一个模型
 
 ```erlang
-%% 构建函数：签名不变，返回 record
-button(<<"Save">>, save, [primary, <<"mt-2">>], [{disabled, true}])
+%% 构建函数：与 record 同名，返回 record
+ah_button(<<"Save">>, save, [primary, <<"mt-2">>], [{disabled, true}])
 
 %% record：字段有名字，postback 回到当前模块
 #ah_button{body = <<"Save">>, value = save, variant = primary,
@@ -29,7 +29,7 @@ button(<<"Save">>, save, [primary, <<"mt-2">>], [{disabled, true}])
            postback = {save, #{id => Id}}}
 ```
 
-两者得到同一个 `#ah_button{}`，由同一段代码渲染。嵌套布局仍然用 `'div'(Children, Css, Attrs)` 这类函数写，比 record 紧凑；选项多的组件直接写 record 更清楚。
+两者得到同一个 `#ah_button{}`，由同一段代码渲染。嵌套布局仍然用 `ah_div(Children, Css, Attrs)` 这类函数写，比 record 紧凑；选项多的组件直接写 record 更清楚。
 
 ## 公共字段
 
@@ -73,7 +73,7 @@ button(<<"Save">>, save, [primary, <<"mt-2">>], [{disabled, true}])
 -behaviour(aihtml_element).
 -include("aihtml_button.hrl").
 
-button(Content, Value, Css, Attrs) ->
+ah_button(Content, Value, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_button{body = Content, value = Value}, Css, Attrs).
 
 render(#ah_button{} = B) ->
@@ -108,13 +108,15 @@ render(#ah_button{} = B) ->
 
 -behaviour(aihtml_element).
 render(#myapp_card{title = T, body = B} = R) ->
-    aihtml:'div'([aihtml:h3(T), B], [<<"card">> | R#myapp_card.css],
-                 aihtml_element:root_attrs(R, click)).
+    aihtml:ah_div([aihtml:ah_h3(T), B], [<<"card">> | R#myapp_card.css],
+                  aihtml_element:root_attrs(R, click)).
 ```
 
 ## 构建函数
 
-签名保持不变：`button(Content, Value, Css, Attrs)` 仍然可用，只是返回 record。它通过 `aihtml_element:build/5` 把参数填进 record：
+构建函数与 record 同名：`#ah_button{}` 的构建函数是 `ah_button(Content, Value, Css, Attrs)`，普通标签是 `ah_div/3`、`ah_p/3` 这样的函数（见下文「普通标签」）。前缀让函数名与 record 一一对应，也不再与使用方的函数、Erlang 的保留字（`div`）冲突。目录里的每个条目都按这个规则命名，包括没有 record 的 `ah_toast/3`（action 里弹提示）和 `ah_theme_switcher/2`；`set_items/3`、`on/3` 这类辅助函数不加前缀。命名规则由 `aihtml_catalog:builder/1` 给出，`scripts/gen-facade.escript` 按它生成门面。
+
+参数与改名前相同，返回 record。构建函数通过 `aihtml_element:build/5` 把参数填进 record：
 
 - **Css**：原子按目录解析成组字段和标志字段，重复或冲突的修饰符照旧立即报错；binary 放进 `css` 字段。
 - **Attrs**：原子键与 record 字段同名的，取出来放进字段，包括 `id`、`disabled`、`name` 和各个选项；其余留在 `attrs` 字段里原样输出。`module`、`css`、`attrs`、`postback`、`delegate` 不会从 Attrs 里取，postback 只能在 record 里写，因为构建函数里的 `?MODULE` 是组件模块而不是调用方。
@@ -129,17 +131,17 @@ render(#myapp_card{title = T, body = B} = R) ->
   - Attrs 里与字段同名的原子键（如 `{disabled, true}`、`{hidden, true}`）会进入字段，由组件按自己的规则输出，而不是原样作为 HTML 属性输出。
   - 只识别原子键：`{<<"id">>, _}`、`{<<"name">>, _}` 这类 binary 键留在 `attrs` 里。
   - 值为 `undefined` 的键会被忽略，字段保持默认值。
-- **HTML 属性与字段同名。** 例如 select 的修饰符组 `size` 与 HTML 的 `size` 属性同名：构建函数 `select/4` 会把 `{size, N}` 留作 HTML 属性；写 record 时 HTML 的 size 放进 `attrs`。
+- **HTML 属性与字段同名。** 例如 select 的修饰符组 `size` 与 HTML 的 `size` 属性同名：构建函数 `ah_select/4` 会把 `{size, N}` 留作 HTML 属性；写 record 时 HTML 的 size 放进 `attrs`。
 - **action、推送、形变替换不变。** `aihtml_action:html/3` 等函数本来就调用 `aihtml_html:render/1`，record 可以直接传入。
 - **头文件带来编译期耦合。** 给组件加字段会改变元组大小，用旧头文件编译的模块在渲染时会报 `badrecord`。rebar3 升级依赖时会整体重新编译，一般没有问题；分开部署的 beam 或热升级会受影响。所以增删、调整字段都算作不兼容的改动。
 - **错误出现的时机。** 修饰符名的错误仍在构建时报出；字段取值的错误从构建时移到了渲染时。
 
 ## 普通标签
 
-`'div'`、`p`、`img`、`aihtml:el/4` 等普通标签生成公共 record `#ah_el{tag, body}`（`include/aihtml_element.hrl`，同样以 `?AH_BASE` 开头），所以所有元素都是同一种数据：
+`ah_div`、`ah_p`、`ah_img`、`aihtml:ah_el/4` 等普通标签的构建函数生成公共 record `#ah_el{tag, body}`（`include/aihtml_element.hrl`，同样以 `?AH_BASE` 开头），所以所有元素都是同一种数据：
 
 ```erlang
-'div'([<<"x">>], [<<"p-2">>], [{title, t}])
+ah_div([<<"x">>], [<<"p-2">>], [{title, t}])
 %% 等于
 #ah_el{tag = 'div', body = [<<"x">>], css = [<<"p-2">>], attrs = [{title, t}]}
 
@@ -159,6 +161,7 @@ render(#myapp_card{title = T, body = B} = R) ->
 3. **一个组件一个模块（已完成）**：原来的 26 个组模块拆成 110 个组件模块和若干 `aihtml_lib_*` 共享模块，头文件、JS、CSS、测试、演示都按组件一一对应；449 个演示的 HTML 与拆分前一致。
 4. **普通标签（已完成）**：`#ah_el{}`。
 5. **文档（已完成）**：演示站 API 页加上 record 写法和字段表（`aihtml_example_records` 从 debug_info 读字段，从头文件读注释），README 的调用约定加上 record 写法。
+6. **构建函数改名（已完成）**：组件和普通标签的构建函数加上与 record 相同的 `ah_` 前缀（`button/4` → `ah_button/4`，`'div'/3` → `ah_div/3`，`aihtml:el/4` → `aihtml:ah_el/4`），组件模块里的函数一起改名；460 个演示的 HTML 输出不变。
 
 ## 样板：按钮组
 

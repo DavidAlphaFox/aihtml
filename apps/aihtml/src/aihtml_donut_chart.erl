@@ -4,7 +4,7 @@
 %%% donut-chart/create does, and drawn like any chart (see aihtml_chart
 %%% and aihtml_lib_chart).
 %%%
-%%% donut_chart/3 builds an element record (#ah_donut_chart{}, defined in
+%%% ah_donut_chart/3 builds an element record (#ah_donut_chart{}, defined in
 %%% include/aihtml_donut_chart.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -14,7 +14,7 @@
 
 -include("aihtml_donut_chart.hrl").
 
--export([donut_chart/3, option/1, render/1, fields/1, catalog/0]).
+-export([ah_donut_chart/3, option/1, render/1, fields/1, catalog/0]).
 
 -export_type([element/0, item/0]).
 
@@ -40,8 +40,8 @@
 %% `colors', `legend' (default right), `labels' (boolean), `tooltip',
 %% `radius' ({Inner, Outer}), `center' ({X, Y}), `height', `width',
 %% `renderer'.
--spec donut_chart([item()], css(), attrs()) -> #ah_donut_chart{}.
-donut_chart(Items, Css, Attrs) ->
+-spec ah_donut_chart([item()], css(), attrs()) -> #ah_donut_chart{}.
+ah_donut_chart(Items, Css, Attrs) ->
     ?E:build(?MODULE, #ah_donut_chart{items = Items}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -122,7 +122,7 @@ render(#ah_donut_chart{loading = L, disabled = D, width = W, height = H, rendere
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => donut_chart, category => data,
-       signature => <<"donut_chart(Items, Css, Attrs)">>,
+       signature => <<"ah_donut_chart(Items, Css, Attrs)">>,
        root => <<"ah-chart">>, flags => [pie, loading, disabled],
        classes => #{pie => [], loading => []},
        options => [title, colors, legend, labels, tooltip, radius, center,

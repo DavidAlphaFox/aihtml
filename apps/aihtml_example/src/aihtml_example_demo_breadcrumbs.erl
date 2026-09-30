@@ -20,20 +20,20 @@ demos() ->
 
 -spec breadcrumbs_basic() -> aihtml:html().
 breadcrumbs_basic() ->
-    breadcrumbs([{<<"Home">>, <<"/">>}, {<<"Users">>, <<"/users">>}, <<"Lin">>], [], []).
+    ah_breadcrumbs([{<<"Home">>, <<"/">>}, {<<"Users">>, <<"/users">>}, <<"Lin">>], [], []).
 
 -spec breadcrumbs_separators() -> aihtml:html().
 breadcrumbs_separators() ->
-    col([breadcrumbs([{<<"Home">>, <<"/">>}, {<<"Library">>, <<"/lib">>}, <<"Data">>], [],
-                     [{separator, none}]),
-         breadcrumbs([#{label => <<"Home">>, href => <<"/">>, icon => <<"⌂"/utf8>>},
-                      {<<"Docs">>, <<"/docs">>}, <<"Guide">>], [],
-                     [{separator, <<"›"/utf8>>}])]).
+    col([ah_breadcrumbs([{<<"Home">>, <<"/">>}, {<<"Library">>, <<"/lib">>}, <<"Data">>], [],
+                        [{separator, none}]),
+         ah_breadcrumbs([#{label => <<"Home">>, href => <<"/">>, icon => <<"⌂"/utf8>>},
+                         {<<"Docs">>, <<"/docs">>}, <<"Guide">>], [],
+                        [{separator, <<"›"/utf8>>}])]).
 
 -spec breadcrumbs_collapsed() -> aihtml:html().
 breadcrumbs_collapsed() ->
-    col([breadcrumbs([{<<"Root">>, <<"#">>}, {<<"A">>, <<"#">>}, {<<"B">>, <<"#">>},
-                      {<<"C">>, <<"#">>}, {<<"D">>, <<"#">>}, <<"Current">>], [],
-                     [{max_items, 4}]),
-         breadcrumbs([{<<"Home">>, <<"/">>}, {<<"Reports">>, <<"/reports">>}], [],
-                     [{active_last, true}])]).
+    col([ah_breadcrumbs([{<<"Root">>, <<"#">>}, {<<"A">>, <<"#">>}, {<<"B">>, <<"#">>},
+                         {<<"C">>, <<"#">>}, {<<"D">>, <<"#">>}, <<"Current">>], [],
+                        [{max_items, 4}]),
+         ah_breadcrumbs([{<<"Home">>, <<"/">>}, {<<"Reports">>, <<"/reports">>}], [],
+                        [{active_last, true}])]).

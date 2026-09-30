@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := chip, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, chip, 3)),
+    ?assert(erlang:function_exported(?D, ah_chip, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -46,16 +46,16 @@ records_match_catalog_test() ->
 %%%===================================================================
 
 chip_test() ->
-    H = ?D:chip(<<"<Tag>">>, [removable, outlined, info, small], [{avatar, <<"JD">>}]),
+    H = ?D:ah_chip(<<"<Tag>">>, [removable, outlined, info, small], [{avatar, <<"JD">>}]),
     ?assert(has(<<"data-variant=\"outlined\" data-color=\"info\" data-size=\"small\" "
                   "data-disabled=\"false\" data-clickable=\"false\" data-ah=\"chip\" "
                   "data-ah-value=\"&lt;Tag&gt;\"">>, H)),
     ?assert(has(<<"<span class=\"ah-chip__avatar\">JD</span><span class=\"ah-chip__label\">&lt;Tag&gt;</span>">>, H)),
     ?assert(has(<<"<button class=\"ah-chip__delete\" type=\"button\"">>, H)),
-    C = ?D:chip(<<"c">>, [clickable], [{value, 7}]),
+    C = ?D:ah_chip(<<"c">>, [clickable], [{value, 7}]),
     ?assert(has(<<"data-clickable=\"true\" data-ah=\"chip\" data-ah-value=\"7\" role=\"button\" tabindex=\"0\"">>, C)),
     ?assertNot(has(<<"ah-chip__delete">>, C)),
-    ?assert(has(<<"data-disabled=\"true\"">>, ?D:chip(<<"d">>, [disabled], []))).
+    ?assert(has(<<"data-disabled=\"true\"">>, ?D:ah_chip(<<"d">>, [disabled], []))).
 
 %%%===================================================================
 %%% element record (designs/05-records.md)
@@ -63,16 +63,16 @@ chip_test() ->
 
 conflicting_modifiers_fail_test() ->
     ?assertError({aihtml, {conflicting_modifiers, chip, variant, _}},
-                 ?D:chip(<<"x">>, [filled, soft], [])).
+                 ?D:ah_chip(<<"x">>, [filled, soft], [])).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?D:chip(<<"Erlang">>, [removable, outlined, info], [{value, erlang}, {id, c1}])),
+    ?assertEqual(r(?D:ah_chip(<<"Erlang">>, [removable, outlined, info], [{value, erlang}, {id, c1}])),
                  r(#ah_chip{body = <<"Erlang">>, variant = outlined, color = info,
                             removable = true, value = erlang, id = c1})).
 
 builder_fills_fields_test() ->
     ?assertError({aihtml, {record_only_field, ah_chip, postback}},
-                 ?D:chip(<<"x">>, [], [{postback, go}])).
+                 ?D:ah_chip(<<"x">>, [], [{postback, go}])).
 
 postback_test() ->
     Token = fun(Html) ->

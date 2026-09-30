@@ -23,21 +23,21 @@ demos() ->
 
 -spec diff_unified() -> aihtml:html().
 diff_unified() ->
-    diff(old_code(), new_code(), [line_numbers, stats], []).
+    ah_diff(old_code(), new_code(), [line_numbers, stats], []).
 
 -spec diff_split() -> aihtml:html().
 diff_split() ->
-    diff(old_code(), new_code(), [split, stats], []).
+    ah_diff(old_code(), new_code(), [split, stats], []).
 
 -spec diff_word() -> aihtml:html().
 diff_word() ->
-    diff(<<"The quick brown fox jumps over the lazy dog. 今天天气晴朗，适合出门散步。"/utf8>>,
-         <<"The quick red fox leaps over the sleepy dog. 今天天气多云，适合在家读书。"/utf8>>,
-         [word], []).
+    ah_diff(<<"The quick brown fox jumps over the lazy dog. 今天天气晴朗，适合出门散步。"/utf8>>,
+            <<"The quick red fox leaps over the sleepy dog. 今天天气多云，适合在家读书。"/utf8>>,
+            [word], []).
 
 -spec diff_plain() -> aihtml:html().
 diff_plain() ->
-    diff(<<"apple\nbanana\ncherry\n">>, <<"apple\nblueberry\ncherry\ndate\n">>, [], []).
+    ah_diff(<<"apple\nbanana\ncherry\n">>, <<"apple\nblueberry\ncherry\ndate\n">>, [], []).
 
 %%%===================================================================
 %%% Data

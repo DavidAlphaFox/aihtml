@@ -39,7 +39,7 @@ two() ->
 %%%===================================================================
 
 render_test() ->
-    H = r(?M:node_graph(two(), [<<"w-full">>], [{id, g}, {name, graph}, {title, <<"t">>}])),
+    H = r(?M:ah_node_graph(two(), [<<"w-full">>], [{id, g}, {name, graph}, {title, <<"t">>}])),
     ?assertMatch({match, _}, re:run(H, <<"^<div class=\"ah-node-graph w-full\" data-ah=\"node-graph\"">>)),
     ?assert(has(<<"id=\"g\"">>, H)),
     ?assert(has(<<"title=\"t\"">>, H)),
@@ -83,8 +83,8 @@ render_test() ->
 has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 
 flags_test() ->
-    H = r(?M:node_graph(two(), [read_only, minimap, no_grid, auto_fit, allow_cycles],
-                        [{link_mode, linear}, {snap, 10}, {height, auto}, {label, <<"Flow">>}])),
+    H = r(?M:ah_node_graph(two(), [read_only, minimap, no_grid, auto_fit, allow_cycles],
+                           [{link_mode, linear}, {snap, 10}, {height, auto}, {label, <<"Flow">>}])),
     ?assert(has(<<"class=\"ah-node-graph\" ">>, H)),
     ?assert(has(<<"data-read-only=\"true\"">>, H)),
     ?assert(has(<<"data-ah-allow-cycles=\"true\"">>, H)),
@@ -99,7 +99,7 @@ flags_test() ->
     ?assertNot(has_quiet(<<"ah-node-graph-node-resize">>, H)),
     ?assertNot(has_quiet(<<"data-action=\"delete\"">>, H)),
     ?assert(has(<<"d=\"M240,44 L255,44 L385,44 L400,44\"">>, H)),
-    H2 = r(?M:node_graph(two(), [no_toolbar], [{link_mode, straight}, {height, <<"50vh">>}])),
+    H2 = r(?M:ah_node_graph(two(), [no_toolbar], [{link_mode, straight}, {height, <<"50vh">>}])),
     ?assertNot(has_quiet(<<"ah-node-graph-toolbar">>, H2)),
     ?assert(has(<<"style=\"height:50vh\"">>, H2)),
     ?assert(has(<<"d=\"M240,44 L250,44 L320,44 L320,44 L390,44 L400,44\"">>, H2)).
@@ -113,7 +113,7 @@ nodes_test() ->
                     #{pos => {0, 0}, inputs => [#{name => x, type => <<"a b">>, label => <<"X & Y">>}]}],
           groups => [#{title => <<"G">>, bounds => [0, 0, 100, 100], color => <<"rgb(1, 2, 3)">>},
                      #{id => gg, bounds => {1, 2, 3, 4}}]},
-    H = r(?M:node_graph(G, [], [])),
+    H = r(?M:ah_node_graph(G, [], [])),
     ?assert(has(<<"data-node-id=\"1\" role=\"group\" aria-label=\"t\" data-collapsed=\"true\" "
                   "style=\"transform:translate3d(10.5px,20px,0);--ah-ng-node-width:300px;"
                   "--ah-ng-node-height:150px;--ah-ng-node-accent:#ff0000;\"">>, H)),
@@ -145,7 +145,7 @@ reroute_and_collapsed_links_test() ->
                     #{id => b, pos => {300, 100}, collapsed => true, inputs => [i]}],
           links => [#{source => [a, 1], target => [b, 0], points => [{200, 50}]},
                     {{a, 0}, {zz, 0}}]},
-    H = r(?M:node_graph(G, [], [{link_mode, linear}])),
+    H = r(?M:ah_node_graph(G, [], [{link_mode, linear}])),
     %% output 1 of a at (240, 64); b collapsed: its inputs sit at y + 15
     ?assert(has(<<"d=\"M240,64 L255,64 L185,50 L200,50 L215,50 L285,115 L300,115\"">>, H)),
     ?assert(has(<<"<circle class=\"ah-node-graph-waypoint\" data-index=\"0\" cx=\"200\" cy=\"50\" r=\"5\"">>, H)),
@@ -155,9 +155,9 @@ reroute_and_collapsed_links_test() ->
                  value(H)).
 
 library_island_test() ->
-    H = r(?M:node_graph(two(), [], [{library, [#{type => x, label => <<"</script><b>">>,
-                                                 category => c, inputs => [i],
-                                                 widgets => [{safe, <<"<em>w</em>">>}]}]}])),
+    H = r(?M:ah_node_graph(two(), [], [{library, [#{type => x, label => <<"</script><b>">>,
+                                                    category => c, inputs => [i],
+                                                    widgets => [{safe, <<"<em>w</em>">>}]}]}])),
     {match, [Json]} = re:run(H, <<"<script class=\"ah-node-graph-data\" type=\"application/json\">(.*?)</script>">>,
                              [{capture, all_but_first, binary}]),
     ?assertNot(has_quiet(<<"</">>, Json)),
@@ -166,13 +166,13 @@ library_island_test() ->
                           <<"node">> := #{<<"inputs">> := [#{<<"name">> := <<"i">>}],
                                           <<"html">> := #{<<"widgets">> := [<<"<em>w</em>">>]}}}]} =
         json:decode(Json),
-    ?assertNot(has_quiet(<<"ah-node-graph-data">>, r(?M:node_graph(two(), [], [])))).
+    ?assertNot(has_quiet(<<"ah-node-graph-data">>, r(?M:ah_node_graph(two(), [], [])))).
 
 layout_test() ->
     G = #{nodes => [#{id => c, inputs => [x]}, #{id => a, outputs => [o]},
                     #{id => b, inputs => [x], outputs => [o]}, #{id => d, pos => {5, 5}}],
           links => [{{a, 0}, {b, 0}}, {{b, 0}, {c, 0}}]},
-    #{<<"nodes">> := Ns} = value(r(?M:node_graph(G, [], []))),
+    #{<<"nodes">> := Ns} = value(r(?M:ah_node_graph(G, [], []))),
     P = maps:from_list([{Id, Pos} || #{<<"id">> := Id, <<"pos">> := Pos} <- Ns]),
     [Ax, _] = maps:get(<<"a">>, P),
     [Bx, _] = maps:get(<<"b">>, P),
@@ -180,7 +180,7 @@ layout_test() ->
     ?assert(Ax < Bx andalso Bx < Cx),
     ?assertEqual([5, 5], maps:get(<<"d">>, P)),
     %% layout auto moves every node
-    #{<<"nodes">> := Ns2} = value(r(?M:node_graph(G, [], [{layout, auto}]))),
+    #{<<"nodes">> := Ns2} = value(r(?M:ah_node_graph(G, [], [{layout, auto}]))),
     ?assertNotEqual([5, 5], hd([Pos || #{<<"id">> := <<"d">>, <<"pos">> := Pos} <- Ns2])),
     %% node_graph_layout/1 answers in the input form
     #{nodes := [#{id := c, pos := {_, _}}, #{id := a, pos := {40, _}}, _, #{id := d, pos := _}],
@@ -224,7 +224,7 @@ validation_test() ->
                  r(#ah_node_graph{graph = #{groups => [#{bounds => {1, 2}}]}})),
     ?assertError({aihtml, {bad_graph_library_item, _}}, r(#ah_node_graph{library = [#{label => x}]})),
     ?assertError({aihtml, {bad_flag, node_graph, minimap, yes}}, r(#ah_node_graph{minimap = yes})),
-    ?assertError({aihtml, {unknown_modifier, node_graph, big, _}}, ?M:node_graph(#{}, [big], [])).
+    ?assertError({aihtml, {unknown_modifier, node_graph, big, _}}, ?M:ah_node_graph(#{}, [big], [])).
 
 %%%===================================================================
 %%% Catalog
@@ -248,21 +248,21 @@ catalog_test() ->
 
 record_equals_builder_test() ->
     Lib = [#{type => t}],
-    ?assertEqual(r(?M:node_graph(two(), [read_only, minimap, <<"x">>],
-                                 [{id, g}, {name, n}, {link_mode, straight}, {snap, 5},
-                                  {height, 300}, {library, Lib}, {label, <<"L">>},
-                                  {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_node_graph(two(), [read_only, minimap, <<"x">>],
+                                    [{id, g}, {name, n}, {link_mode, straight}, {snap, 5},
+                                     {height, 300}, {library, Lib}, {label, <<"L">>},
+                                     {title, <<"t">>}])),
                  r(#ah_node_graph{graph = two(), read_only = true, minimap = true,
                                   css = [<<"x">>], id = g, name = n, link_mode = straight,
                                   snap = 5, height = 300, library = Lib, label = <<"L">>,
                                   attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    R = ?M:node_graph(two(), [no_grid, auto_fit, <<"c">>], [{layout, auto}, {data_x, 1}]),
+    R = ?M:ah_node_graph(two(), [no_grid, auto_fit, <<"c">>], [{layout, auto}, {data_x, 1}]),
     ?assertMatch(#ah_node_graph{no_grid = true, auto_fit = true, layout = auto,
                                 css = [<<"c">>], attrs = [{data_x, 1}], id = undefined}, R),
     ?assertError({aihtml, {record_only_field, ah_node_graph, postback}},
-                 ?M:node_graph(#{}, [], [{postback, x}])).
+                 ?M:ah_node_graph(#{}, [], [{postback, x}])).
 
 generated_id_test() ->
     H = r(#ah_node_graph{}),

@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The chip component (designs/04-components.md): `chip/3'
+%%% @doc The chip component (designs/04-components.md): `ah_chip/3'
 %%% builds an #ah_chip{} element record (include/aihtml_chip.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_chip.hrl").
 
--export([chip/3, render/1, fields/1, catalog/0]).
+-export([ah_chip/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [blank/1, tf/1, none_for/1, method/3]).
 
@@ -34,8 +34,8 @@
 %% they remove themselves; `clickable' chips are keyboard focusable.
 %% Options: `avatar' (initials), `icon' (html), `value' (data-ah-value,
 %% defaults to a binary `Content').
--spec chip(html(), css(), attrs()) -> #ah_chip{}.
-chip(Content, Css, Attrs) ->
+-spec ah_chip(html(), css(), attrs()) -> #ah_chip{}.
+ah_chip(Content, Css, Attrs) ->
     ?E:build(?MODULE, #ah_chip{body = Content}, Css, Attrs).
 
 %% @doc The field names of #ah_chip{}.
@@ -85,7 +85,7 @@ catalog() ->
 
 entry() ->
     #{name => chip, category => media, root => <<"ah-chip">>,
-      signature => <<"chip(Content, Css, Attrs)">>,
+      signature => <<"ah_chip(Content, Css, Attrs)">>,
       groups => #{variant => {[filled, outlined, soft], filled},
                   color => {[default | ?COLORS], default},
                   size => {[small, medium], medium}},

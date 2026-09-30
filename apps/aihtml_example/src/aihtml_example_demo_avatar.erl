@@ -20,29 +20,29 @@ demos() ->
 
 -spec avatar_sizes() -> aihtml:html().
 avatar_sizes() ->
-    row([avatar(<<"SG">>, [sm], []),
-         avatar(<<"SG">>, [], []),
-         avatar(<<"SG">>, [lg], []),
-         avatar(<<"SG">>, [xl], [])]).
+    row([ah_avatar(<<"SG">>, [sm], []),
+         ah_avatar(<<"SG">>, [], []),
+         ah_avatar(<<"SG">>, [lg], []),
+         ah_avatar(<<"SG">>, [xl], [])]).
 
 -spec avatar_shapes() -> aihtml:html().
 avatar_shapes() ->
-    row([avatar(<<"AB">>, [square], []),
-         avatar(<<"CD">>, [rounded, success], []),
-         avatar(<<"EF">>, [warning], []),
-         avatar(<<"GH">>, [error], []),
-         avatar(<<"IJ">>, [info], []),
-         avatar(<<"KL">>, [secondary], []),
-         avatar(undefined, [], [])]).
+    row([ah_avatar(<<"AB">>, [square], []),
+         ah_avatar(<<"CD">>, [rounded, success], []),
+         ah_avatar(<<"EF">>, [warning], []),
+         ah_avatar(<<"GH">>, [error], []),
+         ah_avatar(<<"IJ">>, [info], []),
+         ah_avatar(<<"KL">>, [secondary], []),
+         ah_avatar(undefined, [], [])]).
 
 -spec avatar_images() -> aihtml:html().
 avatar_images() ->
     Photo = <<"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'>"
               "<rect width='40' height='40' fill='%2360a5fa'/><circle cx='20' cy='16' r='7' fill='white'/>"
               "<rect x='8' y='26' width='24' height='14' rx='7' fill='white'/></svg>">>,
-    row([avatar(<<"IM">>, [lg], [{src, Photo}, {alt, <<"Jane">>}]),
-         avatar(<<"BR">>, [lg], [{src, <<"data:image/png;base64,AAAA">>}, {alt, <<"Broken">>}])]).
+    row([ah_avatar(<<"IM">>, [lg], [{src, Photo}, {alt, <<"Jane">>}]),
+         ah_avatar(<<"BR">>, [lg], [{src, <<"data:image/png;base64,AAAA">>}, {alt, <<"Broken">>}])]).
 
 %% Layout helpers of the demos.
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

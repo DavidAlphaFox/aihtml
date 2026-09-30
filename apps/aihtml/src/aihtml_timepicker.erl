@@ -2,8 +2,8 @@
 %%% @doc A clock-face time picker, ported from sigil (form/timepicker).
 %%% See designs/04-components.md.
 %%%
-%%%   timepicker(Value, Css, Attrs)    a clock face (SVG) with hour and
-%%%                                    minute modes, 12h or 24h
+%%%   ah_timepicker(Value, Css, Attrs)    a clock face (SVG) with hour and
+%%%                                       minute modes, 12h or 24h
 %%%
 %%% Value-bearing: the root carries `data-ah-value' (the canonical value,
 %%% "" when empty), a hidden input carries it under the `name' taken from
@@ -13,7 +13,7 @@
 %%% the `inline' flag renders the panel alone, as sigil does. The
 %%% behaviour is `timepicker' (assets/js/components/timepicker.ts).
 %%%
-%%% timepicker/3 builds an #ah_timepicker{} (include/aihtml_timepicker.hrl)
+%%% ah_timepicker/3 builds an #ah_timepicker{} (include/aihtml_timepicker.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%%
@@ -27,7 +27,7 @@
 
 -include("aihtml_timepicker.hrl").
 
--export([timepicker/3, normalize_time/1, render/1, fields/1, catalog/0]).
+-export([ah_timepicker/3, normalize_time/1, render/1, fields/1, catalog/0]).
 
 -export_type([value/0, format/0, element/0]).
 
@@ -64,9 +64,9 @@
 %% (default true: go to minutes after an hour is picked), `min', `max'
 %% (times, same forms as Value; out-of-range numbers are disabled),
 %% `placeholder', `footer' (html under the clock).
--spec timepicker(binary() | string() | tuple() | undefined,
-                 aihtml_html:css(), aihtml_html:attrs()) -> #ah_timepicker{}.
-timepicker(Value, Css, Attrs) ->
+-spec ah_timepicker(binary() | string() | tuple() | undefined,
+                    aihtml_html:css(), aihtml_html:attrs()) -> #ah_timepicker{}.
+ah_timepicker(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_timepicker{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_timepicker{}.
@@ -302,7 +302,7 @@ clear_button(Cls, Hidden) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => timepicker, category => form,
-       signature => <<"timepicker(Value, Css, Attrs)">>,
+       signature => <<"ah_timepicker(Value, Css, Attrs)">>,
        root => <<"ah-timepicker-field">>,
        groups => #{view => {[portrait, landscape], none}},
        flags => [inline, disabled, clearable],

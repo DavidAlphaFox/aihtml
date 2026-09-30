@@ -34,8 +34,8 @@ tree() ->
 %%%===================================================================
 
 cascader_basic_test() ->
-    H = r(?M:cascader(tree(), [<<"zj">>, <<"hz">>, <<"bj">>], [<<"w-64">>],
-                      [{id, cs}, {name, region}, {title, <<"t">>}])),
+    H = r(?M:ah_cascader(tree(), [<<"zj">>, <<"hz">>, <<"bj">>], [<<"w-64">>],
+                         [{id, cs}, {name, region}, {title, <<"t">>}])),
     ?assert(has(<<"<div class=\"ah-cascader w-64\" id=\"cs\" data-ah=\"cascader\" "
                   "data-ah-value=\"zj,hz,bj\"">>, H)),
     ?assert(has(<<"<input type=\"hidden\" name=\"region\" value=\"zj,hz,bj\">">>, H)),
@@ -67,24 +67,24 @@ cascader_basic_test() ->
     ?assertNot(has_quiet(<<"ah-cascader-loader">>, H)).
 
 cascader_empty_and_unknown_test() ->
-    E = r(?M:cascader(tree(), undefined, [], [])),
+    E = r(?M:ah_cascader(tree(), undefined, [], [])),
     ?assert(has(<<"data-ah-value=\"\"">>, E)),
     ?assert(has(<<"id=\"ah-l">>, E)),
     ?assert(has(<<"<span class=\"ah-cascader-clear\" role=\"button\" aria-label=\"Clear\" hidden>">>, E)),
     ?assertNot(has_quiet(<<"class=\"active\"">>, E)),
     %% a path below a lazy node shows the values it cannot resolve
-    U = r(?M:cascader(tree(), [<<"js">>, <<"nj">>], [], [{separator, <<" > ">>}])),
+    U = r(?M:ah_cascader(tree(), [<<"js">>, <<"nj">>], [], [{separator, <<" > ">>}])),
     ?assert(has(<<"value=\"Jiangsu &gt; nj\"">>, U)),
-    ?assertError({aihtml, {bad_option, value, <<"zj">>}}, r(?M:cascader(tree(), <<"zj">>, [], []))),
-    ?assertError({aihtml, {bad_cascader_node, _}}, r(?M:cascader([{1, 2, 3, 4}], undefined, [], []))),
+    ?assertError({aihtml, {bad_option, value, <<"zj">>}}, r(?M:ah_cascader(tree(), <<"zj">>, [], []))),
+    ?assertError({aihtml, {bad_cascader_node, _}}, r(?M:ah_cascader([{1, 2, 3, 4}], undefined, [], []))),
     ?assertError({aihtml, {bad_cascader_node, _}},
-                 r(?M:cascader([#{value => a, kids => []}], undefined, [], []))).
+                 r(?M:ah_cascader([#{value => a, kids => []}], undefined, [], []))).
 
 cascader_flags_options_test() ->
-    H = r(?M:cascader(tree(), undefined,
-                      [lg, disabled, filterable, change_on_select, no_arrow, no_clear],
-                      [{id, c}, {placeholder, <<"Pick">>}, {popup_height, 300},
-                       {empty_text, <<"None">>}, {separator, <<"/">>}])),
+    H = r(?M:ah_cascader(tree(), undefined,
+                         [lg, disabled, filterable, change_on_select, no_arrow, no_clear],
+                         [{id, c}, {placeholder, <<"Pick">>}, {popup_height, 300},
+                          {empty_text, <<"None">>}, {separator, <<"/">>}])),
     ?assert(has(<<"class=\"ah-cascader ah-cascader-lg ah-cascader-change-on-select ah-cascader-disabled "
                   "ah-cascader-filterable ah-cascader-no-arrow ah-cascader-no-clear\"">>, H)),
     ?assert(has(<<"data-ah-separator=\"/\" data-ah-empty=\"None\" data-ah-change-on-select">>, H)),
@@ -103,15 +103,15 @@ cascader_flags_options_test() ->
     ?assert(has(<<"data-path=\"zj\"">>, H)),
     ?assert(has(<<"aria-disabled=\"true\" data-path=\"zj,nb\"">>, H)),
     ?assert(has(<<"data-path=\"js\"">>, H)),
-    S = r(?M:cascader(tree(), undefined, [sm, filterable], [])),
+    S = r(?M:ah_cascader(tree(), undefined, [sm, filterable], [])),
     ?assert(has(<<"ah-cascader-sm">>, S)),
     ?assertNot(has_quiet(<<"data-path=\"zj\"">>, S)),
     ?assertNot(has_quiet(<<"data-path=\"js\"">>, S)),
     ?assert(has(<<"data-path=\"hk\"">>, S)),
     ?assertError({aihtml, {bad_option, popup_height, 0}},
-                 r(?M:cascader([], undefined, [], [{popup_height, 0}]))),
+                 r(?M:ah_cascader([], undefined, [], [{popup_height, 0}]))),
     ?assertError({aihtml, {conflicting_modifiers, cascader, size, _}},
-                 ?M:cascader([], undefined, [sm, lg], [])).
+                 ?M:ah_cascader([], undefined, [sm, lg], [])).
 
 %%%===================================================================
 %%% Lazy levels: render, verify the token, run the action
@@ -126,7 +126,7 @@ action(load, _Args, Ev, Ctx) ->
 
 lazy_round_trip_test() ->
     Ref = {?MODULE, load, #{}},
-    H = r(?M:cascader(tree(), undefined, [], [{id, <<"cz">>}, {load, Ref}])),
+    H = r(?M:ah_cascader(tree(), undefined, [], [{id, <<"cz">>}, {load, Ref}])),
     %% the loader carries the queued action and names the cascader
     {match, [Token]} = re:run(H, <<"<span class=\"ah-cascader-loader\" hidden "
                                    "data-cascader=\"cz\" data-ah-on=\"ah:load:([^\"]+)\" "
@@ -161,7 +161,7 @@ catalog_test() ->
         aihtml_catalog:entry(?M, cascader),
     ?assertEqual(lists:sort(Fl ++ Op), lists:sort(maps:keys(Docs))),
     ?assert(lists:member(setValue, [Name || #{name := Name} <- Ms])),
-    ?assert(erlang:function_exported(?M, cascader, 4)),
+    ?assert(erlang:function_exported(?M, ah_cascader, 4)),
     [?assert(erlang:function_exported(?M, F, A)) || {F, A} <- ?M:facade_extras()].
 
 %%%===================================================================
@@ -170,15 +170,15 @@ catalog_test() ->
 
 record_equals_builder_test() ->
     Ref = {?MODULE, load, #{}},
-    ?assertEqual(r(?M:cascader(tree(), [<<"zj">>], [sm, filterable, <<"w-64">>],
-                               [{id, c}, {name, n}, {separator, <<">">>}, {load, Ref},
-                                {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_cascader(tree(), [<<"zj">>], [sm, filterable, <<"w-64">>],
+                                  [{id, c}, {name, n}, {separator, <<">">>}, {load, Ref},
+                                   {title, <<"t">>}])),
                  r(#ah_cascader{items = tree(), value = [<<"zj">>], size = sm, filterable = true,
                                 css = [<<"w-64">>], id = c, name = n, separator = <<">">>,
                                 load = Ref, attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    C = ?M:cascader([a], [a], [lg, no_arrow, <<"x">>], [{popup_height, 100}, {title, <<"t">>}]),
+    C = ?M:ah_cascader([a], [a], [lg, no_arrow, <<"x">>], [{popup_height, 100}, {title, <<"t">>}]),
     ?assertMatch(#ah_cascader{items = [a], value = [a], size = lg, no_arrow = true,
                               popup_height = 100, css = [<<"x">>], attrs = [{title, <<"t">>}]}, C).
 
@@ -222,7 +222,7 @@ vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_values_test() ->
     Tree = [{<<"a,b">>, <<"AB">>, [{<<"c\\d">>, <<"CD">>}]}],
-    H = r(?M:cascader(Tree, [<<"a,b">>, <<"c\\d">>], [], [{id, <<"cc">>}, {name, p}])),
+    H = r(?M:ah_cascader(Tree, [<<"a,b">>, <<"c\\d">>], [], [{id, <<"cc">>}, {name, p}])),
     ?assert(vhas(<<"data-ah-value=\"a\\,b,c\\\\d\"">>, H)),
     ?assert(vhas(<<"value=\"a\\,b,c\\\\d\"">>, H)),
     ?assert(vhas(<<"data-parent=\"a\\,b\"">>, H)),

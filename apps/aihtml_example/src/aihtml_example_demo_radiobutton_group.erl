@@ -18,19 +18,19 @@ demos() ->
 
 -spec radio_group_vertical() -> aihtml:html().
 radio_group_vertical() ->
-    radiobutton_group([{standard, <<"Standard shipping">>}, {express, <<"Express">>},
-                       {pickup, <<"Pick up in store">>},
-                       {drone, <<"Drone (coming soon)">>, [{disabled, true}]}],
-                      express, [], [{name, shipping}]).
+    ah_radiobutton_group([{standard, <<"Standard shipping">>}, {express, <<"Express">>},
+                          {pickup, <<"Pick up in store">>},
+                          {drone, <<"Drone (coming soon)">>, [{disabled, true}]}],
+                         express, [], [{name, shipping}]).
 
 -spec radio_group_layouts() -> aihtml:html().
 radio_group_layouts() ->
     Sizes = [{s, <<"S">>}, {m, <<"M">>}, {l, <<"L">>}, {xl, <<"XL">>}],
-    'div'([radiobutton_group(Sizes, m, [horizontal], [{name, size}]),
-           radiobutton_group(Sizes, l, [horizontal, label_before, lg], [{name, size2}])],
-          [<<"flex flex-col gap-4">>], []).
+    ah_div([ah_radiobutton_group(Sizes, m, [horizontal], [{name, size}]),
+            ah_radiobutton_group(Sizes, l, [horizontal, label_before, lg], [{name, size2}])],
+           [<<"flex flex-col gap-4">>], []).
 
 -spec radio_group_disabled() -> aihtml:html().
 radio_group_disabled() ->
-    radiobutton_group([{yes, <<"Yes">>}, {no, <<"No">>}], yes, [horizontal],
-                      [{name, agree}, {disabled, true}]).
+    ah_radiobutton_group([{yes, <<"Yes">>}, {no, <<"No">>}], yes, [horizontal],
+                         [{name, agree}, {disabled, true}]).

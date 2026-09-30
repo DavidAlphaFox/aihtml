@@ -42,9 +42,9 @@ every_entry_documents_options_and_methods_test() ->
 %%%===================================================================
 
 popover_test() ->
-    H = ?M:popover(<<"Body">>, [left, no_arrow, <<"w-64">>],
-                   [{id, <<"p">>}, {title, <<"T">>}, {closable, true}, {modal, true},
-                    {anchor, <<"#btn">>}]),
+    H = ?M:ah_popover(<<"Body">>, [left, no_arrow, <<"w-64">>],
+                      [{id, <<"p">>}, {title, <<"T">>}, {closable, true}, {modal, true},
+                       {anchor, <<"#btn">>}]),
     has(H, <<"class=\"ah-popover ah-popover-left ah-popover-no-arrow w-64\"">>),
     has(H, <<"data-ah=\"popover\" data-state=\"closed\" role=\"dialog\"">>),
     has(H, <<"data-ah-anchor=\"#btn\"">>),
@@ -53,7 +53,7 @@ popover_test() ->
     has(H, <<"<div class=\"ah-popover-content\">Body</div>">>).
 
 popover_defaults_test() ->
-    H = ?M:popover(<<"x">>, [], []),
+    H = ?M:ah_popover(<<"x">>, [], []),
     has(H, <<"ah-popover ah-popover-bottom">>),
     lacks(H, <<"ah-popover-title">>).
 
@@ -74,8 +74,8 @@ triggers_in_lib_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:popover(<<"P">>, [top], [{id, <<"p">>}, {title, <<"T">>},
-                                               {closable, true}, {modal, false}])),
+    ?assertEqual(r(?M:ah_popover(<<"P">>, [top], [{id, <<"p">>}, {title, <<"T">>},
+                                                  {closable, true}, {modal, false}])),
                  r(#ah_popover{body = <<"P">>, position = top, id = <<"p">>, title = <<"T">>,
                                closable = true, modal = false})).
 

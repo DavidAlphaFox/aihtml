@@ -43,8 +43,8 @@ res() -> [#{id => r1, name => <<"Room A">>, color => <<"#4285f4">>},
           #{id => r2, name => <<"Room B">>}].
 
 sch(View, Extra) ->
-    r(?M:scheduler(events(), <<"2026-09-29">>, [editable],
-                   [{id, s}, {view, View}, {today, <<"2026-09-29">>} | Extra])).
+    r(?M:ah_scheduler(events(), <<"2026-09-29">>, [editable],
+                      [{id, s}, {view, View}, {today, <<"2026-09-29">>} | Extra])).
 
 scheduler_week_test() ->
     H = sch(week, []),
@@ -90,9 +90,9 @@ scheduler_resources_test() ->
 scheduler_month_test() ->
     Many = [#{id => N, title => N, start => <<"2026-09-15T0", (integer_to_binary(N))/binary, ":00">>}
             || N <- lists:seq(1, 5)],
-    H = r(?M:scheduler(Many ++ events(), {2026, 9, 29}, [],
-                       [{view, month}, {day_max_events, 2}, {today, <<"2026-09-29">>},
-                        {resources, res()}, {source, {?MODULE, load, #{}}}])),
+    H = r(?M:ah_scheduler(Many ++ events(), {2026, 9, 29}, [],
+                          [{view, month}, {day_max_events, 2}, {today, <<"2026-09-29">>},
+                           {resources, res()}, {source, {?MODULE, load, #{}}}])),
     ?assert(has(<<"data-start=\"2026-08-31\" data-end=\"2026-10-05\"">>, H)),
     ?assert(has(<<"ah-scheduler-btn-prev">>, H)),
     ?assert(has(<<"data-ah-sync=\"queue\"">>, H)),
@@ -115,7 +115,7 @@ scheduler_agenda_timeline_test() ->
     ?assert(has(<<"<span class=\"ah-scheduler-agenda-day-date\">September 29, 2026</span>">>, A)),
     ?assert(has(<<"<div class=\"ah-scheduler-agenda-event-time\">All day</div>">>, A)),
     ?assert(has(<<"<div class=\"ah-scheduler-agenda-event-resource-name\">Room A</div>">>, A)),
-    E = r(?M:scheduler([], <<"2026-09-29">>, [], [{view, agenda}])),
+    E = r(?M:ah_scheduler([], <<"2026-09-29">>, [], [{view, agenda}])),
     ?assert(has(<<"<div class=\"ah-scheduler-agenda-empty\">">>, E)),
     T = sch(timeline_day, [{resources, res()}, {day_start, 8}, {day_end, 18}]),
     ?assertEqual(10, count(<<"class=\"ah-scheduler-timeline-slot-header\"">>, T)),
@@ -131,28 +131,28 @@ scheduler_agenda_timeline_test() ->
     ?assert(has(<<"data-eventid=\"t\"">>, W)).
 
 scheduler_labels_test() ->
-    H = r(?M:scheduler([], <<"2026-09-29">>, [no_all_day],
-                       [{labels, #{weekdays_short => [<<"日"/utf8>>, <<"一"/utf8>>, <<"二"/utf8>>,
-                                                      <<"三"/utf8>>, <<"四"/utf8>>, <<"五"/utf8>>,
-                                                      <<"六"/utf8>>],
-                                   range_start => <<"M月d日"/utf8>>,
-                                   range_end => <<"M月d日"/utf8>>}},
-                        {first_day, 0}])),
+    H = r(?M:ah_scheduler([], <<"2026-09-29">>, [no_all_day],
+                          [{labels, #{weekdays_short => [<<"日"/utf8>>, <<"一"/utf8>>, <<"二"/utf8>>,
+                                                         <<"三"/utf8>>, <<"四"/utf8>>, <<"五"/utf8>>,
+                                                         <<"六"/utf8>>],
+                                      range_start => <<"M月d日"/utf8>>,
+                                      range_end => <<"M月d日"/utf8>>}},
+                           {first_day, 0}])),
     ?assert(has(<<">9月27日 – 10月3日</h2>"/utf8>>, H)),
     ?assert(has(<<"<span class=\"ah-scheduler-dayview-header-day\">日</span>"/utf8>>, H)),
     ?assertNot(has_quiet(<<"allday-row">>, H)),
     ?assertError({aihtml, {bad_label, scheduler, todays}},
-                 r(?M:scheduler([], undefined, [], [{labels, #{todays => <<"x">>}}]))),
+                 r(?M:ah_scheduler([], undefined, [], [{labels, #{todays => <<"x">>}}]))),
     ?assertError({aihtml, {bad_label, scheduler, weekdays}},
-                 r(?M:scheduler([], undefined, [], [{labels, #{weekdays => [<<"x">>]}}]))),
+                 r(?M:ah_scheduler([], undefined, [], [{labels, #{weekdays => [<<"x">>]}}]))),
     ?assertError({aihtml, {bad_option, view, year}},
-                 r(?M:scheduler([], undefined, [], [{view, year}]))),
+                 r(?M:ah_scheduler([], undefined, [], [{view, year}]))),
     ?assertError({aihtml, {bad_option, slot_duration, 25}},
-                 r(?M:scheduler([], undefined, [], [{slot_duration, 25}]))),
+                 r(?M:ah_scheduler([], undefined, [], [{slot_duration, 25}]))),
     ?assertError({aihtml, {bad_scheduler_status, <<"gone">>}},
-                 r(?M:scheduler([#{start => <<"2026-01-01">>, status => <<"gone">>}], undefined, [], []))),
+                 r(?M:ah_scheduler([#{start => <<"2026-01-01">>, status => <<"gone">>}], undefined, [], []))),
     ?assertError({aihtml, {bad_rrule, <<"HOURLY">>}},
-                 r(?M:scheduler([#{start => <<"2026-01-01">>, rrule => <<"FREQ=HOURLY">>}], undefined, [], []))).
+                 r(?M:ah_scheduler([#{start => <<"2026-01-01">>, rrule => <<"FREQ=HOURLY">>}], undefined, [], []))).
 
 scheduler_round_trip_test() ->
     Ev = #{id => <<"s1">>, value => <<"2026-10-06">>,
@@ -164,7 +164,7 @@ scheduler_round_trip_test() ->
                                                   <<"agendaDays">> => <<"7">>}})),
     [#{op := html, id := <<"s1">>, swap := morph, html := H}] =
         aihtml_action:render_ops(
-          fun(Ctx) -> ?M:scheduler_update(Ctx, Ev, ?M:scheduler(events(), undefined, [], [])) end),
+          fun(Ctx) -> ?M:scheduler_update(Ctx, Ev, ?M:ah_scheduler(events(), undefined, [], [])) end),
     ?assert(has(<<"id=\"s1\" data-ah=\"scheduler\"">>, H)),
     ?assert(has(<<"data-ah-value=\"2026-10-06\" data-view=\"month\"">>, H)),
     ?assertError({aihtml, {bad_scheduler_view, <<"year">>}},
@@ -196,9 +196,9 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:scheduler(events(), <<"2026-09-29">>, [no_all_day],
-                                [{id, s}, {view, month}, {resources, res()}, {name, shown},
-                                 {today, <<"2026-09-29">>}])),
+    ?assertEqual(r(?M:ah_scheduler(events(), <<"2026-09-29">>, [no_all_day],
+                                   [{id, s}, {view, month}, {resources, res()}, {name, shown},
+                                    {today, <<"2026-09-29">>}])),
                  r(#ah_scheduler{items = events(), value = <<"2026-09-29">>, no_all_day = true,
                                  id = s, view = month, resources = res(), name = shown,
                                  today = <<"2026-09-29">>})).
@@ -206,8 +206,8 @@ record_equals_builder_test() ->
 builder_fills_fields_test() ->
     ?assertMatch(#ah_scheduler{value = <<"2026-01-01">>, editable = true, view = agenda,
                                source = {m, a, #{}}},
-                 ?M:scheduler([], <<"2026-01-01">>, [editable],
-                              [{view, agenda}, {source, {m, a, #{}}}])).
+                 ?M:ah_scheduler([], <<"2026-01-01">>, [editable],
+                                 [{view, agenda}, {source, {m, a, #{}}}])).
 
 postback_test() ->
     Token = fun(Html) ->
@@ -237,8 +237,8 @@ view_link(V, Html) ->
     U.
 
 nav_links(View, Date, Extra) ->
-    H = r(?M:scheduler([], Date, [], [{view, View}, {today, <<"2026-09-29">>},
-                                      {href, ?HREF} | Extra])),
+    H = r(?M:ah_scheduler([], Date, [], [{view, View}, {today, <<"2026-09-29">>},
+                                         {href, ?HREF} | Extra])),
     {href_of(<<"ah-scheduler-btn ah-scheduler-btn-prev">>, H),
      href_of(<<"ah-scheduler-btn ah-scheduler-btn-today">>, H),
      href_of(<<"ah-scheduler-btn ah-scheduler-btn-next">>, H)}.
@@ -262,7 +262,7 @@ scheduler_href_links_test() ->
                   V(<<"2026-10-09">>, <<"agenda">>)},
                  nav_links(agenda, <<"2026-09-29">>, [{agenda_days, 10}])),
     %% view links: the shown date in each view; the active one is aria-current
-    H = r(?M:scheduler([], <<"2026-09-10">>, [], [{view, week}, {href, ?HREF}])),
+    H = r(?M:ah_scheduler([], <<"2026-09-10">>, [], [{view, week}, {href, ?HREF}])),
     ?assertEqual(V(<<"2026-09-10">>, <<"month">>), view_link(<<"month">>, H)),
     ?assertEqual(V(<<"2026-09-10">>, <<"day">>), view_link(<<"day">>, H)),
     ?assert(has(<<"data-view=\"week\" aria-current=\"true\"">>, H)),

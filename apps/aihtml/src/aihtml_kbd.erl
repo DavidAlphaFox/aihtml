@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The kbd component (designs/04-components.md): `kbd/3'
+%%% @doc The kbd component (designs/04-components.md): `ah_kbd/3'
 %%% builds an #ah_kbd{} element record (include/aihtml_kbd.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_kbd.hrl").
 
--export([kbd/3, render/1, fields/1, catalog/0]).
+-export([ah_kbd/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [none_for/1]).
 
@@ -31,8 +31,8 @@
 %% @doc Keyboard key. `Keys' is one key (`<<"Esc">>') or a list of keys
 %% (`[<<"Ctrl">>, <<"K">>]'), rendered as nested `<kbd>'s joined by
 %% the `separator' option (default "+").
--spec kbd(html() | [html()], css(), attrs()) -> #ah_kbd{}.
-kbd(Keys, Css, Attrs) ->
+-spec ah_kbd(html() | [html()], css(), attrs()) -> #ah_kbd{}.
+ah_kbd(Keys, Css, Attrs) ->
     ?E:build(?MODULE, #ah_kbd{keys = Keys}, Css, Attrs).
 
 %% @doc The field names of #ah_kbd{}.
@@ -68,7 +68,7 @@ catalog() ->
 
 entry() ->
     #{name => kbd, category => text, root => <<"ah-kbd">>,
-      signature => <<"kbd(Keys, Css, Attrs)">>,
+      signature => <<"ah_kbd(Keys, Css, Attrs)">>,
       groups => #{size => {[md, lg], md}},
       classes => none_for([md, lg]), options => [separator],
       doc => <<"Keyboard key, or a key combination when Keys is a list.">>}.

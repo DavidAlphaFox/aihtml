@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := aspect_ratio, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, aspect_ratio, 3)),
+    ?assert(erlang:function_exported(?D, ah_aspect_ratio, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -46,26 +46,26 @@ records_match_catalog_test() ->
 %%%===================================================================
 
 aspect_ratio_test() ->
-    ?assert(has(<<"style=\"aspect-ratio: 16 / 9;\"">>, ?D:aspect_ratio([], [], []))),
+    ?assert(has(<<"style=\"aspect-ratio: 16 / 9;\"">>, ?D:ah_aspect_ratio([], [], []))),
     ?assert(has(<<"style=\"aspect-ratio: 4 / 3; max-width: 10px\"">>,
-                ?D:aspect_ratio([], [], [{ratio, <<"4:3">>}, {style, <<"max-width: 10px">>}]))),
-    ?assert(has(<<"aspect-ratio: 1.5;">>, ?D:aspect_ratio([], [], [{ratio, 1.5}]))),
-    ?assert(has(<<"aspect-ratio: 21 / 9;">>, ?D:aspect_ratio([], [], [{ratio, {21, 9}}]))),
+                ?D:ah_aspect_ratio([], [], [{ratio, <<"4:3">>}, {style, <<"max-width: 10px">>}]))),
+    ?assert(has(<<"aspect-ratio: 1.5;">>, ?D:ah_aspect_ratio([], [], [{ratio, 1.5}]))),
+    ?assert(has(<<"aspect-ratio: 21 / 9;">>, ?D:ah_aspect_ratio([], [], [{ratio, {21, 9}}]))),
     ?assertError({aihtml, {bad_ratio, _}},
-                 r(?D:aspect_ratio([], [], [{ratio, <<"1;background:red">>}]))).
+                 r(?D:ah_aspect_ratio([], [], [{ratio, <<"1;background:red">>}]))).
 
 %%%===================================================================
 %%% element record (designs/05-records.md)
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?D:aspect_ratio([], [], [{ratio, <<"4:3">>}, {style, <<"max-width: 10px">>}])),
+    ?assertEqual(r(?D:ah_aspect_ratio([], [], [{ratio, <<"4:3">>}, {style, <<"max-width: 10px">>}])),
                  r(#ah_aspect_ratio{ratio = <<"4:3">>, style = <<"max-width: 10px">>})).
 
 builder_fills_fields_test() ->
     %% a binary style key stays an attribute but is still merged
     ?assert(has(<<"style=\"aspect-ratio: 16 / 9; a: b\"">>,
-                ?D:aspect_ratio([], [], [{<<"style">>, <<"a: b">>}]))).
+                ?D:ah_aspect_ratio([], [], [{<<"style">>, <<"a: b">>}]))).
 
 postback_test() ->
     ?assertError({aihtml, {no_postback_event, ah_aspect_ratio}}, r(#ah_aspect_ratio{postback = p})).

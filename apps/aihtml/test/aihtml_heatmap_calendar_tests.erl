@@ -24,7 +24,7 @@ has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 
 heatmap_test() ->
     Data = #{<<"2026-09-01">> => 1, {2026, 9, 2} => 4, "2026-09-03" => 7, <<"2026-09-04">> => 2.5},
-    H = r(?M:heatmap_calendar(Data, [], [{months, 1}, {end_date, <<"2026-09-29">>}, {id, hm}])),
+    H = r(?M:ah_heatmap_calendar(Data, [], [{months, 1}, {end_date, <<"2026-09-29">>}, {id, hm}])),
     ?assert(has(<<"<div class=\"ah-heatmap-calendar\" data-ah=\"heatmap-calendar\" "
                   "data-tip=\"{value} · {date}\" id=\"hm\">"/utf8>>, H)),
     %% 2026-08-29 is a Saturday: the grid starts on Sunday 2026-08-23 and
@@ -49,12 +49,12 @@ heatmap_test() ->
 
 heatmap_options_test() ->
     Months = [integer_to_binary(M) || M <- lists:seq(1, 12)],
-    H = r(?M:heatmap_calendar([{{2026, 3, 1}, 9}], [],
-                              [{months, 2}, {end_date, {2026, 3, 31}}, {thresholds, [0, 10]},
-                               {legend, false}, {month_labels, Months},
-                               {weekday_labels, [<<"S">>, <<"M">>, <<"T">>, <<"W">>, <<"T">>,
-                                                 <<"F">>, <<"S">>]},
-                               {tooltip, <<"{date}: {value}">>}])),
+    H = r(?M:ah_heatmap_calendar([{{2026, 3, 1}, 9}], [],
+                                 [{months, 2}, {end_date, {2026, 3, 31}}, {thresholds, [0, 10]},
+                                  {legend, false}, {month_labels, Months},
+                                  {weekday_labels, [<<"S">>, <<"M">>, <<"T">>, <<"W">>, <<"T">>,
+                                                    <<"F">>, <<"S">>]},
+                                  {tooltip, <<"{date}: {value}">>}])),
     ?assertNot(has_quiet(<<"legend">>, H)),
     ?assert(has(<<"data-level=\"1\" data-date=\"2026-03-01\"">>, H)),
     ?assert(has(<<">1</span><span class=\"ah-heatmap-calendar__month\"">>, H)),
@@ -65,7 +65,7 @@ heatmap_options_test() ->
     ?assertNot(has_quiet(<<"data-date=\"2026-01-24\"">>, H)),
     %% without end_date the grid ends in the current week
     Today = iso(date()),
-    ?assert(has(<<"data-date=\"", Today/binary, "\"">>, r(?M:heatmap_calendar(#{}, [], [])))).
+    ?assert(has(<<"data-date=\"", Today/binary, "\"">>, r(?M:ah_heatmap_calendar(#{}, [], [])))).
 
 iso({Y, M, D}) -> iolist_to_binary(io_lib:format("~4..0B-~2..0B-~2..0B", [Y, M, D])).
 
@@ -95,13 +95,13 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:heatmap_calendar(#{}, [], [{months, 3}, {end_date, {2026, 9, 29}},
-                                                 {legend, false}])),
+    ?assertEqual(r(?M:ah_heatmap_calendar(#{}, [], [{months, 3}, {end_date, {2026, 9, 29}},
+                                                    {legend, false}])),
                  r(#ah_heatmap_calendar{months = 3, end_date = {2026, 9, 29}, legend = false})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_heatmap_calendar{data = #{}, months = 6, tooltip = <<"t">>},
-                 ?M:heatmap_calendar(#{}, [], [{months, 6}, {tooltip, <<"t">>}])).
+                 ?M:ah_heatmap_calendar(#{}, [], [{months, 6}, {tooltip, <<"t">>}])).
 
 postback_test() ->
     Token = fun(Html) ->

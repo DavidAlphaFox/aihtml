@@ -21,10 +21,10 @@ has(Needle, Hay) ->
 url_mode_test() ->
     Files = [<<"notes.txt">>, #{name => <<"p.png">>, size => 2048, type => <<"image/png">>,
                                 id => 3}],
-    H = r(?M:upload(Files, [<<"w-96">>],
-                    [{id, up}, {name, docs}, {url, <<"/upload">>}, {accept, <<"image/*">>},
-                     {max_size, 1000}, {max_count, 3}, {hint, <<"PNG only">>},
-                     {title, <<"t">>}])),
+    H = r(?M:ah_upload(Files, [<<"w-96">>],
+                       [{id, up}, {name, docs}, {url, <<"/upload">>}, {accept, <<"image/*">>},
+                        {max_size, 1000}, {max_count, 3}, {hint, <<"PNG only">>},
+                        {title, <<"t">>}])),
     ?assertMatch({match, _}, re:run(H, <<"^<div class=\"ah-upload w-96\" data-ah=\"upload\" ">>)),
     Json = <<"[&quot;notes.txt&quot;,{&quot;id&quot;:3,&quot;name&quot;:&quot;p.png&quot;,"
              "&quot;size&quot;:2048,&quot;type&quot;:&quot;image/png&quot;}]">>,
@@ -52,7 +52,7 @@ url_mode_test() ->
     ?assertNot(has_quiet(<<"ah-upload-item-progress">>, H)).
 
 native_mode_test() ->
-    H = r(?M:upload([], [], [{name, attachment}, {multiple, false}])),
+    H = r(?M:ah_upload([], [], [{name, attachment}, {multiple, false}])),
     ?assert(has(<<"<input class=\"ah-upload-input\" type=\"file\" tabindex=\"-1\" "
                   "aria-hidden=\"true\" name=\"attachment\">">>, H)),
     ?assertNot(has_quiet(<<"type=\"hidden\"">>, H)),
@@ -61,11 +61,11 @@ native_mode_test() ->
     ?assert(has(<<"<div class=\"ah-upload-list\" aria-live=\"polite\"></div>">>, H)).
 
 options_test() ->
-    H = r(?M:upload([<<"a">>], [disabled],
-                    [{url, "/u"}, {field_name, doc}, {auto_upload, false}, {show_file_list, false},
-                     {headers, #{<<"x-token">> => <<"k">>}}, {extra_data, #{folder => 7}},
-                     {with_credentials, true}, {labels, #{remove => <<"删除"/utf8>>}},
-                     {drag_text, <<"拖到这里"/utf8>>}, {browse_text, <<"选择"/utf8>>}])),
+    H = r(?M:ah_upload([<<"a">>], [disabled],
+                       [{url, "/u"}, {field_name, doc}, {auto_upload, false}, {show_file_list, false},
+                        {headers, #{<<"x-token">> => <<"k">>}}, {extra_data, #{folder => 7}},
+                        {with_credentials, true}, {labels, #{remove => <<"删除"/utf8>>}},
+                        {drag_text, <<"拖到这里"/utf8>>}, {browse_text, <<"选择"/utf8>>}])),
     ?assert(has(<<"class=\"ah-upload ah-upload-disabled\"">>, H)),
     ?assert(has(<<"data-ah-field=\"doc\"">>, H)),
     ?assert(has(<<"data-ah-manual">>, H)),
@@ -96,13 +96,13 @@ uploaded_files_test() ->
     ?assertError({aihtml, {bad_upload_value, _}}, ?M:uploaded_files(<<"{}">>)),
     %% what the component writes, it reads back
     Files = [#{name => <<"x">>, id => 1}],
-    {match, [V]} = re:run(r(?M:upload(Files, [], [])), <<"data-ah-value=\"([^\"]*)\"">>,
+    {match, [V]} = re:run(r(?M:ah_upload(Files, [], [])), <<"data-ah-value=\"([^\"]*)\"">>,
                           [{capture, all_but_first, binary}]),
     Unescaped = binary:replace(V, <<"&quot;">>, <<"\"">>, [global]),
     ?assertEqual([#{<<"name">> => <<"x">>, <<"id">> => 1}], ?M:uploaded_files(Unescaped)).
 
 escaping_test() ->
-    H = r(?M:upload([#{name => <<"<b>&.txt">>}], [], [{hint, <<"<i>">>}])),
+    H = r(?M:ah_upload([#{name => <<"<b>&.txt">>}], [], [{hint, <<"<i>">>}])),
     ?assert(has(<<"&lt;b&gt;&amp;.txt</span>">>, H)),
     ?assert(has(<<"&lt;i&gt;">>, H)),
     ?assertNot(has_quiet(<<"<b>">>, H)).
@@ -113,7 +113,7 @@ escaping_test() ->
 
 catalog_test() ->
     [#{name := upload}] = ?M:catalog(),
-    ?assert(erlang:function_exported(?M, upload, 3)),
+    ?assert(erlang:function_exported(?M, ah_upload, 3)),
     ?assertEqual([{uploaded_files, 1}], ?M:facade_extras()),
     [?assert(erlang:function_exported(?M, F, A)) || {F, A} <- ?M:facade_extras()],
     #{flags := Fl, options := Op, option_docs := Docs, methods := Ms, category := form,
@@ -129,23 +129,23 @@ catalog_test() ->
 
 record_equals_builder_test() ->
     Files = [#{name => <<"a.pdf">>, size => 10}],
-    ?assertEqual(r(?M:upload(Files, [disabled, <<"w-80">>],
-                             [{id, u}, {name, n}, {url, <<"/up">>}, {accept, <<".pdf">>},
-                              {max_count, 2}, {hint, <<"h">>}, {labels, #{too_many => <<"!">>}},
-                              {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_upload(Files, [disabled, <<"w-80">>],
+                                [{id, u}, {name, n}, {url, <<"/up">>}, {accept, <<".pdf">>},
+                                 {max_count, 2}, {hint, <<"h">>}, {labels, #{too_many => <<"!">>}},
+                                 {title, <<"t">>}])),
                  r(#ah_upload{value = Files, disabled = true, css = [<<"w-80">>], id = u,
                               name = n, url = <<"/up">>, accept = <<".pdf">>, max_count = 2,
                               hint = <<"h">>, labels = #{too_many => <<"!">>},
                               attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    U = ?M:upload([], [<<"x">>], [{multiple, false}, {max_size, 5}, {field_name, f},
-                                  {extra_data, #{a => 1}}, {data_x, 1}]),
+    U = ?M:ah_upload([], [<<"x">>], [{multiple, false}, {max_size, 5}, {field_name, f},
+                                     {extra_data, #{a => 1}}, {data_x, 1}]),
     ?assertMatch(#ah_upload{value = [], multiple = false, max_size = 5, field_name = f,
                             extra_data = #{a := 1}, css = [<<"x">>], attrs = [{data_x, 1}],
                             auto_upload = true, show_file_list = true}, U),
     ?assertError({aihtml, {record_only_field, ah_upload, postback}},
-                 ?M:upload([], [], [{postback, x}])).
+                 ?M:ah_upload([], [], [{postback, x}])).
 
 postback_test() ->
     H = r(#ah_upload{id = u, postback = {got, #{k => 1}}}),
@@ -169,7 +169,7 @@ field_validation_test() ->
     ?assertError({aihtml, {bad_upload_file, 7}}, r(#ah_upload{value = [7]})),
     ?assertError({aihtml, {bad_option, value, x}}, r(#ah_upload{value = x})),
     ?assertError({aihtml, {bad_flag, upload, disabled, 1}}, r(#ah_upload{disabled = 1})),
-    ?assertError({aihtml, {unknown_modifier, upload, big, _}}, ?M:upload([], [big], [])).
+    ?assertError({aihtml, {unknown_modifier, upload, big, _}}, ?M:ah_upload([], [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],

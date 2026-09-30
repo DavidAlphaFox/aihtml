@@ -10,7 +10,7 @@
 %%%
 %%% Literal (binary) classes in `Css' go on the tooltip bubble. The
 %%% record has no postback. Behaviour: assets/js/components/tooltip.ts.
-%%% tooltip/4 builds an #ah_tooltip{} (include/aihtml_tooltip.hrl) and
+%%% ah_tooltip/4 builds an #ah_tooltip{} (include/aihtml_tooltip.hrl) and
 %%% render/1 turns it into HTML (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
@@ -19,7 +19,7 @@
 
 -include("aihtml_tooltip.hrl").
 
--export([tooltip/4, tooltip_attrs/2, render/1, fields/1, catalog/0, facade_extras/0]).
+-export([ah_tooltip/4, tooltip_attrs/2, render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([position/0, trigger/0]).
 
@@ -42,14 +42,14 @@
 %% none), `show_delay' (ms, 100), `auto_hide' (true), `auto_hide_delay'
 %% (ms, 3000), `disabled', `width'. In the record, `Trigger' is the
 %% `anchor' field, because `trigger' is the option.
--spec tooltip(aihtml_html:html(), aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_tooltip(aihtml_html:html(), aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_tooltip{}.
-tooltip(Content, Trigger, Css, Attrs) ->
+ah_tooltip(Content, Trigger, Css, Attrs) ->
     ?E:build(?MODULE, #ah_tooltip{body = Content, anchor = Trigger}, Css, Attrs).
 
 %% @doc Attributes that give any element a plain-text tooltip, for when a
-%% wrapper element is not wanted: `button(..., [tooltip_attrs(<<"Save">>,
-%% #{position => top})])'. Opts as for tooltip/4 plus `position' and
+%% wrapper element is not wanted: `ah_button(..., [tooltip_attrs(<<"Save">>,
+%% #{position => top})])'. Opts as for ah_tooltip/4 plus `position' and
 %% `arrow' (boolean).
 -spec tooltip_attrs(iodata(), map()) -> aihtml_html:attrs().
 tooltip_attrs(Text, Opts) when is_map(Opts) ->
@@ -110,7 +110,7 @@ catalog() ->
     Empty = fun(Ms) -> maps:from_list([{M, []} || M <- Ms]) end,
     Events = [<<"ah:open">>, <<"ah:close">>],
     [#{name => tooltip, category => overlay,
-       signature => <<"tooltip(Content, Trigger, Css, Attrs)">>,
+       signature => <<"ah_tooltip(Content, Trigger, Css, Attrs)">>,
        root => <<"ah-tooltip-host">>,
        groups => #{position => {[top, bottom, left, right, mouse], bottom}},
        flags => [no_arrow],

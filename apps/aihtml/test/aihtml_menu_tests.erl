@@ -36,20 +36,20 @@ catalog_docs_test() ->
 
 unknown_modifier_fails_test() ->
     ?assertError({aihtml, {unknown_modifier, menu, bogus, _}},
-                 ?M:menu([], undefined, [bogus], [])),
+                 ?M:ah_menu([], undefined, [bogus], [])),
     ?assertError({aihtml, {conflicting_modifiers, menu, mode, _}},
-                 ?M:menu([], undefined, [vertical, popup], [])).
+                 ?M:ah_menu([], undefined, [vertical, popup], [])).
 
 %%%===================================================================
 %%% menu
 %%%===================================================================
 
 menu_structure_test() ->
-    H = r(?M:menu([#{key => file, label => <<"File">>,
-                     children => [{new, <<"New">>}, divider,
-                                  #{key => x, label => <<"X">>, disabled => true}]},
-                   #{key => help, label => <<"Help">>, href => <<"/help">>}],
-                  new, [], [{name, <<"cmd">>}, {id, <<"m">>}])),
+    H = r(?M:ah_menu([#{key => file, label => <<"File">>,
+                        children => [{new, <<"New">>}, divider,
+                                     #{key => x, label => <<"X">>, disabled => true}]},
+                      #{key => help, label => <<"Help">>, href => <<"/help">>}],
+                     new, [], [{name, <<"cmd">>}, {id, <<"m">>}])),
     ?assert(has(H, <<"class=\"ah-menu ah-menu-horizontal\"">>)),
     ?assert(has(H, <<"data-ah=\"menu\"">>)),
     ?assert(has(H, <<"role=\"menubar\"">>)),
@@ -66,9 +66,9 @@ menu_structure_test() ->
     ?assert(has(H, <<"id=\"m\"">>)).
 
 menu_modes_and_options_test() ->
-    V = r(?M:menu([{a, <<"A">>}], undefined, [vertical, show_arrows, disabled],
-                  [{click_to_open, true}, {keyboard, false}, {minimize_width, 600},
-                   {title, <<"Main">>}])),
+    V = r(?M:ah_menu([{a, <<"A">>}], undefined, [vertical, show_arrows, disabled],
+                     [{click_to_open, true}, {keyboard, false}, {minimize_width, 600},
+                      {title, <<"Main">>}])),
     ?assert(has(V, <<"ah-menu ah-menu-vertical ah-menu-disabled ah-menu-show-arrows">>)),
     ?assert(has(V, <<"role=\"menu\"">>)),
     ?assert(has(V, <<"data-ah-click-to-open">>)),
@@ -78,23 +78,23 @@ menu_modes_and_options_test() ->
     ?assert(has(V, <<"aria-label=\"Main\"">>)),
     ?assertNot(has(V, <<"data-ah-value">>)),
     ?assertNot(has(V, <<"click_to_open">>)),
-    P = r(?M:menu([], undefined, [popup], [{popup_target, <<"#area">>}])),
+    P = r(?M:ah_menu([], undefined, [popup], [{popup_target, <<"#area">>}])),
     ?assert(has(P, <<"ah-menu-popup">>)),
     ?assert(has(P, <<"data-ah-popup-target=\"#area\"">>)).
 
 menu_columns_and_direction_test() ->
-    H = r(?M:menu([#{key => v, label => <<"V">>, open => [left, up],
-                     columns => [#{header => <<"H1">>, children => [{a, <<"A">>}]},
-                                 #{children => [{b, <<"B">>}]}]}],
-                  undefined, [], [])),
+    H = r(?M:ah_menu([#{key => v, label => <<"V">>, open => [left, up],
+                        columns => [#{header => <<"H1">>, children => [{a, <<"A">>}]},
+                                    #{children => [{b, <<"B">>}]}]}],
+                     undefined, [], [])),
     ?assert(has(H, <<"ah-menu-submenu ah-menu-columns ah-menu-open-left ah-menu-open-up">>)),
     ?assertEqual(2, count(H, <<"class=\"ah-menu-column\"">>)),
     ?assert(has(H, <<"<div class=\"ah-menu-column-header\">H1</div>">>)).
 
 menu_escapes_and_icons_test() ->
-    H = r(?M:menu([#{key => <<"a\"b">>, label => <<"<b>">>, icon => <<"/i.png">>},
-                   #{key => 1, label => <<"One">>, icon => {safe, <<"<svg></svg>">>}}],
-                  1, [], [])),
+    H = r(?M:ah_menu([#{key => <<"a\"b">>, label => <<"<b>">>, icon => <<"/i.png">>},
+                      #{key => 1, label => <<"One">>, icon => {safe, <<"<svg></svg>">>}}],
+                     1, [], [])),
     ?assert(has(H, <<"&lt;b&gt;">>)),
     ?assert(has(H, <<"data-id=\"a&quot;b\"">>)),
     ?assert(has(H, <<"<img class=\"ah-menu-icon\" src=\"/i.png\" alt=\"\">">>)),
@@ -110,16 +110,16 @@ menu_escapes_and_icons_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:menu(?ITEMS, new, [vertical, show_arrows, <<"mt-2">>],
-                           [{name, cmd}, {keyboard, false}, {id, m}, {title, <<"Main">>},
-                            {aria_label, <<"x">>}])),
+    ?assertEqual(r(?M:ah_menu(?ITEMS, new, [vertical, show_arrows, <<"mt-2">>],
+                              [{name, cmd}, {keyboard, false}, {id, m}, {title, <<"Main">>},
+                               {aria_label, <<"x">>}])),
                  r(#ah_menu{items = ?ITEMS, value = new, mode = vertical, show_arrows = true,
                             css = [<<"mt-2">>], name = cmd, keyboard = false, id = m,
                             title = <<"Main">>, attrs = [{aria_label, <<"x">>}]})).
 
 builder_fills_fields_test() ->
     ?assertError({aihtml, {record_only_field, ah_menu, postback}},
-                 ?M:menu([], undefined, [], [{postback, go}])).
+                 ?M:ah_menu([], undefined, [], [{postback, go}])).
 
 token(Html) ->
     {match, [T]} = re:run(r(Html), <<"data-ah-on=\"([a-z]+:[^\"]+)\"">>,

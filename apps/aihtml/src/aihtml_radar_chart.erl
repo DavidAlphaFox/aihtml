@@ -4,7 +4,7 @@
 %%% built here, as sigil's radar-chart/create does, and drawn like any
 %%% chart (see aihtml_chart and aihtml_lib_chart).
 %%%
-%%% radar_chart/3 builds an element record (#ah_radar_chart{}, defined in
+%%% ah_radar_chart/3 builds an element record (#ah_radar_chart{}, defined in
 %%% include/aihtml_radar_chart.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -14,7 +14,7 @@
 
 -include("aihtml_radar_chart.hrl").
 
--export([radar_chart/3, option/1, render/1, fields/1, catalog/0]).
+-export([ah_radar_chart/3, option/1, render/1, fields/1, catalog/0]).
 
 -export_type([element/0, indicator/0]).
 
@@ -42,8 +42,8 @@
 %% `disabled'. Options: `indicators' (`{Name, Max}'), `title', `colors',
 %% `legend', `tooltip', `split_number', `radius', `area_opacity',
 %% `height', `width', `renderer'.
--spec radar_chart([series()], css(), attrs()) -> #ah_radar_chart{}.
-radar_chart(Series, Css, Attrs) ->
+-spec ah_radar_chart([series()], css(), attrs()) -> #ah_radar_chart{}.
+ah_radar_chart(Series, Css, Attrs) ->
     ?E:build(?MODULE, #ah_radar_chart{series = Series}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -110,7 +110,7 @@ render(#ah_radar_chart{loading = L, disabled = D, width = W, height = H, rendere
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => radar_chart, category => data,
-       signature => <<"radar_chart(Series, Css, Attrs)">>,
+       signature => <<"ah_radar_chart(Series, Css, Attrs)">>,
        root => <<"ah-chart">>,
        groups => #{shape => {[polygon, circle], polygon}},
        flags => [loading, disabled],

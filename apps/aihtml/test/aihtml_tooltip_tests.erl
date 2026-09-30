@@ -42,15 +42,15 @@ every_entry_documents_options_and_methods_test() ->
 %%%===================================================================
 
 tooltip_wraps_trigger_test() ->
-    H = ?M:tooltip(<<"Hint <b>">>, aihtml_html:el(button, <<"B">>, [], []), [top], [{id, <<"t">>}]),
+    H = ?M:ah_tooltip(<<"Hint <b>">>, aihtml_html:el(button, <<"B">>, [], []), [top], [{id, <<"t">>}]),
     has(H, <<"<span class=\"ah-tooltip-host\" data-ah=\"tooltip\" data-ah-tip-position=\"top\" id=\"t\">">>),
     has(H, <<"<button>B</button>">>),
     has(H, <<"class=\"ah-tooltip ah-tooltip-top\" role=\"tooltip\"">>),
     has(H, <<"Hint &lt;b&gt;">>).
 
 tooltip_options_and_mouse_test() ->
-    H = ?M:tooltip(<<"x">>, <<"y">>, [mouse, no_arrow, <<"max-w-xs">>],
-                   [{trigger, click}, {auto_hide, false}, {show_delay, 0}, {width, 200}]),
+    H = ?M:ah_tooltip(<<"x">>, <<"y">>, [mouse, no_arrow, <<"max-w-xs">>],
+                      [{trigger, click}, {auto_hide, false}, {show_delay, 0}, {width, 200}]),
     has(H, <<"data-ah-tip-position=\"mouse\"">>),
     has(H, <<"data-ah-tip-trigger=\"click\"">>),
     has(H, <<"data-ah-tip-auto-hide=\"false\"">>),
@@ -62,9 +62,9 @@ tooltip_options_and_mouse_test() ->
 
 tooltip_bad_modifier_test() ->
     ?assertError({aihtml, {unknown_modifier, tooltip, primary, _}},
-                 ?M:tooltip(<<"x">>, <<"y">>, [primary], [])),
+                 ?M:ah_tooltip(<<"x">>, <<"y">>, [primary], [])),
     ?assertError({aihtml, {conflicting_modifiers, tooltip, position, _}},
-                 ?M:tooltip(<<"x">>, <<"y">>, [top, left], [])).
+                 ?M:ah_tooltip(<<"x">>, <<"y">>, [top, left], [])).
 
 tooltip_attrs_test() ->
     B = aihtml_html:el(button, <<"b">>, [], ?M:tooltip_attrs(<<"Save \"now\"">>,
@@ -79,15 +79,15 @@ tooltip_attrs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:tooltip(<<"Hint">>, <<"B">>, [left, no_arrow, <<"max-w-xs">>],
-                              [{id, t}, {trigger, click}, {width, 200}, {title, <<"x">>}])),
+    ?assertEqual(r(?M:ah_tooltip(<<"Hint">>, <<"B">>, [left, no_arrow, <<"max-w-xs">>],
+                                 [{id, t}, {trigger, click}, {width, 200}, {title, <<"x">>}])),
                  r(#ah_tooltip{body = <<"Hint">>, anchor = <<"B">>, position = left,
                                no_arrow = true, css = [<<"max-w-xs">>], id = t,
                                trigger = click, width = 200, attrs = [{title, <<"x">>}]})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_tooltip{body = <<"b">>, anchor = <<"a">>, position = mouse},
-                 ?M:tooltip(<<"b">>, <<"a">>, [mouse], [])).
+                 ?M:ah_tooltip(<<"b">>, <<"a">>, [mouse], [])).
 
 postback_test() ->
     ?assertError({aihtml, {no_postback_event, ah_tooltip}},

@@ -3,11 +3,11 @@
 %%% names are sigil's, so the styles in
 %%% priv/css/sigil/components/dragdrop.css apply unchanged.
 %%%
-%%%   dragdrop(Children, Css, Attrs)       draggable items and drop zones
+%%%   ah_dragdrop(Children, Css, Attrs)    draggable items and drop zones
 %%%   draggable_attrs(Key, Opts)           marks an element as draggable
 %%%   drop_zone_attrs(Zone, Opts)          marks an element as a drop zone
 %%%
-%%% `dragdrop/3' is a scope. Inside it, elements carrying
+%%% `ah_dragdrop/3' is a scope. Inside it, elements carrying
 %%% `draggable_attrs(Key, Opts)' can be dropped on elements carrying
 %%% `drop_zone_attrs(Zone, Opts)'. A drop fires `ah:drop' on the zone; it
 %%% bubbles to the root, which carries the drop in data attributes, so an
@@ -22,7 +22,7 @@
 %%% arrows walk through the zones that accept it, Space or Enter drops,
 %%% Escape cancels.
 %%%
-%%% Behaviour: assets/js/components/dragdrop.ts. dragdrop/3 builds an
+%%% Behaviour: assets/js/components/dragdrop.ts. ah_dragdrop/3 builds an
 %%% #ah_dragdrop{} (include/aihtml_dragdrop.hrl) and render/1 turns it
 %%% into HTML.
 %%% @end
@@ -32,7 +32,7 @@
 
 -include("aihtml_dragdrop.hrl").
 
--export([dragdrop/3, draggable_attrs/2, drop_zone_attrs/2,
+-export([ah_dragdrop/3, draggable_attrs/2, drop_zone_attrs/2,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([tolerance/0]).
@@ -48,12 +48,12 @@
 %% fit: it lies inside; pointer: the pointer is over the zone), `move'
 %% (move the item into the zone on drop), `revert' (slide the copy back
 %% when it is not dropped on a zone). `{disabled, true}' turns dragging off.
--spec dragdrop(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_dragdrop{}.
-dragdrop(Children, Css, Attrs) ->
+-spec ah_dragdrop(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_dragdrop{}.
+ah_dragdrop(Children, Css, Attrs) ->
     ?E:build(?MODULE, #ah_dragdrop{body = Children}, Css, Attrs).
 
-%% @doc Attributes that make an element draggable inside `dragdrop/3':
-%% `div(Label, [], [draggable_attrs(task_1, #{type => task})])'. Opts:
+%% @doc Attributes that make an element draggable inside `ah_dragdrop/3':
+%% `ah_div(Label, [], [draggable_attrs(task_1, #{type => task})])'. Opts:
 %% `type' (zones with `accept' only take listed types), `disabled'.
 -spec draggable_attrs(term(), map()) -> aihtml_html:attrs().
 draggable_attrs(Key, Opts) when is_map(Opts) ->
@@ -65,7 +65,7 @@ draggable_attrs(Key, Opts) when is_map(Opts) ->
      {aria_roledescription, <<"draggable">>},
      {aria_disabled, Disabled =:= true andalso <<"true">>}].
 
-%% @doc Attributes that make an element a drop zone inside `dragdrop/3'.
+%% @doc Attributes that make an element a drop zone inside `ah_dragdrop/3'.
 %% Opts: `accept' (a list of draggable types; any type by default),
 %% `disabled'.
 -spec drop_zone_attrs(term(), map()) -> aihtml_html:attrs().
@@ -114,7 +114,7 @@ render(#ah_dragdrop{body = Body, tolerance = Tol, move = Move, revert = Revert,
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => dragdrop, category => layout,
-       signature => <<"dragdrop(Children, Css, Attrs)">>,
+       signature => <<"ah_dragdrop(Children, Css, Attrs)">>,
        root => <<"ah-dragdrop">>,
        options => [tolerance, move, revert],
        behavior => <<"dragdrop">>,

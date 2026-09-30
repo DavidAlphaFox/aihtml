@@ -53,10 +53,10 @@ shows_toast_test() ->
 
 toast_op_test() ->
     [Op] = ops(fun(Ctx) ->
-                       ?M:toast(Ctx, <<"Saved <b>">>, #{variant => success, duration => 0,
-                                                         position => bottom_left,
-                                                         close_on_click => false,
-                                                         description => "multi word"})
+                       ?M:ah_toast(Ctx, <<"Saved <b>">>, #{variant => success, duration => 0,
+                                                            position => bottom_left,
+                                                            close_on_click => false,
+                                                            description => "multi word"})
                end),
     #{<<"op">> := <<"call">>, <<"method">> := <<"notify">>,
       <<"args">> := [#{<<"card">> := Card, <<"position">> := <<"bottom-left">>,
@@ -67,7 +67,7 @@ toast_op_test() ->
                                               "<div class=\"ah-toast__description\">multi word</div>">>)),
     %% the default duration of a toast
     [#{<<"args">> := [#{<<"duration">> := 4000, <<"position">> := <<"top-right">>}]}] =
-        ops(fun(Ctx) -> ?M:toast(Ctx, <<"t">>, #{}) end).
+        ops(fun(Ctx) -> ?M:ah_toast(Ctx, <<"t">>, #{}) end).
 
 facade_extras_test() ->
     [?assert(erlang:function_exported(?M, F, A)) || {F, A} <- ?M:facade_extras()].

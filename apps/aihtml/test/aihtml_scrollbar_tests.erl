@@ -40,16 +40,16 @@ catalog_docs_test() ->
 
 unknown_modifier_fails_test() ->
     ?assertError({aihtml, {conflicting_modifiers, scrollbar, orientation, _}},
-                 ?M:scrollbar([], [vertical, horizontal], [])).
+                 ?M:ah_scrollbar([], [vertical, horizontal], [])).
 
 %%%===================================================================
 %%% scrollbar
 %%%===================================================================
 
 scrollbar_standalone_test() ->
-    H = r(?M:scrollbar([], [vertical],
-                       [{id, sb}, {value, 1200}, {max, 500}, {step, 5}, {name, off},
-                        {height, 300}, {label, <<"Offset">>}, {show_buttons, false}])),
+    H = r(?M:ah_scrollbar([], [vertical],
+                          [{id, sb}, {value, 1200}, {max, 500}, {step, 5}, {name, off},
+                           {height, 300}, {label, <<"Offset">>}, {show_buttons, false}])),
     ?assert(has(<<"<div class=\"ah-scrollbar-host ah-scrollbar-host-vertical\" id=\"sb\" "
                   "data-ah=\"scrollbar\" data-ah-value=\"500\" role=\"scrollbar\" "
                   "aria-orientation=\"vertical\" aria-valuemin=\"0\" aria-valuemax=\"500\" "
@@ -61,14 +61,14 @@ scrollbar_standalone_test() ->
                   "</div><div class=\"ah-scrollbar-thumb\"></div><div class=\"ah-scrollbar-track-down\">"
                   "</div><div class=\"ah-scrollbar-btn-down\"></div></div>">>, H)),
     ?assert(has(<<"<input type=\"hidden\" name=\"off\" value=\"500\">">>, H)),
-    D = r(?M:scrollbar([], [disabled], [{min, 0.5}, {max, 2.5}, {value, 1.25}])),
+    D = r(?M:ah_scrollbar([], [disabled], [{min, 0.5}, {max, 2.5}, {value, 1.25}])),
     ?assert(has(<<"class=\"ah-scrollbar-host ah-scrollbar-disabled\"">>, D)),
     ?assert(has(<<"data-ah-value=\"1.25\"">>, D)),
     ?assert(has(<<"aria-disabled=\"true\" tabindex=\"-1\"">>, D)).
 
 scrollbar_area_test() ->
-    H = r(?M:scrollbar(aihtml_html:el(p, <<"x">>, [], []), [<<"border">>],
-                       [{id, sa}, {height, 200}, {label, <<"Log">>}])),
+    H = r(?M:ah_scrollbar(aihtml_html:el(p, <<"x">>, [], []), [<<"border">>],
+                          [{id, sa}, {height, 200}, {label, <<"Log">>}])),
     ?assert(has(<<"<div class=\"ah-scrollbar-host border ah-scrollbar-area\" id=\"sa\" "
                   "data-ah=\"scrollbar\" data-area">>, H)),
     ?assert(has(<<"<div class=\"ah-scrollbar-viewport\" id=\"sa-viewport\" tabindex=\"0\" "
@@ -87,12 +87,12 @@ scrollbar_area_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:scrollbar([], [vertical], [{id, b}, {value, 5}, {max, 50}, {step, 1}])),
+    ?assertEqual(r(?M:ah_scrollbar([], [vertical], [{id, b}, {value, 5}, {max, 50}, {step, 1}])),
                  r(#ah_scrollbar{orientation = vertical, id = b, value = 5, max = 50,
                                  step = 1})).
 
 builder_fills_fields_test() ->
-    B = ?M:scrollbar([], [vertical], [{large_step, 7}, {width, 20}]),
+    B = ?M:ah_scrollbar([], [vertical], [{large_step, 7}, {width, 20}]),
     ?assertMatch(#ah_scrollbar{orientation = vertical, large_step = 7, width = 20}, B).
 
 postback_test() ->

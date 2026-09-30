@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The aspect_ratio component (designs/04-components.md): `aspect_ratio/3'
+%%% @doc The aspect_ratio component (designs/04-components.md): `ah_aspect_ratio/3'
 %%% builds an #ah_aspect_ratio{} element record (include/aihtml_aspect_ratio.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_aspect_ratio.hrl").
 
--export([aspect_ratio/3, render/1, fields/1, catalog/0]).
+-export([ah_aspect_ratio/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [num/1]).
 
@@ -30,8 +30,8 @@
 
 %% @doc Fixed aspect ratio box. Option `ratio': `<<"16/9">>' (default),
 %% `<<"4:3">>', a number or `{W, H}'. A `style' attribute is kept.
--spec aspect_ratio(html(), css(), attrs()) -> #ah_aspect_ratio{}.
-aspect_ratio(Children, Css, Attrs) ->
+-spec ah_aspect_ratio(html(), css(), attrs()) -> #ah_aspect_ratio{}.
+ah_aspect_ratio(Children, Css, Attrs) ->
     ?E:build(?MODULE, #ah_aspect_ratio{body = Children}, Css, Attrs).
 
 %% @doc The field names of #ah_aspect_ratio{}.
@@ -95,7 +95,7 @@ catalog() ->
 
 entry() ->
     #{name => aspect_ratio, category => media, root => <<"ah-aspect-ratio">>,
-      signature => <<"aspect_ratio(Children, Css, Attrs)">>,
+      signature => <<"ah_aspect_ratio(Children, Css, Attrs)">>,
       options => [ratio],
       doc => <<"Locks Children to a ratio (\"16/9\", \"4:3\", 1.5 or {W, H}).">>}.
 

@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := statistic, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, statistic, 3)),
+    ?assert(erlang:function_exported(?D, ah_statistic, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -47,7 +47,7 @@ records_match_catalog_test() ->
 
 statistic_format_test() ->
     N = fun(V, O) ->
-                {match, [S]} = re:run(r(?D:statistic(V, [], O)),
+                {match, [S]} = re:run(r(?D:ah_statistic(V, [], O)),
                                       "ah-statistic__number\">([^<]*)<",
                                       [{capture, all_but_first, binary}, unicode]),
                 S
@@ -61,15 +61,15 @@ statistic_format_test() ->
     ?assertEqual(<<"n/a">>, N(<<"n/a">>, [])).
 
 statistic_markup_test() ->
-    H = ?D:statistic(5, [success], [{title, <<"T">>}, {prefix, <<"$">>}, {suffix, <<"%">>},
-                                    {delta, -1.5}, {precision, 1}]),
+    H = ?D:ah_statistic(5, [success], [{title, <<"T">>}, {prefix, <<"$">>}, {suffix, <<"%">>},
+                                       {delta, -1.5}, {precision, 1}]),
     ?assert(has(<<"data-color=\"success\" data-loading=\"false\"">>, H)),
     ?assert(has(<<"<span class=\"ah-statistic__prefix\">$</span>">>, H)),
     ?assert(has(<<"data-direction=\"down\"">>, H)),
     ?assert(has(<<"<span>1.5</span>">>, H)),
-    ?assert(has(<<"data-direction=\"flat\"">>, ?D:statistic(1, [], [{delta, 0}]))),
-    ?assertNot(has(<<"ah-statistic__delta">>, ?D:statistic(1, [], []))),
-    ?assert(has(<<"data-loading=\"true\"">>, ?D:statistic(1, [loading], []))).
+    ?assert(has(<<"data-direction=\"flat\"">>, ?D:ah_statistic(1, [], [{delta, 0}]))),
+    ?assertNot(has(<<"ah-statistic__delta">>, ?D:ah_statistic(1, [], []))),
+    ?assert(has(<<"data-loading=\"true\"">>, ?D:ah_statistic(1, [loading], []))).
 
 %%%===================================================================
 %%% element record (designs/05-records.md)
@@ -77,7 +77,7 @@ statistic_markup_test() ->
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_statistic{value = 5, color = default, precision = 1, loading = true},
-                 ?D:statistic(5, [loading], [{precision, 1}])).
+                 ?D:ah_statistic(5, [loading], [{precision, 1}])).
 
 postback_test() ->
     ?assertError({aihtml, {no_postback_event, ah_statistic}}, r(#ah_statistic{postback = p})).

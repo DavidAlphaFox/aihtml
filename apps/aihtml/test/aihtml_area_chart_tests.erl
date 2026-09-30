@@ -17,10 +17,10 @@ island(Html) ->
     json:decode(Json).
 
 area_option_test() ->
-    O = island(?M:area_chart([{<<"A">>, [1, 2, 3]}, #{name => b, data => [3, null, 1],
-                                                      color => <<"--ah-color-info">>}],
-                             [stack], [{categories, [x, y, z]}, {title, <<"T">>},
-                                       {y_name, <<"n">>}])),
+    O = island(?M:ah_area_chart([{<<"A">>, [1, 2, 3]}, #{name => b, data => [3, null, 1],
+                                                         color => <<"--ah-color-info">>}],
+                                [stack], [{categories, [x, y, z]}, {title, <<"T">>},
+                                          {y_name, <<"n">>}])),
     #{<<"xAxis">> := #{<<"type">> := <<"category">>, <<"data">> := [<<"x">>, <<"y">>, <<"z">>],
                        <<"boundaryGap">> := false},
       <<"yAxis">> := #{<<"type">> := <<"value">>, <<"name">> := <<"n">>},
@@ -32,8 +32,8 @@ area_option_test() ->
     #{<<"data">> := [3, null, 1], <<"color">> := <<"--ah-color-info">>} = S2,
     ?assertNot(maps:is_key(<<"color">>, O)),
     %% line, straight, no legend / tooltip, default categories
-    O2 = island(?M:area_chart([{a, [1, 2]}], [line, straight],
-                              [{legend, none}, {tooltip, false}, {colors, [<<"#f00">>]}])),
+    O2 = island(?M:ah_area_chart([{a, [1, 2]}], [line, straight],
+                                 [{legend, none}, {tooltip, false}, {colors, [<<"#f00">>]}])),
     [S] = maps:get(<<"series">>, O2),
     ?assertEqual(false, maps:get(<<"smooth">>, S)),
     ?assertNot(maps:is_key(<<"areaStyle">>, S)),
@@ -70,7 +70,7 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:area_chart([{a, [1]}], [line], [{id, c}, {categories, [x]}, {legend, top}])),
+    ?assertEqual(r(?M:ah_area_chart([{a, [1]}], [line], [{id, c}, {categories, [x]}, {legend, top}])),
                  r(#ah_area_chart{series = [{a, [1]}], line = true, categories = [x],
                                   legend = top, id = c})).
 

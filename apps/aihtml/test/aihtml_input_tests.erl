@@ -24,33 +24,33 @@ hasnt(Html, Part) ->
 %%% input
 
 input_basic_test() ->
-    H = r(?M:input(<<"hi">>, [], [{name, q}, {placeholder, <<"Search">>}])),
+    H = r(?M:ah_input(<<"hi">>, [], [{name, q}, {placeholder, <<"Search">>}])),
     has(H, <<"<div class=\"ah-input-group ah-input-has-value\" data-ah=\"input\">">>),
     has(H, <<"<input class=\"ah-input\" type=\"text\" value=\"hi\" name=\"q\" placeholder=\"Search\">">>),
     hasnt(H, <<"ah-input-row">>).
 
 input_escapes_value_test() ->
-    H = r(?M:input(<<"\"><script>x</script>">>, [], [])),
+    H = r(?M:ah_input(<<"\"><script>x</script>">>, [], [])),
     has(H, <<"value=\"&quot;&gt;&lt;script&gt;x&lt;/script&gt;\"">>),
     hasnt(H, <<"<script>">>).
 
 input_modifiers_test() ->
-    H = r(?M:input(undefined, [sm, invalid, disabled, no_rounded, <<"w-64">>], [])),
+    H = r(?M:ah_input(undefined, [sm, invalid, disabled, no_rounded, <<"w-64">>], [])),
     has(H, <<"class=\"ah-input-group ah-input-sm ah-input-invalid ah-input-disabled "
              "ah-input-no-rounded w-64\"">>),
     has(H, <<"aria-invalid=\"true\"">>),
     has(H, <<" disabled">>),
-    has(r(?M:input(undefined, [lg, valid], [])), <<"ah-input-lg ah-input-valid">>).
+    has(r(?M:ah_input(undefined, [lg, valid], [])), <<"ah-input-lg ah-input-valid">>).
 
 input_bad_modifiers_test() ->
-    ?assertError({aihtml, {unknown_modifier, input, huge, _}}, ?M:input(undefined, [huge], [])),
+    ?assertError({aihtml, {unknown_modifier, input, huge, _}}, ?M:ah_input(undefined, [huge], [])),
     ?assertError({aihtml, {conflicting_modifiers, input, size, [sm, lg]}},
-                 ?M:input(undefined, [sm, lg], [])),
+                 ?M:ah_input(undefined, [sm, lg], [])),
     ?assertError({aihtml, {conflicting_modifiers, input, state, _}},
-                 ?M:input(undefined, [valid, invalid], [])).
+                 ?M:ah_input(undefined, [valid, invalid], [])).
 
 input_addons_test() ->
-    H = r(?M:input(undefined, [clearable], [{prefix, <<"<$>">>}, {suffix, <<"kg">>}])),
+    H = r(?M:ah_input(undefined, [clearable], [{prefix, <<"<$>">>}, {suffix, <<"kg">>}])),
     has(H, <<"<div class=\"ah-input-row\"><span class=\"ah-input-addon ah-input-addon-prefix\">"
              "&lt;$&gt;</span><input class=\"ah-input\" type=\"text\">"
              "<button class=\"ah-input-clear\"">>),
@@ -60,36 +60,36 @@ input_addons_test() ->
     hasnt(H, <<"prefix=">>).
 
 input_label_test() ->
-    H = r(?M:input(undefined, [], [{label, <<"A & B">>}, {id, x1}, {placeholder, <<"gone">>}])),
+    H = r(?M:ah_input(undefined, [], [{label, <<"A & B">>}, {id, x1}, {placeholder, <<"gone">>}])),
     has(H, <<"<label class=\"ah-input-label\" for=\"x1\">A &amp; B</label>">>),
     has(H, <<"id=\"x1\"">>),
     hasnt(H, <<"placeholder">>),
-    H2 = r(?M:input(<<"v">>, [], [{label, <<"L">>}])),
+    H2 = r(?M:ah_input(<<"v">>, [], [{label, <<"L">>}])),
     has(H2, <<"ah-input-label ah-input-label-float">>),
     {match, [[Id]]} = re:run(H2, <<"id=\"(ah-in-[0-9]+)\"">>, [global, {capture, all_but_first, binary}]),
     has(H2, <<"for=\"", Id/binary, "\"">>).
 
 input_action_on_native_test() ->
-    H = r(?M:input(undefined, [], [{<<"data-ah-on">>, {actions, [{<<"change">>, <<"TOK">>, #{}}]}}])),
+    H = r(?M:ah_input(undefined, [], [{<<"data-ah-on">>, {actions, [{<<"change">>, <<"TOK">>, #{}}]}}])),
     has(H, <<"<input class=\"ah-input\" type=\"text\" data-ah-on=\"change:TOK\">">>).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:input(<<"hi">>, [lg, invalid, clearable, disabled, <<"w-64">>],
-                            [{name, q}, {placeholder, <<"P">>}, {prefix, <<"$">>},
-                             {label, <<"L">>}, {id, q1}])),
+    ?assertEqual(r(?M:ah_input(<<"hi">>, [lg, invalid, clearable, disabled, <<"w-64">>],
+                               [{name, q}, {placeholder, <<"P">>}, {prefix, <<"$">>},
+                                {label, <<"L">>}, {id, q1}])),
                  r(#ah_input{value = <<"hi">>, size = lg, state = invalid, clearable = true,
                              disabled = true, css = [<<"w-64">>], prefix = <<"$">>,
                              label = <<"L">>, id = q1,
                              attrs = [{name, q}, {placeholder, <<"P">>}]})).
 
 builder_fills_fields_test() ->
-    I = ?M:input(<<"v">>, [sm, clearable, <<"x">>],
-                 [{id, a}, {label, <<"L">>}, {suffix, <<"kg">>}, {name, q}]),
+    I = ?M:ah_input(<<"v">>, [sm, clearable, <<"x">>],
+                    [{id, a}, {label, <<"L">>}, {suffix, <<"kg">>}, {name, q}]),
     ?assertMatch(#ah_input{value = <<"v">>, size = sm, state = undefined, clearable = true,
                            id = a, label = <<"L">>, suffix = <<"kg">>, css = [<<"x">>],
                            attrs = [{name, q}]}, I),
     ?assertError({aihtml, {record_only_field, ah_input, postback}},
-                 ?M:input(undefined, [], [{postback, save}])).
+                 ?M:ah_input(undefined, [], [{postback, save}])).
 
 postback_test() ->
     ?assertEqual({<<"change">>, {?MODULE, save, #{k => 1}}},
@@ -109,7 +109,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([input], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, arity(S))),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), arity(S))),
          ?assertEqual(form, C)
      end || #{name := N, signature := S, category := C} <- ?M:catalog()].
 

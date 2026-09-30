@@ -29,25 +29,25 @@ demos() ->
 
 -spec dl_ide() -> aihtml:html().
 dl_ide() ->
-    frame(dock_layout(
-            [{split, horizontal,
-              [{tabs, [explorer, search], #{size => 22}},
-               {split, vertical, [{documents, [main, style], #{size => 65, close => true}},
-                                  {tabs, [console, problems], #{size => 35}}],
-                #{size => 56}},
-               {tabs, [props], #{size => 22}}]},
-             {float, [inspector], #{x => 120, y => 80, width => 260, height => 180}}],
-            [], [{panels, ide_panels()}])).
+    frame(ah_dock_layout(
+               [{split, horizontal,
+                 [{tabs, [explorer, search], #{size => 22}},
+                  {split, vertical, [{documents, [main, style], #{size => 65, close => true}},
+                                     {tabs, [console, problems], #{size => 35}}],
+                   #{size => 56}},
+                  {tabs, [props], #{size => 22}}]},
+                {float, [inspector], #{x => 120, y => 80, width => 260, height => 180}}],
+               [], [{panels, ide_panels()}])).
 
 -spec dl_autohide() -> aihtml:html().
 dl_autohide() ->
-    frame(dock_layout(
-            [{split, vertical,
-              [{documents, [main, style]},
-               {tabs, [console], #{size => 30}}]},
-             {autohide, left, [explorer, search], #{size => 240}},
-             {autohide, right, [props], #{size => 220}}],
-            [], [{panels, ide_panels()}])).
+    frame(ah_dock_layout(
+               [{split, vertical,
+                 [{documents, [main, style]},
+                  {tabs, [console], #{size => 30}}]},
+                {autohide, left, [explorer, search], #{size => 240}},
+                {autohide, right, [props], #{size => 220}}],
+               [], [{panels, ide_panels()}])).
 
 -spec dl_restore() -> aihtml:html().
 dl_restore() ->
@@ -55,27 +55,27 @@ dl_restore() ->
              "{\"type\":\"documents\",\"size\":70,\"items\":[\"style\",\"main\"],\"active\":\"main\"},"
              "{\"type\":\"tabs\",\"size\":30,\"items\":[\"console\",\"explorer\"]}]},"
              "{\"type\":\"autohide\",\"edge\":\"bottom\",\"size\":160,\"items\":[\"problems\"]}]">>,
-    frame(dock_layout(Json, [], [{panels, ide_panels()}])).
+    frame(ah_dock_layout(Json, [], [{panels, ide_panels()}])).
 
 -spec dl_save() -> aihtml:html().
 dl_save() ->
-    'div'([frame(dock_layout({split, horizontal, [{tabs, [explorer]}, {documents, [main]}]},
-                             [], [{panels, ide_panels()}, {name, layout},
-                                  on(change, {?MODULE, layout_saved, #{}})])),
-           pre(<<"拖动标签、调整大小或切换标签后，服务端收到的布局显示在这里。"/utf8>>,
-               [<<"text-xs text-muted whitespace-pre-wrap">>], [{id, <<"layout-saved">>}])],
-          [<<"flex flex-col gap-3">>], []).
+    ah_div([frame(ah_dock_layout({split, horizontal, [{tabs, [explorer]}, {documents, [main]}]},
+                                 [], [{panels, ide_panels()}, {name, layout},
+                                      on(change, {?MODULE, layout_saved, #{}})])),
+            ah_pre(<<"拖动标签、调整大小或切换标签后，服务端收到的布局显示在这里。"/utf8>>,
+                   [<<"text-xs text-muted whitespace-pre-wrap">>], [{id, <<"layout-saved">>}])],
+           [<<"flex flex-col gap-3">>], []).
 
 -spec dl_open() -> aihtml:html().
 dl_open() ->
-    'div'([row([button(<<"打开 Console"/utf8>>, console, [], [on(click, {?MODULE, open, #{}})]),
-                button(<<"浮动打开 Inspector"/utf8>>, inspector, [],
-                       [on(click, {?MODULE, open, #{}})]),
-                button(<<"右侧打开 Properties"/utf8>>, props, [],
-                       [on(click, {?MODULE, open, #{}})])]),
-           frame(dock_layout({documents, [main]}, [],
-                             [{id, <<"dl-open">>}, {panels, ide_panels()}]))],
-          [<<"flex flex-col gap-3">>], []).
+    ah_div([row([ah_button(<<"打开 Console"/utf8>>, console, [], [on(click, {?MODULE, open, #{}})]),
+                 ah_button(<<"浮动打开 Inspector"/utf8>>, inspector, [],
+                           [on(click, {?MODULE, open, #{}})]),
+                 ah_button(<<"右侧打开 Properties"/utf8>>, props, [],
+                           [on(click, {?MODULE, open, #{}})])]),
+            frame(ah_dock_layout({documents, [main]}, [],
+                                 [{id, <<"dl-open">>}, {panels, ide_panels()}]))],
+           [<<"flex flex-col gap-3">>], []).
 
 -spec dl_options() -> aihtml:html().
 dl_options() ->
@@ -108,20 +108,20 @@ action(open, _Args, #{value := Which}, Ctx) ->
 
 ide_panels() ->
     [{explorer, <<"资源管理器"/utf8>>,
-      ul([li(<<"src/">>), li(<<"include/">>), li(<<"rebar.config">>)],
-         [<<"text-sm leading-6">>], [])},
-     {search, <<"搜索"/utf8>>, input(<<>>, [], [{placeholder, <<"跨文件搜索"/utf8>>}])},
+      ah_ul([ah_li(<<"src/">>), ah_li(<<"include/">>), ah_li(<<"rebar.config">>)],
+            [<<"text-sm leading-6">>], [])},
+     {search, <<"搜索"/utf8>>, ah_input(<<>>, [], [{placeholder, <<"跨文件搜索"/utf8>>}])},
      {main, <<"main.erl">>,
-      pre(<<"-module(main).\n-export([start/0]).\n\nstart() ->\n    ok.">>, [<<"text-xs">>], [])},
-     {style, <<"style.css">>, pre(<<".container {\n  display: flex;\n}">>, [<<"text-xs">>], [])},
-     {console, <<"控制台"/utf8>>, pre(<<"$ rebar3 compile\n===> Compiling main">>,
-                                     [<<"text-xs text-success">>], [])},
-     {problems, <<"问题"/utf8>>, p(<<"未检测到问题。"/utf8>>, [<<"text-sm text-muted">>], [])},
-     {props, <<"属性"/utf8>>, p(<<"variant: primary"/utf8>>, [<<"text-sm">>], [])},
-     {inspector, <<"检查器"/utf8>>, p(<<"DOM 树检查器。"/utf8>>, [<<"text-sm">>], [])}].
+      ah_pre(<<"-module(main).\n-export([start/0]).\n\nstart() ->\n    ok.">>, [<<"text-xs">>], [])},
+     {style, <<"style.css">>, ah_pre(<<".container {\n  display: flex;\n}">>, [<<"text-xs">>], [])},
+     {console, <<"控制台"/utf8>>, ah_pre(<<"$ rebar3 compile\n===> Compiling main">>,
+                                        [<<"text-xs text-success">>], [])},
+     {problems, <<"问题"/utf8>>, ah_p(<<"未检测到问题。"/utf8>>, [<<"text-sm text-muted">>], [])},
+     {props, <<"属性"/utf8>>, ah_p(<<"variant: primary"/utf8>>, [<<"text-sm">>], [])},
+     {inspector, <<"检查器"/utf8>>, ah_p(<<"DOM 树检查器。"/utf8>>, [<<"text-sm">>], [])}].
 
 frame(Layout) ->
-    'div'(Layout, [<<"h-[26rem] border border-line rounded overflow-hidden">>], []).
+    ah_div(Layout, [<<"h-[26rem] border border-line rounded overflow-hidden">>], []).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-2">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-2">>], []).

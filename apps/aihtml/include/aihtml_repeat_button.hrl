@@ -9,7 +9,7 @@
 
 %% A button that fires click again and again while it is held (mouse,
 %% touch, Enter or Space): once on press, then every `interval' ms after
-%% `delay' ms; postback fires on each click. Renders as button/4 does.
+%% `delay' ms; postback fires on each click. Renders as ah_button/4 does.
 -record(ah_repeat_button, {?AH_BASE(aihtml_repeat_button),
                            body = [] :: aihtml_html:html(),
                            value = undefined :: term(),

@@ -15,7 +15,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([skeleton], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -30,15 +30,15 @@ catalog_documents_every_option_test() ->
 %%% skeleton
 
 skeleton_test() ->
-    T = r(?M:skeleton([], [{lines, 2}])),
+    T = r(?M:ah_skeleton([], [{lines, 2}])),
     ?assertEqual(<<"<div class=\"ah-skeleton\" data-variant=\"text\" data-animated=\"true\" "
                    "role=\"status\" aria-busy=\"true\" aria-live=\"polite\" aria-label=\"Loading\">"
                    "<span class=\"ah-skeleton__line\" style=\"width:100%;\"></span>"
                    "<span class=\"ah-skeleton__line\" style=\"width:62%;\"></span></div>">>, T),
-    C = r(?M:skeleton([circle, static], [{width, 32}])),
+    C = r(?M:ah_skeleton([circle, static], [{width, 32}])),
     ?assert(has(C, <<"data-variant=\"circle\" data-animated=\"false\"">>)),
     ?assert(has(C, <<"style=\"width:32px;height:32px;\"">>)),
-    R = r(?M:skeleton([rect, done], [{radius, 4}])),
+    R = r(?M:ah_skeleton([rect, done], [{radius, 4}])),
     ?assert(has(R, <<"class=\"ah-skeleton ah-skeleton--done\"">>)),
     ?assert(has(R, <<"border-radius:4px;">>)).
 
@@ -64,13 +64,13 @@ classes_are_styled_test() ->
 
 %% One render of the component in its main variants and states.
 samples() ->
-    [[?M:skeleton([V, static], []) || V <- [text, circle, rect]],
-     ?M:skeleton([done], [])].
+    [[?M:ah_skeleton([V, static], []) || V <- [text, circle, rect]],
+     ?M:ah_skeleton([done], [])].
 
 %%% element records (designs/05-records.md)
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:skeleton([circle, static], [{width, 32}])),
+    ?assertEqual(r(?M:ah_skeleton([circle, static], [{width, 32}])),
                  r(#ah_skeleton{variant = circle, static = true, width = 32})).
 
 postback_test() ->

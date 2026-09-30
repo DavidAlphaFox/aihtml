@@ -28,38 +28,38 @@ demos() ->
 
 -spec rp_basic() -> aihtml:html().
 rp_basic() ->
-    'div'([frame(<<"w-full">>, responsive_panel(nav(), [], [{breakpoint, 400}])),
-           frame(<<"w-72">>, responsive_panel(nav(), [], [{breakpoint, 400}]))],
-          [<<"flex flex-col gap-4">>], []).
+    ah_div([frame(<<"w-full">>, ah_responsive_panel(nav(), [], [{breakpoint, 400}])),
+            frame(<<"w-72">>, ah_responsive_panel(nav(), [], [{breakpoint, 400}]))],
+           [<<"flex flex-col gap-4">>], []).
 
 -spec rp_animation() -> aihtml:html().
 rp_animation() ->
-    'div'([frame(<<"w-40">>, responsive_panel(nav(), [], [{breakpoint, 500}, {animation, A}]))
-           || A <- [fade, slide, none]],
-          [<<"flex flex-wrap gap-6">>], []).
+    ah_div([frame(<<"w-40">>, ah_responsive_panel(nav(), [], [{breakpoint, 500}, {animation, A}]))
+            || A <- [fade, slide, none]],
+           [<<"flex flex-wrap gap-6">>], []).
 
 -spec rp_external() -> aihtml:html().
 rp_external() ->
-    'div'([button(<<"菜单"/utf8>>, menu, [outlined, sm], [{id, <<"rp-menu-btn">>}]),
-           frame(<<"w-60">>,
-                 responsive_panel(nav(), [],
-                                  [{breakpoint, 500}, {toggle_button, <<"#rp-menu-btn">>},
-                                   {auto_close, false}, {collapse_width, 240},
-                                   {toggle_content, <<"⋯"/utf8>>}, {toggle_size, 36}]))],
-          [<<"flex items-start gap-4">>], []).
+    ah_div([ah_button(<<"菜单"/utf8>>, menu, [outlined, sm], [{id, <<"rp-menu-btn">>}]),
+            frame(<<"w-60">>,
+                  ah_responsive_panel(nav(), [],
+                                      [{breakpoint, 500}, {toggle_button, <<"#rp-menu-btn">>},
+                                       {auto_close, false}, {collapse_width, 240},
+                                       {toggle_content, <<"⋯"/utf8>>}, {toggle_size, 36}]))],
+           [<<"flex items-start gap-4">>], []).
 
 %% The content is empty until it is first shown; then action(load_nav, ...)
 %% fills it from the server.
 -spec rp_load() -> aihtml:html().
 rp_load() ->
-    'div'([frame(<<"w-full">>,
-                 responsive_panel(p(<<"加载中…"/utf8>>, [<<"text-sm text-muted p-2">>], []), [],
-                                  [{breakpoint, 400}, {load, {?MODULE, load_nav, #{}}}])),
-           frame(<<"w-60">>,
-                 #ah_responsive_panel{body = p(<<"加载中…"/utf8>>, [<<"text-sm text-muted p-2">>], []),
-                                      breakpoint = 400, animation = slide,
-                                      load = {?MODULE, load_nav, #{}}})],
-          [<<"flex flex-col gap-4">>], []).
+    ah_div([frame(<<"w-full">>,
+                  ah_responsive_panel(ah_p(<<"加载中…"/utf8>>, [<<"text-sm text-muted p-2">>], []), [],
+                                      [{breakpoint, 400}, {load, {?MODULE, load_nav, #{}}}])),
+            frame(<<"w-60">>,
+                  #ah_responsive_panel{body = ah_p(<<"加载中…"/utf8>>, [<<"text-sm text-muted p-2">>], []),
+                                       breakpoint = 400, animation = slide,
+                                       load = {?MODULE, load_nav, #{}}})],
+           [<<"flex flex-col gap-4">>], []).
 
 %%%===================================================================
 %%% Actions
@@ -74,10 +74,10 @@ action(load_nav, _Args, #{id := Id}, Ctx) ->
 %%%===================================================================
 
 nav() ->
-    ul([li(a(Label, [<<"block px-3 py-1.5 text-sm rounded text-fg no-underline hover:bg-surface-2">>], [{href, <<"#">>}]))
-        || Label <- [<<"仪表盘"/utf8>>, <<"数据分析"/utf8>>, <<"报表"/utf8>>,
-                     <<"用户"/utf8>>, <<"设置"/utf8>>]],
-       [<<"list-none m-0 py-2 px-0">>], []).
+    ah_ul([ah_li(ah_a(Label, [<<"block px-3 py-1.5 text-sm rounded text-fg no-underline hover:bg-surface-2">>], [{href, <<"#">>}]))
+           || Label <- [<<"仪表盘"/utf8>>, <<"数据分析"/utf8>>, <<"报表"/utf8>>,
+                        <<"用户"/utf8>>, <<"设置"/utf8>>]],
+          [<<"list-none m-0 py-2 px-0">>], []).
 
 frame(Width, Panel) ->
-    'div'(Panel, [Width, <<"border-2 border-dashed border-line rounded p-3">>], []).
+    ah_div(Panel, [Width, <<"border-2 border-dashed border-line rounded p-3">>], []).

@@ -28,34 +28,34 @@ demos() ->
 
 -spec ab_basic() -> aihtml:html().
 ab_basic() ->
-    'div'([activity_bar([{files, icon(files), <<"资源管理器"/utf8>>},
-                         {search, icon(search), <<"搜索"/utf8>>},
-                         {git, icon(git), <<"源代码管理"/utf8>>},
-                         {run, icon(run), <<"运行和调试"/utf8>>}],
-                        files, [], [{name, view}]),
-           'div'(<<"侧栏内容"/utf8>>, [<<"flex-1 p-4 text-sm text-muted">>], [])],
-          [<<"flex h-64 w-80 border rounded overflow-hidden">>], []).
+    ah_div([ah_activity_bar([{files, icon(files), <<"资源管理器"/utf8>>},
+                             {search, icon(search), <<"搜索"/utf8>>},
+                             {git, icon(git), <<"源代码管理"/utf8>>},
+                             {run, icon(run), <<"运行和调试"/utf8>>}],
+                            files, [], [{name, view}]),
+            ah_div(<<"侧栏内容"/utf8>>, [<<"flex-1 p-4 text-sm text-muted">>], [])],
+           [<<"flex h-64 w-80 border rounded overflow-hidden">>], []).
 
 -spec ab_right() -> aihtml:html().
 ab_right() ->
-    'div'(['div'(<<"编辑区"/utf8>>, [<<"flex-1 p-4 text-sm text-muted">>], []),
-           activity_bar([{outline, icon(list), <<"大纲"/utf8>>},
-                         {chat, icon(chat), <<"对话"/utf8>>},
-                         divider,
-                         {settings, icon(settings), <<"设置"/utf8>>},
-                         {ext, icon(box), <<"扩展（不可用）"/utf8>>, [{disabled, true}]}],
-                        chat, [right], [])],
-          [<<"flex h-64 w-80 border rounded overflow-hidden">>], []).
+    ah_div([ah_div(<<"编辑区"/utf8>>, [<<"flex-1 p-4 text-sm text-muted">>], []),
+            ah_activity_bar([{outline, icon(list), <<"大纲"/utf8>>},
+                             {chat, icon(chat), <<"对话"/utf8>>},
+                             divider,
+                             {settings, icon(settings), <<"设置"/utf8>>},
+                             {ext, icon(box), <<"扩展（不可用）"/utf8>>, [{disabled, true}]}],
+                            chat, [right], [])],
+           [<<"flex h-64 w-80 border rounded overflow-hidden">>], []).
 
 %% A change runs action(view, ...) below, which renders the side panel.
 -spec ab_server() -> aihtml:html().
 ab_server() ->
-    'div'([activity_bar([{files, icon(files), <<"资源管理器"/utf8>>},
-                         {search, icon(search), <<"搜索"/utf8>>},
-                         {git, icon(git), <<"源代码管理"/utf8>>}],
-                        files, [], [on(change, {?MODULE, view, #{}})]),
-           'div'(side_panel(<<"files">>), [<<"flex-1 p-4 text-sm">>], [{id, <<"ab-panel">>}])],
-          [<<"flex h-64 w-96 border rounded overflow-hidden">>], []).
+    ah_div([ah_activity_bar([{files, icon(files), <<"资源管理器"/utf8>>},
+                             {search, icon(search), <<"搜索"/utf8>>},
+                             {git, icon(git), <<"源代码管理"/utf8>>}],
+                            files, [], [on(change, {?MODULE, view, #{}})]),
+            ah_div(side_panel(<<"files">>), [<<"flex-1 p-4 text-sm">>], [{id, <<"ab-panel">>}])],
+           [<<"flex h-64 w-96 border rounded overflow-hidden">>], []).
 
 %%%===================================================================
 %%% Actions

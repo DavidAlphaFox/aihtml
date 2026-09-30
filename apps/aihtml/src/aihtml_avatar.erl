@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The avatar component (designs/04-components.md): `avatar/3'
+%%% @doc The avatar component (designs/04-components.md): `ah_avatar/3'
 %%% builds an #ah_avatar{} element record (include/aihtml_avatar.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_avatar.hrl").
 
--export([avatar/3, render/1, fields/1, catalog/0]).
+-export([ah_avatar/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [blank/1, none_for/1]).
 
@@ -32,8 +32,8 @@
 %% @doc Avatar: an image with an initials (or icon) fallback that shows
 %% when there is no `src' or the image fails to load. `Content' is the
 %% fallback, `"?"' when empty.
--spec avatar(html(), css(), attrs()) -> #ah_avatar{}.
-avatar(Content, Css, Attrs) ->
+-spec ah_avatar(html(), css(), attrs()) -> #ah_avatar{}.
+ah_avatar(Content, Css, Attrs) ->
     ?E:build(?MODULE, #ah_avatar{body = Content}, Css, Attrs).
 
 %% @doc The field names of #ah_avatar{}.
@@ -72,7 +72,7 @@ catalog() ->
 
 entry() ->
     #{name => avatar, category => media, root => <<"ah-avatar">>,
-      signature => <<"avatar(Content, Css, Attrs)">>,
+      signature => <<"ah_avatar(Content, Css, Attrs)">>,
       groups => #{size => {[sm, md, lg, xl], md},
                   shape => {[circle, square, rounded], circle},
                   color => {?COLORS, primary}},

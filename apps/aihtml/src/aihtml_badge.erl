@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The badge component (designs/04-components.md): `badge/3'
+%%% @doc The badge component (designs/04-components.md): `ah_badge/3'
 %%% builds an #ah_badge{} element record (include/aihtml_badge.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_badge.hrl").
 
--export([badge/3, render/1, fields/1, catalog/0]).
+-export([ah_badge/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [blank/1, tf/1, num/1, none_for/1, method/3]).
 
@@ -32,8 +32,8 @@
 %% @doc Badge: a count, dot or status dot over the corner of `Content'
 %% (the anchor). With no anchor (`undefined') the indicator stands alone
 %% inline. Options: `count', `max' (99).
--spec badge(html(), css(), attrs()) -> #ah_badge{}.
-badge(Content, Css, Attrs) ->
+-spec ah_badge(html(), css(), attrs()) -> #ah_badge{}.
+ah_badge(Content, Css, Attrs) ->
     ?E:build(?MODULE, #ah_badge{body = Content}, Css, Attrs).
 
 %% @doc The field names of #ah_badge{}.
@@ -81,7 +81,7 @@ catalog() ->
 
 entry() ->
     #{name => badge, category => media, root => <<"ah-badge-root">>,
-      signature => <<"badge(Anchor, Css, Attrs)">>,
+      signature => <<"ah_badge(Anchor, Css, Attrs)">>,
       groups => #{variant => {[standard, dot, online, away, busy, offline, invisible], standard},
                   color => {[default | ?COLORS], primary},
                   overlap => {[rect, circular], rect},

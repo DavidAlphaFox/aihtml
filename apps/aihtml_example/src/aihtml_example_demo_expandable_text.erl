@@ -19,20 +19,20 @@ demos() ->
 
 -spec expandable_default() -> aihtml:html().
 expandable_default() ->
-    expandable_text(<<"aihtml renders every page on the server as Erlang function calls; "
-                      "the browser only adds behaviour. This paragraph is long enough to be cut "
-                      "at the threshold and shows a toggle to read the rest.">>,
-                    [], [{threshold, 60}]).
+    ah_expandable_text(<<"aihtml renders every page on the server as Erlang function calls; "
+                         "the browser only adds behaviour. This paragraph is long enough to be cut "
+                         "at the threshold and shows a toggle to read the rest.">>,
+                       [], [{threshold, 60}]).
 
 -spec expandable_labels() -> aihtml:html().
 expandable_labels() ->
-    'div'([expandable_text(<<"Release notes: morph swaps keep focus, shared Mustache "
-                             "templates render the same bytes on both ends, and popups "
-                             "follow their anchor.">>,
-                           [], [{threshold, 40}, {expand_label, <<"Show more">>},
-                                {collapse_label, <<"Show less">>}]),
-           expandable_text(<<"This one starts expanded, so the whole text is visible "
-                             "and the toggle folds it.">>,
-                           [], [{threshold, 30}, {expanded, true}]),
-           expandable_text(<<"Short text is shown as is.">>, [], [])],
-          [<<"flex flex-col gap-3">>], []).
+    ah_div([ah_expandable_text(<<"Release notes: morph swaps keep focus, shared Mustache "
+                                 "templates render the same bytes on both ends, and popups "
+                                 "follow their anchor.">>,
+                               [], [{threshold, 40}, {expand_label, <<"Show more">>},
+                                    {collapse_label, <<"Show less">>}]),
+            ah_expandable_text(<<"This one starts expanded, so the whole text is visible "
+                                 "and the toggle folds it.">>,
+                               [], [{threshold, 30}, {expanded, true}]),
+            ah_expandable_text(<<"Short text is shown as is.">>, [], [])],
+           [<<"flex flex-col gap-3">>], []).

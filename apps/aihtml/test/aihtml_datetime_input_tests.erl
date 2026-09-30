@@ -23,7 +23,7 @@ has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 %%%===================================================================
 
 datetime_input_date_test() ->
-    H = r(?M:datetime_input(<<"2026-09-29">>, [<<"w-48">>], [{id, d}, {name, due}, {title, <<"t">>}])),
+    H = r(?M:ah_datetime_input(<<"2026-09-29">>, [<<"w-48">>], [{id, d}, {name, due}, {title, <<"t">>}])),
     ?assert(has(<<"<div class=\"ah-dti-group w-48\" id=\"d\" data-ah=\"datetime-input\" "
                   "data-ah-value=\"2026-09-29\" data-ah-format=\"yyyy-MM-dd\"">>, H)),
     ?assert(has(<<"<input class=\"ah-dti-input\" type=\"text\" id=\"d-input\" readonly">>, H)),
@@ -40,7 +40,7 @@ datetime_input_date_test() ->
 
 datetime_input_formats_test() ->
     V = fun(Value, Format) ->
-                H = r(?M:datetime_input(Value, [], [{format, Format}])),
+                H = r(?M:ah_datetime_input(Value, [], [{format, Format}])),
                 {match, [Iso, Shown]} =
                     re:run(H, <<"data-ah-value=\"([^\"]*)\".* value=\"([^\"]*)\"">>,
                            [{capture, all_but_first, binary}]),
@@ -55,15 +55,15 @@ datetime_input_formats_test() ->
                  V({2026, 9, 1}, <<"yyyy年MM月dd日"/utf8>>)),
     ?assertEqual({<<>>, <<>>}, V(undefined, <<"yyyy-MM-dd">>)),
     %% a time alone has no calendar
-    T = r(?M:datetime_input(<<"10:00">>, [], [{format, <<"HH:mm">>}])),
+    T = r(?M:ah_datetime_input(<<"10:00">>, [], [{format, <<"HH:mm">>}])),
     ?assertNot(has_quiet(<<"ah-dti-cal-btn">>, T)),
     ?assertNot(has_quiet(<<"ah-dti-dropdown">>, T)).
 
 datetime_input_flags_test() ->
-    H = r(?M:datetime_input(undefined, [disabled, readonly, spinner, no_calendar, show_time,
-                                        floating_label, no_rounded],
-                            [{placeholder, <<"Birthday">>}, {min, {2026, 1, 1}},
-                             {max, <<"2026-12-31T08:00">>}])),
+    H = r(?M:ah_datetime_input(undefined, [disabled, readonly, spinner, no_calendar, show_time,
+                                           floating_label, no_rounded],
+                               [{placeholder, <<"Birthday">>}, {min, {2026, 1, 1}},
+                                {max, <<"2026-12-31T08:00">>}])),
     ?assert(has(<<"class=\"ah-dti-group ah-dti-disabled ah-dti-no-rounded ah-dti-readonly\"">>, H)),
     ?assert(has(<<"data-ah-min=\"2026-01-01\" data-ah-max=\"2026-12-31\"">>, H)),
     ?assert(has(<<"data-ah-show-time">>, H)),
@@ -92,10 +92,10 @@ catalog_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:datetime_input(<<"2026-09-29T10:00">>, [spinner, show_time, <<"w-60">>],
-                                     [{id, d}, {name, at}, {format, <<"yyyy-MM-dd HH:mm">>},
-                                      {placeholder, <<"P">>}, {min, <<"2026-01-01T00:00">>},
-                                      {first_day, 1}, {labels, #{time => <<"T">>}}])),
+    ?assertEqual(r(?M:ah_datetime_input(<<"2026-09-29T10:00">>, [spinner, show_time, <<"w-60">>],
+                                        [{id, d}, {name, at}, {format, <<"yyyy-MM-dd HH:mm">>},
+                                         {placeholder, <<"P">>}, {min, <<"2026-01-01T00:00">>},
+                                         {first_day, 1}, {labels, #{time => <<"T">>}}])),
                  r(#ah_datetime_input{value = <<"2026-09-29T10:00">>, spinner = true,
                                       show_time = true, css = [<<"w-60">>], id = d, name = at,
                                       format = <<"yyyy-MM-dd HH:mm">>, placeholder = <<"P">>,
@@ -103,7 +103,7 @@ record_equals_builder_test() ->
                                       labels = #{time => <<"T">>}})).
 
 builder_fills_fields_test() ->
-    D = ?M:datetime_input(undefined, [no_rounded], [{format, <<"HH:mm">>}, {max, <<"18:00">>}]),
+    D = ?M:ah_datetime_input(undefined, [no_rounded], [{format, <<"HH:mm">>}, {max, <<"18:00">>}]),
     ?assertMatch(#ah_datetime_input{no_rounded = true, format = <<"HH:mm">>, max = <<"18:00">>,
                                     id = undefined, attrs = []}, D).
 

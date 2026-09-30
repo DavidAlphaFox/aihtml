@@ -3,7 +3,7 @@
 %%% class names are the ones sigil renders, so the styles in
 %%% priv/css/sigil apply unchanged.
 %%%
-%%%   tile_layout(Layout, Value, Css, Attrs)   resizable panes and tab groups
+%%%   ah_tile_layout(Layout, Value, Css, Attrs)   resizable panes and tab groups
 %%%
 %%% sigil's tile layout is an IDE-style tree, not a free dashboard grid:
 %%% columns and rows of panes separated by splitbars, where a pane is a
@@ -23,7 +23,7 @@
 %%% that the stored value neither places nor lists as closed (added since)
 %%% are appended. A value that does not parse is ignored.
 %%%
-%%% tile_layout/4 builds an #ah_tile_layout{} (include/aihtml_tile_layout.hrl)
+%%% ah_tile_layout/4 builds an #ah_tile_layout{} (include/aihtml_tile_layout.hrl)
 %%% and render/1 turns it into HTML (designs/05-records.md). Behaviour:
 %%% assets/js/components/tile_layout.ts.
 %%% @end
@@ -33,7 +33,7 @@
 
 -include("aihtml_tile_layout.hrl").
 
--export([tile_layout/4, render/1, fields/1, catalog/0]).
+-export([ah_tile_layout/4, render/1, fields/1, catalog/0]).
 
 -export_type([size/0, tab/0, layout_node/0]).
 
@@ -81,9 +81,9 @@
 %% layout_node()). `Value' is a stored arrangement (the JSON the component
 %% reported in `Event.value', or its decoded map) or `undefined' for the
 %% layout as written.
--spec tile_layout(layout_node(), undefined | iodata() | map(), aihtml_html:css(),
-                  aihtml_html:attrs()) -> #ah_tile_layout{}.
-tile_layout(Layout, Value, Css, Attrs) ->
+-spec ah_tile_layout(layout_node(), undefined | iodata() | map(), aihtml_html:css(),
+                     aihtml_html:attrs()) -> #ah_tile_layout{}.
+ah_tile_layout(Layout, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_tile_layout{layout = Layout, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_tile_layout{}.
@@ -451,7 +451,7 @@ append_root(Root, N) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => tile_layout, category => layout,
-       signature => <<"tile_layout(Layout, Value, Css, Attrs)">>,
+       signature => <<"ah_tile_layout(Layout, Value, Css, Attrs)">>,
        root => <<"ah-tl">>,
        options => [splitbar_size, height],
        behavior => <<"tile-layout">>,

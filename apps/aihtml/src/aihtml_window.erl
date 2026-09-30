@@ -12,7 +12,7 @@
 %%%
 %%% Literal (binary) classes in `Css' go on the window. A record's
 %%% postback fires on `ah:close'. Behaviour:
-%%% assets/js/components/window.ts. window/3 builds an #ah_window{}
+%%% assets/js/components/window.ts. ah_window/3 builds an #ah_window{}
 %%% (include/aihtml_window.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -22,7 +22,7 @@
 
 -include("aihtml_window.hrl").
 
--export([window/3, render/1, fields/1, catalog/0]).
+-export([ah_window/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -41,8 +41,8 @@
 %% (false), `collapsed' (false), `modal' (false; scrim, focus trap, scroll
 %% lock), `draggable' (true), `resizable' (true), `width' (300), `height'
 %% (auto), `close_on_overlay' (false), `close_on_esc' (true), `open'.
--spec window(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_window{}.
-window(Children, Css, Attrs) ->
+-spec ah_window(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_window{}.
+ah_window(Children, Css, Attrs) ->
     ?E:build(?MODULE, #ah_window{body = Children}, Css, Attrs).
 
 %% @doc The field names of #ah_window{}.
@@ -118,7 +118,7 @@ render(#ah_window{body = Children, title = Title, footer = Footer, width = Width
 catalog() ->
     Events = [<<"ah:open">>, <<"ah:close">>],
     [#{name => window, category => overlay,
-       signature => <<"window(Children, Css, Attrs)">>,
+       signature => <<"ah_window(Children, Css, Attrs)">>,
        root => <<"ah-window">>,
        options => [title, footer, closable, collapsible, collapsed, modal, draggable,
                    resizable, width, height, close_on_overlay, close_on_esc, open],

@@ -48,7 +48,7 @@ nested() ->
      #{id => 6, name => <<"z.md">>, size => 1}].
 
 treegrid_structure_test() ->
-    H = r(?M:treegrid(cols(), nested(), [<<"mt-2">>], [{id, tg}, {expanded, [1]}])),
+    H = r(?M:ah_treegrid(cols(), nested(), [<<"mt-2">>], [{id, tg}, {expanded, [1]}])),
     ?assert(has(<<"<div class=\"ah-tg mt-2\" id=\"tg\" role=\"treegrid\" data-ah=\"treegrid\" "
                   "data-ah-value=\"\" data-selection=\"single\" data-sortable=\"true\" "
                   "data-alt-rows=\"true\">">>, H)),
@@ -91,22 +91,22 @@ treegrid_flat_test() ->
     Flat = [#{id => a, name => <<"A">>}, #{id => b, name => <<"B">>, parent_id => a},
             #{id => c, name => <<"C">>, parent_id => b}, #{id => d, name => <<"D">>, parent_id => nope},
             #{id => e, name => <<"E">>, parent_id => a}],
-    H = r(?M:treegrid([name], Flat, [], [{id, f}, {expanded, all}])),
+    H = r(?M:ah_treegrid([name], Flat, [], [{id, f}, {expanded, all}])),
     ?assertEqual([<<"a">>, <<"b">>, <<"c">>, <<"e">>, <<"d">>], keys(H)),
     ?assertEqual(keys(H), shown(H)),
     ?assert(has(<<"data-key=\"c\" data-parent=\"b\" data-level=\"2\"">>, H)),
     %% an unknown parent makes a root
     ?assert(has(<<"data-key=\"d\" data-parent=\"\" data-level=\"0\"">>, H)),
     %% other field names
-    H2 = r(?M:treegrid([t], [#{k => 1, t => <<"x">>}, #{k => 2, t => <<"y">>, up => 1}], [],
-                       [{key_field, k}, {parent_field, up}, {id, g}])),
+    H2 = r(?M:ah_treegrid([t], [#{k => 1, t => <<"x">>}, #{k => 2, t => <<"y">>, up => 1}], [],
+                          [{key_field, k}, {parent_field, up}, {id, g}])),
     ?assertEqual([<<"1">>, <<"2">>], keys(H2)),
     ?assertEqual([<<"1">>], shown(H2)).
 
 treegrid_selection_test() ->
-    H = r(?M:treegrid(cols(), nested(), [],
-                      [{id, s}, {selection_mode, checkbox}, {value, [2, 4, 99]}, {name, pick},
-                       {expanded, [1]}])),
+    H = r(?M:ah_treegrid(cols(), nested(), [],
+                         [{id, s}, {selection_mode, checkbox}, {value, [2, 4, 99]}, {name, pick},
+                          {expanded, [1]}])),
     %% unknown keys are dropped from the value
     ?assert(has(<<"aria-multiselectable=\"true\" data-ah=\"treegrid\" data-ah-value=\"2,4\" "
                   "data-selection=\"checkbox\"">>, H)),
@@ -124,17 +124,17 @@ treegrid_selection_test() ->
     ?assert(has(<<"data-key=\"2\" data-parent=\"1\" data-level=\"1\" data-i=\"0\" aria-level=\"2\" "
                   "aria-selected=\"true\" tabindex=\"0\"">>, H)),
     %% none: no aria-selected at all; a comma separated value works too
-    H2 = r(?M:treegrid(cols(), nested(), [], [{selection_mode, none}, {value, <<"1,6">>}])),
+    H2 = r(?M:ah_treegrid(cols(), nested(), [], [{selection_mode, none}, {value, <<"1,6">>}])),
     ?assertNot(has_quiet(<<"aria-selected">>, H2)),
     ?assertNot(has_quiet(<<"ah-tg-row-selected">>, H2)),
-    H3 = r(?M:treegrid(cols(), nested(), [], [{value, <<"1,6">>}])),
+    H3 = r(?M:ah_treegrid(cols(), nested(), [], [{value, <<"1,6">>}])),
     ?assert(has(<<"data-ah-value=\"1,6\"">>, H3)).
 
 treegrid_sort_and_options_test() ->
-    H = r(?M:treegrid(cols(), nested(), [disabled],
-                      [{id, o}, {sort, {size, asc}}, {expanded, all}, {tree_column, size},
-                       {indent, 10}, {alt_rows, false}, {hover, false}, {resizable, true},
-                       {height, 300}, {empty_text, <<"Nothing">>}, {load, {?MODULE, kids, #{}}}])),
+    H = r(?M:ah_treegrid(cols(), nested(), [disabled],
+                         [{id, o}, {sort, {size, asc}}, {expanded, all}, {tree_column, size},
+                          {indent, 10}, {alt_rows, false}, {hover, false}, {resizable, true},
+                          {height, 300}, {empty_text, <<"Nothing">>}, {load, {?MODULE, kids, #{}}}])),
     %% siblings sorted by size; numbers before texts, so the row without a
     %% size (lazy 5) comes last
     ?assertEqual([<<"6">>, <<"1">>, <<"3">>, <<"4">>, <<"2">>, <<"5">>], keys(H)),
@@ -153,15 +153,15 @@ treegrid_sort_and_options_test() ->
     {match, [Token]} = re:run(H, <<"data-load=\"([^\"]+)\"">>, [{capture, all_but_first, binary}]),
     ?assertEqual({ok, {?MODULE, kids, #{}}}, aihtml_action:verify(Token)),
     %% no rows: the empty row shows; no header
-    E = r(?M:treegrid(cols(), [], [], [{show_header, false}, {empty_text, <<"Nothing">>}])),
+    E = r(?M:ah_treegrid(cols(), [], [], [{show_header, false}, {empty_text, <<"Nothing">>}])),
     ?assert(has(<<"<tr class=\"ah-tg-row-empty\"><td class=\"ah-tg-cell-empty\" colspan=\"2\">Nothing</td></tr>">>, E)),
     ?assert(has(<<"<div class=\"ah-tg-header\" hidden>">>, E)),
     %% a renderer and an unsortable column
-    R = r(?M:treegrid([#{field => name, render => fun(V, #{id := I}) ->
-                                                          [V, <<"#">>, integer_to_binary(I)]
-                                                  end, sortable => false, align => right,
-                         class => <<"font-bold">>}],
-                      [#{id => 7, name => <<"n">>}], [], [])),
+    R = r(?M:ah_treegrid([#{field => name, render => fun(V, #{id := I}) ->
+                                                             [V, <<"#">>, integer_to_binary(I)]
+                                                     end, sortable => false, align => right,
+                            class => <<"font-bold">>}],
+                         [#{id => 7, name => <<"n">>}], [], [])),
     ?assert(has(<<"<span class=\"ah-tg-cell-text\">n#7</span>">>, R)),
     ?assert(has(<<"class=\"ah-tg-cell ah-tg-tree-cell font-bold\" role=\"gridcell\" data-field=\"name\" "
                   "style=\"text-align:right;\" data-value=\"n\"">>, R)),
@@ -171,7 +171,7 @@ treegrid_sort_and_options_test() ->
 treegrid_lazy_round_trip_test() ->
     Ref = {?MODULE, kids, #{children => [#{id => 50, name => <<"c1">>},
                                          #{id => 51, name => <<"c2">>, children => lazy}]}},
-    H = r(?M:treegrid(cols(), nested(), [], [{id, <<"lz">>}, {load, Ref}])),
+    H = r(?M:ah_treegrid(cols(), nested(), [], [{id, <<"lz">>}, {load, Ref}])),
     {match, [Token]} = re:run(H, <<"data-load=\"([^\"]+)\"">>, [{capture, all_but_first, binary}]),
     %% the browser sends the row's id and data-* attributes
     Event = #{<<"type">> => <<"ah:load">>, <<"id">> => <<"lz-1">>, <<"value">> => null,
@@ -196,14 +196,14 @@ treegrid_lazy_round_trip_test() ->
                      ?M:treegrid_children(Ctx, #{id => <<"lz-1">>,
                                                  data => #{<<"key">> => <<"5">>, <<"level">> => <<"0">>,
                                                            <<"treegrid">> => <<"lz">>}},
-                                          ?M:treegrid(cols(), [], [], []))
+                                          ?M:ah_treegrid(cols(), [], [], []))
              end),
     ?assertMatch([#{op := html, html := <<>>}, #{op := call, method := <<"childrenLoaded">>}], Ops2).
 
 
 %% The action of the round trip: the lazy tree grid's load.
 action(kids, #{children := Kids}, Event, Ctx) ->
-    ?M:treegrid_children(Ctx, Event, ?M:treegrid(cols(), Kids, [], [])).
+    ?M:treegrid_children(Ctx, Event, ?M:ah_treegrid(cols(), Kids, [], [])).
 
 %%%===================================================================
 %%% Catalog
@@ -236,17 +236,17 @@ catalog_docs_test() ->
 
 record_equals_builder_test() ->
     Load = {?MODULE, kids, #{}},
-    ?assertEqual(r(?M:treegrid(cols(), nested(), [disabled, <<"w-64">>],
-                               [{id, t}, {value, [2]}, {name, n}, {selection_mode, multiple},
-                                {expanded, all}, {sort, {size, desc}}, {load, Load},
-                                {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_treegrid(cols(), nested(), [disabled, <<"w-64">>],
+                                  [{id, t}, {value, [2]}, {name, n}, {selection_mode, multiple},
+                                   {expanded, all}, {sort, {size, desc}}, {load, Load},
+                                   {title, <<"t">>}])),
                  r(#ah_treegrid{columns = cols(), items = nested(), disabled = true,
                                 css = [<<"w-64">>], id = t, value = [2], name = n,
                                 selection_mode = multiple, expanded = all, sort = {size, desc},
                                 load = Load, attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    T = ?M:treegrid([a], [], [disabled, <<"x">>], [{name, n}, {indent, 8}, {role, x}]),
+    T = ?M:ah_treegrid([a], [], [disabled, <<"x">>], [{name, n}, {indent, 8}, {role, x}]),
     ?assertMatch(#ah_treegrid{columns = [a], items = [], disabled = true, name = n, indent = 8,
                               selection_mode = single, css = [<<"x">>], attrs = [{role, x}]}, T).
 
@@ -275,7 +275,7 @@ field_validation_test() ->
     ?assertError({aihtml, {bad_children, 3}},
                  r(#ah_treegrid{columns = [a], items = [#{id => 1, children => [#{id => 2}]},
                                                         #{id => 3, children => 3}]})),
-    ?assertError({aihtml, {unknown_modifier, treegrid, big, _}}, ?M:treegrid([], [], [big], [])).
+    ?assertError({aihtml, {unknown_modifier, treegrid, big, _}}, ?M:ah_treegrid([], [], [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],
@@ -300,7 +300,7 @@ vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_values_test() ->
     Items = [#{id => <<"a,b">>, name => <<"A">>, size => 1}, #{id => c, name => <<"C">>, size => 2}],
-    H = r(?M:treegrid(cols(), Items, [], [{id, tg}, {selection_mode, multiple}, {value, [<<"a,b">>, c]}])),
+    H = r(?M:ah_treegrid(cols(), Items, [], [{id, tg}, {selection_mode, multiple}, {value, [<<"a,b">>, c]}])),
     ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, H)),
-    ?assertEqual(H, r(?M:treegrid(cols(), Items, [], [{id, tg}, {selection_mode, multiple},
-                                                     {value, <<"a\\,b,c">>}]))).
+    ?assertEqual(H, r(?M:ah_treegrid(cols(), Items, [], [{id, tg}, {selection_mode, multiple},
+                                                        {value, <<"a\\,b,c">>}]))).

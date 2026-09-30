@@ -24,7 +24,7 @@ hasnt(Html, Part) ->
 %%% tag_input
 
 tag_input_test() ->
-    H = r(?M:tag_input([<<"a">>, <<"<b>">>], [<<"w-96">>], [{name, tags}, {max_tags, 5}])),
+    H = r(?M:ah_tag_input([<<"a">>, <<"<b>">>], [<<"w-96">>], [{name, tags}, {max_tags, 5}])),
     has(H, <<"<div class=\"ah-tag-input w-96\" data-ah=\"tag-input\" role=\"group\" "
              "data-ah-value=\"a,&lt;b&gt;\" data-disabled=\"false\" data-chip-color=\"primary\" "
              "data-chip-variant=\"soft\" data-max-tags=\"5\">">>),
@@ -36,8 +36,8 @@ tag_input_test() ->
     has(H, <<"<input type=\"hidden\" name=\"tags\" value=\"a,&lt;b&gt;\"></div>">>).
 
 tag_input_empty_disabled_test() ->
-    H = r(?M:tag_input([], [disabled], [{placeholder, <<"Tags">>}, {chip_color, error},
-                                         {allow_duplicates, true}])),
+    H = r(?M:ah_tag_input([], [disabled], [{placeholder, <<"Tags">>}, {chip_color, error},
+                                            {allow_duplicates, true}])),
     has(H, <<"data-ah-value=\"\"">>),
     has(H, <<"data-disabled=\"true\"">>),
     has(H, <<"data-chip-color=\"error\"">>),
@@ -47,13 +47,13 @@ tag_input_empty_disabled_test() ->
     hasnt(H, <<"type=\"hidden\"">>).
 
 tag_input_action_on_root_test() ->
-    H = r(?M:tag_input([<<"x">>], [], [{<<"data-ah-on">>, {actions, [{<<"change">>, <<"T">>, #{}}]}}])),
+    H = r(?M:ah_tag_input([<<"x">>], [], [{<<"data-ah-on">>, {actions, [{<<"change">>, <<"T">>, #{}}]}}])),
     has(H, <<"data-chip-variant=\"soft\" data-ah-on=\"change:T\">">>).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:tag_input([<<"a">>], [<<"w-96">>], [{name, t}, {max_tags, 3},
-                                                         {chip_color, error},
-                                                         {title, <<"x">>}])),
+    ?assertEqual(r(?M:ah_tag_input([<<"a">>], [<<"w-96">>], [{name, t}, {max_tags, 3},
+                                                            {chip_color, error},
+                                                            {title, <<"x">>}])),
                  r(#ah_tag_input{value = [<<"a">>], css = [<<"w-96">>], name = t,
                                  max_tags = 3, chip_color = error,
                                  attrs = [{title, <<"x">>}]})).
@@ -61,7 +61,7 @@ record_equals_builder_test() ->
 builder_fills_fields_test() ->
     ?assertMatch(#ah_tag_input{value = [<<"a">>], name = tags, placeholder = <<"P">>,
                                disabled = true, attrs = []},
-                 ?M:tag_input([<<"a">>], [disabled], [{name, tags}, {placeholder, <<"P">>}])).
+                 ?M:ah_tag_input([<<"a">>], [disabled], [{name, tags}, {placeholder, <<"P">>}])).
 
 postback_test() ->
     ?assertEqual({<<"change">>, {?MODULE, save, #{k => 1}}},
@@ -76,7 +76,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([tag_input], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, arity(S))),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), arity(S))),
          ?assertEqual(form, C)
      end || #{name := N, signature := S, category := C} <- ?M:catalog()].
 
@@ -127,6 +127,6 @@ arity(Sig) ->
 vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_values_test() ->
-    H = r(?M:tag_input([<<"1,000">>, <<"x\\y">>, <<"z">>], [], [{name, t}])),
+    H = r(?M:ah_tag_input([<<"1,000">>, <<"x\\y">>, <<"z">>], [], [{name, t}])),
     ?assert(vhas(<<"data-ah-value=\"1\\,000,x\\\\y,z\"">>, H)),
     ?assert(vhas(<<"value=\"1\\,000,x\\\\y,z\"">>, H)).

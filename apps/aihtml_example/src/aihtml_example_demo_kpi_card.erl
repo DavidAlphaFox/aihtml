@@ -20,18 +20,18 @@ demos() ->
 
 -spec kpi_trends() -> aihtml:html().
 kpi_trends() ->
-    grid([kpi_card(<<"12,480">>, [], [{title, <<"Active users">>}, {trend, 5.2},
-                                      {trend_label, <<"vs last month">>}, {icon, users}]),
-          kpi_card(<<"845">>, [warning], [{title, <<"Installs">>}, {trend, -3.5},
-                                          {trend_label, <<"vs last week">>}, {icon, install}]),
-          kpi_card(<<"4.8">>, [], [{title, <<"Rating">>}, {icon, star}])]).
+    grid([ah_kpi_card(<<"12,480">>, [], [{title, <<"Active users">>}, {trend, 5.2},
+                                         {trend_label, <<"vs last month">>}, {icon, users}]),
+          ah_kpi_card(<<"845">>, [warning], [{title, <<"Installs">>}, {trend, -3.5},
+                                             {trend_label, <<"vs last week">>}, {icon, install}]),
+          ah_kpi_card(<<"4.8">>, [], [{title, <<"Rating">>}, {icon, star}])]).
 
 -spec kpi_colors() -> aihtml:html().
 kpi_colors() ->
-    grid([kpi_card(<<"3,210">>, [success], [{title, <<"Downloads">>}, {trend, 12}, {icon, download}]),
-          kpi_card(<<"96%">>, [info], [{title, <<"SLA">>}, {trend, 0.4}]),
-          kpi_card(<<"7">>, [error], [{title, <<"Incidents">>}, {trend, -30}]),
-          kpi_card(<<"—"/utf8>>, [disabled], [{title, <<"Disabled">>}])]).
+    grid([ah_kpi_card(<<"3,210">>, [success], [{title, <<"Downloads">>}, {trend, 12}, {icon, download}]),
+          ah_kpi_card(<<"96%">>, [info], [{title, <<"SLA">>}, {trend, 0.4}]),
+          ah_kpi_card(<<"7">>, [error], [{title, <<"Incidents">>}, {trend, -30}]),
+          ah_kpi_card(<<"—"/utf8>>, [disabled], [{title, <<"Disabled">>}])]).
 
 -spec kpi_record() -> aihtml:html().
 kpi_record() ->
@@ -42,4 +42,4 @@ kpi_record() ->
 
 %% Layout helpers of the demos.
 grid(Children) ->
-    'div'(Children, [<<"grid grid-cols-1 sm:grid-cols-3 gap-4">>], []).
+    ah_div(Children, [<<"grid grid-cols-1 sm:grid-cols-3 gap-4">>], []).

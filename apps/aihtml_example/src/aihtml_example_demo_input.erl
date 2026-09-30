@@ -20,37 +20,37 @@ demos() ->
 
 -spec input_sizes() -> aihtml:html().
 input_sizes() ->
-    row([input(undefined, [sm, <<"w-56">>], [{placeholder, <<"Small">>}]),
-         input(undefined, [<<"w-56">>], [{placeholder, <<"Medium">>}, {name, q}]),
-         input(undefined, [lg, <<"w-56">>], [{placeholder, <<"Large">>}])]).
+    row([ah_input(undefined, [sm, <<"w-56">>], [{placeholder, <<"Small">>}]),
+         ah_input(undefined, [<<"w-56">>], [{placeholder, <<"Medium">>}, {name, q}]),
+         ah_input(undefined, [lg, <<"w-56">>], [{placeholder, <<"Large">>}])]).
 
 -spec input_states() -> aihtml:html().
 input_states() ->
-    row([input(<<"not-an-email">>, [invalid, <<"w-56">>], [{name, email}]),
-         input(<<"ada@example.com">>, [valid, <<"w-56">>], []),
-         input(<<"Disabled">>, [disabled, <<"w-56">>], []),
-         input(undefined, [no_rounded, <<"w-56">>], [{placeholder, <<"No rounding">>}])]).
+    row([ah_input(<<"not-an-email">>, [invalid, <<"w-56">>], [{name, email}]),
+         ah_input(<<"ada@example.com">>, [valid, <<"w-56">>], []),
+         ah_input(<<"Disabled">>, [disabled, <<"w-56">>], []),
+         ah_input(undefined, [no_rounded, <<"w-56">>], [{placeholder, <<"No rounding">>}])]).
 
 -spec input_addons() -> aihtml:html().
 input_addons() ->
-    row([input(undefined, [<<"w-64">>], [{prefix, <<"https://">>},
-                                         {placeholder, <<"example.com">>}]),
-         input(<<"42">>, [<<"w-40">>], [{suffix, <<"kg">>}]),
-         input(<<"19.99">>, [<<"w-48">>], [{prefix, <<"$">>}, {suffix, <<"USD">>}])]).
+    row([ah_input(undefined, [<<"w-64">>], [{prefix, <<"https://">>},
+                                            {placeholder, <<"example.com">>}]),
+         ah_input(<<"42">>, [<<"w-40">>], [{suffix, <<"kg">>}]),
+         ah_input(<<"19.99">>, [<<"w-48">>], [{prefix, <<"$">>}, {suffix, <<"USD">>}])]).
 
 -spec input_clearable() -> aihtml:html().
 input_clearable() ->
     Search = safe(<<"<svg width=\"14\" height=\"14\" viewBox=\"0 0 24 24\" fill=\"none\" "
                     "stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"11\" cy=\"11\" "
                     "r=\"7\"/><path d=\"m20 20-3.5-3.5\"/></svg>">>),
-    row([input(undefined, [clearable, <<"w-64">>], [{prefix, Search},
-                                                   {placeholder, <<"Search">>}]),
-         input(<<"Clear me">>, [clearable, <<"w-56">>], [])]).
+    row([ah_input(undefined, [clearable, <<"w-64">>], [{prefix, Search},
+                                                      {placeholder, <<"Search">>}]),
+         ah_input(<<"Clear me">>, [clearable, <<"w-56">>], [])]).
 
 -spec input_label() -> aihtml:html().
 input_label() ->
-    row([input(undefined, [<<"w-56">>], [{label, <<"Full name">>}]),
-         input(<<"Ada Lovelace">>, [<<"w-56">>], [{label, <<"Full name">>}])]).
+    row([ah_input(undefined, [<<"w-56">>], [{label, <<"Full name">>}]),
+         ah_input(<<"Ada Lovelace">>, [<<"w-56">>], [{label, <<"Full name">>}])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

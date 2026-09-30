@@ -7,7 +7,7 @@
 按钮的点击直接由 Erlang 函数响应，每个事件一次无状态请求，响应是要应用的 DOM 操作：
 
 ```erlang
-button(<<"删除">>, Id, [borderless], [on(click, {?MODULE, delete, #{id => Id}})])
+ah_button(<<"删除">>, Id, [borderless], [on(click, {?MODULE, delete, #{id => Id}})])
 
 %% 同一个按钮的 record 写法，postback 默认回到当前模块
 #ah_button{body = <<"删除">>, variant = borderless, postback = {delete, #{id => Id}}}
@@ -21,9 +21,9 @@ action(delete, #{id := Id}, _Event, Ctx) ->
 -include_lib("aihtml/include/aihtml.hrl").
 
 login() ->
-    'div'([checkbox(<<"记住我">>, yes, [], [{name, remember}]),
-           button(<<"保存">>, save, [primary, <<"mt-4">>], [{type, submit}])],
-          [<<"flex flex-col gap-2">>], [{id, login}]).
+    ah_div([ah_checkbox(<<"记住我">>, yes, [], [{name, remember}]),
+            ah_button(<<"保存">>, save, [primary, <<"mt-4">>], [{type, submit}])],
+           [<<"flex flex-col gap-2">>], [{id, login}]).
 
 %% aihtml:render(login()) -> iodata()
 ```
@@ -70,15 +70,15 @@ login() ->
 
 ## 调用约定
 
-所有构建函数都返回元素 record：普通标签返回公共的 `#ah_el{tag, body}`，组件返回各自的 record（见下文「record 写法」）。两者可以任意嵌套，最后由 `aihtml:render/1` 输出 iodata。元素在渲染前是普通数据，可以模式匹配和修改；属性名等错误在渲染时报出。
+构建函数与 record 同名，都带 `ah_` 前缀：`ah_button/4` 构建 `#ah_button{}`，`ah_div/3` 等普通标签构建 `#ah_el{}`。所有构建函数都返回元素 record：普通标签返回公共的 `#ah_el{tag, body}`，组件返回各自的 record（见下文「record 写法」）。两者可以任意嵌套，最后由 `aihtml:render/1` 输出 iodata。元素在渲染前是普通数据，可以模式匹配和修改；属性名等错误在渲染时报出。
 
 | 形式 | 例子 |
 |---|---|
-| 通用标签 | `p(Children)`、`p(Children, Css, Attrs)`；`div` 是 Erlang 保留字，写作 `'div'` |
-| 空元素 | `img(Css, Attrs)`、`hr(Css, Attrs)`、`br()` |
-| 取值组件 | `button(Content, Value, Css, Attrs)`、`dropdownlist(Items, Value, Css, Attrs)`、`datepicker(Value, Css, Attrs)` |
-| 容器与展示 | `card(Children, Css, Attrs)`、`chip(Content, Css, Attrs)`、`loader(Css, Attrs)` |
-| 任意标签 | `aihtml:el(Tag, Children, Css, Attrs)`、`aihtml:void(Tag, Css, Attrs)` |
+| 通用标签 | `ah_p(Children)`、`ah_p(Children, Css, Attrs)`、`ah_div(Children, Css, Attrs)` |
+| 空元素 | `ah_img(Css, Attrs)`、`ah_hr(Css, Attrs)`、`ah_br()` |
+| 取值组件 | `ah_button(Content, Value, Css, Attrs)`、`ah_dropdownlist(Items, Value, Css, Attrs)`、`ah_datepicker(Value, Css, Attrs)` |
+| 容器与展示 | `ah_card(Children, Css, Attrs)`、`ah_chip(Content, Css, Attrs)`、`ah_loader(Css, Attrs)` |
+| 任意标签 | `aihtml:ah_el(Tag, Children, Css, Attrs)`、`aihtml:ah_void(Tag, Css, Attrs)` |
 | record 写法 | `#ah_el{tag = section, body = Children, css = Css, attrs = Attrs, id = x}`，空元素的 `body` 可以不写 |
 
 **Children**：binary、数字、原子和可打印字符串都作为文本转义输出；其它列表是子节点序列；`safe(IoData)` 原样输出。
@@ -96,13 +96,13 @@ login() ->
 
 ### record 写法
 
-每个组件都有一个带 `ah_` 前缀的 record，`button/4` 这类函数只是构建它的简写。页面模块 include `aihtml.hrl` 后，两种写法可以混用：
+每个组件都有一个带 `ah_` 前缀的 record，`ah_button/4` 这类函数只是构建它的简写。页面模块 include `aihtml.hrl` 后，两种写法可以混用：
 
 ```erlang
 -include_lib("aihtml/include/aihtml.hrl").
 
 %% 函数写法
-button(<<"Save">>, save, [success, lg], [{disabled, true}])
+ah_button(<<"Save">>, save, [success, lg], [{disabled, true}])
 
 %% record 写法：同一个元素
 #ah_button{body = <<"Save">>, value = save, variant = success, size = lg,
@@ -130,7 +130,7 @@ record 写法适合选项多的组件，也便于在渲染前查看和修改元�
 
 ```erlang
 #ah_button{body = <<"Save">>, postback = {save, #{id => Id}}}
-button(<<"Save">>, undefined, [], [on(click, {?MODULE, save, #{id => Id}})])
+ah_button(<<"Save">>, undefined, [], [on(click, {?MODULE, save, #{id => Id}})])
 ```
 
 主事件由组件决定：按钮是 `click`，取值控件是 `change`，drawer、window 等是 `'ah:close'`，没有主事件的组件（card、badge……）设置 postback 会报 `no_postback_event`。每个组件的字段、类型、默认值和主事件，见演示站文档页的 API 标签。
@@ -143,8 +143,8 @@ button(<<"Save">>, undefined, [], [on(click, {?MODULE, save, #{id => Id}})])
 
 -behaviour(aihtml_element).
 render(#myapp_card{title = T, body = B} = R) ->
-    aihtml:'div'([aihtml:h3(T), B], [<<"card">> | R#myapp_card.css],
-                 aihtml_element:root_attrs(R, click)).
+    aihtml:ah_div([aihtml:ah_h3(T), B], [<<"card">> | R#myapp_card.css],
+                  aihtml_element:root_attrs(R, click)).
 ```
 
 把 `module` 改成别的模块，还可以替换单个元素的渲染方式，例如 `#ah_button{module = myapp_fancy_button}`。
@@ -169,7 +169,7 @@ render(#myapp_card{title = T, body = B} = R) ->
 | 选择器 | datepicker, combobox（支持服务端搜索）, timepicker, colorpicker |
 | 基础布局 | card, panel, expander, tabs, tab_bar, breadcrumbs, pagination, steps, skeleton, loader, empty |
 | 导航 | menu, navbar, sidenav, toolbar, splitter, listmenu, status_bar |
-| 浮层 | tooltip, popover, drawer, sheet, window, notification；`toast/3`、`opens/1` 等触发器 |
+| 浮层 | tooltip, popover, drawer, sheet, window, notification；`ah_toast/3`、`opens/1` 等触发器 |
 | 展示 | avatar, badge, chip, aspect_ratio, kbd, time_ago, expandable_text, progressbar, progress_circle, meter, statistic, kpi_card, timeline, ranking_list, tag_cloud, alert |
 | 日历 | calendar（事件日历：月、周、日、日程视图，可拖动）, datetime_input |
 | 列表选择 | cascader（下一级可由服务端懒加载）, listbox（支持服务端搜索）, transfer |
@@ -190,7 +190,7 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 - **取值组件**：自定义控件把当前值写在根元素的 `data-ah-value`，用隐藏 input 参与表单，值改变时在根元素上触发 `change`。所以 `on(change, {M, A, Args})` 写在组件的 Attrs 里就能收到事件，`Event.value` 就是这个值。
 - **多个值**（多选的 combobox、listbox、transfer、checkbox_group，datagrid 的选中行，sortable 的顺序等）用逗号连接；值本身的逗号和反斜杠写成 `\,`、`\\`。服务端用 `aihtml_value:split(Event.value)` 拆开、`aihtml_value:join(List)` 拼接，浏览器端对应 `AH.lib.values.split/join`；不含逗号的值写法与原来相同。
-- **服务端驱动**：action 里用 `aihtml_action:call(Ctx, Target, Method, Args)` 调用组件方法，例如打开抽屉、设置进度；也可以用 `aihtml_toast:toast(Ctx, Msg, Opts)`、`aihtml_lib_overlay:open(Ctx, Target)` 等封装。
+- **服务端驱动**：action 里用 `aihtml_action:call(Ctx, Target, Method, Args)` 调用组件方法，例如打开抽屉、设置进度；也可以用 `aihtml_toast:ah_toast(Ctx, Msg, Opts)`、`aihtml_lib_overlay:open(Ctx, Target)` 等封装。
 - **辅助函数**：组件之外的函数也由 `aihtml` 门面导出，include `aihtml.hrl` 后可直接调用。前几个在 action 里用：需要服务端补数据的组件，由 action 调用它们回应，它们在服务端渲染 HTML，再形变替换进组件，浏览器不拼 HTML。后几个生成属性，拼进元素的 Attrs：
 
   | 函数 | 用途 |
@@ -214,7 +214,7 @@ render(#myapp_card{title = T, body = B} = R) ->
   | `docking_add_window/4`、`dock_layout_open/3,4` | 往停靠布局里加窗口、打开面板 |
 
   ```erlang
-  %% 树的某个节点展开时加载子节点：tree(Items, undefined, [], [{load, {?MODULE, children, #{}}}])
+  %% 树的某个节点展开时加载子节点：ah_tree(Items, undefined, [], [{load, {?MODULE, children, #{}}}])
   %% 展开的节点的值在 Event 的 data 里（节点的 data-value 属性）
   action(children, _Args, #{data := #{<<"value">> := Parent}} = Event, Ctx) ->
       set_children(Ctx, Event, [{C, C} || C <- db:children(Parent)]).
@@ -225,7 +225,7 @@ render(#myapp_card{title = T, body = B} = R) ->
   - 布局类组件（dock_layout、tile_layout、node_graph）把用户调整后的布局以 JSON 写在 `data-ah-value` 并触发 `change`，服务端保存后，下次用这个 JSON 渲染出同样的布局。
 
   ```erlang
-  datagrid(Columns, FirstPage, [pageable], [{source, {?MODULE, orders, #{}}}, {total, Total}])
+  ah_datagrid(Columns, FirstPage, [pageable], [{source, {?MODULE, orders, #{}}}, {total, Total}])
 
   action(orders, _Args, Event, Ctx) ->
       #{offset := Off, limit := Lim, sort := Sort, filters := F} = datagrid_query(Event),
@@ -281,8 +281,8 @@ action(toggle, #{id := Id}, #{checked := Done}, Ctx) ->
 
 ```erlang
 %% 页面：这个列表跟随 todos 主题；断线重连后运行 refresh 补齐
-ul(Items, [], [{id, todo_list},
-               subscribe(todos, #{refresh => {?MODULE, refresh_todos, #{}}})])
+ah_ul(Items, [], [{id, todo_list},
+                  subscribe(todos, #{refresh => {?MODULE, refresh_todos, #{}}})])
 
 %% 任意节点、任意进程，通常在 action 写完数据层之后
 aihtml_push:publish(todos, fun(C) ->
@@ -303,8 +303,8 @@ end, #{except => Ctx})     %% 跳过发起者，它已经通过 action 响应更
 `fetch/3,4` 生成的属性让元素请求开发者自己路由的 URL，返回的 HTML 片段替换到目标位置。适合已有 REST 路由的场景：
 
 ```erlang
-button(<<"更多">>, more, [outlined],
-       [fetch(get, <<"/items?page=2">>, <<"#items">>, #{swap => append})])
+ah_button(<<"更多">>, more, [outlined],
+          [fetch(get, <<"/items?page=2">>, <<"#items">>, #{swap => append})])
 ```
 
 ### 文件上传
@@ -313,8 +313,8 @@ button(<<"更多">>, more, [outlined],
 - **给出 `url`**：浏览器用 XHR 把每个文件 POST 到这个地址（multipart，字段名默认 `file`），显示进度。服务端返回的 JSON 构成组件的值；上传完成后根元素触发 `change`，所以 postback 能在普通 action 里拿到文件列表：
 
   ```erlang
-  upload([], [], [{url, <<"/upload">>}, {name, files},
-                  on(change, {?MODULE, uploaded, #{}})])
+  ah_upload([], [], [{url, <<"/upload">>}, {name, files},
+                     on(change, {?MODULE, uploaded, #{}})])
 
   action(uploaded, _Args, Event, Ctx) ->
       Files = uploaded_files(Event),        %% [#{<<"name">> => ..., <<"size">> => ...}]
@@ -359,10 +359,10 @@ action 的 `aihtml_action:html(Ctx, Target, Html, Swap)`、服务端推送、`fe
 ```erlang
 %% 页面：搜索框和结果放在同一块里，都有稳定的 id
 results(Query, Rows) ->
-    'div'([input(Query, [], [{id, q}, {name, q},
-                             on(input, {?MODULE, search, #{}}, #{debounce => 200})]),
-           ul([li(R) || R <- Rows], [], [{id, rows}])],
-          [], [{id, search_box}]).
+    ah_div([ah_input(Query, [], [{id, q}, {name, q},
+                                 on(input, {?MODULE, search, #{}}, #{debounce => 200})]),
+            ah_ul([ah_li(R) || R <- Rows], [], [{id, rows}])],
+           [], [{id, search_box}]).
 
 action(search, _, #{value := Q}, Ctx) ->
     aihtml_action:html(Ctx, {id, search_box}, results(Q, db:search(Q)), morph).
@@ -377,9 +377,9 @@ action(search, _, #{value := Q}, Ctx) ->
 适用于：正在播放的视频、有未保存内容的编辑器、已经挂载且内部有状态的组件。浏览器支持 `moveBefore` 时用它移动，iframe 和媒体不会重新加载。
 
 ```erlang
-'div'([video_player(Url), comments(Items)], [], [{id, player_box}])
+ah_div([video_player(Url), comments(Items)], [], [{id, player_box}])
 %% 播放器本身：
-'div'(Player, [], [{id, player}, preserve()])
+ah_div(Player, [], [{id, player}, preserve()])
 ```
 
 ### 过渡动画（settle）
@@ -413,10 +413,10 @@ action(search, _, #{value := Q}, Ctx) ->
 组件事件（`ah:` 开头，例如 datagrid 的 `ah:edit`、scheduler 的 `ah:event-change`）默认是 `drop`：上一次请求还没结束时，新的事件会被丢掉。用户可能很快连续编辑时，绑定这类事件要写 `sync => queue`，例如 `on('ah:edit', {?MODULE, save_cell, #{}}, #{sync => queue})`。
 
 ```erlang
-button(<<"Save">>, save, [],
-       [on(click, {?MODULE, save, #{}},
-           #{indicator => <<"#saving">>, disable => <<"closest form">>})]),
-span(<<"Saving…"/utf8>>, [<<"ah-indicator">>], [{id, saving}])
+ah_button(<<"Save">>, save, [],
+          [on(click, {?MODULE, save, #{}},
+              #{indicator => <<"#saving">>, disable => <<"closest form">>})]),
+ah_span(<<"Saving…"/utf8>>, [<<"ah-indicator">>], [{id, saving}])
 ```
 
 ### 触发事件与浏览器历史
@@ -454,7 +454,7 @@ h.stop();
                              og => #{title => <<"订单"/utf8>>, type => website},
                              json_ld => #{<<"@context">> => <<"https://schema.org">>, <<"@type">> => <<"WebPage">>}})
   ```
-- **Markdown**：`markdown_view(Markdown, Css, Attrs)` 在服务端把 Markdown 渲染成 HTML（`aihtml_lib_markdown`，移植自 markdown-it，配置与 markdown_editor 相同，输出与浏览器端逐字节一致）。可以直接显示用户写的 Markdown：原始 HTML 当作文本，链接只保留 http、https、mailto 和相对地址。
+- **Markdown**：`ah_markdown_view(Markdown, Css, Attrs)` 在服务端把 Markdown 渲染成 HTML（`aihtml_lib_markdown`，移植自 markdown-it，配置与 markdown_editor 相同，输出与浏览器端逐字节一致）。可以直接显示用户写的 Markdown：原始 HTML 当作文本，链接只保留 http、https、mailto 和相对地址。
 - **图表**：各类图表在画布旁输出一份视觉隐藏的数据表（`<table>`，带标题、表头），图表容器的角色是 `figure`。搜索引擎和读屏软件读到的是数据本身。
 - **导航链接**：pagination、datagrid、datatable、calendar、scheduler 有 `href` 选项（URL 模板），翻页、切换日期和视图的按钮变成真正的 `<a href>`：
 
@@ -655,8 +655,8 @@ demos() ->
 
 -spec combo_search() -> aihtml:html().
 combo_search() ->
-    combobox([], undefined, [<<"w-72">>],
-             [{name, city}, {search, {?MODULE, search, #{}}}]).
+    ah_combobox([], undefined, [<<"w-72">>],
+                [{name, city}, {search, {?MODULE, search, #{}}}]).
 ```
 
 示例需要服务端参与时，示例模块本身声明 `-behaviour(aihtml_action)` 并实现 `action/4`，文档页上就能直接操作：

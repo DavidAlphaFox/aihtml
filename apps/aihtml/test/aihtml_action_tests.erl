@@ -60,16 +60,16 @@ args_must_be_data_test() ->
 
 request_options_render_as_attributes_test() ->
     Html = aihtml:render_binary(
-             span([], [], [on(click, {?M, inc, #{n => 1}},
-                              #{sync => queue, sync_scope => <<"form">>,
-                                indicator => <<"#spin">>, disable => this}),
-                           preserve()])),
+             ah_span([], [], [on(click, {?M, inc, #{n => 1}},
+                                 #{sync => queue, sync_scope => <<"form">>,
+                                   indicator => <<"#spin">>, disable => this}),
+                              preserve()])),
     [?assertMatch({match, _}, re:run(Html, P))
      || P <- [<<"data-ah-sync=\"queue\"">>, <<"data-ah-sync-scope=\"form\"">>,
               <<"data-ah-indicator=\"#spin\"">>, <<"data-ah-disable=\"this\"">>,
               <<" data-ah-preserve[ >]">>]],
     ?assertError({aihtml, {bad_sync, later}}, on(click, {?M, inc, #{}}, #{sync => later})),
-    F = aihtml:render_binary(span([], [], [fetch(get, <<"/x">>, this, #{indicator => this})])),
+    F = aihtml:render_binary(ah_span([], [], [fetch(get, <<"/x">>, this, #{indicator => this})])),
     ?assertMatch({match, _}, re:run(F, <<"data-ah-indicator=\"this\"">>)).
 
 trigger_and_history_ops_test() ->
@@ -93,7 +93,7 @@ run_fun(Fun) ->
     {ok, [json(Ops)]}.
 
 component_event_names_test() ->
-    Html = aihtml:render_binary(span([], [], [on('ah:close', {?M, inc, #{n => 1}})])),
+    Html = aihtml:render_binary(ah_span([], [], [on('ah:close', {?M, inc, #{n => 1}})])),
     ?assertMatch({match, _}, re:run(Html, <<"data-ah-on=\"ah:close:[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+\"">>)),
     ?assertError({aihtml, {bad_event_name, _}}, on(<<"ah:Close">>, {?M, inc, #{}})),
     ?assertError({aihtml, {bad_event_name, _}}, on(<<"x y">>, {?M, inc, #{}})).
@@ -104,10 +104,10 @@ component_event_names_test() ->
 
 static_render_carries_signed_actions_test() ->
     Html = aihtml:render_binary(
-             span(<<"+">>, [], [on(click, {?M, inc, #{n => 1}}),
-                                     on(input, {?M, echo, #{}}, #{debounce => 150,
-                                                                   include => [{id, a}, <<".b">>],
-                                                                   confirm => <<"Sure?">>})])),
+             ah_span(<<"+">>, [], [on(click, {?M, inc, #{n => 1}}),
+                                        on(input, {?M, echo, #{}}, #{debounce => 150,
+                                                                      include => [{id, a}, <<".b">>],
+                                                                      confirm => <<"Sure?">>})])),
     ?assertMatch({match, _}, re:run(Html, <<"data-ah-on=\"click:[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]+ "
                                             "input:[A-Za-z0-9_.-]+:150\"">>)),
     ?assertMatch({match, _}, re:run(Html, <<"data-ah-include=\"#a, .b\"">>)),
@@ -122,7 +122,7 @@ page_points_at_the_action_endpoint_test() ->
 %%%===================================================================
 
 run_returns_the_operations_test() ->
-    Tok = token_of(span(<<"+">>, [], [on(click, {?M, inc, #{n => 41}})])),
+    Tok = token_of(ah_span(<<"+">>, [], [on(click, {?M, inc, #{n => 41}})])),
     ?assertEqual({ok, [[#{<<"op">> => <<"html">>, <<"id">> => <<"n">>,
                           <<"swap">> => <<"inner">>, <<"html">> => <<"42">>}]]},
                  run(Tok, #{<<"type">> => <<"click">>})).

@@ -4,7 +4,7 @@
 %%% echarts option is built here, as sigil's bar-chart/create does, and
 %%% drawn like any chart (see aihtml_chart and aihtml_lib_chart).
 %%%
-%%% bar_chart/3 builds an element record (#ah_bar_chart{}, defined in
+%%% ah_bar_chart/3 builds an element record (#ah_bar_chart{}, defined in
 %%% include/aihtml_bar_chart.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -14,7 +14,7 @@
 
 -include("aihtml_bar_chart.hrl").
 
--export([bar_chart/3, option/1, render/1, fields/1, catalog/0]).
+-export([ah_bar_chart/3, option/1, render/1, fields/1, catalog/0]).
 
 -export_type([element/0]).
 
@@ -37,8 +37,8 @@
 %% @doc A bar chart: `Series' as for area_chart. Css: `horizontal',
 %% `stack', `loading', `disabled'. Options: those of area_chart plus
 %% `bar_width' (pixels or a percentage).
--spec bar_chart([series()], css(), attrs()) -> #ah_bar_chart{}.
-bar_chart(Series, Css, Attrs) ->
+-spec ah_bar_chart([series()], css(), attrs()) -> #ah_bar_chart{}.
+ah_bar_chart(Series, Css, Attrs) ->
     ?E:build(?MODULE, #ah_bar_chart{series = Series}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -100,7 +100,7 @@ render(#ah_bar_chart{loading = L, disabled = D, width = W, height = H, renderer 
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => bar_chart, category => data,
-       signature => <<"bar_chart(Series, Css, Attrs)">>,
+       signature => <<"ah_bar_chart(Series, Css, Attrs)">>,
        root => <<"ah-chart">>, flags => [horizontal, stack, loading, disabled],
        classes => #{horizontal => [], stack => [], loading => []},
        options => [categories, title, colors, y_name, legend, grid, tooltip, bar_width,

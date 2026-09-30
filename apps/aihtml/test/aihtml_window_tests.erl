@@ -42,9 +42,9 @@ every_entry_documents_options_and_methods_test() ->
 %%%===================================================================
 
 window_test() ->
-    H = ?M:window(<<"Body">>, [<<"shadow-xl">>],
-                  [{id, <<"w">>}, {title, <<"Title">>}, {modal, true}, {footer, <<"F">>},
-                   {width, 400}, {height, 300}, {collapsible, true}]),
+    H = ?M:ah_window(<<"Body">>, [<<"shadow-xl">>],
+                     [{id, <<"w">>}, {title, <<"Title">>}, {modal, true}, {footer, <<"F">>},
+                      {width, 400}, {height, 300}, {collapsible, true}]),
     has(H, <<"class=\"ah-window shadow-xl ah-window-resizable\" data-ah=\"window\" "
              "data-state=\"closed\" role=\"dialog\" tabindex=\"-1\" aria-modal=\"true\" "
              "aria-labelledby=\"w-title\" style=\"display:none;width:400px;height:300px;\"">>),
@@ -57,8 +57,8 @@ window_test() ->
     ?assertEqual(8, length(binary:matches(r(H), <<"ah-window-resize-handle">>))).
 
 window_plain_test() ->
-    H = ?M:window(<<"x">>, [], [{resizable, false}, {draggable, false}, {closable, false},
-                                {collapsed, true}]),
+    H = ?M:ah_window(<<"x">>, [], [{resizable, false}, {draggable, false}, {closable, false},
+                                   {collapsed, true}]),
     has(H, <<"class=\"ah-window ah-window-collapsed\"">>),
     has(H, <<"aria-modal=\"false\"">>),
     has(H, <<"aria-expanded=\"false\"">>),
@@ -71,16 +71,16 @@ window_plain_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:window(<<"W">>, [<<"shadow">>],
-                             [{id, <<"w">>}, {title, <<"T">>}, {modal, true},
-                              {height, 200}, {collapsed, true}])),
+    ?assertEqual(r(?M:ah_window(<<"W">>, [<<"shadow">>],
+                                [{id, <<"w">>}, {title, <<"T">>}, {modal, true},
+                                 {height, 200}, {collapsed, true}])),
                  r(#ah_window{body = <<"W">>, css = [<<"shadow">>], id = <<"w">>,
                               title = <<"T">>, modal = true, height = 200,
                               collapsed = true})).
 
 builder_fills_fields_test() ->
-    W = ?M:window(<<"x">>, [<<"c">>], [{id, <<"w">>}, {width, 400}, {draggable, false},
-                                        {close_on_esc, false}, {data_x, 1}]),
+    W = ?M:ah_window(<<"x">>, [<<"c">>], [{id, <<"w">>}, {width, 400}, {draggable, false},
+                                           {close_on_esc, false}, {data_x, 1}]),
     ?assertMatch(#ah_window{id = <<"w">>, css = [<<"c">>], width = 400, draggable = false,
                             close_on_esc = false, closable = true, attrs = [{data_x, 1}]}, W).
 

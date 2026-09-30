@@ -2,7 +2,7 @@
 %%% @doc sigil's cascader (form/cascader): a multi-level picker in a
 %%% popup. See designs/04-components.md.
 %%%
-%%%   cascader(Items, Value, Css, Attrs)        the component
+%%%   ah_cascader(Items, Value, Css, Attrs)     the component
 %%%   cascader_children(Ctx, Event, Children)   (in an action) a lazy level
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
@@ -39,7 +39,7 @@
 
 -include("aihtml_cascader.hrl").
 
--export([cascader/4, cascader_children/3, cascader_children/4,
+-export([ah_cascader/4, cascader_children/3, cascader_children/4,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([cascader_node/0, children/0]).
@@ -73,9 +73,9 @@
 %% `separator' (default " / "), `popup_height' (px, default 240),
 %% `empty_text' (search without results, default "No results found"),
 %% `load' (an action ref for `lazy' children, see the module doc).
--spec cascader([cascader_node()], [term()] | undefined, aihtml_html:css(),
-               aihtml_html:attrs()) -> #ah_cascader{}.
-cascader(Items, Value, Css, Attrs) ->
+-spec ah_cascader([cascader_node()], [term()] | undefined, aihtml_html:css(),
+                  aihtml_html:attrs()) -> #ah_cascader{}.
+ah_cascader(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_cascader{items = Items, value = Value}, Css, Attrs).
 
 -spec render(#ah_cascader{}) -> aihtml_html:html().
@@ -263,7 +263,7 @@ fields(ah_cascader) -> record_info(fields, ah_cascader).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => cascader, category => form,
-       signature => <<"cascader(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_cascader(Items, Value, Css, Attrs)">>,
        root => <<"ah-cascader">>,
        groups => #{size => {[sm, lg], none}},
        flags => [disabled, filterable, change_on_select, no_arrow, no_clear],

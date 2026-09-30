@@ -44,7 +44,7 @@ normalize_time_test_() ->
 %%%-------------------------------------------------------------------
 
 timepicker_popup_test() ->
-    H = r(?M:timepicker(<<"14:30">>, [<<"w-48">>], [{name, start}, {id, <<"t1">>}])),
+    H = r(?M:ah_timepicker(<<"14:30">>, [<<"w-48">>], [{name, start}, {id, <<"t1">>}])),
     ?assert(has(H, <<"class=\"ah-timepicker-field w-48\"">>)),
     ?assert(has(H, <<"data-ah=\"timepicker\"">>)),
     ?assert(has(H, <<"data-ah-value=\"14:30\"">>)),
@@ -65,7 +65,7 @@ timepicker_popup_test() ->
     ?assert(has(H, <<"x2=\"220.93\" y2=\"77.5\"">>)).
 
 timepicker_24h_test() ->
-    H = r(?M:timepicker({21, 0}, [inline], [{format, '24h'}, {minute_step, 15}])),
+    H = r(?M:ah_timepicker({21, 0}, [inline], [{format, '24h'}, {minute_step, 15}])),
     ?assert(has(H, <<"class=\"ah-timepicker-field ah-timepicker-field-inline\"">>)),
     ?assertNot(has(H, <<"ah-timepicker-popup">>)),
     ?assertNot(has(H, <<"ah-timepicker-input">>)),
@@ -80,18 +80,18 @@ timepicker_24h_test() ->
     ?assert(has(H, <<"<input type=\"hidden\" value=\"21:00\">">>)).
 
 timepicker_empty_test() ->
-    H = r(?M:timepicker(undefined, [clearable], [{placeholder, <<"<Pick>">>}])),
+    H = r(?M:ah_timepicker(undefined, [clearable], [{placeholder, <<"<Pick>">>}])),
     ?assert(has(H, <<"data-ah-value=\"\"">>)),
     ?assert(has(H, <<"placeholder=\"&lt;Pick&gt;\"">>)),
     ?assert(has(H, <<"ah-timepicker-field-clearable">>)),
     %% nothing to clear yet
     ?assert(has(H, <<"aria-label=\"Clear\" hidden>">>)),
-    H2 = r(?M:timepicker(undefined, [], [{format, '24h'}])),
+    H2 = r(?M:ah_timepicker(undefined, [], [{format, '24h'}])),
     ?assert(has(H2, <<"placeholder=\"--:--\"">>)),
     ?assertNot(has(H2, <<"ah-timepicker-clear">>)).
 
 timepicker_modifiers_test() ->
-    H = r(?M:timepicker(<<"00:10">>, [inline, landscape, disabled], [])),
+    H = r(?M:ah_timepicker(<<"00:10">>, [inline, landscape, disabled], [])),
     ?assert(has(H, <<"ah-timepicker-field-landscape">>)),
     ?assert(has(H, <<"class=\"ah-timepicker ah-timepicker-landscape ah-timepicker-disabled\"">>)),
     ?assert(has(H, <<"aria-disabled=\"true\"">>)),
@@ -100,15 +100,15 @@ timepicker_modifiers_test() ->
                      "aria-disabled=\"true\">12</span>">>)),
     ?assertEqual(0, count(H, <<"tabindex=\"0\" aria-pressed">>)),
     ?assert(has(H, <<"ah-timepicker-header-am ah-timepicker-header-am-active">>)),
-    Hd = r(?M:timepicker(<<"07:05">>, [disabled], [])),
+    Hd = r(?M:ah_timepicker(<<"07:05">>, [disabled], [])),
     ?assert(has(Hd, <<"<input class=\"ah-timepicker-input\" type=\"text\" value=\"7:05 AM\"">>)),
     ?assert(has(Hd, <<"aria-expanded=\"false\" disabled>">>)),
-    ?assertEqual(unknown_modifier, bad(fun() -> ?M:timepicker(undefined, [huge], []) end)),
+    ?assertEqual(unknown_modifier, bad(fun() -> ?M:ah_timepicker(undefined, [huge], []) end)),
     ?assertEqual(conflicting_modifiers,
-                 bad(fun() -> ?M:timepicker(undefined, [portrait, landscape], []) end)).
+                 bad(fun() -> ?M:ah_timepicker(undefined, [portrait, landscape], []) end)).
 
 timepicker_range_test() ->
-    H = r(?M:timepicker(<<"14:00">>, [], [{min, <<"09:00">>}, {max, {17, 30}}])),
+    H = r(?M:ah_timepicker(<<"14:00">>, [], [{min, <<"09:00">>}, {max, {17, 30}}])),
     ?assert(has(H, <<"data-min=\"09:00\" data-max=\"17:30\"">>)),
     %% PM: 6..11 are after 17:30 and disabled; 12 (noon) .. 5 are allowed
     Disabled = [V || {match, [V]} <- [re:run(T, <<"data-val=\"([0-9]+)\"">>,
@@ -118,17 +118,17 @@ timepicker_range_test() ->
     ?assertEqual([<<"6">>, <<"7">>, <<"8">>, <<"9">>, <<"10">>, <<"11">>], Disabled).
 
 timepicker_options_test() ->
-    ?assertEqual(bad_option, bad(fun() -> r(?M:timepicker(undefined, [], [{format, '36h'}])) end)),
-    ?assertEqual(bad_option, bad(fun() -> r(?M:timepicker(undefined, [], [{minute_step, 0}])) end)),
-    ?assertEqual(bad_option, bad(fun() -> r(?M:timepicker(undefined, [], [{min, <<"9">>}])) end)),
-    ?assertEqual(bad_value, bad(fun() -> r(?M:timepicker(<<"nope">>, [], [])) end)),
-    H = r(?M:timepicker(<<"10:00">>, [], [{auto_switch, false}])),
+    ?assertEqual(bad_option, bad(fun() -> r(?M:ah_timepicker(undefined, [], [{format, '36h'}])) end)),
+    ?assertEqual(bad_option, bad(fun() -> r(?M:ah_timepicker(undefined, [], [{minute_step, 0}])) end)),
+    ?assertEqual(bad_option, bad(fun() -> r(?M:ah_timepicker(undefined, [], [{min, <<"9">>}])) end)),
+    ?assertEqual(bad_value, bad(fun() -> r(?M:ah_timepicker(<<"nope">>, [], [])) end)),
+    H = r(?M:ah_timepicker(<<"10:00">>, [], [{auto_switch, false}])),
     ?assert(has(H, <<"data-auto-switch=\"false\"">>)).
 
 timepicker_escaping_test() ->
-    H = r(?M:timepicker(<<"10:00">>, [inline],
-                        [{footer, <<"<b>&">>}, {title, <<"\"x\"">>},
-                         {data, #{note => <<"<i>">>}}])),
+    H = r(?M:ah_timepicker(<<"10:00">>, [inline],
+                           [{footer, <<"<b>&">>}, {title, <<"\"x\"">>},
+                            {data, #{note => <<"<i>">>}}])),
     ?assert(has(H, <<"&lt;b&gt;&amp;">>)),
     ?assert(has(H, <<"title=\"&quot;x&quot;\"">>)),
     ?assert(has(H, <<"data-note=\"&lt;i&gt;\"">>)),
@@ -141,7 +141,7 @@ timepicker_escaping_test() ->
 catalog_test() ->
     [T] = ?M:catalog(),
     ?assertMatch(#{name := timepicker, behavior := <<"timepicker">>}, T),
-    [?assert(erlang:function_exported(?M, N, 3)) || #{name := N} <- [T]],
+    [?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 3)) || #{name := N} <- [T]],
     %% every option and flag is documented
     [?assertEqual([], (Opts ++ Flags) -- maps:keys(Docs))
      || #{options := Opts, flags := Flags, option_docs := Docs} <- [T]],
@@ -155,21 +155,21 @@ catalog_test() ->
 action(_, _, _, _) -> ok.
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:timepicker(<<"14:30">>, [landscape, clearable, <<"w-48">>],
-                                 [{name, start}, {id, t1}, {format, '24h'},
-                                  {minute_step, 15}, {min, <<"09:00">>},
-                                  {auto_switch, false}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_timepicker(<<"14:30">>, [landscape, clearable, <<"w-48">>],
+                                    [{name, start}, {id, t1}, {format, '24h'},
+                                     {minute_step, 15}, {min, <<"09:00">>},
+                                     {auto_switch, false}, {title, <<"t">>}])),
                  r(#ah_timepicker{value = <<"14:30">>, view = landscape, clearable = true,
                                   css = [<<"w-48">>], name = start, id = t1,
                                   format = '24h', minute_step = 15, min = <<"09:00">>,
                                   auto_switch = false, attrs = [{title, <<"t">>}]})),
-    ?assertEqual(r(?M:timepicker(undefined, [inline, disabled], [{footer, <<"f">>}])),
+    ?assertEqual(r(?M:ah_timepicker(undefined, [inline, disabled], [{footer, <<"f">>}])),
                  r(#ah_timepicker{inline = true, disabled = true, footer = <<"f">>})).
 
 builder_fills_fields_test() ->
-    T = ?M:timepicker({9, 5}, [portrait, inline, <<"x">>],
-                      [{name, at}, {format, '24h'}, {placeholder, <<"p">>},
-                       {title, <<"t">>}]),
+    T = ?M:ah_timepicker({9, 5}, [portrait, inline, <<"x">>],
+                         [{name, at}, {format, '24h'}, {placeholder, <<"p">>},
+                          {title, <<"t">>}]),
     ?assertMatch(#ah_timepicker{value = {9, 5}, view = portrait, inline = true,
                                 disabled = false, name = at, format = '24h',
                                 minute_step = 5, auto_switch = true,

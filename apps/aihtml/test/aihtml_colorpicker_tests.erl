@@ -52,9 +52,9 @@ normalize_color_test_() ->
 %%%-------------------------------------------------------------------
 
 colorpicker_popup_test() ->
-    H = r(?M:colorpicker(<<"#3B82F6">>, [<<"m-2">>],
-                         [{name, brand}, {id, <<"c1">>},
-                          {swatches, [<<"#3b82f6">>, <<"#EF4444">>]}])),
+    H = r(?M:ah_colorpicker(<<"#3B82F6">>, [<<"m-2">>],
+                            [{name, brand}, {id, <<"c1">>},
+                             {swatches, [<<"#3b82f6">>, <<"#EF4444">>]}])),
     ?assert(has(H, <<"class=\"ah-colorpicker-field m-2\"">>)),
     ?assert(has(H, <<"data-ah=\"colorpicker\" data-ah-value=\"#3b82f6\"">>)),
     ?assert(has(H, <<"<input type=\"hidden\" name=\"brand\" value=\"#3b82f6\">">>)),
@@ -77,7 +77,7 @@ colorpicker_popup_test() ->
     ?assertNot(has(H, <<"ah-colorpicker-transparent">>)).
 
 colorpicker_alpha_test() ->
-    H = r(?M:colorpicker(<<"#22C55E80">>, [inline, alpha, clearable], [])),
+    H = r(?M:ah_colorpicker(<<"#22C55E80">>, [inline, alpha, clearable], [])),
     ?assert(has(H, <<"data-ah-value=\"#22c55e80\"">>)),
     ?assert(has(H, <<"data-alpha=\"true\"">>)),
     ?assert(has(H, <<"class=\"ah-colorpicker-field ah-colorpicker-field-clearable "
@@ -90,11 +90,11 @@ colorpicker_alpha_test() ->
     ?assert(has(H, <<"<div class=\"ah-colorpicker-transparent\"><a href=\"#\" "
                      "role=\"button\">Clear</a></div>">>)),
     %% opaque alpha is written as 6 digits
-    H2 = r(?M:colorpicker({1, 2, 3, 255}, [alpha], [])),
+    H2 = r(?M:ah_colorpicker({1, 2, 3, 255}, [alpha], [])),
     ?assert(has(H2, <<"data-ah-value=\"#010203\"">>)).
 
 colorpicker_empty_test() ->
-    H = r(?M:colorpicker(undefined, [], [{placeholder, <<"<none>">>}])),
+    H = r(?M:ah_colorpicker(undefined, [], [{placeholder, <<"<none>">>}])),
     ?assert(has(H, <<"data-ah-value=\"\"">>)),
     ?assert(has(H, <<"ah-colorpicker-trigger-swatch ah-colorpicker-trigger-empty">>)),
     ?assert(has(H, <<"trigger-text\">&lt;none&gt;</span>">>)),
@@ -103,29 +103,29 @@ colorpicker_empty_test() ->
     ?assert(has(H, <<"hsl(0, 100%, 50%)">>)).
 
 colorpicker_modifiers_test() ->
-    H = r(?M:colorpicker(<<"#0ea5e9">>, [inline, no_inputs],
-                         [{width, 200}, {height, <<"8rem">>}])),
+    H = r(?M:ah_colorpicker(<<"#0ea5e9">>, [inline, no_inputs],
+                            [{width, 200}, {height, <<"8rem">>}])),
     ?assertNot(has(H, <<"ah-colorpicker-inputs">>)),
     ?assert(has(H, <<"style=\"width: 200px\"">>)),
     ?assert(has(H, <<"; height: 8rem\"">>)),
-    Hp = r(?M:colorpicker(<<"#0ea5e9">>, [inline, no_preview], [])),
+    Hp = r(?M:ah_colorpicker(<<"#0ea5e9">>, [inline, no_preview], [])),
     ?assertNot(has(Hp, <<"ah-colorpicker-preview">>)),
     ?assert(has(Hp, <<"ah-colorpicker-hex-input">>)),
-    Hd = r(?M:colorpicker(<<"#f97316">>, [disabled], [])),
+    Hd = r(?M:ah_colorpicker(<<"#f97316">>, [disabled], [])),
     ?assert(has(Hd, <<"ah-colorpicker-field-disabled">>)),
     ?assert(has(Hd, <<"class=\"ah-colorpicker ah-colorpicker-disabled\"">>)),
     ?assert(has(Hd, <<"aria-expanded=\"false\" disabled">>)),
     %% white gets the dark pointer
-    Hw = r(?M:colorpicker(<<"#fff">>, [inline], [])),
+    Hw = r(?M:ah_colorpicker(<<"#fff">>, [inline], [])),
     ?assert(has(Hw, <<"ah-colorpicker-map-pointer-dark">>)),
-    ?assertEqual(unknown_modifier, bad(fun() -> ?M:colorpicker(undefined, [primary], []) end)),
-    ?assertEqual(bad_value, bad(fun() -> r(?M:colorpicker(<<"#12345678">>, [], [])) end)),
+    ?assertEqual(unknown_modifier, bad(fun() -> ?M:ah_colorpicker(undefined, [primary], []) end)),
+    ?assertEqual(bad_value, bad(fun() -> r(?M:ah_colorpicker(<<"#12345678">>, [], [])) end)),
     ?assertEqual(bad_value,
-                 bad(fun() -> r(?M:colorpicker(undefined, [], [{swatches, [<<"x">>]}])) end)).
+                 bad(fun() -> r(?M:ah_colorpicker(undefined, [], [{swatches, [<<"x">>]}])) end)).
 
 colorpicker_escaping_test() ->
-    H = r(?M:colorpicker(<<"#000">>, [clearable],
-                         [{clear_label, <<"<x>">>}, {aria_label, <<"a\"b">>}])),
+    H = r(?M:ah_colorpicker(<<"#000">>, [clearable],
+                            [{clear_label, <<"<x>">>}, {aria_label, <<"a\"b">>}])),
     ?assert(has(H, <<"<a href=\"#\" role=\"button\">&lt;x&gt;</a>">>)),
     ?assert(has(H, <<"aria-label=\"a&quot;b\"">>)).
 
@@ -136,7 +136,7 @@ colorpicker_escaping_test() ->
 catalog_test() ->
     [C] = ?M:catalog(),
     ?assertMatch(#{name := colorpicker, behavior := <<"colorpicker">>}, C),
-    [?assert(erlang:function_exported(?M, N, 3)) || #{name := N} <- [C]],
+    [?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 3)) || #{name := N} <- [C]],
     %% every option and flag is documented
     [?assertEqual([], (Opts ++ Flags) -- maps:keys(Docs))
      || #{options := Opts, flags := Flags, option_docs := Docs} <- [C]],
@@ -150,27 +150,27 @@ catalog_test() ->
 action(_, _, _, _) -> ok.
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:colorpicker(<<"#22c55e80">>, [alpha, clearable, no_preview],
-                                  [{name, overlay}, {id, c1},
-                                   {swatches, [<<"#fff">>, {1, 2, 3}]},
-                                   {width, 200}, {height, <<"8rem">>},
-                                   {clear_label, <<"None">>}])),
+    ?assertEqual(r(?M:ah_colorpicker(<<"#22c55e80">>, [alpha, clearable, no_preview],
+                                     [{name, overlay}, {id, c1},
+                                      {swatches, [<<"#fff">>, {1, 2, 3}]},
+                                      {width, 200}, {height, <<"8rem">>},
+                                      {clear_label, <<"None">>}])),
                  r(#ah_colorpicker{value = <<"#22c55e80">>, alpha = true, clearable = true,
                                    no_preview = true, name = overlay, id = c1,
                                    swatches = [<<"#fff">>, {1, 2, 3}], width = 200,
                                    height = <<"8rem">>, clear_label = <<"None">>})),
-    ?assertEqual(r(?M:colorpicker(undefined, [inline, no_inputs, disabled],
-                                  [{placeholder, <<"x">>}])),
+    ?assertEqual(r(?M:ah_colorpicker(undefined, [inline, no_inputs, disabled],
+                                     [{placeholder, <<"x">>}])),
                  r(#ah_colorpicker{inline = true, no_inputs = true, disabled = true,
                                    placeholder = <<"x">>})).
 
 builder_fills_fields_test() ->
-    C = ?M:colorpicker(<<"#abc">>, [alpha], [{swatches, [<<"#000">>]}, {id, c}]),
+    C = ?M:ah_colorpicker(<<"#abc">>, [alpha], [{swatches, [<<"#000">>]}, {id, c}]),
     ?assertMatch(#ah_colorpicker{value = <<"#abc">>, alpha = true, id = c,
                                  swatches = [<<"#000">>], placeholder = <<"No color">>,
                                  clear_label = <<"Clear">>, attrs = []}, C),
     ?assertError({aihtml, {record_only_field, ah_colorpicker, postback}},
-                 ?M:colorpicker(undefined, [], [{postback, pick}])).
+                 ?M:ah_colorpicker(undefined, [], [{postback, pick}])).
 
 postback_test() ->
     Token = fun(Html) ->

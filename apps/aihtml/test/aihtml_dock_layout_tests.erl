@@ -42,7 +42,7 @@ ide() ->
      {autohide, bottom, [o], #{size => 150}}].
 
 dock_layout_structure_test() ->
-    H = r(?M:dock_layout(ide(), [<<"x">>], [{id, dl}, {panels, dl_panels()}, {name, lay}])),
+    H = r(?M:ah_dock_layout(ide(), [<<"x">>], [{id, dl}, {panels, dl_panels()}, {name, lay}])),
     ?assert(has(<<"<div class=\"ah-dl x\" id=\"dl\" data-ah=\"dock-layout\"">>, H)),
     ?assert(has(<<"<div class=\"ah-dl-inner\"><div class=\"ah-dl-group ah-dl-horizontal\" "
                   "style=\"flex:100 1 0px\">">>, H)),
@@ -85,7 +85,7 @@ dock_layout_structure_test() ->
     ?assertEqual(nomatch, binary:match(H, <<"\n">>)).
 
 dock_layout_value_test() ->
-    H = r(?M:dock_layout(ide(), [], [{id, dl}, {panels, dl_panels()}])),
+    H = r(?M:ah_dock_layout(ide(), [], [{id, dl}, {panels, dl_panels()}])),
     ?assertEqual(
        [#{<<"type">> => <<"split">>, <<"orientation">> => <<"horizontal">>, <<"size">> => 100,
           <<"items">> =>
@@ -109,51 +109,51 @@ dock_layout_value_test() ->
 
 %% What the browser saves renders the same layout again.
 dock_layout_round_trip_test() ->
-    H1 = r(?M:dock_layout(ide(), [], [{id, dl}, {panels, dl_panels()}])),
+    H1 = r(?M:ah_dock_layout(ide(), [], [{id, dl}, {panels, dl_panels()}])),
     Json = iolist_to_binary(json:encode(value(H1))),
-    H2 = r(?M:dock_layout(Json, [], [{id, dl}, {panels, dl_panels()}])),
+    H2 = r(?M:ah_dock_layout(Json, [], [{id, dl}, {panels, dl_panels()}])),
     ?assertEqual(H1, H2),
     %% the decoded map works too
-    ?assertEqual(H1, r(?M:dock_layout(json:decode(Json), [], [{id, dl}, {panels, dl_panels()}]))).
+    ?assertEqual(H1, r(?M:ah_dock_layout(json:decode(Json), [], [{id, dl}, {panels, dl_panels()}]))).
 
 dock_layout_resolve_test() ->
     %% unknown ids are skipped, a panel is shown once, empty groups go and a
     %% split of one child is replaced by it
     L = {split, vertical, [{tabs, [nope, e, e]}, {tabs, [gone]}, {documents, [m], #{active => zz}}]},
-    H = r(?M:dock_layout(L, [], [{id, x}, {panels, dl_panels()}])),
+    H = r(?M:ah_dock_layout(L, [], [{id, x}, {panels, dl_panels()}])),
     ?assertMatch([#{<<"type">> := <<"split">>, <<"orientation">> := <<"vertical">>,
                     <<"items">> := [#{<<"items">> := [<<"e">>], <<"size">> := 50},
                                     #{<<"type">> := <<"documents">>, <<"active">> := <<"m">>,
                                       <<"size">> := 50}]}],
                  value(H)),
-    H2 = r(?M:dock_layout({split, horizontal, [{tabs, [gone]}, {tabs, [c], #{size => 30}}]},
-                          [], [{id, y}, {panels, dl_panels()}])),
+    H2 = r(?M:ah_dock_layout({split, horizontal, [{tabs, [gone]}, {tabs, [c], #{size => 30}}]},
+                             [], [{id, y}, {panels, dl_panels()}])),
     ?assertMatch([#{<<"type">> := <<"tabs">>, <<"items">> := [<<"c">>], <<"size">> := 100}],
                  value(H2)),
     %% sizes: given ones kept, the rest share what is left, all add up to 100
-    H3 = r(?M:dock_layout({split, horizontal, [{tabs, [e], #{size => <<"20%">>}}, {tabs, [s]},
-                                               {tabs, [c]}]},
-                          [], [{id, z}, {panels, dl_panels()}])),
+    H3 = r(?M:ah_dock_layout({split, horizontal, [{tabs, [e], #{size => <<"20%">>}}, {tabs, [s]},
+                                                  {tabs, [c]}]},
+                             [], [{id, z}, {panels, dl_panels()}])),
     [#{<<"items">> := Kids}] = value(H3),
     ?assertEqual([20, 40, 40], [S || #{<<"size">> := S} <- Kids]),
     %% inline panels and a fixed panel
-    H4 = r(?M:dock_layout([{panel, {p, <<"Fixed">>, <<"body">>}, #{size => 30}},
-                           {tabs, [{q, <<"Q">>, <<"qq">>}]}], [], [{id, w}])),
+    H4 = r(?M:ah_dock_layout([{panel, {p, <<"Fixed">>, <<"body">>}, #{size => 30}},
+                              {tabs, [{q, <<"Q">>, <<"qq">>}]}], [], [{id, w}])),
     ?assert(has(<<"<div class=\"ah-dl-panel\" data-panel-id=\"p\" style=\"flex:30 1 0px\">"
                   "<div class=\"ah-dl-panel-header\">Fixed</div>"
                   "<div class=\"ah-dl-panel-body\">body</div></div>">>, H4)),
     ?assertMatch([#{<<"type">> := <<"panel">>, <<"item">> := <<"p">>, <<"size">> := 30},
                   #{<<"type">> := <<"tabs">>, <<"size">> := 70}], value(H4)),
     %% an empty layout
-    H5 = r(?M:dock_layout([], [], [])),
+    H5 = r(?M:ah_dock_layout([], [], [])),
     ?assert(has(<<"<div class=\"ah-dl-inner\"></div>">>, H5)),
     ?assertEqual([], value(H5)).
 
 dock_layout_options_test() ->
-    H = r(?M:dock_layout({tabs, [e]}, [disabled],
-                         [{panels, dl_panels()}, {resizable, false}, {resize_mode, feedback},
-                          {allow_float, false}, {allow_dock, false}, {min_size, 50},
-                          {labels, #{close => <<"Schließen"/utf8>>}}])),
+    H = r(?M:ah_dock_layout({tabs, [e]}, [disabled],
+                            [{panels, dl_panels()}, {resizable, false}, {resize_mode, feedback},
+                             {allow_float, false}, {allow_dock, false}, {min_size, 50},
+                             {labels, #{close => <<"Schließen"/utf8>>}}])),
     ?assert(has(<<"class=\"ah-dl ah-dl-disabled\"">>, H)),
     ?assert(has(<<"data-ah-resizable=\"false\"">>, H)),
     ?assert(has(<<"data-ah-resize-mode=\"feedback\"">>, H)),
@@ -164,29 +164,29 @@ dock_layout_options_test() ->
     ?assert(has(<<"aria-disabled=\"true\"">>, H)),
     ?assert(has(<<"id=\"ah-dl">>, H)),
     %% defaults stay out of the markup
-    D = r(?M:dock_layout({tabs, [e]}, [], [{panels, dl_panels()}])),
+    D = r(?M:ah_dock_layout({tabs, [e]}, [], [{panels, dl_panels()}])),
     ?assertEqual(nomatch, binary:match(D, <<"data-ah-resizable">>)),
     ?assertEqual(nomatch, binary:match(D, <<"data-ah-resize-mode">>)).
 
 dock_layout_errors_test() ->
     P = [{panels, dl_panels()}],
-    ?assertError({aihtml, {bad_dock_node, _}}, r(?M:dock_layout({grid, [e]}, [], P))),
+    ?assertError({aihtml, {bad_dock_node, _}}, r(?M:ah_dock_layout({grid, [e]}, [], P))),
     ?assertError({aihtml, {bad_dock_node, diagonal}},
-                 r(?M:dock_layout({split, diagonal, []}, [], P))),
+                 r(?M:ah_dock_layout({split, diagonal, []}, [], P))),
     ?assertError({aihtml, {bad_dock_node, <<"middle">>}},
-                 r(?M:dock_layout(<<"[{\"type\":\"autohide\",\"edge\":\"middle\",\"items\":[]}]">>,
-                                  [], P))),
+                 r(?M:ah_dock_layout(<<"[{\"type\":\"autohide\",\"edge\":\"middle\",\"items\":[]}]">>,
+                                     [], P))),
     ?assertError({aihtml, {bad_dock_node, {size, <<"wide">>}}},
-                 r(?M:dock_layout({tabs, [e], #{size => <<"wide">>}}, [], P))),
+                 r(?M:ah_dock_layout({tabs, [e], #{size => <<"wide">>}}, [], P))),
     ?assertError({aihtml, {bad_dock_node, {colour, red}}},
-                 r(?M:dock_layout({tabs, [e], #{colour => red}}, [], P))),
-    ?assertError({aihtml, {bad_dock_json, _}}, r(?M:dock_layout(<<"[">>, [], P))),
-    ?assertError({aihtml, {bad_dock_panel, _}}, r(?M:dock_layout([], [], [{panels, [x]}]))),
+                 r(?M:ah_dock_layout({tabs, [e], #{colour => red}}, [], P))),
+    ?assertError({aihtml, {bad_dock_json, _}}, r(?M:ah_dock_layout(<<"[">>, [], P))),
+    ?assertError({aihtml, {bad_dock_panel, _}}, r(?M:ah_dock_layout([], [], [{panels, [x]}]))),
     ?assertError({aihtml, {bad_option, resize_mode, slow}},
-                 r(?M:dock_layout([], [], [{resize_mode, slow}]))),
-    ?assertError({aihtml, {bad_option, min_size, -3}}, r(?M:dock_layout([], [], [{min_size, -3}]))),
+                 r(?M:ah_dock_layout([], [], [{resize_mode, slow}]))),
+    ?assertError({aihtml, {bad_option, min_size, -3}}, r(?M:ah_dock_layout([], [], [{min_size, -3}]))),
     ?assertError({aihtml, {bad_dock_layout_label, pin}},
-                 r(?M:dock_layout([], [], [{labels, #{pin => <<"x">>}}]))).
+                 r(?M:ah_dock_layout([], [], [{labels, #{pin => <<"x">>}}]))).
 
 dock_layout_open_test() ->
     Ops = aihtml_action:render_ops(
@@ -239,17 +239,17 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:dock_layout(ide(), [disabled], [{id, dl}, {panels, dl_panels()},
-                                                     {resize_mode, feedback}, {min_size, 60}])),
+    ?assertEqual(r(?M:ah_dock_layout(ide(), [disabled], [{id, dl}, {panels, dl_panels()},
+                                                        {resize_mode, feedback}, {min_size, 60}])),
                  r(#ah_dock_layout{layout = ide(), disabled = true, id = dl, panels = dl_panels(),
                                    resize_mode = feedback, min_size = 60})).
 
 builder_fills_fields_test() ->
-    L = ?M:dock_layout({tabs, [e]}, [], [{panels, []}, {allow_dock, false}, {id, k}]),
+    L = ?M:ah_dock_layout({tabs, [e]}, [], [{panels, []}, {allow_dock, false}, {id, k}]),
     ?assertMatch(#ah_dock_layout{layout = {tabs, [e]}, panels = [], allow_dock = false,
                                  allow_float = true, id = k, attrs = []}, L),
     ?assertError({aihtml, {record_only_field, ah_dock_layout, postback}},
-                 ?M:dock_layout([], [], [{postback, x}])).
+                 ?M:ah_dock_layout([], [], [{postback, x}])).
 
 postback_test() ->
     Token = fun(Html) ->
@@ -264,7 +264,7 @@ postback_test() ->
 
 field_validation_test() ->
     ?assertError({aihtml, {bad_option, resizable, no}}, r(#ah_dock_layout{resizable = no})),
-    ?assertError({aihtml, {unknown_modifier, dock_layout, big, _}}, ?M:dock_layout([], [big], [])).
+    ?assertError({aihtml, {unknown_modifier, dock_layout, big, _}}, ?M:ah_dock_layout([], [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],

@@ -4,7 +4,7 @@
 %%% the root and a user change fires `change' there. The indicators use
 %%% the shared template steps_indicator, which steps.ts re-renders.
 %%%
-%%% steps/4 builds an element record (#ah_steps{}, defined in
+%%% ah_steps/4 builds an element record (#ah_steps{}, defined in
 %%% include/aihtml_steps.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -14,7 +14,7 @@
 
 -include("aihtml_steps.hrl").
 
--export([steps/4, render/1, fields/1, catalog/0]).
+-export([ah_steps/4, render/1, fields/1, catalog/0]).
 -export_type([step/0]).
 
 %% Title | {Title, Description} | #{title, description, content, status, disabled}
@@ -40,9 +40,9 @@
 %% prev/next buttons are rendered too.
 %% Options: clickable (default true), show_nav, prev_label, next_label, name.
 %% Value: the current index.
--spec steps([html() | {html(), html()} | map()], non_neg_integer(), css(), attrs()) ->
+-spec ah_steps([html() | {html(), html()} | map()], non_neg_integer(), css(), attrs()) ->
           #ah_steps{}.
-steps(Steps, Current, Css, Attrs) ->
+ah_steps(Steps, Current, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_steps{items = Steps, value = Current}, Css, Attrs).
 
 %% @doc The field names of #ah_steps{}.
@@ -139,7 +139,7 @@ catalog() ->
                    #{name => first, args => <<"()">>, doc => <<"First step.">>},
                    #{name => last, args => <<"()">>, doc => <<"Last step.">>},
                    #{name => setStatus, args => <<"(Index, Status)">>, doc => <<"Set completed, active, error, disabled or pending.">>}],
-       signature => <<"steps(Steps, Current, Css, Attrs)">>, root => <<"ah-steps">>,
+       signature => <<"ah_steps(Steps, Current, Css, Attrs)">>, root => <<"ah-steps">>,
        groups => #{orientation => {[horizontal, vertical], horizontal}},
        flags => [disabled],
        options => [clickable, show_nav, prev_label, next_label, name],

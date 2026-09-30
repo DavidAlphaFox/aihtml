@@ -39,14 +39,14 @@ catalog_docs_test() ->
 %%%===================================================================
 
 toolbar_test() ->
-    H = r(?M:toolbar([#{key => b, label => <<"B">>, toggle => true, pressed => true},
-                      #{key => i, label => <<"I">>},
-                      #{key => u, label => <<"U">>},
-                      separator,
-                      #{key => x, title => <<"Cut">>, disabled => true, minimizable => false},
-                      separator,
-                      {custom, <<"text">>}],
-                     [], [{popup_width, 240}])),
+    H = r(?M:ah_toolbar([#{key => b, label => <<"B">>, toggle => true, pressed => true},
+                         #{key => i, label => <<"I">>},
+                         #{key => u, label => <<"U">>},
+                         separator,
+                         #{key => x, title => <<"Cut">>, disabled => true, minimizable => false},
+                         separator,
+                         {custom, <<"text">>}],
+                        [], [{popup_width, 240}])),
     ?assert(has(H, <<"class=\"ah-toolbar\" data-ah=\"toolbar\" role=\"toolbar\"">>)),
     ?assert(has(H, <<"data-ah-popup-width=\"240\"">>)),
     ?assert(has(H, <<"ah-toolbar-tool ah-toolbar-tool-first">>)),
@@ -68,8 +68,8 @@ toolbar_test() ->
 %%%===================================================================
 
 builder_fills_fields_test() ->
-    T = ?M:toolbar([#{key => b, label => <<"B">>}], [disabled, <<"x">>],
-                   [{popup_width, 160}, {id, tb}, {aria_label, <<"Tools">>}]),
+    T = ?M:ah_toolbar([#{key => b, label => <<"B">>}], [disabled, <<"x">>],
+                      [{popup_width, 160}, {id, tb}, {aria_label, <<"Tools">>}]),
     ?assertMatch(#ah_toolbar{disabled = true, popup_width = 160, id = tb, css = [<<"x">>],
                              attrs = [{aria_label, <<"Tools">>}]}, T).
 

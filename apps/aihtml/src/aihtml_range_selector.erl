@@ -9,7 +9,7 @@
 %%% so nothing needs to be laid out in the browser before it is shown. The
 %%% behaviour lives in assets/js/components/range_selector.ts.
 %%%
-%%% range_selector/4 builds an #ah_range_selector{}
+%%% ah_range_selector/4 builds an #ah_range_selector{}
 %%% (include/aihtml_range_selector.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -19,7 +19,7 @@
 
 -include("aihtml_range_selector.hrl").
 
--export([range_selector/4, render/1, fields/1, catalog/0]).
+-export([ah_range_selector/4, render/1, fields/1, catalog/0]).
 
 -export_type([format/0]).
 
@@ -50,10 +50,10 @@
 %% false), `show_labels' (default true), `show_markers' (default true),
 %% `labels_format', `markers_format' (see format(); markers default to the
 %% labels' format), `min_span' (smallest Hi - Lo, default 0).
--spec range_selector({number(), number()} | {number(), number(), number()},
-                     {number(), number()} | undefined,
-                     aihtml_html:css(), aihtml_html:attrs()) -> #ah_range_selector{}.
-range_selector(Range, Value, Css, Attrs) ->
+-spec ah_range_selector({number(), number()} | {number(), number(), number()},
+                        {number(), number()} | undefined,
+                        aihtml_html:css(), aihtml_html:attrs()) -> #ah_range_selector{}.
+ah_range_selector(Range, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_range_selector{range = Range, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_range_selector{}.
@@ -233,7 +233,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => range_selector, category => form,
-       signature => <<"range_selector(Range, Value, Css, Attrs)">>,
+       signature => <<"ah_range_selector(Range, Value, Css, Attrs)">>,
        root => <<"ah-range-selector">>,
        flags => [disabled],
        options => [major_ticks, minor_ticks, tick_values, show_major_ticks, show_minor_ticks,

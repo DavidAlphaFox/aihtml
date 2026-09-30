@@ -17,8 +17,8 @@ island(Html) ->
     json:decode(Json).
 
 donut_option_test() ->
-    O = island(?M:donut_chart([{a, 1}, #{name => b, value => 2.5, color => <<"red">>}], [],
-                              [{title, t}])),
+    O = island(?M:ah_donut_chart([{a, 1}, #{name => b, value => 2.5, color => <<"red">>}], [],
+                                 [{title, t}])),
     #{<<"series">> := [#{<<"type">> := <<"pie">>, <<"radius">> := [<<"50%">>, <<"70%">>],
                          <<"center">> := [<<"40%">>, <<"55%">>],
                          <<"data">> := [#{<<"name">> := <<"a">>, <<"value">> := 1},
@@ -28,15 +28,15 @@ donut_option_test() ->
                          <<"label">> := #{<<"show">> := true}}],
       <<"legend">> := #{<<"orient">> := <<"vertical">>, <<"data">> := [<<"a">>, <<"b">>]},
       <<"tooltip">> := #{<<"trigger">> := <<"item">>}} = O,
-    O2 = island(?M:donut_chart([{a, 1}], [pie], [{labels, false}, {legend, bottom},
-                                                 {center, {10, 20}}])),
+    O2 = island(?M:ah_donut_chart([{a, 1}], [pie], [{labels, false}, {legend, bottom},
+                                                    {center, {10, 20}}])),
     #{<<"series">> := [#{<<"radius">> := [0, <<"70%">>], <<"center">> := [10, 20],
                          <<"label">> := #{<<"show">> := false}}],
       <<"legend">> := #{<<"bottom">> := 0}} = O2.
 
 %% The slices as a visually hidden table, the title as its caption.
 donut_text_test() ->
-    H = r(?M:donut_chart([{a, 1}, {b, 2}], [], [{id, d}, {title, <<"Share">>}])),
+    H = r(?M:ah_donut_chart([{a, 1}, {b, 2}], [], [{id, d}, {title, <<"Share">>}])),
     ?assertMatch({_, _}, binary:match(H, <<"aria-describedby=\"d-data\"">>)),
     ?assertMatch({_, _}, binary:match(H, <<
         "<div class=\"ah-chart-text ah-sr-only\" id=\"d-data\"><table><caption>Share</caption>"
@@ -71,7 +71,7 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:donut_chart([{a, 1}], [pie], [{id, c}, {labels, false}])),
+    ?assertEqual(r(?M:ah_donut_chart([{a, 1}], [pie], [{id, c}, {labels, false}])),
                  r(#ah_donut_chart{items = [{a, 1}], pie = true, labels = false, id = c})).
 
 field_validation_test() ->

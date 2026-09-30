@@ -42,28 +42,28 @@ every_entry_documents_options_and_methods_test() ->
 %%%===================================================================
 
 sheet_test() ->
-    H = ?M:sheet(<<"x">>, [], [{title, <<"S">>}]),
+    H = ?M:ah_sheet(<<"x">>, [], [{title, <<"S">>}]),
     has(H, <<"class=\"ah-sheet__overlay\" data-ah=\"sheet\"">>),
     has(H, <<"data-side=\"right\"">>),
     has(H, <<"style=\"width:380px;\"">>),
     has(H, <<"aria-label=\"S\"">>),
     lacks(H, <<"handle">>),
-    ?assertError({aihtml, {unknown_modifier, sheet, middle, _}}, ?M:sheet(<<"x">>, [middle], [])),
+    ?assertError({aihtml, {unknown_modifier, sheet, middle, _}}, ?M:ah_sheet(<<"x">>, [middle], [])),
     %% attributes are checked when the record is rendered
-    ?assertError(_, r(?M:sheet(<<"x">>, [], [{handle, true}, {bogus, 1}, {"bad attr", 1}]))).
+    ?assertError(_, r(?M:ah_sheet(<<"x">>, [], [{handle, true}, {bogus, 1}, {"bad attr", 1}]))).
 
 %%%===================================================================
 %%% element records (designs/05-records.md)
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:sheet(<<"S">>, [top], [{id, s}, {footer, <<"F">>}, {open, true}])),
+    ?assertEqual(r(?M:ah_sheet(<<"S">>, [top], [{id, s}, {footer, <<"F">>}, {open, true}])),
                  r(#ah_sheet{body = <<"S">>, side = top, id = s, footer = <<"F">>,
                              open = true})).
 
 builder_fills_fields_test() ->
     %% an option of the drawer is an HTML attribute of the sheet
-    ?assertMatch(#ah_sheet{attrs = [{handle, false}]}, ?M:sheet(<<"x">>, [], [{handle, false}])).
+    ?assertMatch(#ah_sheet{attrs = [{handle, false}]}, ?M:ah_sheet(<<"x">>, [], [{handle, false}])).
 
 postback_test() ->
     Token = fun(Html) ->

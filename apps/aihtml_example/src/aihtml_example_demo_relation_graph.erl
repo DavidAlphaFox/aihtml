@@ -30,58 +30,58 @@ demos() ->
 
 -spec graph_force() -> aihtml:html().
 graph_force() ->
-    relation_graph(team(), [],
-                   [{selected, <<"li">>},
-                    {details, #{<<"li">> => [strong(<<"李雷"/utf8>>, [], []),
-                                             p(<<"后端负责人，维护订单与支付服务。"/utf8>>, [], [])],
-                                <<"han">> => p(<<"韩梅梅：前端负责人。"/utf8>>, [], [])}}]).
+    ah_relation_graph(team(), [],
+                      [{selected, <<"li">>},
+                       {details, #{<<"li">> => [ah_strong(<<"李雷"/utf8>>, [], []),
+                                                ah_p(<<"后端负责人，维护订单与支付服务。"/utf8>>, [], [])],
+                                   <<"han">> => ah_p(<<"韩梅梅：前端负责人。"/utf8>>, [], [])}}]).
 
 -spec graph_circular() -> aihtml:html().
 graph_circular() ->
-    relation_graph(#{nodes => [<<"网关"/utf8>>, <<"订单"/utf8>>, <<"支付"/utf8>>,
-                               <<"库存"/utf8>>, <<"通知"/utf8>>, <<"用户"/utf8>>],
-                     edges => [{<<"网关"/utf8>>, <<"订单"/utf8>>, <<"HTTP">>},
-                               {<<"网关"/utf8>>, <<"用户"/utf8>>, <<"HTTP">>},
-                               {<<"订单"/utf8>>, <<"支付"/utf8>>, <<"RPC">>},
-                               {<<"订单"/utf8>>, <<"库存"/utf8>>, <<"RPC">>},
-                               #{source => <<"支付"/utf8>>, target => <<"通知"/utf8>>,
-                                 label => <<"MQ">>, kind => dashed}]},
-                   [circular, directed], [{height, 360}]).
+    ah_relation_graph(#{nodes => [<<"网关"/utf8>>, <<"订单"/utf8>>, <<"支付"/utf8>>,
+                                  <<"库存"/utf8>>, <<"通知"/utf8>>, <<"用户"/utf8>>],
+                        edges => [{<<"网关"/utf8>>, <<"订单"/utf8>>, <<"HTTP">>},
+                                  {<<"网关"/utf8>>, <<"用户"/utf8>>, <<"HTTP">>},
+                                  {<<"订单"/utf8>>, <<"支付"/utf8>>, <<"RPC">>},
+                                  {<<"订单"/utf8>>, <<"库存"/utf8>>, <<"RPC">>},
+                                  #{source => <<"支付"/utf8>>, target => <<"通知"/utf8>>,
+                                    label => <<"MQ">>, kind => dashed}]},
+                      [circular, directed], [{height, 360}]).
 
 -spec graph_tree() -> aihtml:html().
 graph_tree() ->
-    relation_graph(#{nodes => [#{id => ceo, label => <<"CEO">>},
-                               #{id => cto, label => <<"CTO">>, parent => ceo},
-                               #{id => cfo, label => <<"CFO">>, parent => ceo},
-                               #{id => fe, label => <<"前端组"/utf8>>, parent => cto},
-                               #{id => be, label => <<"后端组"/utf8>>, parent => cto},
-                               #{id => fin, label => <<"财务部"/utf8>>, parent => cfo}]},
-                   [tree, tb], [{height, 340}]).
+    ah_relation_graph(#{nodes => [#{id => ceo, label => <<"CEO">>},
+                                  #{id => cto, label => <<"CTO">>, parent => ceo},
+                                  #{id => cfo, label => <<"CFO">>, parent => ceo},
+                                  #{id => fe, label => <<"前端组"/utf8>>, parent => cto},
+                                  #{id => be, label => <<"后端组"/utf8>>, parent => cto},
+                                  #{id => fin, label => <<"财务部"/utf8>>, parent => cfo}]},
+                      [tree, tb], [{height, 340}]).
 
 -spec graph_fixed() -> aihtml:html().
 graph_fixed() ->
-    relation_graph(#{nodes => [#{id => a, label => <<"需求评审"/utf8>>, x => 0, y => 0, root => true},
-                               #{id => b, label => <<"设计"/utf8>>, x => 200, y => -60},
-                               #{id => c, label => <<"开发"/utf8>>, x => 200, y => 60},
-                               #{id => d, label => <<"上线"/utf8>>, x => 400, y => 0}],
-                     edges => [{a, b}, {a, c}, {b, d}, {c, d}]},
-                   [fixed, round_rect, directed], [{height, 280}, {roam, false}]).
+    ah_relation_graph(#{nodes => [#{id => a, label => <<"需求评审"/utf8>>, x => 0, y => 0, root => true},
+                                  #{id => b, label => <<"设计"/utf8>>, x => 200, y => -60},
+                                  #{id => c, label => <<"开发"/utf8>>, x => 200, y => 60},
+                                  #{id => d, label => <<"上线"/utf8>>, x => 400, y => 0}],
+                        edges => [{a, b}, {a, c}, {b, d}, {c, d}]},
+                      [fixed, round_rect, directed], [{height, 280}, {roam, false}]).
 
 -spec graph_states() -> aihtml:html().
 graph_states() ->
-    'div'([relation_graph(team(), [loading], [{height, 220}]),
-           relation_graph(#{nodes => []}, [], [{height, 220}, {empty_text, <<"暂无关系"/utf8>>}]),
-           relation_graph(team(), [], [{height, 220}, {toolbar, false},
-                                       {error, <<"加载失败，请稍后重试"/utf8>>}])],
-          [<<"grid grid-cols-1 md:grid-cols-3 gap-4">>], []).
+    ah_div([ah_relation_graph(team(), [loading], [{height, 220}]),
+            ah_relation_graph(#{nodes => []}, [], [{height, 220}, {empty_text, <<"暂无关系"/utf8>>}]),
+            ah_relation_graph(team(), [], [{height, 220}, {toolbar, false},
+                                           {error, <<"加载失败，请稍后重试"/utf8>>}])],
+           [<<"grid grid-cols-1 md:grid-cols-3 gap-4">>], []).
 
 -spec graph_select() -> aihtml:html().
 graph_select() ->
-    'div'([#ah_relation_graph{id = <<"team-graph">>, graph = team(), layout = circular,
-                              height = 320, postback = node_selected},
-           span(<<"点击一个节点，或聚焦图后用方向键切换"/utf8>>, [<<"text-sm text-muted">>],
-                [{id, <<"node-selected">>}])],
-          [<<"flex flex-col gap-2">>], []).
+    ah_div([#ah_relation_graph{id = <<"team-graph">>, graph = team(), layout = circular,
+                               height = 320, postback = node_selected},
+            ah_span(<<"点击一个节点，或聚焦图后用方向键切换"/utf8>>, [<<"text-sm text-muted">>],
+                    [{id, <<"node-selected">>}])],
+           [<<"flex flex-col gap-2">>], []).
 
 %%%===================================================================
 %%% Actions

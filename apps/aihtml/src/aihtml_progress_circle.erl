@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The progress_circle component (designs/04-components.md): `progress_circle/3'
+%%% @doc The progress_circle component (designs/04-components.md): `ah_progress_circle/3'
 %%% builds an #ah_progress_circle{} element record (include/aihtml_progress_circle.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_progress_circle.hrl").
 
--export([progress_circle/3, render/1, fields/1, catalog/0]).
+-export([ah_progress_circle/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [blank/1, num/1, method/3]).
 -import(aihtml_lib_progress, [clamp/3]).
@@ -33,8 +33,8 @@
 
 %% @doc Circular progress (SVG), `Value' 0..100. Options: `label' (text
 %% under the ring, also the aria-label), `show_value' (true).
--spec progress_circle(number() | undefined, css(), attrs()) -> #ah_progress_circle{}.
-progress_circle(Value, Css, Attrs) ->
+-spec ah_progress_circle(number() | undefined, css(), attrs()) -> #ah_progress_circle{}.
+ah_progress_circle(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_progress_circle{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_progress_circle{}.
@@ -89,7 +89,7 @@ catalog() ->
 
 entry() ->
     #{name => progress_circle, category => data, root => <<"ah-progress-circle">>,
-      signature => <<"progress_circle(Value, Css, Attrs)">>,
+      signature => <<"ah_progress_circle(Value, Css, Attrs)">>,
       groups => #{size => {[sm, md, lg], md},
                   color => {[primary, success, warning, info, error], primary}},
       flags => [disabled, indeterminate],

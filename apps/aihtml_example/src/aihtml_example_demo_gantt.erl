@@ -27,42 +27,42 @@ demos() ->
 
 -spec gantt_basic() -> aihtml:html().
 gantt_basic() ->
-    gantt([#{id => research, name => <<"Research">>, start => <<"2026-09-07">>,
-             'end' => <<"2026-09-14">>, progress => 100},
-           #{id => design, name => <<"Design">>, start => <<"2026-09-14">>,
-             'end' => <<"2026-09-24">>, progress => 70, dependencies => [research]},
-           #{id => build, name => <<"Build">>, start => <<"2026-09-24">>,
-             'end' => <<"2026-10-14">>, progress => 20, dependencies => [design],
-             color => <<"var(--ah-color-success)">>},
-           #{id => launch, name => <<"Launch">>, start => <<"2026-10-14">>,
-             'end' => <<"2026-10-16">>, dependencies => [build],
-             color => <<"var(--ah-color-warning)">>}],
-          [], [{height, 260}, {sidebar_width, 180}]).
+    ah_gantt([#{id => research, name => <<"Research">>, start => <<"2026-09-07">>,
+                'end' => <<"2026-09-14">>, progress => 100},
+              #{id => design, name => <<"Design">>, start => <<"2026-09-14">>,
+                'end' => <<"2026-09-24">>, progress => 70, dependencies => [research]},
+              #{id => build, name => <<"Build">>, start => <<"2026-09-24">>,
+                'end' => <<"2026-10-14">>, progress => 20, dependencies => [design],
+                color => <<"var(--ah-color-success)">>},
+              #{id => launch, name => <<"Launch">>, start => <<"2026-10-14">>,
+                'end' => <<"2026-10-16">>, dependencies => [build],
+                color => <<"var(--ah-color-warning)">>}],
+             [], [{height, 260}, {sidebar_width, 180}]).
 
 -spec gantt_rows() -> aihtml:html().
 gantt_rows() ->
-    gantt(project_tasks(), [editable],
-          [{rows, project_rows()}, {collapsed, [<<"testing">>]}, {height, 440},
-           {sidebar_width, 200},
-           {labels, #{task => <<"任务"/utf8>>, tasks => <<"{n} 项任务"/utf8>>}}]).
+    ah_gantt(project_tasks(), [editable],
+             [{rows, project_rows()}, {collapsed, [<<"testing">>]}, {height, 440},
+              {sidebar_width, 200},
+              {labels, #{task => <<"任务"/utf8>>, tasks => <<"{n} 项任务"/utf8>>}}]).
 
 %% Dragging a bar calls action(task_changed, ...) below.
 -spec gantt_edit() -> aihtml:html().
 gantt_edit() ->
-    'div'([gantt(project_tasks(), [editable],
-                 [{rows, project_rows()}, {height, 300}, {sidebar_width, 200},
-                  on('ah:task-change', {?MODULE, task_changed, #{}})]),
-           p(<<"拖动任务条或它的两端；选中任务条后可用方向键调整。"/utf8>>,
-             [<<"text-sm text-muted mt-2">>], [{id, <<"gantt-log">>}])], [], []).
+    ah_div([ah_gantt(project_tasks(), [editable],
+                     [{rows, project_rows()}, {height, 300}, {sidebar_width, 200},
+                      on('ah:task-change', {?MODULE, task_changed, #{}})]),
+            ah_p(<<"拖动任务条或它的两端；选中任务条后可用方向键调整。"/utf8>>,
+                 [<<"text-sm text-muted mt-2">>], [{id, <<"gantt-log">>}])], [], []).
 
 -spec gantt_compact() -> aihtml:html().
 gantt_compact() ->
-    gantt([#{id => T, name => N, start => S, 'end' => E}
-           || {T, N, S, E} <- [{a, <<"Kick-off">>, <<"2026-09-28">>, <<"2026-09-29">>},
-                               {b, <<"Survey">>, <<"2026-09-29">>, <<"2026-10-06">>},
-                               {c, <<"Report">>, <<"2026-10-05">>, <<"2026-10-09">>}]],
-          [no_dependencies], [{height, 180}, {column_width, 32}, {row_height, 30},
-                              {sidebar_width, 140}]).
+    ah_gantt([#{id => T, name => N, start => S, 'end' => E}
+              || {T, N, S, E} <- [{a, <<"Kick-off">>, <<"2026-09-28">>, <<"2026-09-29">>},
+                                  {b, <<"Survey">>, <<"2026-09-29">>, <<"2026-10-06">>},
+                                  {c, <<"Report">>, <<"2026-10-05">>, <<"2026-10-09">>}]],
+             [no_dependencies], [{height, 180}, {column_width, 32}, {row_height, 30},
+                                 {sidebar_width, 140}]).
 
 
 %%%===================================================================

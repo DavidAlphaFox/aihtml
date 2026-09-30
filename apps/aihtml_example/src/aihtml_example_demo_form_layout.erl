@@ -19,45 +19,45 @@ demos() ->
 -spec form_basic() -> aihtml:html().
 form_basic() ->
     Values = #{name => <<"Ada">>, plan => pro, budget => 400},
-    form_layout(
-      [#{label => <<"Name">>, key => name,
-         control => fun(V) -> input(V, [], [{name, name}]) end},
-       #{label => <<"Plan">>, key => plan,
-         control => fun(V) -> dropdownlist([free, pro, team], V, [block], [{name, plan}]) end},
-       #{label => <<"Budget">>, key => budget,
-         control => fun(V) -> slider({0, 1000, 50}, V, [tooltip], [{name, budget}]) end},
-       {<<>>, button(<<"Save">>, undefined, [], [{type, submit}])}],
-      Values, [bordered, bg, <<"max-w-lg">>], [{label_width, 90}, {action, <<"#saved">>}]).
+    ah_form_layout(
+         [#{label => <<"Name">>, key => name,
+            control => fun(V) -> ah_input(V, [], [{name, name}]) end},
+          #{label => <<"Plan">>, key => plan,
+            control => fun(V) -> ah_dropdownlist([free, pro, team], V, [block], [{name, plan}]) end},
+          #{label => <<"Budget">>, key => budget,
+            control => fun(V) -> ah_slider({0, 1000, 50}, V, [tooltip], [{name, budget}]) end},
+          {<<>>, ah_button(<<"Save">>, undefined, [], [{type, submit}])}],
+         Values, [bordered, bg, <<"max-w-lg">>], [{label_width, 90}, {action, <<"#saved">>}]).
 
 -spec form_columns() -> aihtml:html().
 form_columns() ->
-    form_layout(
-      [{text, <<"Shipping address">>},
-       {<<"Street">>, input(undefined, [], [{name, street}])},
-       {columns, [{<<"City">>, input(undefined, [], [{name, city}])},
-                  {<<"ZIP">>, input(undefined, [], [{name, zip}])}]},
-       blank,
-       #{label => <<"Country">>, label_position => top,
-         control => select([{cn, <<"China">>}, {jp, <<"Japan">>}, {us, <<"USA">>}], us,
-                           [block], [{name, country}])}],
-      #{}, [bordered, <<"max-w-lg">>], [{tag, 'div'}, {label_width, 70}]).
+    ah_form_layout(
+         [{text, <<"Shipping address">>},
+          {<<"Street">>, ah_input(undefined, [], [{name, street}])},
+          {columns, [{<<"City">>, ah_input(undefined, [], [{name, city}])},
+                     {<<"ZIP">>, ah_input(undefined, [], [{name, zip}])}]},
+          blank,
+          #{label => <<"Country">>, label_position => top,
+            control => ah_select([{cn, <<"China">>}, {jp, <<"Japan">>}, {us, <<"USA">>}], us,
+                                 [block], [{name, country}])}],
+         #{}, [bordered, <<"max-w-lg">>], [{tag, 'div'}, {label_width, 70}]).
 
 -spec form_validate() -> aihtml:html().
 form_validate() ->
-    form_layout(
-      [#{label => <<"User">>, key => user, required => true,
-         control => fun(V) -> input(V, [], [{name, user},
-                                            validate([required, {min_length, 3},
-                                                      {starts_with_letter, <<"Must start with a letter">>}])])
-                    end},
-       #{label => <<"Email">>, key => email, required => true, help => <<"We never share it.">>,
-         control => fun(V) -> input(V, [], [{name, email}, validate([required, email])]) end},
-       #{label => <<"Age">>, key => age,
-         control => fun(V) -> input(V, [], [{name, age}, validate([integer, {range, 18, 120}])]) end},
-       #{label => <<"Plan">>, key => plan, required => true,
-         control => fun(V) -> dropdownlist([free, pro, team], V, [block],
-                                           [{name, plan}, validate([required])])
-                    end},
-       {<<>>, button(<<"Sign up">>, undefined, [], [{type, submit}])}],
-      #{user => <<"x">>, age => <<"12">>},
-      [bordered, bg, <<"max-w-lg">>], [{label_width, 70}, {action, <<"#signed-up">>}]).
+    ah_form_layout(
+         [#{label => <<"User">>, key => user, required => true,
+            control => fun(V) -> ah_input(V, [], [{name, user},
+                                                  validate([required, {min_length, 3},
+                                                            {starts_with_letter, <<"Must start with a letter">>}])])
+                       end},
+          #{label => <<"Email">>, key => email, required => true, help => <<"We never share it.">>,
+            control => fun(V) -> ah_input(V, [], [{name, email}, validate([required, email])]) end},
+          #{label => <<"Age">>, key => age,
+            control => fun(V) -> ah_input(V, [], [{name, age}, validate([integer, {range, 18, 120}])]) end},
+          #{label => <<"Plan">>, key => plan, required => true,
+            control => fun(V) -> ah_dropdownlist([free, pro, team], V, [block],
+                                                 [{name, plan}, validate([required])])
+                       end},
+          {<<>>, ah_button(<<"Sign up">>, undefined, [], [{type, submit}])}],
+         #{user => <<"x">>, age => <<"12">>},
+         [bordered, bg, <<"max-w-lg">>], [{label_width, 70}, {action, <<"#signed-up">>}]).

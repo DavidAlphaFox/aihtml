@@ -18,16 +18,16 @@ demos() ->
 
 -spec otp_digits() -> aihtml:html().
 otp_digits() ->
-    input_otp(6, undefined, [], [{name, code}]).
+    ah_input_otp(6, undefined, [], [{name, code}]).
 
 -spec otp_separator() -> aihtml:html().
 otp_separator() ->
-    input_otp(6, <<"123456">>, [], [{separator_at, 3}]).
+    ah_input_otp(6, <<"123456">>, [], [{separator_at, 3}]).
 
 -spec otp_alphanumeric() -> aihtml:html().
 otp_alphanumeric() ->
-    row([input_otp(4, <<"A1">>, [], [{pattern, alphanumeric}]),
-         input_otp(4, <<"12">>, [disabled], [])]).
+    row([ah_input_otp(4, <<"A1">>, [], [{pattern, alphanumeric}]),
+         ah_input_otp(4, <<"12">>, [disabled], [])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

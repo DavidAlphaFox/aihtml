@@ -20,13 +20,13 @@ demos() ->
 -spec segmented() -> aihtml:html().
 segmented() ->
     Views = [{list, <<"List">>}, {grid, <<"Grid">>}, {board, <<"Board">>}],
-    row([segmented_control(Views, list, [sm], []),
-         segmented_control(Views, grid, [], [{name, layout}]),
-         segmented_control(Views, board, [lg], [])]).
+    row([ah_segmented_control(Views, list, [sm], []),
+         ah_segmented_control(Views, grid, [], [{name, layout}]),
+         ah_segmented_control(Views, board, [lg], [])]).
 
 -spec segmented_full() -> aihtml:html().
 segmented_full() ->
-    'div'([segmented_control([{day, <<"Day">>}, {week, <<"Week">>, [{disabled, true}]},
-                              {month, <<"Month">>}], day, [full_width], []),
-           segmented_control([{a, <<"A">>}, {b, <<"B">>}], a, [], [{disabled, true}])],
-          [<<"flex flex-col gap-3">>], []).
+    ah_div([ah_segmented_control([{day, <<"Day">>}, {week, <<"Week">>, [{disabled, true}]},
+                                  {month, <<"Month">>}], day, [full_width], []),
+            ah_segmented_control([{a, <<"A">>}, {b, <<"B">>}], a, [], [{disabled, true}])],
+           [<<"flex flex-col gap-3">>], []).

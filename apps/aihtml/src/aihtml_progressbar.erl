@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The progressbar component (designs/04-components.md): `progressbar/3'
+%%% @doc The progressbar component (designs/04-components.md): `ah_progressbar/3'
 %%% builds an #ah_progressbar{} element record (include/aihtml_progressbar.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_progressbar.hrl").
 
--export([progressbar/3, render/1, fields/1, catalog/0]).
+-export([ah_progressbar/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [num/1, method/3]).
 -import(aihtml_lib_progress, [clamp/3, pct/3]).
@@ -33,8 +33,8 @@
 %% `indeterminate' flag it may be `undefined'. Options: `min' (0),
 %% `max' (100), `text' (label instead of the percentage), `color_ranges'
 %% (`[{Stop, Color}]', Color a colour atom or a CSS colour).
--spec progressbar(number() | undefined, css(), attrs()) -> #ah_progressbar{}.
-progressbar(Value, Css, Attrs) ->
+-spec ah_progressbar(number() | undefined, css(), attrs()) -> #ah_progressbar{}.
+ah_progressbar(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_progressbar{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_progressbar{}.
@@ -95,7 +95,7 @@ catalog() ->
 
 entry() ->
     #{name => progressbar, category => data, root => <<"ah-progressbar">>,
-      signature => <<"progressbar(Value, Css, Attrs)">>,
+      signature => <<"ah_progressbar(Value, Css, Attrs)">>,
       groups => #{orientation => {[horizontal, vertical], horizontal},
                   layout => {[normal, reverse], normal},
                   color => {[primary, success, warning, error, info], primary}},

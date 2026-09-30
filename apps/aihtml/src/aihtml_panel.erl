@@ -2,7 +2,7 @@
 %%% @doc A scrollable content container (sigil's panel), optionally with a
 %%% header bar holding a title, actions and a collapse toggle.
 %%%
-%%% panel/3 builds an element record (#ah_panel{}, defined in
+%%% ah_panel/3 builds an element record (#ah_panel{}, defined in
 %%% include/aihtml_panel.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -12,7 +12,7 @@
 
 -include("aihtml_panel.hrl").
 
--export([panel/3, render/1, fields/1, catalog/0]).
+-export([ah_panel/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_html, [el/4]).
 -import(aihtml_lib_layout, [maybe_el/3, maybe_el/4, with_id/2, bool/2, tf/1, len/1, style/1]).
@@ -26,8 +26,8 @@
 %% @doc A scrollable content container (sigil's panel), optionally with a
 %% header bar holding a title, actions and a collapse toggle.
 %% Options: title, actions, collapsible, collapsed, height, max_height.
--spec panel(html(), css(), attrs()) -> #ah_panel{}.
-panel(Children, Css, Attrs) ->
+-spec ah_panel(html(), css(), attrs()) -> #ah_panel{}.
+ah_panel(Children, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_panel{body = Children}, Css, Attrs).
 
 %% @doc The field names of #ah_panel{}.
@@ -99,7 +99,7 @@ catalog() ->
                    #{name => collapse, args => <<"()">>, doc => <<"Collapse the scroll area.">>},
                    #{name => expand, args => <<"()">>, doc => <<"Expand the scroll area.">>},
                    #{name => toggle, args => <<"()">>, doc => <<"Collapse or expand.">>}],
-       signature => <<"panel(Children, Css, Attrs)">>, root => <<"ah-panel">>,
+       signature => <<"ah_panel(Children, Css, Attrs)">>, root => <<"ah-panel">>,
        flags => [bordered],
        options => [title, actions, collapsible, collapsed, height, max_height, toggle_label],
        behavior => <<"panel">>, events => [<<"ah:collapse">>, <<"ah:expand">>],

@@ -24,53 +24,53 @@ demos() ->
 
 -spec menubar() -> aihtml:html().
 menubar() ->
-    menu([#{key => file, label => <<"File">>,
-            children => [{new, <<"New">>}, {open, <<"Open…"/utf8>>},
-                         #{key => recent, label => <<"Recent">>,
-                           children => [{report, <<"report.txt">>}, {notes, <<"notes.md">>}]},
-                         divider,
-                         {save, <<"Save">>},
-                         #{key => export, label => <<"Export">>, disabled => true}]},
-          #{key => edit, label => <<"Edit">>,
-            children => [{undo, <<"Undo">>}, {redo, <<"Redo">>}, divider,
-                         {cut, <<"Cut">>}, {copy, <<"Copy">>}, {paste, <<"Paste">>}]},
-          #{key => help, label => <<"Help">>, href => <<"#help">>}],
-         undefined, [], [{name, command}]).
+    ah_menu([#{key => file, label => <<"File">>,
+               children => [{new, <<"New">>}, {open, <<"Open…"/utf8>>},
+                            #{key => recent, label => <<"Recent">>,
+                              children => [{report, <<"report.txt">>}, {notes, <<"notes.md">>}]},
+                            divider,
+                            {save, <<"Save">>},
+                            #{key => export, label => <<"Export">>, disabled => true}]},
+             #{key => edit, label => <<"Edit">>,
+               children => [{undo, <<"Undo">>}, {redo, <<"Redo">>}, divider,
+                            {cut, <<"Cut">>}, {copy, <<"Copy">>}, {paste, <<"Paste">>}]},
+             #{key => help, label => <<"Help">>, href => <<"#help">>}],
+            undefined, [], [{name, command}]).
 
 -spec menu_vertical() -> aihtml:html().
 menu_vertical() ->
-    menu([{inbox, <<"Inbox">>}, {starred, <<"Starred">>},
-          #{key => labels, label => <<"Labels">>,
-            children => [{work, <<"Work">>}, {home, <<"Home">>}]},
-          divider,
-          {trash, <<"Trash">>}],
-         inbox, [vertical], []).
+    ah_menu([{inbox, <<"Inbox">>}, {starred, <<"Starred">>},
+             #{key => labels, label => <<"Labels">>,
+               children => [{work, <<"Work">>}, {home, <<"Home">>}]},
+             divider,
+             {trash, <<"Trash">>}],
+            inbox, [vertical], []).
 
 -spec menu_columns() -> aihtml:html().
 menu_columns() ->
-    menu([#{key => view, label => <<"View">>,
-            columns => [#{header => <<"Panels">>,
-                          children => [{sidebar, <<"Sidebar">>}, {console, <<"Console">>}]},
-                        #{header => <<"Zoom">>,
-                          children => [{zoom_in, <<"Zoom in">>}, {zoom_out, <<"Zoom out">>}]}]},
-          #{key => window, label => <<"Window">>,
-            children => [{minimize, <<"Minimize">>}, {zoom, <<"Zoom">>}]}],
-         undefined, [show_arrows], []).
+    ah_menu([#{key => view, label => <<"View">>,
+               columns => [#{header => <<"Panels">>,
+                             children => [{sidebar, <<"Sidebar">>}, {console, <<"Console">>}]},
+                           #{header => <<"Zoom">>,
+                             children => [{zoom_in, <<"Zoom in">>}, {zoom_out, <<"Zoom out">>}]}]},
+             #{key => window, label => <<"Window">>,
+               children => [{minimize, <<"Minimize">>}, {zoom, <<"Zoom">>}]}],
+            undefined, [show_arrows], []).
 
 -spec context_menu() -> aihtml:html().
 context_menu() ->
-    'div'(['div'(<<"在这里点右键"/utf8>>,
-                 [<<"border border-dashed border-line rounded p-8 text-sm text-muted">>],
-                 [{id, <<"ctx-area">>}]),
-           menu([{cut, <<"Cut">>}, {copy, <<"Copy">>}, {paste, <<"Paste">>}, divider,
-                 #{key => more, label => <<"More">>,
-                   children => [{rename, <<"Rename">>}, {delete, <<"Delete">>}]}],
-                undefined, [popup], [{popup_target, <<"#ctx-area">>}])],
-          [], []).
+    ah_div([ah_div(<<"在这里点右键"/utf8>>,
+                   [<<"border border-dashed border-line rounded p-8 text-sm text-muted">>],
+                   [{id, <<"ctx-area">>}]),
+            ah_menu([{cut, <<"Cut">>}, {copy, <<"Copy">>}, {paste, <<"Paste">>}, divider,
+                     #{key => more, label => <<"More">>,
+                       children => [{rename, <<"Rename">>}, {delete, <<"Delete">>}]}],
+                    undefined, [popup], [{popup_target, <<"#ctx-area">>}])],
+           [], []).
 
 -spec menu_responsive() -> aihtml:html().
 menu_responsive() ->
-    menu([{home, <<"Home">>}, {docs, <<"Docs">>},
-          #{key => more, label => <<"More">>,
-            children => [{blog, <<"Blog">>}, {about, <<"About">>}]}],
-         home, [], [{minimize_width, 768}, {title, <<"Site">>}]).
+    ah_menu([{home, <<"Home">>}, {docs, <<"Docs">>},
+             #{key => more, label => <<"More">>,
+               children => [{blog, <<"Blog">>}, {about, <<"About">>}]}],
+            home, [], [{minimize_width, 768}, {title, <<"Site">>}]).

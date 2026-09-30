@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The tag_cloud component (designs/04-components.md): `tag_cloud/3'
+%%% @doc The tag_cloud component (designs/04-components.md): `ah_tag_cloud/3'
 %%% builds an #ah_tag_cloud{} element record (include/aihtml_tag_cloud.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_tag_cloud.hrl").
 
--export([tag_cloud/3, render/1, fields/1, catalog/0]).
+-export([ah_tag_cloud/3, render/1, fields/1, catalog/0]).
 
 -export_type([tag/0]).
 
@@ -45,8 +45,8 @@
 %% all_upper | first_upper | title_case), `text_color', `min_color' and
 %% `max_color' (#RRGGBB gradient), `min_value', `max_value',
 %% `display_limit', `take_top_weighted'. Fires `ah:tag-click'.
--spec tag_cloud([map() | {html(), number()}], css(), attrs()) -> #ah_tag_cloud{}.
-tag_cloud(Tags, Css, Attrs) ->
+-spec ah_tag_cloud([map() | {html(), number()}], css(), attrs()) -> #ah_tag_cloud{}.
+ah_tag_cloud(Tags, Css, Attrs) ->
     ?E:build(?MODULE, #ah_tag_cloud{items = Tags}, Css, Attrs).
 
 %% @doc The field names of #ah_tag_cloud{}.
@@ -188,7 +188,7 @@ catalog() ->
 
 entry() ->
     #{name => tag_cloud, category => data, root => <<"ah-tagcloud">>,
-      signature => <<"tag_cloud(Tags, Css, Attrs)">>,
+      signature => <<"ah_tag_cloud(Tags, Css, Attrs)">>,
       flags => [disabled],
       options => [min_font_size, max_font_size, font_size_unit, url_base, display_value,
                   sort_by, sort_order, text_case, text_color, min_color, max_color,

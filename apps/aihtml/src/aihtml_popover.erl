@@ -12,7 +12,7 @@
 %%%
 %%% Literal (binary) classes in `Css' go on the popover. A record's
 %%% postback fires on `ah:close'. Behaviour:
-%%% assets/js/components/popover.ts. popover/3 builds an #ah_popover{}
+%%% assets/js/components/popover.ts. ah_popover/3 builds an #ah_popover{}
 %%% (include/aihtml_popover.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -22,7 +22,7 @@
 
 -include("aihtml_popover.hrl").
 
--export([popover/3, render/1, fields/1, catalog/0]).
+-export([ah_popover/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -38,8 +38,8 @@
 %% `no_arrow'. Options: `title', `closable' (close button in the title
 %% bar), `anchor', `modal' (scrim, outside clicks do not close),
 %% `auto_close' (close on outside click, default true), `width'.
--spec popover(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_popover{}.
-popover(Children, Css, Attrs) ->
+-spec ah_popover(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_popover{}.
+ah_popover(Children, Css, Attrs) ->
     ?E:build(?MODULE, #ah_popover{body = Children}, Css, Attrs).
 
 %% @doc The field names of #ah_popover{}.
@@ -90,7 +90,7 @@ catalog() ->
     Sides = [top, bottom, left, right],
     Events = [<<"ah:open">>, <<"ah:close">>],
     [#{name => popover, category => overlay,
-       signature => <<"popover(Children, Css, Attrs)">>,
+       signature => <<"ah_popover(Children, Css, Attrs)">>,
        root => <<"ah-popover">>,
        groups => #{position => {Sides, bottom}},
        flags => [no_arrow],

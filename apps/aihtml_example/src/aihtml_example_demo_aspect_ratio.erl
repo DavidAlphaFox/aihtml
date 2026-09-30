@@ -19,10 +19,10 @@ demos() ->
 
 -spec aspect_ratios() -> aihtml:html().
 aspect_ratios() ->
-    row(['div'(aspect_ratio('div'(R, [<<"h-full flex items-center justify-center "
-                                         "bg-primary/15 text-primary">>], []),
-                            [], [{ratio, R}]),
-               [<<"w-48">>], [])
+    row([ah_div(ah_aspect_ratio(ah_div(R, [<<"h-full flex items-center justify-center "
+                                              "bg-primary/15 text-primary">>], []),
+                                [], [{ratio, R}]),
+                [<<"w-48">>], [])
          || R <- [<<"16/9">>, <<"4:3">>, <<"1/1">>]]).
 
 -spec aspect_ratio_image() -> aihtml:html().
@@ -30,9 +30,9 @@ aspect_ratio_image() ->
     Sky = <<"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 3'>"
             "<rect width='4' height='3' fill='%2393c5fd'/><circle cx='3' cy='1' r='.5' fill='%23fde047'/>"
             "<path d='M0 3 1.5 1.5 3 3z' fill='%2322c55e'/></svg>">>,
-    'div'(aspect_ratio(img([], [{src, Sky}, {alt, <<"Landscape">>}]), [], [{ratio, {21, 9}}]),
-          [<<"max-w-md">>], []).
+    ah_div(ah_aspect_ratio(ah_img([], [{src, Sky}, {alt, <<"Landscape">>}]), [], [{ratio, {21, 9}}]),
+           [<<"max-w-md">>], []).
 
 %% Layout helpers of the demos.
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

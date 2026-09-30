@@ -29,15 +29,15 @@ demos() ->
 
 -spec combo_basic() -> aihtml:html().
 combo_basic() ->
-    combobox(fruits(), <<"Cherry">>, [<<"w-56">>],
-             [{name, fruit}, {placeholder, <<"选一种水果"/utf8>>}]).
+    ah_combobox(fruits(), <<"Cherry">>, [<<"w-56">>],
+                [{name, fruit}, {placeholder, <<"选一种水果"/utf8>>}]).
 
 -spec combo_free_text() -> aihtml:html().
 combo_free_text() ->
-    row([combobox(fruits(), undefined, [free_text, <<"w-56">>],
-                  [{placeholder, <<"任意水果"/utf8>>}, {search_mode, starts_with_ignore_case}]),
-         combobox(fruits(), undefined, [no_arrow, <<"w-56">>],
-                  [{placeholder, <<"没有箭头"/utf8>>}])]).
+    row([ah_combobox(fruits(), undefined, [free_text, <<"w-56">>],
+                     [{placeholder, <<"任意水果"/utf8>>}, {search_mode, starts_with_ignore_case}]),
+         ah_combobox(fruits(), undefined, [no_arrow, <<"w-56">>],
+                     [{placeholder, <<"没有箭头"/utf8>>}])]).
 
 -spec combo_groups() -> aihtml:html().
 combo_groups() ->
@@ -52,25 +52,25 @@ combo_groups() ->
               #{value => 5, label => <<"Katherine Johnson">>,
                 description => <<"Orbital mechanics">>, group => <<"Research">>,
                 disabled => true}],
-    combobox(People, 3, [<<"w-72">>], [{name, person}]).
+    ah_combobox(People, 3, [<<"w-72">>], [{name, person}]).
 
 -spec combo_multiple() -> aihtml:html().
 combo_multiple() ->
-    row([combobox(fruits(), [<<"Apple">>, <<"Mango">>], [multiple, <<"w-72">>],
-                  [{name, fruits}, {placeholder, <<"水果"/utf8>>}]),
-         combobox([<<"Reading">>, <<"Music">>, <<"Sports">>, <<"Travel">>, <<"Coding">>],
-                  [<<"Music">>], [checkboxes, <<"w-72">>], [{placeholder, <<"爱好"/utf8>>}])]).
+    row([ah_combobox(fruits(), [<<"Apple">>, <<"Mango">>], [multiple, <<"w-72">>],
+                     [{name, fruits}, {placeholder, <<"水果"/utf8>>}]),
+         ah_combobox([<<"Reading">>, <<"Music">>, <<"Sports">>, <<"Travel">>, <<"Coding">>],
+                     [<<"Music">>], [checkboxes, <<"w-72">>], [{placeholder, <<"爱好"/utf8>>}])]).
 
 %% Typing calls action(search, ...) below, which answers with set_items.
 -spec combo_search() -> aihtml:html().
 combo_search() ->
-    combobox([], undefined, [<<"w-72">>],
-             [{name, city}, {placeholder, <<"输入城市名，如 an"/utf8>>},
-              {search, {?MODULE, search, #{}}}]).
+    ah_combobox([], undefined, [<<"w-72">>],
+                [{name, city}, {placeholder, <<"输入城市名，如 an"/utf8>>},
+                 {search, {?MODULE, search, #{}}}]).
 
 -spec combo_disabled() -> aihtml:html().
 combo_disabled() ->
-    combobox(fruits(), <<"Apple">>, [disabled, <<"w-56">>], []).
+    ah_combobox(fruits(), <<"Apple">>, [disabled, <<"w-56">>], []).
 
 %%%===================================================================
 %%% Actions
@@ -97,4 +97,4 @@ cities() ->
      <<"Seoul">>, <<"Shanghai">>, <<"Stockholm">>, <<"Tokyo">>, <<"Vienna">>].
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

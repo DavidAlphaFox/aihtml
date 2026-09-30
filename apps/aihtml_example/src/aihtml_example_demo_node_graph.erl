@@ -30,13 +30,13 @@ demos() ->
 
 -spec graph_pipeline() -> aihtml:html().
 graph_pipeline() ->
-    node_graph(pipeline(), [minimap],
-               [{snap, 10}, {height, 560}, {library, library()}]).
+    ah_node_graph(pipeline(), [minimap],
+                  [{snap, 10}, {height, 560}, {library, library()}]).
 
 -spec graph_readonly() -> aihtml:html().
 graph_readonly() ->
-    node_graph(pipeline(), [read_only, no_toolbar, auto_fit, <<"max-w-3xl">>],
-               [{link_mode, linear}, {height, 280}]).
+    ah_node_graph(pipeline(), [read_only, no_toolbar, auto_fit, <<"max-w-3xl">>],
+                  [{link_mode, linear}, {height, 280}]).
 
 -spec graph_layout() -> aihtml:html().
 graph_layout() ->
@@ -45,59 +45,59 @@ graph_layout() ->
                      inputs => [{In, <<"ROWS">>} || In <- Ins],
                      outputs => [{Out, <<"ROWS">>} || Out <- Outs]}
            end,
-    node_graph(#{nodes => [Step(orders, <<"订单表"/utf8>>, [], [rows]),
-                           Step(users, <<"用户表"/utf8>>, [], [rows]),
-                           Step(join, <<"关联"/utf8>>, [left, right], [rows]),
-                           Step(filter, <<"过滤"/utf8>>, [rows], [rows]),
-                           Step(agg, <<"按月汇总"/utf8>>, [rows], [rows]),
-                           Step(report, <<"报表"/utf8>>, [rows], []),
-                           Step(export, <<"导出 CSV"/utf8>>, [rows], [])],
-                 links => [{{orders, 0}, {join, 0}}, {{users, 0}, {join, 1}},
-                           {{join, 0}, {filter, 0}}, {{filter, 0}, {agg, 0}},
-                           {{agg, 0}, {report, 0}}, {{filter, 0}, {export, 0}}]},
-               [auto_fit], [{layout, auto}, {link_mode, straight}, {height, 320}]).
+    ah_node_graph(#{nodes => [Step(orders, <<"订单表"/utf8>>, [], [rows]),
+                              Step(users, <<"用户表"/utf8>>, [], [rows]),
+                              Step(join, <<"关联"/utf8>>, [left, right], [rows]),
+                              Step(filter, <<"过滤"/utf8>>, [rows], [rows]),
+                              Step(agg, <<"按月汇总"/utf8>>, [rows], [rows]),
+                              Step(report, <<"报表"/utf8>>, [rows], []),
+                              Step(export, <<"导出 CSV"/utf8>>, [rows], [])],
+                    links => [{{orders, 0}, {join, 0}}, {{users, 0}, {join, 1}},
+                              {{join, 0}, {filter, 0}}, {{filter, 0}, {agg, 0}},
+                              {{agg, 0}, {report, 0}}, {{filter, 0}, {export, 0}}]},
+                  [auto_fit], [{layout, auto}, {link_mode, straight}, {height, 320}]).
 
 -spec graph_types() -> aihtml:html().
 graph_types() ->
-    node_graph(#{nodes => [#{id => img, type => <<"LoadImage">>, title => <<"读取图片"/utf8>>,
-                             pos => {20, 40}, width => 200,
-                             outputs => [{image, <<"IMAGE">>}, {mask, <<"MASK">>}]},
-                           #{id => any, type => <<"Preview">>, title => <<"预览（任意类型）"/utf8>>,
-                             pos => {330, 20}, width => 230,
-                             inputs => [#{name => in, type => <<"IMAGE,MASK,LATENT">>},
-                                        #{name => extra, type => <<"*">>, optional => true,
-                                          shape => hollow}],
-                             body => p(<<"多类型插槽画成扇形，可选插槽是空心圆。"/utf8>>,
-                                       [<<"text-xs text-muted pb-2">>], [])},
-                           #{id => save, type => <<"SaveImage">>, title => <<"保存"/utf8>>,
-                             pos => {330, 200}, collapsed => true, color => <<"#d98324">>,
-                             inputs => [{images, <<"IMAGE">>}]}],
-                 links => [#{source => {img, 0}, target => {any, 0}},
-                           #{source => {img, 0}, target => {save, 0},
-                             points => [{250, 230}]}],
-                 groups => [#{title => <<"输入"/utf8>>, bounds => {0, 0, 250, 160},
-                              color => <<"#3b82f6">>}]},
-               [], [{height, 300}]).
+    ah_node_graph(#{nodes => [#{id => img, type => <<"LoadImage">>, title => <<"读取图片"/utf8>>,
+                                pos => {20, 40}, width => 200,
+                                outputs => [{image, <<"IMAGE">>}, {mask, <<"MASK">>}]},
+                              #{id => any, type => <<"Preview">>, title => <<"预览（任意类型）"/utf8>>,
+                                pos => {330, 20}, width => 230,
+                                inputs => [#{name => in, type => <<"IMAGE,MASK,LATENT">>},
+                                           #{name => extra, type => <<"*">>, optional => true,
+                                             shape => hollow}],
+                                body => ah_p(<<"多类型插槽画成扇形，可选插槽是空心圆。"/utf8>>,
+                                             [<<"text-xs text-muted pb-2">>], [])},
+                              #{id => save, type => <<"SaveImage">>, title => <<"保存"/utf8>>,
+                                pos => {330, 200}, collapsed => true, color => <<"#d98324">>,
+                                inputs => [{images, <<"IMAGE">>}]}],
+                    links => [#{source => {img, 0}, target => {any, 0}},
+                              #{source => {img, 0}, target => {save, 0},
+                                points => [{250, 230}]}],
+                    groups => [#{title => <<"输入"/utf8>>, bounds => {0, 0, 250, 160},
+                                 color => <<"#3b82f6">>}]},
+                  [], [{height, 300}]).
 
 -spec graph_change() -> aihtml:html().
 graph_change() ->
-    'div'([node_graph(small(), [], [{id, <<"ng-live">>}, {height, 260},
-                                    on(change, {?MODULE, graph_changed, #{log => <<"ng-log">>}})]),
-           'div'([button(<<"重置"/utf8>>, reset, [<<"mt-2">>],
-                         [on(click, {?MODULE, reset, #{}})]),
-                  span(<<"拖动节点、连线或按 Delete 删除试试"/utf8>>,
-                       [<<"text-sm text-muted">>], [{id, <<"ng-log">>}])],
-                 [<<"flex items-center gap-3 mt-2">>], [])],
-          [], []).
+    ah_div([ah_node_graph(small(), [], [{id, <<"ng-live">>}, {height, 260},
+                                        on(change, {?MODULE, graph_changed, #{log => <<"ng-log">>}})]),
+            ah_div([ah_button(<<"重置"/utf8>>, reset, [<<"mt-2">>],
+                              [on(click, {?MODULE, reset, #{}})]),
+                    ah_span(<<"拖动节点、连线或按 Delete 删除试试"/utf8>>,
+                            [<<"text-sm text-muted">>], [{id, <<"ng-log">>}])],
+                   [<<"flex items-center gap-3 mt-2">>], [])],
+           [], []).
 
 -spec graph_record() -> aihtml:html().
 graph_record() ->
-    'div'([#ah_node_graph{id = <<"ng-rec">>, graph = small(), link_mode = linear,
-                          snap = 20, height = 240, allow_cycles = true,
-                          postback = {graph_changed, #{log => <<"ng-rec-log">>}}},
-           p(<<"允许成环、20px 吸附"/utf8>>, [<<"text-sm text-muted mt-2">>],
-             [{id, <<"ng-rec-log">>}])],
-          [], []).
+    ah_div([#ah_node_graph{id = <<"ng-rec">>, graph = small(), link_mode = linear,
+                           snap = 20, height = 240, allow_cycles = true,
+                           postback = {graph_changed, #{log => <<"ng-rec-log">>}}},
+            ah_p(<<"允许成环、20px 吸附"/utf8>>, [<<"text-sm text-muted mt-2">>],
+                 [{id, <<"ng-rec-log">>}])],
+           [], []).
 
 %%%===================================================================
 %%% Actions
@@ -137,7 +137,7 @@ small() ->
                 #{id => e2, source => {op, 0}, target => {out, 0}}]}.
 
 field(Text) ->
-    'div'(Text, [<<"text-xs rounded px-2 py-1 bg-[var(--ah-color-bg-hover)] text-muted truncate">>], []).
+    ah_div(Text, [<<"text-xs rounded px-2 py-1 bg-[var(--ah-color-bg-hover)] text-muted truncate">>], []).
 
 pipeline() ->
     #{nodes =>

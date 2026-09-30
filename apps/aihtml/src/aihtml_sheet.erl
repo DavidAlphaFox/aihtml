@@ -12,7 +12,7 @@
 %%% Literal (binary) classes in `Css' go on the panel. A record's
 %%% postback fires on `ah:close'. Behaviour: assets/js/components/sheet.ts
 %%% (the markup and behaviour are shared with the drawer, see
-%%% aihtml_lib_overlay:slide/5). sheet/3 builds an #ah_sheet{}
+%%% aihtml_lib_overlay:slide/5). ah_sheet/3 builds an #ah_sheet{}
 %%% (include/aihtml_sheet.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -22,7 +22,7 @@
 
 -include("aihtml_sheet.hrl").
 
--export([sheet/3, render/1, fields/1, catalog/0]).
+-export([ah_sheet/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -34,9 +34,9 @@
 
 %% @doc A modal panel that slides in from an edge (no swipe gesture).
 %% Css: side `right | left | top | bottom' (default right). Options as
-%% drawer/3 without `handle' and `dismissible'; `size' defaults to 380px.
--spec sheet(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_sheet{}.
-sheet(Children, Css, Attrs) ->
+%% ah_drawer/3 without `handle' and `dismissible'; `size' defaults to 380px.
+-spec ah_sheet(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_sheet{}.
+ah_sheet(Children, Css, Attrs) ->
     ?E:build(?MODULE, #ah_sheet{body = Children}, Css, Attrs).
 
 %% @doc The field names of #ah_sheet{}.
@@ -71,7 +71,7 @@ catalog() ->
     Sides = [top, bottom, left, right],
     Events = [<<"ah:open">>, <<"ah:close">>],
     [#{name => sheet, category => overlay,
-       signature => <<"sheet(Children, Css, Attrs)">>,
+       signature => <<"ah_sheet(Children, Css, Attrs)">>,
        root => <<"ah-sheet__overlay">>,
        groups => #{side => {Sides, right}},
        classes => Empty(Sides),

@@ -17,16 +17,16 @@ demos() ->
 
 -spec radio_basic() -> aihtml:html().
 radio_basic() ->
-    row([radiobutton(<<"Email">>, email, [], [{name, contact}, {checked, true}]),
-         radiobutton(<<"Phone">>, phone, [], [{name, contact}]),
-         radiobutton(<<"Post">>, post, [], [{name, contact}])]).
+    row([ah_radiobutton(<<"Email">>, email, [], [{name, contact}, {checked, true}]),
+         ah_radiobutton(<<"Phone">>, phone, [], [{name, contact}]),
+         ah_radiobutton(<<"Post">>, post, [], [{name, contact}])]).
 
 -spec radio_sizes() -> aihtml:html().
 radio_sizes() ->
-    row([radiobutton(<<"Small">>, s, [sm], [{name, size}, {checked, true}]),
-         radiobutton(<<"Medium">>, m, [md], [{name, size}]),
-         radiobutton(<<"Large">>, l, [lg], [{name, size}]),
-         radiobutton(<<"Disabled">>, x, [], [{disabled, true}, {checked, true}])]).
+    row([ah_radiobutton(<<"Small">>, s, [sm], [{name, size}, {checked, true}]),
+         ah_radiobutton(<<"Medium">>, m, [md], [{name, size}]),
+         ah_radiobutton(<<"Large">>, l, [lg], [{name, size}]),
+         ah_radiobutton(<<"Disabled">>, x, [], [{disabled, true}, {checked, true}])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-6">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-6">>], []).

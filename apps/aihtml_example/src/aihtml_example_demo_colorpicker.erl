@@ -22,35 +22,35 @@ demos() ->
 
 -spec color_basic() -> aihtml:html().
 color_basic() ->
-    row([colorpicker(<<"#3b82f6">>, [], [{name, brand}]),
-         colorpicker(<<"#F97316">>, [], [{name, accent}])]).
+    row([ah_colorpicker(<<"#3b82f6">>, [], [{name, brand}]),
+         ah_colorpicker(<<"#F97316">>, [], [{name, accent}])]).
 
 -spec color_swatches() -> aihtml:html().
 color_swatches() ->
-    colorpicker(<<"#22c55e">>, [],
-                [{name, label_color},
-                 {swatches, [<<"#ef4444">>, <<"#f97316">>, <<"#eab308">>, <<"#22c55e">>,
-                             <<"#06b6d4">>, <<"#3b82f6">>, <<"#8b5cf6">>, <<"#ec4899">>]}]).
+    ah_colorpicker(<<"#22c55e">>, [],
+                   [{name, label_color},
+                    {swatches, [<<"#ef4444">>, <<"#f97316">>, <<"#eab308">>, <<"#22c55e">>,
+                                <<"#06b6d4">>, <<"#3b82f6">>, <<"#8b5cf6">>, <<"#ec4899">>]}]).
 
 -spec color_alpha() -> aihtml:html().
 color_alpha() ->
-    row([colorpicker(<<"#22c55e80">>, [alpha], [{name, overlay}]),
-         colorpicker({139, 92, 246, 200}, [inline, alpha], [])]).
+    row([ah_colorpicker(<<"#22c55e80">>, [alpha], [{name, overlay}]),
+         ah_colorpicker({139, 92, 246, 200}, [inline, alpha], [])]).
 
 -spec color_states() -> aihtml:html().
 color_states() ->
-    row([colorpicker(undefined, [clearable], [{placeholder, <<"Pick a colour">>}]),
-         colorpicker(<<"#ec4899">>, [clearable], [{clear_label, <<"No colour">>}]),
-         colorpicker(<<"#f97316">>, [disabled], [])]).
+    row([ah_colorpicker(undefined, [clearable], [{placeholder, <<"Pick a colour">>}]),
+         ah_colorpicker(<<"#ec4899">>, [clearable], [{clear_label, <<"No colour">>}]),
+         ah_colorpicker(<<"#f97316">>, [disabled], [])]).
 
 -spec color_inline() -> aihtml:html().
 color_inline() ->
-    colorpicker(<<"ff0000">>, [inline], [{name, highlight}]).
+    ah_colorpicker(<<"ff0000">>, [inline], [{name, highlight}]).
 
 -spec color_compact() -> aihtml:html().
 color_compact() ->
-    row([colorpicker(<<"#0ea5e9">>, [inline, no_inputs], [{width, 200}, {height, 120}]),
-         colorpicker(<<"#8b5cf6">>, [inline, no_preview], [{height, 100}])]).
+    row([ah_colorpicker(<<"#0ea5e9">>, [inline, no_inputs], [{width, 200}, {height, 120}]),
+         ah_colorpicker(<<"#8b5cf6">>, [inline, no_preview], [{height, 100}])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

@@ -18,8 +18,8 @@ demos() ->
 
 -spec toggle_buttons() -> aihtml:html().
 toggle_buttons() ->
-    row([toggle_button(<<"Bold">>, false, [default], []),
-         toggle_button(<<"Italic">>, true, [default], []),
-         toggle_button(<<"Primary">>, true, [], []),
-         toggle_button(<<"Outlined">>, false, [outlined, round], []),
-         toggle_button(<<"Disabled">>, true, [secondary], [{disabled, true}])]).
+    row([ah_toggle_button(<<"Bold">>, false, [default], []),
+         ah_toggle_button(<<"Italic">>, true, [default], []),
+         ah_toggle_button(<<"Primary">>, true, [], []),
+         ah_toggle_button(<<"Outlined">>, false, [outlined, round], []),
+         ah_toggle_button(<<"Disabled">>, true, [secondary], [{disabled, true}])]).

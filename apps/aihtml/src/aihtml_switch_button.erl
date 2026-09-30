@@ -3,7 +3,7 @@
 %%% `<input type="checkbox" role="switch">' in a `<label>' with sigil's
 %%% track and thumb. `Attrs' go to that input.
 %%%
-%%% switch_button/4 builds an #ah_switch_button{}
+%%% ah_switch_button/4 builds an #ah_switch_button{}
 %%% (include/aihtml_switch_button.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -13,7 +13,7 @@
 
 -include("aihtml_switch_button.hrl").
 
--export([switch_button/4, render/1, fields/1, catalog/0]).
+-export([ah_switch_button/4, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -22,9 +22,9 @@
 %% @doc A switch: a native checkbox with `role="switch"'. Options:
 %% `on_label', `off_label' (text inside the track), `locked', and sigil's
 %% `width', `height', `thumb_size' (px) for a custom size.
--spec switch_button(aihtml_html:html(), aihtml_lib_choice:value() | undefined,
-                    aihtml_html:css(), aihtml_html:attrs()) -> #ah_switch_button{}.
-switch_button(Content, Value, Css, Attrs) ->
+-spec ah_switch_button(aihtml_html:html(), aihtml_lib_choice:value() | undefined,
+                       aihtml_html:css(), aihtml_html:attrs()) -> #ah_switch_button{}.
+ah_switch_button(Content, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_switch_button{body = Content, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_switch_button{}.
@@ -72,7 +72,7 @@ default_int(N, _) -> error({aihtml, {bad_option, switch_button, N}}).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => switch_button, category => form,
-       signature => <<"switch_button(Content, Value, Css, Attrs)">>,
+       signature => <<"ah_switch_button(Content, Value, Css, Attrs)">>,
        root => <<"ah-switch">>, groups => #{size => {[sm, md, lg], none}},
        options => [on_label, off_label, locked, width, height, thumb_size],
        behavior => <<"switch-button">>, events => [<<"change">>, <<"input">>],

@@ -18,18 +18,18 @@ demos() ->
 
 -spec checkbox_group_vertical() -> aihtml:html().
 checkbox_group_vertical() ->
-    checkbox_group([{apple, <<"Apple">>}, {pear, <<"Pear">>}, {plum, <<"Plum">>},
-                    {fig, <<"Fig (sold out)">>, [{disabled, true}]}],
-                   [apple, plum], [], [{name, fruit}]).
+    ah_checkbox_group([{apple, <<"Apple">>}, {pear, <<"Pear">>}, {plum, <<"Plum">>},
+                       {fig, <<"Fig (sold out)">>, [{disabled, true}]}],
+                      [apple, plum], [], [{name, fruit}]).
 
 -spec checkbox_group_layouts() -> aihtml:html().
 checkbox_group_layouts() ->
     Days = [{mon, <<"Mon">>}, {tue, <<"Tue">>}, {wed, <<"Wed">>}, {thu, <<"Thu">>}, {fri, <<"Fri">>}],
-    'div'([checkbox_group(Days, [mon, wed], [horizontal], [{name, days}]),
-           checkbox_group(Days, [fri], [horizontal, label_before, sm], [{name, days2}])],
-          [<<"flex flex-col gap-4">>], []).
+    ah_div([ah_checkbox_group(Days, [mon, wed], [horizontal], [{name, days}]),
+            ah_checkbox_group(Days, [fri], [horizontal, label_before, sm], [{name, days2}])],
+           [<<"flex flex-col gap-4">>], []).
 
 -spec checkbox_group_disabled() -> aihtml:html().
 checkbox_group_disabled() ->
-    checkbox_group([{read, <<"Read">>}, {write, <<"Write">>}, {admin, <<"Admin">>}],
-                   [read], [horizontal], [{name, perms}, {disabled, true}]).
+    ah_checkbox_group([{read, <<"Read">>}, {write, <<"Write">>}, {admin, <<"Admin">>}],
+                      [read], [horizontal], [{name, perms}, {disabled, true}]).

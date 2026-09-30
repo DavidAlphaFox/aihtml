@@ -28,8 +28,8 @@ form_layout_test() ->
               {columns, [{<<"C">>, <<"c">>}, {<<"D">>, <<"d">>}]},
               blank,
               #{label => <<"H">>, control => <<"h">>, hidden => true, label_position => top}],
-    H = r(?M:form_layout(Fields, #{b => <<"bee">>}, [bordered, bg],
-                         [{label_width, 100}, {id, f}])),
+    H = r(?M:ah_form_layout(Fields, #{b => <<"bee">>}, [bordered, bg],
+                            [{label_width, 100}, {id, f}])),
     ?assert(has(H, <<"<form class=\"ah-form ah-form-bg ah-form-bordered\" style=\"padding:10px\" id=\"f\">">>)),
     ?assert(has(H, <<"ah-form-label-text\">Intro">>)),
     ?assert(has(H, <<"val=bee">>)),
@@ -41,26 +41,26 @@ form_layout_test() ->
     ?assert(has(H, <<"width:100px">>)).
 
 form_layout_div_padding_test() ->
-    H = r(?M:form_layout([], #{}, [], [{tag, 'div'}, {padding, {1, 2, 3, 4}},
-                                       {label_position, top}])),
+    H = r(?M:ah_form_layout([], #{}, [], [{tag, 'div'}, {padding, {1, 2, 3, 4}},
+                                          {label_position, top}])),
     ?assert(has(H, <<"<div class=\"ah-form\" style=\"padding:1px 2px 3px 4px\">">>)).
 
 form_layout_bad_field_test() ->
-    ?assertError({aihtml, {bad_form_field, 42}}, r(?M:form_layout([42], #{}, [], []))).
+    ?assertError({aihtml, {bad_form_field, 42}}, r(?M:ah_form_layout([42], #{}, [], []))).
 
 %%% element records (designs/05-records.md)
 
 record_equals_builder_test() ->
     Fields = [{<<"A">>, <<"a">>}, #{label => <<"B">>, key => b, control => fun(V) -> V end}],
-    ?assertEqual(r(?M:form_layout(Fields, #{b => <<"bee">>}, [bordered],
-                                  [{label_width, 80}, {padding, 4}, {action, <<"#x">>}])),
+    ?assertEqual(r(?M:ah_form_layout(Fields, #{b => <<"bee">>}, [bordered],
+                                     [{label_width, 80}, {padding, 4}, {action, <<"#x">>}])),
                  r(#ah_form_layout{fields = Fields, values = #{b => <<"bee">>}, bordered = true,
                                    label_width = 80, padding = 4,
                                    attrs = [{action, <<"#x">>}]})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_form_layout{fields = [], tag = 'div', label_position = top, bg = true},
-                 ?M:form_layout([], #{}, [bg], [{tag, 'div'}, {label_position, top}])).
+                 ?M:ah_form_layout([], #{}, [bg], [{tag, 'div'}, {label_position, top}])).
 
 postback_test() ->
     ?assertEqual({<<"submit">>, {?MODULE, save, #{id => 7}}},
@@ -79,7 +79,7 @@ catalog_test() ->
     ?assertEqual([form_layout], Names),
     [begin
          ?assert(is_binary(maps:get(signature, E))),
-         ?assert(erlang:function_exported(?M, N, 4))
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4))
      end || #{name := N} = E <- ?M:catalog()].
 
 catalog_docs_test() ->

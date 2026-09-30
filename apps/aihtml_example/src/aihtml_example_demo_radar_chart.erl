@@ -21,17 +21,17 @@ demos() ->
 
 -spec radar_basic() -> aihtml:html().
 radar_basic() ->
-    radar_chart([{<<"一班"/utf8>>, [80, 50, 30, 40, 100]},
-                 {<<"二班"/utf8>>, [60, 90, 70, 80, 50]}],
-                [], [{indicators, [{<<"语文"/utf8>>, 120}, {<<"数学"/utf8>>, 120},
-                                   {<<"英语"/utf8>>, 120}, {<<"物理"/utf8>>, 120},
-                                   {<<"化学"/utf8>>, 120}]},
-                     {height, 320}]).
+    ah_radar_chart([{<<"一班"/utf8>>, [80, 50, 30, 40, 100]},
+                    {<<"二班"/utf8>>, [60, 90, 70, 80, 50]}],
+                   [], [{indicators, [{<<"语文"/utf8>>, 120}, {<<"数学"/utf8>>, 120},
+                                      {<<"英语"/utf8>>, 120}, {<<"物理"/utf8>>, 120},
+                                      {<<"化学"/utf8>>, 120}]},
+                        {height, 320}]).
 
 -spec radar_circle() -> aihtml:html().
 radar_circle() ->
-    radar_chart([{<<"候选人"/utf8>>, [9, 7, 8, 6, 9, 7]}], [circle],
-                [{indicators, [{<<"沟通"/utf8>>, 10}, {<<"技术"/utf8>>, 10}, {<<"协作"/utf8>>, 10},
-                               {<<"领导力"/utf8>>, 10}, {<<"学习"/utf8>>, 10},
-                               {<<"执行"/utf8>>, 10}]},
-                 {legend, none}, {split_number, 5}, {area_opacity, 0.3}, {height, 300}]).
+    ah_radar_chart([{<<"候选人"/utf8>>, [9, 7, 8, 6, 9, 7]}], [circle],
+                   [{indicators, [{<<"沟通"/utf8>>, 10}, {<<"技术"/utf8>>, 10}, {<<"协作"/utf8>>, 10},
+                                  {<<"领导力"/utf8>>, 10}, {<<"学习"/utf8>>, 10},
+                                  {<<"执行"/utf8>>, 10}]},
+                    {legend, none}, {split_number, 5}, {area_opacity, 0.3}, {height, 300}]).

@@ -5,7 +5,7 @@
 %%% renders, so the styles in priv/css/sigil apply unchanged; the
 %%% behaviour is in assets/js/components/command.ts.
 %%%
-%%%   command(Items, Css, Attrs)               a command palette (⌘K)
+%%%   ah_command(Items, Css, Attrs)            a command palette (⌘K)
 %%%   set_command_items(Ctx, Target, Items)    (in an action) replace a
 %%%                                            command palette's list
 %%%
@@ -23,7 +23,7 @@
 %%% `set_command_items(Ctx, Event, Items)', which renders the list here
 %%% and morphs it into the palette. The browser builds no HTML.
 %%%
-%%% command/3 builds an element record (#ah_command{},
+%%% ah_command/3 builds an element record (#ah_command{},
 %%% include/aihtml_command.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -33,7 +33,7 @@
 
 -include("aihtml_command.hrl").
 
--export([command/3, set_command_items/3, render/1, fields/1, catalog/0, facade_extras/0]).
+-export([ah_command/3, set_command_items/3, render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([item/0, entry/0, action_ref/0]).
 
@@ -66,8 +66,8 @@
 %% description, icon, shortcut, href, disabled}') and groups
 %% `#{heading, items}'. Css `palette' renders it in a hidden centred
 %% overlay, opened with the `open' method or the `hotkey' option.
--spec command([entry()], css(), attrs()) -> #ah_command{}.
-command(Items, Css, Attrs) ->
+-spec ah_command([entry()], css(), attrs()) -> #ah_command{}.
+ah_command(Items, Css, Attrs) ->
     ?E:build(?MODULE, #ah_command{items = Items}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -205,7 +205,7 @@ command_item(Id, #{value := V, label := L} = It, I) ->
 %% its `search' action: `set_command_items(Ctx, Event, Items)'. `Target'
 %% is the search event (whose `data' names the palette and its empty
 %% text) or `{id, RootId}'.
-%% Items take the same forms as in `command/3'. The list is rendered
+%% Items take the same forms as in `ah_command/3'. The list is rendered
 %% here and morphed into `<root id>-list' (morph_inner), so the text
 %% field keeps its focus and caret; then the behaviour method
 %% `itemsLoaded' marks the first command active.
@@ -228,7 +228,7 @@ set_items(Ctx, Id, Items, EmptyText) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => command, category => overlay,
-       signature => <<"command(Items, Css, Attrs)">>,
+       signature => <<"ah_command(Items, Css, Attrs)">>,
        root => <<"ah-command">>,
        flags => [palette, auto_focus],
        classes => #{palette => [<<"ah-command-panel">>], auto_focus => []},

@@ -15,11 +15,11 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 %%% dragdrop
 
 dragdrop_test() ->
-    H = r(?M:dragdrop([aihtml_html:el('div', <<"Task">>, [<<"p-2">>],
-                                      ?M:draggable_attrs(t1, #{type => task})),
-                       aihtml_html:el('div', <<"Done">>, [],
-                                      ?M:drop_zone_attrs(done, #{accept => [task, bug]}))],
-                      [<<"flex">>], [{move, true}, {id, dd}])),
+    H = r(?M:ah_dragdrop([aihtml_html:el('div', <<"Task">>, [<<"p-2">>],
+                                         ?M:draggable_attrs(t1, #{type => task})),
+                          aihtml_html:el('div', <<"Done">>, [],
+                                         ?M:drop_zone_attrs(done, #{accept => [task, bug]}))],
+                         [<<"flex">>], [{move, true}, {id, dd}])),
     ?has(<<"<div class=\"ah-dragdrop flex\" data-ah=\"dragdrop\" data-ah-tolerance=\"intersect\" "
            "data-ah-move id=\"dd\">">>, H),
     ?has(<<"<div class=\"p-2 ah-draggable\" data-ah-drag=\"t1\" data-ah-drag-type=\"task\" "
@@ -28,7 +28,7 @@ dragdrop_test() ->
     ?hasnt(<<"data-ah-revert">>, H).
 
 dragdrop_options_test() ->
-    H = r(?M:dragdrop([], [], [{tolerance, pointer}, {revert, true}, {disabled, true}])),
+    H = r(?M:ah_dragdrop([], [], [{tolerance, pointer}, {revert, true}, {disabled, true}])),
     ?has(<<"class=\"ah-dragdrop ah-dragdrop-disabled\"">>, H),
     ?has(<<"data-ah-tolerance=\"pointer\"">>, H),
     ?has(<<"data-ah-revert">>, H),
@@ -49,7 +49,7 @@ catalog_test() ->
     Cat = ?M:catalog(),
     ?assertEqual([dragdrop], [N || #{name := N} <- Cat]),
     [begin
-         ?assert(erlang:function_exported(?M, N, length(binary:split(S, <<",">>, [global])))),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), length(binary:split(S, <<",">>, [global])))),
          ?assertEqual(layout, C)
      end || #{name := N, signature := S, category := C} <- Cat].
 
@@ -67,12 +67,12 @@ catalog_docs_test() ->
 %%% element records (designs/05-records.md)
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:dragdrop(<<"x">>, [], [{tolerance, fit}, {move, true}, {revert, true}])),
+    ?assertEqual(r(?M:ah_dragdrop(<<"x">>, [], [{tolerance, fit}, {move, true}, {revert, true}])),
                  r(#ah_dragdrop{body = <<"x">>, tolerance = fit, move = true, revert = true})).
 
 builder_fills_fields_test() ->
     ?assertError({aihtml, {record_only_field, ah_dragdrop, postback}},
-                 ?M:dragdrop([], [], [{postback, drop}])).
+                 ?M:ah_dragdrop([], [], [{postback, drop}])).
 
 postback_test() ->
     Token = fun(Html) ->

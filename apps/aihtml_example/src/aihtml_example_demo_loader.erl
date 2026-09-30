@@ -21,19 +21,19 @@ demos() ->
 
 -spec loader_overlay() -> aihtml:html().
 loader_overlay() ->
-    frame([p(<<"Refreshing the report…"/utf8>>), loader([], [])]).
+    frame([ah_p(<<"Refreshing the report…"/utf8>>), ah_loader([], [])]).
 
 -spec loader_positions() -> aihtml:html().
 loader_positions() ->
-    row([frame([loader([top], [{text, <<"Top">>}])]),
-         frame([loader([left], [{text, <<"Left">>}])]),
-         frame([loader([right], [{text, <<"Saving">>}])])]).
+    row([frame([ah_loader([top], [{text, <<"Top">>}])]),
+         frame([ah_loader([left], [{text, <<"Left">>}])]),
+         frame([ah_loader([right], [{text, <<"Saving">>}])])]).
 
 -spec loader_inline() -> aihtml:html().
 loader_inline() ->
-    row([loader([inline], []), loader([inline, right], [{text, <<"Syncing">>}])]).
+    row([ah_loader([inline], []), ah_loader([inline, right], [{text, <<"Syncing">>}])]).
 
 -spec loader_hidden() -> aihtml:html().
 loader_hidden() ->
-    frame([p(<<"Shown by AH.invoke(el, 'show') or a server call.">>),
-           loader([hidden], [{id, <<"report-loader">>}])]).
+    frame([ah_p(<<"Shown by AH.invoke(el, 'show') or a server call.">>),
+           ah_loader([hidden], [{id, <<"report-loader">>}])]).

@@ -29,41 +29,41 @@ demos() ->
 
 -spec pagination_basic() -> aihtml:html().
 pagination_basic() ->
-    pagination(200, 1, [], [{show_size_selector, false}, {name, page}]).
+    ah_pagination(200, 1, [], [{show_size_selector, false}, {name, page}]).
 
 -spec pagination_full() -> aihtml:html().
 pagination_full() ->
-    pagination(500, 12, [], [{page_size, 20}, {show_first_last, true}, {show_total, true},
-                             {show_jumper, true}]).
+    ah_pagination(500, 12, [], [{page_size, 20}, {show_first_last, true}, {show_total, true},
+                                {show_jumper, true}]).
 
 -spec pagination_siblings() -> aihtml:html().
 pagination_siblings() ->
-    pagination(300, 15, [], [{siblings, 2}, {show_size_selector, false}]).
+    ah_pagination(300, 15, [], [{siblings, 2}, {show_size_selector, false}]).
 
 -spec pagination_simple() -> aihtml:html().
 pagination_simple() ->
-    pagination(95, 3, [simple], [{show_size_selector, false}]).
+    ah_pagination(95, 3, [simple], [{show_size_selector, false}]).
 
 -spec pagination_links() -> aihtml:html().
 pagination_links() ->
     Page = aihtml_example_state:int(<<"page">>, 4),
-    pagination(120, Page, [], [{href, <<"/components/pagination/state?page={page}&size={size}">>},
-                               {show_size_selector, false}]).
+    ah_pagination(120, Page, [], [{href, <<"/components/pagination/state?page={page}&size={size}">>},
+                                  {show_size_selector, false}]).
 
 %% Every page is a link the server can render (crawlers, new tabs); with
 %% the change action a click renders the page in place and pushes its URL.
 -spec pagination_server() -> aihtml:html().
 pagination_server() ->
     Page = aihtml_example_state:int(<<"pg">>, 1),
-    'div'([ul(articles(Page), [<<"mb-3 text-sm">>], [{id, <<"pg-articles">>}]),
-           pagination(42, Page, [], [{page_size, 5}, {show_size_selector, false},
-                                     {href, <<"/components/pagination/state?pg={page}">>},
-                                     on(change, {?MODULE, turned, #{}})])],
-          [], []).
+    ah_div([ah_ul(articles(Page), [<<"mb-3 text-sm">>], [{id, <<"pg-articles">>}]),
+            ah_pagination(42, Page, [], [{page_size, 5}, {show_size_selector, false},
+                                         {href, <<"/components/pagination/state?pg={page}">>},
+                                         on(change, {?MODULE, turned, #{}})])],
+           [], []).
 
 -spec pagination_disabled() -> aihtml:html().
 pagination_disabled() ->
-    pagination(50, 2, [disabled], [{show_size_selector, false}]).
+    ah_pagination(50, 2, [disabled], [{show_size_selector, false}]).
 
 -spec pagination_record() -> aihtml:html().
 pagination_record() ->
@@ -82,5 +82,5 @@ action(turned, _Args, #{value := Value}, Ctx) ->
 
 %% The five articles of a page (42 in all).
 articles(Page) ->
-    [li([<<"第 "/utf8>>, integer_to_binary(N), <<" 篇文章"/utf8>>], [], [])
+    [ah_li([<<"第 "/utf8>>, integer_to_binary(N), <<" 篇文章"/utf8>>], [], [])
      || N <- lists:seq((Page - 1) * 5 + 1, min(42, Page * 5))].

@@ -24,7 +24,7 @@ hasnt(Html, Part) ->
 %%% number_input
 
 number_basic_test() ->
-    H = r(?M:number_input(5, [], [{min, 0}, {max, 10}, {name, qty}])),
+    H = r(?M:ah_number_input(5, [], [{min, 0}, {max, 10}, {name, qty}])),
     has(H, <<"data-ah=\"number-input\" data-min=\"0\" data-max=\"10\" data-step=\"1\" "
              "data-decimals=\"0\"">>),
     has(H, <<"role=\"spinbutton\"">>),
@@ -34,38 +34,38 @@ number_basic_test() ->
     has(H, <<"<div class=\"ah-numinput-spin\"><span class=\"ah-numinput-spin-up\"">>).
 
 number_clamp_and_decimals_test() ->
-    has(r(?M:number_input(50, [], [{max, 10}])), <<"value=\"10\"">>),
-    has(r(?M:number_input(-3, [], [{min, 0}])), <<"value=\"0\"">>),
-    has(r(?M:number_input(<<"2.5">>, [], [{step, 0.25}])), <<"value=\"2.50\"">>),
-    has(r(?M:number_input(3, [], [{decimals, 1}])), <<"value=\"3.0\"">>),
-    has(r(?M:number_input(undefined, [], [])), <<"type=\"text\"">>),
-    has(r(?M:number_input(undefined, [], [])), <<"value=\"\"">>),
-    has(r(?M:number_input(undefined, [], [{allow_null, false}, {min, 2}])), <<"value=\"2\"">>),
-    ?assertError({aihtml, {bad_number, <<"abc">>}}, r(?M:number_input(<<"abc">>, [], []))),
+    has(r(?M:ah_number_input(50, [], [{max, 10}])), <<"value=\"10\"">>),
+    has(r(?M:ah_number_input(-3, [], [{min, 0}])), <<"value=\"0\"">>),
+    has(r(?M:ah_number_input(<<"2.5">>, [], [{step, 0.25}])), <<"value=\"2.50\"">>),
+    has(r(?M:ah_number_input(3, [], [{decimals, 1}])), <<"value=\"3.0\"">>),
+    has(r(?M:ah_number_input(undefined, [], [])), <<"type=\"text\"">>),
+    has(r(?M:ah_number_input(undefined, [], [])), <<"value=\"\"">>),
+    has(r(?M:ah_number_input(undefined, [], [{allow_null, false}, {min, 2}])), <<"value=\"2\"">>),
+    ?assertError({aihtml, {bad_number, <<"abc">>}}, r(?M:ah_number_input(<<"abc">>, [], []))),
     ?assertError({aihtml, {bad_option, number_input, step, 0}},
-                 r(?M:number_input(1, [], [{step, 0}]))).
+                 r(?M:ah_number_input(1, [], [{step, 0}]))).
 
 number_symbol_spin_test() ->
-    H = r(?M:number_input(1, [readonly, sm], [{symbol, <<"<$>">>}, {spin, false}])),
+    H = r(?M:ah_number_input(1, [readonly, sm], [{symbol, <<"<$>">>}, {spin, false}])),
     has(H, <<"<span class=\"ah-numinput-prefix\">&lt;$&gt;</span><input">>),
     hasnt(H, <<"ah-numinput-spin">>),
     has(H, <<"ah-numinput-group ah-numinput-sm ah-numinput-readonly">>),
     has(H, <<" readonly">>),
-    H2 = r(?M:number_input(1, [], [{symbol, <<"%">>}, {symbol_position, right}])),
+    H2 = r(?M:ah_number_input(1, [], [{symbol, <<"%">>}, {symbol_position, right}])),
     has(H2, <<"</div><span class=\"ah-numinput-suffix\">%</span></div>">>).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:number_input(<<"2.5">>, [readonly], [{step, 0.5}, {min, 0}, {max, 9},
-                                                           {symbol, <<"%">>},
-                                                           {symbol_position, right},
-                                                           {name, n}])),
+    ?assertEqual(r(?M:ah_number_input(<<"2.5">>, [readonly], [{step, 0.5}, {min, 0}, {max, 9},
+                                                              {symbol, <<"%">>},
+                                                              {symbol_position, right},
+                                                              {name, n}])),
                  r(#ah_number_input{value = <<"2.5">>, readonly = true, step = 0.5, min = 0,
                                     max = 9, symbol = <<"%">>, symbol_position = right,
                                     attrs = [{name, n}]})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_number_input{min = 0, step = 1, spin = false, allow_null = false},
-                 ?M:number_input(1, [], [{min, 0}, {spin, false}, {allow_null, false}])).
+                 ?M:ah_number_input(1, [], [{min, 0}, {spin, false}, {allow_null, false}])).
 
 postback_test() ->
     ?assertEqual({<<"change">>, {?MODULE, save, #{k => 1}}},
@@ -83,7 +83,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([number_input], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, arity(S))),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), arity(S))),
          ?assertEqual(form, C)
      end || #{name := N, signature := S, category := C} <- ?M:catalog()].
 

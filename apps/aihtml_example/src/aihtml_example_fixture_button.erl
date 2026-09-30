@@ -10,7 +10,7 @@
 
 -spec row(aihtml:html()) -> aihtml:html().
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-3">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-3">>], []).
 
 %% Shared by the menu demos.
 -spec menu() -> [aihtml_lib_button:item()].

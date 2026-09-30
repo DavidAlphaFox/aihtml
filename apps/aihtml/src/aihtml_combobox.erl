@@ -2,7 +2,7 @@
 %%% @doc An editable field with a filtered list, ported from sigil
 %%% (form/combobox). See designs/04-components.md.
 %%%
-%%%   combobox(Items, Value, Css, Attrs)   an editable field with a filtered list
+%%%   ah_combobox(Items, Value, Css, Attrs)   an editable field with a filtered list
 %%%   set_items(Ctx, Target, Items[, Opts]) (in an action) replace a combobox's list
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
@@ -12,7 +12,7 @@
 %%%
 %%% == Server-side search ==
 %%%
-%%% `combobox(Items, Value, Css, [{search, {Mod, Action, Args}}])' binds
+%%% `ah_combobox(Items, Value, Css, [{search, {Mod, Action, Args}}])' binds
 %%% `aihtml:on(input, Ref, #{debounce => 250})' to the text field. Each
 %%% pause in typing POSTs the action with
 %%%
@@ -30,7 +30,7 @@
 %%% The browser builds tags from the shared template
 %%% templates/combobox_tag.mustache.
 %%%
-%%% combobox/4 builds an #ah_combobox{} (include/aihtml_combobox.hrl) and
+%%% ah_combobox/4 builds an #ah_combobox{} (include/aihtml_combobox.hrl) and
 %%% render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -40,7 +40,7 @@
 
 -include("aihtml_combobox.hrl").
 
--export([combobox/4, set_items/3, set_items/4,
+-export([ah_combobox/4, set_items/3, set_items/4,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([item/0, search_mode/0, element/0]).
@@ -76,9 +76,9 @@
 %% list opens while typing, default 0), `empty_text' (default "No results
 %% found"), `dropdown_height' (px, default 240), `search' (an action ref,
 %% see the module doc).
--spec combobox([item()], term() | [term()] | undefined, aihtml_html:css(),
-               aihtml_html:attrs()) -> #ah_combobox{}.
-combobox(Items, Value, Css, Attrs) ->
+-spec ah_combobox([item()], term() | [term()] | undefined, aihtml_html:css(),
+                  aihtml_html:attrs()) -> #ah_combobox{}.
+ah_combobox(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_combobox{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_combobox{}.
@@ -227,7 +227,7 @@ render_item(N, #{value := V, label := L} = I, Selected, Checkboxes, Id) ->
 %% the `search' action: `set_items(Ctx, Event, Items)'. `Target' is the
 %% search action's event (whose `data' names the combobox and tells
 %% whether it has check boxes) or `{id, RootId}'. Items take the same forms
-%% as in `combobox/4'. Sends two operations: the rendered items morphed
+%% as in `ah_combobox/4'. Sends two operations: the rendered items morphed
 %% into `<root id>-list' (morph_inner), and a call of the behaviour method
 %% `itemsLoaded' on the root, which re-reads the list, marks the selected
 %% items, highlights the query and opens the popup.
@@ -284,7 +284,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => combobox, category => form,
-       signature => <<"combobox(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_combobox(Items, Value, Css, Attrs)">>,
        root => <<"ah-combobox">>,
        flags => [disabled, no_arrow, multiple, checkboxes, free_text],
        classes => #{no_arrow => [<<"ah-combobox-no-arrow">>],

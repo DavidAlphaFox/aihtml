@@ -37,9 +37,9 @@ catalog_docs_test() ->
 %%%===================================================================
 
 splitter_test() ->
-    H = r(?M:splitter([#{content => <<"L">>, size => <<"30%">>, min => 80},
-                       #{content => <<"R">>, min => 60}],
-                      [], [{name, <<"s">>}])),
+    H = r(?M:ah_splitter([#{content => <<"L">>, size => <<"30%">>, min => 80},
+                          #{content => <<"R">>, min => 60}],
+                         [], [{name, <<"s">>}])),
     ?assert(has(H, <<"class=\"ah-splitter ah-splitter-vertical\"">>)),
     ?assert(has(H, <<"data-ah-value=\"30,70\"">>)),
     ?assert(has(H, <<"data-ah-min=\"80,60\"">>)),
@@ -52,14 +52,14 @@ splitter_test() ->
     ?assert(has(H, <<"name=\"s\" value=\"30,70\"">>)).
 
 splitter_horizontal_pixels_test() ->
-    H = r(?M:splitter([#{content => <<"T">>, size => 120}, <<"B">>], [horizontal, disabled],
-                      [{splitbar_size, 8}, {resizable, false}])),
+    H = r(?M:ah_splitter([#{content => <<"T">>, size => 120}, <<"B">>], [horizontal, disabled],
+                         [{splitbar_size, 8}, {resizable, false}])),
     ?assert(has(H, <<"ah-splitter ah-splitter-horizontal ah-splitter-disabled">>)),
     ?assert(has(H, <<"flex:0 0 120px;min-height:0px;">>)),
     ?assert(has(H, <<"style=\"height:8px\"">>)),
     ?assert(has(H, <<"data-ah-resizable=\"false\"">>)),
     ?assertNot(has(H, <<"data-ah-value">>)),
-    ?assertError({aihtml, {splitter_needs_two_panes, 3}}, r(?M:splitter([a, b, c], [], []))).
+    ?assertError({aihtml, {splitter_needs_two_panes, 3}}, r(?M:ah_splitter([a, b, c], [], []))).
 
 
 %%%===================================================================
@@ -67,7 +67,7 @@ splitter_horizontal_pixels_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:splitter([<<"L">>, <<"R">>], [horizontal], [{splitbar_size, 8}])),
+    ?assertEqual(r(?M:ah_splitter([<<"L">>, <<"R">>], [horizontal], [{splitbar_size, 8}])),
                  r(#ah_splitter{panes = [<<"L">>, <<"R">>], orientation = horizontal,
                                 splitbar_size = 8})).
 

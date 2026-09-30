@@ -7,7 +7,7 @@
 %%% simple data and draw it the same way; what they share is in
 %%% aihtml_lib_chart.
 %%%
-%%%   chart(Option, Css, Attrs)             any echarts option (an Erlang map)
+%%%   ah_chart(Option, Css, Attrs)          any echarts option (an Erlang map)
 %%%   chart_option(Chart)                   the echarts option of a chart record
 %%%   chart_update(Ctx, Target, Chart)      (in an action) redraw a chart in place
 %%%
@@ -47,7 +47,7 @@
 %%% setData, resize, showLoading, ... are reachable with
 %%% aihtml_action:call/4 too.
 %%%
-%%% chart/3 builds an element record (#ah_chart{}, defined in
+%%% ah_chart/3 builds an element record (#ah_chart{}, defined in
 %%% include/aihtml_chart.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -57,7 +57,7 @@
 
 -include("aihtml_chart.hrl").
 
--export([chart/3, chart_option/1, chart_update/3,
+-export([ah_chart/3, chart_option/1, chart_update/3,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([element/0, option/0, chart_record/0, chart/0]).
@@ -86,8 +86,8 @@
 %% colours). Css: `loading', `disabled'. Options: `height', `width'
 %% (pixels or a CSS length; the default height is 400px), `renderer'
 %% (canvas | svg).
--spec chart(option(), css(), attrs()) -> #ah_chart{}.
-chart(Option, Css, Attrs) ->
+-spec ah_chart(option(), css(), attrs()) -> #ah_chart{}.
+ah_chart(Option, Css, Attrs) ->
     ?E:build(?MODULE, #ah_chart{option = Option}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -151,7 +151,7 @@ render(#ah_chart{option = O, loading = L, disabled = D, width = W, height = H,
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => chart, category => data,
-       signature => <<"chart(Option, Css, Attrs)">>,
+       signature => <<"ah_chart(Option, Css, Attrs)">>,
        root => <<"ah-chart">>, flags => [loading, disabled],
        classes => #{loading => []},
        options => [width, height, renderer],

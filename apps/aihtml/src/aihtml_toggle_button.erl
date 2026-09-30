@@ -4,7 +4,7 @@
 %%% root, renders a hidden input when `Attrs' has a `name', and fires
 %%% `change' on the root (designs/04-components.md).
 %%%
-%%% toggle_button/4 builds an #ah_toggle_button{}
+%%% ah_toggle_button/4 builds an #ah_toggle_button{}
 %%% (include/aihtml_toggle_button.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -14,7 +14,7 @@
 
 -include("aihtml_toggle_button.hrl").
 
--export([toggle_button/4, render/1, fields/1, catalog/0]).
+-export([ah_toggle_button/4, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -24,9 +24,9 @@
 %% `data-ah-value' and the button's own `value' are "true" / "false" and
 %% a click toggles them and fires `change'. A `name' in `Attrs' goes to a
 %% hidden input.
--spec toggle_button(aihtml_html:html(), boolean(), aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_toggle_button(aihtml_html:html(), boolean(), aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_toggle_button{}.
-toggle_button(Content, Value, Css, Attrs) when is_boolean(Value) ->
+ah_toggle_button(Content, Value, Css, Attrs) when is_boolean(Value) ->
     ?E:build(?MODULE, #ah_toggle_button{body = Content, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_toggle_button{}.
@@ -49,7 +49,7 @@ render(#ah_toggle_button{body = Content, value = Value, name = Name,
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => toggle_button, category => form,
-       signature => <<"toggle_button(Content, Pressed, Css, Attrs)">>,
+       signature => <<"ah_toggle_button(Content, Pressed, Css, Attrs)">>,
        root => <<"ah-btn">>, groups => ?L:btn_groups(), flags => [round],
        classes => #{md => []}, options => [icon, img, icon_position],
        behavior => <<"toggle-button">>, events => [<<"change">>],

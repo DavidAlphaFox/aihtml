@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The expandable_text component (designs/04-components.md): `expandable_text/3'
+%%% @doc The expandable_text component (designs/04-components.md): `ah_expandable_text/3'
 %%% builds an #ah_expandable_text{} element record (include/aihtml_expandable_text.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_expandable_text.hrl").
 
--export([expandable_text/3, render/1, fields/1, catalog/0]).
+-export([ah_expandable_text/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [tf/1, method/3]).
 
@@ -31,8 +31,8 @@
 %% @doc Long text cut at `threshold' characters (100) with a toggle.
 %% Options: `threshold', `expanded' (false), `expand_label' ("展开"),
 %% `collapse_label' ("收起"). Fires `ah:toggle' with the new state.
--spec expandable_text(unicode:chardata(), css(), attrs()) -> #ah_expandable_text{}.
-expandable_text(Text, Css, Attrs) ->
+-spec ah_expandable_text(unicode:chardata(), css(), attrs()) -> #ah_expandable_text{}.
+ah_expandable_text(Text, Css, Attrs) ->
     ?E:build(?MODULE, #ah_expandable_text{text = Text}, Css, Attrs).
 
 %% @doc The field names of #ah_expandable_text{}.
@@ -76,7 +76,7 @@ catalog() ->
 
 entry() ->
     #{name => expandable_text, category => text, root => <<"ah-expandable-text">>,
-      signature => <<"expandable_text(Text, Css, Attrs)">>,
+      signature => <<"ah_expandable_text(Text, Css, Attrs)">>,
       options => [threshold, expanded, expand_label, collapse_label],
       behavior => <<"expandable-text">>, events => [<<"ah:toggle">>],
       doc => <<"Text cut at threshold characters with an expand/collapse toggle. "

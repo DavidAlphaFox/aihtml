@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The meter component (designs/04-components.md): `meter/3'
+%%% @doc The meter component (designs/04-components.md): `ah_meter/3'
 %%% builds an #ah_meter{} element record (include/aihtml_meter.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_meter.hrl").
 
--export([meter/3, render/1, fields/1, catalog/0]).
+-export([ah_meter/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [blank/1, num/1, none_for/1]).
 -import(aihtml_lib_progress, [clamp/3, pct/3]).
@@ -32,8 +32,8 @@
 %% @doc Meter: a measurement in a known range, coloured low / optimum /
 %% high like the native `<meter>'. Options: `min' (0), `max' (100), `low',
 %% `high', `optimum', `label', `helper_text', `show_value' (false).
--spec meter(number(), css(), attrs()) -> #ah_meter{}.
-meter(Value, Css, Attrs) ->
+-spec ah_meter(number(), css(), attrs()) -> #ah_meter{}.
+ah_meter(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_meter{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_meter{}.
@@ -87,7 +87,7 @@ catalog() ->
 
 entry() ->
     #{name => meter, category => data, root => <<"ah-meter">>,
-      signature => <<"meter(Value, Css, Attrs)">>,
+      signature => <<"ah_meter(Value, Css, Attrs)">>,
       groups => #{size => {[sm, md, lg], md}},
       classes => none_for([sm, md, lg]),
       options => [min, max, low, high, optimum, label, helper_text, show_value],

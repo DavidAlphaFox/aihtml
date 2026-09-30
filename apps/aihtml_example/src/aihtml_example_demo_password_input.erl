@@ -18,21 +18,21 @@ demos() ->
 
 -spec password_basic() -> aihtml:html().
 password_basic() ->
-    row([password_input(<<"secret123">>, [<<"w-60">>], [{name, password}]),
-         password_input(undefined, [<<"w-60">>], [{label, <<"Password">>}]),
-         password_input(undefined, [<<"w-60">>], [{toggle, false},
-                                                 {placeholder, <<"No toggle">>}])]).
+    row([ah_password_input(<<"secret123">>, [<<"w-60">>], [{name, password}]),
+         ah_password_input(undefined, [<<"w-60">>], [{label, <<"Password">>}]),
+         ah_password_input(undefined, [<<"w-60">>], [{toggle, false},
+                                                    {placeholder, <<"No toggle">>}])]).
 
 -spec password_strength() -> aihtml:html().
 password_strength() ->
-    password_input(undefined, [<<"w-72">>], [{strength, true}, {name, new_password},
-                                             {placeholder, <<"New password">>}]).
+    ah_password_input(undefined, [<<"w-72">>], [{strength, true}, {name, new_password},
+                                                {placeholder, <<"New password">>}]).
 
 -spec password_states() -> aihtml:html().
 password_states() ->
-    row([password_input(<<"x">>, [sm, invalid, <<"w-60">>], []),
-         password_input(undefined, [lg, <<"w-60">>], [{placeholder, <<"Large">>}]),
-         password_input(<<"hunter2">>, [disabled, <<"w-60">>], [])]).
+    row([ah_password_input(<<"x">>, [sm, invalid, <<"w-60">>], []),
+         ah_password_input(undefined, [lg, <<"w-60">>], [{placeholder, <<"Large">>}]),
+         ah_password_input(<<"hunter2">>, [disabled, <<"w-60">>], [])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

@@ -24,40 +24,40 @@ demos() ->
 
 -spec navbar_basic() -> aihtml:html().
 navbar_basic() ->
-    navbar([{home, <<"Home">>}, {products, <<"Products">>}, {pricing, <<"Pricing">>},
-            #{key => docs, label => <<"Docs">>, disabled => true}],
-           products, [],
-           [{brand, strong(<<"Acme">>)},
-            {extra, button(<<"Sign in">>, undefined, [sm], [])},
-            {name, section}]).
+    ah_navbar([{home, <<"Home">>}, {products, <<"Products">>}, {pricing, <<"Pricing">>},
+               #{key => docs, label => <<"Docs">>, disabled => true}],
+              products, [],
+              [{brand, ah_strong(<<"Acme">>)},
+               {extra, ah_button(<<"Sign in">>, undefined, [sm], [])},
+               {name, section}]).
 
 -spec navbar_vertical() -> aihtml:html().
 navbar_vertical() ->
-    'div'(navbar([{profile, <<"Profile">>}, {account, <<"Account">>},
-                  {billing, <<"Billing">>}, {security, <<"Security">>}],
-                 account, [vertical], []),
-          [<<"w-56">>], []).
+    ah_div(ah_navbar([{profile, <<"Profile">>}, {account, <<"Account">>},
+                      {billing, <<"Billing">>}, {security, <<"Security">>}],
+                     account, [vertical], []),
+           [<<"w-56">>], []).
 
 -spec navbar_minimized() -> aihtml:html().
 navbar_minimized() ->
-    'div'(navbar([{home, <<"Home">>}, {products, <<"Products">>}, {pricing, <<"Pricing">>}],
-                 pricing, [minimized], [{title, <<"Pricing">>}]),
-          [<<"w-72">>], []).
+    ah_div(ah_navbar([{home, <<"Home">>}, {products, <<"Products">>}, {pricing, <<"Pricing">>}],
+                     pricing, [minimized], [{title, <<"Pricing">>}]),
+           [<<"w-72">>], []).
 
 -spec navbar_links() -> aihtml:html().
 navbar_links() ->
-    navbar([#{key => overview, label => <<"Overview">>, href => <<"#overview">>},
-            #{key => api, label => <<"API">>, href => <<"#api">>},
-            #{key => faq, label => <<"FAQ">>, href => <<"#faq">>}],
-           overview, [], [{columns, [<<"50%">>, <<"30%">>, <<"20%">>]}]).
+    ah_navbar([#{key => overview, label => <<"Overview">>, href => <<"#overview">>},
+               #{key => api, label => <<"API">>, href => <<"#api">>},
+               #{key => faq, label => <<"FAQ">>, href => <<"#faq">>}],
+              overview, [], [{columns, [<<"50%">>, <<"30%">>, <<"20%">>]}]).
 
 -spec navbar_record() -> aihtml:html().
 navbar_record() ->
     #ah_navbar{items = [{home, <<"Home">>}, {products, <<"Products">>},
                         {pricing, <<"Pricing">>}],
                value = home,
-               brand = strong(<<"Acme">>),
-               extra = button(<<"Sign in">>, undefined, [sm], []),
+               brand = ah_strong(<<"Acme">>),
+               extra = ah_button(<<"Sign in">>, undefined, [sm], []),
                title = <<"Acme">>,
                minimize_width = 480,
                name = section}.

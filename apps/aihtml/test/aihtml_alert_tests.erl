@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := alert, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, alert, 3)),
+    ?assert(erlang:function_exported(?D, ah_alert, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -46,12 +46,12 @@ records_match_catalog_test() ->
 %%%===================================================================
 
 alert_test() ->
-    H = ?D:alert(<<"<msg>">>, [], []),
+    H = ?D:ah_alert(<<"<msg>">>, [], []),
     ?assert(has(<<"<div class=\"ah-alert ah-alert-info\" role=\"alert\" data-ah=\"alert\">">>, H)),
     ?assert(has(<<"<div class=\"ah-alert-body\">&lt;msg&gt;</div>">>, H)),
     ?assert(has(<<"<svg">>, H)),
     ?assertNot(has(<<"ah-alert-close">>, H)),
-    D = ?D:alert(<<"m">>, [error, dismissible, <<"mt-2">>], [{title, <<"T&">>}, {icon, false}, {id, a1}]),
+    D = ?D:ah_alert(<<"m">>, [error, dismissible, <<"mt-2">>], [{title, <<"T&">>}, {icon, false}, {id, a1}]),
     ?assert(has(<<"class=\"ah-alert ah-alert-error ah-alert-dismissible mt-2\"">>, D)),
     ?assert(has(<<"<div class=\"ah-alert-title\">T&amp;</div>">>, D)),
     ?assert(has(<<"<button class=\"ah-alert-close\" type=\"button\" aria-label=\"Close\">">>, D)),
@@ -63,11 +63,11 @@ alert_test() ->
 %%%===================================================================
 
 unknown_modifier_fails_test() ->
-    ?assertError({aihtml, {unknown_modifier, alert, danger, _}}, ?D:alert(<<"x">>, [danger], [])).
+    ?assertError({aihtml, {unknown_modifier, alert, danger, _}}, ?D:ah_alert(<<"x">>, [danger], [])).
 
 builder_fills_fields_test() ->
-    A = ?D:alert(<<"m">>, [error, dismissible, <<"mt-2">>],
-                 [{title, <<"T">>}, {icon, false}, {id, a1}, {aria_live, polite}]),
+    A = ?D:ah_alert(<<"m">>, [error, dismissible, <<"mt-2">>],
+                    [{title, <<"T">>}, {icon, false}, {id, a1}, {aria_live, polite}]),
     ?assertMatch(#ah_alert{body = <<"m">>, variant = error, dismissible = true,
                            title = <<"T">>, icon = false, id = a1, css = [<<"mt-2">>],
                            attrs = [{aria_live, polite}]}, A).

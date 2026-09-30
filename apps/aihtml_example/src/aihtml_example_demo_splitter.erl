@@ -22,25 +22,25 @@ demos() ->
 
 -spec splitter_columns() -> aihtml:html().
 splitter_columns() ->
-    'div'(splitter([#{content => pane(<<"Left, at least 80px">>), size => <<"30%">>, min => 80},
-                    #{content => pane(<<"Right">>), min => 80}],
-                   [], [{name, split}]),
-          [<<"h-40 border border-line rounded">>], []).
+    ah_div(ah_splitter([#{content => pane(<<"Left, at least 80px">>), size => <<"30%">>, min => 80},
+                        #{content => pane(<<"Right">>), min => 80}],
+                       [], [{name, split}]),
+           [<<"h-40 border border-line rounded">>], []).
 
 -spec splitter_rows() -> aihtml:html().
 splitter_rows() ->
-    'div'(splitter([#{content => pane(<<"Editor">>), size => <<"65%">>, min => 40},
-                    pane(<<"Console">>)],
-                   [horizontal], [{splitbar_size, 6}]),
-          [<<"h-56 border border-line rounded">>], []).
+    ah_div(ah_splitter([#{content => pane(<<"Editor">>), size => <<"65%">>, min => 40},
+                        pane(<<"Console">>)],
+                       [horizontal], [{splitbar_size, 6}]),
+           [<<"h-56 border border-line rounded">>], []).
 
 -spec splitter_nested() -> aihtml:html().
 splitter_nested() ->
-    'div'(splitter([#{content => pane(<<"Tree">>), size => 160, min => 100},
-                    splitter([pane(<<"Code">>), pane(<<"Preview">>)], [horizontal], [])],
-                   [], []),
-          [<<"h-56 border border-line rounded">>], []).
+    ah_div(ah_splitter([#{content => pane(<<"Tree">>), size => 160, min => 100},
+                        ah_splitter([pane(<<"Code">>), pane(<<"Preview">>)], [horizontal], [])],
+                       [], []),
+           [<<"h-56 border border-line rounded">>], []).
 
 %% Shared by the demos above.
 pane(Text) ->
-    'div'(Text, [<<"p-3 text-sm">>], []).
+    ah_div(Text, [<<"p-3 text-sm">>], []).

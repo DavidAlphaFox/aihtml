@@ -6,7 +6,7 @@
 %%%
 %%% Items are `Label | {Value, Label} | {Value, Label, ItemAttrs}' or
 %%% `divider' (aihtml_lib_button); `ItemAttrs' may carry `icon'.
-%%% dropdown_button/4 builds an #ah_dropdown_button{}
+%%% ah_dropdown_button/4 builds an #ah_dropdown_button{}
 %%% (include/aihtml_dropdown_button.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -16,7 +16,7 @@
 
 -include("aihtml_dropdown_button.hrl").
 
--export([dropdown_button/4, render/1, fields/1, catalog/0]).
+-export([ah_dropdown_button/4, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -25,9 +25,9 @@
 %% @doc A button that opens a menu. Choosing an item sets `data-ah-value'
 %% on the root and fires `change'. Options: `value' (the initially
 %% selected item), `auto_open' (open on hover).
--spec dropdown_button(aihtml_html:html(), [aihtml_lib_button:item()], aihtml_html:css(),
-                      aihtml_html:attrs()) -> #ah_dropdown_button{}.
-dropdown_button(Content, Items, Css, Attrs) ->
+-spec ah_dropdown_button(aihtml_html:html(), [aihtml_lib_button:item()], aihtml_html:css(),
+                         aihtml_html:attrs()) -> #ah_dropdown_button{}.
+ah_dropdown_button(Content, Items, Css, Attrs) ->
     ?E:build(?MODULE, #ah_dropdown_button{body = Content, items = Items}, Css, Attrs).
 
 %% @doc The field names of #ah_dropdown_button{}.
@@ -74,7 +74,7 @@ render(#ah_dropdown_button{body = Content, items = Items0, value = Value, name =
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => dropdown_button, category => form,
-       signature => <<"dropdown_button(Content, Items, Css, Attrs)">>,
+       signature => <<"ah_dropdown_button(Content, Items, Css, Attrs)">>,
        root => <<"ah-dropdown-btn">>,
        groups => #{variant => {[primary, success, warning, error, outlined], none},
                    size => {[sm, md, lg], md}},

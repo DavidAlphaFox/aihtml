@@ -6,7 +6,7 @@
 %%% ...) go to the `<textarea>', `Css' to the wrapper. It shares the
 %%% `input' behaviour.
 %%%
-%%% textarea/3 builds an #ah_textarea{} (include/aihtml_textarea.hrl) and
+%%% ah_textarea/3 builds an #ah_textarea{} (include/aihtml_textarea.hrl) and
 %%% render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -16,7 +16,7 @@
 
 -include("aihtml_textarea.hrl").
 
--export([textarea/3, render/1, fields/1, catalog/0]).
+-export([ah_textarea/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(L, aihtml_lib_input).
@@ -24,8 +24,8 @@
 
 %% @doc A multi-line input, styled like `input' (sigil has no textarea
 %% widget; this follows its a2ui textarea). Option: `label' (floating).
--spec textarea(binary() | undefined, aihtml_html:css(), aihtml_html:attrs()) -> #ah_textarea{}.
-textarea(Value, Css, Attrs) ->
+-spec ah_textarea(binary() | undefined, aihtml_html:css(), aihtml_html:attrs()) -> #ah_textarea{}.
+ah_textarea(Value, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_textarea{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_textarea{}.
@@ -48,7 +48,7 @@ render(#ah_textarea{value = Value, label = Label} = R) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => textarea, category => form,
-       signature => <<"textarea(Value, Css, Attrs)">>,
+       signature => <<"ah_textarea(Value, Css, Attrs)">>,
        root => <<"ah-textarea-group">>,
        groups => #{size => ?L:sizes(), state => ?L:states()},
        flags => [disabled, no_rounded],

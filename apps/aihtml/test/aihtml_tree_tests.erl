@@ -32,7 +32,7 @@ files() ->
      #{label => <<"Remote">>, value => remote, lazy => true}].
 
 tree_structure_test() ->
-    H = r(?M:tree(files(), undefined, [<<"w-64">>], [{id, t}, {aria_label, <<"Files">>}])),
+    H = r(?M:ah_tree(files(), undefined, [<<"w-64">>], [{id, t}, {aria_label, <<"Files">>}])),
     ?assert(has(<<"<div class=\"ah-tree w-64\" id=\"t\" role=\"tree\" data-ah=\"tree\" "
                   "data-ah-value=\"\" data-toggle-mode=\"click\" data-animation=\"slide\" "
                   "aria-label=\"Files\">">>, H)),
@@ -55,7 +55,7 @@ tree_structure_test() ->
     ?assertNot(has_quiet(<<"data-load">>, H)).
 
 tree_selection_test() ->
-    H = r(?M:tree(files(), <<"q2">>, [], [{id, t}, {name, doc}])),
+    H = r(?M:ah_tree(files(), <<"q2">>, [], [{id, t}, {name, doc}])),
     ?assert(has(<<"data-ah-value=\"q2\"">>, H)),
     %% the ancestors of the selected node are open
     ?assert(has(<<"data-value=\"docs\" aria-expanded=\"true\" tabindex=\"-1\"">>, H)),
@@ -66,13 +66,13 @@ tree_selection_test() ->
     ?assertEqual(1, count(<<"tabindex=\"0\"">>, H)),
     ?assert(has(<<"<input type=\"hidden\" name=\"doc\" value=\"q2\" data-ah-input>">>, H)),
     %% an unknown value selects nothing
-    H2 = r(?M:tree(files(), nope, [], [{id, t}])),
+    H2 = r(?M:ah_tree(files(), nope, [], [{id, t}])),
     ?assert(has(<<"data-ah-value=\"\"">>, H2)),
     ?assertNot(has_quiet(<<"aria-selected">>, H2)).
 
 tree_options_test() ->
-    H = r(?M:tree([a, 1, "s"], undefined, [disabled],
-                  [{toggle_mode, dblclick}, {animation, none}, {load, {?MODULE, children, #{}}}])),
+    H = r(?M:ah_tree([a, 1, "s"], undefined, [disabled],
+                     [{toggle_mode, dblclick}, {animation, none}, {load, {?MODULE, children, #{}}}])),
     ?assert(has(<<"class=\"ah-tree ah-tree-disabled\"">>, H)),
     ?assert(has(<<"aria-disabled=\"true\" data-ah=\"tree\"">>, H)),
     ?assert(has(<<"data-toggle-mode=\"dblclick\" data-animation=\"none\" data-load=\"">>, H)),
@@ -81,14 +81,14 @@ tree_options_test() ->
     ?assert(has(<<"data-value=\"1\"">>, H)),
     ?assert(has(<<"data-value=\"s\"">>, H)),
     %% expanded without children is a leaf; expanded with children is open
-    H2 = r(?M:tree([#{label => <<"x">>, expanded => true},
-                    #{label => <<"y">>, expanded => true, items => [z]}], undefined, [], [{id, e}])),
+    H2 = r(?M:ah_tree([#{label => <<"x">>, expanded => true},
+                       #{label => <<"y">>, expanded => true, items => [z]}], undefined, [], [{id, e}])),
     ?assert(has(<<"data-value=\"x\" tabindex=\"0\"">>, H2)),
     ?assert(has(<<"data-value=\"y\" aria-expanded=\"true\"">>, H2)),
     ?assert(has(<<"<span class=\"ah-tree-toggle ah-tree-toggle-open\"">>, H2)).
 
 tree_escaping_test() ->
-    H = r(?M:tree([{<<"a\"b">>, <<"<i>x</i>">>}], <<"a\"b">>, [], [{id, t}])),
+    H = r(?M:ah_tree([{<<"a\"b">>, <<"<i>x</i>">>}], <<"a\"b">>, [], [{id, t}])),
     ?assert(has(<<"data-value=\"a&quot;b\"">>, H)),
     ?assert(has(<<"&lt;i&gt;x&lt;/i&gt;">>, H)).
 
@@ -109,7 +109,7 @@ action(children, #{source := Source}, #{data := #{<<"value">> := V}} = Ev, Ctx) 
 lazy_round_trip_test() ->
     Ref = {?MODULE, children, #{source => #{<<"remote">> => [<<"r1">>, #{label => <<"R2">>,
                                                                         lazy => true}]}}},
-    H = r(?M:tree(files(), undefined, [], [{id, <<"tr">>}, {load, Ref}])),
+    H = r(?M:ah_tree(files(), undefined, [], [{id, <<"tr">>}, {load, Ref}])),
     {match, [Token]} = re:run(H, <<"data-load=\"([^\"]+)\"">>, [{capture, all_but_first, binary}]),
     {ok, Ref} = aihtml_action:verify(Token),
     %% the browser sends the node's id and data-* attributes
@@ -128,9 +128,9 @@ lazy_round_trip_test() ->
     ?assertEqual(#{op => call, id => <<"tr">>, method => <<"childrenLoaded">>,
                    args => [<<"tr-2">>]}, Call),
     %% the same markup as a first render of those children would have
-    Full = r(?M:tree([#{label => <<"Remote">>, value => remote,
-                        items => [<<"r1">>, #{label => <<"R2">>, lazy => true}]}],
-                     undefined, [], [{id, <<"tr">>}])),
+    Full = r(?M:ah_tree([#{label => <<"Remote">>, value => remote,
+                           items => [<<"r1">>, #{label => <<"R2">>, lazy => true}]}],
+                        undefined, [], [{id, <<"tr">>}])),
     ?assert(has(binary:replace(binary:replace(Kids, <<"tr-2">>, <<"tr-0">>, [global]),
                                <<"data-tree-id=\"2-">>, <<"data-tree-id=\"0-">>, [global]),
                 Full)),
@@ -178,20 +178,20 @@ catalog_docs_test() ->
 
 record_equals_builder_test() ->
     Load = {?MODULE, children, #{}},
-    ?assertEqual(r(?M:tree(files(), q1, [disabled, <<"w-64">>],
-                           [{id, t}, {name, n}, {toggle_mode, dblclick}, {animation, none},
-                            {load, Load}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_tree(files(), q1, [disabled, <<"w-64">>],
+                              [{id, t}, {name, n}, {toggle_mode, dblclick}, {animation, none},
+                               {load, Load}, {title, <<"t">>}])),
                  r(#ah_tree{items = files(), value = q1, disabled = true, css = [<<"w-64">>],
                             id = t, name = n, toggle_mode = dblclick, animation = none,
                             load = Load, attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    T = ?M:tree([a], a, [disabled, <<"x">>], [{name, n}, {toggle_mode, dblclick}, {role, x}]),
+    T = ?M:ah_tree([a], a, [disabled, <<"x">>], [{name, n}, {toggle_mode, dblclick}, {role, x}]),
     ?assertMatch(#ah_tree{items = [a], value = a, disabled = true, name = n,
                           toggle_mode = dblclick, animation = slide, css = [<<"x">>],
                           attrs = [{role, x}]}, T),
     ?assertError({aihtml, {record_only_field, ah_tree, postback}},
-                 ?M:tree([], undefined, [], [{postback, pick}])).
+                 ?M:ah_tree([], undefined, [], [{postback, pick}])).
 
 postback_test() ->
     Token = fun(Html) ->
@@ -212,7 +212,7 @@ field_validation_test() ->
     ?assertError({aihtml, {tree_item_needs_value, _}},
                  r(#ah_tree{items = [#{label => {safe, <<"<b>x</b>">>}}]})),
     ?assertError({aihtml, {bad_flag, tree, disabled, yes}}, r(#ah_tree{disabled = yes})),
-    ?assertError({aihtml, {unknown_modifier, tree, big, _}}, ?M:tree([], undefined, [big], [])).
+    ?assertError({aihtml, {unknown_modifier, tree, big, _}}, ?M:ah_tree([], undefined, [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],

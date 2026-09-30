@@ -17,7 +17,7 @@ has(Needle, Hay) ->
 has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 
 datepicker_single_test() ->
-    H = r(?M:datepicker(<<"2026-09-29">>, [<<"w-64">>], [{id, dp}, {name, due}, {title, <<"t">>}])),
+    H = r(?M:ah_datepicker(<<"2026-09-29">>, [<<"w-64">>], [{id, dp}, {name, due}, {title, <<"t">>}])),
     ?assert(has(<<"class=\"ah-datepicker w-64\"">>, H)),
     ?assert(has(<<"id=\"dp\"">>, H)),
     ?assert(has(<<"data-ah=\"datepicker\"">>, H)),
@@ -34,34 +34,34 @@ datepicker_single_test() ->
     ?assertEqual(1, length(binary:matches(H, <<"name=">>))).
 
 datepicker_value_forms_test() ->
-    H = r(?M:datepicker({2026, 1, 5}, [], [{format, <<"d MMM yy">>}])),
+    H = r(?M:ah_datepicker({2026, 1, 5}, [], [{format, <<"d MMM yy">>}])),
     ?assert(has(<<"data-ah-value=\"2026-01-05\"">>, H)),
     ?assert(has(<<"value=\"5 Jan 26\"">>, H)),
-    E = r(?M:datepicker(undefined, [], [])),
+    E = r(?M:ah_datepicker(undefined, [], [])),
     ?assert(has(<<"data-ah-value=\"\"">>, E)),
     ?assert(has(<<"id=\"ah-p">>, E)),          % an id is generated
     ?assertError({aihtml, {bad_date, <<"2026-02-30">>}},
-                 r(?M:datepicker(<<"2026-02-30">>, [], []))),
-    ?assertError({aihtml, {bad_date, _}}, r(?M:datepicker(<<"29/09/2026">>, [], []))).
+                 r(?M:ah_datepicker(<<"2026-02-30">>, [], []))),
+    ?assertError({aihtml, {bad_date, _}}, r(?M:ah_datepicker(<<"29/09/2026">>, [], []))).
 
 datepicker_range_test() ->
-    H = r(?M:datepicker({<<"2026-09-18">>, {2026, 9, 10}}, [], [{name, p}])),
+    H = r(?M:ah_datepicker({<<"2026-09-18">>, {2026, 9, 10}}, [], [{name, p}])),
     ?assert(has(<<"ah-datepicker-range">>, H)),
     ?assert(has(<<"data-ah-range">>, H)),
     %% sorted
     ?assert(has(<<"data-ah-value=\"2026-09-10,2026-09-18\"">>, H)),
     ?assert(has(<<"value=\"2026-09-10 - 2026-09-18\"">>, H)),
-    E = r(?M:datepicker(undefined, [range], [])),
+    E = r(?M:ah_datepicker(undefined, [range], [])),
     ?assert(has(<<"class=\"ah-datepicker ah-datepicker-range\"">>, E)),
     ?assert(has(<<"data-ah-value=\"\"">>, E)).
 
 datepicker_options_test() ->
-    H = r(?M:datepicker(undefined, [disabled, clearable],
-                        [{min, {2026, 1, 1}}, {max, <<"2026-12-31">>},
-                         {disabled_dates, [<<"2026-05-01">>, {2026, 10, 1}]},
-                         {first_day, 1}, {week_numbers, true}, {other_month_days, false},
-                         {weekends, true}, {placeholder, <<"Due">>},
-                         {labels, #{today => <<"今天"/utf8>>}}])),
+    H = r(?M:ah_datepicker(undefined, [disabled, clearable],
+                           [{min, {2026, 1, 1}}, {max, <<"2026-12-31">>},
+                            {disabled_dates, [<<"2026-05-01">>, {2026, 10, 1}]},
+                            {first_day, 1}, {week_numbers, true}, {other_month_days, false},
+                            {weekends, true}, {placeholder, <<"Due">>},
+                            {labels, #{today => <<"今天"/utf8>>}}])),
     ?assert(has(<<"ah-datepicker-disabled">>, H)),
     ?assert(has(<<"ah-datepicker-clearable">>, H)),
     ?assert(has(<<"data-ah-min=\"2026-01-01\"">>, H)),
@@ -78,27 +78,27 @@ datepicker_options_test() ->
     ?assertNot(has_quiet(<<"ah-datepicker-clear\"">>, H)),
     %% labels travel as JSON, escaped in the attribute
     ?assert(has(<<"&quot;today&quot;:&quot;"/utf8>>, H)),
-    ?assertError({aihtml, {bad_first_day, 7}}, r(?M:datepicker(undefined, [], [{first_day, 7}]))),
+    ?assertError({aihtml, {bad_first_day, 7}}, r(?M:ah_datepicker(undefined, [], [{first_day, 7}]))),
     ?assertError({aihtml, {bad_datepicker_label, months}},
-                 r(?M:datepicker(undefined, [], [{labels, #{months => [<<"x">>]}}]))),
+                 r(?M:ah_datepicker(undefined, [], [{labels, #{months => [<<"x">>]}}]))),
     ?assertError({aihtml, {unknown_modifier, datepicker, big, _}},
-                 ?M:datepicker(undefined, [big], [])).
+                 ?M:ah_datepicker(undefined, [big], [])).
 
 datepicker_labels_format_test() ->
     Months = [<<"M", (integer_to_binary(N))/binary>> || N <- lists:seq(1, 12)],
-    H = r(?M:datepicker(<<"2026-03-07">>, [], [{format, <<"MMMM/dd">>},
-                                                {labels, #{months => Months}}])),
+    H = r(?M:ah_datepicker(<<"2026-03-07">>, [], [{format, <<"MMMM/dd">>},
+                                                   {labels, #{months => Months}}])),
     ?assert(has(<<"value=\"M3/07\"">>, H)).
 
 datepicker_clearable_test() ->
-    H = r(?M:datepicker(<<"2026-03-07">>, [clearable], [])),
+    H = r(?M:ah_datepicker(<<"2026-03-07">>, [clearable], [])),
     ?assert(has(<<"class=\"ah-datepicker-clear\"">>, H)),
     ?assert(has(<<"aria-label=\"Clear\"">>, H)).
 
 datepicker_inline_test() ->
-    H = r(?M:datepicker(<<"2026-09-15">>, [inline], [{id, di}, {first_day, 1}, {week_numbers, true},
-                                                      {min, <<"2026-09-05">>},
-                                                      {disabled_dates, [<<"2026-09-21">>]}])),
+    H = r(?M:ah_datepicker(<<"2026-09-15">>, [inline], [{id, di}, {first_day, 1}, {week_numbers, true},
+                                                         {min, <<"2026-09-05">>},
+                                                         {disabled_dates, [<<"2026-09-21">>]}])),
     ?assert(has(<<"ah-datepicker-inline">>, H)),
     ?assert(has(<<"role=\"group\"">>, H)),
     ?assert(has(<<"<div class=\"ah-datepicker-title\" id=\"di-title\" aria-live=\"polite\">September 2026</div>">>, H)),
@@ -111,12 +111,12 @@ datepicker_inline_test() ->
     ?assert(has(<<"id=\"di-d2026-09-21\" data-date=\"2026-09-21\" aria-selected=\"false\" aria-disabled=\"true\"">>, H)),
     %% the non-inline popup starts empty
     ?assert(has(<<"<div class=\"ah-datepicker-popup\" role=\"dialog\" aria-label=\"Choose date\"></div>">>,
-                r(?M:datepicker(<<"2026-09-15">>, [], [])))).
+                r(?M:ah_datepicker(<<"2026-09-15">>, [], [])))).
 
 datepicker_inline_range_week_numbers_test() ->
     %% Sunday first, a range across the turn of the year: week 1 of 2027
-    H = r(?M:datepicker({<<"2026-12-30">>, <<"2027-01-02">>}, [inline],
-                        [{id, dr}, {week_numbers, true}, {other_month_days, false}])),
+    H = r(?M:ah_datepicker({<<"2026-12-30">>, <<"2027-01-02">>}, [inline],
+                           [{id, dr}, {week_numbers, true}, {other_month_days, false}])),
     ?assert(has(<<"December 2026">>, H)),
     ?assert(has(<<"ah-datepicker-day-in-range ah-datepicker-day-range-start">>, H)),
     ?assert(has(<<"<div class=\"ah-datepicker-week-num\">1</div>">>, H)),
@@ -142,19 +142,19 @@ catalog_test() ->
 
 record_equals_builder_test() ->
     Labels = #{today => <<"Now">>},
-    ?assertEqual(r(?M:datepicker(<<"2026-09-15">>, [inline, clearable, <<"w-64">>],
-                                 [{id, dp}, {name, due}, {first_day, 1}, {min, {2026, 9, 5}},
-                                  {week_numbers, true}, {labels, Labels}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_datepicker(<<"2026-09-15">>, [inline, clearable, <<"w-64">>],
+                                    [{id, dp}, {name, due}, {first_day, 1}, {min, {2026, 9, 5}},
+                                     {week_numbers, true}, {labels, Labels}, {title, <<"t">>}])),
                  r(#ah_datepicker{value = <<"2026-09-15">>, inline = true, clearable = true,
                                   css = [<<"w-64">>], id = dp, name = due, first_day = 1,
                                   min = {2026, 9, 5}, week_numbers = true, labels = Labels,
                                   attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    D = ?M:datepicker({<<"2026-01-01">>, undefined}, [range, disabled, <<"x">>],
-                      [{id, d}, {format, <<"d MMM">>}, {max, <<"2026-12-31">>},
-                       {disabled_dates, [{2026, 5, 1}]}, {other_month_days, false},
-                       {title, <<"t">>}]),
+    D = ?M:ah_datepicker({<<"2026-01-01">>, undefined}, [range, disabled, <<"x">>],
+                         [{id, d}, {format, <<"d MMM">>}, {max, <<"2026-12-31">>},
+                          {disabled_dates, [{2026, 5, 1}]}, {other_month_days, false},
+                          {title, <<"t">>}]),
     ?assertMatch(#ah_datepicker{value = {<<"2026-01-01">>, undefined}, range = true,
                                 disabled = true, readonly = false, id = d,
                                 format = <<"d MMM">>, max = <<"2026-12-31">>,

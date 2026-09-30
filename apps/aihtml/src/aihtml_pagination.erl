@@ -18,7 +18,7 @@
 %%% and reload load that URL from the server. The page handler reads the
 %%% page from the query and renders the same component with it.
 %%%
-%%% pagination/4 builds an element record (#ah_pagination{}, defined in
+%%% ah_pagination/4 builds an element record (#ah_pagination{}, defined in
 %%% include/aihtml_pagination.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -28,7 +28,7 @@
 
 -include("aihtml_pagination.hrl").
 
--export([pagination/4, render/1, fields/1, catalog/0]).
+-export([ah_pagination/4, render/1, fields/1, catalog/0]).
 -export([visible_pages/3, pagination_view/5]).
 
 %% Shared with the browser (see aihtml_tpl), compiled to AH.tpl.pagination_items.
@@ -54,8 +54,8 @@
 %% the URL, see the module doc), labels (#{prev, next, first, last, per_page,
 %% total, goto, goto_suffix, goto_confirm, page_info, aria_label,
 %% per_page_aria}), name. Value: the current page.
--spec pagination(non_neg_integer(), pos_integer(), css(), attrs()) -> #ah_pagination{}.
-pagination(Total, Page, Css, Attrs) ->
+-spec ah_pagination(non_neg_integer(), pos_integer(), css(), attrs()) -> #ah_pagination{}.
+ah_pagination(Total, Page, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_pagination{total = Total, value = Page}, Css, Attrs).
 
 %% @doc The field names of #ah_pagination{}.
@@ -231,7 +231,7 @@ catalog() ->
                    #{name => last, args => <<"()">>, doc => <<"Last page.">>},
                    #{name => setTotal, args => <<"(Items)">>, doc => <<"Change the item count; the page is clamped.">>},
                    #{name => setPageSize, args => <<"(N)">>, doc => <<"Change the page size.">>}],
-       signature => <<"pagination(Total, Page, Css, Attrs)">>, root => <<"ah-pagination">>,
+       signature => <<"ah_pagination(Total, Page, Css, Attrs)">>, root => <<"ah-pagination">>,
        flags => [simple, disabled],
        options => [page_size, page_sizes, show_size_selector, show_jumper, show_first_last,
                    show_total, max_visible, siblings, href, labels, name],

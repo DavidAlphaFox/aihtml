@@ -19,25 +19,25 @@ demos() ->
 
 -spec number_basic() -> aihtml:html().
 number_basic() ->
-    row([number_input(5, [<<"w-40">>], [{min, 0}, {max, 10}, {name, qty}]),
-         number_input(<<"2.5">>, [<<"w-40">>], [{step, 0.5}, {min, 0}]),
-         number_input(undefined, [<<"w-40">>], [{label, <<"Amount">>}])]).
+    row([ah_number_input(5, [<<"w-40">>], [{min, 0}, {max, 10}, {name, qty}]),
+         ah_number_input(<<"2.5">>, [<<"w-40">>], [{step, 0.5}, {min, 0}]),
+         ah_number_input(undefined, [<<"w-40">>], [{label, <<"Amount">>}])]).
 
 -spec number_symbols() -> aihtml:html().
 number_symbols() ->
-    row([number_input(19.5, [<<"w-44">>], [{step, 0.5}, {symbol, <<"$">>}]),
-         number_input(75, [<<"w-40">>], [{min, 0}, {max, 100}, {symbol, <<"%">>},
-                                         {symbol_position, right}]),
-         number_input(undefined, [<<"w-40">>], [{spin, false},
-                                                {placeholder, <<"No spin">>}])]).
+    row([ah_number_input(19.5, [<<"w-44">>], [{step, 0.5}, {symbol, <<"$">>}]),
+         ah_number_input(75, [<<"w-40">>], [{min, 0}, {max, 100}, {symbol, <<"%">>},
+                                            {symbol_position, right}]),
+         ah_number_input(undefined, [<<"w-40">>], [{spin, false},
+                                                   {placeholder, <<"No spin">>}])]).
 
 -spec number_states() -> aihtml:html().
 number_states() ->
-    row([number_input(1, [sm, <<"w-32">>], []),
-         number_input(2, [lg, <<"w-40">>], []),
-         number_input(200, [invalid, <<"w-40">>], [{max, 100}]),
-         number_input(3, [readonly, <<"w-32">>], []),
-         number_input(4, [disabled, <<"w-32">>], [])]).
+    row([ah_number_input(1, [sm, <<"w-32">>], []),
+         ah_number_input(2, [lg, <<"w-40">>], []),
+         ah_number_input(200, [invalid, <<"w-40">>], [{max, 100}]),
+         ah_number_input(3, [readonly, <<"w-32">>], []),
+         ah_number_input(4, [disabled, <<"w-32">>], [])]).
 
 -spec number_record() -> aihtml:html().
 number_record() ->
@@ -47,4 +47,4 @@ number_record() ->
                      attrs = [{name, discount}]}.
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

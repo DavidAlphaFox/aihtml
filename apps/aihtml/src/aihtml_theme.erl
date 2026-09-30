@@ -95,7 +95,7 @@ switcher(Css, Attrs) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => theme_switcher, category => theme,
-       signature => <<"theme_switcher(Css, Attrs)">>,
+       signature => <<"ah_theme_switcher(Css, Attrs)">>,
        root => <<"ah-theme-switcher">>, behavior => <<"theme-switcher">>,
        events => [<<"ah:theme">>],
        doc => <<"Four selects, one per theme axis.">>}].

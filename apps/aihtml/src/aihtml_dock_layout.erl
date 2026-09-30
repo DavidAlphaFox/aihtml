@@ -3,7 +3,7 @@
 %%% DOM and class names are sigil's, so the styles in
 %%% priv/css/sigil/components/dock_layout.css apply unchanged.
 %%%
-%%%   dock_layout(Layout, Css, Attrs)    an IDE layout: splits, tab groups,
+%%%   ah_dock_layout(Layout, Css, Attrs)    an IDE layout: splits, tab groups,
 %%%                                      documents, float and auto hide
 %%%   dock_layout_open(Ctx, Target, Panel[, Opts])
 %%%                                      (in an action) open a panel
@@ -15,7 +15,7 @@
 %%% After every rearrangement it fires `change' on the root, so an action
 %%% bound with `on(change, Ref)' (or a record's `postback') receives the
 %%% layout in `Event.value' and can store it per user. The page renders
-%%% that JSON again: `dock_layout(Json, Css, [{panels, Panels}])'. Panel
+%%% that JSON again: `ah_dock_layout(Json, Css, [{panels, Panels}])'. Panel
 %%% contents are ordinary server-rendered HTML; the JSON holds only ids,
 %%% order, sizes and states. It is the layout tree in its map form (see
 %%% layout_node()):
@@ -36,7 +36,7 @@
 %%% The browser builds HTML only from the shared templates
 %%% templates/dock_layout_{group,float,menu}.mustache, which render the
 %%% tab groups and float windows on the server too. Behaviour:
-%%% assets/js/components/dock_layout.ts. dock_layout/3 builds an
+%%% assets/js/components/dock_layout.ts. ah_dock_layout/3 builds an
 %%% #ah_dock_layout{} (include/aihtml_dock_layout.hrl) and render/1 turns
 %%% it into HTML.
 %%% @end
@@ -46,7 +46,7 @@
 
 -include("aihtml_dock_layout.hrl").
 
--export([dock_layout/3, dock_layout_open/3, dock_layout_open/4, render/1, fields/1,
+-export([ah_dock_layout/3, dock_layout_open/3, dock_layout_open/4, render/1, fields/1,
          catalog/0, facade_extras/0]).
 
 -export_type([panel/0, ref/0, opts/0, layout_node/0, layout/0, label_key/0, labels/0]).
@@ -134,8 +134,8 @@
 %% (default true), `min_size' (px, default 100), `labels' (#{auto_hide,
 %% float, dock, close}). `name' goes to a hidden input. The root fills its
 %% parent (width and height 100%).
--spec dock_layout(layout(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_dock_layout{}.
-dock_layout(Layout, Css, Attrs) ->
+-spec ah_dock_layout(layout(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_dock_layout{}.
+ah_dock_layout(Layout, Css, Attrs) ->
     ?E:build(?MODULE, #ah_dock_layout{layout = Layout}, Css, Attrs).
 
 %%%===================================================================
@@ -153,7 +153,7 @@ dock_layout_open(Ctx, Target, Panel) ->
 %% `#{edge => left | right | top | bottom}' docks a new group at that edge
 %% of the layout, `#{float => true | {X, Y}}' floats it; by default it
 %% joins the document group, else the first tab group, else the right
-%% edge. `labels' as in dock_layout/3, for the new group's buttons. The
+%% edge. `labels' as in ah_dock_layout/3, for the new group's buttons. The
 %% browser fires `change'.
 -spec dock_layout_open(aihtml_action:ctx(), {id, iodata() | atom()}, panel(),
                        #{in => aihtml_lib_dock:id(), edge => left | right | top | bottom,
@@ -578,7 +578,7 @@ one_of(K, V, Allowed) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => dock_layout, category => layout,
-       signature => <<"dock_layout(Layout, Css, Attrs)">>,
+       signature => <<"ah_dock_layout(Layout, Css, Attrs)">>,
        root => <<"ah-dl">>,
        flags => [disabled],
        options => [panels, resizable, resize_mode, allow_float, allow_dock, min_size, labels],

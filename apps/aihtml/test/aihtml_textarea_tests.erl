@@ -18,15 +18,15 @@ has(Html, Part) ->
 %%% textarea
 
 textarea_test() ->
-    H = r(?M:textarea(<<"a</textarea><b>">>, [sm, invalid], [{name, notes}, {rows, 5}])),
+    H = r(?M:ah_textarea(<<"a</textarea><b>">>, [sm, invalid], [{name, notes}, {rows, 5}])),
     has(H, <<"class=\"ah-input-group ah-textarea-group ah-input-sm ah-input-invalid\"">>),
     has(H, <<"<textarea class=\"ah-input ah-textarea\" rows=\"5\" aria-invalid=\"true\" "
              "name=\"notes\">a&lt;/textarea&gt;&lt;b&gt;</textarea>">>),
     ?assertError({aihtml, {unknown_modifier, textarea, clearable, _}},
-                 ?M:textarea(undefined, [clearable], [])).
+                 ?M:ah_textarea(undefined, [clearable], [])).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:textarea(<<"t">>, [sm, no_rounded], [{rows, 5}])),
+    ?assertEqual(r(?M:ah_textarea(<<"t">>, [sm, no_rounded], [{rows, 5}])),
                  r(#ah_textarea{value = <<"t">>, size = sm, no_rounded = true,
                                 attrs = [{rows, 5}]})).
 
@@ -43,7 +43,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([textarea], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, arity(S))),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), arity(S))),
          ?assertEqual(form, C)
      end || #{name := N, signature := S, category := C} <- ?M:catalog()].
 

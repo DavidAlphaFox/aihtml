@@ -9,9 +9,9 @@
 %%% -export([action/4]).
 %%%
 %%% item(#{id := Id, text := Text}) ->
-%%%     li([Text, button(<<"Delete">>, Id, [borderless],
-%%%                      [on(click, {?MODULE, delete, #{id => Id}})])],
-%%%        [], [{id, [<<"todo-">>, integer_to_binary(Id)]}]).
+%%%     ah_li([Text, ah_button(<<"Delete">>, Id, [borderless],
+%%%                            [on(click, {?MODULE, delete, #{id => Id}})])],
+%%%           [], [{id, [<<"todo-">>, integer_to_binary(Id)]}]).
 %%%
 %%% action(delete, #{id := Id}, _Event, Ctx) ->
 %%%     ok = todo_db:delete(Id),

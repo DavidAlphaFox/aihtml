@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := badge, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, badge, 3)),
+    ?assert(erlang:function_exported(?D, ah_badge, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -47,18 +47,18 @@ records_match_catalog_test() ->
 
 badge_count_max_zero_test() ->
     ?assert(has(<<"data-invisible=\"false\" aria-hidden=\"true\">99+</span>">>,
-                ?D:badge(<<"x">>, [], [{count, 120}]))),
-    ?assert(has(<<">9+</span>">>, ?D:badge(<<"x">>, [], [{count, 12}, {max, 9}]))),
-    ?assert(has(<<"data-invisible=\"true\"">>, ?D:badge(<<"x">>, [], [{count, 0}]))),
-    ?assert(has(<<"data-invisible=\"false\"">>, ?D:badge(<<"x">>, [show_zero], [{count, 0}]))),
-    ?assert(has(<<"data-invisible=\"true\"">>, ?D:badge(<<"x">>, [invisible], []))).
+                ?D:ah_badge(<<"x">>, [], [{count, 120}]))),
+    ?assert(has(<<">9+</span>">>, ?D:ah_badge(<<"x">>, [], [{count, 12}, {max, 9}]))),
+    ?assert(has(<<"data-invisible=\"true\"">>, ?D:ah_badge(<<"x">>, [], [{count, 0}]))),
+    ?assert(has(<<"data-invisible=\"false\"">>, ?D:ah_badge(<<"x">>, [show_zero], [{count, 0}]))),
+    ?assert(has(<<"data-invisible=\"true\"">>, ?D:ah_badge(<<"x">>, [invisible], []))).
 
 badge_dot_anchor_and_standalone_test() ->
-    H = ?D:badge(<<"anchor">>, [online, circular, bottom, left], [{count, 5}]),
+    H = ?D:ah_badge(<<"anchor">>, [online, circular, bottom, left], [{count, 5}]),
     ?assert(has(<<"data-overlap=\"circular\" data-anchor-vertical=\"bottom\" data-anchor-horizontal=\"left\"">>, H)),
     ?assert(has(<<"data-variant=\"online\" data-color=\"primary\" data-dot=\"true\"">>, H)),
     ?assertNot(has(<<">5<">>, H)),
-    S = ?D:badge(undefined, [error], [{count, <<"<b>">>}]),
+    S = ?D:ah_badge(undefined, [error], [{count, <<"<b>">>}]),
     ?assert(has(<<"ah-badge-root ah-badge-root--standalone">>, S)),
     ?assert(has(<<"data-invisible=\"false\">&lt;b&gt;</span>">>, S)).
 

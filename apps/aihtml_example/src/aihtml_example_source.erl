@@ -30,7 +30,7 @@ spans([T | Rest], Pos, Acc) ->
     Gap = gap(Pos, {L, C}),
     Out = case class(T) of
               none -> Text;
-              Cls -> aihtml:el(span, Text, [Cls], [])
+              Cls -> aihtml:ah_el(span, Text, [Cls], [])
           end,
     spans(Rest, advance({L, C}, Text), [Out, Gap | Acc]).
 

@@ -14,24 +14,24 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 %% --- switch --------------------------------------------------------
 
 switch_test() ->
-    H = r(?M:switch_button(<<"Wi-Fi">>, undefined, [lg], [{name, wifi}, {checked, true},
-                                                          {on_label, <<"<on>">>}])),
+    H = r(?M:ah_switch_button(<<"Wi-Fi">>, undefined, [lg], [{name, wifi}, {checked, true},
+                                                             {on_label, <<"<on>">>}])),
     ?assertMatch(<<"<label class=\"ah-switch ah-switch-lg ah-switch-on\" data-ah=\"switch-button\">", _/binary>>, H),
     ?assert(has(<<"type=\"checkbox\" name=\"wifi\" checked role=\"switch\">">>, H)),
     ?assert(has(<<"ah-switch-label ah-switch-label-on\">&lt;on&gt;</span>">>, H)),
     ?assertNot(has(<<"ah-switch-label-off">>, H)),
     ?assert(has(<<"<span class=\"ah-switch-text\">Wi-Fi</span>">>, H)),
-    C = r(?M:switch_button([], undefined, [], [{width, 80}, {height, 32}])),
+    C = r(?M:ah_switch_button([], undefined, [], [{width, 80}, {height, 32}])),
     ?assert(has(<<"width:80px;height:32px;--sw-travel:-48px;">>, C)),
     ?assert(has(<<"width:28px;height:28px;">>, C)).
 
 render_all_test() ->
-    ?assert(is_binary(r(?M:switch_button(<<"x">>, undefined, [], [])))).
+    ?assert(is_binary(r(?M:ah_switch_button(<<"x">>, undefined, [], [])))).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:switch_button(<<"Wi-Fi">>, undefined, [sm],
-                                    [{name, wifi}, {disabled, true}, {on_label, <<"On">>},
-                                     {width, 60}])),
+    ?assertEqual(r(?M:ah_switch_button(<<"Wi-Fi">>, undefined, [sm],
+                                       [{name, wifi}, {disabled, true}, {on_label, <<"On">>},
+                                        {width, 60}])),
                  r(#ah_switch_button{body = <<"Wi-Fi">>, size = sm, attrs = [{name, wifi}],
                                      disabled = true, on_label = <<"On">>, width = 60})).
 
@@ -48,7 +48,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([switch_button], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          ?assertMatch(#{category := form, behavior := B} when is_binary(B), E)
      end || #{name := N} = E <- ?M:catalog()].
 

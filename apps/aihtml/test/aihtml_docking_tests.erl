@@ -35,7 +35,7 @@ panels() ->
      {b, [{b1, <<"B1">>, <<"three">>, #{pinned => true}}]}].
 
 docking_basic_test() ->
-    H = r(?M:docking(panels(), [<<"h-80">>], [{id, dk}, {name, lay}, {title, <<"t">>}])),
+    H = r(?M:ah_docking(panels(), [<<"h-80">>], [{id, dk}, {name, lay}, {title, <<"t">>}])),
     ?assert(has(<<"<div class=\"ah-docking ah-docking-horizontal h-80\" id=\"dk\" data-ah=\"docking\"">>, H)),
     ?assert(has(<<"data-panel-id=\"a\"">>, H)),
     ?assert(has(<<"class=\"ah-docking-window ah-docking-window-docked\" data-window-id=\"a1\" "
@@ -53,9 +53,9 @@ docking_basic_test() ->
                  value(H)).
 
 docking_options_test() ->
-    H = r(?M:docking(panels(), [vertical, disabled],
-                     [{offset, 8}, {allow_float, false}, {close_buttons, false},
-                      {drag_opacity, 0.5}, {labels, #{collapse => <<"Fold">>}}])),
+    H = r(?M:ah_docking(panels(), [vertical, disabled],
+                        [{offset, 8}, {allow_float, false}, {close_buttons, false},
+                         {drag_opacity, 0.5}, {labels, #{collapse => <<"Fold">>}}])),
     ?assert(has(<<"ah-docking ah-docking-vertical ah-docking-disabled">>, H)),
     ?assert(has(<<"style=\"--ah-docking-offset:8px\"">>, H)),
     ?assert(has(<<"data-ah-allow-float=\"false\"">>, H)),
@@ -66,8 +66,8 @@ docking_options_test() ->
     ?assert(has(<<"id=\"ah-dk">>, H)).                     % an id is generated
 
 docking_floating_test() ->
-    H = r(?M:docking([{p, [{f, <<"F">>, <<"x">>, #{floating => {10, 20.4, 300}}},
-                           {g, <<"G">>, <<"y">>, #{floating => {1, 2}}}]}], [], [])),
+    H = r(?M:ah_docking([{p, [{f, <<"F">>, <<"x">>, #{floating => {10, 20.4, 300}}},
+                              {g, <<"G">>, <<"y">>, #{floating => {1, 2}}}]}], [], [])),
     ?assert(has(<<"ah-docking-window-floating\" data-window-id=\"f\" role=\"region\" "
                   "aria-labelledby=\"">>, H)),
     ?assert(has(<<"style=\"left:10px;top:20.4px;width:300px;\"">>, H)),
@@ -82,7 +82,7 @@ docking_layout_applied_test() ->
     Saved = <<"{\"panels\":[{\"id\":\"b\",\"windows\":[\"a2\",\"b1\",\"zz\"]},{\"id\":\"a\",\"windows\":[]}],"
               "\"floating\":[{\"id\":\"a1\",\"x\":5,\"y\":6,\"width\":200}],"
               "\"collapsed\":[],\"closed\":[\"nope\"]}">>,
-    H = r(?M:docking(panels(), [], [{id, d}, {layout, Saved}])),
+    H = r(?M:ah_docking(panels(), [], [{id, d}, {layout, Saved}])),
     %% panels keep the page's order, windows follow the layout, unknown ids go
     ?assertEqual(#{<<"panels">> => [#{<<"id">> => <<"a">>, <<"windows">> => []},
                                     #{<<"id">> => <<"b">>, <<"windows">> => [<<"a2">>, <<"b1">>]}],
@@ -93,9 +93,9 @@ docking_layout_applied_test() ->
     %% the saved value decides collapsed for the windows it names
     ?assertEqual(0, count(<<"ah-docking-window-collapsed">>, H)),
     %% a closed window is not rendered; one the layout does not name stays home
-    H2 = r(?M:docking(panels(), [], [{layout, #{<<"panels">> => [#{<<"id">> => <<"a">>,
-                                                                   <<"windows">> => [<<"a2">>]}],
-                                                <<"closed">> => [<<"a1">>]}}])),
+    H2 = r(?M:ah_docking(panels(), [], [{layout, #{<<"panels">> => [#{<<"id">> => <<"a">>,
+                                                                      <<"windows">> => [<<"a2">>]}],
+                                                   <<"closed">> => [<<"a1">>]}}])),
     ?assertEqual(0, count(<<"data-window-id=\"a1\"">>, H2)),
     ?assertMatch(#{<<"panels">> := [#{<<"windows">> := [<<"a2">>]},
                                     #{<<"windows">> := [<<"b1">>]}],
@@ -104,16 +104,16 @@ docking_layout_applied_test() ->
     ?assertEqual(0, count(<<"ah-docking-window-collapsed">>, H2)).
 
 docking_errors_test() ->
-    ?assertError({aihtml, {bad_docking_window, _}}, r(?M:docking([{a, [bad]}], [], []))),
+    ?assertError({aihtml, {bad_docking_window, _}}, r(?M:ah_docking([{a, [bad]}], [], []))),
     ?assertError({aihtml, {bad_docking_window_option, color}},
-                 r(?M:docking([{a, [{w, <<"W">>, <<>>, #{color => red}}]}], [], []))),
-    ?assertError({aihtml, {bad_docking_panel, _}}, r(?M:docking([x], [], []))),
-    ?assertError({aihtml, {bad_dock_json, _}}, r(?M:docking([], [], [{layout, <<"{">>}]))),
-    ?assertError({aihtml, {bad_option, offset, -1}}, r(?M:docking([], [], [{offset, -1}]))),
+                 r(?M:ah_docking([{a, [{w, <<"W">>, <<>>, #{color => red}}]}], [], []))),
+    ?assertError({aihtml, {bad_docking_panel, _}}, r(?M:ah_docking([x], [], []))),
+    ?assertError({aihtml, {bad_dock_json, _}}, r(?M:ah_docking([], [], [{layout, <<"{">>}]))),
+    ?assertError({aihtml, {bad_option, offset, -1}}, r(?M:ah_docking([], [], [{offset, -1}]))),
     ?assertError({aihtml, {bad_option, drag_opacity, 2}},
-                 r(?M:docking([], [], [{drag_opacity, 2}]))),
+                 r(?M:ah_docking([], [], [{drag_opacity, 2}]))),
     ?assertError({aihtml, {bad_docking_label, open}},
-                 r(?M:docking([], [], [{labels, #{open => <<"x">>}}]))).
+                 r(?M:ah_docking([], [], [{labels, #{open => <<"x">>}}]))).
 
 docking_add_window_test() ->
     Ops = aihtml_action:render_ops(
@@ -152,17 +152,17 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:docking(panels(), [vertical, disabled, <<"h-80">>],
-                              [{id, d}, {name, n}, {offset, 3}, {allow_float, false},
-                               {labels, #{close => <<"X">>}}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_docking(panels(), [vertical, disabled, <<"h-80">>],
+                                 [{id, d}, {name, n}, {offset, 3}, {allow_float, false},
+                                  {labels, #{close => <<"X">>}}, {title, <<"t">>}])),
                  r(#ah_docking{items = panels(), orientation = vertical, disabled = true,
                                css = [<<"h-80">>], id = d, name = n, offset = 3,
                                allow_float = false, labels = #{close => <<"X">>},
                                attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    D = ?M:docking(panels(), [vertical, <<"x">>], [{layout, <<"{}">>}, {drag_opacity, 0.5},
-                                                   {collapse_buttons, false}, {title, <<"t">>}]),
+    D = ?M:ah_docking(panels(), [vertical, <<"x">>], [{layout, <<"{}">>}, {drag_opacity, 0.5},
+                                                      {collapse_buttons, false}, {title, <<"t">>}]),
     ?assertMatch(#ah_docking{items = [_, _], orientation = vertical, disabled = false,
                              layout = <<"{}">>, drag_opacity = 0.5, collapse_buttons = false,
                              close_buttons = true, css = [<<"x">>], attrs = [{title, <<"t">>}]}, D).

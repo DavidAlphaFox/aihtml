@@ -2,7 +2,7 @@
 %%% @doc A gantt chart, ported from sigil (data/gantt). See
 %%% designs/04-components.md.
 %%%
-%%%   gantt(Tasks, Css, Attrs)             task bars on a day scale
+%%%   ah_gantt(Tasks, Css, Attrs)          task bars on a day scale
 %%%   gantt_update(Ctx, Event, G)          (in an action) re-render after an edit
 %%%
 %%% Everything is rendered here, on the server: the rows, bars, summary
@@ -21,7 +21,7 @@
 %%% the morph keeps the scroll position, and a refused change is undone
 %%% the same way.
 %%%
-%%% gantt/3 builds an #ah_gantt{} (include/aihtml_gantt.hrl) and render/1
+%%% ah_gantt/3 builds an #ah_gantt{} (include/aihtml_gantt.hrl) and render/1
 %%% turns it into HTML, so pages may also write the record directly
 %%% (designs/05-records.md).
 %%% @end
@@ -31,7 +31,7 @@
 
 -include("aihtml_gantt.hrl").
 
--export([gantt/3, gantt_update/3, render/1, fields/1, catalog/0, facade_extras/0]).
+-export([ah_gantt/3, gantt_update/3, render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([element/0, task/0, row/0, label_key/0, labels/0]).
 
@@ -76,8 +76,8 @@
 %% `sidebar_width' (250), `column_width' (px per day, 60), `row_height'
 %% (40), `today' (the date of the today marker, default the server's
 %% date), `labels' (task, tasks, months_short).
--spec gantt([task()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_gantt{}.
-gantt(Tasks, Css, Attrs) ->
+-spec ah_gantt([task()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_gantt{}.
+ah_gantt(Tasks, Css, Attrs) ->
     ?E:build(?MODULE, #ah_gantt{items = Tasks}, Css, Attrs).
 
 %% @doc The field names of #ah_gantt{}.
@@ -438,7 +438,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => gantt, category => data,
-       signature => <<"gantt(Tasks, Css, Attrs)">>,
+       signature => <<"ah_gantt(Tasks, Css, Attrs)">>,
        root => <<"ah-gantt">>,
        flags => [editable, no_dependencies],
        classes => #{editable => [], no_dependencies => []},

@@ -29,7 +29,7 @@ tasks() ->
        dependencies => [t1], color => <<"#f00">>}].
 
 gantt_default_rows_test() ->
-    H = r(?M:gantt(tasks(), [<<"w-full">>], [{id, g}, {today, <<"2026-09-03">>}])),
+    H = r(?M:ah_gantt(tasks(), [<<"w-full">>], [{id, g}, {today, <<"2026-09-03">>}])),
     ?assert(has(<<"<div class=\"ah-gantt w-full\" id=\"g\" data-ah=\"gantt\" style=\"height:500px;\"">>, H)),
     %% a week before September to a week after it
     ?assert(has(<<"data-origin=\"2026-08-25\"">>, H)),
@@ -60,8 +60,8 @@ gantt_rows_test() ->
     Tasks = [#{id => a, row => c1, start => {2026, 9, 1}, 'end' => {2026, 9, 3}},
              #{id => b, row => c2, start => {{2026, 9, 2}, {12, 0, 0}}, 'end' => <<"2026-09-04T12:00">>},
              #{id => x, row => nowhere, start => <<"2026-09-01">>, 'end' => <<"2026-09-02">>}],
-    H = r(?M:gantt(Tasks, [editable], [{rows, Rows}, {collapsed, [p]}, {id, g},
-                                      {labels, #{tasks => <<"{n} jobs">>}}])),
+    H = r(?M:ah_gantt(Tasks, [editable], [{rows, Rows}, {collapsed, [p]}, {id, g},
+                                         {labels, #{tasks => <<"{n} jobs">>}}])),
     %% parent collapsed: children hidden, summary bar shown on its row
     ?assert(has(<<"data-rowid=\"p\" data-level=\"0\" role=\"treeitem\" aria-level=\"1\" "
                   "aria-expanded=\"false\"">>, H)),
@@ -90,17 +90,17 @@ gantt_misc_test() ->
     ?assertNot(has_quiet(<<"<svg">>, H)),
     ?assert(has(<<"data-ah=\"gantt\" data-origin">>, H)),
     ?assertError({aihtml, {bad_date, <<"soon">>}},
-                 r(?M:gantt([#{id => a, start => <<"soon">>, 'end' => <<"2026-01-01">>}], [], []))),
+                 r(?M:ah_gantt([#{id => a, start => <<"soon">>, 'end' => <<"2026-01-01">>}], [], []))),
     ?assertError({aihtml, {bad_gantt_progress, 120}},
-                 r(?M:gantt([(hd(tasks()))#{progress => 120}], [], []))),
+                 r(?M:ah_gantt([(hd(tasks()))#{progress => 120}], [], []))),
     ?assertError({aihtml, {bad_color, <<"red;x">>}},
-                 r(?M:gantt([(hd(tasks()))#{color => <<"red;x">>}], [], []))),
+                 r(?M:ah_gantt([(hd(tasks()))#{color => <<"red;x">>}], [], []))),
     ?assertError({aihtml, {bad_option, column_width, 0}},
-                 r(?M:gantt([], [], [{column_width, 0}]))).
+                 r(?M:ah_gantt([], [], [{column_width, 0}]))).
 
 
 gantt_update_test() ->
-    G = ?M:gantt(tasks(), [], [{collapsed, [x]}]),
+    G = ?M:ah_gantt(tasks(), [], [{collapsed, [x]}]),
     [#{op := html, id := <<"g1">>, swap := morph, html := H}] =
         aihtml_action:render_ops(
           fun(Ctx) ->
@@ -135,9 +135,9 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:gantt(tasks(), [editable, <<"x">>],
-                            [{id, g}, {rows, [#{id => t1}, #{id => t2}]}, {today, {2026, 9, 3}},
-                             {height, 300}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_gantt(tasks(), [editable, <<"x">>],
+                               [{id, g}, {rows, [#{id => t1}, #{id => t2}]}, {today, {2026, 9, 3}},
+                                {height, 300}, {title, <<"t">>}])),
                  r(#ah_gantt{items = tasks(), editable = true, css = [<<"x">>], id = g,
                              rows = [#{id => t1}, #{id => t2}], today = {2026, 9, 3},
                              height = 300, attrs = [{title, <<"t">>}]})).
@@ -145,7 +145,7 @@ record_equals_builder_test() ->
 builder_fills_fields_test() ->
     ?assertMatch(#ah_gantt{items = [], no_dependencies = true, column_width = 30,
                            attrs = [{role, x}]},
-                 ?M:gantt([], [no_dependencies], [{column_width, 30}, {role, x}])).
+                 ?M:ah_gantt([], [no_dependencies], [{column_width, 30}, {role, x}])).
 
 postback_test() ->
     Token = fun(Html) ->
@@ -161,7 +161,7 @@ postback_test() ->
 field_validation_test() ->
     ?assertError({aihtml, {bad_flag, gantt, editable, yes}}, r(#ah_gantt{editable = yes})),
     ?assertError({aihtml, {bad_label, gantt, x}}, r(#ah_gantt{labels = #{x => <<"y">>}})),
-    ?assertError({aihtml, {unknown_modifier, gantt, big, _}}, ?M:gantt([], [big], [])).
+    ?assertError({aihtml, {unknown_modifier, gantt, big, _}}, ?M:ah_gantt([], [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],
@@ -185,7 +185,7 @@ generated_id_test() ->
 vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_collapsed_test() ->
-    G = ?M:gantt(tasks(), [], []),
+    G = ?M:ah_gantt(tasks(), [], []),
     [#{op := html, html := H}] =
         aihtml_action:render_ops(
           fun(Ctx) ->

@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := expandable_text, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, expandable_text, 3)),
+    ?assert(erlang:function_exported(?D, ah_expandable_text, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -47,16 +47,16 @@ records_match_catalog_test() ->
 
 expandable_text_test() ->
     Long = binary:copy(<<"é"/utf8>>, 12),
-    H = ?D:expandable_text(Long, [], [{threshold, 10}]),
+    H = ?D:ah_expandable_text(Long, [], [{threshold, 10}]),
     ?assert(has(<<"data-expanded=\"false\" data-truncated=\"true\"">>, H)),
     ?assert(has(<<"<span data-ah-part=\"short\">", (binary:copy(<<"é"/utf8>>, 10))/binary, "…"/utf8,
                   "</span><span data-ah-part=\"full\" hidden>">>, H)),
     ?assert(has(<<"aria-expanded=\"false\"">>, H)),
     ?assert(has(<<">展开</button>"/utf8>>, H)),
-    E = ?D:expandable_text(Long, [], [{threshold, 10}, {expanded, true}, {collapse_label, <<"less">>}]),
+    E = ?D:ah_expandable_text(Long, [], [{threshold, 10}, {expanded, true}, {collapse_label, <<"less">>}]),
     ?assert(has(<<"<span data-ah-part=\"short\" hidden>">>, E)),
     ?assert(has(<<">less</button>">>, E)),
-    S = ?D:expandable_text(<<"<b>short</b>">>, [], []),
+    S = ?D:ah_expandable_text(<<"<b>short</b>">>, [], []),
     ?assert(has(<<"data-truncated=\"false\"">>, S)),
     ?assert(has(<<"&lt;b&gt;short&lt;/b&gt;">>, S)),
     ?assertNot(has(<<"<button">>, S)).

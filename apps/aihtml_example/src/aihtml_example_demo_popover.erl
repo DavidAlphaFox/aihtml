@@ -22,31 +22,31 @@ demos() ->
 
 -spec popover_basic() -> aihtml:html().
 popover_basic() ->
-    row([button(<<"Show details">>, undefined, [primary], toggles({id, <<"pop-details">>})),
-         popover([p(<<"Popovers hold any content: text, links, small forms.">>,
-                    [<<"mb-2">>], []),
-                  button(<<"Got it">>, undefined, [sm], closes())],
-                 [], [{id, <<"pop-details">>}, {title, <<"Details">>},
-                      {closable, true}, {width, 260}])]).
+    row([ah_button(<<"Show details">>, undefined, [primary], toggles({id, <<"pop-details">>})),
+         ah_popover([ah_p(<<"Popovers hold any content: text, links, small forms.">>,
+                          [<<"mb-2">>], []),
+                     ah_button(<<"Got it">>, undefined, [sm], closes())],
+                    [], [{id, <<"pop-details">>}, {title, <<"Details">>},
+                         {closable, true}, {width, 260}])]).
 
 -spec popover_positions() -> aihtml:html().
 popover_positions() ->
-    row([button(<<"Top">>, undefined, [outlined], toggles({id, <<"pop-top">>})),
-         popover(<<"Above its trigger.">>, [top], [{id, <<"pop-top">>}]),
-         button(<<"Right">>, undefined, [outlined], toggles({id, <<"pop-right">>})),
-         popover(<<"To the right, without an arrow.">>, [right, no_arrow],
-                 [{id, <<"pop-right">>}])]).
+    row([ah_button(<<"Top">>, undefined, [outlined], toggles({id, <<"pop-top">>})),
+         ah_popover(<<"Above its trigger.">>, [top], [{id, <<"pop-top">>}]),
+         ah_button(<<"Right">>, undefined, [outlined], toggles({id, <<"pop-right">>})),
+         ah_popover(<<"To the right, without an arrow.">>, [right, no_arrow],
+                    [{id, <<"pop-right">>}])]).
 
 -spec popover_modal() -> aihtml:html().
 popover_modal() ->
-    row([button(<<"Confirm">>, undefined, [warning], opens({id, <<"pop-modal">>})),
-         popover([p(<<"Outside clicks do not close this one.">>, [<<"mb-2">>], []),
-                  button(<<"OK">>, undefined, [sm, primary], closes())],
-                 [], [{id, <<"pop-modal">>}, {title, <<"Modal popover">>}, {modal, true}])]).
+    row([ah_button(<<"Confirm">>, undefined, [warning], opens({id, <<"pop-modal">>})),
+         ah_popover([ah_p(<<"Outside clicks do not close this one.">>, [<<"mb-2">>], []),
+                     ah_button(<<"OK">>, undefined, [sm, primary], closes())],
+                    [], [{id, <<"pop-modal">>}, {title, <<"Modal popover">>}, {modal, true}])]).
 
 %%%===================================================================
 %%% Helpers
 %%%===================================================================
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-3">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-3">>], []).

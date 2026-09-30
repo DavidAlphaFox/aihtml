@@ -2,7 +2,7 @@
 %%% @doc A spinner (sigil's loader), by default an overlay covering its
 %%% positioned parent.
 %%%
-%%% loader/2 builds an element record (#ah_loader{}, defined in
+%%% ah_loader/2 builds an element record (#ah_loader{}, defined in
 %%% include/aihtml_loader.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -12,7 +12,7 @@
 
 -include("aihtml_loader.hrl").
 
--export([loader/2, render/1, fields/1, catalog/0]).
+-export([ah_loader/2, render/1, fields/1, catalog/0]).
 
 -import(aihtml_html, [el/4]).
 -import(aihtml_lib_layout, [bool/2, tf/1, text_of/1]).
@@ -31,8 +31,8 @@
 %% Options: text (default "Loading..."; <<>> for none), modal (a page
 %% scrim while shown; Esc hides it).
 %% Methods: show([Left, Top]), hide, toggle, text(Text).
--spec loader(css(), attrs()) -> #ah_loader{}.
-loader(Css, Attrs) ->
+-spec ah_loader(css(), attrs()) -> #ah_loader{}.
+ah_loader(Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_loader{}, Css, Attrs).
 
 %% @doc The field names of #ah_loader{}.
@@ -75,7 +75,7 @@ catalog() ->
                    #{name => hide, args => <<"()">>, doc => <<"Hide.">>},
                    #{name => toggle, args => <<"()">>, doc => <<"Show or hide.">>},
                    #{name => text, args => <<"(Text)">>, doc => <<"Change the text.">>}],
-       signature => <<"loader(Css, Attrs)">>, root => <<"ah-loader">>,
+       signature => <<"ah_loader(Css, Attrs)">>, root => <<"ah-loader">>,
        groups => #{text_position => {[bottom, top, left, right], bottom}},
        flags => [hidden, inline, center, disabled],
        classes => #{bottom => [<<"ah-loader-text-bottom">>], top => [<<"ah-loader-text-top">>],

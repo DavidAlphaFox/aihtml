@@ -37,94 +37,94 @@ demos() ->
 
 -spec pivot_basic() -> aihtml:html().
 pivot_basic() ->
-    pivotgrid(sales(), #{rows => [country, city], columns => [year, quarter],
-                         values => [{sales, sum}]},
-              [], [{height, 320}]).
+    ah_pivotgrid(sales(), #{rows => [country, city], columns => [year, quarter],
+                            values => [{sales, sum}]},
+                 [], [{height, 320}]).
 
 -spec pivot_expanded() -> aihtml:html().
 pivot_expanded() ->
-    pivotgrid(sales(), #{rows => [country, city], columns => [year], values => [sales]},
-              [expand_all],
-              [{fields, fields()}, {locale, zh}, {height, 360}]).
+    ah_pivotgrid(sales(), #{rows => [country, city], columns => [year], values => [sales]},
+                 [expand_all],
+                 [{fields, fields()}, {locale, zh}, {height, 360}]).
 
 -spec pivot_measures() -> aihtml:html().
 pivot_measures() ->
-    pivotgrid(sales(), #{rows => [country], columns => [product],
-                         values => [{sales, sum}, {units, avg}, {sales, count}]},
-              [], [{fields, fields()}, {locale, zh}]).
+    ah_pivotgrid(sales(), #{rows => [country], columns => [product],
+                            values => [{sales, sum}, {units, avg}, {sales, count}]},
+                 [], [{fields, fields()}, {locale, zh}]).
 
 -spec pivot_values_on_rows() -> aihtml:html().
 pivot_values_on_rows() ->
-    pivotgrid(sales(), #{rows => [country], columns => [year],
-                         values => [{sales, sum}, {units, sum}]},
-              [values_on_rows], [{fields, fields()}, {locale, zh}]).
+    ah_pivotgrid(sales(), #{rows => [country], columns => [year],
+                            values => [{sales, sum}, {units, sum}]},
+                 [values_on_rows], [{fields, fields()}, {locale, zh}]).
 
 -spec pivot_field_list() -> aihtml:html().
 pivot_field_list() ->
-    pivotgrid(sales(), #{rows => [product], columns => [year], values => [sales]},
-              [field_list], [{fields, fields()}, {locale, zh}, {height, 380}]).
+    ah_pivotgrid(sales(), #{rows => [product], columns => [year], values => [sales]},
+                 [field_list], [{fields, fields()}, {locale, zh}, {height, 380}]).
 
 -spec pivot_no_totals() -> aihtml:html().
 pivot_no_totals() ->
-    pivotgrid(sales(), #{rows => [country, city], columns => [year, quarter], values => [units]},
-              [expand_all],
-              [{fields, fields()}, {locale, zh}, {row_subtotals, false},
-               {col_subtotals, false}, {grand_totals, false}, {height, 320}]).
+    ah_pivotgrid(sales(), #{rows => [country, city], columns => [year, quarter], values => [units]},
+                 [expand_all],
+                 [{fields, fields()}, {locale, zh}, {row_subtotals, false},
+                  {col_subtotals, false}, {grand_totals, false}, {height, 320}]).
 
 -spec pivot_sorted() -> aihtml:html().
 pivot_sorted() ->
-    pivotgrid(sales(), #{rows => [city], columns => [year], values => [sales]},
-              [], [{fields, fields()}, {locale, zh},
-                   {view, #{row_sort => #{by => value, col => [], vi => 0, dir => desc}}}]).
+    ah_pivotgrid(sales(), #{rows => [city], columns => [year], values => [sales]},
+                 [], [{fields, fields()}, {locale, zh},
+                      {view, #{row_sort => #{by => value, col => [], vi => 0, dir => desc}}}]).
 
 %% A click on a value cell runs action(cell, ...) below, which reads the
 %% cell's members with pivotgrid_cell/1.
 -spec pivot_cell_click() -> aihtml:html().
 pivot_cell_click() ->
-    'div'([pivotgrid(sales(), #{rows => [country], columns => [product], values => [sales]},
-                     [], [{fields, fields()}, {locale, zh},
-                          on('ah:cell-click', {?MODULE, cell, <<"pivot-cell">>})]),
-           p(<<"点击一个数值单元格"/utf8>>, [<<"text-sm text-muted mt-2">>],
-             [{id, <<"pivot-cell">>}])],
-          [], []).
+    ah_div([ah_pivotgrid(sales(), #{rows => [country], columns => [product], values => [sales]},
+                         [], [{fields, fields()}, {locale, zh},
+                              on('ah:cell-click', {?MODULE, cell, <<"pivot-cell">>})]),
+            ah_p(<<"点击一个数值单元格"/utf8>>, [<<"text-sm text-muted mt-2">>],
+                 [{id, <<"pivot-cell">>}])],
+           [], []).
 
 %% No data goes to the page: every expand, sort or layout change runs
 %% action(pivot, ...) below, which aggregates on the server.
 -spec pivot_remote() -> aihtml:html().
 pivot_remote() ->
-    pivotgrid(sales(), #{rows => [country, city], columns => [year, quarter], values => [sales]},
-              [field_list],
-              [{fields, fields()}, {locale, zh}, {height, 380},
-               {source, {?MODULE, pivot, #{}}}]).
+    ah_pivotgrid(sales(), #{rows => [country, city], columns => [year, quarter], values => [sales]},
+                 [field_list],
+                 [{fields, fields()}, {locale, zh}, {height, 380},
+                  {source, {?MODULE, pivot, #{}}}]).
 
 -spec pivot_export() -> aihtml:html().
 pivot_export() ->
-    'div'([toolbar([button(<<"导出 Excel"/utf8>>, xlsx, [], [on(click, {?MODULE, export, xlsx})]),
-                    button(<<"导出 CSV"/utf8>>, csv, [], [on(click, {?MODULE, export, csv})]),
-                    button(<<"全部展开"/utf8>>, expand, [], [on(click, {?MODULE, export, expand})])]),
-           pivotgrid(sales(), #{rows => [country, city], columns => [year], values => [sales]},
-                     [], [{id, <<"pivot-export">>}, {fields, fields()}, {locale, zh}])],
-          [], []).
+    ah_div([toolbar([ah_button(<<"导出 Excel"/utf8>>, xlsx, [], [on(click, {?MODULE, export, xlsx})]),
+                     ah_button(<<"导出 CSV"/utf8>>, csv, [], [on(click, {?MODULE, export, csv})]),
+                     ah_button(<<"全部展开"/utf8>>, expand, [], [on(click, {?MODULE, export, expand})])]),
+            ah_pivotgrid(sales(), #{rows => [country, city], columns => [year], values => [sales]},
+                         [], [{id, <<"pivot-export">>}, {fields, fields()}, {locale, zh}])],
+           [], []).
 
 -spec pivot_empty() -> aihtml:html().
 pivot_empty() ->
-    pivotgrid([], #{rows => [country], columns => [year], values => [sales]},
-              [], [{fields, [country, year, sales]}, {locale, zh}]).
+    ah_pivotgrid([], #{rows => [country], columns => [year], values => [sales]},
+                 [], [{fields, [country, year, sales]}, {locale, zh}]).
 
 %% The same component as a record: options are checked field names, and
 %% the postback runs action(cell, ...) below on a cell click.
 -spec pivot_record() -> aihtml:html().
 pivot_record() ->
-    'div'([#ah_pivotgrid{items = sales(),
-                         value = #{rows => [product, country], columns => [quarter],
-                                   values => [{units, sum}]},
-                         fields = fields(), locale = zh, col_subtotals = false,
-                         view = #{expanded_rows => [[<<"手机"/utf8>>]]},
-                         format = #{thousands => <<",">>},
-                         postback = {cell, <<"pivot-cell-2">>}},
-           p(<<"点击一个数值单元格"/utf8>>, [<<"text-sm text-muted mt-2">>],
-             [{id, <<"pivot-cell-2">>}])],
-          [], []).
+    ah_div([#ah_pivotgrid{items = sales(),
+                          value = #{rows => [product, country], columns => [quarter],
+                                    values => [{units, sum}]},
+                          fields = fields(), locale = zh, col_subtotals = false,
+                          view = #{expanded_rows => [[<<"手机"/utf8>>]]},
+                          format = #{thousands => <<",">>},
+                          postback = {cell, <<"pivot-cell-2">>}},
+            ah_p(<<"点击一个数值单元格"/utf8>>, [<<"text-sm text-muted mt-2">>],
+                 [{id, <<"pivot-cell-2">>}])],
+           [], []).
 
 %%%===================================================================
 %%% Actions
@@ -162,7 +162,7 @@ matches(Row, Filter) ->
 %%%===================================================================
 
 toolbar(Children) ->
-    'div'(Children, [<<"flex gap-2 mb-2">>], []).
+    ah_div(Children, [<<"flex gap-2 mb-2">>], []).
 
 fields() ->
     [{country, <<"国家"/utf8>>}, {city, <<"城市"/utf8>>}, {year, <<"年份"/utf8>>},

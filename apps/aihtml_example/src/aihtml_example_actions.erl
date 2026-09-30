@@ -23,45 +23,45 @@ init(Req, State) ->
      State}.
 
 page(View) ->
-    'div'([top_bar(),
-           main(['div'([counter_card(), greeting_card(), data_card(View), include_card(),
-                        todos_card()],
-                       [<<"grid gap-6 md:grid-cols-2">>], [])],
-                [<<"mx-auto max-w-5xl px-4 py-8">>], [])],
-          [<<"min-h-screen">>], []).
+    ah_div([top_bar(),
+            ah_main([ah_div([counter_card(), greeting_card(), data_card(View), include_card(),
+                             todos_card()],
+                            [<<"grid gap-6 md:grid-cols-2">>], [])],
+                    [<<"mx-auto max-w-5xl px-4 py-8">>], [])],
+           [<<"min-h-screen">>], []).
 
 top_bar() ->
     [aihtml_example_site:topbar(demo),
-     'div'(['div'([h1(<<"实时演示"/utf8>>, [<<"text-2xl font-bold">>], []),
-                   p([<<"每个事件一次无状态请求 · 服务器时间 "/utf8>>,
-                      span(aihtml_example_clock:now_text(), [<<"font-mono">>],
-                           [{id, clock}, subscribe(clock)])],
-                     [<<"text-sm text-muted mt-1">>], [])]),
-            theme_switcher([], [])],
-           [<<"mx-auto max-w-5xl px-4 pt-8 flex flex-wrap items-end justify-between gap-4">>], [])].
+     ah_div([ah_div([ah_h1(<<"实时演示"/utf8>>, [<<"text-2xl font-bold">>], []),
+                     ah_p([<<"每个事件一次无状态请求 · 服务器时间 "/utf8>>,
+                           ah_span(aihtml_example_clock:now_text(), [<<"font-mono">>],
+                                   [{id, clock}, subscribe(clock)])],
+                          [<<"text-sm text-muted mt-1">>], [])]),
+             ah_theme_switcher([], [])],
+            [<<"mx-auto max-w-5xl px-4 pt-8 flex flex-wrap items-end justify-between gap-4">>], [])].
 
 %% The count lives in the data layer, so every visitor shares it.
 counter_card() ->
-    card([row([button(<<"+1">>, inc, [], [on(click, {?MODULE, bump, #{}})]),
-               button(<<"Reset">>, reset, [borderless], [on(click, {?MODULE, reset, #{}})]),
-               span([<<"Count: ">>,
-                     strong(aihtml_example_store:counter(), [],
-                            [{id, count},
-                             subscribe(counter, #{refresh => {?MODULE, refresh_counter, #{}}})])],
-                    [<<"text-muted">>], [])]),
-          p(<<"Stored in the data layer and pushed to every open page.">>,
-            [<<"mt-3 text-sm text-muted">>], [])],
-         [], [{title, <<"Click handled in Erlang">>}]).
+    ah_card([row([ah_button(<<"+1">>, inc, [], [on(click, {?MODULE, bump, #{}})]),
+                  ah_button(<<"Reset">>, reset, [borderless], [on(click, {?MODULE, reset, #{}})]),
+                  ah_span([<<"Count: ">>,
+                           ah_strong(aihtml_example_store:counter(), [],
+                                     [{id, count},
+                                      subscribe(counter, #{refresh => {?MODULE, refresh_counter, #{}}})])],
+                          [<<"text-muted">>], [])]),
+             ah_p(<<"Stored in the data layer and pushed to every open page.">>,
+                  [<<"mt-3 text-sm text-muted">>], [])],
+            [], [{title, <<"Click handled in Erlang">>}]).
 
 greeting_card() ->
-    card(['div'([field(<<"Your name">>,
-                       input(<<>>, [], [{id, name}, {placeholder, <<"Type a name">>},
-                                        {autocomplete, off},
-                                        on(input, {?MODULE, greet, #{}}, #{debounce => 150})]),
-                       [top], [{for, name}]),
-                 p(<<"Hello, stranger.">>, [<<"text-muted">>], [{id, greeting}])],
-                [<<"flex flex-col gap-3">>], [])],
-         [], [{title, <<"Input events">>}]).
+    ah_card([ah_div([ah_field(<<"Your name">>,
+                              ah_input(<<>>, [], [{id, name}, {placeholder, <<"Type a name">>},
+                                                  {autocomplete, off},
+                                                  on(input, {?MODULE, greet, #{}}, #{debounce => 150})]),
+                              [top], [{for, name}]),
+                     ah_p(<<"Hello, stranger.">>, [<<"text-muted">>], [{id, greeting}])],
+                    [<<"flex flex-col gap-3">>], [])],
+            [], [{title, <<"Input events">>}]).
 
 %% The buttons show a spinner (indicator) and are disabled while their
 %% request runs; the two share one queue (sync_scope), so a second click
@@ -69,60 +69,60 @@ greeting_card() ->
 data_card(View) ->
     Req = #{indicator => <<"#data-spin">>, disable => <<"#data-card button">>,
             sync => queue, sync_scope => <<"#data-card">>},
-    card([row([button(<<"Load processes">>, load, [outlined],
-                      [on(click, {?MODULE, load_processes, #{}}, Req)]),
-               button(<<"Load system info">>, info, [borderless],
-                      [on(click, {?MODULE, load_system, #{}}, Req)]),
-               span(<<"Loading…"/utf8>>, [<<"ah-indicator text-sm text-muted">>], [{id, <<"data-spin">>}])]),
-          'div'(data_view(View), [<<"mt-4">>], [{id, data}])],
-         [], [{id, <<"data-card">>}, {title, <<"Load data, progressively">>}]).
+    ah_card([row([ah_button(<<"Load processes">>, load, [outlined],
+                            [on(click, {?MODULE, load_processes, #{}}, Req)]),
+                  ah_button(<<"Load system info">>, info, [borderless],
+                            [on(click, {?MODULE, load_system, #{}}, Req)]),
+                  ah_span(<<"Loading…"/utf8>>, [<<"ah-indicator text-sm text-muted">>], [{id, <<"data-spin">>}])]),
+             ah_div(data_view(View), [<<"mt-4">>], [{id, data}])],
+            [], [{id, <<"data-card">>}, {title, <<"Load data, progressively">>}]).
 
 data_view(<<"processes">>) -> processes_table();
 data_view(<<"system">>) -> system_info();
-data_view(_) -> p(<<"Nothing loaded yet.">>, [<<"text-muted text-sm">>], []).
+data_view(_) -> ah_p(<<"Nothing loaded yet.">>, [<<"text-muted text-sm">>], []).
 
 %% The browser sends the values of other controls along with the event.
 include_card() ->
-    card([row([input(<<"2">>, [sm, <<"w-20">>], [{id, a}, {type, number}]),
-               span(<<"+">>),
-               input(<<"3">>, [sm, <<"w-20">>], [{id, b}, {type, number}]),
-               button(<<"=">>, sum, [secondary, sm],
-                      [on(click, {?MODULE, sum, #{}}, #{include => [{id, a}, {id, b}]})]),
-               strong(<<"?">>, [], [{id, sum}])]),
-          row([button(<<"Dark mode from Erlang">>, dark, [borderless],
-                      [on(click, {?MODULE, dark, #{}})])]),
-          %% Server-side search: each keystroke (debounced) runs `search'
-          %% below, which renders the matching rows in Erlang and morphs
-          %% them into the list; the input keeps its focus and caret.
-          field(<<"Registered process (server search)">>,
-                combobox([], undefined, [<<"w-72">>],
-                         [{id, <<"proc_search">>}, {placeholder, <<"Type a name, e.g. kernel">>},
-                          {search, {?MODULE, search, #{}}}]),
-                [top, <<"mt-4">>], [])],
-         [], [{title, <<"Values and scripts">>}]).
+    ah_card([row([ah_input(<<"2">>, [sm, <<"w-20">>], [{id, a}, {type, number}]),
+                  ah_span(<<"+">>),
+                  ah_input(<<"3">>, [sm, <<"w-20">>], [{id, b}, {type, number}]),
+                  ah_button(<<"=">>, sum, [secondary, sm],
+                            [on(click, {?MODULE, sum, #{}}, #{include => [{id, a}, {id, b}]})]),
+                  ah_strong(<<"?">>, [], [{id, sum}])]),
+             row([ah_button(<<"Dark mode from Erlang">>, dark, [borderless],
+                            [on(click, {?MODULE, dark, #{}})])]),
+             %% Server-side search: each keystroke (debounced) runs `search'
+             %% below, which renders the matching rows in Erlang and morphs
+             %% them into the list; the input keeps its focus and caret.
+             ah_field(<<"Registered process (server search)">>,
+                      ah_combobox([], undefined, [<<"w-72">>],
+                                  [{id, <<"proc_search">>}, {placeholder, <<"Type a name, e.g. kernel">>},
+                                   {search, {?MODULE, search, #{}}}]),
+                      [top, <<"mt-4">>], [])],
+            [], [{title, <<"Values and scripts">>}]).
 
 todos_card() ->
-    card([form(field(<<"New todo">>,
-                     'div'([input(<<>>, [], [{id, todo_text}, {name, text},
-                                             {placeholder, <<"What needs doing?">>},
-                                             {autocomplete, off}]),
-                            button(<<"Add">>, add, [], [{type, submit}])],
-                           [<<"flex gap-2">>], []),
-                     [top], [{for, todo_text}]),
-               [], [on(submit, {?MODULE, add_todo, #{}})]),
-          ul([todo_item(T) || T <- aihtml_example_store:todos()],
-             [<<"mt-3 divide-y divide-line">>],
-             [{id, todo_list},
-              subscribe(todos, #{refresh => {?MODULE, refresh_todos, #{}}})])],
-         [<<"md:col-span-2">>], [{title, <<"Todos in the data layer">>}]).
+    ah_card([ah_form(ah_field(<<"New todo">>,
+                              ah_div([ah_input(<<>>, [], [{id, todo_text}, {name, text},
+                                                          {placeholder, <<"What needs doing?">>},
+                                                          {autocomplete, off}]),
+                                      ah_button(<<"Add">>, add, [], [{type, submit}])],
+                                     [<<"flex gap-2">>], []),
+                              [top], [{for, todo_text}]),
+                     [], [on(submit, {?MODULE, add_todo, #{}})]),
+             ah_ul([todo_item(T) || T <- aihtml_example_store:todos()],
+                   [<<"mt-3 divide-y divide-line">>],
+                   [{id, todo_list},
+                    subscribe(todos, #{refresh => {?MODULE, refresh_todos, #{}}})])],
+            [<<"md:col-span-2">>], [{title, <<"Todos in the data layer">>}]).
 
 todo_item(#{id := Id, text := Text, done := Done}) ->
-    li([checkbox(Text, Id, [<<"flex-1">>, [<<"line-through text-muted">> || Done]],
-                 [{checked, Done}, on(change, {?MODULE, toggle_todo, #{id => Id}})]),
-        button(<<"Delete">>, Id, [borderless, sm],
-               [on(click, {?MODULE, delete_todo, #{id => Id}},
-                   #{confirm => <<"Delete this todo?">>})])],
-       [<<"flex items-center gap-3 py-2">>], [{id, todo_dom(Id)}]).
+    ah_li([ah_checkbox(Text, Id, [<<"flex-1">>, [<<"line-through text-muted">> || Done]],
+                       [{checked, Done}, on(change, {?MODULE, toggle_todo, #{id => Id}})]),
+           ah_button(<<"Delete">>, Id, [borderless, sm],
+                     [on(click, {?MODULE, delete_todo, #{id => Id}},
+                         #{confirm => <<"Delete this todo?">>})])],
+          [<<"flex items-center gap-3 py-2">>], [{id, todo_dom(Id)}]).
 
 %%%===================================================================
 %%% Actions: stateless, everything comes from the event and the data layer
@@ -139,7 +139,7 @@ action(refresh_counter, _, _Ev, Ctx) ->
 action(greet, _, #{value := V}, Ctx) ->
     Html = case string:trim(V) of
                <<>> -> <<"Hello, stranger.">>;
-               Name -> [<<"Hello, ">>, strong(Name), <<"!">>]    % escaped
+               Name -> [<<"Hello, ">>, ah_strong(Name), <<"!">>]    % escaped
            end,
     aihtml_action:html(Ctx, {id, greeting}, Html);
 action(load_processes, _, _Ev, Ctx) ->
@@ -203,7 +203,7 @@ show_count(Ctx, N) ->
 %% Progressive update: the loading state is sent at once, the data when
 %% the (here artificially slow) query returns, in the same response.
 loading(Ctx) ->
-    aihtml_action:html(Ctx, {id, data}, p(<<"Loading…"/utf8>>, [<<"text-muted text-sm">>], [])),
+    aihtml_action:html(Ctx, {id, data}, ah_p(<<"Loading…"/utf8>>, [<<"text-muted text-sm">>], [])),
     aihtml_action:flush(Ctx),
     timer:sleep(400).
 
@@ -216,15 +216,15 @@ processes_table() ->
             lists:reverse(lists:keysort(2, [{P, M} || P <- erlang:processes(),
                                                      {memory, M} <- [erlang:process_info(P, memory)]])),
             8),
-    Rows = [tr([td(pid_to_list(P), [<<"font-mono py-1">>], []),
-                td(proc_name(P), [<<"py-1">>], []),
-                td(M div 1024, [<<"py-1 text-right">>], [])])
+    Rows = [ah_tr([ah_td(pid_to_list(P), [<<"font-mono py-1">>], []),
+                   ah_td(proc_name(P), [<<"py-1">>], []),
+                   ah_td(M div 1024, [<<"py-1 text-right">>], [])])
             || {P, M} <- Top],
-    table([thead(tr([th(<<"pid">>, [<<"text-left">>], []),
-                     th(<<"name">>, [<<"text-left">>], []),
-                     th(<<"KiB">>, [<<"text-right">>], [])])),
-           tbody(Rows)],
-          [<<"w-full text-sm">>], []).
+    ah_table([ah_thead(ah_tr([ah_th(<<"pid">>, [<<"text-left">>], []),
+                              ah_th(<<"name">>, [<<"text-left">>], []),
+                              ah_th(<<"KiB">>, [<<"text-right">>], [])])),
+              ah_tbody(Rows)],
+             [<<"w-full text-sm">>], []).
 
 system_info() ->
     Items = [{<<"Node">>, node()},
@@ -233,8 +233,8 @@ system_info() ->
              {<<"Processes">>, erlang:system_info(process_count)},
              {<<"Memory (MiB)">>, erlang:memory(total) div (1024 * 1024)},
              {<<"Request process">>, pid_to_list(self())}],
-    dl([[dt(K, [<<"text-muted">>], []), dd(V, [<<"font-mono">>], [])] || {K, V} <- Items],
-       [<<"grid grid-cols-2 gap-y-1 text-sm">>], []).
+    ah_dl([[ah_dt(K, [<<"text-muted">>], []), ah_dd(V, [<<"font-mono">>], [])] || {K, V} <- Items],
+          [<<"grid grid-cols-2 gap-y-1 text-sm">>], []).
 
 todo_dom(Id) -> <<"todo-", (integer_to_binary(Id))/binary>>.
 
@@ -244,4 +244,4 @@ proc_name(P) ->
         _ -> <<>>
     end.
 
-row(Children) -> 'div'(Children, [<<"flex flex-wrap items-center gap-3">>], []).
+row(Children) -> ah_div(Children, [<<"flex flex-wrap items-center gap-3">>], []).

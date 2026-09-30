@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := ranking_list, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, ranking_list, 3)),
+    ?assert(erlang:function_exported(?D, ah_ranking_list, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -49,8 +49,8 @@ ranking_list_test() ->
     Items = [#{name => <<"<DE>">>, code => de, value => 10, tag => <<"Free">>, sub_value => <<"s">>},
              #{name => <<"US">>, code => <<"US">>, value => 9, tag => <<"Beta">>},
              #{name => <<"X">>, value => 1, rank => 7}],
-    H = ?D:ranking_list(Items, [dense, clickable], [{title, <<"Top">>},
-                                                    {tag_colors, #{<<"Beta">> => error}}]),
+    H = ?D:ah_ranking_list(Items, [dense, clickable], [{title, <<"Top">>},
+                                                       {tag_colors, #{<<"Beta">> => error}}]),
     ?assert(has(<<"class=\"ah-ranking-list ah-ranking-list--dense\"">>, H)),
     ?assert(has(<<"<span class=\"ah-ranking-list__rank\" data-rank=\"1\">1</span>">>, H)),
     ?assert(has(<<"data-rank=\"7\">7<">>, H)),
@@ -60,7 +60,7 @@ ranking_list_test() ->
     ?assert(has(<<"ah-ranking-list__tag ah-ranking-list__tag--success\">Free">>, H)),
     ?assert(has(<<"ah-ranking-list__tag ah-ranking-list__tag--error\">Beta">>, H)),
     ?assert(has(<<"ah-ranking-list__item ah-ranking-list__item--clickable\" data-idx=\"0\" role=\"button\"">>, H)),
-    M = ?D:ranking_list(Items, [], [{max_items, 1}, {show_rank, false}, {flag_style, none}]),
+    M = ?D:ah_ranking_list(Items, [], [{max_items, 1}, {show_rank, false}, {flag_style, none}]),
     ?assertNot(has(<<"US">>, M)),
     ?assertNot(has(<<"ah-ranking-list__rank">>, M)),
     ?assertNot(has(<<"ah-ranking-list__flag">>, M)).

@@ -2,7 +2,7 @@
 %%% @doc A segmented date/time field, ported from sigil
 %%% (form/datetime_input). See designs/04-components.md.
 %%%
-%%%   datetime_input(Value, Css, Attrs)    a segmented date/time field
+%%%   ah_datetime_input(Value, Css, Attrs)    a segmented date/time field
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
 %%% `data-ah-value' and fires `change'; `name' goes to a hidden input. The
@@ -10,7 +10,7 @@
 %%% which draws the drop-down calendar from the shared template
 %%% templates/datetime_input_calendar.mustache.
 %%%
-%%% datetime_input/3 builds an #ah_datetime_input{}
+%%% ah_datetime_input/3 builds an #ah_datetime_input{}
 %%% (include/aihtml_datetime_input.hrl) and render/1 turns it into HTML,
 %%% so pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -20,7 +20,7 @@
 
 -include("aihtml_datetime_input.hrl").
 
--export([datetime_input/3, render/1, fields/1, catalog/0]).
+-export([ah_datetime_input/3, render/1, fields/1, catalog/0]).
 
 -export_type([element/0, value/0, label_key/0, labels/0]).
 
@@ -58,9 +58,9 @@
 %% "yyyy-MM-dd"), `min', `max', `first_day' (0 = Sunday .. 6), `labels'
 %% (a map with `months', `weekdays' (7, from Sunday), `title' (a format),
 %% `time', `prev_month', `next_month').
--spec datetime_input(value(), aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_datetime_input(value(), aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_datetime_input{}.
-datetime_input(Value, Css, Attrs) ->
+ah_datetime_input(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_datetime_input{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_datetime_input{}.
@@ -281,7 +281,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => datetime_input, category => form,
-       signature => <<"datetime_input(Value, Css, Attrs)">>,
+       signature => <<"ah_datetime_input(Value, Css, Attrs)">>,
        root => <<"ah-dti-group">>,
        flags => [disabled, readonly, spinner, no_calendar, show_time, floating_label,
                  no_rounded],

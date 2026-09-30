@@ -27,55 +27,55 @@ demos() ->
 
 -spec swim_basic() -> aihtml:html().
 swim_basic() ->
-    swimlane(order_nodes(), [legend],
-             [{lanes, order_lanes()}, {phases, order_phases()}, {flows, order_flows()},
-              {labels, #{corner => <<"泳道 / 阶段"/utf8>>, start => <<"起点"/utf8>>,
-                         task => <<"任务"/utf8>>, decision => <<"判定"/utf8>>,
-                         'end' => <<"终点"/utf8>>}},
-              {selected, n3}]).
+    ah_swimlane(order_nodes(), [legend],
+                [{lanes, order_lanes()}, {phases, order_phases()}, {flows, order_flows()},
+                 {labels, #{corner => <<"泳道 / 阶段"/utf8>>, start => <<"起点"/utf8>>,
+                            task => <<"任务"/utf8>>, decision => <<"判定"/utf8>>,
+                            'end' => <<"终点"/utf8>>}},
+                 {selected, n3}]).
 
 %% Dropping a node in another cell calls action(node_changed, ...) below.
 -spec swim_edit() -> aihtml:html().
 swim_edit() ->
-    'div'([swimlane(order_nodes(), [editable],
-                    [{lanes, order_lanes()}, {phases, order_phases()}, {flows, order_flows()},
-                     on('ah:node-change', {?MODULE, node_changed, #{}})]),
-           p(<<"拖动节点到别的格子，或选中后按 Shift+方向键。"/utf8>>,
-             [<<"text-sm text-muted mt-2">>], [{id, <<"swim-log">>}])], [], []).
+    ah_div([ah_swimlane(order_nodes(), [editable],
+                        [{lanes, order_lanes()}, {phases, order_phases()}, {flows, order_flows()},
+                         on('ah:node-change', {?MODULE, node_changed, #{}})]),
+            ah_p(<<"拖动节点到别的格子，或选中后按 Shift+方向键。"/utf8>>,
+                 [<<"text-sm text-muted mt-2">>], [{id, <<"swim-log">>}])], [], []).
 
 -spec swim_variants() -> aihtml:html().
 swim_variants() ->
-    swimlane([#{id => a, lane => dev, phase => plan, label => <<"Spec">>, type => start},
-              #{id => b, lane => dev, phase => build, label => <<"Code">>, variant => outline},
-              #{id => c, lane => qa, phase => build, label => <<"Test plan">>, dimmed => true},
-              #{id => d, lane => qa, phase => ship, label => <<"Pass?">>, type => decision},
-              #{id => e, lane => dev, phase => ship, label => <<"Release">>, type => 'end',
-                color => teal}],
-             [],
-             [{lanes, [#{id => dev, name => <<"Development">>, color => indigo},
-                       #{id => qa, name => <<"QA">>, color => pink}]},
-              {phases, [#{id => plan, label => <<"Plan">>}, #{id => build, label => <<"Build">>},
-                        #{id => ship, label => <<"Ship">>}]},
-              {flows, [#{from => a, to => b}, #{from => b, to => d},
-                       #{from => c, to => d, dashed => true, arrow => false},
-                       #{from => d, to => e, label => <<"yes">>},
-                       #{from => d, to => b, label => <<"no">>, dashed => true}]},
-              {selected, d}, {lane_height, 96}, {phase_width, 170}]).
+    ah_swimlane([#{id => a, lane => dev, phase => plan, label => <<"Spec">>, type => start},
+                 #{id => b, lane => dev, phase => build, label => <<"Code">>, variant => outline},
+                 #{id => c, lane => qa, phase => build, label => <<"Test plan">>, dimmed => true},
+                 #{id => d, lane => qa, phase => ship, label => <<"Pass?">>, type => decision},
+                 #{id => e, lane => dev, phase => ship, label => <<"Release">>, type => 'end',
+                   color => teal}],
+                [],
+                [{lanes, [#{id => dev, name => <<"Development">>, color => indigo},
+                          #{id => qa, name => <<"QA">>, color => pink}]},
+                 {phases, [#{id => plan, label => <<"Plan">>}, #{id => build, label => <<"Build">>},
+                           #{id => ship, label => <<"Ship">>}]},
+                 {flows, [#{from => a, to => b}, #{from => b, to => d},
+                          #{from => c, to => d, dashed => true, arrow => false},
+                          #{from => d, to => e, label => <<"yes">>},
+                          #{from => d, to => b, label => <<"no">>, dashed => true}]},
+                 {selected, d}, {lane_height, 96}, {phase_width, 170}]).
 
 -spec swim_continuous() -> aihtml:html().
 swim_continuous() ->
-    swimlane([#{id => q1, lane => web, value => 3, label => <<"Beta">>, type => start},
-              #{id => q2, lane => web, value => 20, label => <<"GA">>, type => 'end'},
-              #{id => q3, lane => app, value => 8, label => <<"TestFlight">>},
-              #{id => q4, lane => app, value => 26, label => <<"Store">>, type => 'end'}],
-             [],
-             [{lanes, [#{id => web, name => <<"Web">>, color => blue},
-                       #{id => app, name => <<"Mobile">>, color => orange}]},
-              {flows, [#{from => q1, to => q3}, #{from => q1, to => q2},
-                       #{from => q3, to => q4}]},
-              {axis, continuous}, {value_domain, {0, 30}}, {axis_width, 720},
-              {value_ticks, [0, 10, 20, 30]}, {lane_height, 90},
-              {labels, #{corner => <<"Days">>}}]).
+    ah_swimlane([#{id => q1, lane => web, value => 3, label => <<"Beta">>, type => start},
+                 #{id => q2, lane => web, value => 20, label => <<"GA">>, type => 'end'},
+                 #{id => q3, lane => app, value => 8, label => <<"TestFlight">>},
+                 #{id => q4, lane => app, value => 26, label => <<"Store">>, type => 'end'}],
+                [],
+                [{lanes, [#{id => web, name => <<"Web">>, color => blue},
+                          #{id => app, name => <<"Mobile">>, color => orange}]},
+                 {flows, [#{from => q1, to => q3}, #{from => q1, to => q2},
+                          #{from => q3, to => q4}]},
+                 {axis, continuous}, {value_domain, {0, 30}}, {axis_width, 720},
+                 {value_ticks, [0, 10, 20, 30]}, {lane_height, 90},
+                 {labels, #{corner => <<"Days">>}}]).
 
 %%%===================================================================
 %%% Actions

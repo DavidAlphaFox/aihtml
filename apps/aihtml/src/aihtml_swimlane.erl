@@ -2,7 +2,7 @@
 %%% @doc A swimlane (cross-functional flow chart), ported from sigil
 %%% (data/swimlane). See designs/04-components.md.
 %%%
-%%%   swimlane(Nodes, Css, Attrs)          lanes x phases flow chart
+%%%   ah_swimlane(Nodes, Css, Attrs)       lanes x phases flow chart
 %%%   swimlane_update(Ctx, Event, S)       (in an action) re-render after an edit
 %%%
 %%% Everything is rendered here, on the server, the flow lines included
@@ -20,7 +20,7 @@
 %%% swimlane_update/3, rendering the swimlane again from the stored data;
 %%% a refused change is undone the same way.
 %%%
-%%% swimlane/3 builds an #ah_swimlane{} (include/aihtml_swimlane.hrl) and
+%%% ah_swimlane/3 builds an #ah_swimlane{} (include/aihtml_swimlane.hrl) and
 %%% render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -30,7 +30,7 @@
 
 -include("aihtml_swimlane.hrl").
 
--export([swimlane/3, swimlane_update/3, render/1, fields/1, catalog/0, facade_extras/0]).
+-export([ah_swimlane/3, swimlane_update/3, render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([element/0, item/0, lane/0, phase/0, flow/0, label_key/0, labels/0]).
 
@@ -86,8 +86,8 @@
 %% (px), `lane_height' (110), `phase_width' (190), `node_width' (132),
 %% `node_height' (52), `lane_label_width' (150), `height' (px, default
 %% the content's), `labels' (corner, start, task, decision, end).
--spec swimlane([item()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_swimlane{}.
-swimlane(Nodes, Css, Attrs) ->
+-spec ah_swimlane([item()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_swimlane{}.
+ah_swimlane(Nodes, Css, Attrs) ->
     ?E:build(?MODULE, #ah_swimlane{items = Nodes}, Css, Attrs).
 
 %% @doc The field names of #ah_swimlane{}.
@@ -504,7 +504,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => swimlane, category => data,
-       signature => <<"swimlane(Nodes, Css, Attrs)">>,
+       signature => <<"ah_swimlane(Nodes, Css, Attrs)">>,
        root => <<"ah-swimlane">>,
        flags => [editable, legend],
        classes => #{editable => [], legend => []},

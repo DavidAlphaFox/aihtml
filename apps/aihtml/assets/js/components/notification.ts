@@ -1,7 +1,7 @@
 /* The notification behaviour (designs/04-components.md), ported from
  * sigil's overlay/notification: a hidden template whose open clones its
  * card into a corner stack; and the page function AH.fn("notify") (also
- * AH.notify), which places a card rendered on the server (toast/3,
+ * AH.notify), which places a card rendered on the server (ah_toast/3,
  * notify/2) or built here. Cards: NotifyCard in _lib_overlay.ts. Events
  * on the template: ah:open, ah:close (detail OverlayClose, {result:
  * null}), ah:click. */
@@ -12,7 +12,7 @@ import "virtual:ah-tpl/notification";
 
 export type { OverlayClose } from "./_lib_overlay.ts";
 
-/** AH.notify's options: card is the HTML aihtml_toast:toast/3 and
+/** AH.notify's options: card is the HTML aihtml_toast:ah_toast/3 and
  *  aihtml_notification:notify/2 render on the server; without it, text
  *  and the CardOptions build one here. duration in ms (default 3000,
  *  <= 0 stays). */

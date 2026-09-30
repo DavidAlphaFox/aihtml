@@ -3,7 +3,7 @@
 %%% names are sigil's, so the styles in priv/css/sigil/components/datagrid
 %%% apply unchanged.
 %%%
-%%%   datagrid(Columns, Rows, Css, Attrs)        the grid
+%%%   ah_datagrid(Columns, Rows, Css, Attrs)     the grid
 %%%   datagrid_query(Event)                      (remote mode) the view the browser asks for
 %%%   datagrid_rows(Ctx, Event, Rows, Total)     (remote mode) answer it
 %%%   datagrid_row(Ctx, Event, Row)              re-render one row (after an edit)
@@ -82,7 +82,7 @@
 -mustache_template({tpl_datagrid_group_row, "../templates/datagrid_group_row.mustache"}).
 -mustache_template({tpl_datagrid_column_menu, "../templates/datagrid_column_menu.mustache"}).
 
--export([datagrid/4, datagrid_query/1, datagrid_rows/4, datagrid_row/3, datagrid_select/2,
+-export([ah_datagrid/4, datagrid_query/1, datagrid_rows/4, datagrid_row/3, datagrid_select/2,
          render/1, fields/1, catalog/0, facade_extras/0]).
 %% The formatting and aggregation model, shared with the browser; for tests.
 -export([format_value/3, aggregate/2, pager_view/4, default_labels/0]).
@@ -174,8 +174,8 @@
 %% `page_sizes', `sort', `filters', `group_by', `edit_mode', `column_menu',
 %% `toolbar', `export_name', `labels', `source', `total', `href'; see
 %% catalog/0.
--spec datagrid([column()], [row()], css(), attrs()) -> #ah_datagrid{}.
-datagrid(Columns, Rows, Css, Attrs) ->
+-spec ah_datagrid([column()], [row()], css(), attrs()) -> #ah_datagrid{}.
+ah_datagrid(Columns, Rows, Css, Attrs) ->
     ?E:build(?MODULE, #ah_datagrid{columns = Columns, rows = Rows}, Css, Attrs).
 
 %% @doc The field names of this component's record.
@@ -1350,7 +1350,7 @@ int_field(Data, K) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => datagrid, category => data,
-       signature => <<"datagrid(Columns, Rows, Css, Attrs)">>,
+       signature => <<"ah_datagrid(Columns, Rows, Css, Attrs)">>,
        root => <<"ah-dg">>,
        groups => #{selection => {[none, single, multi, checkbox], single}},
        flags => [filter_row, pageable, statusbar],

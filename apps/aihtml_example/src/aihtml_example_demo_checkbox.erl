@@ -18,24 +18,24 @@ demos() ->
 
 -spec checkbox_states() -> aihtml:html().
 checkbox_states() ->
-    row([checkbox(<<"Unchecked">>, undefined, [], [{name, a}]),
-         checkbox(<<"Checked">>, undefined, [], [{name, b}, {checked, true}]),
-         checkbox(<<"Indeterminate">>, undefined, [], [{indeterminate, true}]),
-         checkbox(<<"Disabled">>, undefined, [], [{disabled, true}]),
-         checkbox(<<"Disabled checked">>, undefined, [], [{disabled, true}, {checked, true}])]).
+    row([ah_checkbox(<<"Unchecked">>, undefined, [], [{name, a}]),
+         ah_checkbox(<<"Checked">>, undefined, [], [{name, b}, {checked, true}]),
+         ah_checkbox(<<"Indeterminate">>, undefined, [], [{indeterminate, true}]),
+         ah_checkbox(<<"Disabled">>, undefined, [], [{disabled, true}]),
+         ah_checkbox(<<"Disabled checked">>, undefined, [], [{disabled, true}, {checked, true}])]).
 
 -spec checkbox_sizes() -> aihtml:html().
 checkbox_sizes() ->
-    row([checkbox(<<"Small">>, undefined, [sm], [{checked, true}]),
-         checkbox(<<"Medium">>, undefined, [md], [{checked, true}]),
-         checkbox(<<"Large">>, undefined, [lg], [{checked, true}]),
-         checkbox(<<"24px box">>, undefined, [], [{box_size, 24}, {checked, true}])]).
+    row([ah_checkbox(<<"Small">>, undefined, [sm], [{checked, true}]),
+         ah_checkbox(<<"Medium">>, undefined, [md], [{checked, true}]),
+         ah_checkbox(<<"Large">>, undefined, [lg], [{checked, true}]),
+         ah_checkbox(<<"24px box">>, undefined, [], [{box_size, 24}, {checked, true}])]).
 
 -spec checkbox_three_states() -> aihtml:html().
 checkbox_three_states() ->
-    row([checkbox(<<"Click me: on, mixed, off">>, undefined, [],
-                  [{three_states, true}, {checked, true}]),
-         checkbox(<<"Locked">>, undefined, [], [{locked, true}, {checked, true}])]).
+    row([ah_checkbox(<<"Click me: on, mixed, off">>, undefined, [],
+                     [{three_states, true}, {checked, true}]),
+         ah_checkbox(<<"Locked">>, undefined, [], [{locked, true}, {checked, true}])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-6">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-6">>], []).

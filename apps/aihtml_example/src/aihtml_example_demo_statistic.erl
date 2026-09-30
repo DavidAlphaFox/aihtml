@@ -19,17 +19,17 @@ demos() ->
 
 -spec statistic_basic() -> aihtml:html().
 statistic_basic() ->
-    row([statistic(1284500, [primary], [{title, <<"Revenue">>}, {prefix, <<"¥"/utf8>>}]),
-         statistic(98.456, [success], [{title, <<"Uptime">>}, {suffix, <<"%">>}, {precision, 2}]),
-         statistic(1284500, [], [{title, <<"No separators">>}, {group_separator, false}])]).
+    row([ah_statistic(1284500, [primary], [{title, <<"Revenue">>}, {prefix, <<"¥"/utf8>>}]),
+         ah_statistic(98.456, [success], [{title, <<"Uptime">>}, {suffix, <<"%">>}, {precision, 2}]),
+         ah_statistic(1284500, [], [{title, <<"No separators">>}, {group_separator, false}])]).
 
 -spec statistic_delta() -> aihtml:html().
 statistic_delta() ->
-    row([statistic(3210, [], [{title, <<"Orders">>}, {delta, 128}]),
-         statistic(-3250.5, [error], [{title, <<"Balance">>}, {precision, 1}, {delta, -120}]),
-         statistic(42, [], [{title, <<"Tickets">>}, {delta, 0}]),
-         statistic(0, [loading], [{title, <<"Loading">>}])]).
+    row([ah_statistic(3210, [], [{title, <<"Orders">>}, {delta, 128}]),
+         ah_statistic(-3250.5, [error], [{title, <<"Balance">>}, {precision, 1}, {delta, -120}]),
+         ah_statistic(42, [], [{title, <<"Tickets">>}, {delta, 0}]),
+         ah_statistic(0, [loading], [{title, <<"Loading">>}])]).
 
 %% Layout helpers of the demos.
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

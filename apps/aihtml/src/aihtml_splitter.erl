@@ -5,7 +5,7 @@
 %%% assets/js/components/splitter.ts, aihtml's additions in
 %%% priv/css/extra/splitter.css.
 %%%
-%%% splitter/3 builds an #ah_splitter{} record (include/aihtml_splitter.hrl)
+%%% ah_splitter/3 builds an #ah_splitter{} record (include/aihtml_splitter.hrl)
 %%% and render/1 turns it into HTML (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
@@ -14,7 +14,7 @@
 
 -include("aihtml_splitter.hrl").
 
--export([splitter/3]).
+-export([ah_splitter/3]).
 -export([render/1, fields/1, catalog/0]).
 
 -export_type([pane/0]).
@@ -36,8 +36,8 @@
 %% while dragging and `change' at the end with `data-ah-value' set to the
 %% two sizes in percent ("30,70"). Options: `splitbar_size' (px, default
 %% 5), `resizable' (default true), `step' (px, default 10), `name'.
--spec splitter([pane()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_splitter{}.
-splitter(Panes, Css, Attrs) ->
+-spec ah_splitter([pane()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_splitter{}.
+ah_splitter(Panes, Css, Attrs) ->
     ?EL:build(?MODULE, #ah_splitter{panes = Panes}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -107,7 +107,7 @@ percent(L) when is_list(L) -> percent(list_to_binary(L)).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => splitter, category => layout,
-       signature => <<"splitter(Panes, Css, Attrs)">>,
+       signature => <<"ah_splitter(Panes, Css, Attrs)">>,
        root => <<"ah-splitter">>,
        groups => #{orientation => {[vertical, horizontal], vertical}},
        flags => [disabled],

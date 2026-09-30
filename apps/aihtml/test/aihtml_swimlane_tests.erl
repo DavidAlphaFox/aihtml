@@ -31,11 +31,11 @@ swimlane_test() ->
                color => <<"#ff0000">>},
              #{id => c, lane => l2, phase => p2, label => <<"C">>, type => decision, dimmed => true},
              #{id => d, lane => nowhere, phase => p2}],
-    H = r(?M:swimlane(Nodes, [legend, editable],
-                      [{id, sw}, {lanes, lanes()}, {phases, phases()}, {selected, a},
-                       {flows, [#{from => a, to => c, label => <<"go">>},
-                                #{from => b, to => c, dashed => true, arrow => false},
-                                #{from => a, to => d}]}])),
+    H = r(?M:ah_swimlane(Nodes, [legend, editable],
+                         [{id, sw}, {lanes, lanes()}, {phases, phases()}, {selected, a},
+                          {flows, [#{from => a, to => c, label => <<"go">>},
+                                   #{from => b, to => c, dashed => true, arrow => false},
+                                   #{from => a, to => d}]}])),
     ?assert(has(<<"<div class=\"ah-swimlane\" id=\"sw\" data-ah=\"swimlane\" data-axis=\"discrete\"">>, H)),
     ?assert(has(<<"data-editable data-selected=\"a\"">>, H)),
     %% two nodes stacked in the first cell: (110 - 114) / 2 = -2 and 60
@@ -60,24 +60,24 @@ swimlane_test() ->
 
 swimlane_geometry_test() ->
     %% a forward elbow with rounded corners (sigil's flow-points, points->path)
-    F = r(?M:swimlane([#{id => a, lane => l1, phase => p1}, #{id => b, lane => l2, phase => p2}],
-                      [], [{lanes, lanes()}, {phases, phases()}, {flows, [#{from => a, to => b}]}])),
+    F = r(?M:ah_swimlane([#{id => a, lane => l1, phase => p1}, #{id => b, lane => l2, phase => p2}],
+                         [], [{lanes, lanes()}, {phases, phases()}, {flows, [#{from => a, to => b}]}])),
     ?assert(has(<<"d=\"M161,55 L180,55 Q190,55 190,65 L190,155 Q190,165 200,165 L219,165\"">>, F)),
-    H = r(?M:swimlane([#{id => a, lane => l1, value => 0}, #{id => b, lane => l2, value => 10}],
-                      [], [{lanes, lanes()}, {axis, continuous}, {axis_width, 400},
-                           {flows, [#{from => a, to => b}]}])),
+    H = r(?M:ah_swimlane([#{id => a, lane => l1, value => 0}, #{id => b, lane => l2, value => 10}],
+                         [], [{lanes, lanes()}, {axis, continuous}, {axis_width, 400},
+                              {flows, [#{from => a, to => b}]}])),
     ?assert(has(<<"left:0px;top:29px;">>, H)),
     ?assert(has(<<"left:268px;top:139px;">>, H)),
     ?assert(has(<<"<div class=\"ah-swimlane-grid__tick-label\" style=\"position:absolute;left:66px;"
                   "transform:translateX(-50%)\">0</div>">>, H)),
-    ?assertError({aihtml, {bad_option, axis, round}}, r(?M:swimlane([], [], [{axis, round}]))),
+    ?assertError({aihtml, {bad_option, axis, round}}, r(?M:ah_swimlane([], [], [{axis, round}]))),
     ?assertError({aihtml, {bad_swimlane_node_type, box}},
-                 r(?M:swimlane([#{id => a, lane => l1, type => box}], [], []))),
+                 r(?M:ah_swimlane([#{id => a, lane => l1, type => box}], [], []))),
     ?assertError({aihtml, {bad_color, magenta}},
-                 r(?M:swimlane([], [], [{lanes, [#{id => x, color => magenta}]}]))).
+                 r(?M:ah_swimlane([], [], [{lanes, [#{id => x, color => magenta}]}]))).
 
 swimlane_update_test() ->
-    S = ?M:swimlane([], [], []),
+    S = ?M:ah_swimlane([], [], []),
     [#{op := html, id := <<"w">>, html := H}] =
         aihtml_action:render_ops(
           fun(Ctx) -> ?M:swimlane_update(Ctx, #{id => <<"w">>, data => #{<<"selected">> => <<"n">>}}, S) end),
@@ -109,14 +109,14 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:swimlane([#{id => a, lane => l1, phase => p1}], [legend],
-                               [{id, w}, {lanes, lanes()}, {phases, phases()}])),
+    ?assertEqual(r(?M:ah_swimlane([#{id => a, lane => l1, phase => p1}], [legend],
+                                  [{id, w}, {lanes, lanes()}, {phases, phases()}])),
                  r(#ah_swimlane{items = [#{id => a, lane => l1, phase => p1}], legend = true,
                                 id = w, lanes = lanes(), phases = phases()})).
 
 builder_fills_fields_test() ->
     ?assertError({aihtml, {record_only_field, ah_swimlane, postback}},
-                 ?M:swimlane([], [], [{postback, x}])).
+                 ?M:ah_swimlane([], [], [{postback, x}])).
 
 postback_test() ->
     Token = fun(Html) ->

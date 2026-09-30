@@ -37,9 +37,9 @@ catalog_docs_test() ->
 %%%===================================================================
 
 status_bar_test() ->
-    H = r(?M:status_bar([<<"Ln 1">>, #{content => <<"UTF-8">>, align => right}],
-                        [], [{content, <<"Hello world 世界\n\nbye"/utf8>>}, {dirty, true},
-                             {labels, #{unsaved => <<"Modified">>}}])),
+    H = r(?M:ah_status_bar([<<"Ln 1">>, #{content => <<"UTF-8">>, align => right}],
+                           [], [{content, <<"Hello world 世界\n\nbye"/utf8>>}, {dirty, true},
+                                {labels, #{unsaved => <<"Modified">>}}])),
     ?assert(has(H, <<"class=\"ah-status-bar\"">>)),
     ?assert(has(H, <<"data-ah=\"status-bar\"">>)),
     ?assert(has(H, <<"data-dirty=\"true\"">>)),
@@ -54,7 +54,7 @@ status_bar_test() ->
     [_, Right] = binary:split(H, <<"ah-status-bar__side--right">>),
     ?assert(has(Right, <<"UTF-8">>)),
     ?assert(has(Right, <<"ah-status-bar__save">>)),
-    Plain = r(?M:status_bar([#{count => 2, label => <<"errors">>}], [], [])),
+    Plain = r(?M:ah_status_bar([#{count => 2, label => <<"errors">>}], [], [])),
     ?assertNot(has(Plain, <<"data-dirty">>)),
     ?assertNot(has(Plain, <<"ah-status-bar__popover">>)).
 
@@ -64,7 +64,7 @@ status_bar_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:status_bar([<<"Ln 1">>], [], [{dirty, true}, {content, <<"a b">>}])),
+    ?assertEqual(r(?M:ah_status_bar([<<"Ln 1">>], [], [{dirty, true}, {content, <<"a b">>}])),
                  r(#ah_status_bar{segments = [<<"Ln 1">>], dirty = true,
                                   content = <<"a b">>})).
 

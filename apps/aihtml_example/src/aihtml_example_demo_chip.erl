@@ -20,18 +20,18 @@ demos() ->
 -spec chip_variants() -> aihtml:html().
 chip_variants() ->
     Colors = [default, primary, success, warning, error, info],
-    'div'([row([chip(atom_to_binary(C), [Variant, C], []) || C <- Colors])
-           || Variant <- [filled, outlined, soft]],
-          [<<"flex flex-col gap-3">>], []).
+    ah_div([row([ah_chip(atom_to_binary(C), [Variant, C], []) || C <- Colors])
+            || Variant <- [filled, outlined, soft]],
+           [<<"flex flex-col gap-3">>], []).
 
 -spec chip_features() -> aihtml:html().
 chip_features() ->
-    row([chip(<<"Small">>, [small, primary], []),
-         chip(<<"Jane Doe">>, [soft, primary], [{avatar, <<"JD">>}]),
-         chip(<<"Erlang">>, [removable, outlined, info], [{value, erlang}]),
-         chip(<<"Clickable">>, [clickable, soft, success], []),
-         chip(<<"Disabled">>, [disabled, primary], [])]).
+    row([ah_chip(<<"Small">>, [small, primary], []),
+         ah_chip(<<"Jane Doe">>, [soft, primary], [{avatar, <<"JD">>}]),
+         ah_chip(<<"Erlang">>, [removable, outlined, info], [{value, erlang}]),
+         ah_chip(<<"Clickable">>, [clickable, soft, success], []),
+         ah_chip(<<"Disabled">>, [disabled, primary], [])]).
 
 %% Layout helpers of the demos.
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

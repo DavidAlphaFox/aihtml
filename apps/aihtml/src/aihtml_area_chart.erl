@@ -5,7 +5,7 @@
 %%% area-chart/create does, and drawn like any chart (see aihtml_chart and
 %%% aihtml_lib_chart).
 %%%
-%%% area_chart/3 builds an element record (#ah_area_chart{}, defined in
+%%% ah_area_chart/3 builds an element record (#ah_area_chart{}, defined in
 %%% include/aihtml_area_chart.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -15,7 +15,7 @@
 
 -include("aihtml_area_chart.hrl").
 
--export([area_chart/3, option/1, render/1, fields/1, catalog/0]).
+-export([ah_area_chart/3, option/1, render/1, fields/1, catalog/0]).
 
 -export_type([element/0]).
 
@@ -41,8 +41,8 @@
 %% `categories' (the x axis), `title', `colors', `y_name', `legend' (top |
 %% bottom | left | right | none), `grid' and `tooltip' (booleans, default
 %% true), `height', `width', `renderer'.
--spec area_chart([series()], css(), attrs()) -> #ah_area_chart{}.
-area_chart(Series, Css, Attrs) ->
+-spec ah_area_chart([series()], css(), attrs()) -> #ah_area_chart{}.
+ah_area_chart(Series, Css, Attrs) ->
     ?E:build(?MODULE, #ah_area_chart{series = Series}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -92,7 +92,7 @@ render(#ah_area_chart{loading = L, disabled = D, width = W, height = H, renderer
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => area_chart, category => data,
-       signature => <<"area_chart(Series, Css, Attrs)">>,
+       signature => <<"ah_area_chart(Series, Css, Attrs)">>,
        root => <<"ah-chart">>, flags => [line, straight, stack, loading, disabled],
        classes => #{line => [], straight => [], stack => [], loading => []},
        options => [categories, title, colors, y_name, legend, grid, tooltip,

@@ -15,7 +15,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([empty], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -30,10 +30,10 @@ catalog_documents_every_option_test() ->
 %%% empty
 
 empty_test() ->
-    H = r(?M:empty([], [compact], [{title, <<"None">>}, {description, <<"D">>}])),
+    H = r(?M:ah_empty([], [compact], [{title, <<"None">>}, {description, <<"D">>}])),
     ?assertEqual(<<"<div class=\"ah-empty ah-empty-compact\"><div class=\"ah-empty__title\">None</div>"
                    "<div class=\"ah-empty__description\">D</div></div>">>, H),
-    ?assert(has(r(?M:empty(<<"act">>, [], [])), <<"<div class=\"ah-empty__content\">act</div>">>)).
+    ?assert(has(r(?M:ah_empty(<<"act">>, [], [])), <<"<div class=\"ah-empty__content\">act</div>">>)).
 
 %%% CSS: every sigil class the module writes exists in the stylesheets
 
@@ -57,7 +57,7 @@ classes_are_styled_test() ->
 
 %% One render of the component in its main variants and states.
 samples() ->
-    [?M:empty(<<"a">>, [compact], [{icon, <<"i">>}, {title, <<"t">>}, {description, <<"d">>}])].
+    [?M:ah_empty(<<"a">>, [compact], [{icon, <<"i">>}, {title, <<"t">>}, {description, <<"d">>}])].
 
 %%% element records (designs/05-records.md)
 

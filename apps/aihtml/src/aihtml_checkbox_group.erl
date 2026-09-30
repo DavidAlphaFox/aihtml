@@ -6,7 +6,7 @@
 %%% comma separated by aihtml_value:join/1); the behaviour keeps it in sync, stops the inputs' own
 %%% `change' at the root and fires one `change' on the root instead.
 %%%
-%%% checkbox_group/4 builds an #ah_checkbox_group{}
+%%% ah_checkbox_group/4 builds an #ah_checkbox_group{}
 %%% (include/aihtml_checkbox_group.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -16,15 +16,15 @@
 
 -include("aihtml_checkbox_group.hrl").
 
--export([checkbox_group/4, render/1, fields/1, catalog/0]).
+-export([ah_checkbox_group/4, render/1, fields/1, catalog/0]).
 
 -define(E, aihtml_element).
 -define(L, aihtml_lib_choice).
 
 %% @doc Several checkboxes; `Values' lists the checked ones.
--spec checkbox_group([aihtml_lib_choice:item()], [aihtml_lib_choice:value()],
-                     aihtml_html:css(), aihtml_html:attrs()) -> #ah_checkbox_group{}.
-checkbox_group(Items, Values, Css, Attrs) ->
+-spec ah_checkbox_group([aihtml_lib_choice:item()], [aihtml_lib_choice:value()],
+                        aihtml_html:css(), aihtml_html:attrs()) -> #ah_checkbox_group{}.
+ah_checkbox_group(Items, Values, Css, Attrs) ->
     ?E:build(?MODULE, #ah_checkbox_group{items = Items, value = Values}, Css, Attrs).
 
 %% @doc The field names of #ah_checkbox_group{}.
@@ -47,7 +47,7 @@ render(#ah_checkbox_group{items = Items, value = Values} = R) ->
 catalog() ->
     [maps:merge(
        #{name => checkbox_group, category => form,
-         signature => <<"checkbox_group(Items, Values, Css, Attrs)">>,
+         signature => <<"ah_checkbox_group(Items, Values, Css, Attrs)">>,
          root => <<"ah-checkbox-group">>,
          groups => #{layout => {[vertical, horizontal], vertical},
                      size => {[sm, md, lg], none}},

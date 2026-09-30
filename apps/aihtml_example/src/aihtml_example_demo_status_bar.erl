@@ -21,16 +21,16 @@ demos() ->
 
 -spec status_editor() -> aihtml:html().
 status_editor() ->
-    status_bar([<<"Ln 12, Col 4">>,
-                #{content => <<"UTF-8">>, align => right},
-                #{content => <<"Markdown">>, align => right}],
-               [], [{content, <<"Hello 世界，这是一段中英混排文本。\n\n第二段。"/utf8>>},
-                    {dirty, false}]).
+    ah_status_bar([<<"Ln 12, Col 4">>,
+                   #{content => <<"UTF-8">>, align => right},
+                   #{content => <<"Markdown">>, align => right}],
+                  [], [{content, <<"Hello 世界，这是一段中英混排文本。\n\n第二段。"/utf8>>},
+                       {dirty, false}]).
 
 -spec status_segments() -> aihtml:html().
 status_segments() ->
-    status_bar([#{count => 3, label => <<"errors">>,
-                  details => [{<<"Errors">>, 3}, {<<"Warnings">>, 7}]},
-                <<"main">>,
-                #{content => <<"Spaces: 2">>, align => right}],
-               [], [{dirty, true}, {labels, #{unsaved => <<"Modified">>}}]).
+    ah_status_bar([#{count => 3, label => <<"errors">>,
+                     details => [{<<"Errors">>, 3}, {<<"Warnings">>, 7}]},
+                   <<"main">>,
+                   #{content => <<"Spaces: 2">>, align => right}],
+                  [], [{dirty, true}, {labels, #{unsaved => <<"Modified">>}}]).

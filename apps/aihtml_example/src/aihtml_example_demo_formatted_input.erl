@@ -20,28 +20,28 @@ demos() ->
 
 -spec fmt_basic() -> aihtml:html().
 fmt_basic() ->
-    row([formatted_input(1234, [<<"w-44">>], [{name, count}]),
-         formatted_input(255, [<<"w-44">>], [{radix, 16}])]).
+    row([ah_formatted_input(1234, [<<"w-44">>], [{name, count}]),
+         ah_formatted_input(255, [<<"w-44">>], [{radix, 16}])]).
 
 -spec fmt_limits() -> aihtml:html().
 fmt_limits() ->
-    row([formatted_input(128, [<<"w-44">>],
-                         [{min, 0}, {max, 255}, {spin_step, 16}, {radix, 16},
-                          {upper_case, true}]),
-         formatted_input(5, [<<"w-44">>], [{min, 0}, {max, 7}, {radix, 2}])]).
+    row([ah_formatted_input(128, [<<"w-44">>],
+                            [{min, 0}, {max, 255}, {spin_step, 16}, {radix, 16},
+                             {upper_case, true}]),
+         ah_formatted_input(5, [<<"w-44">>], [{min, 0}, {max, 7}, {radix, 2}])]).
 
 -spec fmt_big() -> aihtml:html().
 fmt_big() ->
-    row([formatted_input(1 bsl 64, [<<"w-72">>], [{radix, 16}]),
-         formatted_input(<<"98765432109876543210">>, [<<"w-56">>],
-                         [{notation, exponential}])]).
+    row([ah_formatted_input(1 bsl 64, [<<"w-72">>], [{radix, 16}]),
+         ah_formatted_input(<<"98765432109876543210">>, [<<"w-56">>],
+                            [{notation, exponential}])]).
 
 -spec fmt_plain() -> aihtml:html().
 fmt_plain() ->
-    row([formatted_input(42, [<<"w-40">>],
-                         [{spin_buttons, false}, {drop_down, false},
-                          {placeholder, <<"整数"/utf8>>}]),
-         formatted_input(42, [disabled, <<"w-40">>], [])]).
+    row([ah_formatted_input(42, [<<"w-40">>],
+                            [{spin_buttons, false}, {drop_down, false},
+                             {placeholder, <<"整数"/utf8>>}]),
+         ah_formatted_input(42, [disabled, <<"w-40">>], [])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

@@ -25,44 +25,44 @@ demos() ->
 
 -spec mask_phone() -> aihtml:html().
 mask_phone() ->
-    row([masked_input(<<"5551234567">>, [<<"w-48">>],
-                      [{mask, <<"(999) 999-9999">>}, {name, phone}]),
-         masked_input(undefined, [<<"w-40">>], [{mask, <<"99999-9999">>}, {name, zip}])]).
+    row([ah_masked_input(<<"5551234567">>, [<<"w-48">>],
+                         [{mask, <<"(999) 999-9999">>}, {name, phone}]),
+         ah_masked_input(undefined, [<<"w-40">>], [{mask, <<"99999-9999">>}, {name, zip}])]).
 
 -spec mask_formats() -> aihtml:html().
 mask_formats() ->
-    row([masked_input(<<"09/29/2026">>, [<<"w-36">>], [{mask, <<"99/99/9999">>}]),
-         masked_input(undefined, [<<"w-24">>], [{mask, <<"[0-2][0-9]:[0-5][0-9]">>}]),
-         masked_input(<<"ABC1234">>, [<<"w-36">>], [{mask, <<"LLL-9999">>}]),
-         masked_input(undefined, [<<"w-56">>],
-                      [{mask, <<"[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:"
-                                "[0-9A-F][0-9A-F]">>}])]).
+    row([ah_masked_input(<<"09/29/2026">>, [<<"w-36">>], [{mask, <<"99/99/9999">>}]),
+         ah_masked_input(undefined, [<<"w-24">>], [{mask, <<"[0-2][0-9]:[0-5][0-9]">>}]),
+         ah_masked_input(<<"ABC1234">>, [<<"w-36">>], [{mask, <<"LLL-9999">>}]),
+         ah_masked_input(undefined, [<<"w-56">>],
+                         [{mask, <<"[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:[0-9A-F][0-9A-F]:"
+                                   "[0-9A-F][0-9A-F]">>}])]).
 
 -spec mask_label() -> aihtml:html().
 mask_label() ->
-    row([masked_input(undefined, [floating_label, <<"w-48">>],
-                      [{mask, <<"(999) 999-9999">>}, {placeholder, <<"手机号"/utf8>>}]),
-         masked_input(<<"4111111111111111">>, [<<"w-60">>],
-                      [{mask, <<"9999 9999 9999 9999">>}, {prompt_char, <<"*">>},
-                       {include_literals, true}, {name, card}])]).
+    row([ah_masked_input(undefined, [floating_label, <<"w-48">>],
+                         [{mask, <<"(999) 999-9999">>}, {placeholder, <<"手机号"/utf8>>}]),
+         ah_masked_input(<<"4111111111111111">>, [<<"w-60">>],
+                         [{mask, <<"9999 9999 9999 9999">>}, {prompt_char, <<"*">>},
+                          {include_literals, true}, {name, card}])]).
 
 -spec mask_states() -> aihtml:html().
 mask_states() ->
-    row([masked_input(<<"12345">>, [disabled, <<"w-32">>], []),
-         masked_input(<<"12345">>, [readonly, <<"w-32">>], []),
-         masked_input(undefined, [square, <<"w-32">>], [])]).
+    row([ah_masked_input(<<"12345">>, [disabled, <<"w-32">>], []),
+         ah_masked_input(<<"12345">>, [readonly, <<"w-32">>], []),
+         ah_masked_input(undefined, [square, <<"w-32">>], [])]).
 
 %% Leaving the field after an edit runs action(masked, ...) below.
 -spec mask_change() -> aihtml:html().
 mask_change() ->
-    row([masked_input(undefined, [<<"w-48">>],
-                      [{mask, <<"(999) 999-9999">>},
-                       on(change, {?MODULE, masked, #{}})]),
-         span(<<"输入后按 Tab 离开"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"masked-out">>}])]).
+    row([ah_masked_input(undefined, [<<"w-48">>],
+                         [{mask, <<"(999) 999-9999">>},
+                          on(change, {?MODULE, masked, #{}})]),
+         ah_span(<<"输入后按 Tab 离开"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"masked-out">>}])]).
 
 -spec action(atom(), term(), aihtml_action:event(), aihtml_action:ctx()) -> ok.
 action(masked, _Args, #{value := Value}, Ctx) ->
     aihtml_action:html(Ctx, {id, <<"masked-out">>}, [<<"服务端收到："/utf8>>, Value]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

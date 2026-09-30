@@ -45,9 +45,9 @@ sidenav_test() ->
                             children => [{list, <<"List">>}, {roles, <<"Roles">>}]},
                           #{key => ext, label => <<"Ext">>, href => <<"https://x">>}]},
               #{items => [#{key => s, label => <<"S">>, children => [{t, <<"T">>}]}]}],
-    H = r(?M:sidenav(Groups, roles, [],
-                     [{brand, #{name => <<"Sigil">>, href => <<"/">>}},
-                      {footer, <<"F">>}, {collapsible, true}])),
+    H = r(?M:ah_sidenav(Groups, roles, [],
+                        [{brand, #{name => <<"Sigil">>, href => <<"/">>}},
+                         {footer, <<"F">>}, {collapsible, true}])),
     ?assert(has(H, <<"<aside class=\"ah-sidenav\" data-ah=\"sidenav\" data-ah-value=\"roles\">">>)),
     ?assert(has(H, <<"<a class=\"ah-sidenav__brand\" href=\"/\">">>)),
     ?assert(has(H, <<"<div class=\"ah-nav-tree__group-label\">Main</div>">>)),
@@ -63,8 +63,8 @@ sidenav_test() ->
     ?assert(has(H, <<"aria-expanded=\"true\"">>)).
 
 sidenav_plain_items_prefix_collapsed_test() ->
-    H = r(?M:sidenav([{a, <<"A">>}], undefined, [collapsed],
-                     [{route_prefix, <<"#/">>}, {collapsible, true}])),
+    H = r(?M:ah_sidenav([{a, <<"A">>}], undefined, [collapsed],
+                        [{route_prefix, <<"#/">>}, {collapsible, true}])),
     ?assert(has(H, <<"class=\"ah-sidenav ah-sidenav-collapsed\"">>)),
     ?assert(has(H, <<"href=\"#/a\"">>)),
     ?assert(has(H, <<"aria-expanded=\"false\"">>)),
@@ -79,9 +79,9 @@ sidenav_plain_items_prefix_collapsed_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:sidenav(?ITEMS, new, [collapsed],
-                              [{route_prefix, <<"#/">>}, {collapsible, true},
-                               {style, <<"--w:1px">>}])),
+    ?assertEqual(r(?M:ah_sidenav(?ITEMS, new, [collapsed],
+                                 [{route_prefix, <<"#/">>}, {collapsible, true},
+                                  {style, <<"--w:1px">>}])),
                  r(#ah_sidenav{groups = ?ITEMS, value = new, collapsed = true,
                                route_prefix = <<"#/">>, collapsible = true,
                                attrs = [{style, <<"--w:1px">>}]})).

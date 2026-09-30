@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := kbd, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, kbd, 3)),
+    ?assert(erlang:function_exported(?D, ah_kbd, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -47,9 +47,9 @@ records_match_catalog_test() ->
 
 kbd_test() ->
     ?assertEqual(<<"<kbd class=\"ah-kbd\" data-size=\"lg\">&lt;Esc&gt;</kbd>">>,
-                 r(?D:kbd(<<"<Esc>">>, [lg], []))),
-    ?assertEqual(<<"<kbd class=\"ah-kbd\" data-size=\"md\">Tab</kbd>">>, r(?D:kbd("Tab", [], []))),
-    C = ?D:kbd([<<"Ctrl">>, <<"K">>], [], []),
+                 r(?D:ah_kbd(<<"<Esc>">>, [lg], []))),
+    ?assertEqual(<<"<kbd class=\"ah-kbd\" data-size=\"md\">Tab</kbd>">>, r(?D:ah_kbd("Tab", [], []))),
+    C = ?D:ah_kbd([<<"Ctrl">>, <<"K">>], [], []),
     ?assert(has(<<"<kbd class=\"ah-kbd-combo\" data-size=\"md\"><kbd class=\"ah-kbd\" data-size=\"md\">Ctrl</kbd>"
                   "<span class=\"ah-kbd-combo__sep\" aria-hidden=\"true\">+</span>">>, C)).
 
@@ -58,7 +58,7 @@ kbd_test() ->
 %%%===================================================================
 
 literal_classes_are_appended_test() ->
-    ?assert(has(<<"class=\"ah-kbd mx-1\"">>, ?D:kbd(<<"K">>, [<<"mx-1">>], []))).
+    ?assert(has(<<"class=\"ah-kbd mx-1\"">>, ?D:ah_kbd(<<"K">>, [<<"mx-1">>], []))).
 
 postback_test() ->
     ?assertError({aihtml, {no_postback_event, ah_kbd}}, r(#ah_kbd{postback = p})).

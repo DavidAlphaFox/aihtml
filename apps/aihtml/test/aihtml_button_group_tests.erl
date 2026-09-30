@@ -19,7 +19,7 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 -define(ITEMS, [{list, <<"List">>}, {grid, <<"Grid">>}, {board, <<"Board">>}]).
 
 button_group_default_test() ->
-    H = r(?M:button_group([<<"A">>, {b, <<"B">>, [{title, <<"t">>}]}], undefined, [], [])),
+    H = r(?M:ah_button_group([<<"A">>, {b, <<"B">>, [{title, <<"t">>}]}], undefined, [], [])),
     ?has(<<"class=\"ah-btn-group ah-btn-group-horizontal ah-btn-group-rounded\"">>, H),
     ?has(<<"role=\"group\"">>, H),
     ?has(<<"data-ah=\"button-group\"">>, H),
@@ -28,7 +28,7 @@ button_group_default_test() ->
     ?has(<<"ah-btn-group-btn ah-btn-group-btn-last\" type=\"button\" value=\"b\" data-value=\"b\" title=\"t\"">>, H).
 
 button_group_radio_test() ->
-    H = r(?M:button_group(?ITEMS, grid, [radio], [{name, view}])),
+    H = r(?M:ah_button_group(?ITEMS, grid, [radio], [{name, view}])),
     ?has(<<"role=\"radiogroup\"">>, H),
     ?has(<<"ah-btn-group-radio">>, H),
     ?has(<<"data-ah-value=\"grid\"">>, H),
@@ -37,35 +37,35 @@ button_group_radio_test() ->
            "tabindex=\"0\" role=\"radio\" aria-checked=\"true\"">>, H),
     ?has(<<"value=\"list\" data-value=\"list\" tabindex=\"-1\" role=\"radio\" aria-checked=\"false\"">>, H),
     %% no selection: the first enabled button takes focus
-    N = r(?M:button_group([{a, <<"A">>, [{disabled, true}]}, {b, <<"B">>}], undefined, [radio], [])),
+    N = r(?M:ah_button_group([{a, <<"A">>, [{disabled, true}]}, {b, <<"B">>}], undefined, [radio], [])),
     ?has(<<"data-ah-value=\"\"">>, N),
     ?has(<<"value=\"b\" data-value=\"b\" tabindex=\"0\"">>, N),
     ?has(<<"ah-btn-group-btn-disabled\" type=\"button\" value=\"a\" data-value=\"a\" disabled">>, N).
 
 button_group_checkbox_test() ->
-    H = r(?M:button_group(?ITEMS, [list, board], [checkbox], [])),
+    H = r(?M:ah_button_group(?ITEMS, [list, board], [checkbox], [])),
     ?has(<<"data-ah-value=\"list,board\"">>, H),
     ?has(<<"value=\"list\" data-value=\"list\" aria-pressed=\"true\"">>, H),
     ?has(<<"value=\"grid\" data-value=\"grid\" aria-pressed=\"false\"">>, H),
-    ?assertEqual(r(?M:button_group(?ITEMS, [list, board], [checkbox], [])),
-                 r(?M:button_group(?ITEMS, <<"list,board">>, [checkbox], []))).
+    ?assertEqual(r(?M:ah_button_group(?ITEMS, [list, board], [checkbox], [])),
+                 r(?M:ah_button_group(?ITEMS, <<"list,board">>, [checkbox], []))).
 
 button_group_modifiers_test() ->
-    H = r(?M:button_group(?ITEMS, list, [radio, vertical, square, outlined], [])),
+    H = r(?M:ah_button_group(?ITEMS, list, [radio, vertical, square, outlined], [])),
     ?has(<<"class=\"ah-btn-group ah-btn-group-outlined ah-btn-group-radio ah-btn-group-vertical\"">>, H),
     ?assertError({aihtml, {conflicting_modifiers, button_group, mode, _}},
-                 ?M:button_group(?ITEMS, list, [radio, checkbox], [])),
+                 ?M:ah_button_group(?ITEMS, list, [radio, checkbox], [])),
     ?assertError({aihtml, {unknown_modifier, button_group, primary, _}},
-                 ?M:button_group(?ITEMS, list, [primary], [])).
+                 ?M:ah_button_group(?ITEMS, list, [primary], [])).
 
 button_group_disabled_test() ->
-    H = r(?M:button_group(?ITEMS, list, [radio], [{disabled, true}])),
+    H = r(?M:ah_button_group(?ITEMS, list, [radio], [{disabled, true}])),
     ?has(<<"ah-btn-group-disabled">>, H),
     ?has(<<"aria-disabled=\"true\"">>, H),
     ?assertEqual(3, length(binary:matches(H, <<" disabled">>))).
 
 button_group_escaping_test() ->
-    H = r(?M:button_group([{<<"a\"b">>, <<"<i>">>}], <<"a\"b">>, [radio], [])),
+    H = r(?M:ah_button_group([{<<"a\"b">>, <<"<i>">>}], <<"a\"b">>, [radio], [])),
     ?has(<<"data-value=\"a&quot;b\"">>, H),
     ?has(<<"data-ah-value=\"a&quot;b\"">>, H),
     ?has(<<"&lt;i&gt;">>, H).
@@ -77,7 +77,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- Cat],
     ?assertEqual([button_group], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          #{category := form, signature := S, root := <<"ah-", _/binary>>} = E,
          ?assert(is_binary(S))
      end || #{name := N} = E <- Cat],
@@ -102,7 +102,7 @@ catalog_docs_test() ->
 action(_, _, _, _) -> ok.
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:button_group(?ITEMS, [list], [checkbox, vertical], [{name, v}])),
+    ?assertEqual(r(?M:ah_button_group(?ITEMS, [list], [checkbox, vertical], [{name, v}])),
                  r(#ah_button_group{items = ?ITEMS, value = [list], mode = checkbox,
                                     orientation = vertical, name = v})).
 
@@ -142,11 +142,11 @@ vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_values_test() ->
     Items = [{<<"a,b">>, <<"AB">>}, {c, <<"C">>}],
-    C = r(?M:button_group(Items, [<<"a,b">>, c], [checkbox], [{name, k}])),
+    C = r(?M:ah_button_group(Items, [<<"a,b">>, c], [checkbox], [{name, k}])),
     ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, C)),
     ?assert(vhas(<<"name=\"k\" value=\"a\\,b,c\"">>, C)),
     %% the text form is read the same way
-    ?assertEqual(C, r(?M:button_group(Items, <<"a\\,b,c">>, [checkbox], [{name, k}]))),
+    ?assertEqual(C, r(?M:ah_button_group(Items, <<"a\\,b,c">>, [checkbox], [{name, k}]))),
     %% radio mode: the value itself
-    R = r(?M:button_group(Items, <<"a,b">>, [radio], [])),
+    R = r(?M:ah_button_group(Items, <<"a,b">>, [radio], [])),
     ?assert(vhas(<<"data-ah-value=\"a,b\"">>, R)).

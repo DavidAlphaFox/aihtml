@@ -2,7 +2,7 @@
 %%% @doc A date field with a month grid popup, ported from sigil
 %%% (form/datepicker). See designs/04-components.md.
 %%%
-%%%   datepicker(Value, Css, Attrs)        a text field with a month grid popup
+%%%   ah_datepicker(Value, Css, Attrs)     a text field with a month grid popup
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
 %%% `data-ah-value' and fires `change'; `name' goes to a hidden input. The
@@ -10,7 +10,7 @@
 %%% behaviour (assets/js/components/datepicker.ts). The browser builds the
 %%% month grid from the shared template templates/datepicker_month.mustache.
 %%%
-%%% datepicker/3 builds an #ah_datepicker{} (include/aihtml_datepicker.hrl)
+%%% ah_datepicker/3 builds an #ah_datepicker{} (include/aihtml_datepicker.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -20,7 +20,7 @@
 
 -include("aihtml_datepicker.hrl").
 
--export([datepicker/3, render/1, fields/1, catalog/0]).
+-export([ah_datepicker/3, render/1, fields/1, catalog/0]).
 
 -export_type([date/0, date_value/0, label_key/0, labels/0, element/0]).
 
@@ -68,8 +68,8 @@
 %% `months', `months_short', `weekdays' (7, from Sunday), `title' (a
 %% format, default "MMMM yyyy"), `today', `clear', `prev_month',
 %% `next_month', `prev_year', `next_year').
--spec datepicker(date_value(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_datepicker{}.
-datepicker(Value, Css, Attrs) ->
+-spec ah_datepicker(date_value(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_datepicker{}.
+ah_datepicker(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_datepicker{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_datepicker{}.
@@ -349,7 +349,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => datepicker, category => form,
-       signature => <<"datepicker(Value, Css, Attrs)">>,
+       signature => <<"ah_datepicker(Value, Css, Attrs)">>,
        root => <<"ah-datepicker">>,
        flags => [disabled, readonly, range, clearable, inline],
        classes => #{clearable => [<<"ah-datepicker-clearable">>]},

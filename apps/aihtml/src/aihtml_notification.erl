@@ -14,7 +14,7 @@
 %%% The card is rendered from templates/notification.mustache (see
 %%% aihtml_lib_overlay:card/2, shared with aihtml_toast). A record's
 %%% postback fires on `ah:close' (when a card closes). Behaviour:
-%%% assets/js/components/notification.ts. notification/3 builds an
+%%% assets/js/components/notification.ts. ah_notification/3 builds an
 %%% #ah_notification{} (include/aihtml_notification.hrl) and render/1
 %%% turns it into HTML (designs/05-records.md).
 %%% @end
@@ -24,7 +24,7 @@
 
 -include("aihtml_notification.hrl").
 
--export([notification/3, notify/2, render/1, fields/1, catalog/0]).
+-export([ah_notification/3, notify/2, render/1, fields/1, catalog/0]).
 
 -export_type([variant/0]).
 
@@ -46,9 +46,9 @@
 %% top_left | bottom_right | bottom_left' (default top_right). Options:
 %% `auto_close' (true), `delay' (ms, 3000), `closable' (true),
 %% `close_on_click' (true), `width'.
--spec notification(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_notification(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_notification{}.
-notification(Content, Css, Attrs) ->
+ah_notification(Content, Css, Attrs) ->
     ?E:build(?MODULE, #ah_notification{body = Content}, Css, Attrs).
 
 %% @doc The field names of #ah_notification{}.
@@ -101,7 +101,7 @@ catalog() ->
     Corners = [top_right, top_left, bottom_right, bottom_left],
     Events = [<<"ah:open">>, <<"ah:close">>],
     [#{name => notification, category => overlay,
-       signature => <<"notification(Content, Css, Attrs)">>,
+       signature => <<"ah_notification(Content, Css, Attrs)">>,
        root => <<"ah-notify-tpl">>,
        groups => #{variant => {Variants, info}, position => {Corners, top_right}},
        classes => Empty(Variants ++ Corners),

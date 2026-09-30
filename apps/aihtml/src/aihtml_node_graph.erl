@@ -4,7 +4,7 @@
 %%% class names are sigil's, so priv/css/sigil/components/node_graph.css
 %%% applies unchanged.
 %%%
-%%%   node_graph(Graph, Css, Attrs)          a node editor on an infinite canvas
+%%%   ah_node_graph(Graph, Css, Attrs)       a node editor on an infinite canvas
 %%%   set_node_graph(Ctx, Target, Graph)     (in an action) replace the graph
 %%%   node_graph_layout(Graph)               place the nodes in layers
 %%%
@@ -70,7 +70,7 @@
 
 -include("aihtml_node_graph.hrl").
 
--export([node_graph/3, set_node_graph/3, node_graph_layout/1,
+-export([ah_node_graph/3, set_node_graph/3, node_graph_layout/1,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([graph/0, element/0, graph_id/0, point/0, slot/0, graph_node/0, endpoint/0,
@@ -162,8 +162,8 @@
 %% `layout' (`auto' places every node, default `none' places only nodes
 %% without `pos'), `label' (aria-label). `name' adds a hidden input
 %% holding the graph JSON.
--spec node_graph(graph(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_node_graph{}.
-node_graph(Graph, Css, Attrs) ->
+-spec ah_node_graph(graph(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_node_graph{}.
+ah_node_graph(Graph, Css, Attrs) ->
     ?E:build(?MODULE, #ah_node_graph{graph = Graph}, Css, Attrs).
 
 render_node_graph(#ah_node_graph{name = Name, read_only = RO, link_mode = Mode,
@@ -826,7 +826,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => node_graph, category => data,
-       signature => <<"node_graph(Graph, Css, Attrs)">>,
+       signature => <<"ah_node_graph(Graph, Css, Attrs)">>,
        root => <<"ah-node-graph">>,
        flags => [read_only, minimap, auto_fit, allow_cycles, no_toolbar, no_grid],
        classes => #{read_only => [], minimap => [], auto_fit => [], allow_cycles => [],

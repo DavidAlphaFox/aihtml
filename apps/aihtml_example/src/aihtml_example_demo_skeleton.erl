@@ -19,10 +19,10 @@ demos() ->
 
 -spec skeleton_text() -> aihtml:html().
 skeleton_text() ->
-    row([box(skeleton([], [])), box(skeleton([text, static], [{lines, 2}]))]).
+    row([box(ah_skeleton([], [])), box(ah_skeleton([text, static], [{lines, 2}]))]).
 
 -spec skeleton_shapes() -> aihtml:html().
 skeleton_shapes() ->
-    row([skeleton([circle], [{width, 48}]),
-         box(skeleton([rect], [{height, 80}])),
-         box(skeleton([rect], [{height, 80}, {radius, 0}]))]).
+    row([ah_skeleton([circle], [{width, 48}]),
+         box(ah_skeleton([rect], [{height, 80}])),
+         box(ah_skeleton([rect], [{height, 80}, {radius, 0}]))]).

@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The time_ago component (designs/04-components.md): `time_ago/3'
+%%% @doc The time_ago component (designs/04-components.md): `ah_time_ago/3'
 %%% builds an #ah_time_ago{} element record (include/aihtml_time_ago.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -17,7 +17,7 @@
 
 -include("aihtml_time_ago.hrl").
 
--export([time_ago/3, render/1, fields/1, catalog/0]).
+-export([ah_time_ago/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [to_bin/1, method/3]).
 
@@ -38,8 +38,8 @@
 %% Options: `now' (Unix seconds, for rendering), `labels' (map with
 %% just_now, minutes, hours, days, months; "{n}" is the number),
 %% `live' (true), `title' (true: absolute time on hover).
--spec time_ago(integer() | calendar:datetime() | binary(), css(), attrs()) -> #ah_time_ago{}.
-time_ago(Timestamp, Css, Attrs) ->
+-spec ah_time_ago(integer() | calendar:datetime() | binary(), css(), attrs()) -> #ah_time_ago{}.
+ah_time_ago(Timestamp, Css, Attrs) ->
     ?E:build(?MODULE, #ah_time_ago{timestamp = Timestamp}, Css, Attrs).
 
 %% @doc The field names of #ah_time_ago{}.
@@ -109,7 +109,7 @@ catalog() ->
 
 entry() ->
     #{name => time_ago, category => text, root => <<"ah-time-ago">>,
-      signature => <<"time_ago(Timestamp, Css, Attrs)">>,
+      signature => <<"ah_time_ago(Timestamp, Css, Attrs)">>,
       options => [now, labels, live, title], behavior => <<"time-ago">>,
       doc => <<"Relative time (\"3m ago\") from Unix seconds or a UTC datetime; "
                "updated every 60 s. Methods setDate(iso), refresh().">>}.

@@ -2,7 +2,7 @@
 %%% @doc An ancestor path (sigil's breadcrumbs); the last item is the current
 %%% page.
 %%%
-%%% breadcrumbs/3 builds an element record (#ah_breadcrumbs{}, defined in
+%%% ah_breadcrumbs/3 builds an element record (#ah_breadcrumbs{}, defined in
 %%% include/aihtml_breadcrumbs.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -12,7 +12,7 @@
 
 -include("aihtml_breadcrumbs.hrl").
 
--export([breadcrumbs/3, render/1, fields/1, catalog/0]).
+-export([ah_breadcrumbs/3, render/1, fields/1, catalog/0]).
 -export_type([crumb/0]).
 
 %% Label | {Label, Href} | #{label, href, icon, attrs}
@@ -30,9 +30,9 @@
 %% @doc An ancestor path. `Items' are `Label', `{Label, Href}' or
 %% `#{label, href, icon, attrs}'; the last item is the current page.
 %% Options: separator (default "/"; none for dots), active_last, max_items.
--spec breadcrumbs([html() | {html(), binary() | undefined} | map()], css(), attrs()) ->
+-spec ah_breadcrumbs([html() | {html(), binary() | undefined} | map()], css(), attrs()) ->
           #ah_breadcrumbs{}.
-breadcrumbs(Items, Css, Attrs) ->
+ah_breadcrumbs(Items, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_breadcrumbs{items = Items}, Css, Attrs).
 
 %% @doc The field names of #ah_breadcrumbs{}.
@@ -94,6 +94,6 @@ catalog() ->
                         max_items => <<"Collapse the middle to an ellipsis beyond this many items.">>,
                         label => <<"aria-label of the nav (default breadcrumb).">>},
        methods => [],
-       signature => <<"breadcrumbs(Items, Css, Attrs)">>, root => <<"ah-breadcrumbs">>,
+       signature => <<"ah_breadcrumbs(Items, Css, Attrs)">>, root => <<"ah-breadcrumbs">>,
        options => [separator, active_last, max_items, label],
        doc => <<"An ancestor path; the last item is the current page.">>}].

@@ -2,12 +2,12 @@
 %%% @doc The nav tree, ported from sigil (layout/nav_tree). DOM and class
 %%% names are sigil's, so the styles in priv/css/sigil apply unchanged.
 %%%
-%%%   nav_tree(Items, Value, Css, Attrs)      grouped side navigation of links
+%%%   ah_nav_tree(Items, Value, Css, Attrs)   grouped side navigation of links
 %%%
 %%% The nav tree is value-bearing: the root carries `data-ah-value' (the
 %%% active route) and fires `change'.
 %%%
-%%% nav_tree/4 builds an element record (#ah_nav_tree{}, defined in
+%%% ah_nav_tree/4 builds an element record (#ah_nav_tree{}, defined in
 %%% include/aihtml_nav_tree.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -17,7 +17,7 @@
 
 -include("aihtml_nav_tree.hrl").
 
--export([nav_tree/4, render/1, fields/1, catalog/0]).
+-export([ah_nav_tree/4, render/1, fields/1, catalog/0]).
 
 -export_type([element/0, item/0]).
 
@@ -48,8 +48,8 @@
 %% `Value' is the active route: that link is highlighted and the nodes
 %% around it are open. Options: `route_prefix' (prepended to a route to
 %% make the href, default "#/").
--spec nav_tree([item()], iodata() | atom() | undefined, css(), attrs()) -> #ah_nav_tree{}.
-nav_tree(Items, Value, Css, Attrs) ->
+-spec ah_nav_tree([item()], iodata() | atom() | undefined, css(), attrs()) -> #ah_nav_tree{}.
+ah_nav_tree(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_nav_tree{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of this component's record.
@@ -143,7 +143,7 @@ nav_contains(Items, Active) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => nav_tree, category => layout,
-       signature => <<"nav_tree(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_nav_tree(Items, Value, Css, Attrs)">>,
        root => <<"ah-nav-tree">>, options => [route_prefix],
        behavior => <<"nav-tree">>, events => [<<"change">>],
        doc => <<"A grouped side navigation: links, collapsible nodes with connector lines, "

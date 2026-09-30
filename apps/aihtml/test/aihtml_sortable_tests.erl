@@ -21,7 +21,7 @@ keys(H) ->
 %%% sortable
 
 sortable_default_test() ->
-    H = r(?M:sortable(?ITEMS, undefined, [], [])),
+    H = r(?M:ah_sortable(?ITEMS, undefined, [], [])),
     ?has(<<"<div class=\"ah-sortable ah-sortable-vertical\" role=\"list\" data-ah=\"sortable\" "
            "data-ah-value=\"a,b,c\">">>, H),
     ?assertEqual([<<"a">>, <<"b">>, <<"c">>], keys(H)),
@@ -34,43 +34,43 @@ sortable_default_test() ->
     ?hasnt(<<"ah-sortable-handle">>, H).
 
 sortable_value_orders_items_test() ->
-    ?assertEqual([<<"c">>, <<"a">>, <<"b">>], keys(r(?M:sortable(?ITEMS, [c, a], [], [])))),
-    ?assertEqual([<<"b">>, <<"c">>, <<"a">>], keys(r(?M:sortable(?ITEMS, <<"b,c,a">>, [], [])))),
-    ?assertEqual([<<"b">>, <<"a">>, <<"c">>], keys(r(?M:sortable(?ITEMS, "b,zz,b", [], [])))),
-    H = r(?M:sortable(?ITEMS, [c], [], [{name, order}])),
+    ?assertEqual([<<"c">>, <<"a">>, <<"b">>], keys(r(?M:ah_sortable(?ITEMS, [c, a], [], [])))),
+    ?assertEqual([<<"b">>, <<"c">>, <<"a">>], keys(r(?M:ah_sortable(?ITEMS, <<"b,c,a">>, [], [])))),
+    ?assertEqual([<<"b">>, <<"a">>, <<"c">>], keys(r(?M:ah_sortable(?ITEMS, "b,zz,b", [], [])))),
+    H = r(?M:ah_sortable(?ITEMS, [c], [], [{name, order}])),
     ?has(<<"data-ah-value=\"c,a,b\"">>, H),
     ?has(<<"<input type=\"hidden\" name=\"order\" value=\"c,a,b\" data-ah-input>">>, H),
     %% the first item in the order is the one in the tab order
     ?has(<<"data-value=\"c\" tabindex=\"0\"">>, H).
 
 sortable_modifiers_test() ->
-    H = r(?M:sortable(?ITEMS, undefined, [grid, handle, <<"gap-4">>],
-                      [{group, board}, {id, l1}])),
+    H = r(?M:ah_sortable(?ITEMS, undefined, [grid, handle, <<"gap-4">>],
+                         [{group, board}, {id, l1}])),
     ?has(<<"class=\"ah-sortable ah-sortable-grid gap-4\"">>, H),
     ?has(<<"data-ah-group=\"board\" id=\"l1\"">>, H),
     ?has(<<"class=\"ah-sortable-item ah-sortable-handle-mode\"">>, H),
     ?has(<<"<span class=\"ah-sortable-handle\" aria-hidden=\"true\">"/utf8>>, H),
-    ?has(<<"ah-sortable-horizontal">>, r(?M:sortable([], undefined, [horizontal], []))).
+    ?has(<<"ah-sortable-horizontal">>, r(?M:ah_sortable([], undefined, [horizontal], []))).
 
 sortable_disabled_test() ->
-    H = r(?M:sortable(?ITEMS, undefined, [], [{disabled, true}])),
+    H = r(?M:ah_sortable(?ITEMS, undefined, [], [{disabled, true}])),
     ?has(<<"class=\"ah-sortable ah-sortable-vertical ah-sortable-disabled\"">>, H),
     ?has(<<"aria-disabled=\"true\"">>, H),
     ?hasnt(<<"tabindex=\"0\"">>, H).
 
 sortable_comma_key_test() ->
     Items = [{<<"a,b">>, <<"x">>}, {<<"c\\d">>, <<"y">>}, {e, <<"z">>}],
-    H = r(?M:sortable(Items, undefined, [], [{name, o}])),
+    H = r(?M:ah_sortable(Items, undefined, [], [{name, o}])),
     ?has(<<"data-ah-value=\"a\\,b,c\\\\d,e\"">>, H),
     ?has(<<"name=\"o\" value=\"a\\,b,c\\\\d,e\"">>, H),
     ?has(<<"data-value=\"a,b\"">>, H),
     %% a value in the same text puts them in order
-    H2 = r(?M:sortable(Items, <<"e,c\\\\d,a\\,b">>, [], [])),
+    H2 = r(?M:ah_sortable(Items, <<"e,c\\\\d,a\\,b">>, [], [])),
     ?has(<<"data-ah-value=\"e,c\\\\d,a\\,b\"">>, H2),
-    ?assertEqual(H2, r(?M:sortable(Items, [e, <<"c\\d">>, <<"a,b">>], [], []))).
+    ?assertEqual(H2, r(?M:ah_sortable(Items, [e, <<"c\\d">>, <<"a,b">>], [], []))).
 
 sortable_bad_items_test() ->
-    ?assertError(function_clause, r(?M:sortable([<<"x">>], undefined, [], []))).
+    ?assertError(function_clause, r(?M:ah_sortable([<<"x">>], undefined, [], []))).
 
 %%% catalog
 
@@ -78,7 +78,7 @@ catalog_test() ->
     Cat = ?M:catalog(),
     ?assertEqual([sortable], [N || #{name := N} <- Cat]),
     [begin
-         ?assert(erlang:function_exported(?M, N, length(binary:split(S, <<",">>, [global])))),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), length(binary:split(S, <<",">>, [global])))),
          ?assertEqual(layout, C)
      end || #{name := N, signature := S, category := C} <- Cat].
 
@@ -96,14 +96,14 @@ catalog_docs_test() ->
 %%% element records (designs/05-records.md)
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:sortable(?ITEMS, [b], [horizontal, handle, <<"p-1">>],
-                               [{group, g}, {name, n}, {id, s}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_sortable(?ITEMS, [b], [horizontal, handle, <<"p-1">>],
+                                  [{group, g}, {name, n}, {id, s}, {title, <<"t">>}])),
                  r(#ah_sortable{items = ?ITEMS, value = [b], orientation = horizontal,
                                 handle = true, css = [<<"p-1">>], group = g, name = n, id = s,
                                 attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    S = ?M:sortable(?ITEMS, undefined, [grid], [{disabled, true}, {title, <<"t">>}]),
+    S = ?M:ah_sortable(?ITEMS, undefined, [grid], [{disabled, true}, {title, <<"t">>}]),
     ?assertMatch(#ah_sortable{orientation = grid, disabled = true, handle = false,
                               attrs = [{title, <<"t">>}]}, S).
 
@@ -124,7 +124,7 @@ field_validation_test() ->
     ?assertError({aihtml, {bad_flag, sortable, handle, yes}}, r(#ah_sortable{handle = yes})),
     ?assertError({aihtml, {bad_option, group, {x}}}, r(#ah_sortable{group = {x}})),
     ?assertError({aihtml, {unknown_modifier, sortable, big, _}},
-                 ?M:sortable([], undefined, [big], [])).
+                 ?M:ah_sortable([], undefined, [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],

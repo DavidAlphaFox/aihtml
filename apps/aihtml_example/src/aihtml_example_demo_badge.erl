@@ -21,32 +21,32 @@ demos() ->
 
 -spec badge_counts() -> aihtml:html().
 badge_counts() ->
-    row([badge(avatar(<<"A">>, [square], []), [], [{count, 5}]),
-         badge(avatar(<<"B">>, [square], []), [error], [{count, 120}]),
-         badge(avatar(<<"C">>, [square], []), [info], [{count, 12}, {max, 9}]),
-         badge(avatar(<<"D">>, [square], []), [success, show_zero], [{count, 0}])]).
+    row([ah_badge(ah_avatar(<<"A">>, [square], []), [], [{count, 5}]),
+         ah_badge(ah_avatar(<<"B">>, [square], []), [error], [{count, 120}]),
+         ah_badge(ah_avatar(<<"C">>, [square], []), [info], [{count, 12}, {max, 9}]),
+         ah_badge(ah_avatar(<<"D">>, [square], []), [success, show_zero], [{count, 0}])]).
 
 -spec badge_status() -> aihtml:html().
 badge_status() ->
-    row([badge(avatar(<<"D">>, [square], []), [dot, warning], []),
-         badge(avatar(<<"E">>, [], []), [online, circular, bottom], []),
-         badge(avatar(<<"F">>, [], []), [busy, circular, bottom], []),
-         badge(avatar(<<"G">>, [], []), [away, circular, bottom], []),
-         badge(avatar(<<"H">>, [], []), [offline, circular, bottom], [])]).
+    row([ah_badge(ah_avatar(<<"D">>, [square], []), [dot, warning], []),
+         ah_badge(ah_avatar(<<"E">>, [], []), [online, circular, bottom], []),
+         ah_badge(ah_avatar(<<"F">>, [], []), [busy, circular, bottom], []),
+         ah_badge(ah_avatar(<<"G">>, [], []), [away, circular, bottom], []),
+         ah_badge(ah_avatar(<<"H">>, [], []), [offline, circular, bottom], [])]).
 
 -spec badge_corners() -> aihtml:html().
 badge_corners() ->
-    row([badge(avatar(<<"TR">>, [square], []), [], [{count, 1}]),
-         badge(avatar(<<"TL">>, [square], []), [secondary, left], [{count, 2}]),
-         badge(avatar(<<"BR">>, [square], []), [success, bottom], [{count, 3}]),
-         badge(avatar(<<"BL">>, [square], []), [info, bottom, left], [{count, <<"new">>}])]).
+    row([ah_badge(ah_avatar(<<"TR">>, [square], []), [], [{count, 1}]),
+         ah_badge(ah_avatar(<<"TL">>, [square], []), [secondary, left], [{count, 2}]),
+         ah_badge(ah_avatar(<<"BR">>, [square], []), [success, bottom], [{count, 3}]),
+         ah_badge(ah_avatar(<<"BL">>, [square], []), [info, bottom, left], [{count, <<"new">>}])]).
 
 -spec badge_standalone() -> aihtml:html().
 badge_standalone() ->
-    row([span([<<"Inbox ">>, badge(undefined, [], [{count, 42}])]),
-         badge(undefined, [success], [{count, <<"beta">>}]),
-         badge(undefined, [error], [{count, 1000}])]).
+    row([ah_span([<<"Inbox ">>, ah_badge(undefined, [], [{count, 42}])]),
+         ah_badge(undefined, [success], [{count, <<"beta">>}]),
+         ah_badge(undefined, [error], [{count, 1000}])]).
 
 %% Layout helpers of the demos.
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

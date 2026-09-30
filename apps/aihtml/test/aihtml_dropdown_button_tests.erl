@@ -17,7 +17,7 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 -define(MENU, [{draft, <<"Draft">>}, divider, {copy, <<"Copy & paste">>, [{disabled, true}]}]).
 
 dropdown_button_test() ->
-    H = r(?M:dropdown_button(<<"Actions">>, ?MENU, [primary, sm, rounded], [{name, act}, {id, d}])),
+    H = r(?M:ah_dropdown_button(<<"Actions">>, ?MENU, [primary, sm, rounded], [{name, act}, {id, d}])),
     ?has(<<"<div class=\"ah-dropdown-btn ah-dropdown-btn-sm ah-dropdown-btn-primary "
            "ah-dropdown-btn-rounded\" data-ah=\"dropdown-button\" data-ah-value=\"\" id=\"d\">">>, H),
     ?has(<<"<button class=\"ah-dropdown-btn-wrapper\" type=\"button\" aria-haspopup=\"menu\" "
@@ -30,7 +30,7 @@ dropdown_button_test() ->
     ?has(<<"<input type=\"hidden\" name=\"act\" value=\"\" data-ah-input>">>, H).
 
 dropdown_button_value_test() ->
-    H = r(?M:dropdown_button(<<"A">>, ?MENU, [], [{value, draft}, {auto_open, true}])),
+    H = r(?M:ah_dropdown_button(<<"A">>, ?MENU, [], [{value, draft}, {auto_open, true}])),
     ?has(<<"data-ah-value=\"draft\"">>, H),
     ?has(<<"ah-dropdown-btn-item selected\"">>, H),
     ?has(<<"ah-dropdown-btn-auto-open">>, H),
@@ -38,15 +38,15 @@ dropdown_button_value_test() ->
     ?hasnt(<<"auto_open">>, H).
 
 dropdown_button_disabled_test() ->
-    H = r(?M:dropdown_button(<<"A">>, ?MENU, [], [{disabled, true}])),
+    H = r(?M:ah_dropdown_button(<<"A">>, ?MENU, [], [{disabled, true}])),
     ?has(<<"ah-dropdown-btn-disabled">>, H),
     ?has(<<"aria-disabled=\"true\"">>, H),
     ?has(<<"aria-expanded=\"false\" disabled>">>, H),
     ?assertError({aihtml, {unknown_modifier, dropdown_button, info, _}},
-                 ?M:dropdown_button(<<"A">>, ?MENU, [info], [])).
+                 ?M:ah_dropdown_button(<<"A">>, ?MENU, [info], [])).
 
 dropdown_button_escaping_test() ->
-    H = r(?M:dropdown_button(<<"<x>">>, [{<<"\"v">>, <<"<y>">>}], [], [])),
+    H = r(?M:ah_dropdown_button(<<"<x>">>, [{<<"\"v">>, <<"<y>">>}], [], [])),
     ?has(<<"&lt;x&gt;">>, H),
     ?has(<<"&lt;y&gt;">>, H),
     ?has(<<"data-value=\"&quot;v\"">>, H).
@@ -58,7 +58,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- Cat],
     ?assertEqual([dropdown_button], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          #{category := form, signature := S, root := <<"ah-", _/binary>>} = E,
          ?assert(is_binary(S))
      end || #{name := N} = E <- Cat],
@@ -80,7 +80,7 @@ catalog_docs_test() ->
 %%% element records (designs/05-records.md)
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:dropdown_button(<<"A">>, ?MENU, [sm], [{value, draft}, {auto_open, true}])),
+    ?assertEqual(r(?M:ah_dropdown_button(<<"A">>, ?MENU, [sm], [{value, draft}, {auto_open, true}])),
                  r(#ah_dropdown_button{body = <<"A">>, items = ?MENU, size = sm,
                                        value = draft, auto_open = true})).
 

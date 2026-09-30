@@ -25,17 +25,17 @@ demos() ->
 
 -spec lb_single() -> aihtml:html().
 lb_single() ->
-    listbox(coffees(), <<"breve">>, [<<"w-60 h-64">>], [{name, coffee}]).
+    ah_listbox(coffees(), <<"breve">>, [<<"w-60 h-64">>], [{name, coffee}]).
 
 -spec lb_multiple() -> aihtml:html().
 lb_multiple() ->
-    listbox(coffees(), [<<"latte">>, <<"lungo">>], [multiple, <<"w-60 h-64">>],
-            [{name, coffees}]).
+    ah_listbox(coffees(), [<<"latte">>, <<"lungo">>], [multiple, <<"w-60 h-64">>],
+               [{name, coffees}]).
 
 -spec lb_checkboxes() -> aihtml:html().
 lb_checkboxes() ->
-    listbox(coffees(), [<<"americano">>], [checkboxes, check_all, <<"w-60 h-72">>],
-            [{check_all_label, <<"全选"/utf8>>}]).
+    ah_listbox(coffees(), [<<"americano">>], [checkboxes, check_all, <<"w-60 h-72">>],
+               [{check_all_label, <<"全选"/utf8>>}]).
 
 -spec lb_groups() -> aihtml:html().
 lb_groups() ->
@@ -48,20 +48,20 @@ lb_groups() ->
               #{value => green_tea, label => <<"Green Tea">>, group => <<"茶饮"/utf8>>,
                 disabled => true},
               #{value => earl_grey, label => <<"Earl Grey">>, group => <<"茶饮"/utf8>>}],
-    listbox(Drinks, cold_brew, [filterable, <<"w-60 h-80">>],
-            [{filter_placeholder, <<"过滤"/utf8>>}, {empty_text, <<"没有匹配项"/utf8>>}]).
+    ah_listbox(Drinks, cold_brew, [filterable, <<"w-60 h-80">>],
+               [{filter_placeholder, <<"过滤"/utf8>>}, {empty_text, <<"没有匹配项"/utf8>>}]).
 
 %% Typing calls action(search_people, ...) below, which answers with
 %% listbox_items.
 -spec lb_search() -> aihtml:html().
 lb_search() ->
-    listbox(lists:sublist(people(), 5), undefined, [checkboxes, <<"w-64 h-72">>],
-            [{name, people}, {filter_placeholder, <<"搜索姓名"/utf8>>},
-             {search, {?MODULE, search_people, #{}}}]).
+    ah_listbox(lists:sublist(people(), 5), undefined, [checkboxes, <<"w-64 h-72">>],
+               [{name, people}, {filter_placeholder, <<"搜索姓名"/utf8>>},
+                {search, {?MODULE, search_people, #{}}}]).
 
 -spec lb_disabled() -> aihtml:html().
 lb_disabled() ->
-    listbox(lists:sublist(coffees(), 5), <<"bicerin">>, [disabled, <<"w-60">>], []).
+    ah_listbox(lists:sublist(coffees(), 5), <<"bicerin">>, [disabled, <<"w-60">>], []).
 
 %%%===================================================================
 %%% Actions

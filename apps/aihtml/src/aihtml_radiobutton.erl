@@ -4,7 +4,7 @@
 %%% markup; `Attrs' go to that input, so radios sharing a `name' are
 %%% exclusive natively.
 %%%
-%%% radiobutton/4 builds an #ah_radiobutton{} (include/aihtml_radiobutton.hrl)
+%%% ah_radiobutton/4 builds an #ah_radiobutton{} (include/aihtml_radiobutton.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -14,7 +14,7 @@
 
 -include("aihtml_radiobutton.hrl").
 
--export([radiobutton/4, render/1, fields/1, catalog/0]).
+-export([ah_radiobutton/4, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -23,9 +23,9 @@
 %% @doc A radio button. Radio buttons with the same `name' are exclusive
 %% (natively), and the behaviour restyles the one that was unchecked.
 %% Options: `locked', `box_size'.
--spec radiobutton(aihtml_html:html(), aihtml_lib_choice:value() | undefined,
-                  aihtml_html:css(), aihtml_html:attrs()) -> #ah_radiobutton{}.
-radiobutton(Content, Value, Css, Attrs) ->
+-spec ah_radiobutton(aihtml_html:html(), aihtml_lib_choice:value() | undefined,
+                     aihtml_html:css(), aihtml_html:attrs()) -> #ah_radiobutton{}.
+ah_radiobutton(Content, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_radiobutton{body = Content, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_radiobutton{}.
@@ -50,7 +50,7 @@ render(#ah_radiobutton{body = Content, value = Value, checked = C, disabled = D,
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => radiobutton, category => form,
-       signature => <<"radiobutton(Content, Value, Css, Attrs)">>,
+       signature => <<"ah_radiobutton(Content, Value, Css, Attrs)">>,
        root => <<"ah-radiobutton">>, groups => #{size => {[sm, md, lg], none}},
        options => [locked, box_size],
        behavior => <<"radiobutton">>, events => [<<"change">>, <<"input">>],

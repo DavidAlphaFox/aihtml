@@ -38,61 +38,61 @@ demos() ->
 sched_week() ->
     Date = aihtml_example_state:param(<<"sc_date">>, <<"2026-09-29">>),
     View = aihtml_example_state:param(<<"sc_view">>, <<"week">>),
-    'div'([rooms(Date, View, appointments(<<"2026-01-01">>, <<"2027-01-01">>)),
-           p(<<"拖动预约换时间或会议室，在空白处拖动选择时段；右键打开菜单。"/utf8>>,
-             [<<"text-sm text-muted mt-2">>], [{id, <<"rooms-log">>}])], [], []).
+    ah_div([rooms(Date, View, appointments(<<"2026-01-01">>, <<"2027-01-01">>)),
+            ah_p(<<"拖动预约换时间或会议室，在空白处拖动选择时段；右键打开菜单。"/utf8>>,
+                 [<<"text-sm text-muted mt-2">>], [{id, <<"rooms-log">>}])], [], []).
 
 -spec sched_timeline() -> aihtml:html().
 sched_timeline() ->
-    scheduler(appointments(<<"2026-09-01">>, <<"2026-11-01">>), undefined, [editable],
-              [{view, timeline_day}, {views, [timeline_day, timeline_week, timeline_month]},
-               {resources, resources()}, {day_start, 7}, {day_end, 21}, {height, 300},
-               {source, {?MODULE, load_timeline, #{}}}]).
+    ah_scheduler(appointments(<<"2026-09-01">>, <<"2026-11-01">>), undefined, [editable],
+                 [{view, timeline_day}, {views, [timeline_day, timeline_week, timeline_month]},
+                  {resources, resources()}, {day_start, 7}, {day_end, 21}, {height, 300},
+                  {source, {?MODULE, load_timeline, #{}}}]).
 
 -spec sched_month() -> aihtml:html().
 sched_month() ->
-    scheduler(appointments(<<"2026-08-20">>, <<"2026-10-15">>), <<"2026-09-29">>, [editable],
-              [{view, month}, {views, [month, week, agenda]}, {resources, resources()},
-               {day_max_events, 2}, {height, 640},
-               {source, {?MODULE, load_month, #{}}}]).
+    ah_scheduler(appointments(<<"2026-08-20">>, <<"2026-10-15">>), <<"2026-09-29">>, [editable],
+                 [{view, month}, {views, [month, week, agenda]}, {resources, resources()},
+                  {day_max_events, 2}, {height, 640},
+                  {source, {?MODULE, load_month, #{}}}]).
 
 -spec sched_agenda() -> aihtml:html().
 sched_agenda() ->
-    scheduler(appointments(<<"2026-09-28">>, <<"2026-10-05">>), <<"2026-09-28">>, [],
-              [{view, agenda}, {agenda_days, 7}, {hour_format, 24}, {resources, resources()},
-               {toolbar, false}, {height, 420}]).
+    ah_scheduler(appointments(<<"2026-09-28">>, <<"2026-10-05">>), <<"2026-09-28">>, [],
+                 [{view, agenda}, {agenda_days, 7}, {hour_format, 24}, {resources, resources()},
+                  {toolbar, false}, {height, 420}]).
 
 -spec sched_locale() -> aihtml:html().
 sched_locale() ->
-    scheduler(appointments(<<"2026-09-28">>, <<"2026-10-05">>), <<"2026-09-29">>, [no_all_day],
-              [{view, week}, {first_day, 1}, {day_start, 8}, {day_end, 19},
-               {hour_format, 24}, {slot_height, 24}, {height, 520},
-               {labels, #{today => <<"今天"/utf8>>, all_day_short => <<"全天"/utf8>>,
-                          weekdays_short => [<<"周日"/utf8>>, <<"周一"/utf8>>, <<"周二"/utf8>>,
-                                             <<"周三"/utf8>>, <<"周四"/utf8>>, <<"周五"/utf8>>,
-                                             <<"周六"/utf8>>],
-                          range_start => <<"M月d日"/utf8>>,
-                          range_end => <<"M月d日，yyyy年"/utf8>>}}]).
+    ah_scheduler(appointments(<<"2026-09-28">>, <<"2026-10-05">>), <<"2026-09-29">>, [no_all_day],
+                 [{view, week}, {first_day, 1}, {day_start, 8}, {day_end, 19},
+                  {hour_format, 24}, {slot_height, 24}, {height, 520},
+                  {labels, #{today => <<"今天"/utf8>>, all_day_short => <<"全天"/utf8>>,
+                             weekdays_short => [<<"周日"/utf8>>, <<"周一"/utf8>>, <<"周二"/utf8>>,
+                                                <<"周三"/utf8>>, <<"周四"/utf8>>, <<"周五"/utf8>>,
+                                                <<"周六"/utf8>>],
+                             range_start => <<"M月d日"/utf8>>,
+                             range_end => <<"M月d日，yyyy年"/utf8>>}}]).
 
 %% The same component as a record: options are checked field names; the
 %% postback runs action(shown, ...) on every navigation.
 -spec sched_record() -> aihtml:html().
 sched_record() ->
-    'div'([#ah_scheduler{items = appointments(<<"2026-09-28">>, <<"2026-10-05">>),
-                         value = <<"2026-09-29">>, view = day, views = [day, week],
-                         resources = resources(), editable = true, day_start = 8,
-                         day_end = 18, height = 420, postback = shown},
-           p(<<"切换日期或视图时，服务端会收到 change 事件。"/utf8>>,
-             [<<"text-sm text-muted mt-2">>], [{id, <<"sched-log">>}])], [], []).
+    ah_div([#ah_scheduler{items = appointments(<<"2026-09-28">>, <<"2026-10-05">>),
+                          value = <<"2026-09-29">>, view = day, views = [day, week],
+                          resources = resources(), editable = true, day_start = 8,
+                          day_end = 18, height = 420, postback = shown},
+            ah_p(<<"切换日期或视图时，服务端会收到 change 事件。"/utf8>>,
+                 [<<"text-sm text-muted mt-2">>], [{id, <<"sched-log">>}])], [], []).
 
 rooms(Date, View, Events) ->
     Views = [day, week, month, timeline_day, agenda],
-    scheduler(Events, Date, [editable],
-              [{view, hd([V || V <- Views, atom_to_binary(V) =:= View] ++ [week])},
-               {views, Views}, {resources, resources()}, {height, 560},
-               {source, {?MODULE, load_rooms, #{}}},
-               {href, <<"/components/scheduler/state?sc_date={date}&sc_view={view}">>},
-               on('ah:event-change', {?MODULE, appointment_changed, #{}})]).
+    ah_scheduler(Events, Date, [editable],
+                 [{view, hd([V || V <- Views, atom_to_binary(V) =:= View] ++ [week])},
+                  {views, Views}, {resources, resources()}, {height, 560},
+                  {source, {?MODULE, load_rooms, #{}}},
+                  {href, <<"/components/scheduler/state?sc_date={date}&sc_view={view}">>},
+                  on('ah:event-change', {?MODULE, appointment_changed, #{}})]).
 
 %%%===================================================================
 %%% Actions

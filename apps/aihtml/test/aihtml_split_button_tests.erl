@@ -15,9 +15,9 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 %%% split_button
 
 split_button_test() ->
-    H = r(?M:split_button(<<"Save">>, [{a, <<"A">>, [{icon, <<"+">>}]}, divider,
-                                        {b, <<"B">>, [{disabled, true}]}],
-                          [success, lg], [{menu_align, start}, {id, s}])),
+    H = r(?M:ah_split_button(<<"Save">>, [{a, <<"A">>, [{icon, <<"+">>}]}, divider,
+                                           {b, <<"B">>, [{disabled, true}]}],
+                             [success, lg], [{menu_align, start}, {id, s}])),
     ?has(<<"<div class=\"ah-split-button\" data-variant=\"success\" data-size=\"lg\" "
            "data-disabled=\"false\" data-menu-align=\"start\" data-open=\"false\" "
            "data-ah=\"split-button\" data-ah-value=\"\" id=\"s\">">>, H),
@@ -32,20 +32,20 @@ split_button_test() ->
     ?has(<<"<div class=\"ah-split-button__divider\" role=\"separator\"></div>">>, H).
 
 split_button_defaults_test() ->
-    H = r(?M:split_button(<<"Go">>, [], [], [{name, n}, {value, x}])),
+    H = r(?M:ah_split_button(<<"Go">>, [], [], [{name, n}, {value, x}])),
     ?has(<<"data-variant=\"primary\" data-size=\"md\"">>, H),
     ?has(<<"data-menu-align=\"end\"">>, H),
     ?has(<<"data-ah-value=\"x\"">>, H),
     ?has(<<"<input type=\"hidden\" name=\"n\" value=\"x\" data-ah-input>">>, H).
 
 split_button_disabled_test() ->
-    H = r(?M:split_button(<<"Go">>, [], [], [{disabled, true}])),
+    H = r(?M:ah_split_button(<<"Go">>, [], [], [{disabled, true}])),
     ?has(<<"data-disabled=\"true\"">>, H),
     ?assertEqual(2, length(binary:matches(H, <<" disabled">>))),
     ?assertError({aihtml, {bad_option, menu_align, middle}},
-                 r(?M:split_button(<<"Go">>, [], [], [{menu_align, middle}]))),
+                 r(?M:ah_split_button(<<"Go">>, [], [], [{menu_align, middle}]))),
     ?assertError({aihtml, {conflicting_modifiers, split_button, variant, _}},
-                 ?M:split_button(<<"Go">>, [], [primary, error], [])).
+                 ?M:ah_split_button(<<"Go">>, [], [primary, error], [])).
 
 %%% catalog (demos live in aihtml_example)
 
@@ -54,7 +54,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- Cat],
     ?assertEqual([split_button], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          #{category := form, signature := S, root := <<"ah-", _/binary>>} = E,
          ?assert(is_binary(S))
      end || #{name := N} = E <- Cat],

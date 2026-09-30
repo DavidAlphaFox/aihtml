@@ -14,53 +14,53 @@ r(Html) -> aihtml:render_binary(Html).
 
 nesting_test() ->
     ?assertEqual(<<"<div class=\"a b\" id=\"x\"><p>hi</p><span>1</span></div>">>,
-                 r('div'([p(<<"hi">>), span(1)], [a, <<"b">>], [{id, x}]))).
+                 r(ah_div([ah_p(<<"hi">>), ah_span(1)], [a, <<"b">>], [{id, x}]))).
 
 text_is_escaped_test() ->
-    ?assertEqual(<<"<p>&lt;script&gt;&amp;&quot;&#39;</p>">>, r(p(<<"<script>&\"'">>))).
+    ?assertEqual(<<"<p>&lt;script&gt;&amp;&quot;&#39;</p>">>, r(ah_p(<<"<script>&\"'">>))).
 
 charlist_is_text_test() ->
-    ?assertEqual(<<"<p>héllo</p>"/utf8>>, r(p("héllo"))).
+    ?assertEqual(<<"<p>héllo</p>"/utf8>>, r(ah_p("héllo"))).
 
 integer_child_is_a_number_test() ->
-    ?assertEqual(<<"<dd>8</dd><dd>100</dd>">>, r([dd(8), dd(100)])).
+    ?assertEqual(<<"<dd>8</dd><dd>100</dd>">>, r([ah_dd(8), ah_dd(100)])).
 
 safe_is_verbatim_test() ->
-    ?assertEqual(<<"<p><b>x</b></p>">>, r(p(safe(<<"<b>x</b>">>)))).
+    ?assertEqual(<<"<p><b>x</b></p>">>, r(ah_p(safe(<<"<b>x</b>">>)))).
 
 attribute_values_are_escaped_test() ->
     ?assertEqual(<<"<a href=\"/q?a=1&amp;b=&quot;2&quot;\">x</a>">>,
-                 r(a(<<"x">>, [], [{href, <<"/q?a=1&b=\"2\"">>}]))).
+                 r(ah_a(<<"x">>, [], [{href, <<"/q?a=1&b=\"2\"">>}]))).
 
 boolean_and_dropped_attributes_test() ->
     ?assertEqual(<<"<input disabled>">>,
-                 r(aihtml:void(input, [], [{disabled, true}, {checked, false},
-                                           {value, undefined}]))).
+                 r(aihtml:ah_void(input, [], [{disabled, true}, {checked, false},
+                                              {value, undefined}]))).
 
 underscore_and_data_attributes_test() ->
     ?assertEqual(<<"<span aria-label=\"l\" data-a=\"1\" data-b-c=\"x\"></span>">>,
-                 r(span([], [], [{aria_label, l}, {data, #{a => 1, b_c => x}}]))).
+                 r(ah_span([], [], [{aria_label, l}, {data, #{a => 1, b_c => x}}]))).
 
 later_attribute_wins_class_accumulates_test() ->
     ?assertEqual(<<"<div class=\"a b c\" id=\"2\"></div>">>,
-                 r('div'([], [a], [{id, 1}, {class, <<"b">>}, [{id, 2}, {class, c}]]))).
+                 r(ah_div([], [a], [{id, 1}, {class, <<"b">>}, [{id, 2}, {class, c}]]))).
 
 map_attrs_test() ->
-    ?assertEqual(<<"<p id=\"x\" title=\"t\"></p>">>, r(p([], [], #{title => t, id => x}))).
+    ?assertEqual(<<"<p id=\"x\" title=\"t\"></p>">>, r(ah_p([], [], #{title => t, id => x}))).
 
 css_whitespace_is_normalised_test() ->
-    ?assertEqual(<<"<p class=\"a b c\"></p>">>, r(p([], [<<"  a\n b ">>, ["c"]], []))).
+    ?assertEqual(<<"<p class=\"a b c\"></p>">>, r(ah_p([], [<<"  a\n b ">>, ["c"]], []))).
 
 bad_attribute_name_test() ->
     %% attributes are checked when rendering; the tag when building
     ?assertError({aihtml, {bad_attribute_name, <<"on\"x">>}},
-                 r(span([], [], [{<<"on\"x">>, 1}]))),
-    ?assertError({aihtml, {bad_tag, <<"no tag">>}}, aihtml:el(<<"no tag">>, [], [], [])).
+                 r(ah_span([], [], [{<<"on\"x">>, 1}]))),
+    ?assertError({aihtml, {bad_tag, <<"no tag">>}}, aihtml:ah_el(<<"no tag">>, [], [], [])).
 
 %% Plain tags are #ah_el{} records: data until rendered, and they can be
 %% written directly, with an id and a postback like components.
 plain_element_record_test() ->
-    E = 'div'([<<"x">>], [<<"p-2">>], [{title, t}]),
+    E = ah_div([<<"x">>], [<<"p-2">>], [{title, t}]),
     ?assertMatch(#ah_el{tag = <<"div">>, body = [<<"x">>], css = [<<"p-2">>]}, E),
     ?assertEqual(r(E), r(#ah_el{tag = 'div', body = [<<"x">>], css = [<<"p-2">>],
                                 attrs = [{title, t}]})),
@@ -70,7 +70,7 @@ plain_element_record_test() ->
     %% a void tag may leave body at its default
     ?assertEqual(<<"<img src=\"a.png\" alt=\"\">">>,
                  r(#ah_el{tag = img, attrs = [{src, <<"a.png">>}, {alt, <<>>}]})),
-    ?assertEqual(r(img([], [{src, <<"a.png">>}, {alt, <<>>}])),
+    ?assertEqual(r(ah_img([], [{src, <<"a.png">>}, {alt, <<>>}])),
                  r(#ah_el{tag = img, body = void, attrs = [{src, <<"a.png">>}, {alt, <<>>}]})),
     ?assertError({aihtml, {void_element_with_children, <<"img">>}},
                  r(#ah_el{tag = img, body = <<"x">>})),
@@ -86,11 +86,11 @@ plain_element_record_test() ->
     ?assertEqual(<<"<b>wrapped</b>">>, r(#ah_el{module = ?MODULE, tag = p})).
 
 -spec render(tuple()) -> aihtml:html().
-render(#ah_el{}) -> aihtml:el(b, <<"wrapped">>, [], []).
+render(#ah_el{}) -> aihtml:ah_el(b, <<"wrapped">>, [], []).
 
 void_with_children_test() ->
     ?assertError({aihtml, {void_element_with_children, <<"input">>}},
-                 aihtml:el(input, [<<"x">>], [], [])).
+                 aihtml:ah_el(input, [<<"x">>], [], [])).
 
 %%%===================================================================
 %%% Prefabs
@@ -121,9 +121,15 @@ options_are_split_from_attrs_test() ->
     ?assertEqual({#{title => <<"T">>}, [{id, x}]},
                  aihtml_catalog:split_options(?ENTRY, [{title, <<"T">>}, {id, x}])).
 
+%% The facade function of every entry is ah_<name>, and the signature says so.
 every_catalog_entry_has_a_facade_function_test() ->
     Exports = aihtml:module_info(exports),
-    [?assert(lists:keymember(Name, 1, Exports)) || #{name := Name} <- aihtml_catalog:prefabs()].
+    [begin
+         F = aihtml_catalog:builder(Name),
+         ?assert(lists:keymember(F, 1, Exports)),
+         [Fb | _] = binary:split(Sig, <<"(">>),
+         ?assertEqual(atom_to_binary(F), Fb)
+     end || #{name := Name, signature := Sig} <- aihtml_catalog:prefabs()].
 
 %%%===================================================================
 %%% Fetch, theme, page
@@ -132,9 +138,9 @@ every_catalog_entry_has_a_facade_function_test() ->
 fetch_attrs_test() ->
     ?assertEqual(<<"<button data-ah-fetch=\"post\" data-ah-url=\"/more\" data-ah-target=\"#list\""
                    " data-ah-swap=\"append\" data-ah-confirm=\"Sure?\">More</button>">>,
-                 r(aihtml:el(button, <<"More">>, [], [fetch(post, <<"/more">>, <<"#list">>,
-                                                            #{swap => append,
-                                                              confirm => <<"Sure?">>})]))).
+                 r(aihtml:ah_el(button, <<"More">>, [], [fetch(post, <<"/more">>, <<"#list">>,
+                                                               #{swap => append,
+                                                                 confirm => <<"Sure?">>})]))).
 
 fetch_bad_method_test() ->
     ?assertError({aihtml, {bad_fetch_method, head}}, fetch(head, <<"/">>, this)).
@@ -158,7 +164,7 @@ theme_values_are_in_the_css_test() ->
         V <- [atom_to_binary(A, utf8)]].
 
 page_test() ->
-    H = iolist_to_binary(aihtml:page(p(<<"x">>), #{title => <<"T">>,
+    H = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{title => <<"T">>,
                                                    theme => #{palette => green}})),
     ?assertMatch(<<"<!DOCTYPE html>\n<html lang=\"en\" data-theme=\"light\""
                    " data-palette=\"green\"", _/binary>>, H),
@@ -173,11 +179,11 @@ page_test() ->
     ?assertEqual(nomatch, binary:match(H, <<"jquery">>)),
     %% options: another mount point, jQuery for the page's own scripts,
     %% deferred extra scripts, no runtime
-    H2 = iolist_to_binary(aihtml:page(p(<<"x">>), #{assets => <<"/static/ah/">>,
+    H2 = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{assets => <<"/static/ah/">>,
                                                     jquery => <<"/j.js">>, js => [<<"/app.js">>]})),
     ?assertMatch({_, _}, binary:match(H2, <<"<script src=\"/j.js\"></script><script type=\"module\" src=\"/static/ah/js/",
                                             Entry/binary, "\"></script><script src=\"/app.js\" defer></script>">>)),
-    H3 = iolist_to_binary(aihtml:page(p(<<"x">>), #{runtime => false})),
+    H3 = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{runtime => false})),
     ?assertEqual(nomatch, binary:match(H3, <<"<script type=\"module\"">>)).
 
 %% data-ah behaviour names are lower-case words joined by hyphens
@@ -202,7 +208,7 @@ behaviours_are_defined_in_js_test() ->
     ?assertEqual([], Missing).
 
 page_seo_test() ->
-    H = iolist_to_binary(aihtml:page(p(<<"x">>), #{
+    H = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{
           title => <<"T">>,
           description => <<"A <page> & more">>,
           canonical => <<"https://ex.com/a">>,
@@ -228,5 +234,5 @@ page_seo_test() ->
           "\"headline\":\"\\u003c/script>\\u003cb>\"}</script>">>),
     ?assertEqual(nomatch, binary:match(H, <<"</script><b>">>)),
     %% none of it without the options
-    P = iolist_to_binary(aihtml:page(p(<<"x">>), #{})),
+    P = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{})),
     ?assertEqual(nomatch, binary:match(P, [<<"og:">>, <<"canonical">>, <<"ld+json">>, <<"description">>])).

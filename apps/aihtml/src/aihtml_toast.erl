@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @doc Toasts, ported from sigil's overlay/toast: a page-level API, not
-%%% an element. toast/3 in an action or shows_toast/2 on a trigger pops a
+%%% an element. ah_toast/3 in an action or shows_toast/2 on a trigger pops a
 %%% card in a screen corner; the card is templates/notification.mustache
 %%% (see aihtml_lib_overlay:card/2) around templates/toast.mustache. The
 %%% browser side is AH.fn("toast") in assets/js/components/toast.ts.
@@ -13,7 +13,7 @@
 -compile({parse_transform, beamai_mustache_transform}).
 -mustache_template({tpl_toast, "../templates/toast.mustache"}).
 
--export([toast/3, shows_toast/2, catalog/0, facade_extras/0]).
+-export([ah_toast/3, shows_toast/2, catalog/0, facade_extras/0]).
 
 -define(L, aihtml_lib_overlay).
 
@@ -39,8 +39,8 @@ shows_toast(Message, Opts) when is_map(Opts) ->
 %% @doc In an action: pop a toast (sigil's toast/show!): title `Message'
 %% plus Opts `description', `variant', `duration' (ms, default 4000, 0
 %% keeps it), `position', `closable', `close_on_click', `width'.
--spec toast(aihtml_action:ctx(), iodata(), map()) -> ok.
-toast(Ctx, Message, Opts) when is_map(Opts) ->
+-spec ah_toast(aihtml_action:ctx(), iodata(), map()) -> ok.
+ah_toast(Ctx, Message, Opts) when is_map(Opts) ->
     Title = ?L:text(Message),
     Desc = case maps:get(description, Opts, undefined) of
                undefined -> <<>>;
@@ -63,7 +63,7 @@ facade_extras() -> [{shows_toast, 2}].
 catalog() ->
     Events = [<<"ah:open">>, <<"ah:close">>],
     [#{name => toast, category => overlay,
-       signature => <<"toast(Ctx, Message, Opts)">>,
+       signature => <<"ah_toast(Ctx, Message, Opts)">>,
        root => <<"ah-notify">>,
        option_docs => #{description => <<"Second line under the message.">>,
                        variant => <<"info (default) | success | warning | error.">>,
@@ -74,5 +74,5 @@ catalog() ->
                        width => <<"Card width.">>},
        methods => [],
        behavior => none, events => Events,
-       doc => <<"Page-level API, not an element: toast/3 in an action or "
+       doc => <<"Page-level API, not an element: ah_toast/3 in an action or "
                 "shows_toast/2 on a trigger pops a card built by AH.fn(\"toast\").">>}].

@@ -31,8 +31,8 @@ events() ->
 %%%===================================================================
 
 calendar_root_test() ->
-    H = r(?M:calendar(<<"2030-03-11">>, [<<"shadow">>],
-                      [{id, cal}, {name, day}, {events, events()}, {title, <<"t">>}])),
+    H = r(?M:ah_calendar(<<"2030-03-11">>, [<<"shadow">>],
+                         [{id, cal}, {name, day}, {events, events()}, {title, <<"t">>}])),
     ?assert(has(<<"<div class=\"ah-calendar shadow\" id=\"cal\" data-ah=\"calendar\" "
                   "data-ah-value=\"2030-03-11\" data-ah-view=\"month\"">>, H)),
     ?assert(has(<<"data-view=\"month\" data-start=\"2030-02-24\" data-end=\"2030-04-07\"">>, H)),
@@ -52,7 +52,7 @@ calendar_root_test() ->
 has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 
 calendar_month_view_test() ->
-    H = r(?M:calendar(<<"2030-03-11">>, [], [{id, cal}, {events, events()}, {day_max_events, 2}])),
+    H = r(?M:ah_calendar(<<"2030-03-11">>, [], [{id, cal}, {events, events()}, {day_max_events, 2}])),
     %% 6 weeks: Feb 24 .. Apr 5
     ?assertEqual(6, count(<<"class=\"ah-calendar-week-row\"">>, H)),
     ?assert(has(<<"<div class=\"ah-calendar-day ah-calendar-day-other\" data-date=\"2030-02-24\">">>, H)),
@@ -75,8 +75,8 @@ calendar_month_view_test() ->
     ?assert(has(<<"<div class=\"ah-calendar-daygrid-header-cell\">Sun</div>">>, H)).
 
 calendar_week_view_test() ->
-    H = r(?M:calendar(<<"2030-03-11">>, [editable],
-                      [{id, cal}, {events, events()}, {view, week}, {first_day, 1}])),
+    H = r(?M:ah_calendar(<<"2030-03-11">>, [editable],
+                         [{id, cal}, {events, events()}, {view, week}, {first_day, 1}])),
     ?assert(has(<<"data-start=\"2030-03-11\" data-end=\"2030-03-18\"">>, H)),
     ?assert(has(<<"Mar 11 – Mar 17, 2030"/utf8>>, H)),
     ?assert(has(<<"<span class=\"ah-calendar-timegrid-header-day\">Mon</span>">>, H)),
@@ -95,9 +95,9 @@ calendar_week_view_test() ->
     ?assert(has(<<"style=\"position:relative;height:960px;\"">>, H)).
 
 calendar_day_24h_test() ->
-    H = r(?M:calendar({2030, 3, 11}, [],
-                      [{events, events()}, {view, day}, {hour_format, 24}, {slot_duration, 60},
-                       {slot_height, 30}, {height, undefined}])),
+    H = r(?M:ah_calendar({2030, 3, 11}, [],
+                         [{events, events()}, {view, day}, {hour_format, 24}, {slot_duration, 60},
+                          {slot_height, 30}, {height, undefined}])),
     ?assert(has(<<"Monday, March 11, 2030">>, H)),
     ?assert(has(<<"<div class=\"ah-calendar-timegrid-slot-label\">13:00</div>">>, H)),
     ?assert(has(<<"11:30 – 13:00"/utf8>>, H)),
@@ -105,21 +105,21 @@ calendar_day_24h_test() ->
     ?assertNot(has_quiet(<<"style=\"height:">>, binary:part(H, 0, 900))).
 
 calendar_list_view_test() ->
-    H = r(?M:calendar(<<"2030-03-08">>, [], [{events, events()}, {view, list}, {agenda_days, 7}])),
+    H = r(?M:ah_calendar(<<"2030-03-08">>, [], [{events, events()}, {view, list}, {agenda_days, 7}])),
     ?assert(has(<<"<span class=\"ah-calendar-list-day-name\">Friday</span>"
                   "<span class=\"ah-calendar-list-day-date\">March 8, 2030</span>">>, H)),
     ?assert(has(<<"<div class=\"ah-calendar-list-event-time\">All day</div>">>, H)),
     ?assert(has(<<"background:var(--ah-color-success);">>, H)),
     ?assert(has(<<"background:var(--ah-color-warning);">>, H)),
     ?assert(has(<<"<span class=\"ah-calendar-event-recurring-icon\">↻ </span>Standup"/utf8>>, H)),
-    E = r(?M:calendar(<<"2031-01-01">>, [], [{events, events()}, {view, list}])),
+    E = r(?M:ah_calendar(<<"2031-01-01">>, [], [{events, events()}, {view, list}])),
     ?assert(has(<<"No events in this period">>, E)).
 
 calendar_labels_test() ->
-    H = r(?M:calendar(<<"2030-03-11">>, [],
-                      [{labels, #{today => <<"今天"/utf8>>, title_month => <<"yyyy年M月"/utf8>>,
-                                  more => <<"还有{n}项"/utf8>>}},
-                       {views, [month, list]}])),
+    H = r(?M:ah_calendar(<<"2030-03-11">>, [],
+                         [{labels, #{today => <<"今天"/utf8>>, title_month => <<"yyyy年M月"/utf8>>,
+                                     more => <<"还有{n}项"/utf8>>}},
+                          {views, [month, list]}])),
     ?assert(has(<<">今天</button>"/utf8>>, H)),
     ?assert(has(<<">2030年3月</h2>"/utf8>>, H)),
     ?assert(has(<<"data-ah-labels=">>, H)),
@@ -127,8 +127,8 @@ calendar_labels_test() ->
 
 %% The occurrence days of one recurring event, from the agenda view.
 occurrences(Event, From, Days) ->
-    H = r(?M:calendar(From, [], [{events, [Event#{id => r}]}, {view, list},
-                                 {agenda_days, Days}])),
+    H = r(?M:ah_calendar(From, [], [{events, [Event#{id => r}]}, {view, list},
+                                    {agenda_days, Days}])),
     {match, Ms} = re:run(H, <<"data-eventid=\"r_([0-9]{8})T">>,
                          [global, {capture, all_but_first, binary}]),
     [binary_to_integer(D) || [D] <- Ms].
@@ -186,12 +186,12 @@ catalog_test() ->
 record_equals_builder_test() ->
     Evs = events(),
     Labels = #{today => <<"Now">>},
-    ?assertEqual(r(?M:calendar(<<"2030-03-11">>, [editable, selectable, <<"h-96">>],
-                               [{id, c}, {name, n}, {events, Evs}, {view, week},
-                                {views, [week, day]}, {first_day, 1}, {agenda_days, 5},
-                                {day_max_events, 4}, {slot_duration, 15}, {slot_height, 12},
-                                {height, 400}, {hour_format, 24}, {labels, Labels},
-                                {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_calendar(<<"2030-03-11">>, [editable, selectable, <<"h-96">>],
+                                  [{id, c}, {name, n}, {events, Evs}, {view, week},
+                                   {views, [week, day]}, {first_day, 1}, {agenda_days, 5},
+                                   {day_max_events, 4}, {slot_duration, 15}, {slot_height, 12},
+                                   {height, 400}, {hour_format, 24}, {labels, Labels},
+                                   {title, <<"t">>}])),
                  r(#ah_calendar{value = <<"2030-03-11">>, editable = true, selectable = true,
                                 css = [<<"h-96">>], id = c, name = n, events = Evs, view = week,
                                 views = [week, day], first_day = 1, agenda_days = 5,
@@ -200,13 +200,13 @@ record_equals_builder_test() ->
                                 attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    C = ?M:calendar({2030, 1, 1}, [selectable, <<"x">>],
-                    [{view, list}, {hour_format, 24}, {height, undefined}, {title, <<"t">>}]),
+    C = ?M:ah_calendar({2030, 1, 1}, [selectable, <<"x">>],
+                       [{view, list}, {hour_format, 24}, {height, undefined}, {title, <<"t">>}]),
     ?assertMatch(#ah_calendar{value = {2030, 1, 1}, selectable = true, editable = false,
                               view = list, hour_format = 24, height = 600, events = [],
                               css = [<<"x">>], attrs = [{title, <<"t">>}]}, C),
     ?assertError({aihtml, {record_only_field, ah_calendar, postback}},
-                 ?M:calendar(undefined, [], [{postback, go}])).
+                 ?M:ah_calendar(undefined, [], [{postback, go}])).
 
 generated_id_test() ->
     R = #ah_calendar{},
@@ -248,7 +248,7 @@ field_validation_test() ->
                  r(#ah_calendar{events = [#{start => {2030, 1, 1}, rrule => <<"FREQ=SOMETIMES">>}]})),
     ?assertError({aihtml, {bad_flag, calendar, editable, yes}}, r(#ah_calendar{editable = yes})),
     ?assertError({aihtml, {unknown_modifier, calendar, big, _}},
-                 ?M:calendar(undefined, [big], [])).
+                 ?M:ah_calendar(undefined, [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],
@@ -278,7 +278,7 @@ href_of(Class, Html) ->
     U.
 
 cal_links(View, Date, Extra) ->
-    H = r(?M:calendar(Date, [], [{view, View}, {href, <<"/c/{view}/{date}">>} | Extra])),
+    H = r(?M:ah_calendar(Date, [], [{view, View}, {href, <<"/c/{view}/{date}">>} | Extra])),
     {href_of(<<"ah-calendar-btn ah-calendar-btn-prev">>, H),
      href_of(<<"ah-calendar-btn ah-calendar-btn-next">>, H), H}.
 
@@ -301,7 +301,7 @@ href_links_test() ->
     ?assertEqual(0, count(<<"<button">>, H)).
 
 no_href_unchanged_test() ->
-    H = r(?M:calendar(<<"2030-03-11">>, [], [{events, events()}])),
+    H = r(?M:ah_calendar(<<"2030-03-11">>, [], [{events, events()}])),
     ?assertEqual(0, count(<<"<a ">>, H)),
     ?assertEqual(0, count(<<"data-ah-href">>, H)),
     ?assert(has(<<"<button class=\"ah-calendar-btn ah-calendar-btn-prev\" type=\"button\"">>, H)).

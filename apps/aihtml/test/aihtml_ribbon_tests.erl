@@ -36,7 +36,7 @@ tabs() ->
      {view, <<"View">>, <<"view panel">>, [{icon, <<"V">>}]}].
 
 ribbon_test() ->
-    H = r(?M:ribbon(tabs(), undefined, [<<"mb-2">>], [{id, rb}, {name, tab}])),
+    H = r(?M:ah_ribbon(tabs(), undefined, [<<"mb-2">>], [{id, rb}, {name, tab}])),
     ?assert(has(<<"<div class=\"ah-ribbon ah-ribbon-mode-default ah-ribbon-position-top mb-2\" "
                   "id=\"rb\" data-ah=\"ribbon\" data-ah-value=\"home\" "
                   "data-selection-mode=\"click\"><input type=\"hidden\" name=\"tab\" value=\"home\">">>, H)),
@@ -83,9 +83,9 @@ ribbon_test() ->
     ?assert(has(<<"<i>raw</i>">>, H)).
 
 ribbon_options_test() ->
-    H = r(?M:ribbon(tabs(), view, [left, collapsed, danger, fade, collapsible],
-                    [{selection_mode, hover}, {width, 300}, {height, <<"10rem">>},
-                     {disabled, true}])),
+    H = r(?M:ah_ribbon(tabs(), view, [left, collapsed, danger, fade, collapsible],
+                       [{selection_mode, hover}, {width, 300}, {height, <<"10rem">>},
+                        {disabled, true}])),
     ?assert(has(<<"class=\"ah-ribbon ah-ribbon-animation-fade ah-ribbon-danger "
                   "ah-ribbon-mode-collapsed ah-ribbon-position-left ah-ribbon-collapsible "
                   "ah-ribbon-disabled\"">>, H)),
@@ -99,9 +99,9 @@ ribbon_options_test() ->
     %% the whole ribbon disabled: every tab is
     ?assertEqual(3, count(<<"aria-disabled=\"true\" tabindex=\"-1\" disabled>">>, H)),
     %% a disabled or unknown value falls back to the first enabled tab
-    ?assertEqual(<<"home">>, attr_value(r(?M:ribbon(tabs(), edit, [], [])))),
-    ?assertEqual(<<"home">>, attr_value(r(?M:ribbon(tabs(), nope, [], [])))),
-    ?assertEqual(<<>>, attr_value(r(?M:ribbon([], undefined, [], [])))).
+    ?assertEqual(<<"home">>, attr_value(r(?M:ah_ribbon(tabs(), edit, [], [])))),
+    ?assertEqual(<<"home">>, attr_value(r(?M:ah_ribbon(tabs(), nope, [], [])))),
+    ?assertEqual(<<>>, attr_value(r(?M:ah_ribbon([], undefined, [], [])))).
 
 attr_value(H) ->
     {match, [V]} = re:run(H, <<"data-ah-value=\"([^\"]*)\"">>, [{capture, all_but_first, binary}]),
@@ -123,8 +123,8 @@ catalog_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:ribbon(tabs(), view, [bottom, popup, primary, slide, collapsible, <<"x">>],
-                             [{id, a}, {name, n}, {selection_mode, hover}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_ribbon(tabs(), view, [bottom, popup, primary, slide, collapsible, <<"x">>],
+                                [{id, a}, {name, n}, {selection_mode, hover}, {title, <<"t">>}])),
                  r(#ah_ribbon{items = tabs(), value = view, position = bottom, mode = popup,
                               color = primary, animation = slide, collapsible = true,
                               css = [<<"x">>], id = a, name = n, selection_mode = hover,
@@ -141,7 +141,7 @@ postback_test() ->
     ?assertEqual({<<"ah:command">>, {?MODULE, run, #{id => 1}}},
                  Token(#ah_ribbon{items = tabs(), postback = {run, #{id => 1}}})),
     ?assertError({aihtml, {record_only_field, ah_ribbon, postback}},
-                 ?M:ribbon([], undefined, [], [{postback, x}])).
+                 ?M:ah_ribbon([], undefined, [], [{postback, x}])).
 
 field_validation_test() ->
     ?assertError({aihtml, {bad_modifier, ribbon, position, middle, _}},

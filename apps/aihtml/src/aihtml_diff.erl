@@ -2,11 +2,11 @@
 %%% @doc The diff view, ported from sigil (data/diff). DOM and class names
 %%% are sigil's, so the styles in priv/css/sigil apply unchanged.
 %%%
-%%%   diff(Old, New, Css, Attrs)              line or word diff, computed here
+%%%   ah_diff(Old, New, Css, Attrs)           line or word diff, computed here
 %%%
 %%% The diff is static HTML.
 %%%
-%%% diff/4 builds an element record (#ah_diff{}, defined in
+%%% ah_diff/4 builds an element record (#ah_diff{}, defined in
 %%% include/aihtml_diff.hrl) and render/1 turns it into HTML, so pages may
 %%% also write the record directly (designs/05-records.md).
 %%% @end
@@ -16,7 +16,7 @@
 
 -include("aihtml_diff.hrl").
 
--export([diff/4, render/1, fields/1, catalog/0]).
+-export([ah_diff/4, render/1, fields/1, catalog/0]).
 %% The diff model, for tests and for pages that want the numbers.
 -export([line_rows/2, word_parts/2, split_rows/1]).
 
@@ -43,8 +43,8 @@
 %% (inline word diff, always one column), `unified' (default) or `split'
 %% (old and new side by side), `line_numbers' (in unified view; split
 %% always shows them), `stats' (a +n / -n bar on top).
--spec diff(unicode:chardata(), unicode:chardata(), css(), attrs()) -> #ah_diff{}.
-diff(Old, New, Css, Attrs) ->
+-spec ah_diff(unicode:chardata(), unicode:chardata(), css(), attrs()) -> #ah_diff{}.
+ah_diff(Old, New, Css, Attrs) ->
     ?E:build(?MODULE, #ah_diff{old = Old, new = New}, Css, Attrs).
 
 %% @doc The field names of this component's record.
@@ -299,7 +299,7 @@ diagonal(_, X, Y, _, _, Acc) -> {X, Y, Acc}.
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => diff, category => data,
-       signature => <<"diff(Old, New, Css, Attrs)">>,
+       signature => <<"ah_diff(Old, New, Css, Attrs)">>,
        root => <<"ah-diff">>,
        groups => #{mode => {[line, word], line}, view => {[unified, split], unified}},
        flags => [line_numbers, stats],

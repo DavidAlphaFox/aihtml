@@ -5,9 +5,10 @@
 %% modules (aihtml_catalog:modules/0) and the shared aihtml_lib_* modules
 %% that export `facade_extras/0' (found on the code path).
 %%
-%% For every component module it takes the exported functions named in
-%% the module's catalog, plus the functions listed in its `facade_extras/0'
-%% if it exports one; for a lib module only its `facade_extras/0'. Each
+%% For every component module it takes the builders of the components in
+%% its catalog (`ah_<name>', see aihtml_catalog:builder/1), plus the
+%% functions listed in its `facade_extras/0' if it exports one; for a lib
+%% module only its `facade_extras/0'. Each
 %% gets a delegating wrapper with the module's own -spec (local types
 %% become Module:type() when exported, term() if not).
 %%
@@ -54,7 +55,7 @@ lib_modules() ->
 
 entries(M) ->
     Names = case erlang:function_exported(M, catalog, 0) of
-                true -> [N || #{name := N} <- M:catalog()];
+                true -> [aihtml_catalog:builder(N) || #{name := N} <- M:catalog()];
                 false -> []
             end,
     Extras = case erlang:function_exported(M, facade_extras, 0) of

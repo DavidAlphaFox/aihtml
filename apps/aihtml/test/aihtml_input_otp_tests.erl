@@ -24,7 +24,7 @@ hasnt(Html, Part) ->
 %%% input_otp
 
 otp_test() ->
-    H = r(?M:input_otp(4, <<"12a3">>, [], [{name, code}, {id, otp}])),
+    H = r(?M:ah_input_otp(4, <<"12a3">>, [], [{name, code}, {id, otp}])),
     has(H, <<"<div class=\"ah-input-otp\" data-ah=\"input-otp\" role=\"group\" "
              "data-ah-value=\"123\" data-length=\"4\" data-pattern=\"digit\" "
              "data-disabled=\"false\" data-complete=\"false\" id=\"otp\">">>),
@@ -37,21 +37,21 @@ otp_test() ->
     ?assertEqual(1, count(H, <<"name=">>)).
 
 otp_options_test() ->
-    H = r(?M:input_otp(6, <<"123456789">>, [disabled],
-                       [{separator_at, 3}, {pattern, alphanumeric}])),
+    H = r(?M:ah_input_otp(6, <<"123456789">>, [disabled],
+                          [{separator_at, 3}, {pattern, alphanumeric}])),
     has(H, <<"data-ah-value=\"123456\"">>),
     has(H, <<"data-complete=\"true\"">>),
     has(H, <<"data-disabled=\"true\"">>),
     ?assertEqual(1, count(H, <<"ah-input-otp__separator">>)),
-    has(r(?M:input_otp(4, <<"aB1">>, [], [{pattern, alphanumeric}])), <<"data-ah-value=\"aB1\"">>),
+    has(r(?M:ah_input_otp(4, <<"aB1">>, [], [{pattern, alphanumeric}])), <<"data-ah-value=\"aB1\"">>),
     hasnt(H, <<"separator-at=">>),
-    ?assertError({aihtml, {bad_length, input_otp, 0}}, ?M:input_otp(0, undefined, [], [])),
+    ?assertError({aihtml, {bad_length, input_otp, 0}}, ?M:ah_input_otp(0, undefined, [], [])),
     ?assertError({aihtml, {unknown_modifier, input_otp, sm, _}},
-                 ?M:input_otp(4, undefined, [sm], [])).
+                 ?M:ah_input_otp(4, undefined, [sm], [])).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:input_otp(4, <<"a1">>, [disabled], [{pattern, alphanumeric},
-                                                         {separator_at, 2}, {name, c}])),
+    ?assertEqual(r(?M:ah_input_otp(4, <<"a1">>, [disabled], [{pattern, alphanumeric},
+                                                            {separator_at, 2}, {name, c}])),
                  r(#ah_input_otp{length = 4, value = <<"a1">>, disabled = true,
                                  pattern = alphanumeric, separator_at = 2, name = c})).
 
@@ -70,7 +70,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([input_otp], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, arity(S))),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), arity(S))),
          ?assertEqual(form, C)
      end || #{name := N, signature := S, category := C} <- ?M:catalog()].
 

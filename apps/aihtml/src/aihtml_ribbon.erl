@@ -3,7 +3,7 @@
 %%% class names are the ones sigil renders, so the styles in
 %%% priv/css/sigil apply unchanged.
 %%%
-%%%   ribbon(Tabs, Value, Css, Attrs)          an Office-style ribbon
+%%%   ah_ribbon(Tabs, Value, Css, Attrs)       an Office-style ribbon
 %%%
 %%% Tabs over panels. A panel is any HTML or `{groups, Groups}': labelled
 %%% groups of large and small buttons, toggles, dropdown menus, stacks and
@@ -16,7 +16,7 @@
 %%% bound with postback or `on('ah:command', ...)' reads the command from
 %%% `Event.data'.
 %%%
-%%% ribbon/4 builds an #ah_ribbon{} (include/aihtml_ribbon.hrl) and
+%%% ah_ribbon/4 builds an #ah_ribbon{} (include/aihtml_ribbon.hrl) and
 %%% render/1 turns it into HTML (designs/05-records.md). Behaviour:
 %%% assets/js/components/ribbon.ts.
 %%% @end
@@ -26,7 +26,7 @@
 
 -include("aihtml_ribbon.hrl").
 
--export([ribbon/4, render/1, fields/1, catalog/0]).
+-export([ah_ribbon/4, render/1, fields/1, catalog/0]).
 
 -export_type([menu_item/0, cmd/0, group/0, content/0, tab/0, position/0, mode/0,
               color/0, animation/0]).
@@ -89,8 +89,8 @@
 %% first enabled tab when undefined). Css: `top' (default), `bottom',
 %% `left', `right'; `default', `collapsed', `popup'; a colour `primary',
 %% `success', `warning', `danger'; `slide' or `fade'; `collapsible'.
--spec ribbon([tab()], term(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_ribbon{}.
-ribbon(Tabs, Value, Css, Attrs) ->
+-spec ah_ribbon([tab()], term(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_ribbon{}.
+ah_ribbon(Tabs, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_ribbon{items = Tabs, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_ribbon{}.
@@ -311,7 +311,7 @@ collapse_btn(Collapsed) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => ribbon, category => layout,
-       signature => <<"ribbon(Tabs, Value, Css, Attrs)">>,
+       signature => <<"ah_ribbon(Tabs, Value, Css, Attrs)">>,
        root => <<"ah-ribbon">>,
        groups => #{position => {[top, bottom, left, right], top},
                    mode => {[default, collapsed, popup], default},

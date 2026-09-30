@@ -2,7 +2,7 @@
 %%% @doc sigil's transfer (form/transfer): two lists with move buttons.
 %%% See designs/04-components.md.
 %%%
-%%%   transfer(Items, Value, Css, Attrs)
+%%%   ah_transfer(Items, Value, Css, Attrs)
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
 %%% `data-ah-value' (the keys on the right joined by aihtml_value:join/1)
@@ -21,7 +21,7 @@
 
 -include("aihtml_transfer.hrl").
 
--export([transfer/4, render/1, fields/1, catalog/0]).
+-export([ah_transfer/4, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_list, [item/1, ensure_id/1, sub_id/2, hidden/2, text/1, join/1]).
 
@@ -39,9 +39,9 @@
 %% Options (in Attrs): `source_title' (default "Source"), `target_title'
 %% (default "Target"), `filter_placeholder' (default "Search"),
 %% `empty_text' (an empty list, default "No data").
--spec transfer([aihtml_lib_list:item()], [term()], aihtml_html:css(),
-               aihtml_html:attrs()) -> #ah_transfer{}.
-transfer(Items, Value, Css, Attrs) ->
+-spec ah_transfer([aihtml_lib_list:item()], [term()], aihtml_html:css(),
+                  aihtml_html:attrs()) -> #ah_transfer{}.
+ah_transfer(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_transfer{items = Items, value = Value}, Css, Attrs).
 
 -spec render(#ah_transfer{}) -> aihtml_html:html().
@@ -133,7 +133,7 @@ fields(ah_transfer) -> record_info(fields, ah_transfer).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => transfer, category => form,
-       signature => <<"transfer(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_transfer(Items, Value, Css, Attrs)">>,
        root => <<"ah-transfer">>,
        flags => [disabled, no_filter],
        classes => #{no_filter => [<<"ah-transfer-no-filter">>]},

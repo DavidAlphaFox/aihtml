@@ -19,7 +19,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([pagination], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -43,7 +43,7 @@ visible_pages_test() ->
     [?assert(lists:member(C, ?M:visible_pages(C, 50, 7))) || C <- lists:seq(1, 50)].
 
 pagination_test() ->
-    H = r(?M:pagination(95, 3, [], [{name, page}])),
+    H = r(?M:ah_pagination(95, 3, [], [{name, page}])),
     ?assert(has(H, <<"data-ah=\"pagination\" data-ah-value=\"3\" data-total=\"95\" "
                      "data-page-size=\"10\" data-max-visible=\"7\"">>)),
     ?assert(has(H, <<"aria-current=\"page\">3</li>">>)),
@@ -52,9 +52,9 @@ pagination_test() ->
     ?assertEqual(0, count(H, <<"ah-pagination-nav-disabled">>)).
 
 pagination_clamps_and_options_test() ->
-    H = r(?M:pagination(40, 99, [], [{page_size, 20}, {show_first_last, true}, {show_total, true},
-                                     {show_jumper, true}, {show_size_selector, false},
-                                     {labels, #{total => <<"{0} rows">>}}])),
+    H = r(?M:ah_pagination(40, 99, [], [{page_size, 20}, {show_first_last, true}, {show_total, true},
+                                        {show_jumper, true}, {show_size_selector, false},
+                                        {labels, #{total => <<"{0} rows">>}}])),
     ?assert(has(H, <<"data-ah-value=\"2\"">>)),
     ?assert(has(H, <<"40 rows">>)),
     ?assert(has(H, <<"data-type=\"last\"">>)),
@@ -63,10 +63,10 @@ pagination_clamps_and_options_test() ->
     ?assertNot(has(H, <<"<select">>)).
 
 pagination_simple_and_links_test() ->
-    S = r(?M:pagination(30, 2, [simple], [])),
+    S = r(?M:ah_pagination(30, 2, [simple], [])),
     ?assert(has(S, <<"Page 2 / 3">>)),
     ?assertNot(has(S, <<"ah-pagination-item">>)),
-    L = r(?M:pagination(30, 1, [], [{href, <<"?p={page}&s={size}">>}, {show_size_selector, false}])),
+    L = r(?M:ah_pagination(30, 1, [], [{href, <<"?p={page}&s={size}">>}, {show_size_selector, false}])),
     ?assert(has(L, <<"<a class=\"ah-pagination-item\" href=\"?p=2&amp;s=10\"">>)),
     ?assert(has(L, <<"<a class=\"ah-pagination-nav\" href=\"?p=2&amp;s=10\" data-type=\"next\"">>)),
     ?assert(has(L, <<"ah-pagination-nav ah-pagination-nav-disabled\" data-type=\"prev\"">>)).
@@ -75,9 +75,9 @@ pagination_simple_and_links_test() ->
 %% its page; a server binding keeps the links (the browser intercepts
 %% them) and carries the template on the root for the pushed URL.
 links_for_every_state_test() ->
-    H = r(?M:pagination(95, 3, [], [{href, <<"/list?page={page}&size={size}">>},
-                                    {page_size, 20}, {show_first_last, true},
-                                    aihtml:on(change, {?MODULE, page, #{}})])),
+    H = r(?M:ah_pagination(95, 3, [], [{href, <<"/list?page={page}&size={size}">>},
+                                       {page_size, 20}, {show_first_last, true},
+                                       aihtml:on(change, {?MODULE, page, #{}})])),
     Hrefs = [U || [U] <- element(2, re:run(H, <<"<a [^>]*href=\"([^\"]*)\"">>,
                                               [global, {capture, all_but_first, binary}]))],
     Url = fun(P) -> <<"/list?page=", (integer_to_binary(P))/binary, "&amp;size=20">> end,
@@ -86,7 +86,7 @@ links_for_every_state_test() ->
     ?assert(has(H, <<"data-href=\"/list?page={page}&amp;size={size}\"">>)),
     ?assert(has(H, <<"data-ah-on=\"change:">>)),
     %% the last page: next and last are not links
-    Last = r(?M:pagination(95, 5, [], [{href, <<"?p={page}">>}, {page_size, 20}])),
+    Last = r(?M:ah_pagination(95, 5, [], [{href, <<"?p={page}">>}, {page_size, 20}])),
     ?assert(has(Last, <<"ah-pagination-nav ah-pagination-nav-disabled\" data-type=\"next\"">>)),
     ?assertNot(has(Last, <<"data-type=\"next\" aria-label">>)).
 
@@ -113,10 +113,10 @@ classes_are_styled_test() ->
 
 %% One render of the component in its main variants and states.
 samples() ->
-    [?M:pagination(500, 12, [disabled], [{show_first_last, true}, {show_total, true},
-                                         {show_jumper, true}]),
-     ?M:pagination(95, 3, [simple], []),
-     ?M:pagination(95, 3, [], [{href, <<"?p={page}">>}])].
+    [?M:ah_pagination(500, 12, [disabled], [{show_first_last, true}, {show_total, true},
+                                            {show_jumper, true}]),
+     ?M:ah_pagination(95, 3, [simple], []),
+     ?M:ah_pagination(95, 3, [], [{href, <<"?p={page}">>}])].
 
 %%% element records (designs/05-records.md)
 
@@ -131,8 +131,8 @@ token(Html) ->
     {Ev, Ref}.
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:pagination(500, 12, [simple], [{page_size, 20}, {show_total, true},
-                                                     {labels, #{prev => <<"<">>}}])),
+    ?assertEqual(r(?M:ah_pagination(500, 12, [simple], [{page_size, 20}, {show_total, true},
+                                                        {labels, #{prev => <<"<">>}}])),
                  r(#ah_pagination{total = 500, value = 12, simple = true, page_size = 20,
                                   show_total = true, labels = #{prev => <<"<">>}})).
 

@@ -20,7 +20,7 @@
         postback = undefined :: undefined | aihtml_element:postback(),
         delegate = ?MODULE :: module()).
 
-%% A plain HTML element: what 'div'/3, p/3, aihtml:el/4, img/2 ... build.
+%% A plain HTML element: what ah_div/3, ah_p/3, aihtml:ah_el/4, ah_img/2 ... build.
 %% `tag' is the tag name (atom or binary), `body' its children, or `void'
 %% for a void element such as input or img. The base fields work as for
 %% components: `css' and `attrs' as the builders' Css and Attrs, `id', and

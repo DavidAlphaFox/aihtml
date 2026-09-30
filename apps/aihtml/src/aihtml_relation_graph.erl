@@ -15,7 +15,7 @@
 %%% (bind an action to it that answers with aihtml_chart:chart_update/3
 %%% or a morph).
 %%%
-%%% relation_graph/3 builds an element record (#ah_relation_graph{},
+%%% ah_relation_graph/3 builds an element record (#ah_relation_graph{},
 %%% defined in include/aihtml_relation_graph.hrl) and render/1 turns it
 %%% into HTML, so pages may also write the record directly
 %%% (designs/05-records.md).
@@ -26,7 +26,7 @@
 
 -include("aihtml_relation_graph.hrl").
 
--export([relation_graph/3, option/1, render/1, fields/1, catalog/0]).
+-export([ah_relation_graph/3, option/1, render/1, fields/1, catalog/0]).
 
 -export_type([element/0, graph/0, graph_node/0, edge/0, category/0]).
 
@@ -99,8 +99,8 @@
 %% `details' (#{NodeId => Html} shown in the detail card when that node
 %% is selected), `edge_labels' (auto | boolean), `roam', `toolbar',
 %% `error', `empty_text', `height' (default 420), `width', `renderer'.
--spec relation_graph(graph(), css(), attrs()) -> #ah_relation_graph{}.
-relation_graph(Graph, Css, Attrs) ->
+-spec ah_relation_graph(graph(), css(), attrs()) -> #ah_relation_graph{}.
+ah_relation_graph(Graph, Css, Attrs) ->
     ?E:build(?MODULE, #ah_relation_graph{graph = Graph}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -418,7 +418,7 @@ norm_edge(Other) -> error({aihtml, {bad_edge, Other}}).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => relation_graph, category => data,
-       signature => <<"relation_graph(Graph, Css, Attrs)">>,
+       signature => <<"ah_relation_graph(Graph, Css, Attrs)">>,
        root => <<"ah-relation-graph">>,
        groups => #{layout => {[force, circular, fixed, tree], force},
                    orient => {[lr, tb, rl, bt], lr},

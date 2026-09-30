@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := avatar, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, avatar, 3)),
+    ?assert(erlang:function_exported(?D, ah_avatar, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -46,25 +46,25 @@ records_match_catalog_test() ->
 %%%===================================================================
 
 avatar_defaults_and_modifiers_test() ->
-    H = ?D:avatar(<<"JD">>, [lg, square, success], []),
+    H = ?D:ah_avatar(<<"JD">>, [lg, square, success], []),
     ?assert(has(<<"class=\"ah-avatar\" data-size=\"lg\" data-shape=\"square\" data-color=\"success\"">>, H)),
     ?assert(has(<<"<span class=\"ah-avatar__fallback\" aria-hidden=\"true\">JD</span>">>, H)),
     ?assert(has(<<"data-size=\"md\" data-shape=\"circle\" data-color=\"primary\"">>,
-                ?D:avatar(<<"x">>, [], []))),
-    ?assert(has(<<">?</span>">>, ?D:avatar(undefined, [], []))).
+                ?D:ah_avatar(<<"x">>, [], []))),
+    ?assert(has(<<">?</span>">>, ?D:ah_avatar(undefined, [], []))).
 
 avatar_image_test() ->
-    H = ?D:avatar(<<"A">>, [], [{src, <<"/a.png?x=1&y=\"2\"">>}, {alt, <<"Ann">>}]),
+    H = ?D:ah_avatar(<<"A">>, [], [{src, <<"/a.png?x=1&y=\"2\"">>}, {alt, <<"Ann">>}]),
     ?assert(has(<<"<img class=\"ah-avatar__image\" src=\"/a.png?x=1&amp;y=&quot;2&quot;\" alt=\"Ann\">">>, H)),
     ?assertNot(has(<<"role=\"img\"">>, H)),
-    ?assert(has(<<"role=\"img\" aria-label=\"Ann\"">>, ?D:avatar(<<"A">>, [], [{alt, <<"Ann">>}]))).
+    ?assert(has(<<"role=\"img\" aria-label=\"Ann\"">>, ?D:ah_avatar(<<"A">>, [], [{alt, <<"Ann">>}]))).
 
 %%%===================================================================
 %%% element record (designs/05-records.md)
 %%%===================================================================
 
 unknown_modifier_fails_test() ->
-    ?assertError({aihtml, {unknown_modifier, avatar, huge, _}}, ?D:avatar(<<"A">>, [huge], [])).
+    ?assertError({aihtml, {unknown_modifier, avatar, huge, _}}, ?D:ah_avatar(<<"A">>, [huge], [])).
 
 postback_test() ->
     ?assertError({aihtml, {no_postback_event, ah_avatar}}, r(#ah_avatar{postback = p})).

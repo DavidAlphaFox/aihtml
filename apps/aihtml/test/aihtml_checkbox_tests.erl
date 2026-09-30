@@ -14,7 +14,7 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 %% --- checkbox ------------------------------------------------------
 
 checkbox_markup_test() ->
-    H = r(?M:checkbox(<<"Accept">>, yes, [], [{name, terms}, {checked, true}, {id, <<"t">>}])),
+    H = r(?M:ah_checkbox(<<"Accept">>, yes, [], [{name, terms}, {checked, true}, {id, <<"t">>}])),
     ?assertMatch(<<"<label class=\"ah-checkbox ah-checkbox-checked\" data-ah=\"checkbox\">", _/binary>>, H),
     %% Attrs land on the native input
     ?assert(has(<<"<input class=\"ah-choice-input\" type=\"checkbox\" value=\"yes\" name=\"terms\" checked id=\"t\">">>, H)),
@@ -22,58 +22,58 @@ checkbox_markup_test() ->
     ?assert(has(<<"<span class=\"ah-checkbox-label\">Accept</span>">>, H)).
 
 checkbox_states_test() ->
-    I = r(?M:checkbox(<<"x">>, undefined, [], [{indeterminate, true}])),
+    I = r(?M:ah_checkbox(<<"x">>, undefined, [], [{indeterminate, true}])),
     ?assert(has(<<"ah-checkbox-indeterminate">>, I)),
     ?assert(has(<<"ah-checkbox-check-indeterminate">>, I)),
     ?assertNot(has(<<"indeterminate=">>, I)),         % an option, not an attribute
-    D = r(?M:checkbox(<<"x">>, undefined, [], [{disabled, true}, {three_states, true}, {locked, true}])),
+    D = r(?M:ah_checkbox(<<"x">>, undefined, [], [{disabled, true}, {three_states, true}, {locked, true}])),
     ?assert(has(<<"ah-checkbox-disabled">>, D)),
     ?assert(has(<<" disabled">>, D)),
     ?assert(has(<<"data-ah-three-states">>, D)),
     ?assert(has(<<"data-ah-locked">>, D)),
     ?assertNot(has(<<"value=">>, D)),
-    B = r(?M:checkbox([], undefined, [], [{box_size, 24}])),
+    B = r(?M:ah_checkbox([], undefined, [], [{box_size, 24}])),
     ?assert(has(<<"style=\"width:24px;height:24px;\"">>, B)),
     ?assertNot(has(<<"ah-checkbox-label">>, B)).
 
 checkbox_escaping_test() ->
-    H = r(?M:checkbox(<<"<b>&">>, <<"a\"b">>, [<<"mt-2">>], [{title, <<"<x>">>}])),
+    H = r(?M:ah_checkbox(<<"<b>&">>, <<"a\"b">>, [<<"mt-2">>], [{title, <<"<x>">>}])),
     ?assert(has(<<"&lt;b&gt;&amp;">>, H)),
     ?assert(has(<<"value=\"a&quot;b\"">>, H)),
     ?assert(has(<<"title=\"&lt;x&gt;\"">>, H)),
     ?assert(has(<<"class=\"ah-checkbox mt-2\"">>, H)).
 
 checkbox_modifiers_test() ->
-    ?assert(has(<<"ah-checkbox ah-checkbox-lg">>, r(?M:checkbox(<<"x">>, undefined, [lg], [])))),
+    ?assert(has(<<"ah-checkbox ah-checkbox-lg">>, r(?M:ah_checkbox(<<"x">>, undefined, [lg], [])))),
     ?assertError({aihtml, {unknown_modifier, checkbox, huge, _}},
-                 ?M:checkbox(<<"x">>, undefined, [huge], [])),
+                 ?M:ah_checkbox(<<"x">>, undefined, [huge], [])),
     ?assertError({aihtml, {conflicting_modifiers, checkbox, size, _}},
-                 ?M:checkbox(<<"x">>, undefined, [sm, lg], [])).
+                 ?M:ah_checkbox(<<"x">>, undefined, [sm, lg], [])).
 
 checkbox_action_on_input_test() ->
     A = [{<<"data-ah-on">>, {actions, [{<<"change">>, <<"TOKEN">>, #{}}]}}],
-    H = r(?M:checkbox(<<"x">>, undefined, [], [A])),
+    H = r(?M:ah_checkbox(<<"x">>, undefined, [], [A])),
     ?assert(has(<<"type=\"checkbox\" data-ah-on=\"change:TOKEN\">">>, H)).
 
 render_all_test() ->
-    ?assert(is_binary(r(?M:checkbox(<<"x">>, undefined, [], [])))).
+    ?assert(is_binary(r(?M:ah_checkbox(<<"x">>, undefined, [], [])))).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:checkbox(<<"Accept">>, yes, [lg, <<"mt-2">>],
-                               [{name, terms}, {checked, true}, {id, t}, {box_size, 20}])),
+    ?assertEqual(r(?M:ah_checkbox(<<"Accept">>, yes, [lg, <<"mt-2">>],
+                                  [{name, terms}, {checked, true}, {id, t}, {box_size, 20}])),
                  r(#ah_checkbox{body = <<"Accept">>, value = yes, size = lg,
                                 css = [<<"mt-2">>], attrs = [{name, terms}],
                                 checked = true, id = t, box_size = 20})).
 
 builder_fills_fields_test() ->
-    C = ?M:checkbox(<<"x">>, v, [sm, <<"x">>],
-                    [{name, n}, {checked, true}, {three_states, true}, {title, <<"t">>},
-                     on(change)]),
+    C = ?M:ah_checkbox(<<"x">>, v, [sm, <<"x">>],
+                       [{name, n}, {checked, true}, {three_states, true}, {title, <<"t">>},
+                        on(change)]),
     ?assertMatch(#ah_checkbox{value = v, size = sm, checked = true, disabled = false,
                               three_states = true, css = [<<"x">>]}, C),
     [{name, n}, {title, <<"t">>}, {<<"data-ah-on">>, _} | _] = C#ah_checkbox.attrs,
     ?assertError({aihtml, {record_only_field, ah_checkbox, postback}},
-                 ?M:checkbox(<<"x">>, undefined, [], [{postback, save}])).
+                 ?M:ah_checkbox(<<"x">>, undefined, [], [{postback, save}])).
 
 postback_test() ->
     P = {save, #{id => 1}},
@@ -96,7 +96,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([checkbox], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          ?assertMatch(#{category := form, behavior := B} when is_binary(B), E)
      end || #{name := N} = E <- ?M:catalog()].
 

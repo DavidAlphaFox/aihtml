@@ -2,7 +2,7 @@
 %%% @doc The pivot table, ported from sigil (data/pivotgrid). See
 %%% designs/04-components.md.
 %%%
-%%%   pivotgrid(Rows, Layout, Css, Attrs)   a pivot table of data rows
+%%%   ah_pivotgrid(Rows, Layout, Css, Attrs)   a pivot table of data rows
 %%%   pivotgrid_rows(Ctx, Event, Rows)      (in a `source' action) re-render it
 %%%   pivotgrid_view(Event)                 the layout and view an event carries
 %%%   pivotgrid_cell(Event)                 the cell an 'ah:cell-click' names
@@ -61,7 +61,7 @@
 
 -include("aihtml_pivotgrid.hrl").
 
--export([pivotgrid/4, pivotgrid_rows/3, pivotgrid_view/1, pivotgrid_cell/1,
+-export([ah_pivotgrid/4, pivotgrid_rows/3, pivotgrid_view/1, pivotgrid_cell/1,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([element/0, field_name/0, row/0, agg/0, value_spec/0, layout/0, format/0,
@@ -138,8 +138,8 @@
 %% `format' (the default number format), `height' (px or a CSS length;
 %% the body scrolls under fixed headers), `locale' (en | zh), `labels'
 %% (texts), `source' (an action ref: remote mode, see the module doc).
--spec pivotgrid([row()], layout(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_pivotgrid{}.
-pivotgrid(Rows, Layout, Css, Attrs) ->
+-spec ah_pivotgrid([row()], layout(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_pivotgrid{}.
+ah_pivotgrid(Rows, Layout, Css, Attrs) ->
     ?E:build(?MODULE, #ah_pivotgrid{items = Rows, value = Layout}, Css, Attrs).
 
 render_pivotgrid(#ah_pivotgrid{items = Items, name = Name, source = Source} = R0) ->
@@ -1030,7 +1030,7 @@ pow10(N) -> 10 * pow10(N - 1).
 %%%===================================================================
 
 %% @doc Answer a `source' action: aggregate `Rows' (maps, as for
-%% pivotgrid/4) with the layout, view and options the event carries,
+%% ah_pivotgrid/4) with the layout, view and options the event carries,
 %% render the tables on the server and morph them into the page
 %% (`<root id>-content' and, with a field list, `<root id>-fields'), then
 %% call the behaviour method `viewLoaded'.
@@ -1136,7 +1136,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => pivotgrid, category => data,
-       signature => <<"pivotgrid(Rows, Layout, Css, Attrs)">>,
+       signature => <<"ah_pivotgrid(Rows, Layout, Css, Attrs)">>,
        root => <<"ah-pg">>,
        flags => [expand_all, values_on_rows, field_list],
        classes => #{expand_all => [], values_on_rows => [], field_list => []},

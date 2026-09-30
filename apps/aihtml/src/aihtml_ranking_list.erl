@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The ranking_list component (designs/04-components.md): `ranking_list/3'
+%%% @doc The ranking_list component (designs/04-components.md): `ah_ranking_list/3'
 %%% builds an #ah_ranking_list{} element record (include/aihtml_ranking_list.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_ranking_list.hrl").
 
--export([ranking_list/3, render/1, fields/1, catalog/0]).
+-export([ah_ranking_list/3, render/1, fields/1, catalog/0]).
 
 -export_type([item/0]).
 
@@ -42,8 +42,8 @@
 %% `max_items', `show_rank' (true), `flag_style' (emoji | flag_icons |
 %% none), `tag_colors' (#{Tag => success | warning | error | info}).
 %% `clickable' rows fire `ah:item-click' with the row index.
--spec ranking_list([map()], css(), attrs()) -> #ah_ranking_list{}.
-ranking_list(Items, Css, Attrs) ->
+-spec ah_ranking_list([map()], css(), attrs()) -> #ah_ranking_list{}.
+ah_ranking_list(Items, Css, Attrs) ->
     ?E:build(?MODULE, #ah_ranking_list{items = Items}, Css, Attrs).
 
 %% @doc The field names of #ah_ranking_list{}.
@@ -135,7 +135,7 @@ catalog() ->
 
 entry() ->
     #{name => ranking_list, category => data, root => <<"ah-ranking-list">>,
-      signature => <<"ranking_list(Items, Css, Attrs)">>,
+      signature => <<"ah_ranking_list(Items, Css, Attrs)">>,
       flags => [dense, disabled, clickable],
       classes => #{dense => [<<"ah-ranking-list--dense">>],
                    disabled => [<<"ah-ranking-list--disabled">>], clickable => []},

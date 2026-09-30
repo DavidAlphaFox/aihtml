@@ -5,7 +5,7 @@
 %%% The native control is kept: `Attrs' (name, placeholder, on(...), ...)
 %%% go to the `<input>', `Css' to the wrapper.
 %%%
-%%% password_input/3 builds an #ah_password_input{}
+%%% ah_password_input/3 builds an #ah_password_input{}
 %%% (include/aihtml_password_input.hrl) and render/1 turns it into HTML,
 %%% so pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -15,7 +15,7 @@
 
 -include("aihtml_password_input.hrl").
 
--export([password_input/3, render/1, fields/1, catalog/0]).
+-export([ah_password_input/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(L, aihtml_lib_input).
@@ -24,9 +24,9 @@
 %% @doc A password field with sigil's eye toggle. Options: `toggle'
 %% (default true), `strength' (show the strength meter, default false),
 %% `label' (floating).
--spec password_input(binary() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_password_input(binary() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_password_input{}.
-password_input(Value, Css, Attrs) ->
+ah_password_input(Value, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_password_input{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_password_input{}.
@@ -93,7 +93,7 @@ eye_closed() ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => password_input, category => form,
-       signature => <<"password_input(Value, Css, Attrs)">>,
+       signature => <<"ah_password_input(Value, Css, Attrs)">>,
        root => <<"ah-pwd-group">>,
        groups => #{size => ?L:sizes(), state => ?L:states()},
        flags => [disabled],

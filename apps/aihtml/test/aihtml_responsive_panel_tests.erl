@@ -41,11 +41,11 @@ catalog_docs_test() ->
 %%%===================================================================
 
 responsive_panel_test() ->
-    H = r(?M:responsive_panel(<<"nav">>, [],
-                              [{id, rp}, {breakpoint, 600}, {collapse_width, 240},
-                               {height, 300}, {animation, slide}, {auto_close, false},
-                               {toggle_button, <<"#menu">>}, {toggle_size, 36},
-                               {toggle_label, <<"Menu">>}])),
+    H = r(?M:ah_responsive_panel(<<"nav">>, [],
+                                 [{id, rp}, {breakpoint, 600}, {collapse_width, 240},
+                                  {height, 300}, {animation, slide}, {auto_close, false},
+                                  {toggle_button, <<"#menu">>}, {toggle_size, 36},
+                                  {toggle_label, <<"Menu">>}])),
     ?assert(has(<<"<div class=\"ah-responsive-panel\" id=\"rp\" data-ah=\"responsive-panel\" "
                   "data-breakpoint=\"600\" data-collapse-width=\"240px\" data-animation=\"slide\" "
                   "data-show-duration=\"200\" data-hide-duration=\"200\" data-auto-close=\"false\" "
@@ -55,7 +55,7 @@ responsive_panel_test() ->
                   "aria-controls=\"rp-content\" style=\"width:36px;height:36px;\">☰</div>"/utf8>>, H)),
     ?assert(has(<<"<div class=\"ah-responsive-panel-content\" id=\"rp-content\" "
                   "style=\"height:300px;\">nav</div>">>, H)),
-    D = r(?M:responsive_panel([], [disabled], [{toggle_content, <<"=">>}])),
+    D = r(?M:ah_responsive_panel([], [disabled], [{toggle_content, <<"=">>}])),
     ?assert(has(<<"class=\"ah-responsive-panel ah-responsive-panel-disabled\" id=\"ah-responsive-panel-">>, D)),
     ?assert(has(<<"aria-disabled=\"true\"">>, D)),
     ?assert(has(<<">=</div>">>, D)).
@@ -71,8 +71,8 @@ responsive_panel_load_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:responsive_panel(<<"c">>, [], [{id, p}, {breakpoint, 10},
-                                                    {animation, none}])),
+    ?assertEqual(r(?M:ah_responsive_panel(<<"c">>, [], [{id, p}, {breakpoint, 10},
+                                                       {animation, none}])),
                  r(#ah_responsive_panel{body = <<"c">>, id = p, breakpoint = 10,
                                         animation = none})).
 

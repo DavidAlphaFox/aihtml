@@ -19,23 +19,23 @@ demos() ->
 
 -spec rating_basic() -> aihtml:html().
 rating_basic() ->
-    rating_group(5, 3, [], [{name, stars}]).
+    ah_rating_group(5, 3, [], [{name, stars}]).
 
 -spec rating_half() -> aihtml:html().
 rating_half() ->
-    rating_group(5, 2.5, [], [{name, score}, {precision, 0.5}]).
+    ah_rating_group(5, 2.5, [], [{name, score}, {precision, 0.5}]).
 
 -spec rating_sizes() -> aihtml:html().
 rating_sizes() ->
-    row([rating_group(5, 4, [sm], []),
-         rating_group(5, 4, [md, primary], []),
-         rating_group(5, 4, [lg, success], []),
-         rating_group(10, 7, [sm, error], [])]).
+    row([ah_rating_group(5, 4, [sm], []),
+         ah_rating_group(5, 4, [md, primary], []),
+         ah_rating_group(5, 4, [lg, success], []),
+         ah_rating_group(10, 7, [sm, error], [])]).
 
 -spec rating_readonly() -> aihtml:html().
 rating_readonly() ->
-    row([rating_group(5, 3.5, [], [{readonly, true}, {precision, 0.5}]),
-         rating_group(5, 2, [], [{disabled, true}])]).
+    row([ah_rating_group(5, 3.5, [], [{readonly, true}, {precision, 0.5}]),
+         ah_rating_group(5, 2, [], [{disabled, true}])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-6">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-6">>], []).

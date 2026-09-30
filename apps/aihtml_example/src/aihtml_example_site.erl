@@ -16,19 +16,19 @@ reply(Req, Title, Body, Opts) ->
 -spec topbar(atom()) -> aihtml:element().
 topbar(Active) ->
     Link = fun(Key, Href, Label) ->
-                   a(Label, [<<"px-3 py-2 text-sm rounded-control hover:text-primary">>,
-                             [<<"text-primary font-semibold">> || Key =:= Active]],
-                     [{href, Href}])
+                   ah_a(Label, [<<"px-3 py-2 text-sm rounded-control hover:text-primary">>,
+                                [<<"text-primary font-semibold">> || Key =:= Active]],
+                        [{href, Href}])
            end,
-    header('div'([a(<<"aihtml">>, [<<"text-xl font-bold text-primary">>], [{href, <<"/">>}]),
-                  nav([Link(components, <<"/components">>, <<"组件"/utf8>>),
-                       Link(demo, <<"/demo">>, <<"实时演示"/utf8>>),
-                       Link(fetch, <<"/fetch">>, <<"片段模式"/utf8>>),
-                       a(<<"GitHub">>, [<<"px-3 py-2 text-sm hover:text-primary">>],
-                         [{href, <<"https://github.com/DavidAlphaFox/aihtml">>}])],
-                      [<<"flex items-center gap-1">>], [])],
-                 [<<"max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">>], []),
-           [<<"bg-surface border-b border-line sticky top-0 z-30">>], []).
+    ah_header(ah_div([ah_a(<<"aihtml">>, [<<"text-xl font-bold text-primary">>], [{href, <<"/">>}]),
+                      ah_nav([Link(components, <<"/components">>, <<"组件"/utf8>>),
+                              Link(demo, <<"/demo">>, <<"实时演示"/utf8>>),
+                              Link(fetch, <<"/fetch">>, <<"片段模式"/utf8>>),
+                              ah_a(<<"GitHub">>, [<<"px-3 py-2 text-sm hover:text-primary">>],
+                                   [{href, <<"https://github.com/DavidAlphaFox/aihtml">>}])],
+                             [<<"flex items-center gap-1">>], [])],
+                     [<<"max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">>], []),
+              [<<"bg-surface border-b border-line sticky top-0 z-30">>], []).
 
 %% @doc Component categories in site order.
 -spec categories() -> [atom()].

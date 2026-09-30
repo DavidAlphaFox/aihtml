@@ -21,30 +21,30 @@ demos() ->
 
 -spec toolbar_editor() -> aihtml:html().
 toolbar_editor() ->
-    toolbar([#{key => bold, label => <<"B">>, title => <<"Bold">>, toggle => true, pressed => true},
-             #{key => italic, label => <<"I">>, title => <<"Italic">>, toggle => true},
-             #{key => underline, label => <<"U">>, title => <<"Underline">>, toggle => true},
-             separator,
-             #{key => left, label => <<"Left">>},
-             #{key => center, label => <<"Center">>},
-             #{key => right, label => <<"Right">>},
-             separator,
-             #{key => undo, label => <<"Undo">>},
-             #{key => redo, label => <<"Redo">>, disabled => true},
-             separator,
-             {custom, select([{p, <<"Paragraph">>}, {h1, <<"Heading">>}], p, [sm], [])}],
-            [], [{aria_label, <<"Formatting">>}]).
+    ah_toolbar([#{key => bold, label => <<"B">>, title => <<"Bold">>, toggle => true, pressed => true},
+                #{key => italic, label => <<"I">>, title => <<"Italic">>, toggle => true},
+                #{key => underline, label => <<"U">>, title => <<"Underline">>, toggle => true},
+                separator,
+                #{key => left, label => <<"Left">>},
+                #{key => center, label => <<"Center">>},
+                #{key => right, label => <<"Right">>},
+                separator,
+                #{key => undo, label => <<"Undo">>},
+                #{key => redo, label => <<"Redo">>, disabled => true},
+                separator,
+                {custom, ah_select([{p, <<"Paragraph">>}, {h1, <<"Heading">>}], p, [sm], [])}],
+               [], [{aria_label, <<"Formatting">>}]).
 
 -spec toolbar_overflow() -> aihtml:html().
 toolbar_overflow() ->
-    'div'(toolbar([#{key => new, label => <<"New">>},
-                   #{key => open, label => <<"Open">>},
-                   #{key => save, label => <<"Save">>, minimizable => false},
-                   separator,
-                   #{key => cut, label => <<"Cut">>},
-                   #{key => copy, label => <<"Copy">>},
-                   #{key => paste, label => <<"Paste">>},
-                   separator,
-                   #{key => print, label => <<"Print">>}],
-                  [], [{popup_width, 160}]),
-          [<<"w-64">>], []).
+    ah_div(ah_toolbar([#{key => new, label => <<"New">>},
+                       #{key => open, label => <<"Open">>},
+                       #{key => save, label => <<"Save">>, minimizable => false},
+                       separator,
+                       #{key => cut, label => <<"Cut">>},
+                       #{key => copy, label => <<"Copy">>},
+                       #{key => paste, label => <<"Paste">>},
+                       separator,
+                       #{key => print, label => <<"Print">>}],
+                      [], [{popup_width, 160}]),
+           [<<"w-64">>], []).

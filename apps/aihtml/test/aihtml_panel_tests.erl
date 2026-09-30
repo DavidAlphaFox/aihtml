@@ -15,7 +15,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([panel], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -30,8 +30,8 @@ catalog_documents_every_option_test() ->
 %%% panel
 
 panel_test() ->
-    H = r(?M:panel(<<"c">>, [bordered], [{id, p}, {title, <<"T">>}, {collapsible, true},
-                                          {collapsed, true}, {height, 100}])),
+    H = r(?M:ah_panel(<<"c">>, [bordered], [{id, p}, {title, <<"T">>}, {collapsible, true},
+                                             {collapsed, true}, {height, 100}])),
     ?assert(has(H, <<"class=\"ah-panel ah-panel-bordered ah-panel-has-header ah-panel-collapsed\"">>)),
     ?assert(has(H, <<"data-ah=\"panel\"">>)),
     ?assert(has(H, <<"aria-expanded=\"false\" aria-controls=\"p-body\"">>)),
@@ -39,7 +39,7 @@ panel_test() ->
     ?assert(has(H, <<"<div class=\"ah-panel-content\">c</div>">>)).
 
 panel_plain_test() ->
-    H = r(?M:panel(<<"c">>, [], [{id, p}])),
+    H = r(?M:ah_panel(<<"c">>, [], [{id, p}])),
     ?assertNot(has(H, <<"ah-panel-header">>)),
     ?assertNot(has(H, <<"style=">>)).
 
@@ -65,15 +65,15 @@ classes_are_styled_test() ->
 
 %% One render of the component in its main variants and states.
 samples() ->
-    [?M:panel(<<"c">>, [bordered], [{title, <<"t">>}, {actions, <<"a">>}, {collapsible, true},
-                                {collapsed, true}])].
+    [?M:ah_panel(<<"c">>, [bordered], [{title, <<"t">>}, {actions, <<"a">>}, {collapsible, true},
+                                   {collapsed, true}])].
 
 %%% element records (designs/05-records.md)
 
 builder_fills_fields_test() ->
-    P = ?M:panel(<<"c">>, [bordered, <<"p-2">>],
-                 [{id, p}, {title, <<"T">>}, {collapsible, true}, {height, 100},
-                  {data_x, 1}]),
+    P = ?M:ah_panel(<<"c">>, [bordered, <<"p-2">>],
+                    [{id, p}, {title, <<"T">>}, {collapsible, true}, {height, 100},
+                     {data_x, 1}]),
     ?assertMatch(#ah_panel{body = <<"c">>, bordered = true, css = [<<"p-2">>], id = p,
                            title = <<"T">>, collapsible = true, collapsed = false,
                            height = 100, attrs = [{data_x, 1}]}, P).

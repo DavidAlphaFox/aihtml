@@ -21,14 +21,14 @@ has(Needle, Hay) ->
 has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 
 combobox_tag_template_test() ->
-    H = r(?M:combobox([{<<"a&b">>, <<"A <&>">>}], [<<"a&b">>], [multiple], [])),
+    H = r(?M:ah_combobox([{<<"a&b">>, <<"A <&>">>}], [<<"a&b">>], [multiple], [])),
     ?assert(has(<<"<span class=\"ah-combobox-tag\"><span class=\"ah-combobox-tag-text\">A &lt;&amp;&gt;</span><span class=\"ah-combobox-tag-close\" data-value=\"a&amp;b\" role=\"button\" aria-label=\"Remove A &lt;&amp;&gt;\">&times;</span></span>">>, H)).
 
 combobox_single_test() ->
     Items = [<<"Apple">>, {b, <<"Banana">>}, #{value => 3, label => <<"Cherry <3>">>,
                                                description => <<"red">>}],
-    H = r(?M:combobox(Items, b, [<<"w-56">>], [{id, cb}, {name, fruit},
-                                               {placeholder, <<"Pick">>}])),
+    H = r(?M:ah_combobox(Items, b, [<<"w-56">>], [{id, cb}, {name, fruit},
+                                                  {placeholder, <<"Pick">>}])),
     ?assert(has(<<"class=\"ah-combobox w-56\"">>, H)),
     ?assert(has(<<"data-ah=\"combobox\"">>, H)),
     ?assert(has(<<"data-ah-value=\"b\"">>, H)),
@@ -46,13 +46,13 @@ combobox_single_test() ->
     ?assertNot(has_quiet(<<"data-ah-on">>, H)).
 
 combobox_value_not_in_items_test() ->
-    H = r(?M:combobox([], <<"zed">>, [], [])),
+    H = r(?M:ah_combobox([], <<"zed">>, [], [])),
     ?assert(has(<<"value=\"zed\"">>, H)),
     ?assert(has(<<"data-ah-value=\"zed\"">>, H)).
 
 combobox_multi_test() ->
-    H = r(?M:combobox([<<"a">>, <<"b">>, <<"c">>], [<<"a">>, <<"c">>], [checkboxes],
-                      [{name, n}, {placeholder, <<"P">>}])),
+    H = r(?M:ah_combobox([<<"a">>, <<"b">>, <<"c">>], [<<"a">>, <<"c">>], [checkboxes],
+                         [{name, n}, {placeholder, <<"P">>}])),
     ?assert(has(<<"ah-combobox-checkboxes">>, H)),
     ?assert(has(<<"data-ah-value=\"a,c\"">>, H)),
     ?assert(has(<<"name=\"n\" value=\"a,c\"">>, H)),
@@ -68,7 +68,7 @@ combobox_groups_test() ->
     Items = [#{value => 1, label => <<"A">>, group => <<"G1">>},
              #{value => 2, label => <<"B">>, group => <<"G2">>},
              #{value => 3, label => <<"C">>, group => <<"G1">>, disabled => true}],
-    H = r(?M:combobox(Items, undefined, [], [{id, g}])),
+    H = r(?M:ah_combobox(Items, undefined, [], [{id, g}])),
     [{P1, _}, {P2, _}] = binary:matches(H, <<"ah-combobox-group-header">>),
     {PA, _} = binary:match(H, <<"data-value=\"1\"">>),
     {PC, _} = binary:match(H, <<"data-value=\"3\"">>),
@@ -79,18 +79,18 @@ combobox_groups_test() ->
     ?assert(has(<<"data-group=\"G1\"">>, H)).
 
 combobox_flags_options_test() ->
-    H = r(?M:combobox([<<"x">>], undefined, [disabled, no_arrow, free_text],
-                      [{search_mode, starts_with}, {min_length, 2},
-                       {empty_text, <<"Nothing">>}, {dropdown_height, 120}])),
+    H = r(?M:ah_combobox([<<"x">>], undefined, [disabled, no_arrow, free_text],
+                         [{search_mode, starts_with}, {min_length, 2},
+                          {empty_text, <<"Nothing">>}, {dropdown_height, 120}])),
     ?assert(has(<<"class=\"ah-combobox ah-combobox-disabled ah-combobox-free-text ah-combobox-no-arrow\"">>, H)),
     ?assert(has(<<"data-ah-search-mode=\"starts_with\"">>, H)),
     ?assert(has(<<"data-ah-min-length=\"2\"">>, H)),
     ?assert(has(<<"data-ah-empty=\"Nothing\"">>, H)),
     ?assert(has(<<"style=\"max-height:120px\"">>, H)),
     ?assertError({aihtml, {bad_search_mode, fuzzy}},
-                 r(?M:combobox([], undefined, [], [{search_mode, fuzzy}]))),
+                 r(?M:ah_combobox([], undefined, [], [{search_mode, fuzzy}]))),
     ?assertError({aihtml, {bad_combobox_item, _}},
-                 r(?M:combobox([{1, 2, 3}], undefined, [], []))).
+                 r(?M:ah_combobox([{1, 2, 3}], undefined, [], []))).
 
 %%%===================================================================
 %%% Server-side search: render, verify the token, run the action
@@ -103,7 +103,7 @@ action(search, #{source := Source}, #{value := Q} = Ev, Ctx) ->
 
 search_round_trip_test() ->
     Ref = {?MODULE, search, #{source => [<<"Apple">>, <<"Apricot">>, <<"Banana">>]}},
-    H = r(?M:combobox([], undefined, [], [{id, <<"cb-s">>}, {search, Ref}])),
+    H = r(?M:ah_combobox([], undefined, [], [{id, <<"cb-s">>}, {search, Ref}])),
     ?assert(has(<<"data-ah-remote">>, H)),
     %% the input carries the debounced action: input:TOKEN:250
     {match, [Token]} = re:run(H, <<"data-ah-on=\"input:([^:\"]+):250\"">>,
@@ -114,8 +114,8 @@ search_round_trip_test() ->
     {ok, [Html, Call]} = aihtml_action:execute(Ref, Event, #{send => fun(_) -> error(unexpected_flush) end}),
     %% the items, rendered like the first render, morphed into the list
     #{op := html, swap := morph_inner, id := <<"cb-s-list">>, html := Items} = Html,
-    ?assertEqual(extract_list(r(?M:combobox([<<"Apple">>, <<"Apricot">>], undefined, [],
-                                            [{id, <<"cb-s">>}]))),
+    ?assertEqual(extract_list(r(?M:ah_combobox([<<"Apple">>, <<"Apricot">>], undefined, [],
+                                               [{id, <<"cb-s">>}]))),
                  Items),
     ?assert(has(<<"id=\"cb-s-opt-1\" role=\"option\" aria-selected=\"false\" data-index=\"1\" data-value=\"Apricot\"">>, Items)),
     ?assertNot(has_quiet(<<"Banana">>, Items)),
@@ -139,7 +139,7 @@ search_checkboxes_test() ->
     ?assert(has(<<"class=\"ah-combobox-checkbox\"">>, H)),
     %% the input tells the search action about check boxes
     ?assert(has(<<"data-checkboxes=\"true\"">>,
-                r(?M:combobox([], undefined, [checkboxes], [{search, {?MODULE, search, #{}}}])))).
+                r(?M:ah_combobox([], undefined, [checkboxes], [{search, {?MODULE, search, #{}}}])))).
 
 
 set_items_targets_test() ->
@@ -185,22 +185,22 @@ catalog_test() ->
 
 record_equals_builder_test() ->
     Items = [<<"a">>, {b, <<"B">>}, #{value => c, group => <<"G">>}],
-    ?assertEqual(r(?M:combobox(Items, [a, c], [checkboxes, no_arrow],
-                               [{id, <<"cb">>}, {name, n}, {placeholder, <<"P">>},
-                                {search_mode, starts_with}, {dropdown_height, 100},
-                                {search, {?MODULE, search, #{}}}])),
+    ?assertEqual(r(?M:ah_combobox(Items, [a, c], [checkboxes, no_arrow],
+                                  [{id, <<"cb">>}, {name, n}, {placeholder, <<"P">>},
+                                   {search_mode, starts_with}, {dropdown_height, 100},
+                                   {search, {?MODULE, search, #{}}}])),
                  r(#ah_combobox{items = Items, value = [a, c], checkboxes = true,
                                 no_arrow = true, id = <<"cb">>, name = n, placeholder = <<"P">>,
                                 search_mode = starts_with, dropdown_height = 100,
                                 search = {?MODULE, search, #{}}})).
 
 builder_fills_fields_test() ->
-    C = ?M:combobox([<<"a">>], <<"a">>, [free_text], [{min_length, 2}, {empty_text, <<"-">>}]),
+    C = ?M:ah_combobox([<<"a">>], <<"a">>, [free_text], [{min_length, 2}, {empty_text, <<"-">>}]),
     ?assertMatch(#ah_combobox{items = [<<"a">>], value = <<"a">>, free_text = true,
                               min_length = 2, empty_text = <<"-">>, id = undefined,
                               attrs = []}, C),
     ?assertError({aihtml, {record_only_field, ah_combobox, postback}},
-                 ?M:combobox([], undefined, [], [{postback, pick}])).
+                 ?M:ah_combobox([], undefined, [], [{postback, pick}])).
 
 generated_id_test() ->
     %% no id: one is generated at render, and the parts refer to it
@@ -233,7 +233,7 @@ field_validation_test() ->
                  r(#ah_combobox{css = [multiple]})),
     %% modifier names still fail in the builder
     ?assertError({aihtml, {unknown_modifier, combobox, big, _}},
-                 ?M:combobox([], undefined, [big], [])).
+                 ?M:ah_combobox([], undefined, [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],
@@ -258,9 +258,9 @@ vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_values_test() ->
     Items = [<<"a,b">>, <<"c">>, <<"d\\e">>],
-    M = r(?M:combobox(Items, [<<"a,b">>, <<"d\\e">>], [multiple], [{name, k}])),
+    M = r(?M:ah_combobox(Items, [<<"a,b">>, <<"d\\e">>], [multiple], [{name, k}])),
     ?assert(vhas(<<"data-ah-value=\"a\\,b,d\\\\e\"">>, M)),
     ?assert(vhas(<<"name=\"k\" value=\"a\\,b,d\\\\e\"">>, M)),
     %% a single value is written as it is
-    S = r(?M:combobox(Items, <<"a,b">>, [], [])),
+    S = r(?M:ah_combobox(Items, <<"a,b">>, [], [])),
     ?assert(vhas(<<"data-ah-value=\"a,b\"">>, S)).

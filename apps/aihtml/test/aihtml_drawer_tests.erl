@@ -42,9 +42,9 @@ every_entry_documents_options_and_methods_test() ->
 %%%===================================================================
 
 drawer_structure_test() ->
-    H = ?M:drawer(<<"Body">>, [<<"bg-red-50">>],
-                  [{id, <<"d">>}, {title, <<"Title">>}, {description, <<"Desc">>},
-                   {footer, <<"F">>}]),
+    H = ?M:ah_drawer(<<"Body">>, [<<"bg-red-50">>],
+                     [{id, <<"d">>}, {title, <<"Title">>}, {description, <<"Desc">>},
+                      {footer, <<"F">>}]),
     has(H, <<"<div class=\"ah-drawer__overlay\" data-ah=\"drawer\" data-state=\"closed\" id=\"d\">">>),
     has(H, <<"class=\"ah-drawer__panel bg-red-50\" role=\"dialog\" aria-modal=\"true\" "
              "aria-labelledby=\"d-title\" data-side=\"bottom\" data-state=\"closed\" "
@@ -57,9 +57,9 @@ drawer_structure_test() ->
     has(H, <<"<div class=\"ah-drawer__footer\">F</div>">>).
 
 drawer_options_test() ->
-    H = ?M:drawer(<<"x">>, [right], [{size, 320}, {handle, false}, {closable, false},
-                                     {dismissible, false}, {close_on_overlay, false},
-                                     {close_on_esc, false}, {open, true}]),
+    H = ?M:ah_drawer(<<"x">>, [right], [{size, 320}, {handle, false}, {closable, false},
+                                        {dismissible, false}, {close_on_overlay, false},
+                                        {close_on_esc, false}, {open, true}]),
     has(H, <<"data-side=\"right\"">>),
     has(H, <<"style=\"width:320px;\"">>),
     has(H, <<"data-ah-esc=\"false\" data-ah-scrim=\"false\" data-ah-dismissible=\"false\" "
@@ -73,16 +73,16 @@ drawer_options_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:drawer(<<"D">>, [right, <<"bg-white">>],
-                             [{id, <<"d">>}, {title, <<"T">>}, {size, 280},
-                              {handle, false}, {close_on_esc, false}])),
+    ?assertEqual(r(?M:ah_drawer(<<"D">>, [right, <<"bg-white">>],
+                                [{id, <<"d">>}, {title, <<"T">>}, {size, 280},
+                                 {handle, false}, {close_on_esc, false}])),
                  r(#ah_drawer{body = <<"D">>, side = right, css = [<<"bg-white">>],
                               id = <<"d">>, title = <<"T">>, size = 280, handle = false,
                               close_on_esc = false})).
 
 builder_fills_fields_test() ->
     ?assertError({aihtml, {record_only_field, ah_drawer, postback}},
-                 ?M:drawer(<<"x">>, [], [{postback, save}])).
+                 ?M:ah_drawer(<<"x">>, [], [{postback, save}])).
 
 ids_test() ->
     %% the title id follows the id field, also for an atom id
@@ -107,7 +107,7 @@ field_validation_test() ->
                  r(#ah_drawer{side = center})),
     %% modifier names still fail in the builder
     ?assertError({aihtml, {unknown_modifier, drawer, center, _}},
-                 ?M:drawer(<<"x">>, [center], [])).
+                 ?M:ah_drawer(<<"x">>, [center], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],

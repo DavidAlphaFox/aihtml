@@ -1,6 +1,6 @@
 %%%-------------------------------------------------------------------
 %%% @doc Internal helpers shared by the form components: the labelled row
-%%% of field/4 and form_layout/4 (sigil's form markup), and the value and
+%%% of ah_field/4 and ah_form_layout/4 (sigil's form markup), and the value and
 %%% size formatting of the selection controls (dropdownlist, select,
 %%% slider, field, form_layout). Not part of the public API.
 %%% @end
@@ -14,7 +14,7 @@
 %% px (integer) or a CSS length
 -type size() :: integer() | binary().
 -type label_position() :: left | top | right | bottom.
-%% The row options field/4 and the form_layout rows share (a form_layout
+%% The row options ah_field/4 and the form_layout rows share (a form_layout
 %% field map may hold more keys).
 -type row_opts() :: #{for => term(), help => aihtml_html:html(),
                       error => aihtml_html:html(), required => boolean(),

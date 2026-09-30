@@ -19,7 +19,7 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 -define(ITEMS, [{list, <<"List">>}, {grid, <<"Grid">>}, {board, <<"Board">>}]).
 
 segmented_control_test() ->
-    H = r(?M:segmented_control(?ITEMS, grid, [lg, full_width], [{name, layout}, {id, s}])),
+    H = r(?M:ah_segmented_control(?ITEMS, grid, [lg, full_width], [{name, layout}, {id, s}])),
     ?has(<<"<div class=\"ah-segmented-control\" role=\"tablist\" data-size=\"lg\" "
            "data-full-width=\"true\" data-disabled=\"false\" data-ah=\"segmented-control\" "
            "data-ah-value=\"grid\" id=\"s\">">>, H),
@@ -28,15 +28,15 @@ segmented_control_test() ->
            "data-disabled=\"false\" tabindex=\"0\">Grid</button>">>, H),
     ?has(<<"data-state=\"inactive\"">>, H),
     ?has(<<"<input type=\"hidden\" name=\"layout\" value=\"grid\" data-ah-input>">>, H),
-    ?has(<<"data-size=\"md\"">>, r(?M:segmented_control(?ITEMS, grid, [], []))).
+    ?has(<<"data-size=\"md\"">>, r(?M:ah_segmented_control(?ITEMS, grid, [], []))).
 
 segmented_control_disabled_test() ->
-    H = r(?M:segmented_control([{a, <<"A">>}, {b, <<"B">>, [{disabled, true}]}], a, [], [])),
+    H = r(?M:ah_segmented_control([{a, <<"A">>}, {b, <<"B">>, [{disabled, true}]}], a, [], [])),
     ?has(<<"data-value=\"b\" data-state=\"inactive\" data-disabled=\"true\" tabindex=\"-1\" disabled">>, H),
-    D = r(?M:segmented_control(?ITEMS, list, [], [{disabled, true}])),
+    D = r(?M:ah_segmented_control(?ITEMS, list, [], [{disabled, true}])),
     ?has(<<"data-disabled=\"true\" aria-disabled=\"true\"">>, D),
     ?assertError({aihtml, {unknown_modifier, segmented_control, xl, _}},
-                 ?M:segmented_control(?ITEMS, list, [xl], [])).
+                 ?M:ah_segmented_control(?ITEMS, list, [xl], [])).
 
 %%% catalog (demos live in aihtml_example)
 
@@ -45,7 +45,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- Cat],
     ?assertEqual([segmented_control], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          #{category := form, signature := S, root := <<"ah-", _/binary>>} = E,
          ?assert(is_binary(S))
      end || #{name := N} = E <- Cat],

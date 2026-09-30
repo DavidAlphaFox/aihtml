@@ -39,10 +39,10 @@ catalog_docs_test() ->
 %%%===================================================================
 
 navbar_test() ->
-    H = r(?M:navbar([{home, <<"Home">>}, #{key => docs, label => <<"Docs">>, href => <<"/d">>},
-                     #{key => off, label => <<"Off">>, disabled => true}],
-                    home, [], [{brand, <<"Acme">>}, {extra, <<"X">>},
-                               {columns, [<<"30%">>]}, {name, <<"nav">>}])),
+    H = r(?M:ah_navbar([{home, <<"Home">>}, #{key => docs, label => <<"Docs">>, href => <<"/d">>},
+                        #{key => off, label => <<"Off">>, disabled => true}],
+                       home, [], [{brand, <<"Acme">>}, {extra, <<"X">>},
+                                  {columns, [<<"30%">>]}, {name, <<"nav">>}])),
     ?assert(has(H, <<"class=\"ah-navbar\"">>)),
     ?assert(has(H, <<"role=\"tablist\"">>)),
     ?assert(has(H, <<"data-ah-value=\"home\"">>)),
@@ -59,13 +59,13 @@ navbar_test() ->
     ?assert(has(H, <<"name=\"nav\" value=\"home\"">>)).
 
 navbar_minimized_vertical_test() ->
-    M = r(?M:navbar([{a, <<"A">>}], undefined, [minimized], [{title, <<"T">>},
-                                                              {minimized_height, 40}])),
+    M = r(?M:ah_navbar([{a, <<"A">>}], undefined, [minimized], [{title, <<"T">>},
+                                                                 {minimized_height, 40}])),
     ?assert(has(M, <<"ah-navbar ah-navbar-minimized">>)),
     ?assert(has(M, <<"data-ah-minimized=\"static\"">>)),
     ?assert(has(M, <<"height:40px;">>)),
     ?assert(has(M, <<"<span class=\"ah-navbar-title\">T</span>">>)),
-    V = r(?M:navbar([{a, <<"A">>}], undefined, [vertical], [{selection, false}])),
+    V = r(?M:ah_navbar([{a, <<"A">>}], undefined, [vertical], [{selection, false}])),
     ?assert(has(V, <<"ah-navbar ah-navbar-vertical">>)),
     ?assert(has(V, <<"aria-orientation=\"vertical\"">>)),
     ?assert(has(V, <<"data-ah-selection=\"false\"">>)).
@@ -79,8 +79,8 @@ navbar_minimized_vertical_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:navbar(?ITEMS, help, [minimized],
-                             [{brand, <<"B">>}, {columns, [<<"30%">>]}, {minimized_height, 40}])),
+    ?assertEqual(r(?M:ah_navbar(?ITEMS, help, [minimized],
+                                [{brand, <<"B">>}, {columns, [<<"30%">>]}, {minimized_height, 40}])),
                  r(#ah_navbar{items = ?ITEMS, value = help, minimized = true, brand = <<"B">>,
                               columns = [<<"30%">>], minimized_height = 40})).
 

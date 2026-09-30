@@ -17,27 +17,27 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 %%% toggle_button
 
 toggle_button_test() ->
-    Off = r(?M:toggle_button(<<"B">>, false, [default], [])),
+    Off = r(?M:ah_toggle_button(<<"B">>, false, [default], [])),
     ?has(<<"data-ah=\"toggle-button\"">>, Off),
     ?has(<<"data-ah-value=\"false\"">>, Off),
     ?has(<<"aria-pressed=\"false\"">>, Off),
     ?has(<<"value=\"false\"">>, Off),
     ?hasnt(<<"ah-btn-toggled">>, Off),
-    On = r(?M:toggle_button(<<"B">>, true, [], [])),
+    On = r(?M:ah_toggle_button(<<"B">>, true, [], [])),
     ?has(<<"ah-btn-toggled">>, On),
     ?has(<<"data-ah-value=\"true\"">>, On).
 
 toggle_button_hidden_input_test() ->
-    H = r(?M:toggle_button(<<"B">>, true, [], [{name, bold}, {id, t}])),
+    H = r(?M:ah_toggle_button(<<"B">>, true, [], [{name, bold}, {id, t}])),
     ?has(<<"<input type=\"hidden\" name=\"bold\" value=\"true\" data-ah-input>">>, H),
     %% the name is on the hidden input only
     ?assertEqual(1, length(binary:matches(H, <<"name=">>))),
     ?has(<<"id=\"t\"">>, H),
-    ?assertError(function_clause, ?M:toggle_button(<<"B">>, yes, [], [])).
+    ?assertError(function_clause, ?M:ah_toggle_button(<<"B">>, yes, [], [])).
 
 toggle_button_on_change_test() ->
     Attrs = [{<<"data-ah-on">>, {actions, [{<<"change">>, <<"TOKEN">>, #{}}]}}],
-    H = r(?M:toggle_button(<<"B">>, false, [], Attrs)),
+    H = r(?M:ah_toggle_button(<<"B">>, false, [], Attrs)),
     ?has(<<"data-ah-on=\"change:TOKEN\"">>, H).
 
 %%% catalog (demos live in aihtml_example)
@@ -47,7 +47,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- Cat],
     ?assertEqual([toggle_button], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          #{category := form, signature := S, root := <<"ah-", _/binary>>} = E,
          ?assert(is_binary(S))
      end || #{name := N} = E <- Cat],
@@ -72,9 +72,9 @@ catalog_docs_test() ->
 action(_, _, _, _) -> ok.
 
 builder_fills_fields_test() ->
-    B = ?M:toggle_button(<<"B">>, true, [secondary, <<"x">>],
-                         [{name, bold}, {disabled, true}, {icon, <<"*">>}, {title, <<"t">>},
-                          on(change)]),
+    B = ?M:ah_toggle_button(<<"B">>, true, [secondary, <<"x">>],
+                            [{name, bold}, {disabled, true}, {icon, <<"*">>}, {title, <<"t">>},
+                             on(change)]),
     ?assertMatch(#ah_toggle_button{value = true, variant = secondary, size = md,
                                    name = bold, disabled = true, icon = <<"*">>,
                                    css = [<<"x">>]}, B),

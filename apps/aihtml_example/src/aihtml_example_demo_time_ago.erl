@@ -20,7 +20,7 @@ demos() ->
 -spec time_ago_units() -> aihtml:html().
 time_ago_units() ->
     Now = erlang:system_time(second),
-    row([time_ago(Now - Ago, [], [])
+    row([ah_time_ago(Now - Ago, [], [])
          || Ago <- [5, 3 * 60, 2 * 3600, 3 * 86400, 90 * 86400]]).
 
 -spec time_ago_options() -> aihtml:html().
@@ -29,10 +29,10 @@ time_ago_options() ->
     Chinese = #{just_now => <<"刚刚"/utf8>>, minutes => <<"{n} 分钟前"/utf8>>,
                 hours => <<"{n} 小时前"/utf8>>, days => <<"{n} 天前"/utf8>>,
                 months => <<"{n} 个月前"/utf8>>},
-    row([time_ago(Now - 600, [], [{labels, Chinese}]),
-         time_ago({{2026, 1, 1}, {0, 0, 0}}, [<<"text-muted">>], [{live, false}]),
-         time_ago(<<"2026-07-22T08:00:00Z">>, [], [{title, false}])]).
+    row([ah_time_ago(Now - 600, [], [{labels, Chinese}]),
+         ah_time_ago({{2026, 1, 1}, {0, 0, 0}}, [<<"text-muted">>], [{live, false}]),
+         ah_time_ago(<<"2026-07-22T08:00:00Z">>, [], [{title, false}])]).
 
 %% Layout helpers of the demos.
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

@@ -23,29 +23,29 @@ demos() ->
 
 -spec bar_basic() -> aihtml:html().
 bar_basic() ->
-    bar_chart([{<<"一季度"/utf8>>, [420, 380, 290, 150, 80]},
-               {<<"二季度"/utf8>>, [480, 420, 350, 180, 95]}],
-              [], [{categories, regions()}, {title, <<"各区域销售额"/utf8>>}, {height, 300}]).
+    ah_bar_chart([{<<"一季度"/utf8>>, [420, 380, 290, 150, 80]},
+                  {<<"二季度"/utf8>>, [480, 420, 350, 180, 95]}],
+                 [], [{categories, regions()}, {title, <<"各区域销售额"/utf8>>}, {height, 300}]).
 
 -spec bar_horizontal() -> aihtml:html().
 bar_horizontal() ->
-    bar_chart([{<<"销量"/utf8>>, [850, 620, 480, 320]}], [horizontal],
-              [{categories, [<<"产品 A"/utf8>>, <<"产品 B"/utf8>>, <<"产品 C"/utf8>>,
-                             <<"产品 D"/utf8>>]},
-               {legend, none}, {height, 260}]).
+    ah_bar_chart([{<<"销量"/utf8>>, [850, 620, 480, 320]}], [horizontal],
+                 [{categories, [<<"产品 A"/utf8>>, <<"产品 B"/utf8>>, <<"产品 C"/utf8>>,
+                                <<"产品 D"/utf8>>]},
+                  {legend, none}, {height, 260}]).
 
 -spec bar_stack() -> aihtml:html().
 bar_stack() ->
-    bar_chart([{<<"线上"/utf8>>, [320, 400, 480, 560]},
-               {<<"门店"/utf8>>, [180, 220, 260, 300]}],
-              [stack], [{categories, [<<"Q1">>, <<"Q2">>, <<"Q3">>, <<"Q4">>]}, {height, 300}]).
+    ah_bar_chart([{<<"线上"/utf8>>, [320, 400, 480, 560]},
+                  {<<"门店"/utf8>>, [180, 220, 260, 300]}],
+                 [stack], [{categories, [<<"Q1">>, <<"Q2">>, <<"Q3">>, <<"Q4">>]}, {height, 300}]).
 
 -spec bar_colors() -> aihtml:html().
 bar_colors() ->
-    bar_chart([#{name => <<"完成"/utf8>>, data => [8, 12, 5], color => <<"--ah-color-success">>},
-               #{name => <<"逾期"/utf8>>, data => [2, 1, 4], color => <<"#e8684a">>}],
-              [], [{categories, [<<"设计"/utf8>>, <<"开发"/utf8>>, <<"测试"/utf8>>]},
-                   {bar_width, 18}, {grid, false}, {legend, right}, {height, 260}]).
+    ah_bar_chart([#{name => <<"完成"/utf8>>, data => [8, 12, 5], color => <<"--ah-color-success">>},
+                  #{name => <<"逾期"/utf8>>, data => [2, 1, 4], color => <<"#e8684a">>}],
+                 [], [{categories, [<<"设计"/utf8>>, <<"开发"/utf8>>, <<"测试"/utf8>>]},
+                      {bar_width, 18}, {grid, false}, {legend, right}, {height, 260}]).
 
 %%%===================================================================
 %%% Data

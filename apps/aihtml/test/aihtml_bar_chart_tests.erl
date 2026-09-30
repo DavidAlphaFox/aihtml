@@ -17,9 +17,9 @@ island(Html) ->
     json:decode(Json).
 
 bar_option_test() ->
-    O = island(?M:bar_chart([{a, [1, 2]}, {b, [3, 4]}], [horizontal, stack],
-                            [{categories, [p, q]}, {bar_width, 20}, {grid, false},
-                             {legend, right}])),
+    O = island(?M:ah_bar_chart([{a, [1, 2]}, {b, [3, 4]}], [horizontal, stack],
+                               [{categories, [p, q]}, {bar_width, 20}, {grid, false},
+                                {legend, right}])),
     #{<<"xAxis">> := #{<<"type">> := <<"value">>,
                        <<"splitLine">> := #{<<"show">> := false}},
       <<"yAxis">> := #{<<"type">> := <<"category">>, <<"data">> := [<<"p">>, <<"q">>]},
@@ -30,7 +30,7 @@ bar_option_test() ->
     ?assertMatch(#{<<"type">> := <<"bar">>, <<"stack">> := <<"total">>, <<"barWidth">> := 20,
                    <<"itemStyle">> := #{<<"borderRadius">> := 0}}, B1),
     ?assertMatch(#{<<"itemStyle">> := #{<<"borderRadius">> := [0, 4, 4, 0]}}, B2),
-    [V] = maps:get(<<"series">>, island(?M:bar_chart([{a, [1]}], [], []))),
+    [V] = maps:get(<<"series">>, island(?M:ah_bar_chart([{a, [1]}], [], []))),
     ?assertMatch(#{<<"itemStyle">> := #{<<"borderRadius">> := [4, 4, 0, 0]},
                    <<"barMaxWidth">> := 40}, V).
 
@@ -60,13 +60,13 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:bar_chart([{a, [1]}], [horizontal], [{id, c}, {bar_width, 9}])),
+    ?assertEqual(r(?M:ah_bar_chart([{a, [1]}], [horizontal], [{id, c}, {bar_width, 9}])),
                  r(#ah_bar_chart{series = [{a, [1]}], horizontal = true, bar_width = 9, id = c})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_bar_chart{series = [], stack = true, horizontal = false, title = <<"t">>,
                                css = [<<"x">>], attrs = [{role, x}]},
-                 ?M:bar_chart([], [stack, <<"x">>], [{title, <<"t">>}, {role, x}])).
+                 ?M:ah_bar_chart([], [stack, <<"x">>], [{title, <<"t">>}, {role, x}])).
 
 postback_test() ->
     Token = fun(Html) ->
@@ -82,7 +82,7 @@ field_validation_test() ->
     ?assertError({aihtml, {bad_option, grid, 1}}, r(#ah_bar_chart{grid = 1})),
     ?assertError({aihtml, {bad_option, colors, [red]}}, r(#ah_bar_chart{colors = [red]})),
     ?assertError({aihtml, {bad_option, bar_width, wide}}, r(#ah_bar_chart{bar_width = wide})),
-    ?assertError({aihtml, {unknown_modifier, bar_chart, big, _}}, ?M:bar_chart([], [big], [])).
+    ?assertError({aihtml, {unknown_modifier, bar_chart, big, _}}, ?M:ah_bar_chart([], [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],

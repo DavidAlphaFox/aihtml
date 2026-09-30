@@ -20,21 +20,21 @@ demos() ->
 
 -spec tag_cloud_weights() -> aihtml:html().
 tag_cloud_weights() ->
-    tag_cloud([{<<"Erlang">>, 40}, {<<"jQuery">>, 25}, {<<"CSS">>, 15}, {<<"sigil">>, 30},
-               #{label => <<"OTP">>, value => 35, url => <<"#otp">>},
-               {<<"html">>, 8}, {<<"Tailwind">>, 20}],
-              [], []).
+    ah_tag_cloud([{<<"Erlang">>, 40}, {<<"jQuery">>, 25}, {<<"CSS">>, 15}, {<<"sigil">>, 30},
+                  #{label => <<"OTP">>, value => 35, url => <<"#otp">>},
+                  {<<"html">>, 8}, {<<"Tailwind">>, 20}],
+                 [], []).
 
 -spec tag_cloud_gradient() -> aihtml:html().
 tag_cloud_gradient() ->
-    tag_cloud([{<<"Erlang">>, 40}, {<<"jQuery">>, 25}, {<<"CSS">>, 15}, {<<"sigil">>, 30},
-               {<<"OTP">>, 35}, {<<"html">>, 8}, {<<"Tailwind">>, 20}],
-              [], [{min_color, <<"#93c5fd">>}, {max_color, <<"#1e3a8a">>}, {max_font_size, 32},
-                   {sort_by, value}, {sort_order, descending}]).
+    ah_tag_cloud([{<<"Erlang">>, 40}, {<<"jQuery">>, 25}, {<<"CSS">>, 15}, {<<"sigil">>, 30},
+                  {<<"OTP">>, 35}, {<<"html">>, 8}, {<<"Tailwind">>, 20}],
+                 [], [{min_color, <<"#93c5fd">>}, {max_color, <<"#1e3a8a">>}, {max_font_size, 32},
+                      {sort_by, value}, {sort_order, descending}]).
 
 -spec tag_cloud_values() -> aihtml:html().
 tag_cloud_values() ->
-    tag_cloud([{<<"erlang">>, 40}, {<<"jquery">>, 25}, {<<"css">>, 15}, {<<"sigil">>, 30},
-               {<<"otp">>, 35}, {<<"html">>, 8}],
-              [], [{display_value, true}, {text_case, first_upper},
-                   {display_limit, 4}, {take_top_weighted, true}]).
+    ah_tag_cloud([{<<"erlang">>, 40}, {<<"jquery">>, 25}, {<<"css">>, 15}, {<<"sigil">>, 30},
+                  {<<"otp">>, 35}, {<<"html">>, 8}],
+                 [], [{display_value, true}, {text_case, first_upper},
+                      {display_limit, 4}, {take_top_weighted, true}]).

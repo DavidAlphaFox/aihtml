@@ -24,30 +24,30 @@ demos() ->
 
 -spec notification_variants() -> aihtml:html().
 notification_variants() ->
-    row([button(<<"Info">>, undefined, [info], opens({id, <<"note-info">>})),
-         button(<<"Success">>, undefined, [success], opens({id, <<"note-success">>})),
-         button(<<"Warning">>, undefined, [warning], opens({id, <<"note-warning">>})),
-         button(<<"Error">>, undefined, [error], opens({id, <<"note-error">>})),
-         notification(<<"A new version is available.">>, [info], [{id, <<"note-info">>}]),
-         notification([strong(<<"Upload complete. ">>), <<"3 files were added.">>],
-                      [success], [{id, <<"note-success">>}]),
-         notification(<<"Your session expires in 5 minutes.">>, [warning],
-                      [{id, <<"note-warning">>}]),
-         notification(<<"The server could not be reached.">>, [error],
-                      [{id, <<"note-error">>}])]).
+    row([ah_button(<<"Info">>, undefined, [info], opens({id, <<"note-info">>})),
+         ah_button(<<"Success">>, undefined, [success], opens({id, <<"note-success">>})),
+         ah_button(<<"Warning">>, undefined, [warning], opens({id, <<"note-warning">>})),
+         ah_button(<<"Error">>, undefined, [error], opens({id, <<"note-error">>})),
+         ah_notification(<<"A new version is available.">>, [info], [{id, <<"note-info">>}]),
+         ah_notification([ah_strong(<<"Upload complete. ">>), <<"3 files were added.">>],
+                         [success], [{id, <<"note-success">>}]),
+         ah_notification(<<"Your session expires in 5 minutes.">>, [warning],
+                         [{id, <<"note-warning">>}]),
+         ah_notification(<<"The server could not be reached.">>, [error],
+                         [{id, <<"note-error">>}])]).
 
 -spec notification_sticky() -> aihtml:html().
 notification_sticky() ->
-    row([button(<<"Notify">>, undefined, [outlined], opens({id, <<"note-sticky">>})),
-         button(<<"Close all">>, undefined, [default], closes({id, <<"note-sticky">>})),
-         notification(<<"Stays until you close it.">>, [warning, bottom_right],
-                      [{id, <<"note-sticky">>}, {auto_close, false},
-                       {close_on_click, false}, {width, 320}])]).
+    row([ah_button(<<"Notify">>, undefined, [outlined], opens({id, <<"note-sticky">>})),
+         ah_button(<<"Close all">>, undefined, [default], closes({id, <<"note-sticky">>})),
+         ah_notification(<<"Stays until you close it.">>, [warning, bottom_right],
+                         [{id, <<"note-sticky">>}, {auto_close, false},
+                          {close_on_click, false}, {width, 320}])]).
 
 -spec notify_from_server() -> aihtml:html().
 notify_from_server() ->
-    row([button(<<"Import on the server">>, undefined, [primary],
-                on(click, {?MODULE, import, #{}}))]).
+    row([ah_button(<<"Import on the server">>, undefined, [primary],
+                   on(click, {?MODULE, import, #{}}))]).
 
 %%%===================================================================
 %%% Actions
@@ -55,7 +55,7 @@ notify_from_server() ->
 
 -spec action(atom(), map(), aihtml_action:event(), aihtml_action:ctx()) -> ok.
 action(import, _, _Ev, Ctx) ->
-    aihtml_notification:notify(Ctx, #{content => [strong(<<"Import finished. ">>),
+    aihtml_notification:notify(Ctx, #{content => [ah_strong(<<"Import finished. ">>),
                                                   <<"128 rows added.">>],
                                       variant => success, position => bottom_right}).
 
@@ -64,4 +64,4 @@ action(import, _, _Ev, Ctx) ->
 %%%===================================================================
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-3">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-3">>], []).

@@ -18,20 +18,20 @@ demos() ->
 
 -spec steps_basic() -> aihtml:html().
 steps_basic() ->
-    steps([{<<"Account">>, <<"Create an account">>}, {<<"Profile">>, <<"Your details">>},
-           {<<"Confirm">>, <<"Check and submit">>}], 1, [], []).
+    ah_steps([{<<"Account">>, <<"Create an account">>}, {<<"Profile">>, <<"Your details">>},
+              {<<"Confirm">>, <<"Check and submit">>}], 1, [], []).
 
 -spec steps_wizard() -> aihtml:html().
 steps_wizard() ->
-    steps([#{title => <<"Cart">>, content => p(<<"Your cart.">>)},
-           #{title => <<"Shipping">>, content => p(<<"Shipping address.">>)},
-           #{title => <<"Payment">>, content => p(<<"Payment method.">>)},
-           #{title => <<"Done">>, content => p(<<"Thank you.">>)}],
-          0, [], [{name, step}]).
+    ah_steps([#{title => <<"Cart">>, content => ah_p(<<"Your cart.">>)},
+              #{title => <<"Shipping">>, content => ah_p(<<"Shipping address.">>)},
+              #{title => <<"Payment">>, content => ah_p(<<"Payment method.">>)},
+              #{title => <<"Done">>, content => ah_p(<<"Thank you.">>)}],
+             0, [], [{name, step}]).
 
 -spec steps_vertical() -> aihtml:html().
 steps_vertical() ->
-    steps([{<<"Draft">>, <<"Written">>},
-           #{title => <<"Review">>, status => error, description => <<"Changes requested">>},
-           #{title => <<"Publish">>, disabled => true}],
-          1, [vertical], [{clickable, false}]).
+    ah_steps([{<<"Draft">>, <<"Written">>},
+              #{title => <<"Review">>, status => error, description => <<"Changes requested">>},
+              #{title => <<"Publish">>, disabled => true}],
+             1, [vertical], [{clickable, false}]).

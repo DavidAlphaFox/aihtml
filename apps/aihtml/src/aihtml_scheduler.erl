@@ -2,7 +2,7 @@
 %%% @doc A resource scheduler, ported from sigil (data/scheduler). See
 %%% designs/04-components.md.
 %%%
-%%%   scheduler(Events, Value, Css, Attrs) resource scheduler (day, week,
+%%%   ah_scheduler(Events, Value, Css, Attrs) resource scheduler (day, week,
 %%%                                        month, agenda, timeline views)
 %%%   scheduler_update(Ctx, Event, S)      (in an action) render another range
 %%%   scheduler_range(Event)               the view, date and range an event asks for
@@ -31,7 +31,7 @@
 %%% `data-start' and `data-end' (the visible range, end exclusive) and fires
 %%% `change'; the `source' option binds an action to it, which loads that
 %%% range from the database and answers with
-%%% `scheduler_update(Ctx, Event, scheduler(Events, undefined, Css, Attrs))':
+%%% `scheduler_update(Ctx, Event, ah_scheduler(Events, undefined, Css, Attrs))':
 %%% the date and view come from the event, the new view is rendered here
 %%% and morphed into the page. The browser never renders a range itself,
 %%% so the page holds only what is visible. Without `source' (or a change
@@ -52,7 +52,7 @@
 %%% link. The behaviour keeps the links pointing at the neighbours of the
 %%% shown date.
 %%%
-%%% scheduler/4 builds an #ah_scheduler{} (include/aihtml_scheduler.hrl)
+%%% ah_scheduler/4 builds an #ah_scheduler{} (include/aihtml_scheduler.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -62,7 +62,7 @@
 
 -include("aihtml_scheduler.hrl").
 
--export([scheduler/4, scheduler_update/3, scheduler_range/1,
+-export([ah_scheduler/4, scheduler_update/3, scheduler_range/1,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([element/0, event/0, status/0, resource/0, view/0, label_key/0, labels/0]).
@@ -138,9 +138,9 @@
 %% action that loads another range, see the module doc), `labels',
 %% `href' (a URL template with {date} and {view}: the toolbar becomes
 %% links, see the module doc), `name' (a hidden input with the shown date).
--spec scheduler([event()], aihtml_lib_date:date(), aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_scheduler([event()], aihtml_lib_date:date(), aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_scheduler{}.
-scheduler(Events, Value, Css, Attrs) ->
+ah_scheduler(Events, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_scheduler{items = Events, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_scheduler{}.
@@ -989,7 +989,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => scheduler, category => data,
-       signature => <<"scheduler(Events, Value, Css, Attrs)">>,
+       signature => <<"ah_scheduler(Events, Value, Css, Attrs)">>,
        root => <<"ah-scheduler">>,
        flags => [editable, no_all_day],
        classes => #{editable => [], no_all_day => []},

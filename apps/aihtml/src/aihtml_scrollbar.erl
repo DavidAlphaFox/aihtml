@@ -4,7 +4,7 @@
 %%% standalone with a value (min..max) when `Children' is empty, otherwise
 %%% a scroll area whose content gets custom bars.
 %%%
-%%% scrollbar/3 builds an element record (#ah_scrollbar{}, defined in
+%%% ah_scrollbar/3 builds an element record (#ah_scrollbar{}, defined in
 %%% include/aihtml_scrollbar.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%%
@@ -19,7 +19,7 @@
 
 -include("aihtml_scrollbar.hrl").
 
--export([scrollbar/3, render/1, fields/1, catalog/0]).
+-export([ah_scrollbar/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -34,8 +34,8 @@
 %% width / height, label); with content it is a scroll area of the given
 %% `height' / `width' whose vertical and horizontal bars appear when the
 %% content overflows.
--spec scrollbar(html(), css(), attrs()) -> #ah_scrollbar{}.
-scrollbar(Children, Css, Attrs) ->
+-spec ah_scrollbar(html(), css(), attrs()) -> #ah_scrollbar{}.
+ah_scrollbar(Children, Css, Attrs) ->
     ?E:build(?MODULE, #ah_scrollbar{body = Children}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -108,7 +108,7 @@ bar(Orient) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => scrollbar, category => layout,
-       signature => <<"scrollbar(Children, Css, Attrs)">>,
+       signature => <<"ah_scrollbar(Children, Css, Attrs)">>,
        root => <<"ah-scrollbar-host">>,
        groups => #{orientation => {[horizontal, vertical], horizontal}},
        flags => [disabled],

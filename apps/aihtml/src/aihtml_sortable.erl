@@ -16,7 +16,7 @@
 %%% arrows move it, Space or Enter drops it and Escape puts it back;
 %%% Alt+arrow moves the focused item at once.
 %%%
-%%% Behaviour: assets/js/components/sortable.ts. sortable/4 builds an
+%%% Behaviour: assets/js/components/sortable.ts. ah_sortable/4 builds an
 %%% #ah_sortable{} (include/aihtml_sortable.hrl) and render/1 turns it
 %%% into HTML.
 %%% @end
@@ -26,7 +26,7 @@
 
 -include("aihtml_sortable.hrl").
 
--export([sortable/4, render/1, fields/1, catalog/0]).
+-export([ah_sortable/4, render/1, fields/1, catalog/0]).
 
 -export_type([item/0, orientation/0]).
 
@@ -45,9 +45,9 @@
 %% (default) | `horizontal' | `grid', flag `handle' (drag by a grip only).
 %% Options: `group' (lists of the same group exchange items). `name' goes
 %% to a hidden input, `{disabled, true}' turns sorting off.
--spec sortable([item()], undefined | [term()] | iodata(), aihtml_html:css(),
-               aihtml_html:attrs()) -> #ah_sortable{}.
-sortable(Items, Value, Css, Attrs) ->
+-spec ah_sortable([item()], undefined | [term()] | iodata(), aihtml_html:css(),
+                  aihtml_html:attrs()) -> #ah_sortable{}.
+ah_sortable(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_sortable{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_sortable{}.
@@ -117,7 +117,7 @@ item({K0, Content, IA}) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => sortable, category => layout,
-       signature => <<"sortable(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_sortable(Items, Value, Css, Attrs)">>,
        root => <<"ah-sortable">>,
        groups => #{orientation => {[vertical, horizontal, grid], vertical}},
        flags => [handle],

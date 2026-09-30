@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% @doc An `<a>' styled as a button, ported from sigil's form components.
 %%%
-%%% link_button/4 builds an #ah_link_button{} (include/aihtml_link_button.hrl)
+%%% ah_link_button/4 builds an #ah_link_button{} (include/aihtml_link_button.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -11,16 +11,16 @@
 
 -include("aihtml_link_button.hrl").
 
--export([link_button/4, render/1, fields/1, catalog/0]).
+-export([ah_link_button/4, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
 
 %% @doc An `<a href=Href>' with button styling. `{disabled, true}' in
 %% `Attrs' removes the href and marks it `aria-disabled'.
--spec link_button(aihtml_html:html(), iodata() | undefined, aihtml_html:css(),
-                  aihtml_html:attrs()) -> #ah_link_button{}.
-link_button(Content, Href, Css, Attrs) ->
+-spec ah_link_button(aihtml_html:html(), iodata() | undefined, aihtml_html:css(),
+                     aihtml_html:attrs()) -> #ah_link_button{}.
+ah_link_button(Content, Href, Css, Attrs) ->
     ?E:build(?MODULE, #ah_link_button{body = Content, href = Href}, Css, Attrs).
 
 %% @doc The field names of #ah_link_button{}.
@@ -40,7 +40,7 @@ render(#ah_link_button{body = Content, href = Href, disabled = Disabled} = B) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => link_button, category => form,
-       signature => <<"link_button(Content, Href, Css, Attrs)">>,
+       signature => <<"ah_link_button(Content, Href, Css, Attrs)">>,
        root => <<"ah-btn">>, groups => aihtml_lib_button:btn_groups(), flags => [round],
        classes => #{md => []},
        doc => <<"A link that looks like a button.">>,

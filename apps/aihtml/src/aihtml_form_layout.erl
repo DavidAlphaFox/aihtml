@@ -2,7 +2,7 @@
 %%% @doc sigil's declarative Form (sigil.components.form.form), rendered
 %%% on the server.
 %%%
-%%%   form_layout(Fields, Values, Css, Attrs)
+%%%   ah_form_layout(Fields, Values, Css, Attrs)
 %%%
 %%% == Fields ==
 %%%
@@ -19,7 +19,7 @@
 %%%
 %%% Control is any html(), or a fun((Value) -> html()) that receives
 %%% `maps:get(Key, Values, undefined)', so one Values map fills the form.
-%%% The rows share field/4's markup (aihtml_lib_form); controls given
+%%% The rows share ah_field/4's markup (aihtml_lib_form); controls given
 %%% aihtml_field:validate/1 are checked on submit.
 %%%
 %%% The component function builds an #ah_form_layout{} record (include/
@@ -32,7 +32,7 @@
 
 -include("aihtml_form_layout.hrl").
 
--export([form_layout/4, render/1, fields/1, catalog/0]).
+-export([ah_form_layout/4, render/1, fields/1, catalog/0]).
 
 -export_type([field_spec/0, control/0]).
 
@@ -49,9 +49,9 @@
 %% @doc sigil's declarative Form rendered on the server: rows of labelled
 %% controls (see the module doc for the field shapes). The root is a
 %% `<form>' (option `tag => div' for a plain container); Attrs go to it.
--spec form_layout([field_spec()], #{term() => term()}, aihtml_html:css(),
-                  aihtml_html:attrs()) -> #ah_form_layout{}.
-form_layout(Fields, Values, Css, Attrs) ->
+-spec ah_form_layout([field_spec()], #{term() => term()}, aihtml_html:css(),
+                     aihtml_html:attrs()) -> #ah_form_layout{}.
+ah_form_layout(Fields, Values, Css, Attrs) ->
     ?E:build(?MODULE, #ah_form_layout{fields = Fields, values = Values}, Css, Attrs).
 
 -spec render(#ah_form_layout{}) -> aihtml_html:html().
@@ -114,7 +114,7 @@ fields(ah_form_layout) -> record_info(fields, ah_form_layout).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => form_layout, category => form,
-       signature => <<"form_layout(Fields, Values, Css, Attrs)">>,
+       signature => <<"ah_form_layout(Fields, Values, Css, Attrs)">>,
        root => <<"ah-form">>,
        flags => [bordered, bg, disabled],
        options => [label_position, label_width, padding, tag],

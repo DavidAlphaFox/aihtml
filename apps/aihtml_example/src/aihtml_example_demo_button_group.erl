@@ -20,16 +20,16 @@ demos() ->
 -spec group_modes() -> aihtml:html().
 group_modes() ->
     Views = [{list, <<"List">>}, {grid, <<"Grid">>}, {board, <<"Board">>}],
-    row([button_group([<<"Left">>, <<"Middle">>, <<"Right">>], undefined, [], []),
-         button_group(Views, grid, [radio], [{name, view}]),
-         button_group([{b, <<"B">>}, {i, <<"I">>}, {u, <<"U">>}], [b, u], [checkbox, square], [])]).
+    row([ah_button_group([<<"Left">>, <<"Middle">>, <<"Right">>], undefined, [], []),
+         ah_button_group(Views, grid, [radio], [{name, view}]),
+         ah_button_group([{b, <<"B">>}, {i, <<"I">>}, {u, <<"U">>}], [b, u], [checkbox, square], [])]).
 
 -spec group_layouts() -> aihtml:html().
 group_layouts() ->
     Views = [{list, <<"List">>}, {grid, <<"Grid">>}, {board, <<"Board">>}],
-    row([button_group(Views, list, [radio, vertical], []),
-         button_group(Views, board, [radio, filled], []),
-         button_group(Views, list, [radio, outlined, square], []),
-         button_group([{a, <<"Enabled">>}, {b, <<"Off">>, [{disabled, true}]}, {c, <<"On">>}],
-                      c, [radio], []),
-         button_group(Views, grid, [radio], [{disabled, true}])]).
+    row([ah_button_group(Views, list, [radio, vertical], []),
+         ah_button_group(Views, board, [radio, filled], []),
+         ah_button_group(Views, list, [radio, outlined, square], []),
+         ah_button_group([{a, <<"Enabled">>}, {b, <<"Off">>, [{disabled, true}]}, {c, <<"On">>}],
+                         c, [radio], []),
+         ah_button_group(Views, grid, [radio], [{disabled, true}])]).

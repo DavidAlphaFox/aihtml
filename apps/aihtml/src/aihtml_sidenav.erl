@@ -8,7 +8,7 @@
 %%% Items take the shape of `aihtml_lib_nav:item()'. Selecting an item
 %%% sets `data-ah-value' on the root to its key and fires `change' there.
 %%%
-%%% sidenav/4 builds an #ah_sidenav{} record (include/aihtml_sidenav.hrl)
+%%% ah_sidenav/4 builds an #ah_sidenav{} record (include/aihtml_sidenav.hrl)
 %%% and render/1 turns it into HTML (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
@@ -17,7 +17,7 @@
 
 -include("aihtml_sidenav.hrl").
 
--export([sidenav/4]).
+-export([ah_sidenav/4]).
 -export([render/1, fields/1, catalog/0]).
 
 -export_type([group/0]).
@@ -46,10 +46,10 @@
 %% (`#{name, logo, href}' or html), `footer', `collapsible' (a toggle
 %% button), `route_prefix' (href = prefix ++ key for items without href),
 %% `name'.
--spec sidenav([group()] | [aihtml_lib_nav:item()],
-              aihtml_lib_nav:key() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_sidenav([group()] | [aihtml_lib_nav:item()],
+                 aihtml_lib_nav:key() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_sidenav{}.
-sidenav(Groups, Value, Css, Attrs) ->
+ah_sidenav(Groups, Value, Css, Attrs) ->
     ?EL:build(?MODULE, #ah_sidenav{groups = Groups, value = Value}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -171,7 +171,7 @@ icon_body(Html) -> Html.
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => sidenav, category => layout,
-       signature => <<"sidenav(Groups, Value, Css, Attrs)">>,
+       signature => <<"ah_sidenav(Groups, Value, Css, Attrs)">>,
        root => <<"ah-sidenav">>,
        flags => [collapsed],
        options => [brand, footer, collapsible, route_prefix, name],

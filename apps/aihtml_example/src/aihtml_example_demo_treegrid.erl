@@ -31,7 +31,7 @@ demos() ->
 
 -spec tg_nested() -> aihtml:html().
 tg_nested() ->
-    treegrid(dept_columns(), departments(), [], [{expanded, [1, 10]}]).
+    ah_treegrid(dept_columns(), departments(), [], [{expanded, [1, 10]}]).
 
 -spec tg_flat() -> aihtml:html().
 tg_flat() ->
@@ -44,46 +44,46 @@ tg_flat() ->
              #{id => 111, name => <<"财务分析师"/utf8>>, role => <<"财务"/utf8>>, parent_id => 110},
              #{id => 120, name => <<"COO">>, role => <<"管理层"/utf8>>, parent_id => 100},
              #{id => 121, name => <<"运营经理"/utf8>>, role => <<"运营"/utf8>>, parent_id => 120}],
-    treegrid([#{field => name, title => <<"姓名/职位"/utf8>>, width => 260},
-              #{field => role, title => <<"角色"/utf8>>}],
-             Staff, [], [{expanded, all}, {height, 300}]).
+    ah_treegrid([#{field => name, title => <<"姓名/职位"/utf8>>, width => 260},
+                 #{field => role, title => <<"角色"/utf8>>}],
+                Staff, [], [{expanded, all}, {height, 300}]).
 
 -spec tg_selection() -> aihtml:html().
 tg_selection() ->
-    'div'([treegrid(dept_columns(), departments(), [],
-                    [{selection_mode, multiple}, {expanded, all}, {value, [3, 4]}, {height, 260}]),
-           treegrid(dept_columns(), departments(), [],
-                    [{selection_mode, checkbox}, {expanded, [1]}, {name, teams}])],
-          [<<"grid gap-4">>], []).
+    ah_div([ah_treegrid(dept_columns(), departments(), [],
+                        [{selection_mode, multiple}, {expanded, all}, {value, [3, 4]}, {height, 260}]),
+            ah_treegrid(dept_columns(), departments(), [],
+                        [{selection_mode, checkbox}, {expanded, [1]}, {name, teams}])],
+           [<<"grid gap-4">>], []).
 
 -spec tg_sorted() -> aihtml:html().
 tg_sorted() ->
-    Status = fun(<<"招聘中"/utf8>> = S, _) -> chip(S, [soft, warning, small], []);
-                (S, _) -> chip(S, [soft, success, small], [])
+    Status = fun(<<"招聘中"/utf8>> = S, _) -> ah_chip(S, [soft, warning, small], []);
+                (S, _) -> ah_chip(S, [soft, success, small], [])
              end,
-    treegrid([#{field => name, title => <<"部门/团队"/utf8>>, width => 240},
-              #{field => budget, title => <<"预算"/utf8>>, align => right, type => number,
-                render => fun(V, _) -> [<<"¥"/utf8>>, thousands(V)] end},
-              #{field => headcount, title => <<"人数"/utf8>>, align => center},
-              #{field => status, title => <<"状态"/utf8>>, render => Status, sortable => false}],
-             departments(), [], [{expanded, all}, {sort, {budget, desc}}, {alt_rows, false}]).
+    ah_treegrid([#{field => name, title => <<"部门/团队"/utf8>>, width => 240},
+                 #{field => budget, title => <<"预算"/utf8>>, align => right, type => number,
+                   render => fun(V, _) -> [<<"¥"/utf8>>, thousands(V)] end},
+                 #{field => headcount, title => <<"人数"/utf8>>, align => center},
+                 #{field => status, title => <<"状态"/utf8>>, render => Status, sortable => false}],
+                departments(), [], [{expanded, all}, {sort, {budget, desc}}, {alt_rows, false}]).
 
 %% Expanding a lazy row runs action(folder, ...) below, which answers with
 %% treegrid_children.
 -spec tg_lazy() -> aihtml:html().
 tg_lazy() ->
-    treegrid(file_columns(),
-             [#{path => <<"/src">>, name => <<"src">>, size => <<"—"/utf8>>, children => lazy},
-              #{path => <<"/priv">>, name => <<"priv">>, size => <<"—"/utf8>>, children => lazy},
-              #{path => <<"/README.md">>, name => <<"README.md">>, size => <<"4 KB">>}],
-             [], [{key_field, path}, {load, {?MODULE, folder, #{}}}]).
+    ah_treegrid(file_columns(),
+                [#{path => <<"/src">>, name => <<"src">>, size => <<"—"/utf8>>, children => lazy},
+                 #{path => <<"/priv">>, name => <<"priv">>, size => <<"—"/utf8>>, children => lazy},
+                 #{path => <<"/README.md">>, name => <<"README.md">>, size => <<"4 KB">>}],
+                [], [{key_field, path}, {load, {?MODULE, folder, #{}}}]).
 
 -spec tg_change() -> aihtml:html().
 tg_change() ->
-    'div'([treegrid(dept_columns(), departments(), [],
-                    [{expanded, [1]}, on(change, {?MODULE, team_picked, #{}})]),
-           p(<<"点一行试试"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"team-picked">>}])],
-          [], []).
+    ah_div([ah_treegrid(dept_columns(), departments(), [],
+                        [{expanded, [1]}, on(change, {?MODULE, team_picked, #{}})]),
+            ah_p(<<"点一行试试"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"team-picked">>}])],
+           [], []).
 
 %% The postback runs action(team_picked, ...) below on change.
 -spec tg_record() -> aihtml:html().
@@ -160,7 +160,7 @@ thousands(_) -> <<>>.
 -spec action(atom(), term(), aihtml_action:event(), aihtml_action:ctx()) -> ok.
 action(folder, _Args, #{data := #{<<"key">> := Path}} = Event, Ctx) ->
     treegrid_children(Ctx, Event,
-                      treegrid(file_columns(), folder(Path), [],
-                               [{key_field, path}, {load, {?MODULE, folder, #{}}}]));
+                      ah_treegrid(file_columns(), folder(Path), [],
+                                  [{key_field, path}, {load, {?MODULE, folder, #{}}}]));
 action(team_picked, _Args, #{value := Keys}, Ctx) ->
     aihtml_action:html(Ctx, {id, <<"team-picked">>}, [<<"服务端收到的选中行："/utf8>>, Keys]).

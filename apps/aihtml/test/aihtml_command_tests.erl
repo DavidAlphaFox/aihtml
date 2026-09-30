@@ -27,7 +27,7 @@ cmd_items() ->
      {theme, <<"Toggle theme">>}].
 
 command_test() ->
-    H = r(?M:command(cmd_items(), [<<"w-96">>], [{id, cmd}, {placeholder, <<"Search">>}])),
+    H = r(?M:ah_command(cmd_items(), [<<"w-96">>], [{id, cmd}, {placeholder, <<"Search">>}])),
     ?assert(has(<<"<div class=\"ah-command w-96\" id=\"cmd\" data-ah=\"command\" data-ah-query=\"\" "
                   "data-close-on-select=\"true\">">>, H)),
     ?assert(has(<<"<input class=\"ah-command__input\" type=\"text\" id=\"cmd-input\" "
@@ -54,20 +54,20 @@ command_test() ->
     ?assert(has(<<"<div class=\"ah-command__empty\" hidden>No results found.</div>">>, H)).
 
 command_palette_test() ->
-    H = r(?M:command([<<"a">>], [palette], [{id, p}, {hotkey, <<"k">>}, {close_on_select, false},
-                                             {empty_text, <<"Nothing">>}])),
+    H = r(?M:ah_command([<<"a">>], [palette], [{id, p}, {hotkey, <<"k">>}, {close_on_select, false},
+                                                {empty_text, <<"Nothing">>}])),
     ?assert(has(<<"<div class=\"ah-command-overlay\" hidden><div class=\"ah-command ah-command-panel\" "
                   "id=\"p\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Command palette\" "
                   "data-ah=\"command\" data-ah-query=\"\" data-hotkey=\"k\" "
                   "data-close-on-select=\"false\">">>, H)),
-    E = r(?M:command([], [auto_focus], [{query, <<"zz">>}])),
+    E = r(?M:ah_command([], [auto_focus], [{query, <<"zz">>}])),
     ?assert(has(<<"data-ah-query=\"zz\" data-auto-focus">>, E)),
     ?assert(has(<<"value=\"zz\"">>, E)),
     ?assert(has(<<"<div class=\"ah-command__empty\">No results found.</div>">>, E)),
-    ?assertError({aihtml, {bad_command_item, _}}, r(?M:command([{1, 2, 3}], [], []))).
+    ?assertError({aihtml, {bad_command_item, _}}, r(?M:ah_command([{1, 2, 3}], [], []))).
 
 command_search_test() ->
-    H = r(?M:command([], [], [{id, c}, {search, {?MODULE, search, #{}}}])),
+    H = r(?M:ah_command([], [], [{id, c}, {search, {?MODULE, search, #{}}}])),
     ?assert(has(<<"data-ah-remote">>, H)),
     {match, [Tok]} = re:run(H, <<"data-ah-on=\"input:([^\":]+):250\"">>,
                             [{capture, all_but_first, binary}]),
@@ -103,8 +103,8 @@ catalog_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:command(cmd_items(), [palette], [{id, c}, {hotkey, <<"k">>},
-                                                       {search, {?MODULE, s, #{}}}])),
+    ?assertEqual(r(?M:ah_command(cmd_items(), [palette], [{id, c}, {hotkey, <<"k">>},
+                                                          {search, {?MODULE, s, #{}}}])),
                  r(#ah_command{items = cmd_items(), palette = true, id = c, hotkey = <<"k">>,
                                search = {?MODULE, s, #{}}})).
 
@@ -119,13 +119,13 @@ postback_test() ->
     ?assertEqual({<<"ah:select">>, {other, run, #{}}},
                  Token(#ah_command{postback = run, delegate = other})),
     ?assertError({aihtml, {record_only_field, ah_command, postback}},
-                 ?M:command([], [], [{postback, x}])).
+                 ?M:ah_command([], [], [{postback, x}])).
 
 field_validation_test() ->
     ?assertError({aihtml, {bad_option, search, nope}}, r(#ah_command{search = nope})),
     ?assertError({aihtml, {bad_option, close_on_select, 1}},
                  r(#ah_command{close_on_select = 1})),
-    ?assertError({aihtml, {unknown_modifier, command, big, _}}, ?M:command([], [big], [])).
+    ?assertError({aihtml, {unknown_modifier, command, big, _}}, ?M:ah_command([], [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],

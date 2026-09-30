@@ -21,34 +21,34 @@ demos() ->
 
 -spec slider_basic() -> aihtml:html().
 slider_basic() ->
-    'div'([slider({0, 100}, 40, [tooltip], [{name, volume}, {aria_label, <<"Volume">>}]),
-           slider({0, 100}, 70, [success], [{aria_label, <<"Brightness">>}])],
-          [<<"flex flex-col gap-6 max-w-sm">>], []).
+    ah_div([ah_slider({0, 100}, 40, [tooltip], [{name, volume}, {aria_label, <<"Volume">>}]),
+            ah_slider({0, 100}, 70, [success], [{aria_label, <<"Brightness">>}])],
+           [<<"flex flex-col gap-6 max-w-sm">>], []).
 
 -spec slider_range() -> aihtml:html().
 slider_range() ->
-    'div'(slider({0, 1000, 50}, {200, 600}, [tooltip],
-                 [{name, price}, {min_range, 100}, {ticks, 250}]),
-          [<<"max-w-sm">>], []).
+    ah_div(ah_slider({0, 1000, 50}, {200, 600}, [tooltip],
+                     [{name, price}, {min_range, 100}, {ticks, 250}]),
+           [<<"max-w-sm">>], []).
 
 -spec slider_ticks() -> aihtml:html().
 slider_ticks() ->
-    'div'([slider({0, 10}, 3, [buttons, warning], [{ticks, 1}, {ticks_position, both}]),
-           slider({0, 1, 0.05}, 0.5, [info], [{ticks, 0.25}, {minor_ticks, 0.05}])],
-          [<<"flex flex-col gap-8 max-w-sm py-4">>], []).
+    ah_div([ah_slider({0, 10}, 3, [buttons, warning], [{ticks, 1}, {ticks_position, both}]),
+            ah_slider({0, 1, 0.05}, 0.5, [info], [{ticks, 0.25}, {minor_ticks, 0.05}])],
+           [<<"flex flex-col gap-8 max-w-sm py-4">>], []).
 
 -spec slider_vertical() -> aihtml:html().
 slider_vertical() ->
-    row([slider({0, 100}, 60, [vertical], [{ticks, 25}]),
-         slider({0, 100}, {20, 80}, [vertical, secondary], []),
-         slider({0, 100}, 30, [vertical, disabled], [])]).
+    row([ah_slider({0, 100}, 60, [vertical], [{ticks, 25}]),
+         ah_slider({0, 100}, {20, 80}, [vertical, secondary], []),
+         ah_slider({0, 100}, 30, [vertical, disabled], [])]).
 
 -spec slider_record() -> aihtml:html().
 slider_record() ->
-    'div'(#ah_slider{range = {0, 1000, 50}, value = {200, 600}, template = success,
-                     tooltip = true, ticks = 250, minor_ticks = 50, min_range = 100,
-                     name = price},
-          [<<"max-w-sm">>], []).
+    ah_div(#ah_slider{range = {0, 1000, 50}, value = {200, 600}, template = success,
+                      tooltip = true, ticks = 250, minor_ticks = 50, min_range = 100,
+                      name = price},
+           [<<"max-w-sm">>], []).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

@@ -2,7 +2,7 @@
 %%% @doc The tree, ported from sigil (data/tree). DOM and class names are
 %%% sigil's, so the styles in priv/css/sigil apply unchanged.
 %%%
-%%%   tree(Items, Value, Css, Attrs)          expandable tree, single selection
+%%%   ah_tree(Items, Value, Css, Attrs)       expandable tree, single selection
 %%%   set_children(Ctx, Event, Items)         (in an action) fill a lazy tree node
 %%%
 %%% The tree is value-bearing: the root carries `data-ah-value' (the
@@ -26,7 +26,7 @@
 %%% the node's group, and the behaviour method `childrenLoaded' expands the
 %%% node. While the request runs the node shows a loading state.
 %%%
-%%% tree/4 builds an element record (#ah_tree{}, defined in
+%%% ah_tree/4 builds an element record (#ah_tree{}, defined in
 %%% include/aihtml_tree.hrl) and render/1 turns it into HTML, so pages may
 %%% also write the record directly (designs/05-records.md).
 %%% @end
@@ -36,7 +36,7 @@
 
 -include("aihtml_tree.hrl").
 
--export([tree/4, set_children/3, render/1, fields/1, catalog/0, facade_extras/0]).
+-export([ah_tree/4, set_children/3, render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([element/0, item/0]).
 
@@ -68,8 +68,8 @@
 %% expands it; dblclick: only a double click or the arrow does),
 %% `animation' (slide (default) | none), `load' (an action ref that
 %% supplies the children of lazy nodes, see the module doc).
--spec tree([item()], term(), css(), attrs()) -> #ah_tree{}.
-tree(Items, Value, Css, Attrs) ->
+-spec ah_tree([item()], term(), css(), attrs()) -> #ah_tree{}.
+ah_tree(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_tree{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of this component's record.
@@ -264,7 +264,7 @@ set_children(Ctx, #{id := NodeId0, data := Data}, Items) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => tree, category => data,
-       signature => <<"tree(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_tree(Items, Value, Css, Attrs)">>,
        root => <<"ah-tree">>, flags => [disabled],
        options => [toggle_mode, animation, load],
        behavior => <<"tree">>,

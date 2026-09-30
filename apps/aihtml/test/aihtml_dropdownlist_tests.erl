@@ -12,8 +12,8 @@ r(Html) -> aihtml_html:render_binary(Html).
 has(Bin, Sub) -> binary:match(Bin, Sub) =/= nomatch.
 
 dropdownlist_markup_test() ->
-    H = r(?M:dropdownlist([{a, <<"Alpha">>}, b], b, [primary, <<"w-40">>],
-                          [{name, pick}, {id, <<"dd">>}])),
+    H = r(?M:ah_dropdownlist([{a, <<"Alpha">>}, b], b, [primary, <<"w-40">>],
+                             [{name, pick}, {id, <<"dd">>}])),
     ?assert(has(H, <<"class=\"ah-dropdownlist ah-dropdownlist-primary w-40\"">>)),
     ?assert(has(H, <<"role=\"combobox\"">>)),
     ?assert(has(H, <<"aria-expanded=\"false\"">>)),
@@ -26,14 +26,14 @@ dropdownlist_markup_test() ->
     ?assertNot(has(H, <<" name=\"pick\" role">>)).
 
 dropdownlist_placeholder_test() ->
-    H = r(?M:dropdownlist([a], undefined, [], [{placeholder, <<"Pick">>}])),
+    H = r(?M:ah_dropdownlist([a], undefined, [], [{placeholder, <<"Pick">>}])),
     ?assert(has(H, <<"ah-dropdownlist-content-placeholder\">Pick</span>">>)),
     ?assert(has(H, <<"data-ah-value=\"\"">>)),
     ?assertNot(has(H, <<"type=\"hidden\"">>)).
 
 dropdownlist_groups_filter_disabled_test() ->
-    H = r(?M:dropdownlist([{group, <<"G">>, [{x, <<"X">>, #{disabled => true}}, y]}], y,
-                          [simple, disabled], [{filterable, true}, {dropdown_height, 120}])),
+    H = r(?M:ah_dropdownlist([{group, <<"G">>, [{x, <<"X">>, #{disabled => true}}, y]}], y,
+                             [simple, disabled], [{filterable, true}, {dropdown_height, 120}])),
     ?assert(has(H, <<"ah-dropdownlist-simple">>)),
     ?assert(has(H, <<"ah-dropdownlist-disabled">>)),
     ?assert(has(H, <<"tabindex=\"-1\"">>)),
@@ -45,13 +45,13 @@ dropdownlist_groups_filter_disabled_test() ->
     ?assert(has(H, <<"max-height:120px">>)).
 
 dropdownlist_escapes_test() ->
-    H = r(?M:dropdownlist([{<<"<v>">>, <<"<b>">>}], <<"<v>">>, [], [])),
+    H = r(?M:ah_dropdownlist([{<<"<v>">>, <<"<b>">>}], <<"<v>">>, [], [])),
     ?assertNot(has(H, <<"<b>">>)),
     ?assert(has(H, <<"&lt;b&gt;">>)).
 
 dropdownlist_bad_modifier_test() ->
     ?assertError({aihtml, {unknown_modifier, dropdownlist, huge, _}},
-                 ?M:dropdownlist([a], a, [huge], [])).
+                 ?M:ah_dropdownlist([a], a, [huge], [])).
 
 %%% catalog
 
@@ -60,7 +60,7 @@ catalog_test() ->
     ?assertEqual([dropdownlist], Names),
     [begin
          ?assert(is_binary(maps:get(signature, E))),
-         ?assert(erlang:function_exported(?M, N, 4))
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4))
      end || #{name := N} = E <- ?M:catalog()].
 
 catalog_docs_test() ->
@@ -78,17 +78,17 @@ catalog_docs_test() ->
 action(_, _, _, _) -> ok.
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:dropdownlist(?FRUITS, b, [success, simple, <<"w-40">>],
-                                   [{name, pick}, {id, dd}, {filterable, true},
-                                    {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_dropdownlist(?FRUITS, b, [success, simple, <<"w-40">>],
+                                      [{name, pick}, {id, dd}, {filterable, true},
+                                       {title, <<"t">>}])),
                  r(#ah_dropdownlist{items = ?FRUITS, value = b, template = success,
                                     simple = true, css = [<<"w-40">>], name = pick, id = dd,
                                     filterable = true, attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    D = ?M:dropdownlist([a], a, [danger, disabled, <<"x">>],
-                        [{name, n}, {placeholder, <<"P">>}, {dropdown_height, 90},
-                         {id, i}, {title, <<"t">>}]),
+    D = ?M:ah_dropdownlist([a], a, [danger, disabled, <<"x">>],
+                           [{name, n}, {placeholder, <<"P">>}, {dropdown_height, 90},
+                            {id, i}, {title, <<"t">>}]),
     ?assertMatch(#ah_dropdownlist{template = danger, disabled = true, simple = false,
                                   name = n, placeholder = <<"P">>, dropdown_height = 90,
                                   id = i, css = [<<"x">>], attrs = [{title, <<"t">>}]}, D).

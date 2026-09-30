@@ -19,7 +19,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([expander], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -34,8 +34,8 @@ catalog_documents_every_option_test() ->
 %%% expander
 
 expander_test() ->
-    H = r(?M:expander(<<"body">>, [bottom, no_gutters], [{id, e}, {header, <<"Head">>},
-                                                         {expanded, false}, {name, open}])),
+    H = r(?M:ah_expander(<<"body">>, [bottom, no_gutters], [{id, e}, {header, <<"Head">>},
+                                                            {expanded, false}, {name, open}])),
     ?assert(has(H, <<"class=\"ah-expander ah-expander-bottom ah-expander-no-gutters\"">>)),
     ?assert(has(H, <<"data-ah=\"expander\" data-ah-value=\"false\"">>)),
     ?assert(has(H, <<"role=\"button\" tabindex=\"0\" aria-expanded=\"false\" aria-controls=\"e-content\"">>)),
@@ -43,16 +43,16 @@ expander_test() ->
     ?assert(has(H, <<"<input type=\"hidden\" name=\"open\" value=\"false\">">>)).
 
 expander_disabled_dual_icon_test() ->
-    H = r(?M:expander(<<"b">>, [disabled], [{id, e}, {expand_icon, <<"+">>},
-                                            {collapse_icon, <<"-">>}])),
+    H = r(?M:ah_expander(<<"b">>, [disabled], [{id, e}, {expand_icon, <<"+">>},
+                                               {collapse_icon, <<"-">>}])),
     ?assert(has(H, <<"tabindex=\"-1\"">>)),
     ?assert(has(H, <<"aria-disabled=\"true\"">>)),
     ?assert(has(H, <<"ah-expander-arrow ah-expander-arrow-expanded ah-expander-arrow-dual">>)),
     ?assert(has(H, <<"ah-expander-header ah-expander-header-expanded">>)).
 
 expander_structured_header_test() ->
-    H = r(?M:expander(<<"b">>, [], [{header, #{title => <<"A">>, extra => <<"3">>}},
-                                    {toggle_mode, none}, {accordion, g}])),
+    H = r(?M:ah_expander(<<"b">>, [], [{header, #{title => <<"A">>, extra => <<"3">>}},
+                                       {toggle_mode, none}, {accordion, g}])),
     ?assert(has(H, <<"ah-expander-header-text-structured">>)),
     ?assert(has(H, <<"<span class=\"ah-expander-header-extra\">3</span>">>)),
     ?assert(has(H, <<"ah-expander-header-no-toggle">>)),
@@ -82,11 +82,11 @@ classes_are_styled_test() ->
 
 %% One render of the component in its main variants and states.
 samples() ->
-    [?M:expander(<<"c">>, [bottom, square, no_gutters, disabled],
-                 [{header, #{title => <<"t">>, subheader => <<"s">>, extra => <<"x">>}},
-                  {actions, <<"a">>}, {arrow_position, left}, {toggle_mode, none},
-                  {expand_icon, <<"+">>}, {collapse_icon, <<"-">>}]),
-     ?M:expander(<<"c">>, [], [])].
+    [?M:ah_expander(<<"c">>, [bottom, square, no_gutters, disabled],
+                    [{header, #{title => <<"t">>, subheader => <<"s">>, extra => <<"x">>}},
+                     {actions, <<"a">>}, {arrow_position, left}, {toggle_mode, none},
+                     {expand_icon, <<"+">>}, {collapse_icon, <<"-">>}]),
+     ?M:ah_expander(<<"c">>, [], [])].
 
 %%% element records (designs/05-records.md)
 
@@ -101,9 +101,9 @@ token(Html) ->
     {Ev, Ref}.
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:expander(<<"b">>, [bottom, disabled],
-                               [{id, e}, {header, <<"H">>}, {expanded, false},
-                                {toggle_mode, dblclick}, {name, open}])),
+    ?assertEqual(r(?M:ah_expander(<<"b">>, [bottom, disabled],
+                                  [{id, e}, {header, <<"H">>}, {expanded, false},
+                                   {toggle_mode, dblclick}, {name, open}])),
                  r(#ah_expander{body = <<"b">>, position = bottom, disabled = true, id = e,
                                 header = <<"H">>, expanded = false, toggle_mode = dblclick,
                                 name = open})).
@@ -127,7 +127,7 @@ field_validation_test() ->
     ?assertError({aihtml, {bad_option, expanded, "no"}},
                  r(#ah_expander{id = e, expanded = "no"})),
     %% values are checked when rendering, not when building
-    Bad = ?M:expander(<<"b">>, [], [{id, e}, {arrow_position, up}]),
+    Bad = ?M:ah_expander(<<"b">>, [], [{id, e}, {arrow_position, up}]),
     ?assertError({aihtml, {bad_option, arrow_position, up}}, r(Bad)).
 
 records_match_catalog_test() ->

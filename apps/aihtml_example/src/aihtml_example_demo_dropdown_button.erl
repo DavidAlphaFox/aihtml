@@ -19,13 +19,13 @@ demos() ->
 
 -spec dropdown() -> aihtml:html().
 dropdown() ->
-    row([dropdown_button(<<"Actions">>, menu(), [], [{name, action}]),
-         dropdown_button(<<"Hover me">>, menu(), [outlined], [{auto_open, true}]),
-         dropdown_button(<<"Disabled">>, menu(), [], [{disabled, true}])]).
+    row([ah_dropdown_button(<<"Actions">>, menu(), [], [{name, action}]),
+         ah_dropdown_button(<<"Hover me">>, menu(), [outlined], [{auto_open, true}]),
+         ah_dropdown_button(<<"Disabled">>, menu(), [], [{disabled, true}])]).
 
 -spec dropdown_variants() -> aihtml:html().
 dropdown_variants() ->
-    row([dropdown_button(<<"Primary">>, menu(), [primary], [{value, copy}]),
-         dropdown_button(<<"Outlined">>, menu(), [outlined, rounded], []),
-         dropdown_button(<<"Small">>, menu(), [sm, success], []),
-         dropdown_button(<<"Large">>, menu(), [lg, warning], [])]).
+    row([ah_dropdown_button(<<"Primary">>, menu(), [primary], [{value, copy}]),
+         ah_dropdown_button(<<"Outlined">>, menu(), [outlined, rounded], []),
+         ah_dropdown_button(<<"Small">>, menu(), [sm, success], []),
+         ah_dropdown_button(<<"Large">>, menu(), [lg, warning], [])]).

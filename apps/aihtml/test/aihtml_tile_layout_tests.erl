@@ -38,7 +38,7 @@ layout() ->
                          position => bottom, active => t, resize => false}]}]}.
 
 tile_layout_test() ->
-    H = r(?M:tile_layout(layout(), undefined, [<<"h-96">>], [{id, tl}, {name, arr}])),
+    H = r(?M:ah_tile_layout(layout(), undefined, [<<"h-96">>], [{id, tl}, {name, arr}])),
     ?assert(has(<<"<div class=\"ah-tl h-96\" id=\"tl\" data-ah=\"tile-layout\" data-ah-value=\"">>, H)),
     ?assert(has(<<"data-splitbar-size=\"4\"><input type=\"hidden\" name=\"arr\" value=\"">>, H)),
     ?assert(has(<<"<div class=\"ah-tl-group ah-tl-vertical\" data-id=\"n\" data-type=\"layout-group\" "
@@ -77,29 +77,29 @@ tile_layout_test() ->
                  value_of(H)).
 
 tile_layout_options_test() ->
-    H = r(?M:tile_layout(#{tabs => [{x, <<"X">>, <<>>}], position => left}, undefined, [],
-                         [{splitbar_size, 6}, {height, 300}, {disabled, true}])),
+    H = r(?M:ah_tile_layout(#{tabs => [{x, <<"X">>, <<>>}], position => left}, undefined, [],
+                            [{splitbar_size, 6}, {height, 300}, {disabled, true}])),
     ?assert(has(<<"class=\"ah-tl ah-tl-disabled\"">>, H)),
     ?assert(has(<<"style=\"height:300px;\"">>, H)),
     ?assert(has(<<"data-splitbar-size=\"6\" aria-disabled=\"true\"">>, H)),
     ?assert(has(<<"ah-tl-tab-group ah-tl-tab-group-left">>, H)),
     ?assert(has(<<"aria-orientation=\"vertical\"">>, H)),
     %% percentages over 100% all become 1fr, as in sigil
-    G = r(?M:tile_layout({rows, [#{id => a, content => <<>>, size => <<"70%">>},
-                                 #{id => b, content => <<>>, size => <<"60%">>},
-                                 #{id => c, content => <<>>, size => 200}]}, undefined, [],
-                         [{splitbar_size, 6}])),
+    G = r(?M:ah_tile_layout({rows, [#{id => a, content => <<>>, size => <<"70%">>},
+                                    #{id => b, content => <<>>, size => <<"60%">>},
+                                    #{id => c, content => <<>>, size => 200}]}, undefined, [],
+                            [{splitbar_size, 6}])),
     ?assert(has(<<"grid-template-rows:1fr 6px 1fr 6px 1fr">>, G)),
-    P = r(?M:tile_layout({rows, [#{id => a, content => <<>>, size => 200},
-                                 #{id => b, content => <<>>}]}, undefined, [], [])),
+    P = r(?M:ah_tile_layout({rows, [#{id => a, content => <<>>, size => 200},
+                                    #{id => b, content => <<>>}]}, undefined, [], [])),
     ?assert(has(<<"grid-template-rows:200px 4px 1fr">>, P)),
     ?assertError({aihtml, {duplicate_tile_id, <<"a">>}},
-                 r(?M:tile_layout({columns, [{tabs, [{a, <<"A">>, <<>>}]},
-                                             #{id => a, content => <<>>}]}, undefined, [], []))),
+                 r(?M:ah_tile_layout({columns, [{tabs, [{a, <<"A">>, <<>>}]},
+                                                #{id => a, content => <<>>}]}, undefined, [], []))),
     ?assertError({aihtml, {bad_tile_layout_node, _}},
-                 r(?M:tile_layout({columns, [#{content => <<"no id">>}]}, undefined, [], []))),
+                 r(?M:ah_tile_layout({columns, [#{content => <<"no id">>}]}, undefined, [], []))),
     ?assertError({aihtml, {bad_tile_layout_tab, _}},
-                 r(?M:tile_layout({tabs, [x]}, undefined, [], []))).
+                 r(?M:ah_tile_layout({tabs, [x]}, undefined, [], []))).
 
 %% A stored arrangement is rendered with the contents of the layout.
 tile_layout_value_test() ->
@@ -107,7 +107,7 @@ tile_layout_value_test() ->
                "{\"type\":\"tabs\",\"id\":\"left\",\"tabs\":[\"b\",\"ed\",\"gone\"],\"active\":\"ed\","
                "\"size\":\"30.5fr\"},"
                "{\"type\":\"item\",\"id\":\"zz\"}]}}">>,
-    H = r(?M:tile_layout(layout(), Stored, [], [{id, tl}])),
+    H = r(?M:ah_tile_layout(layout(), Stored, [], [{id, tl}])),
     %% the rows group lost its second child, so the tab group is the root;
     %% the tile "ed" became a tab; "t" (not stored, not closed) joined the
     %% first tab group; "a" stays closed
@@ -130,21 +130,21 @@ tile_layout_value_test() ->
                                           #{<<"type">> => <<"tabs">>, <<"id">> => <<"left">>,
                                             <<"tabs">> => [<<"a">>, <<"b">>, <<"t">>],
                                             <<"size">> => <<"120px">>}]}},
-    H2 = r(?M:tile_layout(layout(), M, [], [])),
+    H2 = r(?M:ah_tile_layout(layout(), M, [], [])),
     ?assert(has(<<"grid-template-columns:1fr 4px 120px">>, H2)),
     ?assertNot(has_quiet(<<"color:red">>, H2)),
     %% unparsable or empty values render the layout as written
-    Plain = value_of(r(?M:tile_layout(layout(), undefined, [], []))),
-    ?assertEqual(Plain, value_of(r(?M:tile_layout(layout(), <<"not json">>, [], [])))),
-    ?assertEqual(Plain, value_of(r(?M:tile_layout(layout(), <<"{\"root\":{\"type\":\"item\",\"id\":\"q\"}}">>,
-                                                  [], [])))).
+    Plain = value_of(r(?M:ah_tile_layout(layout(), undefined, [], []))),
+    ?assertEqual(Plain, value_of(r(?M:ah_tile_layout(layout(), <<"not json">>, [], [])))),
+    ?assertEqual(Plain, value_of(r(?M:ah_tile_layout(layout(), <<"{\"root\":{\"type\":\"item\",\"id\":\"q\"}}">>,
+                                                     [], [])))).
 
 %% A tile the stored value does not know is appended to the root.
 tile_layout_new_tile_test() ->
     Stored = <<"{\"closed\":[],\"root\":{\"type\":\"columns\",\"id\":\"n\",\"items\":["
                "{\"type\":\"tabs\",\"id\":\"left\",\"tabs\":[\"a\",\"b\",\"t\"],\"active\":\"a\"},"
                "{\"type\":\"item\",\"id\":\"old\"}]}}">>,
-    V = value_of(r(?M:tile_layout(layout(), Stored, [], []))),
+    V = value_of(r(?M:ah_tile_layout(layout(), Stored, [], []))),
     #{<<"root">> := #{<<"type">> := <<"columns">>, <<"items">> := Items}} = V,
     ?assertEqual([<<"left">>, <<"ed">>], [maps:get(<<"id">>, I) || I <- Items]).
 
@@ -164,8 +164,8 @@ catalog_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:tile_layout(layout(), undefined, [<<"h-64">>],
-                                  [{id, b}, {splitbar_size, 8}, {height, 200}, {disabled, true}])),
+    ?assertEqual(r(?M:ah_tile_layout(layout(), undefined, [<<"h-64">>],
+                                     [{id, b}, {splitbar_size, 8}, {height, 200}, {disabled, true}])),
                  r(#ah_tile_layout{layout = layout(), css = [<<"h-64">>], id = b, splitbar_size = 8,
                                    height = 200, disabled = true})).
 
@@ -188,7 +188,7 @@ field_validation_test() ->
                  r(#ah_tile_layout{layout = #{id => a, content => <<>>, min => -1}})),
     ?assertError({aihtml, {bad_option, close, 1}},
                  r(#ah_tile_layout{layout = {tabs, [#{id => a, label => <<"A">>, close => 1}]}})),
-    ?assertError({aihtml, {unknown_modifier, tile_layout, big, _}}, ?M:tile_layout(x, x, [big], [])).
+    ?assertError({aihtml, {unknown_modifier, tile_layout, big, _}}, ?M:ah_tile_layout(x, x, [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],

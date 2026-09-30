@@ -3,12 +3,12 @@
 %%% (data/heatmap_calendar). DOM and class names are sigil's, so the styles
 %%% in priv/css/sigil apply unchanged.
 %%%
-%%%   heatmap_calendar(Data, Css, Attrs)      GitHub-style contribution grid
+%%%   ah_heatmap_calendar(Data, Css, Attrs)   GitHub-style contribution grid
 %%%
 %%% heatmap_calendar fires 'ah:select' with the clicked date as
 %%% `data-ah-value'.
 %%%
-%%% heatmap_calendar/3 builds an element record (#ah_heatmap_calendar{},
+%%% ah_heatmap_calendar/3 builds an element record (#ah_heatmap_calendar{},
 %%% defined in include/aihtml_heatmap_calendar.hrl) and render/1 turns it
 %%% into HTML, so pages may also write the record directly
 %%% (designs/05-records.md).
@@ -19,7 +19,7 @@
 
 -include("aihtml_heatmap_calendar.hrl").
 
--export([heatmap_calendar/3, render/1, fields/1, catalog/0]).
+-export([ah_heatmap_calendar/3, render/1, fields/1, catalog/0]).
 
 -export_type([element/0, day/0, data/0]).
 
@@ -46,8 +46,8 @@
 %% `weekday_labels' (7, from Sunday), `month_labels' (12), `legend'
 %% (`{Less, More}' texts, or false), `tooltip' (text with {date} and
 %% {value}).
--spec heatmap_calendar(data(), css(), attrs()) -> #ah_heatmap_calendar{}.
-heatmap_calendar(Data, Css, Attrs) ->
+-spec ah_heatmap_calendar(data(), css(), attrs()) -> #ah_heatmap_calendar{}.
+ah_heatmap_calendar(Data, Css, Attrs) ->
     ?E:build(?MODULE, #ah_heatmap_calendar{data = Data}, Css, Attrs).
 
 %% @doc The field names of this component's record.
@@ -198,7 +198,7 @@ num(V) when is_float(V) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => heatmap_calendar, category => data,
-       signature => <<"heatmap_calendar(Data, Css, Attrs)">>,
+       signature => <<"ah_heatmap_calendar(Data, Css, Attrs)">>,
        root => <<"ah-heatmap-calendar">>,
        options => [months, end_date, thresholds, weekday_labels, month_labels, legend, tooltip],
        behavior => <<"heatmap-calendar">>, events => [<<"ah:select">>],

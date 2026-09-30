@@ -32,101 +32,101 @@ demos() ->
 
 -spec rb_office() -> aihtml:html().
 rb_office() ->
-    ribbon([#{key => home, label => <<"开始"/utf8>>,
-              groups => [{<<"剪贴板"/utf8>>,
-                          [#{key => paste, label => <<"粘贴"/utf8>>, icon => icon(paste), size => large,
-                             items => [{paste, <<"粘贴"/utf8>>}, {paste_text, <<"只粘贴文本"/utf8>>}]},
-                           {stack, [{cut, icon(cut), <<"剪切"/utf8>>},
-                                    {copy, icon(copy), <<"复制"/utf8>>},
-                                    #{key => painter, icon => icon(brush), label => <<"格式刷"/utf8>>,
-                                      disabled => true}]}]},
-                         {<<"字体"/utf8>>,
-                          [{stack, [#{key => bold, icon => <<"B">>, label => <<"加粗"/utf8>>,
-                                      toggle => true, pressed => true},
-                                    #{key => italic, icon => <<"I">>, label => <<"斜体"/utf8>>,
-                                      toggle => true},
-                                    #{key => underline, icon => <<"U">>, label => <<"下划线"/utf8>>,
-                                      toggle => true}]},
-                           separator,
-                           {stack, [#{key => size, label => <<"字号"/utf8>>,
-                                      items => [{s12, <<"12">>}, {s14, <<"14">>}, {s18, <<"18">>},
-                                                divider, {grow, <<"增大字号"/utf8>>}]},
-                                    {superscript, <<"x²"/utf8>>, <<"上标"/utf8>>},
-                                    {subscript, <<"x₂"/utf8>>, <<"下标"/utf8>>}]}]},
-                         {<<"编辑"/utf8>>,
-                          [#{key => find, label => <<"查找"/utf8>>, icon => icon(search), size => large},
-                           #{key => replace, label => <<"替换"/utf8>>, icon => icon(replace), size => large}]}]},
-            #{key => insert, label => <<"插入"/utf8>>,
-              groups => [{<<"表格"/utf8>>, [#{key => table, label => <<"表格"/utf8>>, icon => icon(table),
-                                              size => large}]},
-                         {<<"插图"/utf8>>, [#{key => image, label => <<"图片"/utf8>>, icon => icon(image),
-                                              size => large},
-                                            #{key => chart, label => <<"图表"/utf8>>, icon => icon(chart),
-                                              size => large},
-                                            #{key => shape, label => <<"形状"/utf8>>, icon => icon(shape),
-                                              size => large,
-                                              items => [{rect, <<"矩形"/utf8>>}, {circle, <<"圆形"/utf8>>},
-                                                        {arrow, <<"箭头"/utf8>>}]}]}]},
-            #{key => view, label => <<"视图"/utf8>>,
-              groups => [{<<"显示"/utf8>>, [#{key => ruler, label => <<"标尺"/utf8>>, toggle => true},
-                                             #{key => grid, label => <<"网格线"/utf8>>, toggle => true,
-                                               pressed => true},
-                                             #{key => nav, label => <<"导航窗格"/utf8>>, toggle => true}]},
-                         {<<"缩放"/utf8>>, [{zoom, icon(search), <<"100%">>},
-                                             {one_page, icon(copy), <<"单页"/utf8>>}]}]}],
-           home, [collapsible], []).
+    ah_ribbon([#{key => home, label => <<"开始"/utf8>>,
+                 groups => [{<<"剪贴板"/utf8>>,
+                             [#{key => paste, label => <<"粘贴"/utf8>>, icon => icon(paste), size => large,
+                                items => [{paste, <<"粘贴"/utf8>>}, {paste_text, <<"只粘贴文本"/utf8>>}]},
+                              {stack, [{cut, icon(cut), <<"剪切"/utf8>>},
+                                       {copy, icon(copy), <<"复制"/utf8>>},
+                                       #{key => painter, icon => icon(brush), label => <<"格式刷"/utf8>>,
+                                         disabled => true}]}]},
+                            {<<"字体"/utf8>>,
+                             [{stack, [#{key => bold, icon => <<"B">>, label => <<"加粗"/utf8>>,
+                                         toggle => true, pressed => true},
+                                       #{key => italic, icon => <<"I">>, label => <<"斜体"/utf8>>,
+                                         toggle => true},
+                                       #{key => underline, icon => <<"U">>, label => <<"下划线"/utf8>>,
+                                         toggle => true}]},
+                              separator,
+                              {stack, [#{key => size, label => <<"字号"/utf8>>,
+                                         items => [{s12, <<"12">>}, {s14, <<"14">>}, {s18, <<"18">>},
+                                                   divider, {grow, <<"增大字号"/utf8>>}]},
+                                       {superscript, <<"x²"/utf8>>, <<"上标"/utf8>>},
+                                       {subscript, <<"x₂"/utf8>>, <<"下标"/utf8>>}]}]},
+                            {<<"编辑"/utf8>>,
+                             [#{key => find, label => <<"查找"/utf8>>, icon => icon(search), size => large},
+                              #{key => replace, label => <<"替换"/utf8>>, icon => icon(replace), size => large}]}]},
+               #{key => insert, label => <<"插入"/utf8>>,
+                 groups => [{<<"表格"/utf8>>, [#{key => table, label => <<"表格"/utf8>>, icon => icon(table),
+                                                 size => large}]},
+                            {<<"插图"/utf8>>, [#{key => image, label => <<"图片"/utf8>>, icon => icon(image),
+                                                 size => large},
+                                               #{key => chart, label => <<"图表"/utf8>>, icon => icon(chart),
+                                                 size => large},
+                                               #{key => shape, label => <<"形状"/utf8>>, icon => icon(shape),
+                                                 size => large,
+                                                 items => [{rect, <<"矩形"/utf8>>}, {circle, <<"圆形"/utf8>>},
+                                                           {arrow, <<"箭头"/utf8>>}]}]}]},
+               #{key => view, label => <<"视图"/utf8>>,
+                 groups => [{<<"显示"/utf8>>, [#{key => ruler, label => <<"标尺"/utf8>>, toggle => true},
+                                                #{key => grid, label => <<"网格线"/utf8>>, toggle => true,
+                                                  pressed => true},
+                                                #{key => nav, label => <<"导航窗格"/utf8>>, toggle => true}]},
+                            {<<"缩放"/utf8>>, [{zoom, icon(search), <<"100%">>},
+                                                {one_page, icon(copy), <<"单页"/utf8>>}]}]}],
+              home, [collapsible], []).
 
 -spec rb_basic() -> aihtml:html().
 rb_basic() ->
-    ribbon([{home, <<"首页"/utf8>>, para(<<"首页内容区域"/utf8>>)},
-            {edit, <<"编辑（禁用）"/utf8>>, para(<<"编辑内容区域"/utf8>>), [{disabled, true}]},
-            {view, <<"视图"/utf8>>, para(<<"视图内容区域"/utf8>>)}],
-           home, [], [{name, tab}]).
+    ah_ribbon([{home, <<"首页"/utf8>>, para(<<"首页内容区域"/utf8>>)},
+               {edit, <<"编辑（禁用）"/utf8>>, para(<<"编辑内容区域"/utf8>>), [{disabled, true}]},
+               {view, <<"视图"/utf8>>, para(<<"视图内容区域"/utf8>>)}],
+              home, [], [{name, tab}]).
 
 -spec rb_positions() -> aihtml:html().
 rb_positions() ->
-    'div'([ribbon([{file, <<"文件"/utf8>>, para(<<"文件内容"/utf8>>)},
-                   {home, <<"首页"/utf8>>, para(<<"首页内容"/utf8>>)},
-                   {help, <<"帮助"/utf8>>, para(<<"帮助内容"/utf8>>)}],
-                  home, [bottom], [{height, 120}]),
-           ribbon([{file, <<"文件"/utf8>>, para(<<"文件内容"/utf8>>)},
-                   {home, <<"首页"/utf8>>, para(<<"首页内容"/utf8>>)},
-                   {data, <<"数据"/utf8>>, para(<<"数据内容"/utf8>>)},
-                   {help, <<"帮助"/utf8>>, para(<<"帮助内容"/utf8>>)}],
-                  home, [left], [{height, 170}])],
-          [<<"flex flex-col gap-4">>], []).
+    ah_div([ah_ribbon([{file, <<"文件"/utf8>>, para(<<"文件内容"/utf8>>)},
+                       {home, <<"首页"/utf8>>, para(<<"首页内容"/utf8>>)},
+                       {help, <<"帮助"/utf8>>, para(<<"帮助内容"/utf8>>)}],
+                      home, [bottom], [{height, 120}]),
+            ah_ribbon([{file, <<"文件"/utf8>>, para(<<"文件内容"/utf8>>)},
+                       {home, <<"首页"/utf8>>, para(<<"首页内容"/utf8>>)},
+                       {data, <<"数据"/utf8>>, para(<<"数据内容"/utf8>>)},
+                       {help, <<"帮助"/utf8>>, para(<<"帮助内容"/utf8>>)}],
+                      home, [left], [{height, 170}])],
+           [<<"flex flex-col gap-4">>], []).
 
 -spec rb_collapsible() -> aihtml:html().
 rb_collapsible() ->
-    'div'([ribbon(small_tabs(), home, [collapsible, collapsed], []),
-           p(<<"折叠后点击选项卡，面板浮在页面上方；点击命令或页面其他位置会收起。"/utf8>>,
-             [<<"text-sm text-muted">>], [])],
-          [<<"flex flex-col gap-2 pb-24">>], []).
+    ah_div([ah_ribbon(small_tabs(), home, [collapsible, collapsed], []),
+            ah_p(<<"折叠后点击选项卡，面板浮在页面上方；点击命令或页面其他位置会收起。"/utf8>>,
+                 [<<"text-sm text-muted">>], [])],
+           [<<"flex flex-col gap-2 pb-24">>], []).
 
 -spec rb_popup() -> aihtml:html().
 rb_popup() ->
-    'div'(ribbon(small_tabs(), home, [popup], [{selection_mode, hover}]),
-          [<<"pb-24">>], []).
+    ah_div(ah_ribbon(small_tabs(), home, [popup], [{selection_mode, hover}]),
+           [<<"pb-24">>], []).
 
 -spec rb_colors() -> aihtml:html().
 rb_colors() ->
-    'div'([ribbon(small_tabs(), home, [C, A], [])
-           || {C, A} <- [{primary, slide}, {success, fade}, {warning, fade}, {danger, slide}]],
-          [<<"flex flex-col gap-3">>], []).
+    ah_div([ah_ribbon(small_tabs(), home, [C, A], [])
+            || {C, A} <- [{primary, slide}, {success, fade}, {warning, fade}, {danger, slide}]],
+           [<<"flex flex-col gap-3">>], []).
 
 %% Clicking a command runs action(command, ...) below.
 -spec rb_server() -> aihtml:html().
 rb_server() ->
-    'div'([ribbon(small_tabs(), home, [], [on('ah:command', {?MODULE, command, #{}})]),
-           span(<<"还没有执行命令"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"rb-log">>}])],
-          [<<"flex flex-col gap-2">>], []).
+    ah_div([ah_ribbon(small_tabs(), home, [], [on('ah:command', {?MODULE, command, #{}})]),
+            ah_span(<<"还没有执行命令"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"rb-log">>}])],
+           [<<"flex flex-col gap-2">>], []).
 
 -spec rb_record() -> aihtml:html().
 rb_record() ->
-    'div'([#ah_ribbon{items = small_tabs(), value = insert, color = success, collapsible = true,
-                      postback = command},
-           span(<<"还没有执行命令"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"rb-log">>}])],
-          [<<"flex flex-col gap-2">>], []).
+    ah_div([#ah_ribbon{items = small_tabs(), value = insert, color = success, collapsible = true,
+                       postback = command},
+            ah_span(<<"还没有执行命令"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"rb-log">>}])],
+           [<<"flex flex-col gap-2">>], []).
 
 small_tabs() ->
     [#{key => home, label => <<"开始"/utf8>>,
@@ -163,7 +163,7 @@ action(command, _Args, #{data := Data, value := Tab}, Ctx) ->
 %%%===================================================================
 
 para(T) ->
-    p(T, [<<"m-0 text-sm text-muted">>], []).
+    ah_p(T, [<<"m-0 text-sm text-muted">>], []).
 
 
 %% 20px line icons (stroke follows the text colour).

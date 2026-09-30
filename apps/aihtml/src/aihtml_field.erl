@@ -2,11 +2,11 @@
 %%% @doc One labelled form row in sigil's form markup, and client-side
 %%% validation (sigil.components.form.{form, validator}).
 %%%
-%%%   field(Label, Control, Css, Attrs)   one labelled form row
-%%%   validate(Rules)                     client validation attrs
+%%%   ah_field(Label, Control, Css, Attrs)   one labelled form row
+%%%   validate(Rules)                        client validation attrs
 %%%
-%%% validate/1 lives here because its messages show in field/4 rows (and
-%%% form_layout/4 rows, which share the markup, see aihtml_lib_form); the
+%%% validate/1 lives here because its messages show in ah_field/4 rows (and
+%%% ah_form_layout/4 rows, which share the markup, see aihtml_lib_form); the
 %%% aihtml facade re-exports it. The validator behaviour is in
 %%% assets/js/components/field.ts.
 %%%
@@ -21,7 +21,7 @@
 %%%   | {Rule, Message}         any of the above with its own message
 %%%
 %%% and these options in the same list:
-%%%   {hint, auto | tooltip | label}   auto: label inside field/4 rows,
+%%%   {hint, auto | tooltip | label}   auto: label inside ah_field/4 rows,
 %%%                                    sigil's tooltip bubble elsewhere
 %%%   {position, right | left | top | bottom}   tooltip side (right)
 %%%   {on, blur | input | change | [Event]}     when to check (blur)
@@ -36,7 +36,7 @@
 
 -include("aihtml_field.hrl").
 
--export([field/4, validate/1, render/1, fields/1, catalog/0, facade_extras/0]).
+-export([ah_field/4, validate/1, render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([rule/0]).
 
@@ -56,9 +56,9 @@
 
 %% @doc One form row in sigil's form markup: a label, the control, and an
 %% optional help or error line under the control.
--spec field(aihtml_html:html(), aihtml_html:html(), aihtml_html:css(),
-            aihtml_html:attrs()) -> #ah_field{}.
-field(Label, Control, Css, Attrs) ->
+-spec ah_field(aihtml_html:html(), aihtml_html:html(), aihtml_html:css(),
+               aihtml_html:attrs()) -> #ah_field{}.
+ah_field(Label, Control, Css, Attrs) ->
     ?E:build(?MODULE, #ah_field{label = Label, body = Control}, Css, Attrs).
 
 -spec render(#ah_field{}) -> aihtml_html:html().
@@ -81,7 +81,7 @@ render(#ah_field{label = Label, body = Control, error = Error} = R) ->
 
 %% @doc Attributes that make a control validate on the client (sigil's
 %% Validator). Put them in the control's Attrs, e.g.
-%% `input(..., [{name, email}, validate([required, email])])'. A form
+%% `ah_input(..., [{name, email}, validate([required, email])])'. A form
 %% holding such controls is checked on submit; if anything fails the
 %% submit is stopped before actions (on/2) or data-ah-fetch see it.
 -spec validate([rule() | {hint | position | on, term()}]) -> aihtml_html:attrs().
@@ -157,7 +157,7 @@ fields(ah_field) -> record_info(fields, ah_field).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => field, category => form,
-       signature => <<"field(Label, Control, Css, Attrs)">>,
+       signature => <<"ah_field(Label, Control, Css, Attrs)">>,
        root => <<"ah-form-row">>,
        groups => #{label_position => {[left, top, right, bottom], left}},
        classes => #{left => []},

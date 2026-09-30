@@ -2,7 +2,7 @@
 %%% @doc The data table, ported from sigil (data/datatable). DOM and class
 %%% names are sigil's, so the styles in priv/css/sigil apply unchanged.
 %%%
-%%%   datatable(Columns, Rows, Css, Attrs)    sort, filter, page, select, edit
+%%%   ah_datatable(Columns, Rows, Css, Attrs)    sort, filter, page, select, edit
 %%%   datatable_rows(Ctx, Event, Table)       (in an action) answer a remote query
 %%%   datatable_row(Ctx, Event, Table, Row)   (in an action) re-render one row
 %%%   datatable_query(Event)                  the view state of a remote query
@@ -60,7 +60,7 @@
 %%% answer with `datatable_row(Ctx, Event, Table, Row)' to show the stored
 %%% row (rendered here, with the column renderers).
 %%%
-%%% datatable/4 builds an element record (#ah_datatable{}, defined in
+%%% ah_datatable/4 builds an element record (#ah_datatable{}, defined in
 %%% include/aihtml_datatable.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -73,7 +73,7 @@
 -compile({parse_transform, beamai_mustache_transform}).
 -mustache_template({tpl_datatable_pager, "../templates/datatable_pager.mustache"}).
 
--export([datatable/4, datatable_rows/3, datatable_row/4, datatable_query/1,
+-export([ah_datatable/4, datatable_rows/3, datatable_row/4, datatable_query/1,
          render/1, fields/1, catalog/0, facade_extras/0]).
 %% In-memory queries and the pager model, for pages and tests.
 -export([datatable_page/3, pager_view/5, pager_view/6]).
@@ -129,8 +129,8 @@
 %% `page_sizes', `total', `source', `href', `editable', `edit', `row_details',
 %% `expanded', `resizable', `column_chooser', `alt_rows', `hover',
 %% `show_header', `height', `empty_text', `texts'.
--spec datatable([column()], [row()], css(), attrs()) -> #ah_datatable{}.
-datatable(Columns, Rows, Css, Attrs) ->
+-spec ah_datatable([column()], [row()], css(), attrs()) -> #ah_datatable{}.
+ah_datatable(Columns, Rows, Css, Attrs) ->
     ?E:build(?MODULE, #ah_datatable{columns = Columns, rows = Rows}, Css, Attrs).
 
 %% @doc The field names of this component's record.
@@ -749,7 +749,7 @@ datatable_row(Ctx, Event, #ah_datatable{} = T, Row) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => datatable, category => data,
-       signature => <<"datatable(Columns, Rows, Css, Attrs)">>,
+       signature => <<"ah_datatable(Columns, Rows, Css, Attrs)">>,
        root => <<"ah-dt">>, flags => [disabled],
        options => [value, selection_mode, key_field, sortable, sort, filter, filters, search,
                    page_size, page, page_sizes, total, source, href, editable, edit, row_details,

@@ -20,7 +20,7 @@
 -module(aihtml_catalog).
 
 -export([prefabs/0, prefab/1, entry/2, classes/2, flags/2, split_options/2, modules/0,
-         parse_css/2, field_classes/3]).
+         builder/1, parse_css/2, field_classes/3]).
 
 -export_type([entry/0]).
 
@@ -97,6 +97,11 @@
 %% @doc The modules that define components, in catalog order.
 -spec modules() -> [module()].
 modules() -> ?COMPONENTS.
+
+%% @doc The builder function of the component `Name': `ah_<name>', the same
+%% prefix as its record (`button' -> `ah_button/4', `#ah_button{}').
+-spec builder(atom()) -> atom().
+builder(Name) -> binary_to_atom(<<"ah_", (atom_to_binary(Name))/binary>>).
 
 -spec prefabs() -> [entry()].
 prefabs() ->

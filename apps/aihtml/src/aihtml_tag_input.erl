@@ -5,7 +5,7 @@
 %%% A value-bearing component: `Attrs' go to the root, which carries
 %%% `data-ah-value' and fires `change'; `name' goes to a hidden input.
 %%%
-%%% tag_input/3 builds an #ah_tag_input{} (include/aihtml_tag_input.hrl)
+%%% ah_tag_input/3 builds an #ah_tag_input{} (include/aihtml_tag_input.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -15,7 +15,7 @@
 
 -include("aihtml_tag_input.hrl").
 
--export([tag_input/3, render/1, fields/1, catalog/0]).
+-export([ah_tag_input/3, render/1, fields/1, catalog/0]).
 
 -export_type([chip_color/0, chip_variant/0]).
 
@@ -38,8 +38,8 @@
 %% `chip_color' (default primary), `chip_variant' (default soft).
 %% `data-ah-value' is the tags joined with commas (aihtml_value:join/1: a
 %% comma inside a tag, from `Tags' or setTags, is escaped as `\,').
--spec tag_input([binary()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_tag_input{}.
-tag_input(Tags, Css, Attrs) when is_list(Tags) ->
+-spec ah_tag_input([binary()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_tag_input{}.
+ah_tag_input(Tags, Css, Attrs) when is_list(Tags) ->
     aihtml_element:build(?MODULE, #ah_tag_input{value = Tags}, Css, Attrs).
 
 %% @doc The field names of #ah_tag_input{}.
@@ -78,7 +78,7 @@ default(V, _) -> V.
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => tag_input, category => form,
-       signature => <<"tag_input(Tags, Css, Attrs)">>,
+       signature => <<"ah_tag_input(Tags, Css, Attrs)">>,
        root => <<"ah-tag-input">>,
        flags => [disabled],
        classes => #{disabled => []},

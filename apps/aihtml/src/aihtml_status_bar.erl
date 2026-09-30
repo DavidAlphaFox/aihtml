@@ -6,7 +6,7 @@
 %%% assets/js/components/status_bar.ts, aihtml's additions in
 %%% priv/css/extra/status_bar.css.
 %%%
-%%% status_bar/3 builds an #ah_status_bar{} record
+%%% ah_status_bar/3 builds an #ah_status_bar{} record
 %%% (include/aihtml_status_bar.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -16,7 +16,7 @@
 
 -include("aihtml_status_bar.hrl").
 
--export([status_bar/3]).
+-export([ah_status_bar/3]).
 -export([render/1, fields/1, catalog/0]).
 
 -export_type([segment/0]).
@@ -35,8 +35,8 @@
 %% hover. Options: `content' (text: adds sigil's CJK-aware word count
 %% segment), `dirty' (true | false: adds the saved/unsaved dot on the
 %% right), `labels' (map overriding the default English labels).
--spec status_bar([segment()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_status_bar{}.
-status_bar(Segments, Css, Attrs) ->
+-spec ah_status_bar([segment()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_status_bar{}.
+ah_status_bar(Segments, Css, Attrs) ->
     ?EL:build(?MODULE, #ah_status_bar{segments = Segments}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -136,7 +136,7 @@ word_count_segment(Text0, Labels) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => status_bar, category => layout,
-       signature => <<"status_bar(Segments, Css, Attrs)">>,
+       signature => <<"ah_status_bar(Segments, Css, Attrs)">>,
        root => <<"ah-status-bar">>,
        options => [content, dirty, labels],
        behavior => <<"status-bar">>,

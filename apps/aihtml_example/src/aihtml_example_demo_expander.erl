@@ -22,39 +22,39 @@ demos() ->
 
 -spec expander_basic() -> aihtml:html().
 expander_basic() ->
-    col([expander(p(<<"Returns are free within 30 days.">>), [],
-                  [{header, <<"Return policy">>}]),
-         expander(p(<<"We ship worldwide.">>), [],
-                  [{header, <<"Shipping">>}, {expanded, false},
-                   {actions, button(<<"Contact us">>, contact, [outlined, sm], [])}])]).
+    col([ah_expander(ah_p(<<"Returns are free within 30 days.">>), [],
+                     [{header, <<"Return policy">>}]),
+         ah_expander(ah_p(<<"We ship worldwide.">>), [],
+                     [{header, <<"Shipping">>}, {expanded, false},
+                      {actions, ah_button(<<"Contact us">>, contact, [outlined, sm], [])}])]).
 
 -spec expander_structured() -> aihtml:html().
 expander_structured() ->
-    expander(p(<<"Invoice details.">>), [],
-             [{header, #{title => <<"Invoice #1024">>, subheader => <<"Due in 5 days">>,
-                         extra => <<"$320.00">>}},
-              {arrow_position, left}, {expanded, false}]).
+    ah_expander(ah_p(<<"Invoice details.">>), [],
+                [{header, #{title => <<"Invoice #1024">>, subheader => <<"Due in 5 days">>,
+                            extra => <<"$320.00">>}},
+                 {arrow_position, left}, {expanded, false}]).
 
 -spec expander_icons() -> aihtml:html().
 expander_icons() ->
-    expander(p(<<"Plus and minus swap places.">>), [square],
-             [{header, <<"More options">>}, {expand_icon, <<"+">>},
-              {collapse_icon, <<"−"/utf8>>}, {animation, fade}, {expanded, false}]).
+    ah_expander(ah_p(<<"Plus and minus swap places.">>), [square],
+                [{header, <<"More options">>}, {expand_icon, <<"+">>},
+                 {collapse_icon, <<"−"/utf8>>}, {animation, fade}, {expanded, false}]).
 
 -spec expander_styles() -> aihtml:html().
 expander_styles() ->
-    col([expander(p(<<"The header sits below.">>), [bottom],
-                  [{header, <<"Header at the bottom">>}, {expanded, false}]),
-         expander(p(<<"No frame around it.">>), [no_gutters],
-                  [{header, <<"No gutters">>}, {expanded, false}]),
-         expander(p(<<"Hidden">>), [disabled],
-                  [{header, <<"Disabled">>}, {expanded, false}])]).
+    col([ah_expander(ah_p(<<"The header sits below.">>), [bottom],
+                     [{header, <<"Header at the bottom">>}, {expanded, false}]),
+         ah_expander(ah_p(<<"No frame around it.">>), [no_gutters],
+                     [{header, <<"No gutters">>}, {expanded, false}]),
+         ah_expander(ah_p(<<"Hidden">>), [disabled],
+                     [{header, <<"Disabled">>}, {expanded, false}])]).
 
 -spec expander_accordion() -> aihtml:html().
 expander_accordion() ->
-    col([expander(p(<<"Create an account first.">>), [],
-                  [{header, <<"How do I start?">>}, {accordion, faq}]),
-         expander(p(<<"Yes, any time from settings.">>), [],
-                  [{header, <<"Can I cancel?">>}, {accordion, faq}, {expanded, false}]),
-         expander(p(<<"Email support@example.com.">>), [],
-                  [{header, <<"Where is support?">>}, {accordion, faq}, {expanded, false}])]).
+    col([ah_expander(ah_p(<<"Create an account first.">>), [],
+                     [{header, <<"How do I start?">>}, {accordion, faq}]),
+         ah_expander(ah_p(<<"Yes, any time from settings.">>), [],
+                     [{header, <<"Can I cancel?">>}, {accordion, faq}, {expanded, false}]),
+         ah_expander(ah_p(<<"Email support@example.com.">>), [],
+                     [{header, <<"Where is support?">>}, {accordion, faq}, {expanded, false}])]).

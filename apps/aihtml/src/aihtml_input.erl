@@ -5,7 +5,7 @@
 %%% The native control is kept: `Attrs' (name, placeholder, on(...), ...)
 %%% go to the `<input>', `Css' to the wrapper.
 %%%
-%%% input/3 builds an #ah_input{} (include/aihtml_input.hrl) and render/1
+%%% ah_input/3 builds an #ah_input{} (include/aihtml_input.hrl) and render/1
 %%% turns it into HTML, so pages may also write the record directly
 %%% (designs/05-records.md).
 %%% @end
@@ -15,7 +15,7 @@
 
 -include("aihtml_input.hrl").
 
--export([input/3, render/1, fields/1, catalog/0]).
+-export([ah_input/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(L, aihtml_lib_input).
@@ -24,8 +24,8 @@
 %% @doc A text input in sigil's `.ah-input-group' shell. Options:
 %% `prefix', `suffix' (any html: text or an icon), `label' (a floating
 %% label; replaces the placeholder).
--spec input(binary() | undefined, aihtml_html:css(), aihtml_html:attrs()) -> #ah_input{}.
-input(Value, Css, Attrs) ->
+-spec ah_input(binary() | undefined, aihtml_html:css(), aihtml_html:attrs()) -> #ah_input{}.
+ah_input(Value, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_input{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_input{}.
@@ -66,7 +66,7 @@ clear_button() ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => input, category => form,
-       signature => <<"input(Value, Css, Attrs)">>,
+       signature => <<"ah_input(Value, Css, Attrs)">>,
        root => <<"ah-input-group">>,
        groups => #{size => ?L:sizes(), state => ?L:states()},
        flags => [disabled, no_rounded, clearable],

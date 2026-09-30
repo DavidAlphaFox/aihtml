@@ -17,11 +17,11 @@ demos() ->
 
 -spec tab_bar_editor() -> aihtml:html().
 tab_bar_editor() ->
-    tab_bar([{index, <<"index.erl">>}, {core, <<"core.erl">>, #{dirty => true}},
-             {readme, <<"README.md">>, #{icon => <<"📄"/utf8>>}}, {config, <<"rebar.config">>}],
-            core, [], []).
+    ah_tab_bar([{index, <<"index.erl">>}, {core, <<"core.erl">>, #{dirty => true}},
+                {readme, <<"README.md">>, #{icon => <<"📄"/utf8>>}}, {config, <<"rebar.config">>}],
+               core, [], []).
 
 -spec tab_bar_fixed() -> aihtml:html().
 tab_bar_fixed() ->
-    tab_bar([{one, <<"One">>}, {two, <<"Two">>}, {three, <<"Three">>}], one, [],
-            [{closable, false}]).
+    ah_tab_bar([{one, <<"One">>}, {two, <<"Two">>}, {three, <<"Three">>}], one, [],
+               [{closable, false}]).

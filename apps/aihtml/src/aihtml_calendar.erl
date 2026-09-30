@@ -2,7 +2,7 @@
 %%% @doc An event calendar, ported from sigil (form/calendar). See
 %%% designs/04-components.md.
 %%%
-%%%   calendar(Value, Css, Attrs)          an event calendar: month, week, day, agenda
+%%%   ah_calendar(Value, Css, Attrs)       an event calendar: month, week, day, agenda
 %%%   set_events(Ctx, Target, Events)      (in an action) replace a calendar's events
 %%%   add_event(Ctx, Target, Event)        (in an action) add one event
 %%%
@@ -39,7 +39,7 @@
 %%%   ah:select         from, to (end exclusive), allDay
 %%%   ah:more-click     date (then the day view opens, unless prevented)
 %%%
-%%% calendar/3 builds an #ah_calendar{} (include/aihtml_calendar.hrl) and
+%%% ah_calendar/3 builds an #ah_calendar{} (include/aihtml_calendar.hrl) and
 %%% render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -49,7 +49,7 @@
 
 -include("aihtml_calendar.hrl").
 
--export([calendar/3, set_events/3, add_event/3,
+-export([ah_calendar/3, set_events/3, add_event/3,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([element/0, event/0, status/0, view/0, label_key/0, labels/0]).
@@ -105,8 +105,8 @@
 %% lets the content decide), `hour_format' (12 or 24), `href' (a URL
 %% template with {date} and {view}: the toolbar becomes links, see the
 %% module doc), `labels' (see `labels()').
--spec calendar(aihtml_lib_date:date(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_calendar{}.
-calendar(Value, Css, Attrs) ->
+-spec ah_calendar(aihtml_lib_date:date(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_calendar{}.
+ah_calendar(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_calendar{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_calendar{}.
@@ -660,7 +660,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => calendar, category => form,
-       signature => <<"calendar(Value, Css, Attrs)">>,
+       signature => <<"ah_calendar(Value, Css, Attrs)">>,
        root => <<"ah-calendar">>,
        flags => [editable, selectable],
        options => [events, view, views, first_day, agenda_days, day_max_events,

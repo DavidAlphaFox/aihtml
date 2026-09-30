@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The timeline component (designs/04-components.md): `timeline/3'
+%%% @doc The timeline component (designs/04-components.md): `ah_timeline/3'
 %%% builds an #ah_timeline{} element record (include/aihtml_timeline.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_timeline.hrl").
 
--export([timeline/3, render/1, fields/1, catalog/0]).
+-export([ah_timeline/3, render/1, fields/1, catalog/0]).
 
 -export_type([item/0]).
 
@@ -36,8 +36,8 @@
 %% `icon' (html), `description', `dot' (primary | success | warning |
 %% danger) and `expanded'. Items with a description expand on click
 %% unless the `collapsible' option is false.
--spec timeline([map()], css(), attrs()) -> #ah_timeline{}.
-timeline(Items, Css, Attrs) ->
+-spec ah_timeline([map()], css(), attrs()) -> #ah_timeline{}.
+ah_timeline(Items, Css, Attrs) ->
     ?E:build(?MODULE, #ah_timeline{items = Items}, Css, Attrs).
 
 %% @doc The field names of #ah_timeline{}.
@@ -109,7 +109,7 @@ catalog() ->
 
 entry() ->
     #{name => timeline, category => data, root => <<"ah-timeline">>,
-      signature => <<"timeline(Items, Css, Attrs)">>,
+      signature => <<"ah_timeline(Items, Css, Attrs)">>,
       groups => #{position => {[both, near, far], both}},
       flags => [horizontal, disabled],
       classes => maps:from_list([{M, [<<"ah-timeline-position-", (atom_to_binary(M))/binary>>]}

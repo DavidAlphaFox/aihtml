@@ -8,7 +8,7 @@
 %%% Items take the shape of `aihtml_lib_nav:item()'. Selecting a leaf sets
 %%% `data-ah-value' on the root to its key and fires `change' there.
 %%%
-%%% listmenu/4 builds an #ah_listmenu{} record (include/aihtml_listmenu.hrl)
+%%% ah_listmenu/4 builds an #ah_listmenu{} record (include/aihtml_listmenu.hrl)
 %%% and render/1 turns it into HTML (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
@@ -17,7 +17,7 @@
 
 -include("aihtml_listmenu.hrl").
 
--export([listmenu/4]).
+-export([ah_listmenu/4]).
 -export([render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_nav, [norm/1, label/1, key_attr/1, value_attr/1, is_value/2,
@@ -32,9 +32,9 @@
 %% Options: `header' (default true), `back_button' (true), `filter'
 %% (false), `arrows' (true), `back_label' ("Back"), `filter_placeholder'
 %% ("Filter..."), `animation' (slide | fade | none), `name'.
--spec listmenu([aihtml_lib_nav:item()], aihtml_lib_nav:key() | undefined, aihtml_html:css(),
-               aihtml_html:attrs()) -> #ah_listmenu{}.
-listmenu(Items, Value, Css, Attrs) ->
+-spec ah_listmenu([aihtml_lib_nav:item()], aihtml_lib_nav:key() | undefined, aihtml_html:css(),
+                  aihtml_html:attrs()) -> #ah_listmenu{}.
+ah_listmenu(Items, Value, Css, Attrs) ->
     ?EL:build(?MODULE, #ah_listmenu{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -153,7 +153,7 @@ default(V, _) -> V.
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => listmenu, category => layout,
-       signature => <<"listmenu(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_listmenu(Items, Value, Css, Attrs)">>,
        root => <<"ah-listmenu">>,
        flags => [disabled],
        options => [header, back_button, filter, arrows, back_label,

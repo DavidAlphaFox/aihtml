@@ -3,7 +3,7 @@
 
 -export([fruits/0]).
 
-%% @doc Fruit items as dropdownlist/4 and select/4 take them.
+%% @doc Fruit items as ah_dropdownlist/4 and ah_select/4 take them.
 -spec fruits() -> [{atom(), binary()}].
 fruits() ->
     [{apple, <<"Apple">>}, {banana, <<"Banana">>}, {cherry, <<"Cherry">>},

@@ -17,7 +17,7 @@ token(Html) ->
     {Ev, Ref}.
 
 slider_single_test() ->
-    H = r(?M:slider({0, 100}, 25, [], [{name, v}])),
+    H = r(?M:ah_slider({0, 100}, 25, [], [{name, v}])),
     ?assert(has(H, <<"class=\"ah-slider ah-slider-horizontal ah-slider-buttons-hidden ah-slider-ticks-hidden\"">>)),
     ?assert(has(H, <<"role=\"slider\" tabindex=\"0\" aria-valuenow=\"25\"">>)),
     ?assert(has(H, <<"data-ah-value=\"25\"">>)),
@@ -26,11 +26,11 @@ slider_single_test() ->
     ?assert(has(H, <<"<input type=\"hidden\" name=\"v\" value=\"25\">">>)).
 
 slider_clamps_test() ->
-    ?assert(has(r(?M:slider({0, 10}, 42, [], [])), <<"data-ah-value=\"10\"">>)),
-    ?assert(has(r(?M:slider({0, 10}, undefined, [], [])), <<"data-ah-value=\"0\"">>)).
+    ?assert(has(r(?M:ah_slider({0, 10}, 42, [], [])), <<"data-ah-value=\"10\"">>)),
+    ?assert(has(r(?M:ah_slider({0, 10}, undefined, [], [])), <<"data-ah-value=\"0\"">>)).
 
 slider_range_test() ->
-    H = r(?M:slider({0, 100, 5}, {80, 20}, [success], [{min_range, 10}])),
+    H = r(?M:ah_slider({0, 100, 5}, {80, 20}, [success], [{min_range, 10}])),
     ?assert(has(H, <<"data-ah-value=\"20,80\"">>)),
     ?assert(has(H, <<"role=\"group\"">>)),
     ?assert(has(H, <<"ah-slider-range-slider">>)),
@@ -39,8 +39,8 @@ slider_range_test() ->
     ?assert(has(H, <<"ah-slider-success">>)).
 
 slider_ticks_buttons_vertical_test() ->
-    H = r(?M:slider({0, 1, 0.1}, 0.5, [vertical, buttons, tooltip],
-                    [{ticks, 0.5}, {ticks_position, both}])),
+    H = r(?M:ah_slider({0, 1, 0.1}, 0.5, [vertical, buttons, tooltip],
+                       [{ticks, 0.5}, {ticks_position, both}])),
     ?assert(has(H, <<"ah-slider-vertical">>)),
     ?assert(has(H, <<"ah-slider-button-prev">>)),
     ?assertNot(has(H, <<"ah-slider-buttons-hidden">>)),
@@ -52,23 +52,23 @@ slider_ticks_buttons_vertical_test() ->
     ?assert(has(H, <<"data-ah-step=\"0.1\"">>)).
 
 slider_bad_range_test() ->
-    ?assertError({aihtml, {bad_slider_range, {5, 1, 1}}}, ?M:slider({5, 1}, 2, [], [])).
+    ?assertError({aihtml, {bad_slider_range, {5, 1, 1}}}, ?M:ah_slider({5, 1}, 2, [], [])).
 
 %%% element records (designs/05-records.md)
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:slider({0, 10, 2}, {2, 8}, [vertical, buttons],
-                             [{ticks, 2}, {min_range, 2}, {name, r}])),
+    ?assertEqual(r(?M:ah_slider({0, 10, 2}, {2, 8}, [vertical, buttons],
+                                [{ticks, 2}, {min_range, 2}, {name, r}])),
                  r(#ah_slider{range = {0, 10, 2}, value = {2, 8}, orientation = vertical,
                               buttons = true, ticks = 2, min_range = 2, name = r})),
-    ?assertEqual(r(?M:slider({0, 10}, 3, [], [])), r(#ah_slider{range = {0, 10}, value = 3})).
+    ?assertEqual(r(?M:ah_slider({0, 10}, 3, [], [])), r(#ah_slider{range = {0, 10}, value = 3})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_slider{range = {0, 5, 1}, value = 2, template = info, tooltip = true,
                             ticks = 1, ticks_position = both},
-                 ?M:slider({0, 5}, 2, [info, tooltip], [{ticks, 1}, {ticks_position, both}])),
+                 ?M:ah_slider({0, 5}, 2, [info, tooltip], [{ticks, 1}, {ticks_position, both}])),
     ?assertError({aihtml, {record_only_field, ah_slider, postback}},
-                 ?M:slider({0, 1}, 0, [], [{postback, x}])).
+                 ?M:ah_slider({0, 1}, 0, [], [{postback, x}])).
 
 postback_test() ->
     ?assertEqual({<<"change">>, {other_mod, vol, #{}}},
@@ -89,7 +89,7 @@ catalog_test() ->
     ?assertEqual([slider], Names),
     [begin
          ?assert(is_binary(maps:get(signature, E))),
-         ?assert(erlang:function_exported(?M, N, 4))
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4))
      end || #{name := N} = E <- ?M:catalog()].
 
 catalog_docs_test() ->

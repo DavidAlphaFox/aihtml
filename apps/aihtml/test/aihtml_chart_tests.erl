@@ -26,8 +26,8 @@ island(Html) ->
     json:decode(Json).
 
 chart_markup_test() ->
-    H = r(?M:chart(#{series => [#{type => line, data => [1, 2]}]}, [<<"mt-2">>],
-                   [{id, c}, {height, 300}, {aria_label, <<"Sales">>}])),
+    H = r(?M:ah_chart(#{series => [#{type => line, data => [1, 2]}]}, [<<"mt-2">>],
+                      [{id, c}, {height, 300}, {aria_label, <<"Sales">>}])),
     ?assert(has(<<"<div class=\"ah-chart mt-2\" role=\"figure\" data-ah=\"chart\" "
                   "aria-describedby=\"c-data\" style=\"height:300px;\" id=\"c\" "
                   "aria-label=\"Sales\">"
@@ -35,11 +35,11 @@ chart_markup_test() ->
     %% no table for a line without a category axis: the caption alone
     ?assert(has(<<"</script><p class=\"ah-chart-text ah-sr-only\" id=\"c-data\">Sales</p></div>">>, H)),
     ?assertEqual(#{<<"series">> => [#{<<"type">> => <<"line">>, <<"data">> => [1, 2]}]},
-                 island(?M:chart(#{series => [#{type => line, data => [1, 2]}]}, [], []))).
+                 island(?M:ah_chart(#{series => [#{type => line, data => [1, 2]}]}, [], []))).
 
 chart_flags_test() ->
-    H = r(?M:chart(#{}, [loading, disabled], [{width, <<"50%">>}, {height, 200},
-                                               {renderer, svg}])),
+    H = r(?M:ah_chart(#{}, [loading, disabled], [{width, <<"50%">>}, {height, 200},
+                                                  {renderer, svg}])),
     ?assert(has(<<"class=\"ah-chart ah-chart-disabled\"">>, H)),
     ?assert(has(<<"data-ah-renderer=\"svg\" data-ah-loading=\"true\" aria-disabled=\"true\" "
                   "style=\"width:50%;height:200px;\"">>, H)),
@@ -49,11 +49,11 @@ chart_flags_test() ->
 
 island_escaping_test() ->
     Opt = #{title => #{text => <<"</script><!-- x">>}},
-    H = r(?M:chart(Opt, [], [])),
+    H = r(?M:ah_chart(Opt, [], [])),
     ?assertEqual(nomatch, binary:match(H, <<"</script><!--">>)),
     ?assertEqual(1, length(binary:matches(H, <<"</script>">>))),
     %% and the data still round-trips
-    ?assertEqual(#{<<"title">> => #{<<"text">> => <<"</script><!-- x">>}}, island(?M:chart(Opt, [], []))).
+    ?assertEqual(#{<<"title">> => #{<<"text">> => <<"</script><!-- x">>}}, island(?M:ah_chart(Opt, [], []))).
 
 chart_option_test() ->
     ?assertEqual(#{a => 1}, ?M:chart_option(#ah_chart{option = #{a => 1}})),
@@ -93,7 +93,7 @@ chart_update_test() ->
 %% without a table ({caption, Text} for a caption alone).
 tbl(Opt) -> tbl(Opt, []).
 tbl(Opt, Attrs) ->
-    H = r(?M:chart(Opt, [], [{id, c} | Attrs])),
+    H = r(?M:ah_chart(Opt, [], [{id, c} | Attrs])),
     case re:run(H, <<"<div class=\"ah-chart-text ah-sr-only\" id=\"c-data\"><table>(.*?)</table></div>">>,
                 [{capture, all_but_first, binary}, dotall]) of
         {match, [T]} ->
@@ -212,20 +212,20 @@ text_free_form_test() ->
 
 text_ids_and_limit_test() ->
     %% without a root id: a generated one, the same on both ends
-    H = r(?M:chart(#{title => #{text => t}}, [], [])),
+    H = r(?M:ah_chart(#{title => #{text => t}}, [], [])),
     {match, [Id, Id]} = re:run(H, <<"aria-describedby=\"(ah-chart-text-[0-9]+)\".*id=\"(ah-chart-text-[0-9]+)\"">>,
                                [{capture, all_but_first, binary}]),
     %% a user's aria-describedby wins
     ?assert(has(<<"aria-describedby=\"mine\"">>,
-                r(?M:chart(#{title => #{text => t}}, [], [{aria_describedby, mine}])))),
+                r(?M:ah_chart(#{title => #{text => t}}, [], [{aria_describedby, mine}])))),
     %% at most 500 rows, then a line that says how many are left out
     {_, _, Rows} = tbl(#{xAxis => #{type => category},
                          series => [#{type => bar, data => lists:seq(1, 503)}]}),
     ?assertEqual(501, length(Rows)),
     ?assertEqual([<<"And 3 more rows.">>], lists:last(Rows)),
     ?assert(has(<<"<td colspan=\"2\">And 3 more rows.</td>">>,
-                r(?M:chart(#{xAxis => #{type => category},
-                             series => [#{type => bar, data => lists:seq(1, 503)}]}, [], [])))).
+                r(?M:ah_chart(#{xAxis => #{type => category},
+                                series => [#{type => bar, data => lists:seq(1, 503)}]}, [], [])))).
 
 %%%===================================================================
 %%% Catalog
@@ -256,13 +256,13 @@ catalog_docs_test() ->
 
 record_equals_builder_test() ->
     Opt = #{series => []},
-    ?assertEqual(r(?M:chart(Opt, [loading, <<"x">>], [{id, c}, {height, 100}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_chart(Opt, [loading, <<"x">>], [{id, c}, {height, 100}, {title, <<"t">>}])),
                  r(#ah_chart{option = Opt, loading = true, css = [<<"x">>], id = c, height = 100,
                              attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
     ?assertError({aihtml, {record_only_field, ah_chart, postback}},
-                 ?M:chart(#{}, [], [{postback, x}])).
+                 ?M:ah_chart(#{}, [], [{postback, x}])).
 
 postback_test() ->
     Token = fun(Html) ->

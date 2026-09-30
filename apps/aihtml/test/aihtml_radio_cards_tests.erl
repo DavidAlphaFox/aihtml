@@ -21,7 +21,7 @@ radio_cards_test() ->
     Items = [{free, <<"Free">>, #{description => <<"<i>trial</i>">>}},
              {pro, <<"Pro">>, #{icon => <<"P">>}},
              {team, <<"Team">>, [{disabled, true}]}],
-    H = r(?M:radio_cards(Items, pro, [], [{name, plan}, {columns, 2}, {align, start}])),
+    H = r(?M:ah_radio_cards(Items, pro, [], [{name, plan}, {columns, 2}, {align, start}])),
     ?assertMatch(<<"<div class=\"ah-radio-cards\" data-ah=\"radio-cards\" role=\"radiogroup\" data-ah-value=\"pro\" data-columns=\"2\" data-align=\"start\" data-disabled=\"false\">", _/binary>>, H),
     ?assert(has(<<"&lt;i&gt;trial&lt;/i&gt;">>, H)),
     ?assert(has(<<"<span class=\"ah-radio-cards__icon\" aria-hidden=\"true\">P</span>">>, H)),
@@ -29,17 +29,17 @@ radio_cards_test() ->
     ?assert(has(<<"data-value=\"team\" data-index=\"2\" data-selected=\"false\" data-disabled=\"true\"">>, H)),
     ?assertEqual(3, count(<<"name=\"plan\"">>, H)),
     ?assertError({aihtml, {bad_option, radio_cards, columns, <<"4">>}},
-                 r(?M:radio_cards(Items, pro, [], [{columns, 4}]))),
+                 r(?M:ah_radio_cards(Items, pro, [], [{columns, 4}]))),
     ?assertError({aihtml, {unknown_modifier, radio_cards, big, _}},
-                 ?M:radio_cards(Items, pro, [big], [])).
+                 ?M:ah_radio_cards(Items, pro, [big], [])).
 
 render_all_test() ->
     Items = [{a, <<"A">>}, {b, <<"B">>}],
-    ?assert(is_binary(r(?M:radio_cards(Items, a, [], [])))).
+    ?assert(is_binary(r(?M:ah_radio_cards(Items, a, [], [])))).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:radio_cards(items(), b, [], [{name, plan}, {columns, 2},
-                                                   {align, start}, {disabled, true}])),
+    ?assertEqual(r(?M:ah_radio_cards(items(), b, [], [{name, plan}, {columns, 2},
+                                                      {align, start}, {disabled, true}])),
                  r(#ah_radio_cards{items = items(), value = b, name = plan, columns = 2,
                                    align = start, disabled = true})).
 
@@ -58,7 +58,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([radio_cards], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          ?assertMatch(#{category := form, behavior := B} when is_binary(B), E)
      end || #{name := N} = E <- ?M:catalog()].
 

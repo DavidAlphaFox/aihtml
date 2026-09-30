@@ -2,8 +2,8 @@
 %%% @doc File upload, ported from sigil (form/upload and its core,
 %%% drop_zone and picker helpers). See designs/04-components.md.
 %%%
-%%%   upload(Value, Css, Attrs)   a drop zone, a file picker and a file list
-%%%   uploaded_files(Event)       (in an action) the files of a change event
+%%%   ah_upload(Value, Css, Attrs)   a drop zone, a file picker and a file list
+%%%   uploaded_files(Event)          (in an action) the files of a change event
 %%%
 %%% Two transports:
 %%%
@@ -44,7 +44,7 @@
 
 -include("aihtml_upload.hrl").
 
--export([upload/3, uploaded_files/1, render/1, fields/1, catalog/0, facade_extras/0,
+-export([ah_upload/3, uploaded_files/1, render/1, fields/1, catalog/0, facade_extras/0,
          format_size/1]).
 
 -export_type([file/0, labels/0]).
@@ -90,8 +90,8 @@
 %% `with_credentials', `labels' (a map of `remove', `upload_failed',
 %% `type_mismatch', `too_large', `too_many', `network_error'). `name'
 %% names the hidden input (with `url') or the file input (without).
--spec upload([file()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_upload{}.
-upload(Value, Css, Attrs) when is_list(Value) ->
+-spec ah_upload([file()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_upload{}.
+ah_upload(Value, Css, Attrs) when is_list(Value) ->
     ?E:build(?MODULE, #ah_upload{value = Value}, Css, Attrs).
 
 -spec render(#ah_upload{}) -> aihtml_html:html().
@@ -298,7 +298,7 @@ text(L) when is_list(L) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => upload, category => form,
-       signature => <<"upload(Value, Css, Attrs)">>,
+       signature => <<"ah_upload(Value, Css, Attrs)">>,
        root => <<"ah-upload">>,
        flags => [disabled],
        options => [url, field_name, accept, multiple, max_size, max_count, auto_upload,

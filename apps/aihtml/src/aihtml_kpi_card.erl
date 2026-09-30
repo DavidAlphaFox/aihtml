@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The kpi_card component (designs/04-components.md): `kpi_card/3'
+%%% @doc The kpi_card component (designs/04-components.md): `ah_kpi_card/3'
 %%% builds an #ah_kpi_card{} element record (include/aihtml_kpi_card.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_kpi_card.hrl").
 
--export([kpi_card/3, render/1, fields/1, catalog/0]).
+-export([ah_kpi_card/3, render/1, fields/1, catalog/0]).
 
 -export_type([icon/0]).
 
@@ -38,8 +38,8 @@
 %% @doc KPI card: title, big value and a trend badge. Options: `title',
 %% `trend' (percent, > 0 up), `trend_label', `icon' (users, download,
 %% install, star, trending_up, trending_down, or html).
--spec kpi_card(html(), css(), attrs()) -> #ah_kpi_card{}.
-kpi_card(Value, Css, Attrs) ->
+-spec ah_kpi_card(html(), css(), attrs()) -> #ah_kpi_card{}.
+ah_kpi_card(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_kpi_card{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_kpi_card{}.
@@ -120,7 +120,7 @@ catalog() ->
 
 entry() ->
     #{name => kpi_card, category => data, root => <<"ah-kpi-card">>,
-      signature => <<"kpi_card(Value, Css, Attrs)">>,
+      signature => <<"ah_kpi_card(Value, Css, Attrs)">>,
       groups => #{color => {[primary, success, warning, info, error], none}},
       flags => [disabled],
       classes => maps:from_list([{M, [<<"ah-kpi-card--", (atom_to_binary(M))/binary>>]}

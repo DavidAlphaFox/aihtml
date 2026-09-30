@@ -18,21 +18,21 @@ count(Sub, Bin) -> length(binary:matches(Bin, Sub)).
 items() -> [{a, <<"A">>}, {b, <<"B & b">>}, {c, <<"C">>, #{disabled => true, class => <<"x">>}}].
 
 radiobutton_group_test() ->
-    H = r(?M:radiobutton_group(items(), b, [], [{name, p}])),
+    H = r(?M:ah_radiobutton_group(items(), b, [], [{name, p}])),
     ?assert(has(<<"role=\"radiogroup\" data-ah-value=\"b\"">>, H)),
     ?assert(has(<<"data-ah=\"radiobutton-group\"">>, H)),
     ?assertEqual(3, count(<<"type=\"radio\"">>, H)),
     ?assert(has(<<"value=\"b\" name=\"p\" checked">>, H)),
     ?assert(has(<<"ah-radiobutton ah-radiobutton-checked">>, H)),
     %% an unknown value selects nothing
-    ?assert(has(<<"data-ah-value=\"\"">>, r(?M:radiobutton_group(items(), zzz, [], [])))).
+    ?assert(has(<<"data-ah-value=\"\"">>, r(?M:ah_radiobutton_group(items(), zzz, [], [])))).
 
 render_all_test() ->
     Items = [{a, <<"A">>}, {b, <<"B">>}],
-    ?assert(is_binary(r(?M:radiobutton_group(Items, a, [], [])))).
+    ?assert(is_binary(r(?M:ah_radiobutton_group(Items, a, [], [])))).
 
 builder_fills_fields_test() ->
-    G = ?M:radiobutton_group(items(), a, [], [{name, p}, {required, true}, {form, f}]),
+    G = ?M:ah_radiobutton_group(items(), a, [], [{name, p}, {required, true}, {form, f}]),
     ?assertMatch(#ah_radiobutton_group{name = p, required = true, form = f,
                                        layout = vertical, attrs = []}, G).
 
@@ -49,7 +49,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([radiobutton_group], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          ?assertMatch(#{category := form, behavior := B} when is_binary(B), E)
      end || #{name := N} = E <- ?M:catalog()].
 

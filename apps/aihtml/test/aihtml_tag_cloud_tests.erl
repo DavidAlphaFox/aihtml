@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := tag_cloud, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, tag_cloud, 3)),
+    ?assert(erlang:function_exported(?D, ah_tag_cloud, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -48,37 +48,37 @@ records_match_catalog_test() ->
 tag_cloud_weights_test() ->
     Tags = [#{label => <<"a">>, value => 10}, #{label => <<"b">>, value => 20},
             {<<"c">>, 30, <<"/c?x=1&y">>}],
-    H = ?D:tag_cloud(Tags, [], []),
+    H = ?D:ah_tag_cloud(Tags, [], []),
     ?assert(has(<<"style=\"font-size: 10px;\"">>, H)),
     ?assert(has(<<"style=\"font-size: 17px;\"">>, H)),
     ?assert(has(<<"style=\"font-size: 24px;\" href=\"/c?x=1&amp;y\"">>, H)),
     ?assert(has(<<"<ul class=\"ah-tagcloud\">">>, H)),
     ?assert(has(<<"<div class=\"ah-tagcloud\" data-ah=\"tag-cloud\">">>, H)),
-    One = ?D:tag_cloud([{<<"only">>, 5}], [], [{min_font_size, 1}, {max_font_size, 2},
-                                              {font_size_unit, 'rem'}]),
+    One = ?D:ah_tag_cloud([{<<"only">>, 5}], [], [{min_font_size, 1}, {max_font_size, 2},
+                                                 {font_size_unit, 'rem'}]),
     ?assert(has(<<"font-size: 1.5rem;">>, One)).
 
 tag_cloud_options_test() ->
     Tags = [{<<"b x">>, 20}, {<<"a">>, 10}, {<<"c">>, 30}],
-    G = ?D:tag_cloud(Tags, [], [{min_color, <<"#000000">>}, {max_color, <<"#ffffff">>}]),
+    G = ?D:ah_tag_cloud(Tags, [], [{min_color, <<"#000000">>}, {max_color, <<"#ffffff">>}]),
     ?assert(has(<<"color: rgb(128,128,128);\"">>, G)),
     ?assert(has(<<"color: rgb(0,0,0);\"">>, G)),
-    S = r(?D:tag_cloud(Tags, [], [{sort_by, value}, {sort_order, descending},
-                                  {text_case, title_case}, {display_value, true}])),
+    S = r(?D:ah_tag_cloud(Tags, [], [{sort_by, value}, {sort_order, descending},
+                                     {text_case, title_case}, {display_value, true}])),
     {P1, _} = binary:match(S, <<">C (30)<">>),
     {P2, _} = binary:match(S, <<">B X (20)<">>),
     ?assert(P1 < P2),
-    L = ?D:tag_cloud(Tags, [], [{display_limit, 2}, {take_top_weighted, true}]),
+    L = ?D:ah_tag_cloud(Tags, [], [{display_limit, 2}, {take_top_weighted, true}]),
     ?assertNot(has(<<">a<">>, L)),
     ?assert(has(<<">b x<">>, L)),
-    F = ?D:tag_cloud(Tags, [], [{min_value, 15}, {max_value, 25}]),
+    F = ?D:ah_tag_cloud(Tags, [], [{min_value, 15}, {max_value, 25}]),
     ?assertNot(has(<<">c<">>, F)),
     ?assertError({aihtml, {bad_color, _}},
-                 r(?D:tag_cloud(Tags, [], [{min_color, <<"red">>}, {max_color, <<"#fff000">>}]))),
-    ?assertError({aihtml, {bad_unit, _}}, r(?D:tag_cloud(Tags, [], [{font_size_unit, <<"px;x">>}]))).
+                 r(?D:ah_tag_cloud(Tags, [], [{min_color, <<"red">>}, {max_color, <<"#fff000">>}]))),
+    ?assertError({aihtml, {bad_unit, _}}, r(?D:ah_tag_cloud(Tags, [], [{font_size_unit, <<"px;x">>}]))).
 
 tag_cloud_escaping_test() ->
-    H = ?D:tag_cloud([{<<"<script>">>, 1}], [disabled], []),
+    H = ?D:ah_tag_cloud([{<<"<script>">>, 1}], [disabled], []),
     ?assert(has(<<"&lt;script&gt;">>, H)),
     ?assertNot(has(<<"<script>">>, H)),
     ?assert(has(<<"class=\"ah-tagcloud ah-tagcloud-disabled\"">>, H)).
@@ -88,8 +88,8 @@ tag_cloud_escaping_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?D:tag_cloud([{<<"a">>, 1}, {<<"b">>, 2}], [], [{sort_by, value},
-                                                                  {sort_order, descending}])),
+    ?assertEqual(r(?D:ah_tag_cloud([{<<"a">>, 1}, {<<"b">>, 2}], [], [{sort_by, value},
+                                                                     {sort_order, descending}])),
                  r(#ah_tag_cloud{items = [{<<"a">>, 1}, {<<"b">>, 2}], sort_by = value,
                                  sort_order = descending})).
 

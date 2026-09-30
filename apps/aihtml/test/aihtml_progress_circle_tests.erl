@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := progress_circle, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, progress_circle, 3)),
+    ?assert(erlang:function_exported(?D, ah_progress_circle, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -53,11 +53,11 @@ progress_circle_geometry_test() ->
                      binary_to_float(<<O/binary, (case binary:match(O, <<".">>) of
                                                       nomatch -> <<".0">>; _ -> <<>> end)/binary>>)
              end,
-    ?assert(abs(Offset(?D:progress_circle(0, [], [])) - C) < 0.001),
-    ?assert(abs(Offset(?D:progress_circle(25, [], [])) - 0.75 * C) < 0.001),
-    ?assert(abs(Offset(?D:progress_circle(100, [], []))) < 0.001),
-    ?assert(abs(Offset(?D:progress_circle(250, [], []))) < 0.001),
-    H = ?D:progress_circle(42.9, [lg, success], [{label, <<"Up<load>">>}]),
+    ?assert(abs(Offset(?D:ah_progress_circle(0, [], [])) - C) < 0.001),
+    ?assert(abs(Offset(?D:ah_progress_circle(25, [], [])) - 0.75 * C) < 0.001),
+    ?assert(abs(Offset(?D:ah_progress_circle(100, [], []))) < 0.001),
+    ?assert(abs(Offset(?D:ah_progress_circle(250, [], []))) < 0.001),
+    H = ?D:ah_progress_circle(42.9, [lg, success], [{label, <<"Up<load>">>}]),
     ?assert(has(<<"viewBox=\"0 0 100 100\"">>, H)),
     ?assert(has(<<"cx=\"50\" cy=\"50\" r=\"45\"">>, H)),
     ?assert(has(<<"stroke-dasharray=\"282.7433\"">>, H)),
@@ -65,8 +65,8 @@ progress_circle_geometry_test() ->
     ?assert(has(<<">42%</span>">>, H)),
     ?assert(has(<<"aria-label=\"Up&lt;load&gt;\"">>, H)),
     ?assert(has(<<"<span class=\"ah-progress-circle-label\">Up&lt;load&gt;</span>">>, H)),
-    ?assertNot(has(<<"ah-progress-circle-value">>, ?D:progress_circle(5, [], [{show_value, false}]))),
-    ?assert(has(<<"ah-progress-circle-disabled">>, ?D:progress_circle(5, [disabled], []))).
+    ?assertNot(has(<<"ah-progress-circle-value">>, ?D:ah_progress_circle(5, [], [{show_value, false}]))),
+    ?assert(has(<<"ah-progress-circle-disabled">>, ?D:ah_progress_circle(5, [disabled], []))).
 
 %%%===================================================================
 %%% element record (designs/05-records.md)

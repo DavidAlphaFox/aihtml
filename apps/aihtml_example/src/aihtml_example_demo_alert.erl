@@ -19,18 +19,18 @@ demos() ->
 
 -spec alert_variants() -> aihtml:html().
 alert_variants() ->
-    stack([alert(<<"A new version is available.">>, [], []),
-           alert(<<"Your changes were saved.">>, [success], []),
-           alert(<<"Your trial ends in 3 days.">>, [warning], []),
-           alert(<<"Could not reach the server.">>, [error], []),
-           alert(<<"No icon, plain message.">>, [], [{icon, false}])]).
+    stack([ah_alert(<<"A new version is available.">>, [], []),
+           ah_alert(<<"Your changes were saved.">>, [success], []),
+           ah_alert(<<"Your trial ends in 3 days.">>, [warning], []),
+           ah_alert(<<"Could not reach the server.">>, [error], []),
+           ah_alert(<<"No icon, plain message.">>, [], [{icon, false}])]).
 
 -spec alert_dismissible() -> aihtml:html().
 alert_dismissible() ->
-    stack([alert(<<"Your changes were saved.">>, [success, dismissible], [{title, <<"Saved">>}]),
-           alert([<<"Could not reach the server. ">>, a(<<"Retry">>, [<<"underline">>], [{href, <<"#">>}])],
-                 [error, dismissible], [{title, <<"Connection failed">>}])]).
+    stack([ah_alert(<<"Your changes were saved.">>, [success, dismissible], [{title, <<"Saved">>}]),
+           ah_alert([<<"Could not reach the server. ">>, ah_a(<<"Retry">>, [<<"underline">>], [{href, <<"#">>}])],
+                    [error, dismissible], [{title, <<"Connection failed">>}])]).
 
 %% Layout helpers of the demos.
 stack(Children) ->
-    'div'(Children, [<<"flex flex-col gap-3">>], []).
+    ah_div(Children, [<<"flex flex-col gap-3">>], []).

@@ -4,7 +4,7 @@
 %%% input carries it when Attrs has a `name', and `change' fires on the
 %%% root.
 %%%
-%%% rating_group/4 builds an #ah_rating_group{}
+%%% ah_rating_group/4 builds an #ah_rating_group{}
 %%% (include/aihtml_rating_group.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -14,7 +14,7 @@
 
 -include("aihtml_rating_group.hrl").
 
--export([rating_group/4, render/1, fields/1, catalog/0]).
+-export([ah_rating_group/4, render/1, fields/1, catalog/0]).
 
 -export_type([color/0]).
 
@@ -32,11 +32,11 @@
 %% @doc Star rating from 0 to `Max'. Options in Attrs: `name' (hidden
 %% input), `precision' (1 | 0.5), `allow_clear' (clicking the current
 %% value clears it, default true), `readonly', `disabled'.
--spec rating_group(pos_integer(), number() | undefined, aihtml_html:css(),
-                   aihtml_html:attrs()) -> #ah_rating_group{}.
-rating_group(Max, Value, Css, Attrs) when is_integer(Max), Max >= 1 ->
+-spec ah_rating_group(pos_integer(), number() | undefined, aihtml_html:css(),
+                      aihtml_html:attrs()) -> #ah_rating_group{}.
+ah_rating_group(Max, Value, Css, Attrs) when is_integer(Max), Max >= 1 ->
     ?E:build(?MODULE, #ah_rating_group{max = Max, value = Value}, Css, Attrs);
-rating_group(Max, _Value, _Css, _Attrs) ->
+ah_rating_group(Max, _Value, _Css, _Attrs) ->
     error({aihtml, {bad_max, rating_group, Max}}).
 
 %% @doc The field names of #ah_rating_group{}.
@@ -95,7 +95,7 @@ pct(R) -> ?L:num(R * 100).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => rating_group, category => form,
-       signature => <<"rating_group(Max, Value, Css, Attrs)">>,
+       signature => <<"ah_rating_group(Max, Value, Css, Attrs)">>,
        root => <<"ah-rating">>,
        groups => #{size => {[sm, md, lg], md},
                    color => {[warning, primary, success, error], warning}},

@@ -4,7 +4,7 @@
 %%% `disabled', `required' and `form' go to every input, the rest to the
 %%% root, which carries `data-ah-value' and fires one `change'.
 %%%
-%%% radio_cards/4 builds an #ah_radio_cards{} (include/aihtml_radio_cards.hrl)
+%%% ah_radio_cards/4 builds an #ah_radio_cards{} (include/aihtml_radio_cards.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -14,7 +14,7 @@
 
 -include("aihtml_radio_cards.hrl").
 
--export([radio_cards/4, render/1, fields/1, catalog/0]).
+-export([ah_radio_cards/4, render/1, fields/1, catalog/0]).
 
 -export_type([columns/0, align/0]).
 
@@ -28,9 +28,9 @@
 %% @doc Selectable cards with a title, an optional description and icon
 %% (item Opts `description', `icon'). Options in Attrs: `columns'
 %% (1 | 2 | 3 | auto) and `align' (center | start).
--spec radio_cards([aihtml_lib_choice:item()], aihtml_lib_choice:value() | undefined,
-                  aihtml_html:css(), aihtml_html:attrs()) -> #ah_radio_cards{}.
-radio_cards(Items, Value, Css, Attrs) ->
+-spec ah_radio_cards([aihtml_lib_choice:item()], aihtml_lib_choice:value() | undefined,
+                     aihtml_html:css(), aihtml_html:attrs()) -> #ah_radio_cards{}.
+ah_radio_cards(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_radio_cards{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_radio_cards{}.
@@ -79,7 +79,7 @@ desc_span(D) -> ?H:el(span, D, [<<"ah-radio-cards__description">>], []).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => radio_cards, category => form,
-       signature => <<"radio_cards(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_radio_cards(Items, Value, Css, Attrs)">>,
        root => <<"ah-radio-cards">>, options => [columns, align],
        behavior => <<"radio-cards">>, events => [<<"change">>],
        doc => <<"Card radio group; item Opts: description, icon, disabled, class. "

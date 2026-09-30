@@ -25,40 +25,40 @@ demos() ->
 
 -spec window_dialog() -> aihtml:html().
 window_dialog() ->
-    'div'([button(<<"Delete file">>, undefined, [error], opens({id, <<"win-confirm">>})),
-           window(p(<<"Delete report.pdf? This cannot be undone.">>),
-                  [], [{id, <<"win-confirm">>}, {title, <<"Confirm delete">>},
-                       {modal, true}, {width, 380}, {resizable, false},
-                       {footer, [button(<<"Cancel">>, undefined, [default],
-                                        closes(closest, cancel)),
-                                 button(<<"Delete">>, undefined, [error],
-                                        closes(closest, ok))]}])]).
+    ah_div([ah_button(<<"Delete file">>, undefined, [error], opens({id, <<"win-confirm">>})),
+            ah_window(ah_p(<<"Delete report.pdf? This cannot be undone.">>),
+                      [], [{id, <<"win-confirm">>}, {title, <<"Confirm delete">>},
+                           {modal, true}, {width, 380}, {resizable, false},
+                           {footer, [ah_button(<<"Cancel">>, undefined, [default],
+                                               closes(closest, cancel)),
+                                     ah_button(<<"Delete">>, undefined, [error],
+                                               closes(closest, ok))]}])]).
 
 -spec window_tool() -> aihtml:html().
 window_tool() ->
-    'div'([button(<<"Open tool window">>, undefined, [outlined], toggles({id, <<"win-tool">>})),
-           window(p(<<"Drag the title bar, resize from the edges, collapse with the arrow.">>),
-                  [], [{id, <<"win-tool">>}, {title, <<"Properties">>}, {width, 320},
-                       {collapsible, true}])]).
+    ah_div([ah_button(<<"Open tool window">>, undefined, [outlined], toggles({id, <<"win-tool">>})),
+            ah_window(ah_p(<<"Drag the title bar, resize from the edges, collapse with the arrow.">>),
+                      [], [{id, <<"win-tool">>}, {title, <<"Properties">>}, {width, 320},
+                           {collapsible, true}])]).
 
 -spec window_from_server() -> aihtml:html().
 window_from_server() ->
-    'div'([button(<<"Load and open">>, undefined, [primary],
-                  on(click, {?MODULE, open, #{target => <<"win-server">>}})),
-           window(p(<<"Opened with aihtml_lib_overlay:open/2 from an action.">>),
-                  [], [{id, <<"win-server">>}, {title, <<"From the server">>}, {width, 360}])]).
+    ah_div([ah_button(<<"Load and open">>, undefined, [primary],
+                      on(click, {?MODULE, open, #{target => <<"win-server">>}})),
+            ah_window(ah_p(<<"Opened with aihtml_lib_overlay:open/2 from an action.">>),
+                      [], [{id, <<"win-server">>}, {title, <<"From the server">>}, {width, 360}])]).
 
 -spec window_record() -> aihtml:html().
 window_record() ->
-    'div'([button(<<"Rename file">>, undefined, [outlined], opens({id, <<"win-rename">>})),
-           #ah_window{id = <<"win-rename">>, title = <<"Rename">>, modal = true, width = 360,
-                      resizable = false,
-                      body = input(<<"report.pdf">>, [], [{name, file_name}]),
-                      footer = [button(<<"Cancel">>, undefined, [default], closes()),
-                                button(<<"Rename">>, undefined, [primary],
-                                       closes(closest, ok))],
-                      %% fires when the window closes, handled by action/4 below
-                      postback = window_closed}]).
+    ah_div([ah_button(<<"Rename file">>, undefined, [outlined], opens({id, <<"win-rename">>})),
+            #ah_window{id = <<"win-rename">>, title = <<"Rename">>, modal = true, width = 360,
+                       resizable = false,
+                       body = ah_input(<<"report.pdf">>, [], [{name, file_name}]),
+                       footer = [ah_button(<<"Cancel">>, undefined, [default], closes()),
+                                 ah_button(<<"Rename">>, undefined, [primary],
+                                           closes(closest, ok))],
+                       %% fires when the window closes, handled by action/4 below
+                       postback = window_closed}]).
 
 %%%===================================================================
 %%% Actions
@@ -68,4 +68,4 @@ window_record() ->
 action(open, #{target := Id}, _Ev, Ctx) ->
     aihtml_lib_overlay:open(Ctx, {id, Id});
 action(window_closed, _, _Ev, Ctx) ->
-    toast(Ctx, <<"The window was closed">>, #{description => <<"Sent by its postback.">>}).
+    ah_toast(Ctx, <<"The window was closed">>, #{description => <<"Sent by its postback.">>}).

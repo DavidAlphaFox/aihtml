@@ -1,5 +1,5 @@
 /* The validator of aihtml_field:validate/1 (designs/04-components.md):
-   client-side checks whose messages show in field/4 and form_layout/4
+   client-side checks whose messages show in ah_field/4 and ah_form_layout/4
    rows, or as sigil's tooltip bubble. Ported from sigil
    (sigil.components.form.validator). */
 // ah-load: [data-ah-validate]
@@ -18,8 +18,8 @@ import type { FloatHandle, Placement } from "../core.ts";
 // browser, data-ah-fetch nor an aihtml action (on/2) sees it.
 //
 // Errors show as in sigil: the error class on the control plus either a
-// tooltip bubble (.ah-validator-hint) or an error label. Inside a
-// field/4 row ("auto", the default) the label goes under the control.
+// tooltip bubble (.ah-validator-hint) or an error label. Inside an
+// ah_field/4 row ("auto", the default) the label goes under the control.
 //
 //   ah:validation-error (detail ValidationError {invalid: [el]}) /
 //   ah:validation-success                 native events on the form

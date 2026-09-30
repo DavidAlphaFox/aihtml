@@ -24,7 +24,7 @@ activity_items() ->
      {git, <<"G">>, <<"Source control">>, [{disabled, true}]}].
 
 activity_bar_test() ->
-    H = r(?M:activity_bar(activity_items(), search, [<<"h-64">>], [{id, ab}, {name, view}])),
+    H = r(?M:ah_activity_bar(activity_items(), search, [<<"h-64">>], [{id, ab}, {name, view}])),
     ?assert(has(<<"<div class=\"ah-activity-bar h-64\" role=\"tablist\" "
                   "aria-orientation=\"vertical\" data-placement=\"left\" "
                   "data-ah=\"activity-bar\" data-ah-value=\"search\" id=\"ab\">">>, H)),
@@ -41,7 +41,7 @@ activity_bar_test() ->
     ?assertEqual(1, count(<<"tabindex=\"0\"">>, H)).
 
 activity_bar_right_and_no_value_test() ->
-    H = r(?M:activity_bar(activity_items(), undefined, [right], [])),
+    H = r(?M:ah_activity_bar(activity_items(), undefined, [right], [])),
     ?assert(has(<<"class=\"ah-activity-bar\"">>, H)),
     ?assert(has(<<"data-placement=\"right\"">>, H)),
     ?assert(has(<<"data-ah-value=\"\"">>, H)),
@@ -50,7 +50,7 @@ activity_bar_right_and_no_value_test() ->
                   "aria-selected=\"false\" aria-label=\"Explorer\" title=\"Explorer\" "
                   "tabindex=\"0\"">>, H)),
     ?assertEqual(1, count(<<"tabindex=\"0\"">>, H)),
-    ?assertError({aihtml, {bad_activity_bar_item, _}}, r(?M:activity_bar([x], x, [], []))).
+    ?assertError({aihtml, {bad_activity_bar_item, _}}, r(?M:ah_activity_bar([x], x, [], []))).
 
 %%%===================================================================
 %%% Catalog
@@ -68,8 +68,8 @@ catalog_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:activity_bar(activity_items(), files, [right, <<"x">>],
-                                   [{id, a}, {name, n}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_activity_bar(activity_items(), files, [right, <<"x">>],
+                                      [{id, a}, {name, n}, {title, <<"t">>}])),
                  r(#ah_activity_bar{items = activity_items(), value = files, placement = right,
                                     css = [<<"x">>], id = a, name = n,
                                     attrs = [{title, <<"t">>}]})).

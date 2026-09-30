@@ -5,7 +5,7 @@
 %%% `change' fires on the root (designs/04-components.md).
 %%%
 %%% Items are `Label | {Value, Label} | {Value, Label, ItemAttrs}'
-%%% (aihtml_lib_button). segmented_control/4 builds an
+%%% (aihtml_lib_button). ah_segmented_control/4 builds an
 %%% #ah_segmented_control{} (include/aihtml_segmented_control.hrl) and
 %%% render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -16,7 +16,7 @@
 
 -include("aihtml_segmented_control.hrl").
 
--export([segmented_control/4, render/1, fields/1, catalog/0]).
+-export([ah_segmented_control/4, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -24,9 +24,9 @@
 
 %% @doc Mutually exclusive segments (role tablist, as in sigil). `Value'
 %% is the selected item's value.
--spec segmented_control([aihtml_lib_button:item()], term(), aihtml_html:css(),
-                        aihtml_html:attrs()) -> #ah_segmented_control{}.
-segmented_control(Items, Value, Css, Attrs) ->
+-spec ah_segmented_control([aihtml_lib_button:item()], term(), aihtml_html:css(),
+                           aihtml_html:attrs()) -> #ah_segmented_control{}.
+ah_segmented_control(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_segmented_control{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_segmented_control{}.
@@ -67,7 +67,7 @@ render(#ah_segmented_control{items = Items0, value = Value, name = Name, size = 
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => segmented_control, category => form,
-       signature => <<"segmented_control(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_segmented_control(Items, Value, Css, Attrs)">>,
        root => <<"ah-segmented-control">>,
        groups => #{size => {[sm, md, lg], md}}, flags => [full_width],
        classes => #{sm => [], md => [], lg => [], full_width => []},

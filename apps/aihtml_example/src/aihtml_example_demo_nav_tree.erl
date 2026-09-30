@@ -26,25 +26,25 @@ demos() ->
 
 -spec nav_basic() -> aihtml:html().
 nav_basic() ->
-    side(nav_tree(nav_groups(), <<"user/cards">>, [], [])).
+    side(ah_nav_tree(nav_groups(), <<"user/cards">>, [], [])).
 
 -spec nav_plain() -> aihtml:html().
 nav_plain() ->
-    side(nav_tree([{<<"概览"/utf8>>, <<"overview">>},
-                   #{label => <<"设置"/utf8>>,
-                     items => [{<<"账号"/utf8>>, <<"settings/account">>},
-                               {<<"通知"/utf8>>, <<"settings/notify">>},
-                               #{label => <<"安全"/utf8>>,
-                                 items => [{<<"密码"/utf8>>, <<"settings/security/password">>},
-                                           {<<"两步验证"/utf8>>, <<"settings/security/2fa">>}]}]},
-                   #{label => <<"帮助文档"/utf8>>, href => <<"https://example.com/docs">>}],
-                  <<"settings/security/2fa">>, [], [])).
+    side(ah_nav_tree([{<<"概览"/utf8>>, <<"overview">>},
+                      #{label => <<"设置"/utf8>>,
+                        items => [{<<"账号"/utf8>>, <<"settings/account">>},
+                                  {<<"通知"/utf8>>, <<"settings/notify">>},
+                                  #{label => <<"安全"/utf8>>,
+                                    items => [{<<"密码"/utf8>>, <<"settings/security/password">>},
+                                              {<<"两步验证"/utf8>>, <<"settings/security/2fa">>}]}]},
+                      #{label => <<"帮助文档"/utf8>>, href => <<"https://example.com/docs">>}],
+                     <<"settings/security/2fa">>, [], [])).
 
 -spec nav_change() -> aihtml:html().
 nav_change() ->
-    row([side(nav_tree(nav_groups(), <<"dashboard">>, [],
-                       [on(change, {?MODULE, route_picked, #{}})])),
-         span(<<"点击左侧链接"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"route-picked">>}])]).
+    row([side(ah_nav_tree(nav_groups(), <<"dashboard">>, [],
+                          [on(change, {?MODULE, route_picked, #{}})])),
+         ah_span(<<"点击左侧链接"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"route-picked">>}])]).
 
 %%%===================================================================
 %%% Actions
@@ -84,7 +84,7 @@ icon(Name) ->
               "stroke-linejoin=\"round\">">>, maps:get(Name, Paths), <<"</svg>">>]}.
 
 side(Nav) ->
-    'div'(Nav, [<<"w-64 rounded-md border border-border p-3 bg-surface">>], []).
+    ah_div(Nav, [<<"w-64 rounded-md border border-border p-3 bg-surface">>], []).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

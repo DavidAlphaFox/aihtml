@@ -27,25 +27,25 @@ demos() ->
 
 -spec heatmap_basic() -> aihtml:html().
 heatmap_basic() ->
-    heatmap_calendar(activity(), [], [{end_date, {2026, 9, 29}}]).
+    ah_heatmap_calendar(activity(), [], [{end_date, {2026, 9, 29}}]).
 
 -spec heatmap_custom() -> aihtml:html().
 heatmap_custom() ->
-    heatmap_calendar(activity(), [],
-                     [{months, 6}, {end_date, {2026, 9, 29}}, {thresholds, [0, 2, 5, 8]},
-                      {weekday_labels, [<<>>, <<"一"/utf8>>, <<>>, <<"三"/utf8>>, <<>>,
-                                        <<"五"/utf8>>, <<>>]},
-                      {month_labels, [<<(integer_to_binary(M))/binary, "月"/utf8>>
-                                      || M <- lists:seq(1, 12)]},
-                      {legend, {<<"少"/utf8>>, <<"多"/utf8>>}},
-                      {tooltip, <<"{date}：{value} 次提交"/utf8>>}]).
+    ah_heatmap_calendar(activity(), [],
+                        [{months, 6}, {end_date, {2026, 9, 29}}, {thresholds, [0, 2, 5, 8]},
+                         {weekday_labels, [<<>>, <<"一"/utf8>>, <<>>, <<"三"/utf8>>, <<>>,
+                                           <<"五"/utf8>>, <<>>]},
+                         {month_labels, [<<(integer_to_binary(M))/binary, "月"/utf8>>
+                                         || M <- lists:seq(1, 12)]},
+                         {legend, {<<"少"/utf8>>, <<"多"/utf8>>}},
+                         {tooltip, <<"{date}：{value} 次提交"/utf8>>}]).
 
 -spec heatmap_select() -> aihtml:html().
 heatmap_select() ->
-    'div'([#ah_heatmap_calendar{data = activity(), months = 4, end_date = {2026, 9, 29},
-                                postback = day_picked},
-           p(<<"点击任意一天"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"day-picked">>}])],
-          [], []).
+    ah_div([#ah_heatmap_calendar{data = activity(), months = 4, end_date = {2026, 9, 29},
+                                 postback = day_picked},
+            ah_p(<<"点击任意一天"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"day-picked">>}])],
+           [], []).
 
 %%%===================================================================
 %%% Actions

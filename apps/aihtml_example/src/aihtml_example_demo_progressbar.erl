@@ -21,30 +21,30 @@ demos() ->
 
 -spec progress_values() -> aihtml:html().
 progress_values() ->
-    stack([progressbar(35, [show_text], []),
-           progressbar(9, [show_text], [{max, 10}, {text, <<"9 of 10 files">>}]),
-           progressbar(60, [], [{aria_label, <<"Upload">>}])]).
+    stack([ah_progressbar(35, [show_text], []),
+           ah_progressbar(9, [show_text], [{max, 10}, {text, <<"9 of 10 files">>}]),
+           ah_progressbar(60, [], [{aria_label, <<"Upload">>}])]).
 
 -spec progress_styles() -> aihtml:html().
 progress_styles() ->
-    stack([progressbar(70, [success, striped, animated, show_text], []),
-           progressbar(45, [warning, striped], []),
-           progressbar(undefined, [indeterminate, info], [{aria_label, <<"Loading">>}]),
-           progressbar(50, [disabled, show_text], [])]).
+    stack([ah_progressbar(70, [success, striped, animated, show_text], []),
+           ah_progressbar(45, [warning, striped], []),
+           ah_progressbar(undefined, [indeterminate, info], [{aria_label, <<"Loading">>}]),
+           ah_progressbar(50, [disabled, show_text], [])]).
 
 -spec progress_ranges() -> aihtml:html().
 progress_ranges() ->
-    progressbar(80, [show_text], [{color_ranges, [{30, success}, {60, warning}, {100, error}]}]).
+    ah_progressbar(80, [show_text], [{color_ranges, [{30, success}, {60, warning}, {100, error}]}]).
 
 -spec progress_vertical() -> aihtml:html().
 progress_vertical() ->
-    row([progressbar(30, [vertical, show_text], [{style, <<"height: 120px">>}]),
-         progressbar(60, [vertical, reverse, success, show_text], [{style, <<"height: 120px">>}]),
-         'div'(progressbar(40, [reverse, error], []), [<<"flex-1">>], [])]).
+    row([ah_progressbar(30, [vertical, show_text], [{style, <<"height: 120px">>}]),
+         ah_progressbar(60, [vertical, reverse, success, show_text], [{style, <<"height: 120px">>}]),
+         ah_div(ah_progressbar(40, [reverse, error], []), [<<"flex-1">>], [])]).
 
 %% Layout helpers of the demos.
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).
 
 stack(Children) ->
-    'div'(Children, [<<"flex flex-col gap-3">>], []).
+    ah_div(Children, [<<"flex flex-col gap-3">>], []).

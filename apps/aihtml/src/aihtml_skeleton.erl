@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% @doc A shimmering placeholder while content loads (sigil's skeleton).
 %%%
-%%% skeleton/2 builds an element record (#ah_skeleton{}, defined in
+%%% ah_skeleton/2 builds an element record (#ah_skeleton{}, defined in
 %%% include/aihtml_skeleton.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -11,7 +11,7 @@
 
 -include("aihtml_skeleton.hrl").
 
--export([skeleton/2, render/1, fields/1, catalog/0]).
+-export([ah_skeleton/2, render/1, fields/1, catalog/0]).
 
 -import(aihtml_html, [el/4]).
 -import(aihtml_lib_layout, [tf/1, len/1, style/1]).
@@ -26,8 +26,8 @@
 %% @doc A shimmering placeholder. Css: text (default) | circle | rect,
 %% static (no shimmer), done (hidden).
 %% Options: lines (text, default 3), width, height, radius, label.
--spec skeleton(css(), attrs()) -> #ah_skeleton{}.
-skeleton(Css, Attrs) ->
+-spec ah_skeleton(css(), attrs()) -> #ah_skeleton{}.
+ah_skeleton(Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_skeleton{}, Css, Attrs).
 
 %% @doc The field names of #ah_skeleton{}.
@@ -83,7 +83,7 @@ catalog() ->
                         static => <<"No shimmer.">>,
                         done => <<"Hidden: loading has finished.">>},
        methods => [],
-       signature => <<"skeleton(Css, Attrs)">>, root => <<"ah-skeleton">>,
+       signature => <<"ah_skeleton(Css, Attrs)">>, root => <<"ah-skeleton">>,
        groups => #{variant => {[text, circle, rect], none}},
        flags => [static, done],
        classes => #{text => [], circle => [], rect => [], static => [],

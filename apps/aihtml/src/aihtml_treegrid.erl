@@ -2,7 +2,7 @@
 %%% @doc The tree grid, ported from sigil (data/treegrid). DOM and class
 %%% names are sigil's, so the styles in priv/css/sigil apply unchanged.
 %%%
-%%%   treegrid(Columns, Items, Css, Attrs)    rows in a tree: expand, sort, select
+%%%   ah_treegrid(Columns, Items, Css, Attrs)    rows in a tree: expand, sort, select
 %%%   treegrid_children(Ctx, Event, Table)    (in an action) rows of a lazy node
 %%%
 %%% The tree grid is value-bearing: the root carries `data-ah-value' (the
@@ -24,7 +24,7 @@
 %%% They are rendered here, appended to the body and moved under their
 %%% parent by the behaviour method `childrenLoaded'.
 %%%
-%%% treegrid/4 builds an element record (#ah_treegrid{}, defined in
+%%% ah_treegrid/4 builds an element record (#ah_treegrid{}, defined in
 %%% include/aihtml_treegrid.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -34,7 +34,7 @@
 
 -include("aihtml_treegrid.hrl").
 
--export([treegrid/4, treegrid_children/3, render/1, fields/1, catalog/0, facade_extras/0]).
+-export([ah_treegrid/4, treegrid_children/3, render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([element/0, column/0, row/0]).
 
@@ -65,8 +65,8 @@
 %% `key_field', `children_field', `parent_field', `tree_column',
 %% `expanded' (keys, or all), `sortable', `sort', `indent', `alt_rows',
 %% `hover', `show_header', `resizable', `height', `empty_text', `load'.
--spec treegrid([column()], [row()], css(), attrs()) -> #ah_treegrid{}.
-treegrid(Columns, Items, Css, Attrs) ->
+-spec ah_treegrid([column()], [row()], css(), attrs()) -> #ah_treegrid{}.
+ah_treegrid(Columns, Items, Css, Attrs) ->
     ?E:build(?MODULE, #ah_treegrid{columns = Columns, items = Items}, Css, Attrs).
 
 %% @doc The field names of this component's record.
@@ -350,7 +350,7 @@ treegrid_children(Ctx, #{id := RowId0, data := Data}, #ah_treegrid{items = Items
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => treegrid, category => data,
-       signature => <<"treegrid(Columns, Items, Css, Attrs)">>,
+       signature => <<"ah_treegrid(Columns, Items, Css, Attrs)">>,
        root => <<"ah-tg">>, flags => [disabled],
        options => [value, selection_mode, key_field, children_field, parent_field, tree_column,
                    expanded, sortable, sort, indent, alt_rows, hover, show_header, resizable,

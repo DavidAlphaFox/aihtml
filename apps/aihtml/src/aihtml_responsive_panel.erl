@@ -4,7 +4,7 @@
 %%% place while the parent is wide, folded into a toggle and a floating
 %%% overlay when it is narrower than a breakpoint.
 %%%
-%%% responsive_panel/3 builds an element record (#ah_responsive_panel{},
+%%% ah_responsive_panel/3 builds an element record (#ah_responsive_panel{},
 %%% defined in include/aihtml_responsive_panel.hrl) and render/1 turns it
 %%% into HTML, so pages may also write the record directly
 %%% (designs/05-records.md). The behaviour is in
@@ -16,7 +16,7 @@
 
 -include("aihtml_responsive_panel.hrl").
 
--export([responsive_panel/3, render/1, fields/1, catalog/0]).
+-export([ah_responsive_panel/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -33,8 +33,8 @@
 %% auto_close, toggle_button (a selector of an extra toggle), toggle_size,
 %% toggle_content, toggle_label, load (an action ref fired the first
 %% time the content is shown).
--spec responsive_panel(html(), css(), attrs()) -> #ah_responsive_panel{}.
-responsive_panel(Children, Css, Attrs) ->
+-spec ah_responsive_panel(html(), css(), attrs()) -> #ah_responsive_panel{}.
+ah_responsive_panel(Children, Css, Attrs) ->
     ?E:build(?MODULE, #ah_responsive_panel{body = Children}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -84,7 +84,7 @@ render(#ah_responsive_panel{body = Children} = R0) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => responsive_panel, category => layout,
-       signature => <<"responsive_panel(Children, Css, Attrs)">>,
+       signature => <<"ah_responsive_panel(Children, Css, Attrs)">>,
        root => <<"ah-responsive-panel">>, flags => [disabled],
        options => [breakpoint, collapse_width, height, animation, show_duration,
                    hide_duration, auto_close, toggle_button, toggle_size, toggle_content,

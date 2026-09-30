@@ -4,7 +4,7 @@
 %%% (carousel) showing one page at a time, dragged or swiped, dots to pick
 %%% a page, optional slide show; the value is the current page index.
 %%%
-%%% scrollview/3 builds an element record (#ah_scrollview{}, defined in
+%%% ah_scrollview/3 builds an element record (#ah_scrollview{}, defined in
 %%% include/aihtml_scrollview.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%%
@@ -19,7 +19,7 @@
 
 -include("aihtml_scrollview.hrl").
 
--export([scrollview/3, render/1, fields/1, catalog/0]).
+-export([ah_scrollview/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -34,8 +34,8 @@
 %% slide_show, slide_duration, animation_duration, move_threshold,
 %% bounce, label. A `name' in `Attrs' adds a hidden input holding the
 %% page index.
--spec scrollview([html()], css(), attrs()) -> #ah_scrollview{}.
-scrollview(Pages, Css, Attrs) ->
+-spec ah_scrollview([html()], css(), attrs()) -> #ah_scrollview{}.
+ah_scrollview(Pages, Css, Attrs) ->
     ?E:build(?MODULE, #ah_scrollview{body = Pages}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -111,7 +111,7 @@ render(#ah_scrollview{body = Pages} = R0) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => scrollview, category => layout,
-       signature => <<"scrollview(Pages, Css, Attrs)">>,
+       signature => <<"ah_scrollview(Pages, Css, Attrs)">>,
        root => <<"ah-scrollview">>, flags => [disabled],
        options => [current_page, width, height, show_buttons, slide_show, slide_duration,
                    animation_duration, move_threshold, bounce, label],

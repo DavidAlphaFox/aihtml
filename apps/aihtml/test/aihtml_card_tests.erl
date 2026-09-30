@@ -15,7 +15,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([card], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -30,8 +30,8 @@ catalog_documents_every_option_test() ->
 %%% card
 
 card_test() ->
-    H = r(?M:card(<<"Body & more">>, [hover, <<"w-64">>],
-                  [{title, <<"T">>}, {footer, <<"F">>}, {id, c1}])),
+    H = r(?M:ah_card(<<"Body & more">>, [hover, <<"w-64">>],
+                     [{title, <<"T">>}, {footer, <<"F">>}, {id, c1}])),
     ?assertEqual(<<"<div class=\"ah-card ah-card-hover w-64\" id=\"c1\">"
                    "<div class=\"ah-card-header\"><h3 class=\"ah-card-title\">T</h3></div>"
                    "<div class=\"ah-card-body\">Body &amp; more</div>"
@@ -39,7 +39,7 @@ card_test() ->
 
 card_minimal_test() ->
     ?assertEqual(<<"<div class=\"ah-card\"><div class=\"ah-card-body\">x</div></div>">>,
-                 r(?M:card(<<"x">>, [], []))).
+                 r(?M:ah_card(<<"x">>, [], []))).
 
 %%% CSS: every sigil class the module writes exists in the stylesheets
 
@@ -63,23 +63,23 @@ classes_are_styled_test() ->
 
 %% One render of the component in its main variants and states.
 samples() ->
-    [?M:card(<<"b">>, [hover, flush], [{title, <<"t">>}, {subtitle, <<"s">>}, {extra, <<"x">>},
-                                   {media, <<"m">>}, {footer, <<"f">>}])].
+    [?M:ah_card(<<"b">>, [hover, flush], [{title, <<"t">>}, {subtitle, <<"s">>}, {extra, <<"x">>},
+                                      {media, <<"m">>}, {footer, <<"f">>}])].
 
 %%% element records (designs/05-records.md)
 
 unknown_modifier_test() ->
-    ?assertError({aihtml, {unknown_modifier, card, bogus, _}}, ?M:card(<<"x">>, [bogus], [])).
+    ?assertError({aihtml, {unknown_modifier, card, bogus, _}}, ?M:ah_card(<<"x">>, [bogus], [])).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:card(<<"b">>, [hover, <<"w-64">>],
-                           [{title, <<"T">>}, {footer, <<"F">>}, {id, c1}, {data_x, 1}])),
+    ?assertEqual(r(?M:ah_card(<<"b">>, [hover, <<"w-64">>],
+                              [{title, <<"T">>}, {footer, <<"F">>}, {id, c1}, {data_x, 1}])),
                  r(#ah_card{body = <<"b">>, hover = true, css = [<<"w-64">>], title = <<"T">>,
                             footer = <<"F">>, id = c1, attrs = [{data_x, 1}]})).
 
 builder_fills_fields_test() ->
     ?assertError({aihtml, {record_only_field, ah_card, postback}},
-                 ?M:card(<<"x">>, [], [{postback, save}])).
+                 ?M:ah_card(<<"x">>, [], [{postback, save}])).
 
 postback_test() ->
     ?assertError({aihtml, {no_postback_event, ah_card}}, r(setelement(6, #ah_card{}, x))).

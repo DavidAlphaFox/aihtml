@@ -19,17 +19,17 @@ demos() ->
 
 -spec kbd_keys() -> aihtml:html().
 kbd_keys() ->
-    row([kbd(<<"Esc">>, [], []),
-         kbd(<<"⌘"/utf8>>, [], []),
-         kbd(<<"Tab">>, [], []),
-         kbd(<<"Enter">>, [lg], [])]).
+    row([ah_kbd(<<"Esc">>, [], []),
+         ah_kbd(<<"⌘"/utf8>>, [], []),
+         ah_kbd(<<"Tab">>, [], []),
+         ah_kbd(<<"Enter">>, [lg], [])]).
 
 -spec kbd_combos() -> aihtml:html().
 kbd_combos() ->
-    row([kbd([<<"Ctrl">>, <<"Shift">>, <<"P">>], [], []),
-         kbd([<<"⌘"/utf8>>, <<"K">>], [lg], []),
-         span([<<"Press ">>, kbd([<<"Ctrl">>, <<"C">>], [], []), <<" to copy">>])]).
+    row([ah_kbd([<<"Ctrl">>, <<"Shift">>, <<"P">>], [], []),
+         ah_kbd([<<"⌘"/utf8>>, <<"K">>], [lg], []),
+         ah_span([<<"Press ">>, ah_kbd([<<"Ctrl">>, <<"C">>], [], []), <<" to copy">>])]).
 
 %% Layout helpers of the demos.
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

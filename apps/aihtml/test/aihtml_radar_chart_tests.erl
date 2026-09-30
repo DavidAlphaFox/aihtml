@@ -17,9 +17,9 @@ island(Html) ->
     json:decode(Json).
 
 radar_option_test() ->
-    O = island(?M:radar_chart([{a, [1, 2, 3]}], [circle],
-                              [{indicators, [{x, 5}, #{name => y, max => 10, min => 1}, {z, 5}]},
-                               {split_number, 5}, {area_opacity, 0.5}])),
+    O = island(?M:ah_radar_chart([{a, [1, 2, 3]}], [circle],
+                                 [{indicators, [{x, 5}, #{name => y, max => 10, min => 1}, {z, 5}]},
+                                  {split_number, 5}, {area_opacity, 0.5}])),
     #{<<"radar">> := #{<<"shape">> := <<"circle">>, <<"splitNumber">> := 5,
                        <<"indicator">> := [#{<<"name">> := <<"x">>, <<"max">> := 5},
                                            #{<<"name">> := <<"y">>, <<"max">> := 10, <<"min">> := 1},
@@ -28,12 +28,12 @@ radar_option_test() ->
                          <<"data">> := [#{<<"name">> := <<"a">>, <<"value">> := [1, 2, 3]}]}],
       <<"legend">> := #{<<"icon">> := <<"circle">>}} = O,
     ?assertMatch(#{<<"radar">> := #{<<"shape">> := <<"polygon">>}},
-                 island(?M:radar_chart([], [], []))).
+                 island(?M:ah_radar_chart([], [], []))).
 
 %% Indicators x series as a visually hidden table.
 radar_text_test() ->
     H = aihtml_html:render_binary(
-          ?M:radar_chart([{a, [1, 2]}, {b, [3, 4]}], [], [{id, r}, {indicators, [{x, 5}, {y, 5}]}])),
+          ?M:ah_radar_chart([{a, [1, 2]}, {b, [3, 4]}], [], [{id, r}, {indicators, [{x, 5}, {y, 5}]}])),
     ?assertMatch({_, _}, binary:match(H, <<
         "<div class=\"ah-chart-text ah-sr-only\" id=\"r-data\"><table>"
         "<thead><tr><th scope=\"col\">Indicator</th><th scope=\"col\">a</th>"
@@ -67,7 +67,7 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:radar_chart([{a, [1]}], [circle], [{id, c}, {indicators, [{x, 2}]}])),
+    ?assertEqual(r(?M:ah_radar_chart([{a, [1]}], [circle], [{id, c}, {indicators, [{x, 2}]}])),
                  r(#ah_radar_chart{series = [{a, [1]}], shape = circle, indicators = [{x, 2}],
                                    id = c})).
 

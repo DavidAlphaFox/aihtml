@@ -8,7 +8,7 @@
 %%% `name' renders a hidden input, and user changes fire `change' on the
 %%% root.
 %%%
-%%% activity_bar/4 builds an element record (#ah_activity_bar{},
+%%% ah_activity_bar/4 builds an element record (#ah_activity_bar{},
 %%% include/aihtml_activity_bar.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -18,7 +18,7 @@
 
 -include("aihtml_activity_bar.hrl").
 
--export([activity_bar/4, render/1, fields/1, catalog/0]).
+-export([ah_activity_bar/4, render/1, fields/1, catalog/0]).
 
 -export_type([item/0]).
 
@@ -46,8 +46,8 @@
 %% attributes of the button (`{disabled, true}' disables it). `Value' is
 %% the active item. Css: `left' (default) or `right' places the active
 %% marker on that edge.
--spec activity_bar([item()], term(), css(), attrs()) -> #ah_activity_bar{}.
-activity_bar(Items, Value, Css, Attrs) ->
+-spec ah_activity_bar([item()], term(), css(), attrs()) -> #ah_activity_bar{}.
+ah_activity_bar(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_activity_bar{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -106,7 +106,7 @@ activity_item(Other) -> error({aihtml, {bad_activity_bar_item, Other}}).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => activity_bar, category => layout,
-       signature => <<"activity_bar(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_activity_bar(Items, Value, Css, Attrs)">>,
        root => <<"ah-activity-bar">>,
        groups => #{placement => {[left, right], left}},
        classes => #{left => [], right => []},

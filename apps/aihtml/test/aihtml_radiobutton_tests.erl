@@ -14,15 +14,15 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 %% --- radiobutton ---------------------------------------------------
 
 radiobutton_test() ->
-    H = r(?M:radiobutton(<<"Email">>, email, [sm], [{name, c}, {checked, true}])),
+    H = r(?M:ah_radiobutton(<<"Email">>, email, [sm], [{name, c}, {checked, true}])),
     ?assertMatch(<<"<label class=\"ah-radiobutton ah-radiobutton-sm ah-radiobutton-checked\" data-ah=\"radiobutton\">", _/binary>>, H),
     ?assert(has(<<"type=\"radio\" value=\"email\" name=\"c\" checked">>, H)),
     ?assert(has(<<"ah-radiobutton-check ah-radiobutton-check-checked">>, H)),
     ?assertError({aihtml, {unknown_modifier, radiobutton, primary, _}},
-                 ?M:radiobutton(<<"x">>, x, [primary], [])).
+                 ?M:ah_radiobutton(<<"x">>, x, [primary], [])).
 
 render_all_test() ->
-    ?assert(is_binary(r(?M:radiobutton(<<"x">>, a, [], [])))).
+    ?assert(is_binary(r(?M:ah_radiobutton(<<"x">>, a, [], [])))).
 
 postback_test() ->
     postback_change(#ah_radiobutton{postback = {save, #{id => 1}}}).
@@ -36,7 +36,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([radiobutton], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          ?assertMatch(#{category := form, behavior := B} when is_binary(B), E)
      end || #{name := N} = E <- ?M:catalog()].
 

@@ -27,31 +27,31 @@ demos() ->
 
 -spec area_basic() -> aihtml:html().
 area_basic() ->
-    area_chart([{<<"活跃用户"/utf8>>, [1200, 1800, 2400, 3200, 4100, 5200]},
-                {<<"新注册"/utf8>>, [400, 600, 800, 1000, 1200, 1500]}],
-               [], [{categories, months()}, {title, <<"用户增长趋势"/utf8>>}, {height, 300}]).
+    ah_area_chart([{<<"活跃用户"/utf8>>, [1200, 1800, 2400, 3200, 4100, 5200]},
+                   {<<"新注册"/utf8>>, [400, 600, 800, 1000, 1200, 1500]}],
+                  [], [{categories, months()}, {title, <<"用户增长趋势"/utf8>>}, {height, 300}]).
 
 -spec area_line() -> aihtml:html().
 area_line() ->
-    area_chart([{<<"响应时间"/utf8>>, [120, 132, 101, 134, 90, 230, 210]}],
-               [line, straight],
-               [{categories, [<<"周一"/utf8>>, <<"周二"/utf8>>, <<"周三"/utf8>>, <<"周四"/utf8>>,
-                              <<"周五"/utf8>>, <<"周六"/utf8>>, <<"周日"/utf8>>]},
-                {y_name, <<"毫秒"/utf8>>}, {legend, none}, {height, 260}]).
+    ah_area_chart([{<<"响应时间"/utf8>>, [120, 132, 101, 134, 90, 230, 210]}],
+                  [line, straight],
+                  [{categories, [<<"周一"/utf8>>, <<"周二"/utf8>>, <<"周三"/utf8>>, <<"周四"/utf8>>,
+                                 <<"周五"/utf8>>, <<"周六"/utf8>>, <<"周日"/utf8>>]},
+                   {y_name, <<"毫秒"/utf8>>}, {legend, none}, {height, 260}]).
 
 -spec area_stack() -> aihtml:html().
 area_stack() ->
-    area_chart([{<<"邮件"/utf8>>, [120, 132, 101, 134, 90, 230]},
-                {<<"广告"/utf8>>, [220, 182, 191, 234, 290, 330]},
-                {<<"搜索"/utf8>>, [320, 332, 301, 334, 390, 330]}],
-               [stack], [{categories, months()}, {legend, top}, {height, 300}]).
+    ah_area_chart([{<<"邮件"/utf8>>, [120, 132, 101, 134, 90, 230]},
+                   {<<"广告"/utf8>>, [220, 182, 191, 234, 290, 330]},
+                   {<<"搜索"/utf8>>, [320, 332, 301, 334, 390, 330]}],
+                  [stack], [{categories, months()}, {legend, top}, {height, 300}]).
 
 -spec area_live() -> aihtml:html().
 area_live() ->
-    'div'([area_chart(visits(), [], [{id, <<"live-area">>}, {categories, hours()}, {height, 260}]),
-           button(<<"刷新数据"/utf8>>, refresh, [outlined],
-                  [on(click, {?MODULE, refresh_visits, #{}})])],
-          [<<"flex flex-col gap-2 items-start">>], []).
+    ah_div([ah_area_chart(visits(), [], [{id, <<"live-area">>}, {categories, hours()}, {height, 260}]),
+            ah_button(<<"刷新数据"/utf8>>, refresh, [outlined],
+                      [on(click, {?MODULE, refresh_visits, #{}})])],
+           [<<"flex flex-col gap-2 items-start">>], []).
 
 %%%===================================================================
 %%% Actions

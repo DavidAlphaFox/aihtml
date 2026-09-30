@@ -15,12 +15,12 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 %%% link_button
 
 link_button_test() ->
-    H = r(?M:link_button(<<"Docs & more">>, <<"/docs?a=1&b=2">>, [outlined], [{target, <<"_blank">>}])),
+    H = r(?M:ah_link_button(<<"Docs & more">>, <<"/docs?a=1&b=2">>, [outlined], [{target, <<"_blank">>}])),
     ?assertEqual(<<"<a class=\"ah-btn ah-btn-outlined ah-link-btn\" role=\"link\" "
                    "href=\"/docs?a=1&amp;b=2\" target=\"_blank\">Docs &amp; more</a>">>, H).
 
 link_button_disabled_test() ->
-    H = r(?M:link_button(<<"x">>, <<"/x">>, [], [{disabled, true}])),
+    H = r(?M:ah_link_button(<<"x">>, <<"/x">>, [], [{disabled, true}])),
     ?hasnt(<<"href">>, H),
     ?hasnt(<<" disabled">>, H),
     ?has(<<"aria-disabled=\"true\"">>, H),
@@ -34,7 +34,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- Cat],
     ?assertEqual([link_button], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          #{category := form, signature := S, root := <<"ah-", _/binary>>} = E,
          ?assert(is_binary(S))
      end || #{name := N} = E <- Cat],

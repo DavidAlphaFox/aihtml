@@ -22,20 +22,20 @@ demos() ->
 
 -spec listmenu_drill() -> aihtml:html().
 listmenu_drill() ->
-    'div'(listmenu(food(), undefined, [], [{name, food}]),
-          [<<"w-72 border border-line rounded">>], []).
+    ah_div(ah_listmenu(food(), undefined, [], [{name, food}]),
+           [<<"w-72 border border-line rounded">>], []).
 
 -spec listmenu_filter() -> aihtml:html().
 listmenu_filter() ->
-    'div'(listmenu(food(), undefined, [],
-                   [{filter, true}, {filter_placeholder, <<"Filter food">>},
-                    {animation, fade}]),
-          [<<"w-72 border border-line rounded">>], []).
+    ah_div(ah_listmenu(food(), undefined, [],
+                       [{filter, true}, {filter_placeholder, <<"Filter food">>},
+                        {animation, fade}]),
+           [<<"w-72 border border-line rounded">>], []).
 
 -spec listmenu_nested_value() -> aihtml:html().
 listmenu_nested_value() ->
-    'div'(listmenu(food(), lemon, [], [{back_label, <<"Up">>}]),
-          [<<"w-72 border border-line rounded">>], []).
+    ah_div(ah_listmenu(food(), lemon, [], [{back_label, <<"Up">>}]),
+           [<<"w-72 border border-line rounded">>], []).
 
 %% Shared by the demos above.
 food() ->

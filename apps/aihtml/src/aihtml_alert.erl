@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The alert component (designs/04-components.md): `alert/3'
+%%% @doc The alert component (designs/04-components.md): `ah_alert/3'
 %%% builds an #ah_alert{} element record (include/aihtml_alert.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -12,7 +12,7 @@
 
 -include("aihtml_alert.hrl").
 
--export([alert/3, render/1, fields/1, catalog/0]).
+-export([ah_alert/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [blank/1, method/3, svg/1, circle/3, line/4, polyline/1, path/1]).
 
@@ -30,8 +30,8 @@
 %% @doc Alert (aihtml's own): an inline message box. Options: `title',
 %% `icon' (true, false or html). `dismissible' adds a close button; the
 %% browser fires `ah:dismiss' (cancellable) and removes the alert.
--spec alert(html(), css(), attrs()) -> #ah_alert{}.
-alert(Children, Css, Attrs) ->
+-spec ah_alert(html(), css(), attrs()) -> #ah_alert{}.
+ah_alert(Children, Css, Attrs) ->
     ?E:build(?MODULE, #ah_alert{body = Children}, Css, Attrs).
 
 %% @doc The field names of #ah_alert{}.
@@ -81,7 +81,7 @@ catalog() ->
 
 entry() ->
     #{name => alert, category => text, root => <<"ah-alert">>,
-      signature => <<"alert(Children, Css, Attrs)">>,
+      signature => <<"ah_alert(Children, Css, Attrs)">>,
       groups => #{variant => {[info, success, warning, error], info}},
       flags => [dismissible], options => [title, icon], behavior => <<"alert">>,
       events => [<<"ah:dismiss">>],

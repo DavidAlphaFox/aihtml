@@ -19,53 +19,53 @@ has(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 button_default_test() ->
     ?assertEqual(<<"<button class=\"ah-btn ah-btn-primary\" type=\"button\" value=\"save\">Save</button>">>,
-                 r(?M:button(<<"Save">>, save, [], []))).
+                 r(?M:ah_button(<<"Save">>, save, [], []))).
 
 button_no_value_test() ->
-    ?hasnt(<<"value=">>, r(?M:button(<<"Go">>, undefined, [], []))).
+    ?hasnt(<<"value=">>, r(?M:ah_button(<<"Go">>, undefined, [], []))).
 
 button_variants_and_sizes_test() ->
-    H = r(?M:button(<<"x">>, undefined, [outlined, lg, round, <<"mt-2">>], [])),
+    H = r(?M:ah_button(<<"x">>, undefined, [outlined, lg, round, <<"mt-2">>], [])),
     ?has(<<"class=\"ah-btn ah-btn-lg ah-btn-outlined ah-btn-round mt-2\"">>, H),
-    ?has(<<"class=\"ah-btn ah-btn-primary\"">>, r(?M:button(<<"x">>, undefined, [md], []))),
-    ?has(<<"ah-btn-sm">>, r(?M:button(<<"x">>, undefined, [sm], []))).
+    ?has(<<"class=\"ah-btn ah-btn-primary\"">>, r(?M:ah_button(<<"x">>, undefined, [md], []))),
+    ?has(<<"ah-btn-sm">>, r(?M:ah_button(<<"x">>, undefined, [sm], []))).
 
 button_type_override_test() ->
-    H = r(?M:button(<<"x">>, undefined, [], [{type, submit}])),
+    H = r(?M:ah_button(<<"x">>, undefined, [], [{type, submit}])),
     ?has(<<"type=\"submit\"">>, H),
     ?hasnt(<<"type=\"button\"">>, H).
 
 button_disabled_test() ->
-    H = r(?M:button(<<"x">>, undefined, [], [{disabled, true}])),
+    H = r(?M:ah_button(<<"x">>, undefined, [], [{disabled, true}])),
     ?has(<<"ah-btn-disabled">>, H),
     ?has(<<" disabled>">>, H),
-    ?hasnt(<<"ah-btn-disabled">>, r(?M:button(<<"x">>, undefined, [], [{disabled, false}]))).
+    ?hasnt(<<"ah-btn-disabled">>, r(?M:ah_button(<<"x">>, undefined, [], [{disabled, false}]))).
 
 button_escaping_test() ->
-    H = r(?M:button(<<"<b>&\"">>, <<"a\"b">>, [], [{title, <<"<t>">>}])),
+    H = r(?M:ah_button(<<"<b>&\"">>, <<"a\"b">>, [], [{title, <<"<t>">>}])),
     ?has(<<"&lt;b&gt;&amp;&quot;</button>">>, H),
     ?has(<<"value=\"a&quot;b\"">>, H),
     ?has(<<"title=\"&lt;t&gt;\"">>, H),
     ?hasnt(<<"<b>">>, H).
 
 button_icon_test() ->
-    H = r(?M:button(<<"Go">>, undefined, [], [{icon, <<"*">>}, {icon_position, right}])),
+    H = r(?M:ah_button(<<"Go">>, undefined, [], [{icon, <<"*">>}, {icon_position, right}])),
     ?has(<<"ah-btn-img-right">>, H),
     ?has(<<"<span class=\"ah-btn-text\">Go</span><span class=\"ah-btn-img\" aria-hidden=\"true\">*</span>">>, H),
     ?hasnt(<<"icon">>, binary:replace(H, <<"ah-btn-img">>, <<>>, [global])),
-    I = r(?M:button(<<"Go">>, undefined, [], [{img, <<"/a.png">>}])),
+    I = r(?M:ah_button(<<"Go">>, undefined, [], [{img, <<"/a.png">>}])),
     ?has(<<"<img class=\"ah-btn-img\" src=\"/a.png\" width=\"16\" height=\"16\" alt=\"\">">>, I),
     %% field values are checked when rendering
     ?assertError({aihtml, {bad_option, icon_position, middle}},
-                 r(?M:button(<<"Go">>, undefined, [], [{icon, <<"*">>}, {icon_position, middle}]))).
+                 r(?M:ah_button(<<"Go">>, undefined, [], [{icon, <<"*">>}, {icon_position, middle}]))).
 
 button_modifier_validation_test() ->
     ?assertError({aihtml, {unknown_modifier, button, huge, _}},
-                 ?M:button(<<"x">>, undefined, [huge], [])),
+                 ?M:ah_button(<<"x">>, undefined, [huge], [])),
     ?assertError({aihtml, {conflicting_modifiers, button, variant, _}},
-                 ?M:button(<<"x">>, undefined, [primary, error], [])),
+                 ?M:ah_button(<<"x">>, undefined, [primary, error], [])),
     ?assertError({aihtml, {conflicting_modifiers, button, size, _}},
-                 ?M:button(<<"x">>, undefined, [sm, lg], [])).
+                 ?M:ah_button(<<"x">>, undefined, [sm, lg], [])).
 
 %%% catalog (demos live in aihtml_example)
 
@@ -74,7 +74,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- Cat],
     ?assertEqual([button], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          #{category := form, signature := S, root := <<"ah-", _/binary>>} = E,
          ?assert(is_binary(S))
      end || #{name := N} = E <- Cat],
@@ -110,15 +110,15 @@ render(#ah_button{} = B) ->
 action(_, _, _, _) -> ok.
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:button(<<"Save">>, save, [outlined, lg, round, <<"mt-2">>],
-                             [{disabled, true}, {id, s}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_button(<<"Save">>, save, [outlined, lg, round, <<"mt-2">>],
+                                [{disabled, true}, {id, s}, {title, <<"t">>}])),
                  r(#ah_button{body = <<"Save">>, value = save, variant = outlined, size = lg,
                               round = true, css = [<<"mt-2">>], disabled = true, id = s,
                               attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
     ?assertError({aihtml, {record_only_field, ah_button, postback}},
-                 ?M:button(<<"x">>, undefined, [], [{postback, save}])).
+                 ?M:ah_button(<<"x">>, undefined, [], [{postback, save}])).
 
 postback_test() ->
     Token = fun(Html) ->

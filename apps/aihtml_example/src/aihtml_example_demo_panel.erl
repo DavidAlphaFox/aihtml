@@ -18,21 +18,21 @@ demos() ->
 
 -spec panel_scroll() -> aihtml:html().
 panel_scroll() ->
-    'div'(panel([p(<<"Log line ", (integer_to_binary(I))/binary>>) || I <- lists:seq(1, 20)],
-                [bordered, <<"p-2">>], [{height, 160}]),
-          [<<"w-80">>], []).
+    ah_div(ah_panel([ah_p(<<"Log line ", (integer_to_binary(I))/binary>>) || I <- lists:seq(1, 20)],
+                    [bordered, <<"p-2">>], [{height, 160}]),
+           [<<"w-80">>], []).
 
 -spec panel_header() -> aihtml:html().
 panel_header() ->
-    'div'(panel([p(<<"Deployed ", (integer_to_binary(I))/binary, " minutes ago">>)
-                 || I <- lists:seq(1, 12)],
-                [bordered],
-                [{title, <<"Activity">>}, {actions, button(<<"Refresh">>, refresh, [outlined, sm], [])},
-                 {collapsible, true}, {max_height, 180}]),
-          [<<"w-80">>], []).
+    ah_div(ah_panel([ah_p(<<"Deployed ", (integer_to_binary(I))/binary, " minutes ago">>)
+                     || I <- lists:seq(1, 12)],
+                    [bordered],
+                    [{title, <<"Activity">>}, {actions, ah_button(<<"Refresh">>, refresh, [outlined, sm], [])},
+                     {collapsible, true}, {max_height, 180}]),
+           [<<"w-80">>], []).
 
 -spec panel_collapsed() -> aihtml:html().
 panel_collapsed() ->
-    'div'(panel(p(<<"Advanced settings go here.">>), [bordered],
-                [{title, <<"Advanced">>}, {collapsible, true}, {collapsed, true}]),
-          [<<"w-80">>], []).
+    ah_div(ah_panel(ah_p(<<"Advanced settings go here.">>), [bordered],
+                    [{title, <<"Advanced">>}, {collapsible, true}, {collapsed, true}]),
+           [<<"w-80">>], []).

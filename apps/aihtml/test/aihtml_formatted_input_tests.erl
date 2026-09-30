@@ -24,8 +24,8 @@ has(Needle, Hay) ->
 %%%===================================================================
 
 formatted_input_test() ->
-    H = r(?M:formatted_input(255, [], [{id, f}, {radix, 16}, {min, 0}, {max, <<"1000">>},
-                                       {name, n}, {upper_case, true}])),
+    H = r(?M:ah_formatted_input(255, [], [{id, f}, {radix, 16}, {min, 0}, {max, <<"1000">>},
+                                          {name, n}, {upper_case, true}])),
     ?assert(has(<<"<div class=\"ah-fmt-input-group\" id=\"f\" data-ah=\"formatted-input\" "
                   "data-ah-value=\"255\" data-ah-radix=\"16\" data-ah-min=\"0\" "
                   "data-ah-max=\"1000\" data-ah-step=\"1\" data-ah-upper>">>, H)),
@@ -38,7 +38,7 @@ formatted_input_test() ->
 
 formatted_values_test() ->
     Shown = fun(V, Attrs) ->
-                    H = r(?M:formatted_input(V, [], Attrs)),
+                    H = r(?M:ah_formatted_input(V, [], Attrs)),
                     {match, [D, Dec]} = re:run(H, <<"class=\"ah-fmt-input\"[^>]* value=\"([^\"]*)\" "
                                                      "role=\"spinbutton\" aria-valuenow=\"([^\"]*)\"">>,
                                                [{capture, all_but_first, binary}]),
@@ -55,17 +55,17 @@ formatted_values_test() ->
     ?assertEqual({<<"10">>, <<"10">>}, Shown(3, [{min, 10}])),
     ?assertEqual({<<"20">>, <<"20">>}, Shown(99, [{max, 20}])),
     %% no spin buttons, no menu
-    P = r(?M:formatted_input(0, [disabled], [{spin_buttons, false}, {drop_down, false},
-                                             {placeholder, <<"n">>}, {drop_down_width, 90}])),
+    P = r(?M:ah_formatted_input(0, [disabled], [{spin_buttons, false}, {drop_down, false},
+                                                {placeholder, <<"n">>}, {drop_down_width, 90}])),
     ?assertNot(has_quiet(<<"ah-fmt-spin">>, P)),
     ?assertNot(has_quiet(<<"ah-fmt-popup">>, P)),
     ?assert(has(<<"ah-fmt-input-group ah-fmt-input-disabled">>, P)),
     ?assert(has(<<"style=\"width:120px\"">>,
-                r(?M:formatted_input(0, [], [{drop_down_width, 120}])))),
-    ?assertError({aihtml, {bad_option, radix, 3}}, r(?M:formatted_input(1, [], [{radix, 3}]))),
-    ?assertError({aihtml, {bad_option, value, <<"x">>}}, r(?M:formatted_input(<<"x">>, [], []))),
+                r(?M:ah_formatted_input(0, [], [{drop_down_width, 120}])))),
+    ?assertError({aihtml, {bad_option, radix, 3}}, r(?M:ah_formatted_input(1, [], [{radix, 3}]))),
+    ?assertError({aihtml, {bad_option, value, <<"x">>}}, r(?M:ah_formatted_input(<<"x">>, [], []))),
     ?assertError({aihtml, {bad_option, notation, sci}},
-                 r(?M:formatted_input(1, [], [{notation, sci}]))).
+                 r(?M:ah_formatted_input(1, [], [{notation, sci}]))).
 
 has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 
@@ -78,7 +78,7 @@ catalog_test() ->
     ?assertEqual([formatted_input], Names),
     [begin
          Arity = length(binary:matches(maps:get(signature, E), <<",">>)) + 1,
-         ?assert(erlang:function_exported(?M, N, Arity)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), Arity)),
          ?assertEqual(form, maps:get(category, E))
      end || #{name := N} = E <- ?M:catalog()].
 
@@ -95,14 +95,14 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:formatted_input(7, [disabled], [{id, f}, {radix, 2}, {max, 9}])),
+    ?assertEqual(r(?M:ah_formatted_input(7, [disabled], [{id, f}, {radix, 2}, {max, 9}])),
                  r(#ah_formatted_input{value = 7, disabled = true, id = f, radix = 2, max = 9})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_formatted_input{value = 1, radix = 16, spin_buttons = false,
                                      attrs = [{title, <<"t">>}]},
-                 ?M:formatted_input(1, [], [{radix, 16}, {spin_buttons, false},
-                                            {title, <<"t">>}])).
+                 ?M:ah_formatted_input(1, [], [{radix, 16}, {spin_buttons, false},
+                                               {title, <<"t">>}])).
 
 postback_test() ->
     Token = fun(Html) ->

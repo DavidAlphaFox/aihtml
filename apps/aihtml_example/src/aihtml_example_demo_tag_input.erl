@@ -17,12 +17,12 @@ demos() ->
 
 -spec tags_basic() -> aihtml:html().
 tags_basic() ->
-    tag_input([<<"erlang">>, <<"jquery">>, <<"tailwind">>], [<<"w-96">>], [{name, tags}]).
+    ah_tag_input([<<"erlang">>, <<"jquery">>, <<"tailwind">>], [<<"w-96">>], [{name, tags}]).
 
 -spec tags_limits() -> aihtml:html().
 tags_limits() ->
-    'div'([tag_input([<<"red">>], [<<"w-96">>], [{max_tags, 3}, {chip_color, error},
-                                                 {chip_variant, filled},
-                                                 {placeholder, <<"Up to 3 tags">>}]),
-           tag_input([<<"locked">>], [disabled, <<"w-96">>], [])],
-          [<<"flex flex-col gap-3">>], []).
+    ah_div([ah_tag_input([<<"red">>], [<<"w-96">>], [{max_tags, 3}, {chip_color, error},
+                                                     {chip_variant, filled},
+                                                     {placeholder, <<"Up to 3 tags">>}]),
+            ah_tag_input([<<"locked">>], [disabled, <<"w-96">>], [])],
+           [<<"flex flex-col gap-3">>], []).

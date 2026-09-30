@@ -5,7 +5,7 @@
 %%% A value-bearing component: `Attrs' go to the root, which carries
 %%% `data-ah-value' and fires `change'; `name' goes to a hidden input.
 %%%
-%%% input_otp/4 builds an #ah_input_otp{} (include/aihtml_input_otp.hrl)
+%%% ah_input_otp/4 builds an #ah_input_otp{} (include/aihtml_input_otp.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%% @end
@@ -15,7 +15,7 @@
 
 -include("aihtml_input_otp.hrl").
 
--export([input_otp/4, render/1, fields/1, catalog/0]).
+-export([ah_input_otp/4, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(L, aihtml_lib_input).
@@ -26,11 +26,11 @@
 %% Options: `pattern' (digit | alphanumeric, default digit),
 %% `separator_at' (a dash after that many boxes). Fires `change' on the
 %% root, and `ah:complete' when every box is filled.
--spec input_otp(pos_integer(), binary() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_input_otp(pos_integer(), binary() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_input_otp{}.
-input_otp(Length, Value, Css, Attrs) when is_integer(Length), Length > 0 ->
+ah_input_otp(Length, Value, Css, Attrs) when is_integer(Length), Length > 0 ->
     aihtml_element:build(?MODULE, #ah_input_otp{length = Length, value = Value}, Css, Attrs);
-input_otp(Length, _, _, _) ->
+ah_input_otp(Length, _, _, _) ->
     error({aihtml, {bad_length, input_otp, Length}}).
 
 %% @doc The field names of #ah_input_otp{}.
@@ -86,7 +86,7 @@ otp_char(_, _) -> false.
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => input_otp, category => form,
-       signature => <<"input_otp(Length, Value, Css, Attrs)">>,
+       signature => <<"ah_input_otp(Length, Value, Css, Attrs)">>,
        root => <<"ah-input-otp">>,
        flags => [disabled],
        classes => #{disabled => []},

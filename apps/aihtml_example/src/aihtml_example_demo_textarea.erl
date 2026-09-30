@@ -17,15 +17,15 @@ demos() ->
 
 -spec textarea_basic() -> aihtml:html().
 textarea_basic() ->
-    row([textarea(undefined, [<<"w-80">>], [{name, notes},
-                                            {placeholder, <<"Write something...">>}]),
-         textarea(<<"Line one\nLine two">>, [<<"w-80">>], [{rows, 4}])]).
+    row([ah_textarea(undefined, [<<"w-80">>], [{name, notes},
+                                               {placeholder, <<"Write something...">>}]),
+         ah_textarea(<<"Line one\nLine two">>, [<<"w-80">>], [{rows, 4}])]).
 
 -spec textarea_states() -> aihtml:html().
 textarea_states() ->
-    row([textarea(undefined, [sm, <<"w-60">>], [{label, <<"Notes">>}]),
-         textarea(<<"Too short">>, [invalid, <<"w-60">>], []),
-         textarea(<<"Read only">>, [disabled, <<"w-60">>], [])]).
+    row([ah_textarea(undefined, [sm, <<"w-60">>], [{label, <<"Notes">>}]),
+         ah_textarea(<<"Too short">>, [invalid, <<"w-60">>], []),
+         ah_textarea(<<"Read only">>, [disabled, <<"w-60">>], [])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

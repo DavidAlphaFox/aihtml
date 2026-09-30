@@ -50,7 +50,7 @@ pcols() ->
      #{field => city, title => <<"City">>}].
 
 datatable_structure_test() ->
-    H = r(?M:datatable(pcols(), people(), [], [{id, dt}])),
+    H = r(?M:ah_datatable(pcols(), people(), [], [{id, dt}])),
     ?assert(has(<<"<div class=\"ah-dt\" id=\"dt\" role=\"grid\" data-ah=\"datatable\" data-ah-value=\"\" "
                   "data-selection=\"single\" data-mode=\"local\" data-sortable=\"true\" "
                   "data-alt-rows=\"true\" data-filter=\"none\" data-page=\"1\">">>, H)),
@@ -74,9 +74,9 @@ datatable_structure_test() ->
 
 datatable_local_view_test() ->
     %% initial sort, filter and page are applied here as the browser would
-    H = r(?M:datatable(pcols(), people(), [],
-                       [{id, v}, {sort, {age, desc}}, {page_size, 2}, {page, 2},
-                        {filter, row}, {filters, #{city => <<"o">>}}])),
+    H = r(?M:ah_datatable(pcols(), people(), [],
+                          [{id, v}, {sort, {age, desc}}, {page_size, 2}, {page, 2},
+                           {filter, row}, {filters, #{city => <<"o">>}}])),
     %% Oslo, Rome, Oslo match "o"; by age desc: 3 (47), 1 (31), 2 (25)
     ?assertEqual([<<"3">>, <<"1">>, <<"2">>, <<"4">>, <<"5">>], keys(H)),
     ?assertEqual([<<"2">>], shown(H)),
@@ -90,15 +90,15 @@ datatable_local_view_test() ->
     ?assert(has(<<"data-sizes=\"5,10,25,50\"">>, H)),
     ?assert(has(<<"<option value=\"2\" selected>2</option><option value=\"5\">5</option>">>, H)),
     %% a page past the end is clamped; search mode
-    S = r(?M:datatable(pcols(), people(), [],
-                       [{id, s}, {filter, search}, {search, <<" LI ">>}, {page_size, 10}, {page, 9}])),
+    S = r(?M:ah_datatable(pcols(), people(), [],
+                          [{id, s}, {filter, search}, {search, <<" LI ">>}, {page_size, 10}, {page, 9}])),
     ?assertEqual([<<"5">>], shown(S)),
     ?assert(has(<<"data-search=\" LI \" data-page=\"1\"">>, S)),
     ?assert(has(<<"<div class=\"ah-dt-search-bar\"><input class=\"ah-dt-search-input\" type=\"text\" "
                   "value=\" LI \" placeholder=\"Search...\" aria-label=\"Search...\"></div>">>, S)),
     %% advanced conditions
-    A = r(?M:datatable(pcols(), people(), [],
-                       [{id, a}, {filter, advanced}, {filters, #{age => {gt, 30}, city => {empty, <<>>}}}])),
+    A = r(?M:ah_datatable(pcols(), people(), [],
+                          [{id, a}, {filter, advanced}, {filters, #{age => {gt, 30}, city => {empty, <<>>}}}])),
     ?assertEqual([], shown(A)),
     ?assert(has(<<"<tr class=\"ah-dt-row-empty\"><td">>, A)),
     ?assert(has(<<"<option value=\"gt\" selected>Greater Than</option>">>, A)),
@@ -106,18 +106,18 @@ datatable_local_view_test() ->
                   "placeholder=\"Value...\" value=\"\" aria-label=\"City\" disabled>">>, A)),
     %% text columns offer no gt
     ?assertEqual(1, count(<<"value=\"gt\"">>, A)),
-    A2 = r(?M:datatable(pcols(), people(), [],
-                        [{filter, advanced}, {filters, #{age => {lte, <<"31">>}, name => {not_contains, <<"b">>}}}])),
+    A2 = r(?M:ah_datatable(pcols(), people(), [],
+                           [{filter, advanced}, {filters, #{age => {lte, <<"31">>}, name => {not_contains, <<"b">>}}}])),
     ?assertEqual([<<"1">>, <<"4">>], shown(A2)).
 
 datatable_features_test() ->
     Details = fun(#{name := N}) -> [<<"About ">>, N] end,
     Cols = pcols() ++ [#{field => note, hidden => true, editable => false}],
-    H = r(?M:datatable(Cols, lists:sublist(people(), 2), [<<"w-full">>],
-                       [{id, f}, {selection_mode, checkbox}, {value, [2]}, {row_details, Details},
-                        {expanded, [1]}, {editable, true}, {edit, {?MODULE, edit, #{}}},
-                        {resizable, true}, {column_chooser, true}, {name, sel},
-                        {texts, #{columns => <<"Cols">>}}])),
+    H = r(?M:ah_datatable(Cols, lists:sublist(people(), 2), [<<"w-full">>],
+                          [{id, f}, {selection_mode, checkbox}, {value, [2]}, {row_details, Details},
+                           {expanded, [1]}, {editable, true}, {edit, {?MODULE, edit, #{}}},
+                           {resizable, true}, {column_chooser, true}, {name, sel},
+                           {texts, #{columns => <<"Cols">>}}])),
     ?assert(has(<<"<colgroup><col style=\"width:36px;min-width:36px;\"><col style=\"width:40px;min-width:40px;\">"
                   "<col style=\"width:120px;min-width:120px;\"><col><col><col hidden></colgroup>">>, H)),
     ?assert(has(<<"<th class=\"ah-dt-th ah-dt-th-expand\" role=\"columnheader\"></th>">>, H)),
@@ -147,11 +147,11 @@ datatable_features_test() ->
     {match, [Token]} = re:run(H, <<"data-edit=\"([^\"]+)\"">>, [{capture, all_but_first, binary}]),
     ?assertEqual({ok, {?MODULE, edit, #{}}}, aihtml_action:verify(Token)),
     %% rows without a key field are keyed by position
-    K = r(?M:datatable([a], [#{a => <<"x">>}, #{a => <<"y">>}], [], [{id, k}])),
+    K = r(?M:ah_datatable([a], [#{a => <<"x">>}, #{a => <<"y">>}], [], [{id, k}])),
     ?assertEqual([<<"0">>, <<"1">>], keys(K)).
 
 row_id_test() ->
-    H = r(?M:datatable([k], [#{id => <<"a b/é"/utf8>>, k => 1}], [], [{id, t}])),
+    H = r(?M:ah_datatable([k], [#{id => <<"a b/é"/utf8>>, k => 1}], [], [{id, t}])),
     ?assert(has(<<"id=\"t-r-a_20b_2f_c3_a9\" role=\"row\" data-key=\"a b/é\""/utf8>>, H)).
 
 pager_test() ->
@@ -212,8 +212,8 @@ datatable_page_test() ->
 
 remote_render_test() ->
     Src = {?MODULE, query, #{}},
-    H = r(?M:datatable(pcols(), lists:sublist(people(), 2), [],
-                       [{id, rq}, {source, Src}, {total, 42}, {page_size, 2}, {page, 3}])),
+    H = r(?M:ah_datatable(pcols(), lists:sublist(people(), 2), [],
+                          [{id, rq}, {source, Src}, {total, 42}, {page_size, 2}, {page, 3}])),
     ?assert(has(<<"data-mode=\"remote\"">>, H)),
     ?assert(has(<<"data-page=\"3\" data-page-size=\"2\" data-total=\"42\"">>, H)),
     ?assert(has(<<"data-ah-on=\"ah:query:">>, H)),
@@ -228,11 +228,11 @@ action(query, _, Event, Ctx) ->
     ?M:datatable_rows(Ctx, Event, remote(Rows, Total));
 action(edit, _, #{data := #{<<"key">> := K, <<"value">> := V}} = Event, Ctx) ->
     [Row] = [P || #{id := I} = P <- people(), integer_to_binary(I) =:= K],
-    ?M:datatable_row(Ctx, Event, ?M:datatable(pcols(), [], [], [{editable, true}]), Row#{name => V}).
+    ?M:datatable_row(Ctx, Event, ?M:ah_datatable(pcols(), [], [], [{editable, true}]), Row#{name => V}).
 
 remote(Rows, Total) ->
-    ?M:datatable(pcols(), Rows, [], [{source, {?MODULE, query, #{}}}, {total, Total},
-                                     {page_size, 5}, {filter, row}, {selection_mode, multiple}]).
+    ?M:ah_datatable(pcols(), Rows, [], [{source, {?MODULE, query, #{}}}, {total, Total},
+                                        {page_size, 5}, {filter, row}, {selection_mode, multiple}]).
 
 remote_round_trip_test() ->
     Event = query_event(#{<<"sortField">> => <<"age">>, <<"sortDir">> => <<"asc">>,
@@ -254,7 +254,7 @@ remote_round_trip_test() ->
     ?assert(has(<<"<div class=\"ah-dt-pager-info\">1-2 of 3</div>">>, H)),
     ?assertError({aihtml, {datatable_rows_needs_source, _}},
                  aihtml_action:render_ops(fun(Ctx) ->
-                                                  ?M:datatable_rows(Ctx, Event, ?M:datatable(pcols(), [], [], []))
+                                                  ?M:datatable_rows(Ctx, Event, ?M:ah_datatable(pcols(), [], [], []))
                                           end)).
 
 %%%===================================================================
@@ -264,14 +264,14 @@ remote_round_trip_test() ->
 -define(HREF, <<"/t?p={page}&s={size}&o={sort}&q={search}">>).
 
 href_local_test() ->
-    H = r(?M:datatable(pcols(), people(), [],
-                       [{id, hl}, {page_size, 2}, {page, 2}, {sort, {age, desc}},
-                        {search, <<"a & b">>}, {filter, search}, {href, ?HREF}])),
+    H = r(?M:ah_datatable(pcols(), people(), [],
+                          [{id, hl}, {page_size, 2}, {page, 2}, {sort, {age, desc}},
+                           {search, <<"a & b">>}, {filter, search}, {href, ?HREF}])),
     %% nothing matches "a & b": one empty page, prev/next disabled buttons
     ?assert(has(<<"data-href=\"/t?p={page}&amp;s={size}&amp;o={sort}&amp;q={search}\"">>, H)),
-    H2 = r(?M:datatable(pcols(), people(), [],
-                        [{id, hl}, {page_size, 2}, {page, 2}, {sort, {age, desc}},
-                         {href, ?HREF}])),
+    H2 = r(?M:ah_datatable(pcols(), people(), [],
+                           [{id, hl}, {page_size, 2}, {page, 2}, {sort, {age, desc}},
+                            {href, ?HREF}])),
     U = fun(P) -> <<"/t?p=", P/binary, "&amp;s=2&amp;o=age%3Adesc&amp;q=">> end,
     ?assert(has(<<"<a class=\"ah-dt-pager-btn ah-dt-pager-btn-prev\" href=\"", (U(<<"1">>))/binary,
                   "\" aria-label=\"Previous page\">">>, H2)),
@@ -282,7 +282,7 @@ href_local_test() ->
     ?assert(has(<<"<button class=\"ah-dt-pager-btn ah-dt-pager-btn-num ah-dt-pager-btn-active\" "
                   "type=\"button\" data-page=\"2\" aria-current=\"page\">2</button>">>, H2)),
     %% the first page: prev is a disabled button, not a link
-    H3 = r(?M:datatable(pcols(), people(), [], [{id, hl}, {page_size, 2}, {href, ?HREF}])),
+    H3 = r(?M:ah_datatable(pcols(), people(), [], [{id, hl}, {page_size, 2}, {href, ?HREF}])),
     ?assert(has(<<"<button class=\"ah-dt-pager-btn ah-dt-pager-btn-prev\" type=\"button\" "
                   "aria-label=\"Previous page\" disabled>">>, H3)),
     ?assert(has(<<"href=\"/t?p=2&amp;s=2&amp;o=&amp;q=\"">>, H3)).
@@ -293,15 +293,15 @@ href_encoding_test() ->
     ?assertMatch(#{prev_link := false, next_link := true, next_href := <<"/x?n=2&s=10">>}, V),
     Odd = <<"Ö &'()*!~ /"/utf8>>,
     Rows = [#{id => I, name => Odd, age => I, city => <<>>} || I <- [1, 2, 3]],
-    H = r(?M:datatable(pcols(), Rows, [],
-                       [{id, he}, {page_size, 1}, {filter, search}, {search, Odd},
-                        {href, <<"/y?q={search}&p={page}">>}])),
+    H = r(?M:ah_datatable(pcols(), Rows, [],
+                          [{id, he}, {page_size, 1}, {filter, search}, {search, Odd},
+                           {href, <<"/y?q={search}&p={page}">>}])),
     %% as encodeURIComponent: ' ( ) * ! ~ stay, the rest %XX (UTF-8)
     ?assert(has(<<"href=\"/y?q=%C3%96%20%26&#39;()*!~%20%2F&amp;p=2\"">>, H)).
 
 href_absent_test() ->
     %% without href: no links, no data-href
-    H = r(?M:datatable(pcols(), people(), [], [{id, hn}, {page_size, 2}, {page, 2}])),
+    H = r(?M:ah_datatable(pcols(), people(), [], [{id, hn}, {page_size, 2}, {page, 2}])),
     ?assertNot(has_quiet(<<"<a ">>, H)),
     ?assertNot(has_quiet(<<"data-href">>, H)),
     ?assertEqual(?M:pager_view(2, 2, 5, [5], #{info => <<>>, prev => <<>>, next => <<>>, page_size => <<>>}),
@@ -313,9 +313,9 @@ href_round_trip_test() ->
     %% with the event's sort and page
     Event = query_event(#{<<"sortField">> => <<"name">>, <<"sortDir">> => <<"desc">>,
                           <<"page">> => <<"2">>, <<"pageSize">> => <<"2">>}),
-    Table = ?M:datatable(pcols(), lists:sublist(people(), 2), [],
-                         [{source, {?MODULE, query, #{}}}, {total, 5}, {page_size, 2},
-                          {href, ?HREF}]),
+    Table = ?M:ah_datatable(pcols(), lists:sublist(people(), 2), [],
+                            [{source, {?MODULE, query, #{}}}, {total, 5}, {page_size, 2},
+                             {href, ?HREF}]),
     [#{op := html, html := H}] =
         aihtml_action:render_ops(fun(Ctx) -> ?M:datatable_rows(Ctx, Event, Table) end),
     ?assert(has(<<"href=\"/t?p=3&amp;s=2&amp;o=name%3Adesc&amp;q=\"">>, H)),
@@ -324,7 +324,7 @@ href_round_trip_test() ->
 remote_no_total_test() ->
     %% remote mode renders what it is given: total defaults to the rows,
     %% none shows the empty text (the table never loads on mount)
-    H = r(?M:datatable(pcols(), [], [], [{id, re}, {source, {?MODULE, query, #{}}}, {page_size, 2}])),
+    H = r(?M:ah_datatable(pcols(), [], [], [{id, re}, {source, {?MODULE, query, #{}}}, {page_size, 2}])),
     ?assert(has(<<"data-total=\"0\"">>, H)),
     ?assert(has(<<"<tr class=\"ah-dt-row-empty\"><td class=\"ah-dt-cell-empty\"">>, H)).
 
@@ -367,18 +367,18 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:datatable(pcols(), people(), [],
-                                [{id, d}, {page_size, 2}, {filter, row}, {sort, {age, asc}},
-                                 {texts, #{info => <<"{total}">>}}])),
+    ?assertEqual(r(?M:ah_datatable(pcols(), people(), [],
+                                   [{id, d}, {page_size, 2}, {filter, row}, {sort, {age, asc}},
+                                    {texts, #{info => <<"{total}">>}}])),
                  r(#ah_datatable{columns = pcols(), rows = people(), id = d, page_size = 2,
                                  filter = row, sort = {age, asc}, texts = #{info => <<"{total}">>}})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_datatable{columns = [a], rows = [], page_size = 5, total = 9,
                                source = {m, a, []}},
-                 ?M:datatable([a], [], [], [{page_size, 5}, {total, 9}, {source, {m, a, []}}])),
+                 ?M:ah_datatable([a], [], [], [{page_size, 5}, {total, 9}, {source, {m, a, []}}])),
     ?assertError({aihtml, {record_only_field, ah_datatable, postback}},
-                 ?M:datatable([], [], [], [{postback, pick}])).
+                 ?M:ah_datatable([], [], [], [{postback, pick}])).
 
 postback_test() ->
     Token = fun(Html) ->
@@ -432,15 +432,15 @@ vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_values_test() ->
     Rows = [#{id => <<"a,b">>, name => <<"A">>}, #{id => <<"c">>, name => <<"C">>}],
-    H = r(?M:datatable([name], Rows, [], [{id, dt}, {selection_mode, multiple},
-                                          {name, sel}, {expanded, [<<"a,b">>]},
-                                          {value, [<<"a,b">>, <<"c">>]}])),
+    H = r(?M:ah_datatable([name], Rows, [], [{id, dt}, {selection_mode, multiple},
+                                             {name, sel}, {expanded, [<<"a,b">>]},
+                                             {value, [<<"a,b">>, <<"c">>]}])),
     ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, H)),
     ?assert(vhas(<<"data-expanded=\"a\\,b\"">>, H)),
     %% the same selection as text
-    ?assertEqual(H, r(?M:datatable([name], Rows, [], [{id, dt}, {selection_mode, multiple},
-                                                      {name, sel}, {expanded, [<<"a,b">>]},
-                                                      {value, <<"a\\,b,c">>}]))).
+    ?assertEqual(H, r(?M:ah_datatable([name], Rows, [], [{id, dt}, {selection_mode, multiple},
+                                                         {name, sel}, {expanded, [<<"a,b">>]},
+                                                         {value, <<"a\\,b,c">>}]))).
 
 comma_remote_test() ->
     Event = (query_event(#{<<"page">> => <<"1">>, <<"pageSize">> => <<"5">>,

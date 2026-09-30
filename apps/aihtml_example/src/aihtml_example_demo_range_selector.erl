@@ -28,57 +28,57 @@ demos() ->
 
 -spec range_basic() -> aihtml:html().
 range_basic() ->
-    range_selector({0, 200}, {10, 50}, [],
-                   [{major_ticks, 20}, {minor_ticks, 5}, {show_minor_ticks, true},
-                    {name, range}]).
+    ah_range_selector({0, 200}, {10, 50}, [],
+                      [{major_ticks, 20}, {minor_ticks, 5}, {show_minor_ticks, true},
+                       {name, range}]).
 
 -spec range_dates() -> aihtml:html().
 range_dates() ->
     Day = 86400000,
     Months = [ms({2024, M, 1}) || M <- lists:seq(1, 12)],
-    range_selector({ms({2024, 1, 1}), ms({2024, 12, 31}), Day},
-                   {ms({2024, 3, 1}), ms({2024, 9, 1})}, [],
-                   [{tick_values, Months}, {labels_format, month},
-                    {markers_format, date}]).
+    ah_range_selector({ms({2024, 1, 1}), ms({2024, 12, 31}), Day},
+                      {ms({2024, 3, 1}), ms({2024, 9, 1})}, [],
+                      [{tick_values, Months}, {labels_format, month},
+                       {markers_format, date}]).
 
 -spec range_time() -> aihtml:html().
 range_time() ->
     Hour = 3600000,
-    range_selector({0, 24 * Hour, Hour div 2}, {8 * Hour, 18 * Hour}, [],
-                   [{major_ticks, 4 * Hour}, {minor_ticks, Hour},
-                    {show_minor_ticks, true}, {labels_format, time}]).
+    ah_range_selector({0, 24 * Hour, Hour div 2}, {8 * Hour, 18 * Hour}, [],
+                      [{major_ticks, 4 * Hour}, {minor_ticks, Hour},
+                       {show_minor_ticks, true}, {labels_format, time}]).
 
 -spec range_money() -> aihtml:html().
 range_money() ->
-    range_selector({1000, 10000, 100}, {2500, 7500}, [],
-                   [{major_ticks, 1500}, {labels_format, currency},
-                    {min_span, 1000}, {name, budget}]).
+    ah_range_selector({1000, 10000, 100}, {2500, 7500}, [],
+                      [{major_ticks, 1500}, {labels_format, currency},
+                       {min_span, 1000}, {name, budget}]).
 
 -spec range_decimal() -> aihtml:html().
 range_decimal() ->
-    range_selector({0, 10, 0.1}, {2.5, 7.5}, [],
-                   [{major_ticks, 2.5}, {minor_ticks, 0.5}, {show_minor_ticks, true},
-                    {labels_format, {fixed, 1}},
-                    {markers_format, {<<>>, {fixed, 1}, <<" mm">>}}]).
+    ah_range_selector({0, 10, 0.1}, {2.5, 7.5}, [],
+                      [{major_ticks, 2.5}, {minor_ticks, 0.5}, {show_minor_ticks, true},
+                       {labels_format, {fixed, 1}},
+                       {markers_format, {<<>>, {fixed, 1}, <<" mm">>}}]).
 
 -spec range_states() -> aihtml:html().
 range_states() ->
-    'div'([range_selector({-1000, -100, 10}, {-800, -300}, [],
-                          [{major_ticks, 100}, {show_markers, false}]),
-           range_selector({0, 100}, {20, 60}, [disabled], [{major_ticks, 25}])],
-          [<<"flex flex-col gap-2">>], []).
+    ah_div([ah_range_selector({-1000, -100, 10}, {-800, -300}, [],
+                              [{major_ticks, 100}, {show_markers, false}]),
+            ah_range_selector({0, 100}, {20, 60}, [disabled], [{major_ticks, 25}])],
+           [<<"flex flex-col gap-2">>], []).
 
 %% The same component as a record: options are checked field names, and
 %% the postback runs action(range_picked, ...) below on change.
 -spec range_record() -> aihtml:html().
 range_record() ->
-    'div'([#ah_range_selector{range = {0, 100, 5}, value = {20, 80}, name = score,
-                              major_ticks = 20, minor_ticks = 5, show_minor_ticks = true,
-                              markers_format = {<<>>, number, <<" 分"/utf8>>},
-                              min_span = 10, postback = range_picked},
-           span(<<"拖动后显示服务端收到的值"/utf8>>, [<<"text-sm text-muted">>],
-                [{id, <<"range-picked">>}])],
-          [<<"flex flex-col gap-2">>], []).
+    ah_div([#ah_range_selector{range = {0, 100, 5}, value = {20, 80}, name = score,
+                               major_ticks = 20, minor_ticks = 5, show_minor_ticks = true,
+                               markers_format = {<<>>, number, <<" 分"/utf8>>},
+                               min_span = 10, postback = range_picked},
+            ah_span(<<"拖动后显示服务端收到的值"/utf8>>, [<<"text-sm text-muted">>],
+                    [{id, <<"range-picked">>}])],
+           [<<"flex flex-col gap-2">>], []).
 
 -spec action(atom(), term(), aihtml_action:event(), aihtml_action:ctx()) -> ok.
 action(range_picked, _Args, #{value := Value}, Ctx) ->

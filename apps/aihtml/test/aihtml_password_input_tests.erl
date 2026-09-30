@@ -24,7 +24,7 @@ hasnt(Html, Part) ->
 %%% password_input
 
 password_test() ->
-    H = r(?M:password_input(<<"p&w">>, [lg], [{name, pw}])),
+    H = r(?M:ah_password_input(<<"p&w">>, [lg], [{name, pw}])),
     has(H, <<"class=\"ah-pwd-group ah-pwd-lg\" data-ah=\"password-input\"">>),
     has(H, <<"<input class=\"ah-pwd\" type=\"password\" value=\"p&amp;w\"">>),
     has(H, <<"name=\"pw\"">>),
@@ -35,17 +35,17 @@ password_test() ->
     hasnt(H, <<"ah-pwd-strength">>).
 
 password_options_test() ->
-    H = r(?M:password_input(undefined, [disabled], [{toggle, false}, {strength, true}])),
+    H = r(?M:ah_password_input(undefined, [disabled], [{toggle, false}, {strength, true}])),
     hasnt(H, <<"ah-pwd-toggle">>),
     has(H, <<"<div class=\"ah-pwd-strength\"><div class=\"ah-pwd-strength-bar\">"
              "<div class=\"ah-pwd-strength-fill\"></div></div>">>),
     has(H, <<"ah-pwd-disabled">>),
     hasnt(H, <<"toggle=">>),
     ?assertError({aihtml, {unknown_modifier, password_input, readonly, _}},
-                 ?M:password_input(undefined, [readonly], [])).
+                 ?M:ah_password_input(undefined, [readonly], [])).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:password_input(undefined, [valid], [{toggle, false}, {strength, true}])),
+    ?assertEqual(r(?M:ah_password_input(undefined, [valid], [{toggle, false}, {strength, true}])),
                  r(#ah_password_input{state = valid, toggle = false, strength = true})).
 
 postback_test() ->
@@ -62,7 +62,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([password_input], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, arity(S))),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), arity(S))),
          ?assertEqual(form, C)
      end || #{name := N, signature := S, category := C} <- ?M:catalog()].
 

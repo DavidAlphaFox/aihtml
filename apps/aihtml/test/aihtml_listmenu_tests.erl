@@ -45,7 +45,7 @@ listmenu_test() ->
                               children => [{lemon, <<"Lemon">>}]}]},
              {bread, <<"Bread">>},
              #{key => cake, label => <<"Cake">>, disabled => true}],
-    Root = r(?M:listmenu(Items, bread, [], [{filter, true}, {name, <<"food">>}])),
+    Root = r(?M:ah_listmenu(Items, bread, [], [{filter, true}, {name, <<"food">>}])),
     ?assert(has(Root, <<"class=\"ah-listmenu\" data-ah=\"listmenu\" tabindex=\"0\"">>)),
     ?assert(has(Root, <<"data-ah-stack=\"\"">>)),
     ?assertEqual(3, count(Root, <<"class=\"ah-listmenu-page\"">>)),
@@ -56,12 +56,12 @@ listmenu_test() ->
     ?assert(has(Root, <<"name=\"food\" value=\"bread\"">>)),
     ?assertEqual(2, count(Root, <<"ah-listmenu-arrow">>)),
     %% a nested value opens its page and fills the stack and title
-    Nested = r(?M:listmenu(Items, lemon, [], [{header, true}, {animation, fade}])),
+    Nested = r(?M:ah_listmenu(Items, lemon, [], [{header, true}, {animation, fade}])),
     ?assert(has(Nested, <<"data-ah-stack=\"0,4\"">>)),
     ?assert(has(Nested, <<"<span class=\"ah-listmenu-title\">Citrus</span>">>)),
     ?assert(has(Nested, <<"data-page-id=\"4\" role=\"menu\">">>)),
     ?assert(has(Nested, <<"data-ah-animation=\"fade\"">>)),
-    NoHeader = r(?M:listmenu(Items, undefined, [disabled], [{header, false}, {arrows, false}])),
+    NoHeader = r(?M:ah_listmenu(Items, undefined, [disabled], [{header, false}, {arrows, false}])),
     ?assertNot(has(NoHeader, <<"ah-listmenu-header">>)),
     ?assertNot(has(NoHeader, <<"ah-listmenu-arrow">>)),
     ?assert(has(NoHeader, <<"ah-listmenu ah-listmenu-disabled">>)).
@@ -75,14 +75,14 @@ listmenu_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:listmenu(?ITEMS, new, [], [{filter, true}, {back_label, <<"Up">>}])),
+    ?assertEqual(r(?M:ah_listmenu(?ITEMS, new, [], [{filter, true}, {back_label, <<"Up">>}])),
                  r(#ah_listmenu{items = ?ITEMS, value = new, filter = true,
                                 back_label = <<"Up">>})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_listmenu{header = true, back_button = true, filter = false,
                               arrows = true, back_label = <<"Back">>, name = food},
-                 ?M:listmenu([], undefined, [], [{name, food}])).
+                 ?M:ah_listmenu([], undefined, [], [{name, food}])).
 
 token(Html) ->
     {match, [T]} = re:run(r(Html), <<"data-ah-on=\"([a-z]+:[^\"]+)\"">>,

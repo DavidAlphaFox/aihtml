@@ -15,7 +15,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([loader], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -30,12 +30,12 @@ catalog_documents_every_option_test() ->
 %%% loader
 
 loader_test() ->
-    H = r(?M:loader([hidden, top], [{text, <<"Wait">>}, {modal, true}])),
+    H = r(?M:ah_loader([hidden, top], [{text, <<"Wait">>}, {modal, true}])),
     ?assertEqual(<<"<div class=\"ah-loader ah-loader-text-top ah-loader-hidden\" role=\"status\" "
                    "aria-live=\"polite\" aria-busy=\"false\" aria-label=\"Wait\" data-ah=\"loader\" "
                    "data-modal=\"true\"><div class=\"ah-loader-icon\" aria-hidden=\"true\"></div>"
                    "<div class=\"ah-loader-text\">Wait</div></div>">>, H),
-    ?assert(has(r(?M:loader([], [])), <<"ah-loader ah-loader-text-bottom\"">>)).
+    ?assert(has(r(?M:ah_loader([], [])), <<"ah-loader ah-loader-text-bottom\"">>)).
 
 %%% CSS: every sigil class the module writes exists in the stylesheets
 
@@ -59,12 +59,12 @@ classes_are_styled_test() ->
 
 %% One render of the component in its main variants and states.
 samples() ->
-    [?M:loader([P, hidden, inline, center, disabled], []) || P <- [top, bottom, left, right]].
+    [?M:ah_loader([P, hidden, inline, center, disabled], []) || P <- [top, bottom, left, right]].
 
 %%% element records (designs/05-records.md)
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:loader([hidden, top], [{text, <<"Wait">>}, {modal, true}])),
+    ?assertEqual(r(?M:ah_loader([hidden, top], [{text, <<"Wait">>}, {modal, true}])),
                  r(#ah_loader{hidden = true, text_position = top, text = <<"Wait">>,
                               modal = true})).
 

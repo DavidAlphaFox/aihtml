@@ -19,7 +19,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([steps], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -34,8 +34,8 @@ catalog_documents_every_option_test() ->
 %%% steps
 
 steps_test() ->
-    H = r(?M:steps([<<"A">>, {<<"B">>, <<"desc">>}, #{title => <<"C">>, status => error}], 1,
-                   [vertical], [])),
+    H = r(?M:ah_steps([<<"A">>, {<<"B">>, <<"desc">>}, #{title => <<"C">>, status => error}], 1,
+                      [vertical], [])),
     ?assert(has(H, <<"class=\"ah-steps ah-steps-vertical\" data-ah=\"steps\" data-ah-value=\"1\"">>)),
     ?assert(has(H, <<"ah-steps-item ah-steps-item-completed ah-steps-item-clickable">>)),
     ?assert(has(H, <<"ah-steps-item ah-steps-item-active ah-steps-item-clickable ah-steps-item-selected">>)),
@@ -46,8 +46,8 @@ steps_test() ->
     ?assertNot(has(H, <<"ah-steps-nav">>)).
 
 steps_panels_nav_test() ->
-    H = r(?M:steps([#{title => <<"A">>, content => <<"a">>}, #{title => <<"B">>, content => <<"b">>}],
-                   0, [], [{clickable, false}])),
+    H = r(?M:ah_steps([#{title => <<"A">>, content => <<"a">>}, #{title => <<"B">>, content => <<"b">>}],
+                      0, [], [{clickable, false}])),
     ?assert(has(H, <<"<div class=\"ah-steps-panel ah-steps-panel-active\" data-index=\"0\">a</div>">>)),
     ?assertEqual(2, count(H, <<" disabled>">>)),
     ?assert(has(H, <<"data-clickable=\"false\"">>)),
@@ -75,9 +75,9 @@ classes_are_styled_test() ->
 
 %% One render of the component in its main variants and states.
 samples() ->
-    [?M:steps([<<"A">>, #{title => <<"B">>, status => error, description => <<"d">>,
-                          content => <<"c">>}, #{title => <<"C">>, disabled => true}, <<"D">>],
-              1, [vertical, disabled], [])].
+    [?M:ah_steps([<<"A">>, #{title => <<"B">>, status => error, description => <<"d">>,
+                             content => <<"c">>}, #{title => <<"C">>, disabled => true}, <<"D">>],
+                 1, [vertical, disabled], [])].
 
 %%% element records (designs/05-records.md)
 
@@ -92,7 +92,7 @@ token(Html) ->
     {Ev, Ref}.
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:steps([<<"A">>, <<"B">>], 1, [vertical], [{clickable, false}])),
+    ?assertEqual(r(?M:ah_steps([<<"A">>, <<"B">>], 1, [vertical], [{clickable, false}])),
                  r(#ah_steps{items = [<<"A">>, <<"B">>], value = 1, orientation = vertical,
                              clickable = false})).
 

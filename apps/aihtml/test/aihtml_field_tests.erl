@@ -13,8 +13,8 @@ r(Html) -> aihtml_html:render_binary(Html).
 has(Bin, Sub) -> binary:match(Bin, Sub) =/= nomatch.
 
 field_test() ->
-    H = r(?M:field(<<"Name">>, aihtml_html:void(input, [<<"ah-input">>], [{id, n}]), [top],
-                   [{for, n}, {required, true}, {help, <<"Help">>}, {id, row}])),
+    H = r(?M:ah_field(<<"Name">>, aihtml_html:void(input, [<<"ah-input">>], [{id, n}]), [top],
+                      [{for, n}, {required, true}, {help, <<"Help">>}, {id, row}])),
     ?assert(has(H, <<"<div class=\"ah-form-row ah-form-row-top\" id=\"row\">">>)),
     ?assert(has(H, <<"<label class=\"ah-form-label\" for=\"n\">">>)),
     ?assert(has(H, <<"ah-form-required">>)),
@@ -22,7 +22,7 @@ field_test() ->
     ?assert(has(H, <<"ah-form-field">>)).
 
 field_error_test() ->
-    H = r(?M:field(<<"E">>, <<"x">>, [], [{error, <<"Bad">>}, {label_width, 90}])),
+    H = r(?M:ah_field(<<"E">>, <<"x">>, [], [{error, <<"Bad">>}, {label_width, 90}])),
     ?assert(has(H, <<"ah-form-row ah-form-row-invalid">>)),
     ?assert(has(H, <<"ah-form-error ah-validator-error-label\" role=\"alert\">Bad">>)),
     ?assert(has(H, <<"width:90px;min-width:90px">>)).
@@ -67,14 +67,14 @@ facade_extras_test() ->
 %%% element records (designs/05-records.md)
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:field(<<"L">>, <<"ctl">>, [top],
-                            [{for, x}, {error, <<"E">>}, {required, true}, {id, row}])),
+    ?assertEqual(r(?M:ah_field(<<"L">>, <<"ctl">>, [top],
+                               [{for, x}, {error, <<"E">>}, {required, true}, {id, row}])),
                  r(#ah_field{label = <<"L">>, body = <<"ctl">>, label_position = top, for = x,
                              error = <<"E">>, required = true, id = row})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_field{label = <<"L">>, body = <<"c">>, help = <<"h">>, label_width = 60},
-                 ?M:field(<<"L">>, <<"c">>, [], [{help, <<"h">>}, {label_width, 60}])).
+                 ?M:ah_field(<<"L">>, <<"c">>, [], [{help, <<"h">>}, {label_width, 60}])).
 
 field_can_wrap_records_test() ->
     %% a control given as a record is rendered in place
@@ -82,9 +82,9 @@ field_can_wrap_records_test() ->
     H = r(#ah_field{label = <<"Pick">>, body = Dd, for = pick}),
     ?assert(has(H, <<"<label class=\"ah-form-label\" for=\"pick\">">>)),
     ?assert(has(H, <<"<div><div class=\"ah-dropdownlist\" role=\"combobox\"">>)),
-    H2 = r(aihtml_form_layout:form_layout([#{label => <<"S">>, key => s,
-                                             control => fun(V) -> #ah_slider{value = V} end}],
-                                          #{s => 30}, [], [])),
+    H2 = r(aihtml_form_layout:ah_form_layout([#{label => <<"S">>, key => s,
+                                                control => fun(V) -> #ah_slider{value = V} end}],
+                                             #{s => 30}, [], [])),
     ?assert(has(H2, <<"data-ah-value=\"30\"">>)).
 
 postback_test() ->
@@ -102,7 +102,7 @@ catalog_test() ->
     ?assertEqual([field], Names),
     [begin
          ?assert(is_binary(maps:get(signature, E))),
-         ?assert(erlang:function_exported(?M, N, 4))
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4))
      end || #{name := N} = E <- ?M:catalog()].
 
 catalog_docs_test() ->

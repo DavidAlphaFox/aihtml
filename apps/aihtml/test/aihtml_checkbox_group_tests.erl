@@ -19,8 +19,8 @@ items() -> [{a, <<"A">>}, {b, <<"B & b">>}, {c, <<"C">>, #{disabled => true, cla
 
 checkbox_group_test() ->
     A = [{<<"data-ah-on">>, {actions, [{<<"change">>, <<"TOK">>, #{}}]}}],
-    H = r(?M:checkbox_group(items(), [a, <<"c">>], [horizontal],
-                            [{name, f}, {id, <<"g">>}, A])),
+    H = r(?M:ah_checkbox_group(items(), [a, <<"c">>], [horizontal],
+                               [{name, f}, {id, <<"g">>}, A])),
     ?assertMatch(<<"<div class=\"ah-checkbox-group ah-checkbox-group-horizontal\" data-ah=\"checkbox-group\" role=\"group\" data-ah-value=\"a,c\" data-label-position=\"after\" id=\"g\" data-ah-on=\"change:TOK\">", _/binary>>, H),
     %% name goes to every input, the action only to the root
     ?assertEqual(3, count(<<"name=\"f\"">>, H)),
@@ -31,7 +31,7 @@ checkbox_group_test() ->
     ?assertEqual(1, count(<<" disabled">>, H)).
 
 checkbox_group_disabled_before_test() ->
-    H = r(?M:checkbox_group(items(), [], [label_before, sm], [{disabled, true}])),
+    H = r(?M:ah_checkbox_group(items(), [], [label_before, sm], [{disabled, true}])),
     ?assert(has(<<"ah-checkbox-group ah-checkbox-group-vertical ah-checkbox-group-disabled\"">>, H)),
     ?assert(has(<<"data-label-position=\"before\"">>, H)),
     ?assert(has(<<"aria-disabled=\"true\"">>, H)),
@@ -39,15 +39,15 @@ checkbox_group_disabled_before_test() ->
     ?assert(has(<<"<span class=\"ah-checkbox-group-label\">A</span><span class=\"ah-checkbox ah-checkbox-sm ah-checkbox-disabled\">">>, H)),
     ?assertNot(has(<<"ah-checkbox-group-sm">>, H)),
     ?assertError({aihtml, {conflicting_modifiers, checkbox_group, layout, _}},
-                 ?M:checkbox_group(items(), [], [vertical, horizontal], [])).
+                 ?M:ah_checkbox_group(items(), [], [vertical, horizontal], [])).
 
 render_all_test() ->
     Items = [{a, <<"A">>}, {b, <<"B">>}],
-    ?assert(is_binary(r(?M:checkbox_group(Items, [a], [], [])))).
+    ?assert(is_binary(r(?M:ah_checkbox_group(Items, [a], [], [])))).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:checkbox_group(items(), [a], [horizontal, label_before, sm],
-                                     [{name, f}, {id, g}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_checkbox_group(items(), [a], [horizontal, label_before, sm],
+                                        [{name, f}, {id, g}, {title, <<"t">>}])),
                  r(#ah_checkbox_group{items = items(), value = [a], layout = horizontal,
                                       label_before = true, size = sm, name = f, id = g,
                                       attrs = [{title, <<"t">>}]})).
@@ -69,7 +69,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([checkbox_group], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          ?assertMatch(#{category := form, behavior := B} when is_binary(B), E)
      end || #{name := N} = E <- ?M:catalog()].
 
@@ -121,6 +121,6 @@ postback_change(E) ->
 vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_values_test() ->
-    H = r(?M:checkbox_group([{<<"a,b">>, <<"AB">>}, {c, <<"C">>}], [<<"a,b">>, c], [], [])),
+    H = r(?M:ah_checkbox_group([{<<"a,b">>, <<"AB">>}, {c, <<"C">>}], [<<"a,b">>, c], [], [])),
     ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, H)),
     ?assert(vhas(<<"value=\"a,b\" checked">>, H)).

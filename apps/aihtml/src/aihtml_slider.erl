@@ -2,7 +2,7 @@
 %%% @doc sigil's Slider (sigil.components.form.slider): a single value or
 %%% a {Lo, Hi} range.
 %%%
-%%%   slider(Range, Value, Css, Attrs)
+%%%   ah_slider(Range, Value, Css, Attrs)
 %%%
 %%% The markup and classes are sigil's, so the ported stylesheets under
 %%% priv/css/sigil/components apply; behaviour is in
@@ -18,7 +18,7 @@
 
 -include("aihtml_slider.hrl").
 
--export([slider/4, render/1, fields/1, catalog/0]).
+-export([ah_slider/4, render/1, fields/1, catalog/0]).
 
 -export_type([range/0]).
 
@@ -33,14 +33,14 @@
 %% number, or {Lo, Hi} for a two-thumb range slider. data-ah-value holds
 %% "V" or "Lo,Hi"; `input' fires while dragging, `change' on release and
 %% on each keyboard or button step.
--spec slider(range(),
-             number() | {number(), number()} | undefined,
-             aihtml_html:css(), aihtml_html:attrs()) -> #ah_slider{}.
-slider({Min, Max}, Value, Css, Attrs) ->
-    slider({Min, Max, 1}, Value, Css, Attrs);
-slider({Min, Max, Step} = Range, Value, Css, Attrs) when Max > Min, Step > 0 ->
+-spec ah_slider(range(),
+                number() | {number(), number()} | undefined,
+                aihtml_html:css(), aihtml_html:attrs()) -> #ah_slider{}.
+ah_slider({Min, Max}, Value, Css, Attrs) ->
+    ah_slider({Min, Max, 1}, Value, Css, Attrs);
+ah_slider({Min, Max, Step} = Range, Value, Css, Attrs) when Max > Min, Step > 0 ->
     ?E:build(?MODULE, #ah_slider{range = Range, value = Value}, Css, Attrs);
-slider(Range, _Value, _Css, _Attrs) ->
+ah_slider(Range, _Value, _Css, _Attrs) ->
     error({aihtml, {bad_slider_range, Range}}).
 
 -spec render(#ah_slider{}) -> aihtml_html:html().
@@ -201,7 +201,7 @@ fields(ah_slider) -> record_info(fields, ah_slider).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => slider, category => form,
-       signature => <<"slider({Min, Max} | {Min, Max, Step}, Value | {Lo, Hi}, Css, Attrs)">>,
+       signature => <<"ah_slider({Min, Max} | {Min, Max, Step}, Value | {Lo, Hi}, Css, Attrs)">>,
        root => <<"ah-slider">>,
        groups => #{orientation => {[horizontal, vertical], horizontal},
                    template => {[primary, success, warning, danger, info, secondary], none}},

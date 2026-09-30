@@ -16,7 +16,7 @@ count(Sub, Bin) -> length(binary:matches(Bin, Sub)).
 %% --- rating --------------------------------------------------------
 
 rating_test() ->
-    H = r(?M:rating_group(5, 2.5, [lg, error], [{name, stars}, {precision, 0.5}, {id, <<"r">>}])),
+    H = r(?M:ah_rating_group(5, 2.5, [lg, error], [{name, stars}, {precision, 0.5}, {id, <<"r">>}])),
     ?assertMatch(<<"<div class=\"ah-rating\" data-ah=\"rating\" role=\"radiogroup\" data-ah-value=\"2.5\" data-ah-max=\"5\" data-size=\"lg\" data-color=\"error\" data-precision=\"0.5\" data-readonly=\"false\" data-disabled=\"false\" data-allow-clear=\"true\" id=\"r\">", _/binary>>, H),
     ?assertEqual(5, count(<<"class=\"ah-rating__star\"">>, H)),
     ?assertEqual(2, count(<<"aria-checked=\"true\"">>, H)),
@@ -26,7 +26,7 @@ rating_test() ->
     ?assert(has(<<"aria-label=\"3 / 5\"">>, H)).
 
 rating_defaults_test() ->
-    H = r(?M:rating_group(3, undefined, [], [{readonly, true}, {allow_clear, false}])),
+    H = r(?M:ah_rating_group(3, undefined, [], [{readonly, true}, {allow_clear, false}])),
     ?assert(has(<<"data-ah-value=\"0\"">>, H)),
     ?assert(has(<<"data-size=\"md\" data-color=\"warning\" data-precision=\"1\" data-readonly=\"true\"">>, H)),
     ?assert(has(<<"data-allow-clear=\"false\"">>, H)),
@@ -34,20 +34,20 @@ rating_defaults_test() ->
     ?assertEqual(3, count(<<"tabindex=\"-1\"">>, H)),
     ?assertNot(has(<<"type=\"hidden\"">>, H)),
     ?assertNot(has(<<" readonly">>, H)),
-    D = r(?M:rating_group(2, 1.0, [], [{disabled, true}])),
+    D = r(?M:ah_rating_group(2, 1.0, [], [{disabled, true}])),
     ?assert(has(<<"data-ah-value=\"1\"">>, D)),
     ?assertEqual(2, count(<<" disabled>">>, D)),
     ?assertError({aihtml, {conflicting_modifiers, rating_group, size, _}},
-                 ?M:rating_group(5, 1, [sm, lg], [])),
+                 ?M:ah_rating_group(5, 1, [sm, lg], [])),
     ?assertError({aihtml, {bad_option, rating_group, precision, 0.25}},
-                 r(?M:rating_group(5, 1, [], [{precision, 0.25}]))),
-    ?assertError({aihtml, {bad_max, rating_group, 0}}, ?M:rating_group(0, 1, [], [])).
+                 r(?M:ah_rating_group(5, 1, [], [{precision, 0.25}]))),
+    ?assertError({aihtml, {bad_max, rating_group, 0}}, ?M:ah_rating_group(0, 1, [], [])).
 
 render_all_test() ->
-    ?assert(is_binary(r(?M:rating_group(5, 3, [], [])))).
+    ?assert(is_binary(r(?M:ah_rating_group(5, 3, [], [])))).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:rating_group(5, 2.5, [lg, error], [{name, stars}, {precision, 0.5}])),
+    ?assertEqual(r(?M:ah_rating_group(5, 2.5, [lg, error], [{name, stars}, {precision, 0.5}])),
                  r(#ah_rating_group{max = 5, value = 2.5, size = lg, color = error,
                                     name = stars, precision = 0.5})).
 
@@ -71,7 +71,7 @@ catalog_test() ->
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([rating_group], Names),
     [begin
-         ?assert(erlang:function_exported(?M, N, 4)),
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4)),
          ?assertMatch(#{category := form, behavior := B} when is_binary(B), E)
      end || #{name := N} = E <- ?M:catalog()].
 

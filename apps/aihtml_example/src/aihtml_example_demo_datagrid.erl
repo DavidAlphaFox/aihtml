@@ -40,21 +40,21 @@ demos() ->
 
 -spec grid_basic() -> aihtml:html().
 grid_basic() ->
-    datagrid(columns(), lists:sublist(employees(), 6), [], [{sort, [{salary, desc}]}]).
+    ah_datagrid(columns(), lists:sublist(employees(), 6), [], [{sort, [{salary, desc}]}]).
 
 -spec grid_multi() -> aihtml:html().
 grid_multi() ->
-    datagrid(columns(), lists:sublist(employees(), 6), [multi], [{value, [2, 3]}]).
+    ah_datagrid(columns(), lists:sublist(employees(), 6), [multi], [{value, [2, 3]}]).
 
 -spec grid_checkbox() -> aihtml:html().
 grid_checkbox() ->
-    datagrid(columns(), lists:sublist(employees(), 6), [checkbox],
-             [{value, [1]}, {name, <<"ids">>}]).
+    ah_datagrid(columns(), lists:sublist(employees(), 6), [checkbox],
+                [{value, [1]}, {name, <<"ids">>}]).
 
 -spec grid_paging_filter() -> aihtml:html().
 grid_paging_filter() ->
-    datagrid(columns(), employees(), [filter_row, pageable],
-             [{page_size, 5}, {page_sizes, [5, 10, 20]}, {filters, [{dept, <<"研发"/utf8>>}]}]).
+    ah_datagrid(columns(), employees(), [filter_row, pageable],
+                [{page_size, 5}, {page_sizes, [5, 10, 20]}, {filters, [{dept, <<"研发"/utf8>>}]}]).
 
 -spec grid_types() -> aihtml:html().
 grid_types() ->
@@ -78,7 +78,7 @@ grid_types() ->
             #{id => 3, name => <<"数据平台"/utf8>>, budget => 990000, rate => 0.35, progress => 35,
               score => 3, status => late, due => <<"2026-08-01">>, public => true,
               site => <<"https://example.com/c">>}],
-    datagrid(Cols, Rows, [none], []).
+    ah_datagrid(Cols, Rows, [none], []).
 
 -spec grid_pinned() -> aihtml:html().
 grid_pinned() ->
@@ -90,7 +90,7 @@ grid_pinned() ->
             #{key => hired, title => <<"入职日期"/utf8>>, width => 140},
             #{key => salary, title => <<"月薪"/utf8>>, width => 130, align => right, format => <<"n0">>},
             #{key => age, title => <<"年龄"/utf8>>, width => 100, align => center, hidden => true}],
-    'div'(datagrid(Cols, employees(), [], [{height, 300}]), [<<"max-w-2xl">>], []).
+    ah_div(ah_datagrid(Cols, employees(), [], [{height, 300}]), [<<"max-w-2xl">>], []).
 
 %% A double click (or Enter / F2) edits a cell; the change runs
 %% action(saved, ...) below, which re-renders the row from the server.
@@ -107,11 +107,11 @@ grid_editing() ->
             #{key => hired, title => <<"入职日期"/utf8>>, width => 140, type => date, editable => true},
             #{key => active, title => <<"在职"/utf8>>, width => 70, type => bool, align => center,
               editable => true}],
-    'div'([datagrid(Cols, lists:sublist(employees(), 5), [],
-                    [on('ah:edit', {?MODULE, saved, #{}}, #{sync => queue})]),
-           p(<<"双击单元格编辑，Enter 保存，Esc 取消，Tab 跳到下一个可编辑列。"/utf8>>,
-             [<<"text-sm text-muted mt-2">>], [{id, <<"dg-edit-log">>}])],
-          [], []).
+    ah_div([ah_datagrid(Cols, lists:sublist(employees(), 5), [],
+                        [on('ah:edit', {?MODULE, saved, #{}}, #{sync => queue})]),
+            ah_p(<<"双击单元格编辑，Enter 保存，Esc 取消，Tab 跳到下一个可编辑列。"/utf8>>,
+                 [<<"text-sm text-muted mt-2">>], [{id, <<"dg-edit-log">>}])],
+           [], []).
 
 -spec grid_grouping() -> aihtml:html().
 grid_grouping() ->
@@ -122,20 +122,20 @@ grid_grouping() ->
               aggregates => [avg, max]},
             #{key => salary, title => <<"月薪"/utf8>>, width => 150, align => right,
               format => <<"n0">>, aggregates => [sum, avg]}],
-    datagrid(Cols, employees(), [statusbar, filter_row],
-             [{group_by, [dept]}, {height, 420},
-              {labels, #{sum => <<"合计"/utf8>>, avg => <<"平均"/utf8>>, max => <<"最大"/utf8>>}}]).
+    ah_datagrid(Cols, employees(), [statusbar, filter_row],
+                [{group_by, [dept]}, {height, 420},
+                 {labels, #{sum => <<"合计"/utf8>>, avg => <<"平均"/utf8>>, max => <<"最大"/utf8>>}}]).
 
 -spec grid_toolbar() -> aihtml:html().
 grid_toolbar() ->
-    'div'([datagrid(columns(), employees(), [multi, pageable],
-                    [{toolbar, [export_csv, export_xlsx, export_pdf, separator,
-                                {archive, <<"归档所选"/utf8>>}, spacer, search]},
-                     {export_name, <<"employees">>}, {page_size, 5},
-                     on('ah:toolbar', {?MODULE, tool, #{}})]),
-           p(<<"导出的是过滤、排序后的全部行；Excel 与 PDF 的库在第一次导出时才加载。"/utf8>>,
-             [<<"text-sm text-muted mt-2">>], [{id, <<"dg-tool-log">>}])],
-          [], []).
+    ah_div([ah_datagrid(columns(), employees(), [multi, pageable],
+                        [{toolbar, [export_csv, export_xlsx, export_pdf, separator,
+                                    {archive, <<"归档所选"/utf8>>}, spacer, search]},
+                         {export_name, <<"employees">>}, {page_size, 5},
+                         on('ah:toolbar', {?MODULE, tool, #{}})]),
+            ah_p(<<"导出的是过滤、排序后的全部行；Excel 与 PDF 的库在第一次导出时才加载。"/utf8>>,
+                 [<<"text-sm text-muted mt-2">>], [{id, <<"dg-tool-log">>}])],
+           [], []).
 
 %% Only one page is rendered here: the first, or the one a pager link
 %% names (href: /components/datagrid/state?dg_page=...). With JavaScript,
@@ -148,35 +148,35 @@ grid_remote() ->
     Query = #{sort => Sort, filters => [], search => <<>>, page => Page, page_size => Size,
               offset => (Page - 1) * Size, limit => Size, export => undefined},
     {Rows, Total} = datagrid_select(Query, employees()),
-    datagrid(columns(), Rows, [filter_row, pageable, checkbox],
-             [{source, {?MODULE, people, #{}}}, {total, Total}, {page, Page},
-              {page_size, Size}, {sort, Sort}, {page_sizes, [5, 10, 20]},
-              {toolbar, [search, spacer, export_csv]},
-              {href, <<"/components/datagrid/state?dg_page={page}&dg_size={size}&dg_sort={sort}">>}]).
+    ah_datagrid(columns(), Rows, [filter_row, pageable, checkbox],
+                [{source, {?MODULE, people, #{}}}, {total, Total}, {page, Page},
+                 {page_size, Size}, {sort, Sort}, {page_sizes, [5, 10, 20]},
+                 {toolbar, [search, spacer, export_csv]},
+                 {href, <<"/components/datagrid/state?dg_page={page}&dg_size={size}&dg_sort={sort}">>}]).
 
 -spec grid_change() -> aihtml:html().
 grid_change() ->
-    'div'([datagrid(columns(), lists:sublist(employees(), 5), [checkbox],
-                    [on(change, {?MODULE, picked, #{}}),
-                     on('ah:command', {?MODULE, command, #{}})]),
-           p(<<"还没有选择"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"dg-picked">>}])],
-          [], []).
+    ah_div([ah_datagrid(columns(), lists:sublist(employees(), 5), [checkbox],
+                        [on(change, {?MODULE, picked, #{}}),
+                         on('ah:command', {?MODULE, command, #{}})]),
+            ah_p(<<"还没有选择"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"dg-picked">>}])],
+           [], []).
 
 -spec grid_empty() -> aihtml:html().
 grid_empty() ->
-    datagrid(columns(), [], [filter_row, pageable],
-             [{labels, #{empty => <<"暂无数据"/utf8>>, total => <<"共 {0} 条"/utf8>>,
-                         per_page => <<"{0} 条/页"/utf8>>, filter => <<"过滤..."/utf8>>}}]).
+    ah_datagrid(columns(), [], [filter_row, pageable],
+                [{labels, #{empty => <<"暂无数据"/utf8>>, total => <<"共 {0} 条"/utf8>>,
+                            per_page => <<"{0} 条/页"/utf8>>, filter => <<"过滤..."/utf8>>}}]).
 
 %% The same component as a record: options are checked field names, and
 %% the postback runs action(picked, ...) below on change.
 -spec grid_record() -> aihtml:html().
 grid_record() ->
-    'div'([#ah_datagrid{columns = columns(), rows = lists:sublist(employees(), 8),
-                        selection = multi, pageable = true, page_size = 4,
-                        sort = [{age, asc}], postback = {picked, #{log => <<"dg-picked-r">>}}},
-           p(<<"还没有选择"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"dg-picked-r">>}])],
-          [], []).
+    ah_div([#ah_datagrid{columns = columns(), rows = lists:sublist(employees(), 8),
+                         selection = multi, pageable = true, page_size = 4,
+                         sort = [{age, asc}], postback = {picked, #{log => <<"dg-picked-r">>}}},
+            ah_p(<<"还没有选择"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"dg-picked-r">>}])],
+           [], []).
 
 %%%===================================================================
 %%% Actions

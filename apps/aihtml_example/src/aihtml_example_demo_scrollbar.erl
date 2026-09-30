@@ -28,40 +28,40 @@ demos() ->
 %% Releasing the thumb (or a click) runs action(scrolled, ...).
 -spec sb_horizontal() -> aihtml:html().
 sb_horizontal() ->
-    'div'([scrollbar([], [<<"max-w-sm">>],
-                     [{value, 250}, {max, 1000}, {name, offset},
-                      {label, <<"偏移量"/utf8>>}, on(change, {?MODULE, scrolled, #{}})]),
-           span(<<"值：250"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"sb-value">>}])],
-          [<<"flex items-center gap-4">>], []).
+    ah_div([ah_scrollbar([], [<<"max-w-sm">>],
+                         [{value, 250}, {max, 1000}, {name, offset},
+                          {label, <<"偏移量"/utf8>>}, on(change, {?MODULE, scrolled, #{}})]),
+            ah_span(<<"值：250"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"sb-value">>}])],
+           [<<"flex items-center gap-4">>], []).
 
 -spec sb_vertical() -> aihtml:html().
 sb_vertical() ->
-    'div'([scrollbar([], [vertical], [{height, 220}, {value, 400}]),
-           scrollbar([], [vertical], [{height, 220}, {max, 100}, {value, 30},
-                                      {show_buttons, false}]),
-           scrollbar([], [vertical, disabled], [{height, 220}, {value, 700}])],
-          [<<"flex gap-8">>], []).
+    ah_div([ah_scrollbar([], [vertical], [{height, 220}, {value, 400}]),
+            ah_scrollbar([], [vertical], [{height, 220}, {max, 100}, {value, 30},
+                                          {show_buttons, false}]),
+            ah_scrollbar([], [vertical, disabled], [{height, 220}, {value, 700}])],
+           [<<"flex gap-8">>], []).
 
 -spec sb_area() -> aihtml:html().
 sb_area() ->
-    scrollbar([p(<<"第 "/utf8, (integer_to_binary(N))/binary, " 条消息：自定义滚动条跟随内容滚动，"
-                   "滚轮、触摸和键盘仍是原生的。"/utf8>>,
-                 [<<"px-3 py-2 border-b border-line text-sm">>], [])
-               || N <- lists:seq(1, 30)],
-              [<<"max-w-md border border-line rounded">>],
-              [{height, 220}, {label, <<"消息"/utf8>>}]).
+    ah_scrollbar([ah_p(<<"第 "/utf8, (integer_to_binary(N))/binary, " 条消息：自定义滚动条跟随内容滚动，"
+                         "滚轮、触摸和键盘仍是原生的。"/utf8>>,
+                       [<<"px-3 py-2 border-b border-line text-sm">>], [])
+                  || N <- lists:seq(1, 30)],
+                 [<<"max-w-md border border-line rounded">>],
+                 [{height, 220}, {label, <<"消息"/utf8>>}]).
 
 -spec sb_area_both() -> aihtml:html().
 sb_area_both() ->
     Cols = lists:seq(1, 14),
     Row = fun(R) ->
-                  tr([td(<<"R", (integer_to_binary(R))/binary, "C", (integer_to_binary(C))/binary>>,
-                         [<<"px-3 py-1 border border-line whitespace-nowrap">>], [])
-                      || C <- Cols])
+                  ah_tr([ah_td(<<"R", (integer_to_binary(R))/binary, "C", (integer_to_binary(C))/binary>>,
+                               [<<"px-3 py-1 border border-line whitespace-nowrap">>], [])
+                         || C <- Cols])
           end,
-    scrollbar(table([Row(R) || R <- lists:seq(1, 20)], [<<"text-sm">>], []),
-              [<<"max-w-lg border border-line rounded">>],
-              [{height, 200}, {step, 20}]).
+    ah_scrollbar(ah_table([Row(R) || R <- lists:seq(1, 20)], [<<"text-sm">>], []),
+                 [<<"max-w-lg border border-line rounded">>],
+                 [{height, 200}, {step, 20}]).
 
 %%%===================================================================
 %%% Actions

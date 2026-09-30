@@ -1,5 +1,5 @@
 %%%-------------------------------------------------------------------
-%%% @doc The statistic component (designs/04-components.md): `statistic/3'
+%%% @doc The statistic component (designs/04-components.md): `ah_statistic/3'
 %%% builds an #ah_statistic{} element record (include/aihtml_statistic.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
@@ -13,7 +13,7 @@
 
 -include("aihtml_statistic.hrl").
 
--export([statistic/3, render/1, fields/1, catalog/0]).
+-export([ah_statistic/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_display, [blank/1, tf/1, none_for/1]).
 
@@ -31,8 +31,8 @@
 %% @doc Statistic: title, prefix, number, suffix and a delta arrow.
 %% Options: `title', `prefix', `suffix', `precision', `group_separator'
 %% (true), `delta'.
--spec statistic(number() | html(), css(), attrs()) -> #ah_statistic{}.
-statistic(Value, Css, Attrs) ->
+-spec ah_statistic(number() | html(), css(), attrs()) -> #ah_statistic{}.
+ah_statistic(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_statistic{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_statistic{}.
@@ -112,7 +112,7 @@ catalog() ->
 
 entry() ->
     #{name => statistic, category => data, root => <<"ah-statistic">>,
-      signature => <<"statistic(Value, Css, Attrs)">>,
+      signature => <<"ah_statistic(Value, Css, Attrs)">>,
       groups => #{color => {[default, primary, success, warning, error], default}},
       flags => [loading],
       classes => none_for([default, primary, success, warning, error, loading]),

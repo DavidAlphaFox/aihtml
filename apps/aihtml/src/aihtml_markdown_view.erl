@@ -2,7 +2,7 @@
 %%% @doc Markdown shown as HTML, rendered on the server: the reading side
 %%% of markdown_editor (see designs/04-components.md).
 %%%
-%%%   markdown_view(Markdown, Css, Attrs)
+%%%   ah_markdown_view(Markdown, Css, Attrs)
 %%%
 %%% The Markdown is parsed and rendered by aihtml_lib_markdown, a port of
 %%% markdown-it configured as the editor configures it, so a document
@@ -22,7 +22,7 @@
 %%% To show what an editor holds as the user edits, re-render the view in
 %%% the editor's change postback with aihtml_action:html/4 (the demo does).
 %%%
-%%% markdown_view/3 builds an #ah_markdown_view{}
+%%% ah_markdown_view/3 builds an #ah_markdown_view{}
 %%% (include/aihtml_markdown_view.hrl) and render/1 turns it into HTML,
 %%% so pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -32,7 +32,7 @@
 
 -include("aihtml_markdown_view.hrl").
 
--export([markdown_view/3, render/1, fields/1, catalog/0]).
+-export([ah_markdown_view/3, render/1, fields/1, catalog/0]).
 
 -export_type([element/0]).
 
@@ -41,9 +41,9 @@
 %% @doc The HTML of `Markdown' (a binary or string of UTF-8 Markdown;
 %% `undefined' is empty). No modifiers or options: Css adds classes
 %% (for instance Tailwind's `max-w-prose'), Attrs go to the root.
--spec markdown_view(undefined | unicode:chardata(), aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_markdown_view(undefined | unicode:chardata(), aihtml_html:css(), aihtml_html:attrs()) ->
           element().
-markdown_view(Markdown, Css, Attrs) ->
+ah_markdown_view(Markdown, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_markdown_view{markdown = Markdown}, Css, Attrs).
 
 %% @doc The field names of #ah_markdown_view{}.
@@ -62,7 +62,7 @@ render(#ah_markdown_view{markdown = Markdown} = R) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => markdown_view, category => text,
-       signature => <<"markdown_view(Markdown, Css, Attrs)">>,
+       signature => <<"ah_markdown_view(Markdown, Css, Attrs)">>,
        root => <<"ah-markdown-view">>,
        behavior => none,
        doc => <<"Markdown rendered to HTML on the server (as markdown_editor's markdown-it "

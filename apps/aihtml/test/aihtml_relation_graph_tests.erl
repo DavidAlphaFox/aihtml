@@ -30,9 +30,9 @@ graph() ->
       edges => [{a, b}, #{source => a, target => t, label => <<"leads">>, kind => dashed}]}.
 
 graph_markup_test() ->
-    H = r(?M:relation_graph(graph(), [directed],
-                            [{id, g}, {selected, a}, {focus, b},
-                             {details, #{a => <<"<Ann>">>, b => <<"Bob">>}}])),
+    H = r(?M:ah_relation_graph(graph(), [directed],
+                               [{id, g}, {selected, a}, {focus, b},
+                                {details, #{a => <<"<Ann>">>, b => <<"Bob">>}}])),
     ?assert(has(<<"<div class=\"ah-relation-graph\" role=\"group\" "
                   "aria-roledescription=\"relation graph\" aria-describedby=\"g-data\" tabindex=\"0\" "
                   "data-ah=\"relation-graph\" data-ah-value=\"a\" data-layout=\"force\" "
@@ -56,21 +56,21 @@ graph_markup_test() ->
                   "aria-atomic=\"true\"></div>">>, H)),
     ?assertEqual(nomatch, binary:match(H, <<"ah-relation-graph__state">>)),
     %% no selection: the card is hidden
-    H2 = r(?M:relation_graph(graph(), [], [{toolbar, false}])),
+    H2 = r(?M:ah_relation_graph(graph(), [], [{toolbar, false}])),
     ?assert(has(<<"data-ah-value=\"\" data-layout=\"force\" style">>, H2)),
     ?assert(has(<<"class=\"ah-relation-graph__detail\" data-visible=\"false\"">>, H2)),
     ?assertEqual(nomatch, binary:match(H2, <<"toolbar">>)).
 
 graph_states_test() ->
     ?assert(has(<<"<div class=\"ah-relation-graph__state\" data-kind=\"loading\">">>,
-                r(?M:relation_graph(graph(), [loading], [])))),
+                r(?M:ah_relation_graph(graph(), [loading], [])))),
     ?assert(has(<<"data-kind=\"error\" role=\"alert\"><span>boom</span>">>,
-                r(?M:relation_graph(graph(), [], [{error, <<"boom">>}])))),
+                r(?M:ah_relation_graph(graph(), [], [{error, <<"boom">>}])))),
     ?assert(has(<<"data-kind=\"empty\"><span>Nothing</span>">>,
-                r(?M:relation_graph({[], []}, [], [{empty_text, <<"Nothing">>}])))).
+                r(?M:ah_relation_graph({[], []}, [], [{empty_text, <<"Nothing">>}])))).
 
 graph_option_test() ->
-    O = island_of_graph(?M:relation_graph(graph(), [directed, round_rect], [])),
+    O = island_of_graph(?M:ah_relation_graph(graph(), [directed, round_rect], [])),
     #{<<"color">> := [<<"--ah-color-primary">>, <<"#123456">>],
       <<"legend">> := [#{<<"data">> := [<<"people">>, <<"teams">>]}],
       <<"series">> := [S]} = O,
@@ -88,13 +88,13 @@ graph_option_test() ->
       <<"lineStyle">> := #{<<"type">> := <<"solid">>, <<"width">> := 1.8}} = L1,
     #{<<"value">> := <<"leads">>, <<"lineStyle">> := #{<<"type">> := <<"dashed">>}} = L2,
     %% circular / fixed layouts; edge labels off
-    [C] = maps:get(<<"series">>, island_of_graph(?M:relation_graph(graph(), [circular],
-                                                                   [{edge_labels, false},
-                                                                    {roam, false}]))),
+    [C] = maps:get(<<"series">>, island_of_graph(?M:ah_relation_graph(graph(), [circular],
+                                                                      [{edge_labels, false},
+                                                                       {roam, false}]))),
     #{<<"layout">> := <<"circular">>, <<"roam">> := false,
       <<"edgeLabel">> := #{<<"show">> := false}} = C,
     ?assertNot(maps:is_key(<<"force">>, C)),
-    [F] = maps:get(<<"series">>, island_of_graph(?M:relation_graph(
+    [F] = maps:get(<<"series">>, island_of_graph(?M:ah_relation_graph(
                                                    #{nodes => [#{id => p, x => 1, y => 2}]},
                                                    [fixed], []))),
     #{<<"layout">> := <<"none">>, <<"data">> := [#{<<"x">> := 1, <<"y">> := 2}]} = F.
@@ -102,7 +102,7 @@ graph_option_test() ->
 tree_option_test() ->
     %% from edges; a cycle is cut; two roots get an invisible root
     G = #{nodes => [a, b, c, d], edges => [{a, b}, {b, c}, {c, b}]},
-    [S] = maps:get(<<"series">>, island_of_graph(?M:relation_graph(G, [tree, bt], []))),
+    [S] = maps:get(<<"series">>, island_of_graph(?M:ah_relation_graph(G, [tree, bt], []))),
     #{<<"type">> := <<"tree">>, <<"orient">> := <<"BT">>,
       <<"data">> := [#{<<"id">> := <<"__root__">>,
                        <<"children">> := [#{<<"id">> := <<"a">>,
@@ -114,7 +114,7 @@ tree_option_test() ->
     ?assertNot(maps:is_key(<<"children">>, D)),
     %% from parents; one root
     P = #{nodes => [#{id => r}, #{id => k, parent => r, collapsed => true}]},
-    [S2] = maps:get(<<"series">>, island_of_graph(?M:relation_graph(P, [tree], []))),
+    [S2] = maps:get(<<"series">>, island_of_graph(?M:ah_relation_graph(P, [tree], []))),
     #{<<"orient">> := <<"LR">>,
       <<"data">> := [#{<<"id">> := <<"r">>,
                        <<"children">> := [#{<<"id">> := <<"k">>, <<"collapsed">> := true}]}]} = S2.
@@ -150,13 +150,13 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:relation_graph({[a], []}, [tree, rl, directed], [{id, g}, {selected, a}])),
+    ?assertEqual(r(?M:ah_relation_graph({[a], []}, [tree, rl, directed], [{id, g}, {selected, a}])),
                  r(#ah_relation_graph{graph = {[a], []}, layout = tree, orient = rl,
                                       directed = true, selected = a, id = g})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_relation_graph{layout = circular, node_shape = square, height = 300},
-                 ?M:relation_graph({[], []}, [circular, square], [{height, 300}])).
+                 ?M:ah_relation_graph({[], []}, [circular, square], [{height, 300}])).
 
 postback_test() ->
     Token = fun(Html) ->

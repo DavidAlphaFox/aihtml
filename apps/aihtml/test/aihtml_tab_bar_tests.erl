@@ -19,7 +19,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([tab_bar], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -34,12 +34,12 @@ catalog_documents_every_option_test() ->
 %%% tab_bar
 
 tab_bar_test() ->
-    H = r(?M:tab_bar([{a, <<"a.erl">>}, {b, <<"b.erl">>, #{dirty => true}}], b, [], [])),
+    H = r(?M:ah_tab_bar([{a, <<"a.erl">>}, {b, <<"b.erl">>, #{dirty => true}}], b, [], [])),
     ?assert(has(H, <<"class=\"ah-tab-bar\" role=\"tablist\" data-ah=\"tab-bar\" data-ah-value=\"b\"">>)),
     ?assert(has(H, <<"data-id=\"b\" data-active=\"true\" data-dirty=\"true\"">>)),
     ?assertEqual(1, count(H, <<"ah-tab-bar__dot">>)),
     ?assertEqual(2, count(H, <<"aria-label=\"close ">>)),
-    ?assertNot(has(r(?M:tab_bar([{a, <<"A">>}], a, [], [{closable, false}])), <<"__close">>)).
+    ?assertNot(has(r(?M:ah_tab_bar([{a, <<"A">>}], a, [], [{closable, false}])), <<"__close">>)).
 
 %%% CSS: every sigil class the module writes exists in the stylesheets
 
@@ -63,7 +63,7 @@ classes_are_styled_test() ->
 
 %% One render of the component in its main variants and states.
 samples() ->
-    [?M:tab_bar([{a, <<"A">>, #{dirty => true, icon => <<"i">>}}, {b, <<"B">>}], a, [], [])].
+    [?M:ah_tab_bar([{a, <<"A">>, #{dirty => true, icon => <<"i">>}}, {b, <<"B">>}], a, [], [])].
 
 %%% element records (designs/05-records.md)
 
@@ -79,7 +79,7 @@ token(Html) ->
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_tab_bar{items = [], value = x, closable = false},
-                 ?M:tab_bar([], x, [], [{closable, false}])).
+                 ?M:ah_tab_bar([], x, [], [{closable, false}])).
 
 postback_test() ->
     ?assertEqual({<<"change">>, {?MODULE, focus, #{}}},

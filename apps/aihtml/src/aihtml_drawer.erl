@@ -12,7 +12,7 @@
 %%% Literal (binary) classes in `Css' go on the panel. A record's
 %%% postback fires on `ah:close'. Behaviour: assets/js/components/drawer.ts
 %%% (the markup and behaviour are shared with the sheet, see
-%%% aihtml_lib_overlay:slide/5). drawer/3 builds an #ah_drawer{}
+%%% aihtml_lib_overlay:slide/5). ah_drawer/3 builds an #ah_drawer{}
 %%% (include/aihtml_drawer.hrl) and render/1 turns it into HTML
 %%% (designs/05-records.md).
 %%% @end
@@ -22,7 +22,7 @@
 
 -include("aihtml_drawer.hrl").
 
--export([drawer/3, render/1, fields/1, catalog/0]).
+-export([ah_drawer/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -38,8 +38,8 @@
 %% otherwise; integer px or CSS length; default 50vh or 380px), `closable'
 %% (true), `handle' (grab bar, true), `dismissible' (swipe to close, true),
 %% `close_on_overlay' (true), `close_on_esc' (true), `open' (false).
--spec drawer(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_drawer{}.
-drawer(Children, Css, Attrs) ->
+-spec ah_drawer(aihtml_html:html(), aihtml_html:css(), aihtml_html:attrs()) -> #ah_drawer{}.
+ah_drawer(Children, Css, Attrs) ->
     ?E:build(?MODULE, #ah_drawer{body = Children}, Css, Attrs).
 
 %% @doc The field names of #ah_drawer{}.
@@ -75,7 +75,7 @@ catalog() ->
     Sides = [top, bottom, left, right],
     Events = [<<"ah:open">>, <<"ah:close">>],
     [#{name => drawer, category => overlay,
-       signature => <<"drawer(Children, Css, Attrs)">>,
+       signature => <<"ah_drawer(Children, Css, Attrs)">>,
        root => <<"ah-drawer__overlay">>,
        groups => #{side => {Sides, bottom}},
        classes => Empty(Sides),

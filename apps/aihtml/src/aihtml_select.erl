@@ -1,7 +1,7 @@
 %%%-------------------------------------------------------------------
 %%% @doc A native select wrapped to look like the dropdownlist.
 %%%
-%%%   select(Options, Value, Css, Attrs)
+%%%   ah_select(Options, Value, Css, Attrs)
 %%%
 %%% Options are items as in aihtml_lib_select; groups become optgroups.
 %%% The markup and classes follow sigil's dropdownlist, so its ported
@@ -17,7 +17,7 @@
 
 -include("aihtml_select.hrl").
 
--export([select/4, render/1, fields/1, catalog/0]).
+-export([ah_select/4, render/1, fields/1, catalog/0]).
 
 -define(E, aihtml_element).
 -define(F, aihtml_lib_form).
@@ -25,10 +25,10 @@
 %% @doc A native select wrapped to look like the dropdownlist. Css styles
 %% the wrapper; Attrs (name, id, multiple, disabled, on/2 ...) go to the
 %% select itself. Value may be a list when the select is `multiple'.
--spec select([aihtml_lib_select:item()],
-             aihtml_lib_select:value() | [aihtml_lib_select:value()] | undefined,
-             aihtml_html:css(), aihtml_html:attrs()) -> #ah_select{}.
-select(Options, Value, Css, Attrs) ->
+-spec ah_select([aihtml_lib_select:item()],
+                aihtml_lib_select:value() | [aihtml_lib_select:value()] | undefined,
+                aihtml_html:css(), aihtml_html:attrs()) -> #ah_select{}.
+ah_select(Options, Value, Css, Attrs) ->
     %% {size, N} is the select's HTML attribute, not the size modifier;
     %% a binary key keeps it (in place) among the HTML attributes
     Html = [case A of {size, N} -> {<<"size">>, N}; _ -> A end || A <- flat_attrs(Attrs)],
@@ -69,7 +69,7 @@ fields(ah_select) -> record_info(fields, ah_select).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => select, category => form,
-       signature => <<"select(Options, Value, Css, Attrs)">>,
+       signature => <<"ah_select(Options, Value, Css, Attrs)">>,
        root => <<"ah-select">>,
        groups => #{size => {[sm, lg], none},
                    template => {[primary, success, warning, danger], none}},

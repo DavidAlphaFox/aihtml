@@ -24,30 +24,30 @@ demos() ->
 
 -spec sheet_form() -> aihtml:html().
 sheet_form() ->
-    'div'([button(<<"Edit profile">>, undefined, [primary], opens({id, <<"sheet-profile">>})),
-           sheet([input(undefined, [], [{name, name}, {placeholder, <<"Name">>}]),
-                  input(undefined, [<<"mt-3">>], [{name, email}, {placeholder, <<"Email">>}])],
-                 [], [{id, <<"sheet-profile">>}, {title, <<"Edit profile">>},
-                      {description, <<"Changes are saved when you click Save.">>},
-                      {footer, [button(<<"Cancel">>, undefined, [default], closes()),
-                                button(<<"Save">>, undefined, [primary], closes(closest, save))]}])]).
+    ah_div([ah_button(<<"Edit profile">>, undefined, [primary], opens({id, <<"sheet-profile">>})),
+            ah_sheet([ah_input(undefined, [], [{name, name}, {placeholder, <<"Name">>}]),
+                      ah_input(undefined, [<<"mt-3">>], [{name, email}, {placeholder, <<"Email">>}])],
+                     [], [{id, <<"sheet-profile">>}, {title, <<"Edit profile">>},
+                          {description, <<"Changes are saved when you click Save.">>},
+                          {footer, [ah_button(<<"Cancel">>, undefined, [default], closes()),
+                                    ah_button(<<"Save">>, undefined, [primary], closes(closest, save))]}])]).
 
 -spec sheet_sides() -> aihtml:html().
 sheet_sides() ->
-    row([button(atom_to_binary(Side), undefined, [outlined],
-                opens({id, <<"sheet-", (atom_to_binary(Side))/binary>>}))
+    row([ah_button(atom_to_binary(Side), undefined, [outlined],
+                   opens({id, <<"sheet-", (atom_to_binary(Side))/binary>>}))
          || Side <- [left, top, bottom]]
-        ++ [sheet(<<"Slides in from the ", (atom_to_binary(Side))/binary, ".">>, [Side],
-                  [{id, <<"sheet-", (atom_to_binary(Side))/binary>>},
-                   {title, atom_to_binary(Side)}, {size, 240}])
+        ++ [ah_sheet(<<"Slides in from the ", (atom_to_binary(Side))/binary, ".">>, [Side],
+                     [{id, <<"sheet-", (atom_to_binary(Side))/binary>>},
+                      {title, atom_to_binary(Side)}, {size, 240}])
             || Side <- [left, top, bottom]]).
 
 -spec sheet_from_server() -> aihtml:html().
 sheet_from_server() ->
-    'div'([button(<<"Ask the server">>, undefined, [primary],
-                  on(click, {?MODULE, open, #{target => <<"sheet-server">>}})),
-           sheet(p(<<"The server opened this sheet with aihtml_lib_overlay:open/2.">>),
-                 [], [{id, <<"sheet-server">>}, {title, <<"Opened by an action">>}])]).
+    ah_div([ah_button(<<"Ask the server">>, undefined, [primary],
+                      on(click, {?MODULE, open, #{target => <<"sheet-server">>}})),
+            ah_sheet(ah_p(<<"The server opened this sheet with aihtml_lib_overlay:open/2.">>),
+                     [], [{id, <<"sheet-server">>}, {title, <<"Opened by an action">>}])]).
 
 %%%===================================================================
 %%% Actions
@@ -62,4 +62,4 @@ action(open, #{target := Id}, _Ev, Ctx) ->
 %%%===================================================================
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-3">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-3">>], []).

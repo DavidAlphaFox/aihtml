@@ -3,7 +3,7 @@
 %%% (text/markdown_editor, built on its prose_editor). See
 %%% designs/04-components.md.
 %%%
-%%%   markdown_editor(Value, Css, Attrs)      Value is the Markdown text
+%%%   ah_markdown_editor(Value, Css, Attrs)   Value is the Markdown text
 %%%
 %%% The editor is ProseMirror with markdown-it, imported by the
 %%% `markdown-editor' behaviour (assets/js/components/markdown_editor.ts)
@@ -27,7 +27,7 @@
 %%% textarea holds (text typed before it loaded is kept); then the textarea is
 %%% hidden and kept in sync with the document.
 %%%
-%%% markdown_editor/3 builds an #ah_markdown_editor{}
+%%% ah_markdown_editor/3 builds an #ah_markdown_editor{}
 %%% (include/aihtml_markdown_editor.hrl) and render/1 turns it into HTML,
 %%% so pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -37,7 +37,7 @@
 
 -include("aihtml_markdown_editor.hrl").
 
--export([markdown_editor/3, render/1, fields/1, catalog/0]).
+-export([ah_markdown_editor/3, render/1, fields/1, catalog/0]).
 
 -export_type([label_key/0, labels/0, element/0]).
 
@@ -102,9 +102,9 @@
 %% the document scrolls inside), `labels' (a map of texts, see
 %% label_key()). `name' names the textarea that carries the Markdown in
 %% a form.
--spec markdown_editor(undefined | unicode:chardata(), aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_markdown_editor(undefined | unicode:chardata(), aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_markdown_editor{}.
-markdown_editor(Value, Css, Attrs) ->
+ah_markdown_editor(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_markdown_editor{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_markdown_editor{}.
@@ -324,7 +324,7 @@ icon({<<"table">>, _}) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => markdown_editor, category => form,
-       signature => <<"markdown_editor(Value, Css, Attrs)">>,
+       signature => <<"ah_markdown_editor(Value, Css, Attrs)">>,
        root => <<"ah-md-editor">>,
        flags => [disabled, readonly],
        options => [placeholder, show_stats, max_chars, height, labels],

@@ -25,28 +25,28 @@ demos() ->
 
 -spec cas_basic() -> aihtml:html().
 cas_basic() ->
-    row([cascader(regions(), undefined, [<<"w-64">>], [{name, region}]),
-         cascader(regions(), [<<"guangdong">>, <<"shenzhen">>, <<"nanshan">>], [<<"w-64">>],
-                  [{name, office}])]).
+    row([ah_cascader(regions(), undefined, [<<"w-64">>], [{name, region}]),
+         ah_cascader(regions(), [<<"guangdong">>, <<"shenzhen">>, <<"nanshan">>], [<<"w-64">>],
+                     [{name, office}])]).
 
 -spec cas_sizes() -> aihtml:html().
 cas_sizes() ->
-    row([cascader(regions(), undefined, [sm, <<"w-56">>], [{placeholder, <<"小号"/utf8>>}]),
-         cascader(regions(), undefined, [<<"w-56">>], [{placeholder, <<"默认"/utf8>>}]),
-         cascader(regions(), undefined, [lg, <<"w-56">>], [{placeholder, <<"大号"/utf8>>}]),
-         cascader(regions(), [<<"beijing">>, <<"haidian">>], [disabled, <<"w-56">>], [])]).
+    row([ah_cascader(regions(), undefined, [sm, <<"w-56">>], [{placeholder, <<"小号"/utf8>>}]),
+         ah_cascader(regions(), undefined, [<<"w-56">>], [{placeholder, <<"默认"/utf8>>}]),
+         ah_cascader(regions(), undefined, [lg, <<"w-56">>], [{placeholder, <<"大号"/utf8>>}]),
+         ah_cascader(regions(), [<<"beijing">>, <<"haidian">>], [disabled, <<"w-56">>], [])]).
 
 -spec cas_any_level() -> aihtml:html().
 cas_any_level() ->
-    row([cascader(categories(), [<<"electronics">>], [change_on_select, <<"w-64">>],
-                  [{separator, <<" > ">>}, {placeholder, <<"商品分类"/utf8>>}]),
-         cascader(categories(), undefined, [no_clear, no_arrow, <<"w-64">>],
-                  [{placeholder, <<"无清除按钮、无箭头"/utf8>>}])]).
+    row([ah_cascader(categories(), [<<"electronics">>], [change_on_select, <<"w-64">>],
+                     [{separator, <<" > ">>}, {placeholder, <<"商品分类"/utf8>>}]),
+         ah_cascader(categories(), undefined, [no_clear, no_arrow, <<"w-64">>],
+                     [{placeholder, <<"无清除按钮、无箭头"/utf8>>}])]).
 
 -spec cas_search() -> aihtml:html().
 cas_search() ->
-    cascader(regions(), undefined, [filterable, <<"w-72">>],
-             [{placeholder, <<"输入搜索，如 南"/utf8>>}, {empty_text, <<"没有匹配的地区"/utf8>>}]).
+    ah_cascader(regions(), undefined, [filterable, <<"w-72">>],
+                [{placeholder, <<"输入搜索，如 南"/utf8>>}, {empty_text, <<"没有匹配的地区"/utf8>>}]).
 
 %% Opening a province calls action(load_cities, ...) below.
 -spec cas_lazy() -> aihtml:html().
@@ -54,8 +54,8 @@ cas_lazy() ->
     Provinces = [{<<"zhejiang">>, <<"浙江省"/utf8>>, lazy},
                  {<<"jiangsu">>, <<"江苏省"/utf8>>, lazy},
                  {<<"hainan">>, <<"海南省"/utf8>>, lazy}],
-    cascader(Provinces, undefined, [<<"w-64">>],
-             [{name, city}, {load, {?MODULE, load_cities, #{}}}]).
+    ah_cascader(Provinces, undefined, [<<"w-64">>],
+                [{name, city}, {load, {?MODULE, load_cities, #{}}}]).
 
 %% The same component as a record: options are checked field names, and
 %% the postback runs action(region_picked, ...) below on change.
@@ -64,7 +64,7 @@ cas_record() ->
     row([#ah_cascader{items = regions(), value = [<<"shanghai">>, <<"xuhui">>],
                       name = region, filterable = true, separator = <<" · "/utf8>>,
                       css = [<<"w-64">>], postback = region_picked},
-         span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"region-picked">>}])]).
+         ah_span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"region-picked">>}])]).
 
 %%%===================================================================
 %%% Actions
@@ -130,4 +130,4 @@ categories() ->
       [{<<"coffee">>, <<"咖啡"/utf8>>}, {<<"tea">>, <<"茶"/utf8>>}]}].
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

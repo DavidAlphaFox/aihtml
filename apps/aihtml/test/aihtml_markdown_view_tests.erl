@@ -13,7 +13,7 @@ r(Html) -> aihtml_html:render_binary(Html).
 
 catalog_names_are_exported_test() ->
     [#{name := markdown_view, category := C, behavior := none}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, markdown_view, 3)),
+    ?assert(erlang:function_exported(?D, ah_markdown_view, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -41,28 +41,28 @@ records_match_catalog_test() ->
 renders_markdown_test() ->
     ?assertEqual(<<"<div class=\"ah-markdown-view\"><h1>Title</h1>\n"
                    "<p>Some <strong>bold</strong> text.</p>\n</div>">>,
-                 r(?D:markdown_view(<<"# Title\n\nSome **bold** text.\n">>, [], []))).
+                 r(?D:ah_markdown_view(<<"# Title\n\nSome **bold** text.\n">>, [], []))).
 
 css_and_attrs_go_to_the_root_test() ->
     ?assertEqual(<<"<div class=\"ah-markdown-view max-w-prose\" id=\"doc\" lang=\"en\">"
                    "<p>x</p>\n</div>">>,
-                 r(?D:markdown_view("x", [<<"max-w-prose">>], [{id, doc}, {lang, en}]))).
+                 r(?D:ah_markdown_view("x", [<<"max-w-prose">>], [{id, doc}, {lang, en}]))).
 
 undefined_is_empty_test() ->
     ?assertEqual(<<"<div class=\"ah-markdown-view\"></div>">>,
-                 r(?D:markdown_view(undefined, [], []))).
+                 r(?D:ah_markdown_view(undefined, [], []))).
 
 html_is_escaped_test() ->
-    Out = r(?D:markdown_view(<<"<script>alert(1)</script>\n\n[x](javascript:alert(1))">>, [], [])),
+    Out = r(?D:ah_markdown_view(<<"<script>alert(1)</script>\n\n[x](javascript:alert(1))">>, [], [])),
     ?assertEqual(nomatch, binary:match(Out, [<<"<script">>, <<"href">>])),
     ?assertNotEqual(nomatch, binary:match(Out, <<"&lt;script&gt;">>)).
 
 record_test() ->
-    ?assertEqual(r(?D:markdown_view(<<"- [x] done">>, [], [{id, t}])),
+    ?assertEqual(r(?D:ah_markdown_view(<<"- [x] done">>, [], [{id, t}])),
                  r(#ah_markdown_view{markdown = <<"- [x] done">>, id = t})).
 
 unknown_modifier_test() ->
-    ?assertError(_, r(?D:markdown_view(<<"x">>, [nope], []))).
+    ?assertError(_, r(?D:ah_markdown_view(<<"x">>, [nope], []))).
 
 postback_test() ->
     ?assertError({aihtml, {no_postback_event, ah_markdown_view}},

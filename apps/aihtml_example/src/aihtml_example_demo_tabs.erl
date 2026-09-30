@@ -21,30 +21,30 @@ demos() ->
 
 -spec tabs_basic() -> aihtml:html().
 tabs_basic() ->
-    tabs([{overview, <<"Overview">>, p(<<"Product overview.">>)},
-          {specs, <<"Specs">>, p(<<"Weight 1.2 kg, 13 inch display.">>)},
-          {reviews, <<"Reviews">>, p(<<"No reviews yet.">>), #{disabled => true}},
-          {faq, <<"FAQ">>, p(<<"Questions and answers.">>)}],
-         specs, [], [{name, section}]).
+    ah_tabs([{overview, <<"Overview">>, ah_p(<<"Product overview.">>)},
+             {specs, <<"Specs">>, ah_p(<<"Weight 1.2 kg, 13 inch display.">>)},
+             {reviews, <<"Reviews">>, ah_p(<<"No reviews yet.">>), #{disabled => true}},
+             {faq, <<"FAQ">>, ah_p(<<"Questions and answers.">>)}],
+            specs, [], [{name, section}]).
 
 -spec tabs_positions() -> aihtml:html().
 tabs_positions() ->
-    Tabs = [{a, <<"Mail">>, p(<<"Inbox">>)}, {b, <<"Calendar">>, p(<<"Today">>)},
-            {c, <<"Contacts">>, p(<<"People">>)}],
-    col([tabs(Tabs, a, [bottom], []),
-         row([box(tabs(Tabs, b, [left], [])),
-              box(tabs(Tabs, c, [right], []))])]).
+    Tabs = [{a, <<"Mail">>, ah_p(<<"Inbox">>)}, {b, <<"Calendar">>, ah_p(<<"Today">>)},
+            {c, <<"Contacts">>, ah_p(<<"People">>)}],
+    col([ah_tabs(Tabs, a, [bottom], []),
+         row([box(ah_tabs(Tabs, b, [left], [])),
+              box(ah_tabs(Tabs, c, [right], []))])]).
 
 -spec tabs_hover() -> aihtml:html().
 tabs_hover() ->
-    tabs([{day, <<"Day">>, p(<<"Hourly view.">>)}, {week, <<"Week">>, p(<<"Seven days.">>)},
-          {month, <<"Month">>, p(<<"Whole month.">>)}],
-         week, [], [{selection_mode, hover}, {animation, none}]).
+    ah_tabs([{day, <<"Day">>, ah_p(<<"Hourly view.">>)}, {week, <<"Week">>, ah_p(<<"Seven days.">>)},
+             {month, <<"Month">>, ah_p(<<"Whole month.">>)}],
+            week, [], [{selection_mode, hover}, {animation, none}]).
 
 -spec tabs_scrollable() -> aihtml:html().
 tabs_scrollable() ->
-    'div'(tabs([{I, <<"Document ", (integer_to_binary(I))/binary>>,
-                 p(<<"Contents of document ", (integer_to_binary(I))/binary>>)}
-                || I <- lists:seq(1, 10)],
-               1, [], [{scrollable, true}]),
-          [<<"w-96">>], []).
+    ah_div(ah_tabs([{I, <<"Document ", (integer_to_binary(I))/binary>>,
+                     ah_p(<<"Contents of document ", (integer_to_binary(I))/binary>>)}
+                    || I <- lists:seq(1, 10)],
+                   1, [], [{scrollable, true}]),
+           [<<"w-96">>], []).

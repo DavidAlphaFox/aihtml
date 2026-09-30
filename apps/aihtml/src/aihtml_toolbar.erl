@@ -5,7 +5,7 @@
 %%% assets/js/components/toolbar.ts, aihtml's additions in
 %%% priv/css/extra/toolbar.css.
 %%%
-%%% toolbar/3 builds an #ah_toolbar{} record (include/aihtml_toolbar.hrl)
+%%% ah_toolbar/3 builds an #ah_toolbar{} record (include/aihtml_toolbar.hrl)
 %%% and render/1 turns it into HTML (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
@@ -14,7 +14,7 @@
 
 -include("aihtml_toolbar.hrl").
 
--export([toolbar/3]).
+-export([ah_toolbar/3]).
 -export([render/1, fields/1, catalog/0]).
 
 -export_type([tool/0]).
@@ -35,8 +35,8 @@
 %% sets `data-ah-value' to that key and fires `change'; `toggle' tools also
 %% flip `aria-pressed'. Flag `disabled'. Options: `popup_width' (default
 %% 200).
--spec toolbar([tool()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_toolbar{}.
-toolbar(Tools, Css, Attrs) ->
+-spec ah_toolbar([tool()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_toolbar{}.
+ah_toolbar(Tools, Css, Attrs) ->
     ?EL:build(?MODULE, #ah_toolbar{tools = Tools}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -124,7 +124,7 @@ tool_custom(Html, Cls) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => toolbar, category => layout,
-       signature => <<"toolbar(Tools, Css, Attrs)">>,
+       signature => <<"ah_toolbar(Tools, Css, Attrs)">>,
        root => <<"ah-toolbar">>,
        flags => [disabled],
        options => [popup_width],

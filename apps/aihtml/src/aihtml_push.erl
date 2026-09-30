@@ -4,8 +4,8 @@
 %%%
 %%% ```
 %%% %% in the page: the list follows the `todos' topic
-%%% ul(Items, [], [{id, todo_list},
-%%%                subscribe(todos, #{refresh => {?MODULE, refresh_todos, #{}}})])
+%%% ah_ul(Items, [], [{id, todo_list},
+%%%                   subscribe(todos, #{refresh => {?MODULE, refresh_todos, #{}}})])
 %%%
 %%% %% anywhere, typically in an action after the data layer changed
 %%% aihtml_push:publish(todos, fun(Ctx) ->

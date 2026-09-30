@@ -18,9 +18,9 @@ demos() ->
 
 -spec split() -> aihtml:html().
 split() ->
-    row([split_button(<<"Save">>, menu(), [], [{menu_align, start}]),
-         split_button(<<"Secondary">>, menu(), [secondary], []),
-         split_button(<<"Small">>, menu(), [success, sm], []),
-         split_button(<<"Large">>, menu(), [error, lg], []),
-         split_button(<<"Outlined">>, menu(), [outlined], []),
-         split_button(<<"Disabled">>, menu(), [info], [{disabled, true}])]).
+    row([ah_split_button(<<"Save">>, menu(), [], [{menu_align, start}]),
+         ah_split_button(<<"Secondary">>, menu(), [secondary], []),
+         ah_split_button(<<"Small">>, menu(), [success, sm], []),
+         ah_split_button(<<"Large">>, menu(), [error, lg], []),
+         ah_split_button(<<"Outlined">>, menu(), [outlined], []),
+         ah_split_button(<<"Disabled">>, menu(), [info], [{disabled, true}])]).

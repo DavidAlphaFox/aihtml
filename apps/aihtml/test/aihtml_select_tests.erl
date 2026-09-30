@@ -19,8 +19,8 @@ token(Html) ->
 -define(FRUITS, [{apple, <<"Apple">>}, {group, <<"G">>, [b, {c, <<"C">>, #{disabled => true}}]}]).
 
 select_test() ->
-    H = r(?M:select([{a, <<"A">>}, {group, <<"G">>, [b, c]}], b, [sm],
-                    [{name, s}, {placeholder, <<"Choose">>}])),
+    H = r(?M:ah_select([{a, <<"A">>}, {group, <<"G">>, [b, c]}], b, [sm],
+                       [{name, s}, {placeholder, <<"Choose">>}])),
     ?assert(has(H, <<"<span class=\"ah-select ah-select-sm\">">>)),
     ?assert(has(H, <<"<select class=\"ah-select-control\" name=\"s\">">>)),
     ?assert(has(H, <<"<option value=\"\">Choose</option>">>)),
@@ -29,7 +29,7 @@ select_test() ->
     ?assertNot(has(H, <<"placeholder">>)).
 
 select_multiple_test() ->
-    H = r(?M:select([a, b, c], [a, c], [], [{multiple, true}])),
+    H = r(?M:ah_select([a, b, c], [a, c], [], [{multiple, true}])),
     ?assert(has(H, <<"<option value=\"a\" selected>">>)),
     ?assert(has(H, <<"<option value=\"b\">">>)),
     ?assert(has(H, <<"<option value=\"c\" selected>">>)),
@@ -38,14 +38,14 @@ select_multiple_test() ->
 %%% element records (designs/05-records.md)
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:select(?FRUITS, [apple, b], [lg, block],
-                             [{multiple, true}, {size, 4}, {name, s}, {id, sel}])),
+    ?assertEqual(r(?M:ah_select(?FRUITS, [apple, b], [lg, block],
+                                [{multiple, true}, {size, 4}, {name, s}, {id, sel}])),
                  r(#ah_select{items = ?FRUITS, value = [apple, b], size = lg, block = true,
                               id = sel, attrs = [{multiple, true}, {size, 4}, {name, s}]})).
 
 builder_fills_fields_test() ->
     %% {size, N} stays an HTML attribute of the select
-    S = ?M:select([a], a, [sm], [{size, 3}, {name, s}]),
+    S = ?M:ah_select([a], a, [sm], [{size, 3}, {name, s}]),
     ?assertMatch(#ah_select{size = sm, attrs = [{<<"size">>, 3}, {name, s}]}, S),
     ?assert(has(r(S), <<"<select class=\"ah-select-control\" size=\"3\" name=\"s\">">>)).
 
@@ -69,7 +69,7 @@ catalog_test() ->
     ?assertEqual([select], Names),
     [begin
          ?assert(is_binary(maps:get(signature, E))),
-         ?assert(erlang:function_exported(?M, N, 4))
+         ?assert(erlang:function_exported(?M, aihtml_catalog:builder(N), 4))
      end || #{name := N} = E <- ?M:catalog()].
 
 catalog_docs_test() ->

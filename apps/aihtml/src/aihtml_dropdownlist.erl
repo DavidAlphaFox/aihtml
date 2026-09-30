@@ -2,7 +2,7 @@
 %%% @doc sigil's DropDownList (sigil.components.form.dropdownlist): a
 %%% custom popup list with one choice.
 %%%
-%%%   dropdownlist(Items, Value, Css, Attrs)
+%%%   ah_dropdownlist(Items, Value, Css, Attrs)
 %%%
 %%% Items are as in aihtml_lib_select. The markup and classes are
 %%% sigil's, so the ported stylesheets under priv/css/sigil/components
@@ -18,7 +18,7 @@
 
 -include("aihtml_dropdownlist.hrl").
 
--export([dropdownlist/4, render/1, fields/1, catalog/0]).
+-export([ah_dropdownlist/4, render/1, fields/1, catalog/0]).
 
 -define(E, aihtml_element).
 -define(F, aihtml_lib_form).
@@ -26,9 +26,9 @@
 %% @doc sigil's DropDownList: a combobox root showing the current label and
 %% a popup listbox. Value-bearing: data-ah-value on the root, a hidden
 %% input when the `name' option is given, `change' on the root.
--spec dropdownlist([aihtml_lib_select:item()], aihtml_lib_select:value() | undefined,
-                   aihtml_html:css(), aihtml_html:attrs()) -> #ah_dropdownlist{}.
-dropdownlist(Items, Value, Css, Attrs) ->
+-spec ah_dropdownlist([aihtml_lib_select:item()], aihtml_lib_select:value() | undefined,
+                      aihtml_html:css(), aihtml_html:attrs()) -> #ah_dropdownlist{}.
+ah_dropdownlist(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_dropdownlist{items = Items, value = Value}, Css, Attrs).
 
 -spec render(#ah_dropdownlist{}) -> aihtml_html:html().
@@ -119,7 +119,7 @@ fields(ah_dropdownlist) -> record_info(fields, ah_dropdownlist).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => dropdownlist, category => form,
-       signature => <<"dropdownlist(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_dropdownlist(Items, Value, Css, Attrs)">>,
        root => <<"ah-dropdownlist">>,
        groups => #{template => {[primary, success, warning, danger], none}},
        flags => [simple, disabled, block],

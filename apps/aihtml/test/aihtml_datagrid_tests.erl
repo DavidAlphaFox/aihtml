@@ -46,7 +46,7 @@ shown(H) ->
 %%%===================================================================
 
 structure_test() ->
-    H = r(?M:datagrid(cols(), rows(), [<<"mt-2">>], [{id, g}, {aria_label, <<"People">>}])),
+    H = r(?M:ah_datagrid(cols(), rows(), [<<"mt-2">>], [{id, g}, {aria_label, <<"People">>}])),
     ?assert(has(<<"<div class=\"ah-dg mt-2\" id=\"g\" role=\"grid\" aria-rowcount=\"6\" "
                   "aria-colcount=\"5\" data-ah=\"datagrid\" data-ah-value=\"\" "
                   "data-ah-selection=\"single\" data-ah-edit-mode=\"dblclick\" "
@@ -92,7 +92,7 @@ structure_test() ->
     ?assertEqual([<<"1">>, <<"2">>, <<"3">>, <<"4">>, <<"5">>], shown(H)).
 
 selection_test() ->
-    H = r(?M:datagrid(cols(), rows(), [checkbox], [{id, g}, {value, [2, 4]}, {name, ids}])),
+    H = r(?M:ah_datagrid(cols(), rows(), [checkbox], [{id, g}, {value, [2, 4]}, {name, ids}])),
     ?assert(has(<<"aria-multiselectable=\"true\"">>, H)),
     ?assert(has(<<"data-ah-value=\"2,4\" data-ah-selection=\"checkbox\"">>, H)),
     ?assert(has(<<"<input type=\"hidden\" name=\"ids\" value=\"2,4\" data-ah-input>">>, H)),
@@ -106,17 +106,17 @@ selection_test() ->
                   "aria-label=\"Select row\">">>, H)),
     ?assertEqual(2, count(<<"checked aria-label=\"Select row\"">>, H)),
     %% all selected: the header box is checked
-    Hall = r(?M:datagrid(cols(), rows(), [checkbox], [{value, [1, 2, 3, 4, 5]}])),
+    Hall = r(?M:ah_datagrid(cols(), rows(), [checkbox], [{value, [1, 2, 3, 4, 5]}])),
     ?assert(has(<<"type=\"checkbox\" tabindex=\"-1\" checked aria-label=\"Select all rows\"">>, Hall)),
     %% none: no aria-selected
-    Hn = r(?M:datagrid(cols(), rows(), [none], [])),
+    Hn = r(?M:ah_datagrid(cols(), rows(), [none], [])),
     ?assertNot(has_quiet(<<"aria-selected">>, Hn)),
     ?assertNot(has_quiet(<<"aria-multiselectable">>, Hn)).
 
 local_view_test() ->
-    H = r(?M:datagrid(cols(), rows(), [filter_row, pageable, statusbar],
-                      [{id, g}, {page_size, 2}, {page, 2}, {sort, [{age, desc}]},
-                       {filters, #{dept => <<"ENG">>}}])),
+    H = r(?M:ah_datagrid(cols(), rows(), [filter_row, pageable, statusbar],
+                         [{id, g}, {page_size, 2}, {page, 2}, {sort, [{age, desc}]},
+                          {filters, #{dept => <<"ENG">>}}])),
     %% eng rows by age desc: Cy 41, Ann 30, Eve 28; page 2 of size 2 is Eve
     ?assertEqual([<<"5">>], shown(H)),
     ?assert(has(<<"data-sort=\"[[&quot;age&quot;,&quot;desc&quot;]]\" "
@@ -149,11 +149,11 @@ local_view_test() ->
                   "aria-current=\"page\">2</button>">>, H)),
     ?assert(has(<<"<option value=\"2\" selected>2 / page</option><option value=\"10\">">>, H)),
     %% a page past the end shows the last one
-    H2 = r(?M:datagrid(cols(), rows(), [pageable], [{page_size, 2}, {page, 9}])),
+    H2 = r(?M:ah_datagrid(cols(), rows(), [pageable], [{page_size, 2}, {page, 9}])),
     ?assertEqual([<<"5">>], shown(H2)).
 
 grouping_test() ->
-    H = r(?M:datagrid(cols(), rows(), [], [{id, g}, {group_by, [dept]}, {sort, [{name, asc}]}])),
+    H = r(?M:ah_datagrid(cols(), rows(), [], [{id, g}, {group_by, [dept]}, {sort, [{name, asc}]}])),
     ?assert(has(<<"<div class=\"ah-dg-group-row\" role=\"row\" data-group-id=\"dept:eng\" "
                   "data-level=\"0\" aria-level=\"1\" aria-expanded=\"true\">"
                   "<span class=\"ah-dg-group-indent\" style=\"width:0px\"></span>"
@@ -166,7 +166,7 @@ grouping_test() ->
     ?assertEqual([<<"1">>, <<"3">>, <<"5">>, <<"2">>, <<"4">>], shown(H)),
     ?assert(has(<<"data-group-by=\"[&quot;dept&quot;]\"">>, H)),
     %% nested groups
-    H2 = r(?M:datagrid(cols(), rows(), [], [{group_by, [dept, active]}])),
+    H2 = r(?M:ah_datagrid(cols(), rows(), [], [{group_by, [dept, active]}])),
     ?assert(has(<<"data-group-id=\"dept:eng|active:true\" data-level=\"1\" aria-level=\"2\"">>, H2)),
     ?assert(has(<<"style=\"width:20px\"">>, H2)).
 
@@ -183,7 +183,7 @@ column_types_test() ->
             #{key => h, hidden => true, pinned => true}],
     Row = #{id => 1, p => 10, s => 3, b => ok, l => <<"https://e.x/?a=1&b=2">>, i => <<"/a.png">>,
             d => {2026, 9, 29}, x => <<"raw">>, h => 1},
-    H = r(?M:datagrid(Cols, [Row], [], [{id, g}])),
+    H = r(?M:ah_datagrid(Cols, [Row], [], [{id, g}])),
     ?assert(has(<<"<div class=\"ah-dg-progress\" role=\"progressbar\" aria-valuenow=\"10\" "
                   "aria-valuemin=\"0\" aria-valuemax=\"50\"><div class=\"ah-dg-progress-bar\" "
                   "style=\"width:20%\"></div></div>">>, H)),
@@ -210,7 +210,7 @@ cell(V, #{id := Id}) ->
 pinned_test() ->
     Cols = [#{key => id, width => 60, pinned => true}, #{key => name, width => 90, pinned => true},
             #{key => age}],
-    H = r(?M:datagrid(Cols, rows(), [checkbox], [{id, g}])),
+    H = r(?M:ah_datagrid(Cols, rows(), [checkbox], [{id, g}])),
     %% the check box column is pinned with them
     ?assert(has(<<"data-field=\"__checkbox\" style=\"width:40px;position:sticky;left:0px;z-index:2\"">>, H)),
     ?assert(has(<<"data-field=\"id\" style=\"width:60px;position:sticky;left:40px;z-index:2\"">>, H)),
@@ -220,11 +220,11 @@ pinned_test() ->
     ?assert(has(<<"data-field=\"age\" style=\"width:100px\">">>, H)).
 
 toolbar_labels_test() ->
-    H = r(?M:datagrid(cols(), [], [pageable],
-                      [{toolbar, [export_csv, separator, {archive, <<"Archive">>}, spacer, search,
-                                  #{name => del, label => <<"Delete">>, icon => <<"x">>}]},
-                       {labels, #{empty => <<"暂无数据"/utf8>>, total => <<"共 {0} 条"/utf8>>}},
-                       {export_name, <<"people">>}])),
+    H = r(?M:ah_datagrid(cols(), [], [pageable],
+                         [{toolbar, [export_csv, separator, {archive, <<"Archive">>}, spacer, search,
+                                     #{name => del, label => <<"Delete">>, icon => <<"x">>}]},
+                          {labels, #{empty => <<"暂无数据"/utf8>>, total => <<"共 {0} 条"/utf8>>}},
+                          {export_name, <<"people">>}])),
     ?assert(has(<<"<div class=\"ah-dg-toolbar\" role=\"toolbar\"><button class=\"ah-dg-toolbar-btn\" "
                   "type=\"button\" data-export=\"csv\"><span class=\"ah-dg-toolbar-btn-icon\" "
                   "aria-hidden=\"true\">⤓</span><span class=\"ah-dg-toolbar-btn-text\">CSV</span>"
@@ -240,15 +240,15 @@ toolbar_labels_test() ->
     ?assert(has(<<"class=\"ah-dg-pager-button\" data-page=\"1\" aria-label=\"Last page\" disabled>">>, H)).
 
 escaping_test() ->
-    H = r(?M:datagrid([#{key => <<"a\"b">>, title => <<"<T>">>}],
-                      [#{id => <<"k 1">>, <<"a\"b">> => <<"<script>">>}], [], [{id, g}])),
+    H = r(?M:ah_datagrid([#{key => <<"a\"b">>, title => <<"<T>">>}],
+                         [#{id => <<"k 1">>, <<"a\"b">> => <<"<script>">>}], [], [{id, g}])),
     ?assert(has(<<"&lt;script&gt;">>, H)),
     ?assert(has(<<"<span class=\"ah-dg-header-cell-content\">&lt;T&gt;</span>">>, H)),
     ?assert(has(<<"data-field=\"a&quot;b\"">>, H)),
     %% a key that is not a plain name gets a hex row id
     ?assert(has(<<"id=\"g-rx-6b2031\" role=\"row\" data-key=\"k 1\"">>, H)),
     %% the atom key finds a binary key and the other way round
-    H2 = r(?M:datagrid([name], [#{id => 1, <<"name">> => <<"bin">>}], [], [])),
+    H2 = r(?M:ah_datagrid([name], [#{id => 1, <<"name">> => <<"bin">>}], [], [])),
     ?assert(has(<<">bin</span>">>, H2)).
 
 generated_id_test() ->
@@ -289,8 +289,8 @@ aggregate_test() ->
     ?assertEqual(1, ?M:aggregate(min, [3, 1, 2])),
     ?assertEqual(0, ?M:aggregate(sum, [])),
     %% no numbers: count 0, the others empty
-    H = r(?M:datagrid([#{key => v, aggregates => [sum, count]}], [#{id => 1, v => <<"x">>}],
-                      [statusbar], [])),
+    H = r(?M:ah_datagrid([#{key => v, aggregates => [sum, count]}], [#{id => 1, v => <<"x">>}],
+                         [statusbar], [])),
     ?assert(has(<<"<span class=\"ah-dg-statusbar-value\"></span>">>, H)),
     ?assert(has(<<"<span class=\"ah-dg-statusbar-value\">0</span>">>, H)).
 
@@ -316,9 +316,9 @@ action(people, _, Event, Ctx) ->
     ?M:datagrid_rows(Ctx, Event, Rows, Total).
 
 remote_html() ->
-    r(?M:datagrid(cols(), lists:sublist(rows(), 2), [pageable, filter_row],
-                  [{id, rg}, {page_size, 2}, {page_sizes, [2, 4]}, {total, 5},
-                   {source, {?MODULE, people, #{}}}])).
+    r(?M:ah_datagrid(cols(), lists:sublist(rows(), 2), [pageable, filter_row],
+                     [{id, rg}, {page_size, 2}, {page_sizes, [2, 4]}, {total, 5},
+                      {source, {?MODULE, people, #{}}}])).
 
 token(H, Attr) ->
     {match, [T]} = re:run(H, <<Attr/binary, "=\"([^\"]+)\"">>, [{capture, all_but_first, binary}]),
@@ -338,13 +338,13 @@ remote_render_test() ->
     ?assertNot(has_quiet(<<"data-i=">>, H)),
     %% without a total the rows given are the whole count; no rows is the
     %% empty state, rendered here (the grid does not load on mount)
-    H2 = r(?M:datagrid(cols(), [], [pageable], [{source, {?MODULE, people, #{}}}])),
+    H2 = r(?M:ah_datagrid(cols(), [], [pageable], [{source, {?MODULE, people, #{}}}])),
     ?assert(has(<<"data-ah-loaded=\"true\"">>, H2)),
     ?assert(has(<<"ah-dg-body ah-dg-body-empty">>, H2)),
     ?assert(has(<<"<div class=\"ah-dg-empty-message\">No data</div>">>, H2)),
     ?assert(has(<<"Total 0">>, H2)),
-    H3 = r(?M:datagrid(cols(), lists:sublist(rows(), 3), [pageable],
-                       [{source, {?MODULE, people, #{}}}])),
+    H3 = r(?M:ah_datagrid(cols(), lists:sublist(rows(), 3), [pageable],
+                          [{source, {?MODULE, people, #{}}}])),
     ?assertEqual([<<"1">>, <<"2">>, <<"3">>], shown(H3)),
     ?assert(has(<<"Total 3">>, H3)).
 
@@ -353,10 +353,10 @@ remote_render_test() ->
 %%%===================================================================
 
 linked_html() ->
-    r(?M:datagrid(cols(), lists:sublist(rows(), 2), [pageable],
-                  [{id, lg}, {page_size, 2}, {page_sizes, [2, 4]}, {total, 5}, {page, 2},
-                   {sort, [{name, asc}, {age, desc}]}, {source, {?MODULE, people, #{}}},
-                   {href, <<"/p?page={page}&size={size}&sort={sort}&q={search}">>}])).
+    r(?M:ah_datagrid(cols(), lists:sublist(rows(), 2), [pageable],
+                     [{id, lg}, {page_size, 2}, {page_sizes, [2, 4]}, {total, 5}, {page, 2},
+                      {sort, [{name, asc}, {age, desc}]}, {source, {?MODULE, people, #{}}},
+                      {href, <<"/p?page={page}&size={size}&sort={sort}&q={search}">>}])).
 
 pager_links_test() ->
     H = linked_html(),
@@ -370,17 +370,17 @@ pager_links_test() ->
                   "data-page=\"3\" aria-label=\"Last page\">&gt;|</a>">>, H)),
     ?assertNot(has_quiet(<<"<button type=\"button\" class=\"ah-dg-pager-button">>, H)),
     %% on the first page first / prev stay disabled buttons
-    H1 = r(?M:datagrid(cols(), rows(), [pageable], [{page_size, 2}, {href, <<"?p={page}">>}])),
+    H1 = r(?M:ah_datagrid(cols(), rows(), [pageable], [{page_size, 2}, {href, <<"?p={page}">>}])),
     ?assert(has(<<"<button type=\"button\" class=\"ah-dg-pager-button\" data-page=\"1\" "
                   "aria-label=\"First page\" disabled>|&lt;</button>">>, H1)),
     ?assert(has(<<"<a class=\"ah-dg-pager-button\" href=\"?p=2\" data-page=\"2\" "
                   "aria-label=\"Next page\">&gt;</a>">>, H1)),
     %% without href the pager has no links and the root no data-ah-href
-    H0 = r(?M:datagrid(cols(), rows(), [pageable], [{page_size, 2}])),
+    H0 = r(?M:ah_datagrid(cols(), rows(), [pageable], [{page_size, 2}])),
     ?assertNot(has_quiet(<<"<a class=\"ah-dg-pager-button">>, H0)),
     ?assertNot(has_quiet(<<"data-ah-href">>, H0)),
     ?assertError({aihtml, {bad_option, href, 7}},
-                 r(?M:datagrid(cols(), rows(), [], [{href, 7}]))).
+                 r(?M:ah_datagrid(cols(), rows(), [], [{href, 7}]))).
 
 pager_view_links_test() ->
     L = ?M:default_labels(),
@@ -452,7 +452,7 @@ remote_export_test() ->
     ?assertEqual(5, length(Body)).
 
 datagrid_row_test() ->
-    H = r(?M:datagrid(cols(), rows(), [], [{id, g}])),
+    H = r(?M:ah_datagrid(cols(), rows(), [], [{id, g}])),
     Ev = #{type => <<"ah:edit">>, id => <<"g">>, value => <<>>,
            data => #{<<"render">> => token(H, <<"data-render">>), <<"key">> => <<"2">>}},
     Ops = aihtml_action:render_ops(
@@ -507,7 +507,7 @@ field_validation_test() ->
     ?assertError({aihtml, {bad_toolbar_item, print}}, r(#ah_datagrid{toolbar = [print]})),
     ?assertError({aihtml, {bad_badge_class, pink}},
                  r(#ah_datagrid{columns = [#{key => a, type => badge, badges => #{x => {<<"X">>, pink}}}]})),
-    ?assertError({aihtml, {unknown_modifier, datagrid, big, _}}, ?M:datagrid([], [], [big], [])).
+    ?assertError({aihtml, {unknown_modifier, datagrid, big, _}}, ?M:ah_datagrid([], [], [big], [])).
 
 %%%===================================================================
 %%% Catalog and records
@@ -532,20 +532,20 @@ catalog_docs_test() ->
 
 record_equals_builder_test() ->
     Src = {?MODULE, people, #{}},
-    ?assertEqual(r(?M:datagrid(cols(), rows(), [multi, pageable, <<"w-full">>],
-                               [{id, g}, {page_size, 3}, {sort, [{age, asc}]}, {value, [1]},
-                                {source, Src}, {total, 5}, {name, n}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_datagrid(cols(), rows(), [multi, pageable, <<"w-full">>],
+                                  [{id, g}, {page_size, 3}, {sort, [{age, asc}]}, {value, [1]},
+                                   {source, Src}, {total, 5}, {name, n}, {title, <<"t">>}])),
                  r(#ah_datagrid{columns = cols(), rows = rows(), selection = multi, pageable = true,
                                 css = [<<"w-full">>], id = g, page_size = 3, sort = [{age, asc}],
                                 value = [1], source = Src, total = 5, name = n,
                                 attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    G = ?M:datagrid([a], [], [checkbox, statusbar, <<"x">>], [{height, 300}, {role, x}]),
+    G = ?M:ah_datagrid([a], [], [checkbox, statusbar, <<"x">>], [{height, 300}, {role, x}]),
     ?assertMatch(#ah_datagrid{columns = [a], selection = checkbox, statusbar = true,
                               height = 300, css = [<<"x">>], attrs = [{role, x}]}, G),
     ?assertError({aihtml, {record_only_field, ah_datagrid, postback}},
-                 ?M:datagrid([], [], [], [{postback, pick}])).
+                 ?M:ah_datagrid([], [], [], [{postback, pick}])).
 
 postback_test() ->
     {match, [Ev, Tok]} = re:run(r(#ah_datagrid{columns = [a], postback = {picked, #{n => 1}}}),
@@ -575,7 +575,7 @@ vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_values_test() ->
     Rows = [#{id => <<"1,5">>, name => <<"A">>}, #{id => 2, name => <<"B">>}],
-    H = r(?M:datagrid([#{key => name}], Rows, [multi],
-                      [{id, g}, {name, sel}, {value, [<<"1,5">>, 2]}])),
+    H = r(?M:ah_datagrid([#{key => name}], Rows, [multi],
+                         [{id, g}, {name, sel}, {value, [<<"1,5">>, 2]}])),
     ?assert(vhas(<<"data-ah-value=\"1\\,5,2\"">>, H)),
     ?assert(vhas(<<"value=\"1\\,5,2\"">>, H)).

@@ -23,37 +23,37 @@ demos() ->
 
 -spec time_basic() -> aihtml:html().
 time_basic() ->
-    row([timepicker(<<"14:30">>, [<<"w-48">>], [{name, start}]),
-         timepicker({9, 0}, [<<"w-48">>], [{name, finish}])]).
+    row([ah_timepicker(<<"14:30">>, [<<"w-48">>], [{name, start}]),
+         ah_timepicker({9, 0}, [<<"w-48">>], [{name, finish}])]).
 
 -spec time_24h() -> aihtml:html().
 time_24h() ->
-    row([timepicker(<<"21:15">>, [<<"w-40">>], [{format, '24h'}]),
-         timepicker({9, 45}, [<<"w-40">>], [{format, '24h'}, {minute_step, 15},
-                                           {name, meeting}])]).
+    row([ah_timepicker(<<"21:15">>, [<<"w-40">>], [{format, '24h'}]),
+         ah_timepicker({9, 45}, [<<"w-40">>], [{format, '24h'}, {minute_step, 15},
+                                              {name, meeting}])]).
 
 -spec time_range() -> aihtml:html().
 time_range() ->
-    timepicker(undefined, [<<"w-56">>],
-               [{placeholder, <<"Office hours only">>},
-                {min, <<"09:00">>}, {max, <<"17:30">>}, {name, visit}]).
+    ah_timepicker(undefined, [<<"w-56">>],
+                  [{placeholder, <<"Office hours only">>},
+                   {min, <<"09:00">>}, {max, <<"17:30">>}, {name, visit}]).
 
 -spec time_states() -> aihtml:html().
 time_states() ->
-    row([timepicker(<<"08:20">>, [clearable, <<"w-48">>], []),
-         timepicker(<<"07:05">>, [disabled, <<"w-48">>], [])]).
+    row([ah_timepicker(<<"08:20">>, [clearable, <<"w-48">>], []),
+         ah_timepicker(<<"07:05">>, [disabled, <<"w-48">>], [])]).
 
 -spec time_inline() -> aihtml:html().
 time_inline() ->
-    row([timepicker(<<"08:20">>, [inline], [{name, alarm}]),
-         timepicker(<<"21:00">>, [inline], [{format, '24h'}, {auto_switch, false}])]).
+    row([ah_timepicker(<<"08:20">>, [inline], [{name, alarm}]),
+         ah_timepicker(<<"21:00">>, [inline], [{format, '24h'}, {auto_switch, false}])]).
 
 -spec time_landscape() -> aihtml:html().
 time_landscape() ->
-    row([timepicker(<<"00:10">>, [inline, landscape], []),
-         timepicker(<<"12:00">>, [inline],
-                    [{format, '24h'},
-                     {footer, span(<<"Times are local">>, [<<"text-xs text-muted">>], [])}])]).
+    row([ah_timepicker(<<"00:10">>, [inline, landscape], []),
+         ah_timepicker(<<"12:00">>, [inline],
+                       [{format, '24h'},
+                        {footer, ah_span(<<"Times are local">>, [<<"text-xs text-muted">>], [])}])]).
 
 -spec time_records() -> aihtml:html().
 time_records() ->
@@ -64,4 +64,4 @@ time_records() ->
                         auto_switch = false}]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

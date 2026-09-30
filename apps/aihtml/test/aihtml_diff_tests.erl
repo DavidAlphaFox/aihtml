@@ -89,7 +89,7 @@ word_parts_test() ->
     ?assertEqual([], ?M:word_parts(<<>>, <<>>)).
 
 diff_unified_test() ->
-    H = r(?M:diff(<<"a\n\n<b>">>, <<"a\n\nc">>, [line_numbers, stats, <<"max-h-64">>], [{id, d}])),
+    H = r(?M:ah_diff(<<"a\n\n<b>">>, <<"a\n\nc">>, [line_numbers, stats, <<"max-h-64">>], [{id, d}])),
     ?assert(has(<<"<div class=\"ah-diff max-h-64\" data-mode=\"line\" data-view=\"unified\" id=\"d\">">>, H)),
     ?assert(has(<<"<div class=\"ah-diff__stats\"><span class=\"ah-diff__stat\" data-type=\"add\">+1</span>"
                   "<span class=\"ah-diff__stat\" data-type=\"del\">-1</span></div>">>, H)),
@@ -103,13 +103,13 @@ diff_unified_test() ->
                   "<span class=\"ah-diff__marker\" aria-hidden=\"true\">-</span>"
                   "<span class=\"ah-diff__text\">&lt;b&gt;</span>">>, H)),
     %% without line numbers
-    H2 = r(?M:diff(<<"a">>, <<"b">>, [], [])),
+    H2 = r(?M:ah_diff(<<"a">>, <<"b">>, [], [])),
     ?assertNot(has_quiet(<<"lineno">>, H2)),
     ?assertNot(has_quiet(<<"stats">>, H2)),
     ?assert(has(<<"<div class=\"ah-diff__row\" data-type=\"add\"><span class=\"ah-diff__marker\" aria-hidden=\"true\">+</span>">>, H2)).
 
 diff_split_word_test() ->
-    H = r(?M:diff(<<"a\nb">>, <<"a\nc\nd">>, [split], [])),
+    H = r(?M:ah_diff(<<"a\nb">>, <<"a\nc\nd">>, [split], [])),
     ?assert(has(<<"data-view=\"split\"><div class=\"ah-diff__split\">">>, H)),
     ?assert(has(<<"<div class=\"ah-diff__pair\"><div class=\"ah-diff__side\" data-side=\"old\" data-type=\"del\">"
                   "<span class=\"ah-diff__lineno\" aria-hidden=\"true\">2</span>"
@@ -118,13 +118,13 @@ diff_split_word_test() ->
     ?assert(has(<<"<div class=\"ah-diff__side\" data-side=\"old\" data-type=\"empty\">"
                   "<span class=\"ah-diff__lineno\" aria-hidden=\"true\"></span>"/utf8>>, H)),
     %% word mode is always one column, and has no stats bar
-    W = r(?M:diff(<<"one two">>, <<"one 2">>, [word, split, stats], [])),
+    W = r(?M:ah_diff(<<"one two">>, <<"one 2">>, [word, split, stats], [])),
     ?assert(has(<<"data-mode=\"word\" data-view=\"unified\"><div class=\"ah-diff__words\">"
                   "<span class=\"ah-diff__word\" data-type=\"ctx\">one </span>"
                   "<span class=\"ah-diff__word\" data-type=\"del\">two</span>"
                   "<span class=\"ah-diff__word\" data-type=\"add\">2</span></div>">>, W)),
     ?assertError({aihtml, {conflicting_modifiers, diff, view, [split, unified]}},
-                 ?M:diff(<<>>, <<>>, [split, unified], [])).
+                 ?M:ah_diff(<<>>, <<>>, [split, unified], [])).
 
 %%%===================================================================
 %%% Catalog
@@ -155,12 +155,12 @@ catalog_docs_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:diff(<<"a">>, <<"b">>, [split, stats], [])),
+    ?assertEqual(r(?M:ah_diff(<<"a">>, <<"b">>, [split, stats], [])),
                  r(#ah_diff{old = <<"a">>, new = <<"b">>, view = split, stats = true})).
 
 builder_fills_fields_test() ->
     ?assertMatch(#ah_diff{old = <<"o">>, new = <<"n">>, mode = word, view = unified,
-                          line_numbers = true}, ?M:diff(<<"o">>, <<"n">>, [word, line_numbers], [])).
+                          line_numbers = true}, ?M:ah_diff(<<"o">>, <<"n">>, [word, line_numbers], [])).
 
 postback_test() ->
     ?assertError({aihtml, {no_postback_event, ah_diff}}, r(#ah_diff{postback = x})).

@@ -21,7 +21,7 @@ catalog_matches_exports_test() ->
     Exports = ?M:module_info(exports),
     Names = [N || #{name := N} <- ?M:catalog()],
     ?assertEqual([tabs], Names),
-    [?assert(lists:keymember(N, 1, Exports)) || N <- Names],
+    [?assert(lists:keymember(aihtml_catalog:builder(N), 1, Exports)) || N <- Names],
     [?assertMatch(#{category := layout, root := <<"ah-", _/binary>>, signature := _}, E)
      || E <- ?M:catalog()].
 
@@ -36,9 +36,9 @@ catalog_documents_every_option_test() ->
 %%% tabs
 
 tabs_test() ->
-    H = r(?M:tabs([{a, <<"A">>, <<"pa">>}, {<<"b">>, <<"B">>, <<"pb">>},
-                   {c, <<"C">>, <<"pc">>, #{disabled => true}}],
-                  b, [left], [{id, t}, {name, tab}])),
+    H = r(?M:ah_tabs([{a, <<"A">>, <<"pa">>}, {<<"b">>, <<"B">>, <<"pb">>},
+                      {c, <<"C">>, <<"pc">>, #{disabled => true}}],
+                     b, [left], [{id, t}, {name, tab}])),
     ?assert(has(H, <<"class=\"ah-tabs ah-tabs-left\" id=\"t\" data-ah=\"tabs\" data-ah-value=\"b\"">>)),
     ?assert(has(H, <<"role=\"tablist\" aria-orientation=\"vertical\"">>)),
     ?assert(has(H, <<"class=\"ah-tabs-item ah-tabs-item-selected\" id=\"t-tab-1\" role=\"tab\" "
@@ -50,8 +50,8 @@ tabs_test() ->
     ?assertNot(has(H, <<" name=\"tab\" data">>)).
 
 tabs_default_active_skips_disabled_test() ->
-    H = r(?M:tabs([{a, <<"A">>, <<>>, #{disabled => true}}, {b, <<"B">>, <<>>}], undefined, [],
-                  [{scrollable, true}])),
+    H = r(?M:ah_tabs([{a, <<"A">>, <<>>, #{disabled => true}}, {b, <<"B">>, <<>>}], undefined, [],
+                     [{scrollable, true}])),
     ?assert(has(H, <<"data-ah-value=\"b\"">>)),
     ?assert(has(H, <<"ah-tabs ah-tabs-top ah-tabs-scrollable">>)),
     ?assertEqual(2, count(H, <<"ah-tabs-scroll-btn">>)).
@@ -79,7 +79,7 @@ classes_are_styled_test() ->
 %% One render of the component in its main variants and states.
 samples() ->
     Tabs = [{a, <<"A">>, <<"a">>}, {b, <<"B">>, <<"b">>, #{disabled => true}}],
-    [?M:tabs(Tabs, a, [P, disabled], [{scrollable, true}]) || P <- [top, bottom, left, right]].
+    [?M:ah_tabs(Tabs, a, [P, disabled], [{scrollable, true}]) || P <- [top, bottom, left, right]].
 
 %%% element records (designs/05-records.md)
 
@@ -95,10 +95,10 @@ token(Html) ->
 
 unknown_modifier_test() ->
     ?assertError({aihtml, {conflicting_modifiers, tabs, position, _}},
-                 ?M:tabs([], undefined, [left, right], [])).
+                 ?M:ah_tabs([], undefined, [left, right], [])).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:tabs(?TABS, b, [left], [{id, t}, {scrollable, true}])),
+    ?assertEqual(r(?M:ah_tabs(?TABS, b, [left], [{id, t}, {scrollable, true}])),
                  r(#ah_tabs{items = ?TABS, value = b, position = left, id = t,
                             scrollable = true})).
 

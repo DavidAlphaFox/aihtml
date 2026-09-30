@@ -9,7 +9,7 @@
 %%% laid out in the browser before it is shown. The behaviour lives in
 %%% assets/js/components/formatted_input.ts.
 %%%
-%%% formatted_input/3 builds an #ah_formatted_input{}
+%%% ah_formatted_input/3 builds an #ah_formatted_input{}
 %%% (include/aihtml_formatted_input.hrl) and render/1 turns it into HTML,
 %%% so pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -19,7 +19,7 @@
 
 -include("aihtml_formatted_input.hrl").
 
--export([formatted_input/3, render/1, fields/1, catalog/0]).
+-export([ah_formatted_input/3, render/1, fields/1, catalog/0]).
 
 -export_type([integer_value/0, radix/0]).
 
@@ -44,9 +44,9 @@
 %% `spin_step' (default 1), `drop_down' (the radix menu, default true),
 %% `drop_down_width' (px), `notation' (default | exponential, decimal
 %% only), `placeholder'.
--spec formatted_input(integer_value(), aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_formatted_input(integer_value(), aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_formatted_input{}.
-formatted_input(Value, Css, Attrs) ->
+ah_formatted_input(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_formatted_input{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_formatted_input{}.
@@ -173,7 +173,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => formatted_input, category => form,
-       signature => <<"formatted_input(Value, Css, Attrs)">>,
+       signature => <<"ah_formatted_input(Value, Css, Attrs)">>,
        root => <<"ah-fmt-input-group">>,
        flags => [disabled],
        classes => #{disabled => [<<"ah-fmt-input-disabled">>]},

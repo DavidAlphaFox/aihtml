@@ -18,7 +18,7 @@ demos() ->
 
 -spec link_buttons() -> aihtml:html().
 link_buttons() ->
-    row([link_button(<<"Primary link">>, <<"#top">>, [], []),
-         link_button(<<"Outlined">>, <<"#top">>, [outlined, round], []),
-         link_button(<<"Small borderless">>, <<"#top">>, [borderless, sm], []),
-         link_button(<<"Disabled">>, <<"#top">>, [secondary], [{disabled, true}])]).
+    row([ah_link_button(<<"Primary link">>, <<"#top">>, [], []),
+         ah_link_button(<<"Outlined">>, <<"#top">>, [outlined, round], []),
+         ah_link_button(<<"Small borderless">>, <<"#top">>, [borderless, sm], []),
+         ah_link_button(<<"Disabled">>, <<"#top">>, [secondary], [{disabled, true}])]).

@@ -18,21 +18,21 @@ demos() ->
 
 -spec radio_cards_plans() -> aihtml:html().
 radio_cards_plans() ->
-    radio_cards([{free, <<"Free">>, #{description => <<"Personal trial, limited features">>}},
-                 {pro, <<"Pro">>, #{description => <<"All features and priority support">>}},
-                 {team, <<"Team">>, #{description => <<"Collaboration and permissions">>}},
-                 {enterprise, <<"Enterprise">>, #{description => <<"Contact sales">>,
-                                                   disabled => true}}],
-                pro, [], [{name, plan}, {columns, 2}, {align, start}]).
+    ah_radio_cards([{free, <<"Free">>, #{description => <<"Personal trial, limited features">>}},
+                    {pro, <<"Pro">>, #{description => <<"All features and priority support">>}},
+                    {team, <<"Team">>, #{description => <<"Collaboration and permissions">>}},
+                    {enterprise, <<"Enterprise">>, #{description => <<"Contact sales">>,
+                                                      disabled => true}}],
+                   pro, [], [{name, plan}, {columns, 2}, {align, start}]).
 
 -spec radio_cards_icons() -> aihtml:html().
 radio_cards_icons() ->
-    radio_cards([{card, <<"Card">>, #{icon => <<"💳"/utf8>>}},
-                 {bank, <<"Bank transfer">>, #{icon => <<"🏦"/utf8>>}},
-                 {cash, <<"Cash">>, #{icon => <<"💵"/utf8>>}}],
-                card, [], [{name, payment}, {columns, 3}]).
+    ah_radio_cards([{card, <<"Card">>, #{icon => <<"💳"/utf8>>}},
+                    {bank, <<"Bank transfer">>, #{icon => <<"🏦"/utf8>>}},
+                    {cash, <<"Cash">>, #{icon => <<"💵"/utf8>>}}],
+                   card, [], [{name, payment}, {columns, 3}]).
 
 -spec radio_cards_disabled() -> aihtml:html().
 radio_cards_disabled() ->
-    radio_cards([{monthly, <<"Monthly">>}, {yearly, <<"Yearly">>}], yearly, [],
-                [{name, billing}, {columns, 2}, {disabled, true}]).
+    ah_radio_cards([{monthly, <<"Monthly">>}, {yearly, <<"Yearly">>}], yearly, [],
+                   [{name, billing}, {columns, 2}, {disabled, true}]).

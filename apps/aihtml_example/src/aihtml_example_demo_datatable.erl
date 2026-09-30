@@ -37,44 +37,44 @@ demos() ->
 
 -spec dt_basic() -> aihtml:html().
 dt_basic() ->
-    datatable(employee_columns(), lists:sublist(employees(), 8), [], [{height, 330}]).
+    ah_datatable(employee_columns(), lists:sublist(employees(), 8), [], [{height, 330}]).
 
 -spec dt_paging() -> aihtml:html().
 dt_paging() ->
-    datatable(employee_columns(), employees(), [], [{page_size, 5}, {sort, {salary, desc}}]).
+    ah_datatable(employee_columns(), employees(), [], [{page_size, 5}, {sort, {salary, desc}}]).
 
 -spec dt_filter_row() -> aihtml:html().
 dt_filter_row() ->
-    datatable(employee_columns(), employees(), [],
-              [{filter, row}, {filters, #{dept => <<"研发"/utf8>>}}, {page_size, 10}]).
+    ah_datatable(employee_columns(), employees(), [],
+                 [{filter, row}, {filters, #{dept => <<"研发"/utf8>>}}, {page_size, 10}]).
 
 -spec dt_search() -> aihtml:html().
 dt_search() ->
-    datatable(employee_columns(), employees(), [],
-              [{filter, search}, {page_size, 5}, {page_sizes, []}]).
+    ah_datatable(employee_columns(), employees(), [],
+                 [{filter, search}, {page_size, 5}, {page_sizes, []}]).
 
 -spec dt_advanced() -> aihtml:html().
 dt_advanced() ->
-    datatable(employee_columns(), employees(), [],
-              [{filter, advanced}, {filters, #{age => {gte, 30}}}, {page_size, 5}]).
+    ah_datatable(employee_columns(), employees(), [],
+                 [{filter, advanced}, {filters, #{age => {gte, 30}}}, {page_size, 5}]).
 
 -spec dt_checkbox() -> aihtml:html().
 dt_checkbox() ->
-    'div'([datatable(employee_columns(), lists:sublist(employees(), 6), [],
-                     [{selection_mode, checkbox}, {value, [2, 5]}, {name, employees},
-                      on(change, {?MODULE, employees_picked, #{}})]),
-           p(<<"已选：2,5"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"employees-picked">>}])],
-          [], []).
+    ah_div([ah_datatable(employee_columns(), lists:sublist(employees(), 6), [],
+                         [{selection_mode, checkbox}, {value, [2, 5]}, {name, employees},
+                          on(change, {?MODULE, employees_picked, #{}})]),
+            ah_p(<<"已选：2,5"/utf8>>, [<<"text-sm text-muted mt-2">>], [{id, <<"employees-picked">>}])],
+           [], []).
 
 -spec dt_details() -> aihtml:html().
 dt_details() ->
     Details = fun(#{name := Name, title := Title, hired := Hired}) ->
-                      'div'([strong(Name, [], []), <<" · "/utf8>>, Title,
-                             p([<<"入职日期："/utf8>>, Hired], [<<"text-muted mt-1">>], [])],
-                            [<<"text-sm">>], [])
+                      ah_div([ah_strong(Name, [], []), <<" · "/utf8>>, Title,
+                              ah_p([<<"入职日期："/utf8>>, Hired], [<<"text-muted mt-1">>], [])],
+                             [<<"text-sm">>], [])
               end,
-    datatable(lists:sublist(employee_columns(), 4), lists:sublist(employees(), 5), [],
-              [{row_details, Details}, {expanded, [1]}, {selection_mode, none}]).
+    ah_datatable(lists:sublist(employee_columns(), 4), lists:sublist(employees(), 5), [],
+                 [{row_details, Details}, {expanded, [1]}, {selection_mode, none}]).
 
 %% A committed edit runs action(employee_edited, ...) below, which answers
 %% with the stored row (the salary renderer applies again).
@@ -85,8 +85,8 @@ dt_editing() ->
 -spec dt_columns() -> aihtml:html().
 dt_columns() ->
     Columns = [C#{hidden => maps:get(field, C) =:= hired} || C <- employee_columns()],
-    datatable(Columns, lists:sublist(employees(), 6), [],
-              [{resizable, true}, {column_chooser, true}]).
+    ah_datatable(Columns, lists:sublist(employees(), 6), [],
+                 [{resizable, true}, {column_chooser, true}]).
 
 %% Each sort, filter or page change runs action(orders, ...) below, which
 %% queries the rows and answers with datatable_rows. The pager's links
@@ -108,12 +108,12 @@ dt_remote() ->
 
 -spec dt_texts() -> aihtml:html().
 dt_texts() ->
-    datatable(employee_columns(), employees(), [],
-              [{filter, search}, {page_size, 5},
-               {empty_text, <<"没有符合条件的员工"/utf8>>},
-               {texts, #{search => <<"搜索姓名、部门……"/utf8>>, info => <<"第 {start}-{end} 条，共 {total} 条"/utf8>>,
-                         prev => <<"上一页"/utf8>>, next => <<"下一页"/utf8>>,
-                         page_size => <<"每页行数"/utf8>>}}]).
+    ah_datatable(employee_columns(), employees(), [],
+                 [{filter, search}, {page_size, 5},
+                  {empty_text, <<"没有符合条件的员工"/utf8>>},
+                  {texts, #{search => <<"搜索姓名、部门……"/utf8>>, info => <<"第 {start}-{end} 条，共 {total} 条"/utf8>>,
+                            prev => <<"上一页"/utf8>>, next => <<"下一页"/utf8>>,
+                            page_size => <<"每页行数"/utf8>>}}]).
 
 %% The postback runs action(employees_picked, ...) below on change.
 -spec dt_record() -> aihtml:html().
@@ -147,8 +147,8 @@ employees() ->
      || {I, N} <- lists:zip(lists:seq(1, length(Names)), Names)].
 
 editable_table() ->
-    datatable(lists:sublist(employee_columns(), 5), lists:sublist(employees(), 6), [],
-              [{editable, true}, {edit, {?MODULE, employee_edited, #{}}}]).
+    ah_datatable(lists:sublist(employee_columns(), 5), lists:sublist(employees(), 6), [],
+                 [{editable, true}, {edit, {?MODULE, employee_edited, #{}}}]).
 
 order_columns() ->
     [#{field => no, title => <<"订单号"/utf8>>, width => 110},
@@ -170,10 +170,10 @@ orders() ->
      || I <- lists:seq(1, 137)].
 
 orders_table(Rows, Total, #{page := Page, page_size := Size, sort := Sort}) ->
-    datatable(order_columns(), Rows, [],
-              [{source, {?MODULE, orders, #{}}}, {total, Total}, {page, Page},
-               {page_size, Size}, {sort, Sort}, {filter, row}, {height, 470},
-               {href, <<"/components/datatable/state?dt_page={page}&dt_size={size}&dt_sort={sort}">>}]).
+    ah_datatable(order_columns(), Rows, [],
+                 [{source, {?MODULE, orders, #{}}}, {total, Total}, {page, Page},
+                  {page_size, Size}, {sort, Sort}, {filter, row}, {height, 470},
+                  {href, <<"/components/datatable/state?dt_page={page}&dt_size={size}&dt_sort={sort}">>}]).
 
 thousands(N) when is_integer(N) ->
     S = integer_to_list(N),

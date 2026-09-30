@@ -18,25 +18,25 @@ demos() ->
 
 -spec select_basic() -> aihtml:html().
 select_basic() ->
-    row([select(fruits(), grape, [], [{name, fruit}]),
-         select(fruits(), undefined, [], [{name, other}, {placeholder, <<"Choose…"/utf8>>}])]).
+    row([ah_select(fruits(), grape, [], [{name, fruit}]),
+         ah_select(fruits(), undefined, [], [{name, other}, {placeholder, <<"Choose…"/utf8>>}])]).
 
 -spec select_sizes() -> aihtml:html().
 select_sizes() ->
-    row([select(fruits(), apple, [sm], []),
-         select(fruits(), apple, [], []),
-         select(fruits(), apple, [lg], []),
-         select(fruits(), peach, [primary], []),
-         select(fruits(), lemon, [danger], [])]).
+    row([ah_select(fruits(), apple, [sm], []),
+         ah_select(fruits(), apple, [], []),
+         ah_select(fruits(), apple, [lg], []),
+         ah_select(fruits(), peach, [primary], []),
+         ah_select(fruits(), lemon, [danger], [])]).
 
 -spec select_groups() -> aihtml:html().
 select_groups() ->
-    row([select([{group, <<"Warm">>, [red, orange]}, {group, <<"Cool">>, [blue, green]}],
-                blue, [], [{name, colour}]),
-         select(fruits(), [apple, mango], [], [{multiple, true}, {size, 4}]),
-         select(fruits(), lemon, [], [{disabled, true}])]).
+    row([ah_select([{group, <<"Warm">>, [red, orange]}, {group, <<"Cool">>, [blue, green]}],
+                   blue, [], [{name, colour}]),
+         ah_select(fruits(), [apple, mango], [], [{multiple, true}, {size, 4}]),
+         ah_select(fruits(), lemon, [], [{disabled, true}])]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).
 
 fruits() -> aihtml_example_fixture_select:fruits().

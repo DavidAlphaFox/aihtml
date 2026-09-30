@@ -30,7 +30,7 @@ count(Needle, Hay) -> length(binary:matches(Hay, Needle)).
 listbox_single_test() ->
     Items = [<<"a">>, {b, <<"Bee">>}, #{value => 3, label => <<"Three">>, disabled => true,
                                          icon => <<"/i.png">>}],
-    H = r(?M:listbox(Items, b, [<<"w-60">>], [{id, lb}, {name, pick}])),
+    H = r(?M:ah_listbox(Items, b, [<<"w-60">>], [{id, lb}, {name, pick}])),
     ?assert(has(<<"<div class=\"ah-listbox w-60\" id=\"lb\" data-ah=\"listbox\" "
                   "data-ah-value=\"b\" tabindex=\"0\" role=\"listbox\" "
                   "aria-multiselectable=\"false\">">>, H)),
@@ -44,17 +44,17 @@ listbox_single_test() ->
     ?assert(has(<<"<input type=\"hidden\" name=\"pick\" value=\"b\">">>, H)),
     ?assertNot(has_quiet(<<"ah-listbox-filter">>, H)),
     ?assertNot(has_quiet(<<"ah-listbox-checkbox">>, H)),
-    E = r(?M:listbox([], undefined, [], [{empty_text, <<"Nothing">>}])),
+    E = r(?M:ah_listbox([], undefined, [], [{empty_text, <<"Nothing">>}])),
     ?assert(has(<<"<div class=\"ah-listbox-empty\">Nothing</div>">>, E)),
-    ?assertError({aihtml, {bad_list_item, _}}, r(?M:listbox([{1, 2, 3}], undefined, [], []))),
+    ?assertError({aihtml, {bad_list_item, _}}, r(?M:ah_listbox([{1, 2, 3}], undefined, [], []))),
     ?assertError({aihtml, {bad_list_item, _}},
-                 r(?M:listbox([#{value => 1, colour => red}], undefined, [], []))).
+                 r(?M:ah_listbox([#{value => 1, colour => red}], undefined, [], []))).
 
 listbox_multi_groups_test() ->
     Items = [#{value => a, group => <<"G1">>}, #{value => b, group => <<"G2">>},
              #{value => c, group => <<"G1">>}],
-    H = r(?M:listbox(Items, [a, c], [checkboxes, check_all, filterable, disabled],
-                     [{id, m}, {check_all_label, <<"All">>}, {filter_placeholder, <<"Find">>}])),
+    H = r(?M:ah_listbox(Items, [a, c], [checkboxes, check_all, filterable, disabled],
+                        [{id, m}, {check_all_label, <<"All">>}, {filter_placeholder, <<"Find">>}])),
     ?assert(has(<<"class=\"ah-listbox ah-listbox-checkboxes ah-listbox-disabled "
                   "ah-listbox-filterable\"">>, H)),
     ?assert(has(<<"data-ah-value=\"a,c\" tabindex=\"-1\" role=\"listbox\" "
@@ -72,11 +72,11 @@ listbox_multi_groups_test() ->
     ?assert(has(<<"G1</li><li class=\"ah-listbox-item ah-listbox-item-selected\" id=\"m-o-0\"">>, H)),
     ?assert(has(<<"id=\"m-o-2\"">>, H)),
     ?assertEqual(2, count(<<"ah-listbox-checkbox ah-listbox-checkbox-checked">>, H)),
-    M = r(?M:listbox([a, b], [b], [multiple], [])),
+    M = r(?M:ah_listbox([a, b], [b], [multiple], [])),
     ?assert(has(<<"class=\"ah-listbox ah-listbox-multiple\"">>, M)),
     ?assert(has(<<"data-ah-value=\"b\"">>, M)),
     %% check_all needs check boxes
-    ?assertNot(has_quiet(<<"class=\"ah-listbox-check-all\"">>, r(?M:listbox([a], a, [check_all], [])))).
+    ?assertNot(has_quiet(<<"class=\"ah-listbox-check-all\"">>, r(?M:ah_listbox([a], a, [check_all], [])))).
 
 -spec action(atom(), term(), aihtml_action:event(), aihtml_action:ctx()) -> ok.
 action(search, #{source := Source}, #{value := Q} = Ev, Ctx) ->
@@ -85,7 +85,7 @@ action(search, #{source := Source}, #{value := Q} = Ev, Ctx) ->
 
 listbox_search_round_trip_test() ->
     Ref = {?MODULE, search, #{source => [<<"Apple">>, <<"Banana">>, <<"Grape">>]}},
-    H = r(?M:listbox([], undefined, [checkboxes], [{id, <<"ls">>}, {search, Ref}])),
+    H = r(?M:ah_listbox([], undefined, [checkboxes], [{id, <<"ls">>}, {search, Ref}])),
     ?assert(has(<<"ah-listbox-remote">>, H)),
     ?assert(has(<<"ah-listbox-filter-input">>, H)),     % search implies the filter
     {match, [Token]} = re:run(H, <<"data-ah-on=\"input:([^:\"]+):250\"">>,
@@ -95,8 +95,8 @@ listbox_search_round_trip_test() ->
               <<"data">> => #{<<"listbox">> => <<"ls">>, <<"checkboxes">> => <<"true">>}},
     {ok, [Html, Call]} = aihtml_action:execute(Ref, Event, #{send => fun(_) -> error(unexpected_flush) end}),
     #{op := html, swap := morph_inner, id := <<"ls-list">>, html := Rows} = Html,
-    ?assertEqual(extract_list(r(?M:listbox([<<"Apple">>, <<"Grape">>], undefined, [checkboxes],
-                                           [{id, <<"ls">>}]))), Rows),
+    ?assertEqual(extract_list(r(?M:ah_listbox([<<"Apple">>, <<"Grape">>], undefined, [checkboxes],
+                                              [{id, <<"ls">>}]))), Rows),
     ?assertEqual(#{op => call, id => <<"ls">>, method => <<"itemsLoaded">>, args => []}, Call),
     Ops = aihtml_action:render_ops(
             fun(Ctx) -> ?M:listbox_items(Ctx, {id, x}, [a, b], #{selected => [b]}) end),
@@ -118,7 +118,7 @@ catalog_test() ->
         aihtml_catalog:entry(?M, listbox),
     ?assertEqual(lists:sort(Fl ++ Op), lists:sort(maps:keys(Docs))),
     ?assert(lists:member(setValue, [Name || #{name := Name} <- Ms])),
-    ?assert(erlang:function_exported(?M, listbox, 4)),
+    ?assert(erlang:function_exported(?M, ah_listbox, 4)),
     [?assert(erlang:function_exported(?M, F, A)) || {F, A} <- ?M:facade_extras()].
 
 %%%===================================================================
@@ -126,13 +126,13 @@ catalog_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:listbox([a, b], [a], [checkboxes, check_all],
-                              [{id, l}, {check_all_label, <<"All">>}])),
+    ?assertEqual(r(?M:ah_listbox([a, b], [a], [checkboxes, check_all],
+                                 [{id, l}, {check_all_label, <<"All">>}])),
                  r(#ah_listbox{items = [a, b], value = [a], checkboxes = true, check_all = true,
                                id = l, check_all_label = <<"All">>})).
 
 builder_fills_fields_test() ->
-    L = ?M:listbox([a], a, [multiple], [{empty_text, <<"-">>}, {name, n}]),
+    L = ?M:ah_listbox([a], a, [multiple], [{empty_text, <<"-">>}, {name, n}]),
     ?assertMatch(#ah_listbox{multiple = true, empty_text = <<"-">>, name = n, attrs = []}, L).
 
 generated_id_test() ->
@@ -155,7 +155,7 @@ postback_test() ->
 field_validation_test() ->
     ?assertError({aihtml, {bad_list_item, _}}, r(#ah_listbox{items = [{1, 2, 3}]})),
     ?assertError({aihtml, {unknown_modifier, listbox, big, _}},
-                 ?M:listbox([], undefined, [big], [])).
+                 ?M:ah_listbox([], undefined, [big], [])).
 
 records_match_catalog_test() ->
     Base = [module, id, css, attrs, postback, delegate],
@@ -180,9 +180,9 @@ vhas(Sub, Bin) -> binary:match(Bin, Sub) =/= nomatch.
 
 comma_values_test() ->
     Items = [<<"a,b">>, <<"c">>],
-    M = r(?M:listbox(Items, [<<"a,b">>, <<"c">>], [multiple], [{name, k}])),
+    M = r(?M:ah_listbox(Items, [<<"a,b">>, <<"c">>], [multiple], [{name, k}])),
     ?assert(vhas(<<"data-ah-value=\"a\\,b,c\"">>, M)),
     ?assert(vhas(<<"value=\"a\\,b,c\"">>, M)),
     ?assertEqual([<<"a,b">>, <<"c">>], aihtml_value:split(<<"a\\,b,c">>)),
-    S = r(?M:listbox(Items, <<"a,b">>, [], [])),
+    S = r(?M:ah_listbox(Items, <<"a,b">>, [], [])),
     ?assert(vhas(<<"data-ah-value=\"a,b\"">>, S)).

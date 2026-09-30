@@ -40,7 +40,7 @@ publish_reaches_subscribers() ->
     C = subscriber([clock]),
     ?assertEqual(2, aihtml_push:subscribers(todos)),
     ok = aihtml_push:publish(todos, fun(Ctx) ->
-                                        aihtml_action:html(Ctx, {id, list}, li(<<"<new>">>), append)
+                                        aihtml_action:html(Ctx, {id, list}, ah_li(<<"<new>">>), append)
                                     end),
     Expected = {undefined, [#{<<"op">> => <<"html">>, <<"id">> => <<"list">>,
                               <<"swap">> => <<"append">>,
@@ -134,8 +134,8 @@ topic_must_be_data_test() ->
     ?assertError({aihtml, {topic_not_data, _}}, aihtml_push:token({pid, self()})).
 
 subscribe_renders_tokens_test() ->
-    Html = aihtml:render_binary(ul([], [], [{id, list},
-                                            subscribe(todos, #{refresh => {?M, inc, #{n => 0}}})])),
+    Html = aihtml:render_binary(ah_ul([], [], [{id, list},
+                                               subscribe(todos, #{refresh => {?M, inc, #{n => 0}}})])),
     {match, [T, R]} = re:run(Html, <<"data-ah-subscribe=\"([^\"]+)\" data-ah-refresh=\"([^\"]+)\"">>,
                              [{capture, all_but_first, binary}]),
     ?assertEqual({ok, [todos]}, aihtml_push:verify([T])),

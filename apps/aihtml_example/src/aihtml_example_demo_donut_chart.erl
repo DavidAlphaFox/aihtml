@@ -22,19 +22,19 @@ demos() ->
 
 -spec donut_basic() -> aihtml:html().
 donut_basic() ->
-    donut_chart([{<<"Windows">>, 45}, {<<"macOS">>, 28}, {<<"Linux">>, 18},
-                 {<<"其他"/utf8>>, 9}],
-                [], [{title, <<"操作系统分布"/utf8>>}, {height, 300}]).
+    ah_donut_chart([{<<"Windows">>, 45}, {<<"macOS">>, 28}, {<<"Linux">>, 18},
+                    {<<"其他"/utf8>>, 9}],
+                   [], [{title, <<"操作系统分布"/utf8>>}, {height, 300}]).
 
 -spec donut_pie() -> aihtml:html().
 donut_pie() ->
-    donut_chart([{<<"直接访问"/utf8>>, 335}, {<<"邮件营销"/utf8>>, 310},
-                 {<<"联盟广告"/utf8>>, 234}, {<<"视频广告"/utf8>>, 135}],
-                [pie], [{legend, bottom}, {height, 300}]).
+    ah_donut_chart([{<<"直接访问"/utf8>>, 335}, {<<"邮件营销"/utf8>>, 310},
+                    {<<"联盟广告"/utf8>>, 234}, {<<"视频广告"/utf8>>, 135}],
+                   [pie], [{legend, bottom}, {height, 300}]).
 
 -spec donut_plain() -> aihtml:html().
 donut_plain() ->
-    donut_chart([#{name => <<"已用"/utf8>>, value => 72, color => <<"--ah-color-primary">>},
-                 #{name => <<"剩余"/utf8>>, value => 28, color => <<"--ah-color-border">>}],
-                [], [{labels, false}, {legend, none}, {radius, {<<"60%">>, <<"80%">>}},
-                     {height, 200}, {width, 240}]).
+    ah_donut_chart([#{name => <<"已用"/utf8>>, value => 72, color => <<"--ah-color-primary">>},
+                    #{name => <<"剩余"/utf8>>, value => 28, color => <<"--ah-color-border">>}],
+                   [], [{labels, false}, {legend, none}, {radius, {<<"60%">>, <<"80%">>}},
+                        {height, 200}, {width, 240}]).

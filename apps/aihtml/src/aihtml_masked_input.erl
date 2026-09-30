@@ -9,7 +9,7 @@
 %%% in the browser before it is shown. The behaviour lives in
 %%% assets/js/components/masked_input.ts.
 %%%
-%%% masked_input/3 builds an #ah_masked_input{}
+%%% ah_masked_input/3 builds an #ah_masked_input{}
 %%% (include/aihtml_masked_input.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -19,7 +19,7 @@
 
 -include("aihtml_masked_input.hrl").
 
--export([masked_input/3, render/1, fields/1, catalog/0]).
+-export([ah_masked_input/3, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -35,9 +35,9 @@
 %% `floating_label' (the placeholder floats above the field).
 %% Options: `mask' (default "99999"), `prompt_char' (default "_"),
 %% `placeholder', `include_literals' (the value keeps the literals).
--spec masked_input(unicode:chardata() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_masked_input(unicode:chardata() | undefined, aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_masked_input{}.
-masked_input(Value, Css, Attrs) ->
+ah_masked_input(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_masked_input{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_masked_input{}.
@@ -151,7 +151,7 @@ text(X) -> beamai_html_escape:to_binary(X, aihtml).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => masked_input, category => form,
-       signature => <<"masked_input(Value, Css, Attrs)">>,
+       signature => <<"ah_masked_input(Value, Css, Attrs)">>,
        root => <<"ah-masked-input-group">>,
        flags => [disabled, readonly, square, floating_label],
        classes => #{disabled => [<<"ah-masked-input-disabled">>],

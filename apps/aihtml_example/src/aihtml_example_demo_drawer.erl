@@ -22,37 +22,37 @@ demos() ->
 
 -spec drawer_bottom() -> aihtml:html().
 drawer_bottom() ->
-    'div'([button(<<"Open drawer">>, undefined, [primary], opens({id, <<"drawer-bottom">>})),
-           drawer(p(<<"Drag the handle down, press Escape or click the scrim to close.">>),
-                  [], [{id, <<"drawer-bottom">>}, {title, <<"Filters">>},
-                       {description, <<"Swipe down to close.">>},
-                       {footer, [button(<<"Reset">>, undefined, [default], closes()),
-                                 button(<<"Apply">>, undefined, [primary], closes(closest, apply))]}])]).
+    ah_div([ah_button(<<"Open drawer">>, undefined, [primary], opens({id, <<"drawer-bottom">>})),
+            ah_drawer(ah_p(<<"Drag the handle down, press Escape or click the scrim to close.">>),
+                      [], [{id, <<"drawer-bottom">>}, {title, <<"Filters">>},
+                           {description, <<"Swipe down to close.">>},
+                           {footer, [ah_button(<<"Reset">>, undefined, [default], closes()),
+                                     ah_button(<<"Apply">>, undefined, [primary], closes(closest, apply))]}])]).
 
 -spec drawer_sides() -> aihtml:html().
 drawer_sides() ->
-    row([button(<<"Left">>, undefined, [outlined], opens({id, <<"drawer-left">>})),
-         button(<<"Right">>, undefined, [outlined], opens({id, <<"drawer-right">>})),
-         drawer(nav_links(), [left], [{id, <<"drawer-left">>}, {title, <<"Menu">>}, {size, 280}]),
-         drawer(nav_links(), [right], [{id, <<"drawer-right">>}, {title, <<"Menu">>}, {size, 280}])]).
+    row([ah_button(<<"Left">>, undefined, [outlined], opens({id, <<"drawer-left">>})),
+         ah_button(<<"Right">>, undefined, [outlined], opens({id, <<"drawer-right">>})),
+         ah_drawer(nav_links(), [left], [{id, <<"drawer-left">>}, {title, <<"Menu">>}, {size, 280}]),
+         ah_drawer(nav_links(), [right], [{id, <<"drawer-right">>}, {title, <<"Menu">>}, {size, 280}])]).
 
 -spec drawer_options() -> aihtml:html().
 drawer_options() ->
-    'div'([button(<<"Open">>, undefined, [secondary], opens({id, <<"drawer-plain">>})),
-           drawer(p(<<"No handle and no swipe; only the close button closes it.">>),
-                  [top], [{id, <<"drawer-plain">>}, {title, <<"Announcement">>},
-                          {size, 200}, {handle, false}, {dismissible, false},
-                          {close_on_overlay, false}, {close_on_esc, false}])]).
+    ah_div([ah_button(<<"Open">>, undefined, [secondary], opens({id, <<"drawer-plain">>})),
+            ah_drawer(ah_p(<<"No handle and no swipe; only the close button closes it.">>),
+                      [top], [{id, <<"drawer-plain">>}, {title, <<"Announcement">>},
+                              {size, 200}, {handle, false}, {dismissible, false},
+                              {close_on_overlay, false}, {close_on_esc, false}])]).
 
 %%%===================================================================
 %%% Helpers
 %%%===================================================================
 
 nav_links() ->
-    ul([li(a(<<"Dashboard">>, [], [{href, <<"#">>}])),
-        li(a(<<"Projects">>, [], [{href, <<"#">>}])),
-        li(a(<<"Settings">>, [], [{href, <<"#">>}]))],
-       [<<"flex flex-col gap-2">>], []).
+    ah_ul([ah_li(ah_a(<<"Dashboard">>, [], [{href, <<"#">>}])),
+           ah_li(ah_a(<<"Projects">>, [], [{href, <<"#">>}])),
+           ah_li(ah_a(<<"Settings">>, [], [{href, <<"#">>}]))],
+          [<<"flex flex-col gap-2">>], []).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-3">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-3">>], []).

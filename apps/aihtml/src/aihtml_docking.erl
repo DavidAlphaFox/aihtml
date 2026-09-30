@@ -3,7 +3,7 @@
 %%% class names are sigil's, so the styles in
 %%% priv/css/sigil/components/docking.css apply unchanged.
 %%%
-%%%   docking(Panels, Css, Attrs)        panels of windows, dragged between them
+%%%   ah_docking(Panels, Css, Attrs)     panels of windows, dragged between them
 %%%   docking_add_window(Ctx, Target, PanelId, Window)
 %%%                                      (in an action) add a window
 %%%
@@ -14,7 +14,7 @@
 %%% After every rearrangement it fires `change' on the root, so an action
 %%% bound with `on(change, Ref)' (or a record's `postback') receives the
 %%% layout in `Event.value' and can store it per user. The page renders
-%%% that JSON again: `docking(Panels, Css, [{layout, Json}])'. Window
+%%% that JSON again: `ah_docking(Panels, Css, [{layout, Json}])'. Window
 %%% contents are ordinary server-rendered HTML; the JSON holds only ids,
 %%% order, sizes and states:
 %%%
@@ -25,7 +25,7 @@
 %%% Windows the JSON does not mention (added to the page later) stay in
 %%% their own panel.
 %%%
-%%% Behaviour: assets/js/components/docking.ts. docking/3 builds an
+%%% Behaviour: assets/js/components/docking.ts. ah_docking/3 builds an
 %%% #ah_docking{} (include/aihtml_docking.hrl) and render/1 turns it into
 %%% HTML.
 %%% @end
@@ -35,7 +35,7 @@
 
 -include("aihtml_docking.hrl").
 
--export([docking/3, docking_add_window/4, render/1, fields/1, catalog/0, facade_extras/0]).
+-export([ah_docking/3, docking_add_window/4, render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([window_opts/0, window/0, panel/0, saved/0, orientation/0]).
 
@@ -92,15 +92,15 @@
 %% `drag_opacity' (of the dragged window, default 0.3), `close_buttons',
 %% `collapse_buttons' (default true), `labels' (#{collapse, close}).
 %% `name' goes to a hidden input.
--spec docking([panel()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_docking{}.
-docking(Panels, Css, Attrs) ->
+-spec ah_docking([panel()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_docking{}.
+ah_docking(Panels, Css, Attrs) ->
     ?E:build(?MODULE, #ah_docking{items = Panels}, Css, Attrs).
 
 %%%===================================================================
 %%% Server-driven operations
 %%%===================================================================
 
-%% @doc In an action: render `Window' (as in docking/3) and append it to
+%% @doc In an action: render `Window' (as in ah_docking/3) and append it to
 %% the panel `PanelId' of the docking `{id, RootId}'. The browser fires
 %% `change'.
 -spec docking_add_window(aihtml_action:ctx(), {id, iodata() | atom()}, aihtml_lib_dock:id(),
@@ -332,7 +332,7 @@ number_or(_, D) -> D.
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => docking, category => layout,
-       signature => <<"docking(Panels, Css, Attrs)">>,
+       signature => <<"ah_docking(Panels, Css, Attrs)">>,
        root => <<"ah-docking">>,
        groups => #{orientation => {[horizontal, vertical], horizontal}},
        flags => [disabled],

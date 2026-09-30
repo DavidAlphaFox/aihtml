@@ -26,15 +26,15 @@ tr_basic() ->
              {zhaoliu, <<"赵六"/utf8>>}, {sunqi, <<"孙七"/utf8>>},
              #{value => zhouba, label => <<"周八（离职）"/utf8>>, disabled => true},
              {wujiu, <<"吴九"/utf8>>}, {zhengshi, <<"郑十"/utf8>>}],
-    transfer(Users, [lisi], [<<"max-w-2xl">>],
-             [{name, members}, {source_title, <<"可选用户"/utf8>>},
-              {target_title, <<"已选用户"/utf8>>}, {filter_placeholder, <<"搜索"/utf8>>}]).
+    ah_transfer(Users, [lisi], [<<"max-w-2xl">>],
+                [{name, members}, {source_title, <<"可选用户"/utf8>>},
+                 {target_title, <<"已选用户"/utf8>>}, {filter_placeholder, <<"搜索"/utf8>>}]).
 
 -spec tr_no_filter() -> aihtml:html().
 tr_no_filter() ->
-    transfer(departments(), [], [no_filter, <<"max-w-2xl">>],
-             [{source_title, <<"可选部门"/utf8>>}, {target_title, <<"已选部门"/utf8>>},
-              {empty_text, <<"暂无"/utf8>>}]).
+    ah_transfer(departments(), [], [no_filter, <<"max-w-2xl">>],
+                [{source_title, <<"可选部门"/utf8>>}, {target_title, <<"已选部门"/utf8>>},
+                 {empty_text, <<"暂无"/utf8>>}]).
 
 -spec tr_change() -> aihtml:html().
 tr_change() ->
@@ -42,17 +42,17 @@ tr_change() ->
                #{value => email, label => <<"邮箱"/utf8>>, icon => <<"✉"/utf8>>},
                #{value => phone, label => <<"电话"/utf8>>, icon => <<"☎"/utf8>>},
                #{value => city, label => <<"城市"/utf8>>, icon => <<"🏙"/utf8>>}],
-    'div'([transfer(Columns, [name, email], [<<"max-w-2xl">>],
-                    [{source_title, <<"隐藏的列"/utf8>>}, {target_title, <<"显示的列"/utf8>>},
-                     on(change, {?MODULE, columns_changed, #{}})]),
-           p(<<"显示：name,email"/utf8>>, [<<"text-sm text-muted mt-2">>],
-             [{id, <<"columns-shown">>}])],
-          [], []).
+    ah_div([ah_transfer(Columns, [name, email], [<<"max-w-2xl">>],
+                        [{source_title, <<"隐藏的列"/utf8>>}, {target_title, <<"显示的列"/utf8>>},
+                         on(change, {?MODULE, columns_changed, #{}})]),
+            ah_p(<<"显示：name,email"/utf8>>, [<<"text-sm text-muted mt-2">>],
+                 [{id, <<"columns-shown">>}])],
+           [], []).
 
 -spec tr_disabled() -> aihtml:html().
 tr_disabled() ->
-    transfer(lists:sublist(departments(), 4), [<<"design">>], [disabled, no_filter,
-                                                               <<"max-w-2xl">>], []).
+    ah_transfer(lists:sublist(departments(), 4), [<<"design">>], [disabled, no_filter,
+                                                                  <<"max-w-2xl">>], []).
 
 %%%===================================================================
 %%% Actions

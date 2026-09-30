@@ -68,9 +68,9 @@ apps/aihtml_example/src/aihtml_example_demo_button.erl  演示
 
 | 类型 | 签名 | 例子 |
 |---|---|---|
-| 取值控件 | `(Content 或 Items, Value, Css, Attrs)` | `button(Content, Value, Css, Attrs)`、`slider(Range, Value, Css, Attrs)`、`dropdownlist(Items, Value, Css, Attrs)` |
-| 容器与展示 | `(Children 或 Content, Css, Attrs)` | `card(Children, Css, Attrs)`、`badge(Content, Css, Attrs)` |
-| 无内容 | `(Css, Attrs)` | `loader(Css, Attrs)` |
+| 取值控件 | `(Content 或 Items, Value, Css, Attrs)` | `ah_button(Content, Value, Css, Attrs)`、`ah_slider(Range, Value, Css, Attrs)`、`ah_dropdownlist(Items, Value, Css, Attrs)` |
+| 容器与展示 | `(Children 或 Content, Css, Attrs)` | `ah_card(Children, Css, Attrs)`、`ah_badge(Content, Css, Attrs)` |
+| 无内容 | `(Css, Attrs)` | `ah_loader(Css, Attrs)` |
 
 **Css**：
 - 原子是语义修饰符，由 catalog 的 `groups`、`flags` 校验，生成 `<root>-<mod>`。

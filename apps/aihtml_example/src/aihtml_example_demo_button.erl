@@ -22,37 +22,37 @@ demos() ->
 
 -spec button_variants() -> aihtml:html().
 button_variants() ->
-    row([button(<<"Primary">>, save, [primary], []),
-         button(<<"Secondary">>, save, [secondary], []),
-         button(<<"Outlined">>, save, [outlined], []),
-         button(<<"Success">>, save, [success], []),
-         button(<<"Warning">>, save, [warning], []),
-         button(<<"Error">>, save, [error], []),
-         button(<<"Info">>, save, [info], []),
-         button(<<"Default">>, save, [default], []),
-         button(<<"Borderless">>, save, [borderless], [])]).
+    row([ah_button(<<"Primary">>, save, [primary], []),
+         ah_button(<<"Secondary">>, save, [secondary], []),
+         ah_button(<<"Outlined">>, save, [outlined], []),
+         ah_button(<<"Success">>, save, [success], []),
+         ah_button(<<"Warning">>, save, [warning], []),
+         ah_button(<<"Error">>, save, [error], []),
+         ah_button(<<"Info">>, save, [info], []),
+         ah_button(<<"Default">>, save, [default], []),
+         ah_button(<<"Borderless">>, save, [borderless], [])]).
 
 -spec button_sizes() -> aihtml:html().
 button_sizes() ->
-    row([button(<<"Small">>, undefined, [sm], []),
-         button(<<"Medium">>, undefined, [], []),
-         button(<<"Large">>, undefined, [lg], []),
-         button(<<"Full width">>, undefined, [outlined, <<"w-full">>], [])]).
+    row([ah_button(<<"Small">>, undefined, [sm], []),
+         ah_button(<<"Medium">>, undefined, [], []),
+         ah_button(<<"Large">>, undefined, [lg], []),
+         ah_button(<<"Full width">>, undefined, [outlined, <<"w-full">>], [])]).
 
 -spec button_states() -> aihtml:html().
 button_states() ->
-    row([button(<<"Round">>, undefined, [round], []),
-         button(<<"Round secondary">>, undefined, [round, secondary], []),
-         button(<<"Disabled">>, undefined, [], [{disabled, true}]),
-         button(<<"Outlined disabled">>, undefined, [outlined], [{disabled, true}]),
-         button(<<"Submit">>, undefined, [success], [{type, submit}])]).
+    row([ah_button(<<"Round">>, undefined, [round], []),
+         ah_button(<<"Round secondary">>, undefined, [round, secondary], []),
+         ah_button(<<"Disabled">>, undefined, [], [{disabled, true}]),
+         ah_button(<<"Outlined disabled">>, undefined, [outlined], [{disabled, true}]),
+         ah_button(<<"Submit">>, undefined, [success], [{type, submit}])]).
 
 -spec button_icons() -> aihtml:html().
 button_icons() ->
-    row([button(<<"Icon left">>, undefined, [], [{icon, <<"★"/utf8>>}]),
-         button(<<"Icon right">>, undefined, [outlined],
-                [{icon, <<"→"/utf8>>}, {icon_position, right}]),
-         button(<<"Top">>, undefined, [default], [{icon, <<"☰"/utf8>>}, {icon_position, top}])]).
+    row([ah_button(<<"Icon left">>, undefined, [], [{icon, <<"★"/utf8>>}]),
+         ah_button(<<"Icon right">>, undefined, [outlined],
+                   [{icon, <<"→"/utf8>>}, {icon_position, right}]),
+         ah_button(<<"Top">>, undefined, [default], [{icon, <<"☰"/utf8>>}, {icon_position, top}])]).
 
 -spec button_records() -> aihtml:html().
 button_records() ->

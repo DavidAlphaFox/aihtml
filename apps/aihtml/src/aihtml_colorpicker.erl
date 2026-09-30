@@ -2,9 +2,9 @@
 %%% @doc An HSV colour picker, ported from sigil (form/colorpicker). See
 %%% designs/04-components.md.
 %%%
-%%%   colorpicker(Value, Css, Attrs)   saturation/value area, hue bar,
-%%%                                    optional alpha bar, hex and RGB
-%%%                                    inputs, swatches
+%%%   ah_colorpicker(Value, Css, Attrs)   saturation/value area, hue bar,
+%%%                                       optional alpha bar, hex and RGB
+%%%                                       inputs, swatches
 %%%
 %%% Value-bearing: the root carries `data-ah-value' (the canonical value,
 %%% "" when empty), a hidden input carries it under the `name' taken from
@@ -15,7 +15,7 @@
 %%% the `inline' flag renders the panel alone, as sigil does. The
 %%% behaviour is `colorpicker' (assets/js/components/colorpicker.ts).
 %%%
-%%% colorpicker/3 builds an #ah_colorpicker{} (include/aihtml_colorpicker.hrl)
+%%% ah_colorpicker/3 builds an #ah_colorpicker{} (include/aihtml_colorpicker.hrl)
 %%% and render/1 turns it into HTML, so pages may also write the record
 %%% directly (designs/05-records.md).
 %%%
@@ -29,7 +29,7 @@
 
 -include("aihtml_colorpicker.hrl").
 
--export([colorpicker/3, normalize_color/2, render/1, fields/1, catalog/0]).
+-export([ah_colorpicker/3, normalize_color/2, render/1, fields/1, catalog/0]).
 
 -export_type([color/0, css_length/0, element/0]).
 
@@ -54,9 +54,9 @@
 %% Options: `swatches' (a list of colours shown under the inputs),
 %% `placeholder' (trigger text when empty), `width', `height' (sigil's
 %% sizes, pixels or a CSS length), `clear_label' (default "Clear").
--spec colorpicker(binary() | string() | tuple() | undefined,
-                  aihtml_html:css(), aihtml_html:attrs()) -> #ah_colorpicker{}.
-colorpicker(Value, Css, Attrs) ->
+-spec ah_colorpicker(binary() | string() | tuple() | undefined,
+                     aihtml_html:css(), aihtml_html:attrs()) -> #ah_colorpicker{}.
+ah_colorpicker(Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_colorpicker{value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_colorpicker{}.
@@ -320,7 +320,7 @@ hidden_input(Name, Value, Disabled) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => colorpicker, category => form,
-       signature => <<"colorpicker(Value, Css, Attrs)">>,
+       signature => <<"ah_colorpicker(Value, Css, Attrs)">>,
        root => <<"ah-colorpicker-field">>,
        flags => [inline, disabled, clearable, alpha, no_inputs, no_preview],
        classes => #{alpha => [], no_inputs => [], no_preview => []},

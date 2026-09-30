@@ -22,31 +22,31 @@ demos() ->
 
 -spec tooltip_positions() -> aihtml:html().
 tooltip_positions() ->
-    row([tooltip(<<"Shown above">>, button(<<"Top">>, undefined, [outlined], []), [top], []),
-         tooltip(<<"Shown below">>, button(<<"Bottom">>, undefined, [outlined], []), [], []),
-         tooltip(<<"On the left">>, button(<<"Left">>, undefined, [outlined], []), [left], []),
-         tooltip(<<"On the right">>, button(<<"Right">>, undefined, [outlined], []), [right], [])]).
+    row([ah_tooltip(<<"Shown above">>, ah_button(<<"Top">>, undefined, [outlined], []), [top], []),
+         ah_tooltip(<<"Shown below">>, ah_button(<<"Bottom">>, undefined, [outlined], []), [], []),
+         ah_tooltip(<<"On the left">>, ah_button(<<"Left">>, undefined, [outlined], []), [left], []),
+         ah_tooltip(<<"On the right">>, ah_button(<<"Right">>, undefined, [outlined], []), [right], [])]).
 
 -spec tooltip_triggers() -> aihtml:html().
 tooltip_triggers() ->
-    row([tooltip(<<"Opened by a click">>, button(<<"Click me">>, undefined, [], []),
-                 [top], [{trigger, click}]),
-         tooltip(<<"Follows the mouse">>, button(<<"Mouse">>, undefined, [default], []),
-                 [mouse], []),
-         tooltip(<<"No arrow, stays until you leave">>,
-                 button(<<"No arrow">>, undefined, [default], []),
-                 [no_arrow], [{auto_hide, false}])]).
+    row([ah_tooltip(<<"Opened by a click">>, ah_button(<<"Click me">>, undefined, [], []),
+                    [top], [{trigger, click}]),
+         ah_tooltip(<<"Follows the mouse">>, ah_button(<<"Mouse">>, undefined, [default], []),
+                    [mouse], []),
+         ah_tooltip(<<"No arrow, stays until you leave">>,
+                    ah_button(<<"No arrow">>, undefined, [default], []),
+                    [no_arrow], [{auto_hide, false}])]).
 
 -spec tooltip_on_any_element() -> aihtml:html().
 tooltip_on_any_element() ->
-    row([button(<<"Save">>, save, [primary],
-                tooltip_attrs(<<"Save the document (Ctrl+S)">>, #{position => top})),
-         span(<<"Hover this text">>, [<<"underline decoration-dotted">>],
-              [{tabindex, 0}, tooltip_attrs(<<"Any element works">>, #{})])]).
+    row([ah_button(<<"Save">>, save, [primary],
+                   tooltip_attrs(<<"Save the document (Ctrl+S)">>, #{position => top})),
+         ah_span(<<"Hover this text">>, [<<"underline decoration-dotted">>],
+                 [{tabindex, 0}, tooltip_attrs(<<"Any element works">>, #{})])]).
 
 %%%===================================================================
 %%% Helpers
 %%%===================================================================
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-3">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-3">>], []).

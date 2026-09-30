@@ -24,7 +24,7 @@ nav_items() ->
      #{header => <<"Three">>, content => <<"Third">>, disabled => true}].
 
 navigationbar_test() ->
-    H = r(?M:navigationbar(nav_items(), 0, [square], [{id, nb}, {name, open}])),
+    H = r(?M:ah_navigationbar(nav_items(), 0, [square], [{id, nb}, {name, open}])),
     ?assert(has(<<"<div class=\"ah-navigationbar ah-navigationbar-square ah-navigationbar-vertical "
                   "ah-navigationbar-animate-slide\" id=\"nb\" data-ah=\"navigationbar\" "
                   "data-ah-value=\"0\" data-expand-mode=\"single_fit_height\" "
@@ -53,9 +53,9 @@ navigationbar_test() ->
                   "aria-controls=\"nb-item-2-content\" aria-disabled=\"true\">">>, H)).
 
 navigationbar_options_test() ->
-    H = r(?M:navigationbar(nav_items(), <<"0,1">>, [disable_gutters, no_arrow],
-                           [{expand_mode, multiple}, {animation, none}, {toggle_mode, none},
-                            {height, 300}, {width, <<"20rem">>}, {disabled, true}])),
+    H = r(?M:ah_navigationbar(nav_items(), <<"0,1">>, [disable_gutters, no_arrow],
+                              [{expand_mode, multiple}, {animation, none}, {toggle_mode, none},
+                               {height, 300}, {width, <<"20rem">>}, {disabled, true}])),
     ?assert(has(<<"class=\"ah-navigationbar ah-navigationbar-no-gutters ah-navigationbar-vertical "
                   "ah-navigationbar-expand-multiple ah-navigationbar-disabled\"">>, H)),
     ?assert(has(<<"style=\"width:20rem;height:300px;\"">>, H)),
@@ -66,11 +66,11 @@ navigationbar_options_test() ->
     %% only single_fit_height with a height fits the bodies
     ?assertNot(has_quiet(<<"data-fit">>, H)),
     ?assertEqual(3, count(<<"tabindex=\"-1\"">>, H)),
-    F = r(?M:navigationbar(nav_items(), [1], [], [{height, 300}])),
+    F = r(?M:ah_navigationbar(nav_items(), [1], [], [{height, 300}])),
     ?assert(has(<<" data-fit">>, F)),
-    D = r(?M:navigationbar(nav_items(), undefined, [],
-                           [{arrow_position, left}, {expand_icon, <<"+">>},
-                            {collapse_icon, <<"-">>}])),
+    D = r(?M:ah_navigationbar(nav_items(), undefined, [],
+                              [{arrow_position, left}, {expand_icon, <<"+">>},
+                               {collapse_icon, <<"-">>}])),
     ?assert(has(<<"<span class=\"ah-navigationbar-arrow ah-navigationbar-arrow-left "
                   "ah-navigationbar-arrow-dual\" aria-hidden=\"true\">"
                   "<span class=\"ah-navigationbar-icon ah-navigationbar-icon-expand\">+</span>"
@@ -96,9 +96,9 @@ catalog_test() ->
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:navigationbar(nav_items(), [0, 2], [square, no_arrow],
-                                    [{id, b}, {expand_mode, toggle}, {animation, fade},
-                                     {expand_duration, 100}, {disabled, true}])),
+    ?assertEqual(r(?M:ah_navigationbar(nav_items(), [0, 2], [square, no_arrow],
+                                       [{id, b}, {expand_mode, toggle}, {animation, fade},
+                                        {expand_duration, 100}, {disabled, true}])),
                  r(#ah_navigationbar{items = nav_items(), value = [0, 2], square = true,
                                      no_arrow = true, id = b, expand_mode = toggle,
                                      animation = fade, expand_duration = 100,

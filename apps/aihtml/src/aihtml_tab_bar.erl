@@ -2,7 +2,7 @@
 %%% @doc An editor-style strip of closable tabs. The value, the active id, is
 %%% in `data-ah-value' on the root and a user switch fires `change' there.
 %%%
-%%% tab_bar/4 builds an element record (#ah_tab_bar{}, defined in
+%%% ah_tab_bar/4 builds an element record (#ah_tab_bar{}, defined in
 %%% include/aihtml_tab_bar.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -12,7 +12,7 @@
 
 -include("aihtml_tab_bar.hrl").
 
--export([tab_bar/4, render/1, fields/1, catalog/0]).
+-export([ah_tab_bar/4, render/1, fields/1, catalog/0]).
 -export_type([tab/0]).
 
 %% {Id, Title} | {Id, Title, #{dirty => true, icon => Html}}
@@ -34,9 +34,9 @@
 %% Options: closable (default true), close_label, name.
 %% Value: the active id. Closing a tab removes it (and fires `change' when
 %% the active tab moves); the root also gets `ah:close' with the id.
--spec tab_bar([{key(), html()} | {key(), html(), map()}], key() | undefined,
-              css(), attrs()) -> #ah_tab_bar{}.
-tab_bar(Items, Active, Css, Attrs) ->
+-spec ah_tab_bar([{key(), html()} | {key(), html(), map()}], key() | undefined,
+                 css(), attrs()) -> #ah_tab_bar{}.
+ah_tab_bar(Items, Active, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_tab_bar{items = Items, value = Active}, Css, Attrs).
 
 %% @doc The field names of #ah_tab_bar{}.
@@ -93,7 +93,7 @@ catalog() ->
                         name => <<"Submit the active id as a hidden input.">>},
        methods => [#{name => select, args => <<"(Id)">>, doc => <<"Activate a tab without firing change.">>},
                    #{name => close, args => <<"(Id)">>, doc => <<"Remove a tab; the neighbour becomes active if it was.">>}],
-       signature => <<"tab_bar(Items, Active, Css, Attrs)">>, root => <<"ah-tab-bar">>,
+       signature => <<"ah_tab_bar(Items, Active, Css, Attrs)">>, root => <<"ah-tab-bar">>,
        options => [closable, close_label, name],
        behavior => <<"tab-bar">>, events => [<<"change">>, <<"ah:close">>],
        doc => <<"An editor-style strip of closable tabs; value is the active id. "

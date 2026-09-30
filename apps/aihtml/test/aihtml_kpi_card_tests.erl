@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := kpi_card, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, kpi_card, 3)),
+    ?assert(erlang:function_exported(?D, ah_kpi_card, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -46,27 +46,27 @@ records_match_catalog_test() ->
 %%%===================================================================
 
 kpi_card_test() ->
-    H = ?D:kpi_card(<<"1<2">>, [success], [{title, <<"Users">>}, {trend, 5}, {icon, users},
-                                           {trend_label, <<"vs">>}]),
+    H = ?D:ah_kpi_card(<<"1<2">>, [success], [{title, <<"Users">>}, {trend, 5}, {icon, users},
+                                              {trend_label, <<"vs">>}]),
     ?assert(has(<<"class=\"ah-kpi-card ah-kpi-card--success ah-kpi-card-trend-up\"">>, H)),
     ?assert(has(<<"<span class=\"ah-kpi-card-trend-value\">+5.0%</span>">>, H)),
     ?assert(has(<<"<div class=\"ah-kpi-card-value\">1&lt;2</div>">>, H)),
     ?assert(has(<<"ah-kpi-card-icon-wrapper">>, H)),
     ?assert(has(<<"ah-kpi-card-trend-label\">vs<">>, H)),
-    D = ?D:kpi_card(<<"1">>, [disabled], [{trend, -3.25}]),
+    D = ?D:ah_kpi_card(<<"1">>, [disabled], [{trend, -3.25}]),
     ?assert(has(<<"class=\"ah-kpi-card ah-kpi-card-disabled ah-kpi-card-trend-down\"">>, D)),
     ?assert(has(<<">-3.3%<">>, D) orelse has(<<">-3.2%<">>, D)),
-    ?assertNot(has(<<"ah-kpi-card-trend">>, ?D:kpi_card(<<"1">>, [], []))),
-    ?assertError({aihtml, {unknown_icon, rocket}}, r(?D:kpi_card(<<"1">>, [], [{icon, rocket}]))).
+    ?assertNot(has(<<"ah-kpi-card-trend">>, ?D:ah_kpi_card(<<"1">>, [], []))),
+    ?assertError({aihtml, {unknown_icon, rocket}}, r(?D:ah_kpi_card(<<"1">>, [], [{icon, rocket}]))).
 
 %%%===================================================================
 %%% element record (designs/05-records.md)
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?D:kpi_card(<<"845">>, [warning, <<"p-2">>],
-                               [{title, <<"Installs">>}, {trend, -3.5}, {icon, install},
-                                {data_x, 1}])),
+    ?assertEqual(r(?D:ah_kpi_card(<<"845">>, [warning, <<"p-2">>],
+                                  [{title, <<"Installs">>}, {trend, -3.5}, {icon, install},
+                                   {data_x, 1}])),
                  r(#ah_kpi_card{value = <<"845">>, color = warning, css = [<<"p-2">>],
                                 title = <<"Installs">>, trend = -3.5, icon = install,
                                 attrs = [{data_x, 1}]})).

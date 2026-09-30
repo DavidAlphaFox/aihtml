@@ -31,50 +31,50 @@ demos() ->
 
 -spec date_basic() -> aihtml:html().
 date_basic() ->
-    row([datepicker(<<"2026-09-29">>, [], [{name, due}]),
-         datepicker(undefined, [clearable], [{placeholder, <<"选择日期"/utf8>>}])]).
+    row([ah_datepicker(<<"2026-09-29">>, [], [{name, due}]),
+         ah_datepicker(undefined, [clearable], [{placeholder, <<"选择日期"/utf8>>}])]).
 
 -spec date_range() -> aihtml:html().
 date_range() ->
-    row([datepicker({<<"2026-09-10">>, <<"2026-09-18">>}, [clearable, <<"w-64">>],
-                    [{name, period}]),
-         datepicker(undefined, [range, <<"w-64">>], [{placeholder, <<"开始 - 结束"/utf8>>}])]).
+    row([ah_datepicker({<<"2026-09-10">>, <<"2026-09-18">>}, [clearable, <<"w-64">>],
+                       [{name, period}]),
+         ah_datepicker(undefined, [range, <<"w-64">>], [{placeholder, <<"开始 - 结束"/utf8>>}])]).
 
 -spec date_limits() -> aihtml:html().
 date_limits() ->
-    datepicker({2026, 9, 15}, [],
-               [{min, <<"2026-09-05">>}, {max, <<"2026-10-20">>},
-                {disabled_dates, [<<"2026-09-21">>, <<"2026-09-22">>]},
-                {week_numbers, true}, {format, <<"d MMM yyyy">>}]).
+    ah_datepicker({2026, 9, 15}, [],
+                  [{min, <<"2026-09-05">>}, {max, <<"2026-10-20">>},
+                   {disabled_dates, [<<"2026-09-21">>, <<"2026-09-22">>]},
+                   {week_numbers, true}, {format, <<"d MMM yyyy">>}]).
 
 -spec date_locale() -> aihtml:html().
 date_locale() ->
     Months = [<<"一月"/utf8>>, <<"二月"/utf8>>, <<"三月"/utf8>>, <<"四月"/utf8>>,
               <<"五月"/utf8>>, <<"六月"/utf8>>, <<"七月"/utf8>>, <<"八月"/utf8>>,
               <<"九月"/utf8>>, <<"十月"/utf8>>, <<"十一月"/utf8>>, <<"十二月"/utf8>>],
-    datepicker(<<"2026-09-29">>, [],
-               [{first_day, 1}, {format, <<"yyyy/MM/dd">>}, {other_month_days, false},
-                {weekends, true},
-                {labels, #{months => Months, title => <<"yyyy年 MMMM"/utf8>>,
-                           weekdays => [<<"日"/utf8>>, <<"一"/utf8>>, <<"二"/utf8>>,
-                                        <<"三"/utf8>>, <<"四"/utf8>>, <<"五"/utf8>>,
-                                        <<"六"/utf8>>],
-                           today => <<"今天"/utf8>>, clear => <<"清除"/utf8>>}}]).
+    ah_datepicker(<<"2026-09-29">>, [],
+                  [{first_day, 1}, {format, <<"yyyy/MM/dd">>}, {other_month_days, false},
+                   {weekends, true},
+                   {labels, #{months => Months, title => <<"yyyy年 MMMM"/utf8>>,
+                              weekdays => [<<"日"/utf8>>, <<"一"/utf8>>, <<"二"/utf8>>,
+                                           <<"三"/utf8>>, <<"四"/utf8>>, <<"五"/utf8>>,
+                                           <<"六"/utf8>>],
+                              today => <<"今天"/utf8>>, clear => <<"清除"/utf8>>}}]).
 
 -spec date_inline() -> aihtml:html().
 date_inline() ->
-    row([datepicker(<<"2026-09-29">>, [inline], [{first_day, 1}]),
-         datepicker({<<"2026-09-08">>, <<"2026-09-12">>}, [inline], [{week_numbers, true}])]).
+    row([ah_datepicker(<<"2026-09-29">>, [inline], [{first_day, 1}]),
+         ah_datepicker({<<"2026-09-08">>, <<"2026-09-12">>}, [inline], [{week_numbers, true}])]).
 
 -spec date_states() -> aihtml:html().
 date_states() ->
-    row([datepicker(<<"2026-01-01">>, [disabled], []),
-         datepicker(<<"2026-01-01">>, [readonly], [])]).
+    row([ah_datepicker(<<"2026-01-01">>, [disabled], []),
+         ah_datepicker(<<"2026-01-01">>, [readonly], [])]).
 
 -spec date_change() -> aihtml:html().
 date_change() ->
-    row([datepicker(undefined, [], [on(change, {?MODULE, date_picked, #{}})]),
-         span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"date-picked">>}])]).
+    row([ah_datepicker(undefined, [], [on(change, {?MODULE, date_picked, #{}})]),
+         ah_span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"date-picked">>}])]).
 
 %% The same component as a record: options are checked field names, and
 %% the postback runs action(date_picked, ...) below on change.
@@ -84,7 +84,7 @@ date_record() ->
                         min = <<"2026-09-01">>, max = <<"2026-12-31">>, first_day = 1,
                         format = <<"d MMM yyyy">>, week_numbers = true,
                         postback = date_picked},
-         span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"date-picked">>}])]).
+         ah_span(<<"还没有选择"/utf8>>, [<<"text-sm text-muted">>], [{id, <<"date-picked">>}])]).
 
 %%%===================================================================
 %%% Actions
@@ -95,4 +95,4 @@ action(date_picked, _Args, #{value := Value}, Ctx) ->
     aihtml_action:html(Ctx, {id, <<"date-picked">>}, [<<"服务端收到："/utf8>>, Value]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).

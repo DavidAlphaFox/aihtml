@@ -25,25 +25,25 @@ demos() ->
 -spec repeat_counter() -> aihtml:html().
 repeat_counter() ->
     Step = fun(Label, By) ->
-                   repeat_button(Label, By, [outlined],
-                                 [{interval, 80},
-                                  on(click, {?MODULE, step, #{by => By}},
-                                     #{include => [<<"input[name=qty]">>]})])
+                   ah_repeat_button(Label, By, [outlined],
+                                    [{interval, 80},
+                                     on(click, {?MODULE, step, #{by => By}},
+                                        #{include => [<<"input[name=qty]">>]})])
            end,
     row([Step(<<"−"/utf8>>, -1),
-         formatted_input(10, [<<"w-32">>],
-                         [{id, qty}, {name, qty}, {min, 0}, {max, 999},
-                          {spin_buttons, false}, {drop_down, false}]),
+         ah_formatted_input(10, [<<"w-32">>],
+                            [{id, qty}, {name, qty}, {min, 0}, {max, 999},
+                             {spin_buttons, false}, {drop_down, false}]),
          Step(<<"+">>, 1)]).
 
 -spec repeat_variants() -> aihtml:html().
 repeat_variants() ->
-    row([repeat_button(<<"Primary">>, undefined, [], []),
-         repeat_button(<<"Slow">>, undefined, [secondary, sm], [{delay, 600}, {interval, 250}]),
-         repeat_button(<<"Round">>, undefined, [success, round], []),
-         repeat_button(<<"Next">>, undefined, [outlined, lg],
-                       [{icon, <<"▶"/utf8>>}, {icon_position, right}]),
-         repeat_button(<<"Disabled">>, undefined, [], [{disabled, true}])]).
+    row([ah_repeat_button(<<"Primary">>, undefined, [], []),
+         ah_repeat_button(<<"Slow">>, undefined, [secondary, sm], [{delay, 600}, {interval, 250}]),
+         ah_repeat_button(<<"Round">>, undefined, [success, round], []),
+         ah_repeat_button(<<"Next">>, undefined, [outlined, lg],
+                          [{icon, <<"▶"/utf8>>}, {icon_position, right}]),
+         ah_repeat_button(<<"Disabled">>, undefined, [], [{disabled, true}])]).
 
 -spec action(atom(), term(), aihtml_action:event(), aihtml_action:ctx()) -> ok.
 action(step, #{by := By}, #{values := Values}, Ctx) ->
@@ -51,4 +51,4 @@ action(step, #{by := By}, #{values := Values}, Ctx) ->
     aihtml_action:call(Ctx, {id, qty}, setValue, [max(0, min(999, Old + By))]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

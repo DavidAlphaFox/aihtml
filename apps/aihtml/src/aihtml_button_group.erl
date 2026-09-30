@@ -5,7 +5,7 @@
 %%% a `name', and fires `change' on the root (designs/04-components.md).
 %%%
 %%% Items are `Label | {Value, Label} | {Value, Label, ItemAttrs}'
-%%% (aihtml_lib_button). button_group/4 builds an #ah_button_group{}
+%%% (aihtml_lib_button). ah_button_group/4 builds an #ah_button_group{}
 %%% (include/aihtml_button_group.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -15,7 +15,7 @@
 
 -include("aihtml_button_group.hrl").
 
--export([button_group/4, render/1, fields/1, catalog/0]).
+-export([ah_button_group/4, render/1, fields/1, catalog/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -25,9 +25,9 @@
 %% value; in `checkbox' mode a list of values (or "a,b", aihtml_value). In the default
 %% mode `Value' is ignored and each button is a plain button whose own
 %% `value' is the item value, so `ItemAttrs' can carry `on(click, ...)'.
--spec button_group([aihtml_lib_button:item()], term(), aihtml_html:css(),
-                   aihtml_html:attrs()) -> #ah_button_group{}.
-button_group(Items, Value, Css, Attrs) ->
+-spec ah_button_group([aihtml_lib_button:item()], term(), aihtml_html:css(),
+                      aihtml_html:attrs()) -> #ah_button_group{}.
+ah_button_group(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_button_group{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_button_group{}.
@@ -89,7 +89,7 @@ render(#ah_button_group{items = Items0, value = Value, name = Name, mode = Mode,
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => button_group, category => form,
-       signature => <<"button_group(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_button_group(Items, Value, Css, Attrs)">>,
        root => <<"ah-btn-group">>,
        groups => #{mode => {[default, radio, checkbox], default},
                    orientation => {[horizontal, vertical], horizontal},

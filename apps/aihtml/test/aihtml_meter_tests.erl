@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := meter, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, meter, 3)),
+    ?assert(erlang:function_exported(?D, ah_meter, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -47,7 +47,7 @@ records_match_catalog_test() ->
 
 meter_state_test() ->
     St = fun(V, O) ->
-                 {match, [S]} = re:run(r(?D:meter(V, [], O)), "data-state=\"([a-z]+)\"",
+                 {match, [S]} = re:run(r(?D:ah_meter(V, [], O)), "data-state=\"([a-z]+)\"",
                                        [{capture, all_but_first, binary}]),
                  S
          end,
@@ -61,14 +61,14 @@ meter_state_test() ->
     ?assertEqual(<<"optimum">>, St(10, [{optimum, 5} | T])).
 
 meter_markup_test() ->
-    H = ?D:meter(30, [lg], [{min, 20}, {max, 40}, {label, <<"CPU&">>}, {show_value, true},
-                             {helper_text, <<"h">>}]),
+    H = ?D:ah_meter(30, [lg], [{min, 20}, {max, 40}, {label, <<"CPU&">>}, {show_value, true},
+                                {helper_text, <<"h">>}]),
     ?assert(has(<<"class=\"ah-meter\" data-size=\"lg\"">>, H)),
     ?assert(has(<<"<span class=\"ah-meter__label\">CPU&amp;</span><span class=\"ah-meter__value\">30</span>">>, H)),
     ?assert(has(<<"role=\"meter\" aria-valuenow=\"30\" aria-valuemin=\"20\" aria-valuemax=\"40\"">>, H)),
     ?assert(has(<<"style=\"width: 50%;\"">>, H)),
     ?assert(has(<<"<div class=\"ah-meter__helper\">h</div>">>, H)),
-    ?assertNot(has(<<"ah-meter__head">>, ?D:meter(1, [], []))).
+    ?assertNot(has(<<"ah-meter__head">>, ?D:ah_meter(1, [], []))).
 
 %%%===================================================================
 %%% element record (designs/05-records.md)

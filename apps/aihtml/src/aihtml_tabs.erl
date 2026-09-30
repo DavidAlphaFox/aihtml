@@ -2,7 +2,7 @@
 %%% @doc Tabbed panels (sigil's tabs). The value, the active key, is in
 %%% `data-ah-value' on the root and a user switch fires `change' there.
 %%%
-%%% tabs/4 builds an element record (#ah_tabs{}, defined in
+%%% ah_tabs/4 builds an element record (#ah_tabs{}, defined in
 %%% include/aihtml_tabs.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -12,7 +12,7 @@
 
 -include("aihtml_tabs.hrl").
 
--export([tabs/4, render/1, fields/1, catalog/0]).
+-export([ah_tabs/4, render/1, fields/1, catalog/0]).
 -export_type([tab/0]).
 
 %% {Key, Label, Panel} | {Key, Label, Panel, #{disabled => true}}
@@ -35,9 +35,9 @@
 %% first enabled tab).
 %% Options: animation (fade | none), selection_mode (click | hover),
 %% scrollable, name. Value: the active key.
--spec tabs([{key(), html(), html()} | {key(), html(), html(), map()}],
-           key() | undefined, css(), attrs()) -> #ah_tabs{}.
-tabs(Tabs, Active, Css, Attrs) ->
+-spec ah_tabs([{key(), html(), html()} | {key(), html(), html(), map()}],
+              key() | undefined, css(), attrs()) -> #ah_tabs{}.
+ah_tabs(Tabs, Active, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_tabs{items = Tabs, value = Active}, Css, Attrs).
 
 %% @doc The field names of #ah_tabs{}.
@@ -113,7 +113,7 @@ catalog() ->
        methods => [#{name => select, args => <<"(Key)">>, doc => <<"Show a tab without firing change.">>},
                    #{name => enable, args => <<"(Key)">>, doc => <<"Enable a tab.">>},
                    #{name => disable, args => <<"(Key)">>, doc => <<"Disable a tab.">>}],
-       signature => <<"tabs(Tabs, Active, Css, Attrs)">>, root => <<"ah-tabs">>,
+       signature => <<"ah_tabs(Tabs, Active, Css, Attrs)">>, root => <<"ah-tabs">>,
        groups => #{position => {[top, bottom, left, right], top}},
        flags => [disabled],
        options => [animation, selection_mode, scrollable, name],

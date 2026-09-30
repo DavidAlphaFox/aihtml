@@ -20,21 +20,21 @@ demos() ->
 
 -spec circle_sizes() -> aihtml:html().
 circle_sizes() ->
-    row([progress_circle(25, [sm], []),
-         progress_circle(50, [], []),
-         progress_circle(75, [lg], [])]).
+    row([ah_progress_circle(25, [sm], []),
+         ah_progress_circle(50, [], []),
+         ah_progress_circle(75, [lg], [])]).
 
 -spec circle_colors() -> aihtml:html().
 circle_colors() ->
-    row([progress_circle(60, [Color], []) || Color <- [primary, success, warning, info, error]]).
+    row([ah_progress_circle(60, [Color], []) || Color <- [primary, success, warning, info, error]]).
 
 -spec circle_states() -> aihtml:html().
 circle_states() ->
-    row([progress_circle(75, [lg, success], [{label, <<"Uploaded">>}]),
-         progress_circle(60, [info], [{show_value, false}, {label, <<"No value">>}]),
-         progress_circle(undefined, [indeterminate], [{label, <<"Working">>}]),
-         progress_circle(30, [disabled], [])]).
+    row([ah_progress_circle(75, [lg, success], [{label, <<"Uploaded">>}]),
+         ah_progress_circle(60, [info], [{show_value, false}, {label, <<"No value">>}]),
+         ah_progress_circle(undefined, [indeterminate], [{label, <<"Working">>}]),
+         ah_progress_circle(30, [disabled], [])]).
 
 %% Layout helpers of the demos.
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-4">>], []).

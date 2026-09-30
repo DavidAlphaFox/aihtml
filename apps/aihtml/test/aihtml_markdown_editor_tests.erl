@@ -19,8 +19,8 @@ has_quiet(Needle, Hay) -> binary:match(Hay, Needle) =/= nomatch.
 count(Needle, Hay) -> length(binary:matches(Hay, Needle)).
 
 markdown_editor_basic_test() ->
-    H = r(?M:markdown_editor(<<"# Title\n\nSome **bold**.">>, [<<"w-full">>],
-                             [{id, ed}, {name, body}, {title, <<"t">>}])),
+    H = r(?M:ah_markdown_editor(<<"# Title\n\nSome **bold**.">>, [<<"w-full">>],
+                                [{id, ed}, {name, body}, {title, <<"t">>}])),
     ?assert(has(<<"<div class=\"ah-md-editor w-full\" id=\"ed\" data-ah=\"markdown-editor\"">>, H)),
     ?assert(has(<<"data-ah-value=\"# Title\n\nSome **bold**.\"">>, H)),
     ?assert(has(<<"data-ah-placeholder=\"Start typing...\"">>, H)),
@@ -57,21 +57,21 @@ markdown_editor_basic_test() ->
                   "&quot;enter_url&quot;:&quot;Enter URL:&quot;}\"">>, H)).
 
 markdown_editor_empty_test() ->
-    H = r(?M:markdown_editor(undefined, [], [])),
+    H = r(?M:ah_markdown_editor(undefined, [], [])),
     ?assert(has(<<"data-ah-value=\"\"">>, H)),
     ?assert(has(<<"id=\"ah-md">>, H)),                  % an id is generated
     ?assert(has(<<"spellcheck=\"false\"></textarea>">>, H)),
-    ?assertEqual(r(?M:markdown_editor(<<>>, [], [{id, x}])),
-                 r(?M:markdown_editor(undefined, [], [{id, x}]))),
+    ?assertEqual(r(?M:ah_markdown_editor(<<>>, [], [{id, x}])),
+                 r(?M:ah_markdown_editor(undefined, [], [{id, x}]))),
     %% a string value
     ?assert(has(<<"data-ah-value=\"héllo\""/utf8>>,
-                r(?M:markdown_editor("héllo", [], [])))).
+                r(?M:ah_markdown_editor("héllo", [], [])))).
 
 %% The Markdown travels in an attribute and a textarea, escaped: no
 %% </textarea>, </script> or quote in it can break out.
 escaping_test() ->
     Md = <<"</textarea><script>alert(1)</script> & \"q\" 'a' <!-- x -->">>,
-    H = r(?M:markdown_editor(Md, [], [{id, e}])),
+    H = r(?M:ah_markdown_editor(Md, [], [{id, e}])),
     ?assertNot(has_quiet(<<"<script">>, H)),
     ?assertNot(has_quiet(<<"<!--">>, H)),
     ?assertEqual(1, count(<<"</textarea>">>, H)),
@@ -82,16 +82,16 @@ escaping_test() ->
 %% The HTML parser drops a newline right after <textarea>: one is added so
 %% that a value starting with a newline survives.
 leading_newline_test() ->
-    H = r(?M:markdown_editor(<<"\n\nText">>, [], [{id, n}])),
+    H = r(?M:ah_markdown_editor(<<"\n\nText">>, [], [{id, n}])),
     ?assert(has(<<"spellcheck=\"false\">\n\n\nText</textarea>">>, H)),
     ?assert(has(<<"data-ah-value=\"\n\nText\"">>, H)),
     ?assert(has(<<"spellcheck=\"false\">Text</textarea>">>,
-                r(?M:markdown_editor(<<"Text">>, [], [{id, n}])))).
+                r(?M:ah_markdown_editor(<<"Text">>, [], [{id, n}])))).
 
 markdown_editor_options_test() ->
-    H = r(?M:markdown_editor(<<"x">>, [],
-                             [{id, o}, {placeholder, <<"写点什么"/utf8>>}, {show_stats, true},
-                              {max_chars, 500}, {height, 320}])),
+    H = r(?M:ah_markdown_editor(<<"x">>, [],
+                                [{id, o}, {placeholder, <<"写点什么"/utf8>>}, {show_stats, true},
+                                 {max_chars, 500}, {height, 320}])),
     ?assert(has(<<"data-ah-placeholder=\"写点什么\""/utf8>>, H)),
     ?assert(has(<<"placeholder=\"写点什么\""/utf8>>, H)),
     ?assert(has(<<"data-ah-max-chars=\"500\"">>, H)),
@@ -104,50 +104,50 @@ markdown_editor_options_test() ->
     ?assert(has(<<"data-stat=\"limit\">–/500</span>"/utf8>>, H)),
     ?assert(has(<<"<span class=\"ah-pm-stats__warning\" hidden>Limit exceeded</span>">>, H)),
     %% show_stats alone: no limit
-    S = r(?M:markdown_editor(<<>>, [], [{show_stats, true}])),
+    S = r(?M:ah_markdown_editor(<<>>, [], [{show_stats, true}])),
     ?assert(has(<<"data-stat=\"paragraphs\"">>, S)),
     ?assertNot(has_quiet(<<"data-stat=\"limit\"">>, S)),
     ?assertNot(has_quiet(<<"ah-pm-stats__warning">>, S)),
     %% a CSS length
-    ?assert(has(<<"style=\"height:60vh\"">>, r(?M:markdown_editor(<<>>, [], [{height, <<"60vh">>}])))),
+    ?assert(has(<<"style=\"height:60vh\"">>, r(?M:ah_markdown_editor(<<>>, [], [{height, <<"60vh">>}])))),
     ?assert(has(<<"style=\"height:calc(100vh - 80px)\"">>,
-                r(?M:markdown_editor(<<>>, [], [{height, "calc(100vh - 80px)"}])))),
+                r(?M:ah_markdown_editor(<<>>, [], [{height, "calc(100vh - 80px)"}])))),
     ?assertError({aihtml, {bad_height, <<"1px;color:red">>}},
-                 r(?M:markdown_editor(<<>>, [], [{height, <<"1px;color:red">>}]))),
-    ?assertError({aihtml, {bad_max_chars, 0}}, r(?M:markdown_editor(<<>>, [], [{max_chars, 0}]))),
+                 r(?M:ah_markdown_editor(<<>>, [], [{height, <<"1px;color:red">>}]))),
+    ?assertError({aihtml, {bad_max_chars, 0}}, r(?M:ah_markdown_editor(<<>>, [], [{max_chars, 0}]))),
     ?assertError({aihtml, {unknown_modifier, markdown_editor, big, _}},
-                 ?M:markdown_editor(<<>>, [big], [])).
+                 ?M:ah_markdown_editor(<<>>, [big], [])).
 
 readonly_disabled_test() ->
-    Ro = r(?M:markdown_editor(<<"x">>, [readonly], [{id, ro}, {name, n}])),
+    Ro = r(?M:ah_markdown_editor(<<"x">>, [readonly], [{id, ro}, {name, n}])),
     ?assert(has(<<"class=\"ah-md-editor ah-md-editor-readonly\"">>, Ro)),
     ?assert(has(<<"data-ah-readonly">>, Ro)),
     ?assert(has(<<" readonly>x</textarea>">>, Ro)),
     %% nothing to edit with
     ?assertNot(has_quiet(<<"ah-pm-slash-menu">>, Ro)),
     ?assertNot(has_quiet(<<"ah-pm-block-handle">>, Ro)),
-    Di = r(?M:markdown_editor(<<"x">>, [disabled], [{id, di}])),
+    Di = r(?M:ah_markdown_editor(<<"x">>, [disabled], [{id, di}])),
     ?assert(has(<<"class=\"ah-md-editor ah-md-editor-disabled\"">>, Di)),
     ?assert(has(<<"aria-disabled=\"true\"">>, Di)),
     ?assert(has(<<" disabled>x</textarea>">>, Di)),
     ?assertNot(has_quiet(<<"ah-pm-slash-menu">>, Di)).
 
 labels_test() ->
-    H = r(?M:markdown_editor(<<>>, [], [{id, l}, {show_stats, true},
-                                        {labels, #{heading_1 => <<"标题 1"/utf8>>,
-                                                   group_list => "列表",
-                                                   chars => <<"字符"/utf8>>,
-                                                   editor => <<"正文"/utf8>>}}])),
+    H = r(?M:ah_markdown_editor(<<>>, [], [{id, l}, {show_stats, true},
+                                           {labels, #{heading_1 => <<"标题 1"/utf8>>,
+                                                      group_list => "列表",
+                                                      chars => <<"字符"/utf8>>,
+                                                      editor => <<"正文"/utf8>>}}])),
     ?assert(has(<<"<span class=\"ah-pm-slash-menu-item-label\">标题 1</span>"/utf8>>, H)),
     ?assert(has(<<"data-group=\"List\">列表</button>"/utf8>>, H)),
     ?assert(has(<<"<span class=\"ah-pm-stats__label\">字符</span>"/utf8>>, H)),
     ?assert(has(<<"aria-label=\"正文\""/utf8>>, H)),
     ?assert(has(<<"&quot;editor&quot;:&quot;正文&quot;"/utf8>>, H)),
     %% label texts are escaped
-    E = r(?M:markdown_editor(<<>>, [], [{labels, #{paragraph => <<"<b>P</b>">>}}])),
+    E = r(?M:ah_markdown_editor(<<>>, [], [{labels, #{paragraph => <<"<b>P</b>">>}}])),
     ?assert(has(<<"&lt;b&gt;P&lt;/b&gt;">>, E)),
     ?assertError({aihtml, {bad_markdown_editor_label, nope}},
-                 r(?M:markdown_editor(<<>>, [], [{labels, #{nope => <<"x">>}}]))).
+                 r(?M:ah_markdown_editor(<<>>, [], [{labels, #{nope => <<"x">>}}]))).
 
 %%%===================================================================
 %%% Catalog
@@ -172,18 +172,18 @@ catalog_test() ->
 
 record_equals_builder_test() ->
     Labels = #{chars => <<"C">>},
-    ?assertEqual(r(?M:markdown_editor(<<"# Hi">>, [readonly, <<"h-96">>],
-                                      [{id, md}, {name, body}, {placeholder, <<"P">>},
-                                       {show_stats, true}, {max_chars, 50}, {height, 400},
-                                       {labels, Labels}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_markdown_editor(<<"# Hi">>, [readonly, <<"h-96">>],
+                                         [{id, md}, {name, body}, {placeholder, <<"P">>},
+                                          {show_stats, true}, {max_chars, 50}, {height, 400},
+                                          {labels, Labels}, {title, <<"t">>}])),
                  r(#ah_markdown_editor{value = <<"# Hi">>, readonly = true, css = [<<"h-96">>],
                                        id = md, name = body, placeholder = <<"P">>,
                                        show_stats = true, max_chars = 50, height = 400,
                                        labels = Labels, attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    D = ?M:markdown_editor(<<"x">>, [disabled, <<"c">>],
-                           [{id, d}, {max_chars, 10}, {height, <<"50vh">>}, {title, <<"t">>}]),
+    D = ?M:ah_markdown_editor(<<"x">>, [disabled, <<"c">>],
+                              [{id, d}, {max_chars, 10}, {height, <<"50vh">>}, {title, <<"t">>}]),
     ?assertMatch(#ah_markdown_editor{value = <<"x">>, disabled = true, readonly = false, id = d,
                                      max_chars = 10, height = <<"50vh">>, show_stats = false,
                                      css = [<<"c">>], attrs = [{title, <<"t">>}]}, D).

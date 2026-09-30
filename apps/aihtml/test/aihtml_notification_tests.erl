@@ -47,15 +47,15 @@ every_entry_documents_options_and_methods_test() ->
 %%%===================================================================
 
 notification_template_test() ->
-    H = ?M:notification(<<"Saved <ok>">>, [success, bottom_left],
-                        [{id, <<"n">>}, {auto_close, false}, {width, 300},
-                         {close_on_click, false}]),
+    H = ?M:ah_notification(<<"Saved <ok>">>, [success, bottom_left],
+                           [{id, <<"n">>}, {auto_close, false}, {width, 300},
+                            {close_on_click, false}]),
     has(H, <<"<div class=\"ah-notify-tpl\" data-ah=\"notification\" hidden "
              "data-ah-position=\"bottom-left\" data-ah-duration=\"0\" id=\"n\">"
              "<div class=\"ah-notify ah-notify-success\" role=\"alert\" style=\"width:300px\">">>),
     has(H, <<"<div class=\"ah-notify-content\">Saved &lt;ok&gt;</div>">>),
     has(H, <<"class=\"ah-notify-close\"">>),
-    D = ?M:notification(<<"x">>, [], [{closable, false}]),
+    D = ?M:ah_notification(<<"x">>, [], [{closable, false}]),
     has(D, <<"data-ah-position=\"top-right\" data-ah-duration=\"3000\">">>),
     has(D, <<"ah-notify ah-notify-info ah-notify-clickable">>),
     has(D, <<"<circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"16\"">>),
@@ -79,15 +79,15 @@ card_matches_template_test() ->
                                   #{variant => <<"info">>, info => true, success => false,
                                     warning => false, error => false, clickable => true,
                                     closable => true, width => null, content => <<"x">>})),
-    has(?M:notification(<<"x">>, [], []), B).
+    has(?M:ah_notification(<<"x">>, [], []), B).
 
 %%%===================================================================
 %%% element records (designs/05-records.md)
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:notification(<<"N">>, [error, bottom_left],
-                                   [{id, <<"n">>}, {auto_close, false}, {width, 320}])),
+    ?assertEqual(r(?M:ah_notification(<<"N">>, [error, bottom_left],
+                                      [{id, <<"n">>}, {auto_close, false}, {width, 320}])),
                  r(#ah_notification{body = <<"N">>, variant = error, position = bottom_left,
                                     id = <<"n">>, auto_close = false, width = 320})).
 

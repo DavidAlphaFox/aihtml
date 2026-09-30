@@ -2,7 +2,7 @@
 %%% @doc sigil's listbox (form/listbox): a single or multi selection
 %%% list. See designs/04-components.md.
 %%%
-%%%   listbox(Items, Value, Css, Attrs)     the component
+%%%   ah_listbox(Items, Value, Css, Attrs)  the component
 %%%   listbox_items(Ctx, Event, Items)      (in an action) new list rows
 %%%
 %%% A value-bearing component: `Attrs' go to the root, which carries
@@ -13,7 +13,7 @@
 %%%
 %%% == Server-side search ==
 %%%
-%%% `listbox(Items, Value, [filterable], [{search, Ref}])' binds
+%%% `ah_listbox(Items, Value, [filterable], [{search, Ref}])' binds
 %%% `aihtml:on(input, Ref, #{debounce => 250})' to the filter field; the
 %%% action gets the query in `Event.value' and answers with
 %%% `listbox_items(Ctx, Event, Items)', which morphs the rendered rows into
@@ -29,7 +29,7 @@
 
 -include("aihtml_listbox.hrl").
 
--export([listbox/4, listbox_items/3, listbox_items/4,
+-export([ah_listbox/4, listbox_items/3, listbox_items/4,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -import(aihtml_lib_list, [item/1, ensure_id/1, sub_id/2, hidden/2, text/1, value/2]).
@@ -48,9 +48,9 @@
 %% `filter_placeholder' (default "Search"), `check_all_label' (default
 %% "Select all"), `search' (an action ref: the filter asks the server,
 %% see the module doc).
--spec listbox([aihtml_lib_list:item()], term() | [term()] | undefined,
-              aihtml_html:css(), aihtml_html:attrs()) -> #ah_listbox{}.
-listbox(Items, Value, Css, Attrs) ->
+-spec ah_listbox([aihtml_lib_list:item()], term() | [term()] | undefined,
+                 aihtml_html:css(), aihtml_html:attrs()) -> #ah_listbox{}.
+ah_listbox(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_listbox{items = Items, value = Value}, Css, Attrs).
 
 -spec render(#ah_listbox{}) -> aihtml_html:html().
@@ -177,7 +177,7 @@ fields(ah_listbox) -> record_info(fields, ah_listbox).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => listbox, category => form,
-       signature => <<"listbox(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_listbox(Items, Value, Css, Attrs)">>,
        root => <<"ah-listbox">>,
        flags => [disabled, multiple, checkboxes, check_all, filterable],
        %% sigil's ah-listbox-check-all is the check-all row itself

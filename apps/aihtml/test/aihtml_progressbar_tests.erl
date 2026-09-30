@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := progressbar, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, progressbar, 3)),
+    ?assert(erlang:function_exported(?D, ah_progressbar, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -46,31 +46,31 @@ records_match_catalog_test() ->
 %%%===================================================================
 
 progressbar_test() ->
-    H = ?D:progressbar(150, [show_text], [{min, 50}, {max, 250}]),
+    H = ?D:ah_progressbar(150, [show_text], [{min, 50}, {max, 250}]),
     ?assert(has(<<"class=\"ah-progressbar ah-progressbar-horizontal\" role=\"progressbar\" "
                   "aria-valuemin=\"50\" aria-valuemax=\"250\" aria-valuenow=\"150\" "
                   "aria-valuetext=\"50%\"">>, H)),
     ?assert(has(<<"<div class=\"ah-progressbar-value\" style=\"width: 50%;\">">>, H)),
     ?assert(has(<<"<span class=\"ah-progressbar-text\">50%</span>">>, H)),
-    ?assert(has(<<"style=\"width: 100%;\"">>, ?D:progressbar(999, [], []))),
-    ?assert(has(<<"style=\"display: none;\">0%</span>">>, ?D:progressbar(-5, [], []))).
+    ?assert(has(<<"style=\"width: 100%;\"">>, ?D:ah_progressbar(999, [], []))),
+    ?assert(has(<<"style=\"display: none;\">0%</span>">>, ?D:ah_progressbar(-5, [], []))).
 
 progressbar_variants_test() ->
-    V = ?D:progressbar(30, [vertical, reverse, success, striped, animated, disabled], []),
+    V = ?D:ah_progressbar(30, [vertical, reverse, success, striped, animated, disabled], []),
     ?assert(has(<<"class=\"ah-progressbar ah-progressbar-success ah-progressbar-reverse "
                   "ah-progressbar-vertical ah-progressbar-animated ah-progressbar-disabled "
                   "ah-progressbar-striped\"">>, V)),
     ?assert(has(<<"<div class=\"ah-progressbar-value-vertical\" style=\"height: 30%;\">">>, V)),
     ?assert(has(<<"aria-orientation=\"vertical\"">>, V)),
-    I = ?D:progressbar(undefined, [indeterminate], []),
+    I = ?D:ah_progressbar(undefined, [indeterminate], []),
     ?assert(has(<<"ah-progressbar-indeterminate">>, I)),
     ?assert(has(<<"aria-busy=\"true\"">>, I)),
     ?assertNot(has(<<"aria-valuenow">>, I)),
     ?assert(has(<<"<div class=\"ah-progressbar-value\"></div>">>, I)).
 
 progressbar_ranges_and_text_test() ->
-    H = ?D:progressbar(50, [], [{color_ranges, [{30, success}, {80, <<"#ff0000">>}]},
-                                {text, <<"<half>">>}]),
+    H = ?D:ah_progressbar(50, [], [{color_ranges, [{30, success}, {80, <<"#ff0000">>}]},
+                                   {text, <<"<half>">>}]),
     ?assert(has(<<"data-range-index=\"0\" data-ah-stop=\"30\" style=\"background-color: "
                   "var(--ah-color-success); z-index: 2; width: 30%;\"">>, H)),
     ?assert(has(<<"data-range-index=\"1\" data-ah-stop=\"80\" style=\"background-color: "
@@ -78,7 +78,7 @@ progressbar_ranges_and_text_test() ->
     ?assert(has(<<"&lt;half&gt;</span>">>, H)),
     ?assert(has(<<"data-ah-text=\"custom\"">>, H)),
     ?assertError({aihtml, {bad_color, _}},
-                 r(?D:progressbar(1, [], [{color_ranges, [{5, <<"red;}x{">>}]}]))).
+                 r(?D:ah_progressbar(1, [], [{color_ranges, [{5, <<"red;}x{">>}]}]))).
 
 %%%===================================================================
 %%% element record (designs/05-records.md)
@@ -86,10 +86,10 @@ progressbar_ranges_and_text_test() ->
 
 conflicting_modifiers_fail_test() ->
     ?assertError({aihtml, {conflicting_modifiers, progressbar, orientation, _}},
-                 ?D:progressbar(1, [horizontal, vertical], [])).
+                 ?D:ah_progressbar(1, [horizontal, vertical], [])).
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?D:progressbar(9, [show_text, striped], [{max, 10}, {text, <<"9 of 10">>}])),
+    ?assertEqual(r(?D:ah_progressbar(9, [show_text, striped], [{max, 10}, {text, <<"9 of 10">>}])),
                  r(#ah_progressbar{value = 9, show_text = true, striped = true, max = 10,
                                    text = <<"9 of 10">>})).
 

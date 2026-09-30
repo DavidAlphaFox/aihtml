@@ -8,7 +8,7 @@
 %%% Items take the shape of `aihtml_lib_nav:item()'. Selecting an item
 %%% sets `data-ah-value' on the root to its key and fires `change' there.
 %%%
-%%% navbar/4 builds an #ah_navbar{} record (include/aihtml_navbar.hrl) and
+%%% ah_navbar/4 builds an #ah_navbar{} record (include/aihtml_navbar.hrl) and
 %%% render/1 turns it into HTML (designs/05-records.md).
 %%% @end
 %%%-------------------------------------------------------------------
@@ -17,7 +17,7 @@
 
 -include("aihtml_navbar.hrl").
 
--export([navbar/4]).
+-export([ah_navbar/4]).
 -export([render/1, fields/1, catalog/0]).
 
 -import(aihtml_lib_nav, [norm/1, label/1, key_attr/1, value_attr/1, is_value/2,
@@ -33,9 +33,9 @@
 %% (default 36), `minimize_width' (minimize below this window width),
 %% `columns' (item widths, e.g. [<<"30%">>, <<"70%">>]), `selection'
 %% (default true), `name'.
--spec navbar([aihtml_lib_nav:item()], aihtml_lib_nav:key() | undefined, aihtml_html:css(),
-             aihtml_html:attrs()) -> #ah_navbar{}.
-navbar(Items, Value, Css, Attrs) ->
+-spec ah_navbar([aihtml_lib_nav:item()], aihtml_lib_nav:key() | undefined, aihtml_html:css(),
+                aihtml_html:attrs()) -> #ah_navbar{}.
+ah_navbar(Items, Value, Css, Attrs) ->
     ?EL:build(?MODULE, #ah_navbar{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of the record.
@@ -109,7 +109,7 @@ slot(Html, Class) -> aihtml_html:el('div', Html, [Class], []).
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => navbar, category => layout,
-       signature => <<"navbar(Items, Value, Css, Attrs)">>,
+       signature => <<"ah_navbar(Items, Value, Css, Attrs)">>,
        root => <<"ah-navbar">>,
        groups => #{orientation => {[horizontal, vertical], horizontal}},
        flags => [minimized, disabled],

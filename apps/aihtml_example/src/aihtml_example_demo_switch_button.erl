@@ -19,24 +19,24 @@ demos() ->
 
 -spec switch_basic() -> aihtml:html().
 switch_basic() ->
-    row([switch_button(<<"Wi-Fi">>, undefined, [], [{name, wifi}, {checked, true}]),
-         switch_button(<<"Bluetooth">>, undefined, [], [{name, bluetooth}]),
-         switch_button(<<"Disabled">>, undefined, [], [{disabled, true}]),
-         switch_button(<<"Locked">>, undefined, [], [{locked, true}, {checked, true}])]).
+    row([ah_switch_button(<<"Wi-Fi">>, undefined, [], [{name, wifi}, {checked, true}]),
+         ah_switch_button(<<"Bluetooth">>, undefined, [], [{name, bluetooth}]),
+         ah_switch_button(<<"Disabled">>, undefined, [], [{disabled, true}]),
+         ah_switch_button(<<"Locked">>, undefined, [], [{locked, true}, {checked, true}])]).
 
 -spec switch_labels() -> aihtml:html().
 switch_labels() ->
-    row([switch_button(<<"Notifications">>, undefined, [],
-                       [{on_label, <<"On">>}, {off_label, <<"Off">>}, {checked, true}]),
-         switch_button(<<"Auto save">>, undefined, [],
-                       [{on_label, <<"是"/utf8>>}, {off_label, <<"否"/utf8>>}])]).
+    row([ah_switch_button(<<"Notifications">>, undefined, [],
+                          [{on_label, <<"On">>}, {off_label, <<"Off">>}, {checked, true}]),
+         ah_switch_button(<<"Auto save">>, undefined, [],
+                          [{on_label, <<"是"/utf8>>}, {off_label, <<"否"/utf8>>}])]).
 
 -spec switch_sizes() -> aihtml:html().
 switch_sizes() ->
-    row([switch_button(<<"Small">>, undefined, [sm], [{checked, true}]),
-         switch_button(<<"Medium">>, undefined, [md], [{checked, true}]),
-         switch_button(<<"Large">>, undefined, [lg], [{checked, true}]),
-         switch_button(<<"80 x 32">>, undefined, [], [{width, 80}, {height, 32}])]).
+    row([ah_switch_button(<<"Small">>, undefined, [sm], [{checked, true}]),
+         ah_switch_button(<<"Medium">>, undefined, [md], [{checked, true}]),
+         ah_switch_button(<<"Large">>, undefined, [lg], [{checked, true}]),
+         ah_switch_button(<<"80 x 32">>, undefined, [], [{width, 80}, {height, 32}])]).
 
 -spec switch_records() -> aihtml:html().
 switch_records() ->
@@ -47,4 +47,4 @@ switch_records() ->
          #ah_switch_button{body = <<"Locked">>, checked = true, locked = true}]).
 
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-center gap-6">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-center gap-6">>], []).

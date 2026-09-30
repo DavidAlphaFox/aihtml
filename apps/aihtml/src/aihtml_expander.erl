@@ -3,7 +3,7 @@
 %%% value ("true" / "false") is in `data-ah-value' on the root and a user
 %%% toggle fires `change' there.
 %%%
-%%% expander/3 builds an element record (#ah_expander{}, defined in
+%%% ah_expander/3 builds an element record (#ah_expander{}, defined in
 %%% include/aihtml_expander.hrl) and render/1 turns it into HTML, so pages
 %%% may also write the record directly (designs/05-records.md).
 %%% @end
@@ -13,7 +13,7 @@
 
 -include("aihtml_expander.hrl").
 
--export([expander/3, render/1, fields/1, catalog/0]).
+-export([ah_expander/3, render/1, fields/1, catalog/0]).
 
 -import(aihtml_html, [el/4]).
 -import(aihtml_lib_layout, [maybe_el/3, with_id/2, bool/2, one_of/3, hidden/2, tf/1]).
@@ -31,8 +31,8 @@
 %% arrow_position (right | left), expand_icon, collapse_icon,
 %% accordion (a name: opening one closes the others with that name), name.
 %% Value: "true" | "false".
--spec expander(html(), css(), attrs()) -> #ah_expander{}.
-expander(Children, Css, Attrs) ->
+-spec ah_expander(html(), css(), attrs()) -> #ah_expander{}.
+ah_expander(Children, Css, Attrs) ->
     aihtml_element:build(?MODULE, #ah_expander{body = Children}, Css, Attrs).
 
 %% @doc The field names of #ah_expander{}.
@@ -127,7 +127,7 @@ catalog() ->
        methods => [#{name => open, args => <<"()">>, doc => <<"Expand without firing change.">>},
                    #{name => close, args => <<"()">>, doc => <<"Collapse without firing change.">>},
                    #{name => toggle, args => <<"()">>, doc => <<"Flip the state without firing change.">>}],
-       signature => <<"expander(Children, Css, Attrs)">>, root => <<"ah-expander">>,
+       signature => <<"ah_expander(Children, Css, Attrs)">>, root => <<"ah-expander">>,
        groups => #{position => {[top, bottom], top}},
        flags => [square, no_gutters, disabled],
        classes => #{no_gutters => [<<"ah-expander-no-gutters">>]},

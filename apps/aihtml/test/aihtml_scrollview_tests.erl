@@ -40,16 +40,16 @@ catalog_docs_test() ->
 
 unknown_modifier_fails_test() ->
     ?assertError({aihtml, {unknown_modifier, scrollview, big, _}},
-                 ?M:scrollview([], [big], [])).
+                 ?M:ah_scrollview([], [big], [])).
 
 %%%===================================================================
 %%% scrollview
 %%%===================================================================
 
 scrollview_structure_test() ->
-    H = r(?M:scrollview([<<"a">>, <<"b">>, <<"c">>], [<<"rounded">>],
-                        [{id, sv}, {current_page, 1}, {name, page}, {height, 200},
-                         {title, <<"t">>}])),
+    H = r(?M:ah_scrollview([<<"a">>, <<"b">>, <<"c">>], [<<"rounded">>],
+                           [{id, sv}, {current_page, 1}, {name, page}, {height, 200},
+                            {title, <<"t">>}])),
     ?assert(has(<<"<div class=\"ah-scrollview rounded\" id=\"sv\" data-ah=\"scrollview\" "
                   "data-ah-value=\"1\"">>, H)),
     ?assert(has(<<"role=\"region\" aria-roledescription=\"carousel\" aria-label=\"Carousel\" "
@@ -67,10 +67,10 @@ scrollview_structure_test() ->
     ?assertNot(has_quiet(<<"data-slide-show">>, H)).
 
 scrollview_options_test() ->
-    H = r(?M:scrollview([<<"a">>, <<"b">>], [disabled],
-                        [{current_page, 9}, {show_buttons, false}, {slide_show, true},
-                         {slide_duration, 2000}, {animation_duration, 500},
-                         {move_threshold, 0.25}, {bounce, false}, {label, <<"Promo">>}])),
+    H = r(?M:ah_scrollview([<<"a">>, <<"b">>], [disabled],
+                           [{current_page, 9}, {show_buttons, false}, {slide_show, true},
+                            {slide_duration, 2000}, {animation_duration, 500},
+                            {move_threshold, 0.25}, {bounce, false}, {label, <<"Promo">>}])),
     ?assert(has(<<"class=\"ah-scrollview ah-scrollview-disabled\"">>, H)),
     ?assert(has(<<"data-ah-value=\"1\"">>, H)),                  % clamped
     ?assert(has(<<"style=\"margin-left:-100%;transition-duration:500ms;\"">>, H)),
@@ -81,26 +81,26 @@ scrollview_options_test() ->
                   "data-threshold=\"0.25\" data-bounce=\"false\"">>, H)),
     %% no aria-live while the pages turn by themselves
     ?assertNot(has_quiet(<<"aria-live">>, H)),
-    ?assert(has(<<"data-ah-value=\"0\"">>, r(?M:scrollview([], [], [])))).
+    ?assert(has(<<"data-ah-value=\"0\"">>, r(?M:ah_scrollview([], [], [])))).
 
 %%%===================================================================
 %%% element records (designs/05-records.md)
 %%%===================================================================
 
 record_equals_builder_test() ->
-    ?assertEqual(r(?M:scrollview([<<"a">>, <<"b">>], [disabled, <<"x">>],
-                                 [{id, s}, {name, n}, {current_page, 1}, {height, 90},
-                                  {bounce, false}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_scrollview([<<"a">>, <<"b">>], [disabled, <<"x">>],
+                                    [{id, s}, {name, n}, {current_page, 1}, {height, 90},
+                                     {bounce, false}, {title, <<"t">>}])),
                  r(#ah_scrollview{body = [<<"a">>, <<"b">>], disabled = true, css = [<<"x">>],
                                   id = s, name = n, current_page = 1, height = 90,
                                   bounce = false, attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    S = ?M:scrollview([<<"a">>], [disabled], [{slide_show, true}, {title, <<"t">>}]),
+    S = ?M:ah_scrollview([<<"a">>], [disabled], [{slide_show, true}, {title, <<"t">>}]),
     ?assertMatch(#ah_scrollview{body = [<<"a">>], disabled = true, slide_show = true,
                                 attrs = [{title, <<"t">>}]}, S),
     ?assertError({aihtml, {record_only_field, ah_scrollview, postback}},
-                 ?M:scrollview([], [], [{postback, go}])).
+                 ?M:ah_scrollview([], [], [{postback, go}])).
 
 generated_id_test() ->
     H = r(#ah_scrollview{body = [<<"a">>]}),

@@ -20,23 +20,23 @@ demos() ->
 
 -spec card_basic() -> aihtml:html().
 card_basic() ->
-    'div'(card(p(<<"Orders ship within two business days.">>), [],
-               [{title, <<"Shipping">>}]),
-          [<<"w-72">>], []).
+    ah_div(ah_card(ah_p(<<"Orders ship within two business days.">>), [],
+                   [{title, <<"Shipping">>}]),
+           [<<"w-72">>], []).
 
 -spec card_header() -> aihtml:html().
 card_header() ->
-    'div'(card(p(<<"3 open issues, 12 closed this week.">>), [hover],
-               [{title, <<"Project Atlas">>}, {subtitle, <<"Updated today">>},
-                {extra, button(<<"Edit">>, edit, [outlined, sm], [])},
-                {footer, small(<<"Owner: Lin">>)}]),
-          [<<"w-80">>], []).
+    ah_div(ah_card(ah_p(<<"3 open issues, 12 closed this week.">>), [hover],
+                   [{title, <<"Project Atlas">>}, {subtitle, <<"Updated today">>},
+                    {extra, ah_button(<<"Edit">>, edit, [outlined, sm], [])},
+                    {footer, ah_small(<<"Owner: Lin">>)}]),
+           [<<"w-80">>], []).
 
 -spec card_media() -> aihtml:html().
 card_media() ->
-    row([card(p(<<"A card with a media strip.">>), [],
-              [{media, 'div'([], [<<"h-24 bg-gradient-to-r from-sky-400 to-indigo-500">>], [])},
-               {title, <<"Media">>}]),
-         card(ul([li(<<"Inbox">>, [<<"px-4 py-2 border-b border-line">>], []),
-                  li(<<"Archive">>, [<<"px-4 py-2">>], [])]),
-              [flush], [{title, <<"Flush body">>}])]).
+    row([ah_card(ah_p(<<"A card with a media strip.">>), [],
+                 [{media, ah_div([], [<<"h-24 bg-gradient-to-r from-sky-400 to-indigo-500">>], [])},
+                  {title, <<"Media">>}]),
+         ah_card(ah_ul([ah_li(<<"Inbox">>, [<<"px-4 py-2 border-b border-line">>], []),
+                        ah_li(<<"Archive">>, [<<"px-4 py-2">>], [])]),
+                 [flush], [{title, <<"Flush body">>}])]).

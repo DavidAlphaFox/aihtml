@@ -16,7 +16,7 @@ has(Needle, Html) ->
 
 catalog_names_are_exported_test() ->
     [#{name := timeline, category := C}] = ?D:catalog(),
-    ?assert(erlang:function_exported(?D, timeline, 3)),
+    ?assert(erlang:function_exported(?D, ah_timeline, 3)),
     ?assert(lists:member(C, [form, layout, overlay, data, media, text])).
 
 api_docs_cover_options_and_flags_test() ->
@@ -50,7 +50,7 @@ timeline_test() ->
              #{date => <<"d1">>, title => <<"t1">>, dot => success, expanded => true,
                description => <<"y">>},
              #{date => <<"d2">>, title => <<"t2">>}],
-    H = ?D:timeline(Items, [], []),
+    H = ?D:ah_timeline(Items, [], []),
     B = r(H),
     ?assert(has(<<"class=\"ah-timeline ah-timeline-position-both ah-collapsible\"">>, H)),
     %% both: item 0 on the far side (date near), item 1 near
@@ -62,10 +62,10 @@ timeline_test() ->
                   "tabindex=\"0\" aria-expanded=\"true\"">>, H)),
     %% no description, nothing to expand
     ?assert(has(<<"<div class=\"ah-timeline-item\"><div class=\"ah-timeline-item-pointer\">">>, H)),
-    N = ?D:timeline(Items, [near, horizontal], [{collapsible, false}]),
+    N = ?D:ah_timeline(Items, [near, horizontal], [{collapsible, false}]),
     ?assert(has(<<"class=\"ah-timeline ah-timeline-position-near ah-timeline-horizontal\"">>, N)),
     ?assertNot(has(<<"ah-collapsible">>, N)),
-    ?assertError({aihtml, {bad_dot, pink}}, r(?D:timeline([#{dot => pink}], [], []))).
+    ?assertError({aihtml, {bad_dot, pink}}, r(?D:ah_timeline([#{dot => pink}], [], []))).
 
 %%%===================================================================
 %%% element record (designs/05-records.md)

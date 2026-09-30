@@ -9,16 +9,16 @@
 
 -spec row(aihtml:html()) -> aihtml:html().
 row(Children) ->
-    'div'(Children, [<<"flex flex-wrap items-start gap-4">>], []).
+    ah_div(Children, [<<"flex flex-wrap items-start gap-4">>], []).
 
 -spec col(aihtml:html()) -> aihtml:html().
 col(Children) ->
-    'div'(Children, [<<"flex flex-col gap-2">>], []).
+    ah_div(Children, [<<"flex flex-col gap-2">>], []).
 
 -spec box(aihtml:html()) -> aihtml:html().
 box(Child) ->
-    'div'(Child, [<<"w-64">>], []).
+    ah_div(Child, [<<"w-64">>], []).
 
 -spec frame(aihtml:html()) -> aihtml:html().
 frame(Children) ->
-    'div'(Children, [<<"relative w-56 h-32 p-3 border border-line rounded">>], []).
+    ah_div(Children, [<<"relative w-56 h-32 p-3 border border-line rounded">>], []).

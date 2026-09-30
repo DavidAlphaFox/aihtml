@@ -60,7 +60,7 @@ layout() -> #{rows => [country, city], columns => [year], values => [sales]}.
 %%%===================================================================
 
 basic_test() ->
-    H = r(?M:pivotgrid(sales(), layout(), [<<"mt-2">>], [{id, pg}, {title, <<"t">>}])),
+    H = r(?M:ah_pivotgrid(sales(), layout(), [<<"mt-2">>], [{id, pg}, {title, <<"t">>}])),
     ?assert(has(<<"<div class=\"ah-pg mt-2\" id=\"pg\" data-ah=\"pivotgrid\"">>, H)),
     ?assert(has(<<"title=\"t\"">>, H)),
     ?assert(has(<<"id=\"pg-content\" tabindex=\"0\" role=\"grid\"">>, H)),
@@ -83,7 +83,7 @@ basic_test() ->
     ?assert(has(<<"ah-pg-resize-line">>, H)).
 
 expand_and_subtotals_test() ->
-    H = r(?M:pivotgrid(sales(), layout(), [expand_all], [{id, pg}])),
+    H = r(?M:ah_pivotgrid(sales(), layout(), [expand_all], [{id, pg}])),
     ?assertEqual([<<"CN">>, <<"Beijing">>, <<"Shanghai">>, <<"US">>, <<"NYC">>,
                   <<"Grand Total">>], row_labels(H)),
     ?assertEqual([[<<"30">>, <<"5">>, <<"35">>], [<<"10">>, <<"5">>, <<"15">>],
@@ -100,13 +100,13 @@ expand_and_subtotals_test() ->
                    <<"row_sort">> => null, <<"col_sort">> => <<"asc">>},
                  json:decode(attr(<<"data-view">>, H))),
     %% without row subtotals the expanded parents are blank
-    H2 = r(?M:pivotgrid(sales(), layout(), [expand_all], [{row_subtotals, false}])),
+    H2 = r(?M:ah_pivotgrid(sales(), layout(), [expand_all], [{row_subtotals, false}])),
     ?assertEqual([<<>>, <<>>, <<>>], hd(cells(H2))),
     ?assert(hasnt(<<"ah-pg-row-header ah-pg-total\" role=\"row\" data-path=\"[&quot;CN">>, H2)).
 
 column_tree_test() ->
     L = #{rows => [country], columns => [year, city], values => [{units, count}]},
-    H = r(?M:pivotgrid(sales(), L, [], [{view, #{expanded_cols => [[2023]]}}])),
+    H = r(?M:ah_pivotgrid(sales(), L, [], [{view, #{expanded_cols => [[2023]]}}])),
     %% 2023 spans Beijing, NYC, Shanghai and its subtotal; 2024 stays a leaf
     ?assert(has(<<"colspan=\"4\" data-path=\"[2023]\" aria-expanded=\"true\"">>, H)),
     ?assert(has(<<"rowspan=\"2\" data-path=\"[2024]\" data-sort=\"[[2024],0]\" data-ci=\"4\" "
@@ -117,30 +117,30 @@ column_tree_test() ->
                   [<<>>, <<"1">>, <<>>, <<"1">>, <<"1">>, <<"2">>],
                   [<<"1">>, <<"1">>, <<"1">>, <<"3">>, <<"2">>, <<"5">>]], cells(H)),
     %% no column subtotals, no grand totals
-    H2 = r(?M:pivotgrid(sales(), L, [], [{view, #{expanded_cols => [[2023]]}},
-                                         {col_subtotals, false}, {grand_totals, false}])),
+    H2 = r(?M:ah_pivotgrid(sales(), L, [], [{view, #{expanded_cols => [[2023]]}},
+                                            {col_subtotals, false}, {grand_totals, false}])),
     ?assertEqual([[<<"1">>, <<>>, <<"1">>, <<"1">>], [<<>>, <<"1">>, <<>>, <<"1">>]], cells(H2)),
     ?assert(hasnt(<<">Grand Total<">>, H2)).
 
 aggregates_test() ->
     Aggs = [sum, count, avg, min, max, product],
     L = #{rows => [country], columns => [], values => [{units, A} || A <- Aggs]},
-    H = r(?M:pivotgrid(sales(), L, [], [])),
+    H = r(?M:ah_pivotgrid(sales(), L, [], [])),
     ?assertEqual([[<<"6">>, <<"3">>, <<"2">>, <<"1">>, <<"3">>, <<"6">>],
                   [<<"9">>, <<"2">>, <<"4.50">>, <<"4">>, <<"5">>, <<"20">>],
                   [<<"15">>, <<"5">>, <<"3">>, <<"1">>, <<"5">>, <<"120">>]], cells(H)),
     %% without column fields the headers are the measure labels
     ?assert(has(<<">units (Average)<">>, H)),
     %% count of a field counts non-blank values; no measure counts records
-    H2 = r(?M:pivotgrid(sales(), #{rows => [country], values => [{sales, count}]}, [], [])),
+    H2 = r(?M:ah_pivotgrid(sales(), #{rows => [country], values => [{sales, count}]}, [], [])),
     ?assertEqual([[<<"3">>], [<<"1">>], [<<"4">>]], cells(H2)),
-    H3 = r(?M:pivotgrid(sales(), #{rows => [country]}, [], [])),
+    H3 = r(?M:ah_pivotgrid(sales(), #{rows => [country]}, [], [])),
     ?assertEqual([[<<"3">>], [<<"2">>], [<<"5">>]], cells(H3)),
     ?assert(has(<<">Count<">>, H3)).
 
 values_on_rows_test() ->
     L = #{rows => [country], columns => [year], values => [sales, {units, max}]},
-    H = r(?M:pivotgrid(sales(), L, [values_on_rows], [])),
+    H = r(?M:ah_pivotgrid(sales(), L, [values_on_rows], [])),
     ?assertEqual(6, count(<<"<tr class=\"ah-pg-body-row">>, H)),
     ?assert(has(<<"data-vi=\"1\"><td class=\"ah-pg-row-th ah-pg-value-label-cell\">"
                   "units (Max)</td>">>, H)),
@@ -149,8 +149,8 @@ values_on_rows_test() ->
                  lists:sublist(cells(H), 2)),
     %% one measure: the flag changes nothing
     Content = fun(X) -> hd(binary:split(tl_after(X, <<"id=\"a-content\"">>), <<"id=\"a-menu\"">>)) end,
-    ?assertEqual(Content(r(?M:pivotgrid(sales(), layout(), [], [{id, a}]))),
-                 Content(r(?M:pivotgrid(sales(), layout(), [values_on_rows], [{id, a}])))).
+    ?assertEqual(Content(r(?M:ah_pivotgrid(sales(), layout(), [], [{id, a}]))),
+                 Content(r(?M:ah_pivotgrid(sales(), layout(), [values_on_rows], [{id, a}])))).
 
 tl_after(B, Sep) -> lists:last(binary:split(B, Sep)).
 
@@ -158,20 +158,20 @@ key_order_and_blanks_test() ->
     Rows = [#{k => <<"b">>, v => 1}, #{k => 10, v => 1}, #{k => null, v => 1},
             #{k => 9, v => 1}, #{k => <<"a">>, v => 1}, #{k => 2.5, v => 1},
             #{v => 1}, #{k => true, v => 1}, #{k => {2026, 9, 29}, v => 1}],
-    H = r(?M:pivotgrid(Rows, #{rows => [k], values => [v]}, [], [])),
+    H = r(?M:ah_pivotgrid(Rows, #{rows => [k], values => [v]}, [], [])),
     ?assertEqual([<<"2.5">>, <<"9">>, <<"10">>, <<"2026-09-29">>, <<"a">>, <<"b">>,
                   <<"true">>, <<"(blank)">>, <<"Grand Total">>], row_labels(H)),
     ?assertEqual([<<"2">>], lists:nth(8, cells(H))),
     %% descending
-    Hd = r(?M:pivotgrid(Rows, #{rows => [k], values => [v]}, [],
-                        [{view, #{row_sort => #{by => key, dir => desc}}}])),
+    Hd = r(?M:ah_pivotgrid(Rows, #{rows => [k], values => [v]}, [],
+                           [{view, #{row_sort => #{by => key, dir => desc}}}])),
     ?assertEqual(<<"(blank)">>, hd(row_labels(Hd))).
 
 sort_by_value_test() ->
     L = #{rows => [city], columns => [year], values => [units]},
-    H = r(?M:pivotgrid(sales(), L, [],
-                       [{view, #{row_sort => #{by => value, col => [2024], vi => 0,
-                                               dir => desc}}}])),
+    H = r(?M:ah_pivotgrid(sales(), L, [],
+                          [{view, #{row_sort => #{by => value, col => [2024], vi => 0,
+                                                  dir => desc}}}])),
     %% NYC 4, Beijing 3, Shanghai (blank in 2024) last
     ?assertEqual([<<"NYC">>, <<"Beijing">>, <<"Shanghai">>, <<"Grand Total">>], row_labels(H)),
     ?assert(has(<<"data-sort=\"[[2024],0]\" data-ci=\"1\" aria-sort=\"descending\"">>, H)),
@@ -181,8 +181,8 @@ format_test() ->
     Rows = [#{k => a, v => 1234567.125}, #{k => b, v => -0.125}, #{k => c, v => 1.005},
             #{k => d, v => 1000}],
     F = fun(Fmt) ->
-                H = r(?M:pivotgrid(Rows, #{rows => [k], values => [v]}, [],
-                                   [{format, Fmt}, {grand_totals, false}])),
+                H = r(?M:ah_pivotgrid(Rows, #{rows => [k], values => [v]}, [],
+                                      [{format, Fmt}, {grand_totals, false}])),
                 [C || [C] <- cells(H)]
         end,
     ?assertEqual([<<"1234567.13">>, <<"-0.13">>, <<"1.00">>, <<"1000">>], F(#{})),
@@ -195,19 +195,19 @@ format_test() ->
     ?assertEqual([<<"1234567,1">>, <<"-0,1">>, <<"1,0">>, <<"1000,0">>],
                  F(#{decimals => 1, decimal => <<",">>})),
     %% a field's own format wins; counts ignore prefix and decimals
-    H = r(?M:pivotgrid(Rows, #{rows => [k], values => [v, {v, count}]}, [],
-                       [{fields, [k, #{name => v, label => <<"V">>,
-                                       format => #{prefix => <<"¥"/utf8>>, decimals => 1}}]},
-                        {format, #{prefix => <<"X">>}}])),
+    H = r(?M:ah_pivotgrid(Rows, #{rows => [k], values => [v, {v, count}]}, [],
+                          [{fields, [k, #{name => v, label => <<"V">>,
+                                          format => #{prefix => <<"¥"/utf8>>, decimals => 1}}]},
+                           {format, #{prefix => <<"X">>}}])),
     ?assertEqual([<<"¥1000.0"/utf8>>, <<"1">>], lists:nth(4, cells(H))),
     ?assert(has(<<">V (Sum)<">>, H)).
 
 field_list_and_labels_test() ->
     Fields = [{country, <<"国家"/utf8>>}, {city, <<"城市"/utf8>>}, year,
               #{name => sales, label => <<"销售额"/utf8>>, agg => avg}, units],
-    H = r(?M:pivotgrid(sales(), #{rows => [country], columns => [year], values => [sales]},
-                       [field_list], [{id, pg}, {fields, Fields}, {locale, zh},
-                                      {labels, #{grand_total => <<"总计"/utf8>>}}])),
+    H = r(?M:ah_pivotgrid(sales(), #{rows => [country], columns => [year], values => [sales]},
+                          [field_list], [{id, pg}, {fields, Fields}, {locale, zh},
+                                         {labels, #{grand_total => <<"总计"/utf8>>}}])),
     ?assert(has(<<"<div class=\"ah-pg-fields\" id=\"pg-fields\">">>, H)),
     ?assert(has(<<"id=\"pg-chip-fields-0\" role=\"button\" tabindex=\"0\" draggable=\"true\" "
                   "aria-haspopup=\"menu\" data-zone=\"fields\" data-index=\"0\" "
@@ -224,15 +224,15 @@ field_list_and_labels_test() ->
     ?assertEqual(<<"总计"/utf8>>, maps:get(<<"grand_total">>, maps:get(<<"labels">>, Conf))).
 
 empty_and_height_test() ->
-    H = r(?M:pivotgrid([], #{rows => [a]}, [], [{fields, [a]}, {height, 300}])),
+    H = r(?M:ah_pivotgrid([], #{rows => [a]}, [], [{fields, [a]}, {height, 300}])),
     ?assert(has(<<"<div class=\"ah-pg-empty\">No data to display</div>">>, H)),
     ?assert(has(<<"style=\"height:300px\"">>, H)),
     ?assert(has(<<"style=\"height:50vh\"">>,
-                r(?M:pivotgrid([], #{}, [], [{height, <<"50vh">>}])))).
+                r(?M:ah_pivotgrid([], #{}, [], [{height, <<"50vh">>}])))).
 
 island_escape_test() ->
     Rows = [#{k => <<"</script><!--x">>, v => 1}],
-    H = r(?M:pivotgrid(Rows, #{rows => [k], values => [v]}, [], [])),
+    H = r(?M:ah_pivotgrid(Rows, #{rows => [k], values => [v]}, [], [])),
     {match, [Island]} = re:run(H, <<"<script class=\"ah-pg-data\"[^>]*>(.*?)</script>">>,
                                [{capture, all_but_first, binary}]),
     ?assertEqual(nomatch, binary:match(Island, <<"<">>)),
@@ -246,8 +246,8 @@ island_escape_test() ->
 %%%===================================================================
 
 remote_test() ->
-    H = r(?M:pivotgrid(sales(), layout(), [field_list],
-                       [{id, rp}, {source, {?MODULE, pivot, #{}}}, {fields, [country, city, year, sales]}])),
+    H = r(?M:ah_pivotgrid(sales(), layout(), [field_list],
+                          [{id, rp}, {source, {?MODULE, pivot, #{}}}, {fields, [country, city, year, sales]}])),
     ?assert(hasnt(<<"ah-pg-data">>, H)),
     ?assert(has(<<"data-ah-remote">>, H)),
     ?assert(has(<<"data-ah-on=\"ah:view:">>, H)),
@@ -266,11 +266,11 @@ remote_test() ->
      #{op := attr, id := <<"rp">>, name := <<"data-view">>},
      #{op := call, id := <<"rp">>, method := <<"viewLoaded">>}] = [atomize(O) || O <- Ops],
     %% same markup as a first render of that view
-    Local = r(?M:pivotgrid(sales(), layout(), [field_list],
-                           [{id, rp}, {fields, [country, city, year, sales]},
-                            {view, #{expanded_rows => [[<<"CN">>]],
-                                     row_sort => #{by => value, col => [], vi => 0, dir => asc},
-                                     col_sort => desc}}])),
+    Local = r(?M:ah_pivotgrid(sales(), layout(), [field_list],
+                              [{id, rp}, {fields, [country, city, year, sales]},
+                               {view, #{expanded_rows => [[<<"CN">>]],
+                                        row_sort => #{by => value, col => [], vi => 0, dir => asc},
+                                        col_sort => desc}}])),
     ?assert(has(Grid, Local)),
     ?assertEqual([<<"US">>, <<"CN">>, <<"Beijing">>, <<"Shanghai">>, <<"Grand Total">>],
                  row_labels(Grid)),
@@ -313,7 +313,7 @@ cell_event_test() ->
 %%%===================================================================
 
 validation_test() ->
-    R = fun(L, Css, A) -> r(?M:pivotgrid(sales(), L, Css, A)) end,
+    R = fun(L, Css, A) -> r(?M:ah_pivotgrid(sales(), L, Css, A)) end,
     ?assertError({aihtml, {bad_option, value, <<"region">>}}, R(#{rows => [region]}, [], [])),
     ?assertError({aihtml, {bad_option, value, <<"country">>}},
                  R(#{rows => [country], columns => [country]}, [], [])),
@@ -328,11 +328,11 @@ validation_test() ->
     ?assertError({aihtml, {bad_option, grand_totals, no}}, R(#{}, [], [{grand_totals, no}])),
     ?assertError({aihtml, {bad_option, source, _}}, R(#{}, [], [{source, fun() -> ok end}])),
     ?assertError({aihtml, {bad_pivot_value, {1, 2}}},
-                 r(?M:pivotgrid([#{a => {1, 2}}], #{rows => [a]}, [], []))),
+                 r(?M:ah_pivotgrid([#{a => {1, 2}}], #{rows => [a]}, [], []))),
     ?assertError({aihtml, {bad_flag, pivotgrid, field_list, yes}},
                  r(#ah_pivotgrid{field_list = yes})),
     ?assertError({aihtml, {unknown_modifier, pivotgrid, big, _}},
-                 ?M:pivotgrid([], #{}, [big], [])).
+                 ?M:ah_pivotgrid([], #{}, [big], [])).
 
 %%%===================================================================
 %%% Catalog and records (designs/05-records.md)
@@ -349,10 +349,10 @@ catalog_test() ->
 
 record_equals_builder_test() ->
     Fields = [country, city, year, #{name => sales, format => #{decimals => 1}}],
-    ?assertEqual(r(?M:pivotgrid(sales(), layout(), [expand_all, field_list, <<"w-full">>],
-                                [{id, pg}, {name, layout}, {fields, Fields}, {height, 200},
-                                 {locale, zh}, {grand_totals, false},
-                                 {view, #{col_sort => desc}}, {title, <<"t">>}])),
+    ?assertEqual(r(?M:ah_pivotgrid(sales(), layout(), [expand_all, field_list, <<"w-full">>],
+                                   [{id, pg}, {name, layout}, {fields, Fields}, {height, 200},
+                                    {locale, zh}, {grand_totals, false},
+                                    {view, #{col_sort => desc}}, {title, <<"t">>}])),
                  r(#ah_pivotgrid{items = sales(), value = layout(), expand_all = true,
                                  field_list = true, css = [<<"w-full">>], id = pg, name = layout,
                                  fields = Fields, height = 200, locale = zh,
@@ -360,14 +360,14 @@ record_equals_builder_test() ->
                                  attrs = [{title, <<"t">>}]})).
 
 builder_fills_fields_test() ->
-    P = ?M:pivotgrid([], #{}, [values_on_rows, <<"x">>],
-                     [{id, p}, {row_subtotals, false}, {labels, #{empty => <<"-">>}},
-                      {title, <<"t">>}]),
+    P = ?M:ah_pivotgrid([], #{}, [values_on_rows, <<"x">>],
+                        [{id, p}, {row_subtotals, false}, {labels, #{empty => <<"-">>}},
+                         {title, <<"t">>}]),
     ?assertMatch(#ah_pivotgrid{items = [], value = #{}, values_on_rows = true, id = p,
                                row_subtotals = false, labels = #{empty := <<"-">>},
                                css = [<<"x">>], attrs = [{title, <<"t">>}]}, P),
     ?assertError({aihtml, {record_only_field, ah_pivotgrid, postback}},
-                 ?M:pivotgrid([], #{}, [], [{postback, x}])).
+                 ?M:ah_pivotgrid([], #{}, [], [{postback, x}])).
 
 generated_id_and_hidden_input_test() ->
     H = r(#ah_pivotgrid{items = sales(), value = layout(), name = pv}),

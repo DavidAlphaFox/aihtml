@@ -5,7 +5,7 @@
 %%% carries `data-ah-value'; the behaviour stops the inputs' own `change'
 %%% at the root and fires one `change' on the root instead.
 %%%
-%%% radiobutton_group/4 builds an #ah_radiobutton_group{}
+%%% ah_radiobutton_group/4 builds an #ah_radiobutton_group{}
 %%% (include/aihtml_radiobutton_group.hrl) and render/1 turns it into
 %%% HTML, so pages may also write the record directly
 %%% (designs/05-records.md).
@@ -16,7 +16,7 @@
 
 -include("aihtml_radiobutton_group.hrl").
 
--export([radiobutton_group/4, render/1, fields/1, catalog/0]).
+-export([ah_radiobutton_group/4, render/1, fields/1, catalog/0]).
 
 -define(E, aihtml_element).
 -define(L, aihtml_lib_choice).
@@ -24,9 +24,9 @@
 %% @doc Mutually exclusive radio buttons; `Value' is the selected one (or
 %% `undefined'). Arrow keys move the selection, as in sigil. Give the
 %% group a `name' so it is exclusive without JS too.
--spec radiobutton_group([aihtml_lib_choice:item()], aihtml_lib_choice:value() | undefined,
-                        aihtml_html:css(), aihtml_html:attrs()) -> #ah_radiobutton_group{}.
-radiobutton_group(Items, Value, Css, Attrs) ->
+-spec ah_radiobutton_group([aihtml_lib_choice:item()], aihtml_lib_choice:value() | undefined,
+                           aihtml_html:css(), aihtml_html:attrs()) -> #ah_radiobutton_group{}.
+ah_radiobutton_group(Items, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_radiobutton_group{items = Items, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_radiobutton_group{}.
@@ -48,7 +48,7 @@ render(#ah_radiobutton_group{items = Items, value = Value} = R) ->
 catalog() ->
     [maps:merge(
        #{name => radiobutton_group, category => form,
-         signature => <<"radiobutton_group(Items, Value, Css, Attrs)">>,
+         signature => <<"ah_radiobutton_group(Items, Value, Css, Attrs)">>,
          root => <<"ah-radiobutton-group">>,
          groups => #{layout => {[vertical, horizontal], vertical},
                      size => {[sm, md, lg], none}},

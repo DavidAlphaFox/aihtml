@@ -7,7 +7,7 @@
 %%% repeatedly while held, so `on(click, ...)' or a postback runs once per
 %%% repetition. The behaviour lives in assets/js/components/repeat_button.ts.
 %%%
-%%% repeat_button/4 builds an #ah_repeat_button{}
+%%% ah_repeat_button/4 builds an #ah_repeat_button{}
 %%% (include/aihtml_repeat_button.hrl) and render/1 turns it into HTML, so
 %%% pages may also write the record directly (designs/05-records.md).
 %%% @end
@@ -18,7 +18,7 @@
 -include("aihtml_repeat_button.hrl").
 -include("aihtml_button.hrl").
 
--export([repeat_button/4, render/1, fields/1, catalog/0]).
+-export([ah_repeat_button/4, render/1, fields/1, catalog/0]).
 
 -define(E, aihtml_element).
 
@@ -31,9 +31,9 @@
 %% size, round) and options (icon, img, icon_position).
 %% Options: `delay' (ms before repeating, default 300), `interval' (ms
 %% between clicks, default 50).
--spec repeat_button(aihtml_html:html(), term(), aihtml_html:css(), aihtml_html:attrs()) ->
+-spec ah_repeat_button(aihtml_html:html(), term(), aihtml_html:css(), aihtml_html:attrs()) ->
           #ah_repeat_button{}.
-repeat_button(Content, Value, Css, Attrs) ->
+ah_repeat_button(Content, Value, Css, Attrs) ->
     ?E:build(?MODULE, #ah_repeat_button{body = Content, value = Value}, Css, Attrs).
 
 %% @doc The field names of #ah_repeat_button{}.
@@ -62,7 +62,7 @@ render(#ah_repeat_button{delay = Delay, interval = Interval} = R) ->
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
     [#{name => repeat_button, category => form,
-       signature => <<"repeat_button(Content, Value, Css, Attrs)">>,
+       signature => <<"ah_repeat_button(Content, Value, Css, Attrs)">>,
        root => <<"ah-btn">>,
        groups => #{variant => {[primary, secondary, outlined, success, warning, error,
                                 info, default, borderless], primary},

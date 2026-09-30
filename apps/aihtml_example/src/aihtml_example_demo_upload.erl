@@ -28,74 +28,74 @@ demos() ->
 
 -spec upload_basic() -> aihtml:html().
 upload_basic() ->
-    upload([], [<<"max-w-lg">>],
-           [{url, <<"/upload">>}, {name, attachments},
-            {drag_text, <<"拖拽文件到此处，或"/utf8>>}, {browse_text, <<"点击上传"/utf8>>},
-            {hint, <<"任意类型，单个不超过 5 MB"/utf8>>}]).
+    ah_upload([], [<<"max-w-lg">>],
+              [{url, <<"/upload">>}, {name, attachments},
+               {drag_text, <<"拖拽文件到此处，或"/utf8>>}, {browse_text, <<"点击上传"/utf8>>},
+               {hint, <<"任意类型，单个不超过 5 MB"/utf8>>}]).
 
 %% Each finished file fires change; action(uploaded, ...) below lists them.
 -spec upload_change() -> aihtml:html().
 upload_change() ->
-    'div'([upload([], [<<"max-w-lg">>],
-                  [{url, <<"/upload">>}, {hint, <<"上传后服务端收到文件列表"/utf8>>},
-                   on(change, {?MODULE, uploaded, <<"upload-received">>})]),
-           p(<<"还没有上传文件"/utf8>>, [<<"text-sm text-muted mt-2">>],
-             [{id, <<"upload-received">>}])],
-          [], []).
+    ah_div([ah_upload([], [<<"max-w-lg">>],
+                      [{url, <<"/upload">>}, {hint, <<"上传后服务端收到文件列表"/utf8>>},
+                       on(change, {?MODULE, uploaded, <<"upload-received">>})]),
+            ah_p(<<"还没有上传文件"/utf8>>, [<<"text-sm text-muted mt-2">>],
+                 [{id, <<"upload-received">>}])],
+           [], []).
 
 -spec upload_manual() -> aihtml:html().
 upload_manual() ->
-    'div'([upload([], [<<"max-w-lg mb-3">>],
-                  [{id, <<"manual-upload">>}, {url, <<"/upload">>}, {auto_upload, false},
-                   {browse_text, <<"选择文件"/utf8>>},
-                   {hint, <<"选好后点“上传全部”"/utf8>>}]),
-           'div'([button(<<"上传全部"/utf8>>, undefined, [primary, sm],
-                         [on(click, {?MODULE, call, uploadAll})]),
-                  button(<<"清空列表"/utf8>>, undefined, [outlined, sm],
-                         [on(click, {?MODULE, call, clear})])],
-                 [<<"flex gap-2">>], [])],
-          [], []).
+    ah_div([ah_upload([], [<<"max-w-lg mb-3">>],
+                      [{id, <<"manual-upload">>}, {url, <<"/upload">>}, {auto_upload, false},
+                       {browse_text, <<"选择文件"/utf8>>},
+                       {hint, <<"选好后点“上传全部”"/utf8>>}]),
+            ah_div([ah_button(<<"上传全部"/utf8>>, undefined, [primary, sm],
+                              [on(click, {?MODULE, call, uploadAll})]),
+                    ah_button(<<"清空列表"/utf8>>, undefined, [outlined, sm],
+                              [on(click, {?MODULE, call, clear})])],
+                   [<<"flex gap-2">>], [])],
+           [], []).
 
 -spec upload_limits() -> aihtml:html().
 upload_limits() ->
-    upload([], [<<"max-w-lg">>],
-           [{url, <<"/upload">>}, {accept, <<"image/*">>}, {max_size, 2 * 1024 * 1024},
-            {max_count, 3}, {hint, <<"只收图片，最多 3 个，单个不超过 2 MB"/utf8>>},
-            {labels, #{type_mismatch => <<"不是图片"/utf8>>,
-                       too_large => <<"超过 2 MB"/utf8>>,
-                       too_many => <<"最多 3 个文件"/utf8>>,
-                       upload_failed => <<"上传失败"/utf8>>,
-                       remove => <<"删除"/utf8>>}}]).
+    ah_upload([], [<<"max-w-lg">>],
+              [{url, <<"/upload">>}, {accept, <<"image/*">>}, {max_size, 2 * 1024 * 1024},
+               {max_count, 3}, {hint, <<"只收图片，最多 3 个，单个不超过 2 MB"/utf8>>},
+               {labels, #{type_mismatch => <<"不是图片"/utf8>>,
+                          too_large => <<"超过 2 MB"/utf8>>,
+                          too_many => <<"最多 3 个文件"/utf8>>,
+                          upload_failed => <<"上传失败"/utf8>>,
+                          remove => <<"删除"/utf8>>}}]).
 
 -spec upload_existing() -> aihtml:html().
 upload_existing() ->
     Files = [#{id => 11, name => <<"合同扫描件.pdf"/utf8>>, size => 482133,
                type => <<"application/pdf">>},
              #{id => 12, name => <<"logo.png">>, size => 18420, type => <<"image/png">>}],
-    'div'([upload(Files, [<<"max-w-lg">>], [{url, <<"/upload">>}, {name, files}]),
-           upload(Files, [disabled, <<"max-w-lg">>],
-                  [{url, <<"/upload">>}, {hint, <<"已禁用"/utf8>>}])],
-          [<<"flex flex-col gap-6">>], []).
+    ah_div([ah_upload(Files, [<<"max-w-lg">>], [{url, <<"/upload">>}, {name, files}]),
+            ah_upload(Files, [disabled, <<"max-w-lg">>],
+                      [{url, <<"/upload">>}, {hint, <<"已禁用"/utf8>>}])],
+           [<<"flex flex-col gap-6">>], []).
 
 -spec upload_native() -> aihtml:html().
 upload_native() ->
-    form([upload([], [<<"max-w-lg mb-3">>],
-                 [{name, file}, {multiple, false}, {hint, <<"提交时随表单一起发送"/utf8>>}]),
-          button(<<"提交表单"/utf8>>, undefined, [primary, sm], [{type, submit}])],
-         [], [{action, <<"/upload">>}, {method, post},
-              {enctype, <<"multipart/form-data">>}, {target, <<"_blank">>}]).
+    ah_form([ah_upload([], [<<"max-w-lg mb-3">>],
+                       [{name, file}, {multiple, false}, {hint, <<"提交时随表单一起发送"/utf8>>}]),
+             ah_button(<<"提交表单"/utf8>>, undefined, [primary, sm], [{type, submit}])],
+            [], [{action, <<"/upload">>}, {method, post},
+                 {enctype, <<"multipart/form-data">>}, {target, <<"_blank">>}]).
 
 %% The same component as a record: options are checked field names, and
 %% the postback runs action(uploaded, ...) below on change.
 -spec upload_record() -> aihtml:html().
 upload_record() ->
-    'div'([#ah_upload{url = <<"/upload">>, accept = <<"image/*,.pdf">>, max_count = 5,
-                      field_name = <<"document">>, extra_data = #{folder => <<"inbox">>},
-                      hint = <<"图片或 PDF，最多 5 个"/utf8>>, css = [<<"max-w-lg">>],
-                      postback = {uploaded, <<"record-received">>}},
-           p(<<"还没有上传文件"/utf8>>, [<<"text-sm text-muted mt-2">>],
-             [{id, <<"record-received">>}])],
-          [], []).
+    ah_div([#ah_upload{url = <<"/upload">>, accept = <<"image/*,.pdf">>, max_count = 5,
+                       field_name = <<"document">>, extra_data = #{folder => <<"inbox">>},
+                       hint = <<"图片或 PDF，最多 5 个"/utf8>>, css = [<<"max-w-lg">>],
+                       postback = {uploaded, <<"record-received">>}},
+            ah_p(<<"还没有上传文件"/utf8>>, [<<"text-sm text-muted mt-2">>],
+                 [{id, <<"record-received">>}])],
+           [], []).
 
 %%%===================================================================
 %%% Actions
