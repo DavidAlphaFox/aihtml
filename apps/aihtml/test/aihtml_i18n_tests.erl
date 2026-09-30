@@ -247,6 +247,40 @@ zh_rendering_test() ->
     Has(Zh(aihtml:ah_pivotgrid(Rows, Layout, [], [{locale, en}])), <<"Grand Total">>),
     ?assertEqual(<<"en">>, ?M:locale()).
 
+%% 12-hour times, short dates and currencies in the language's order and
+%% symbols; a symbol given explicitly wins.
+formats_follow_language_test() ->
+    Zh = fun(F) -> ?M:with(zh, F) end,
+    ?assertEqual(<<"10:00 AM">>, aihtml_lib_date:time_12h(<<"10:00">>, <<"AM">>)),
+    ?assertEqual(<<"上午10:00"/utf8>>, Zh(fun() -> aihtml_lib_date:time_12h(<<"10:00">>, <<"上午"/utf8>>) end)),
+    Has = fun(Bin, Part) -> ?assertMatch({_, _}, binary:match(Bin, Part)) end,
+    Ev = [#{title => <<"Kick-off">>, start => <<"2026-09-01T10:00">>}],
+    Has(Zh(fun() -> aihtml:render_binary(aihtml:ah_calendar(<<"2026-09-01">>, [], [{events, Ev}])) end),
+        <<"上午10:00"/utf8>>),
+    Has(aihtml:render_binary(aihtml:ah_calendar(<<"2026-09-01">>, [], [{events, Ev}])), <<"10:00 AM">>),
+    %% range_selector: 2026-09-30 16:00 UTC in ms
+    T = 1790784000000,
+    RS = fun(Fmt) -> aihtml:ah_range_selector({T - 86400000, T + 86400000, 3600000}, {T, T}, [],
+                                              [{labels_format, Fmt}, {major_ticks, 86400000}]) end,
+    Has(aihtml:render_binary(RS(date)), <<"9/30/2026">>),
+    Has(Zh(fun() -> aihtml:render_binary(RS(date)) end), <<"2026/9/30">>),
+    Has(Zh(fun() -> aihtml:render_binary(RS(time)) end), <<"下午4:00"/utf8>>),
+    Money = fun(Fmt) -> aihtml:ah_range_selector({0, 5000, 100}, {1200, 3400}, [], [{labels_format, Fmt},
+                                                                                   {major_ticks, 1000}]) end,
+    Has(aihtml:render_binary(Money(currency)), <<"$1,000">>),
+    Has(Zh(fun() -> aihtml:render_binary(Money(currency)) end), <<"¥1,000"/utf8>>),
+    Has(Zh(fun() -> aihtml:render_binary(Money({currency, <<"$">>})) end), <<"$1,000">>),
+    ?assertError({aihtml, {bad_option, labels_format, {currency, 42}}},
+                 aihtml:render_binary(Money({currency, 42}))),
+    %% timepicker: the field's text and the header's AM / PM first in Chinese
+    TP = fun(Css) -> aihtml:ah_timepicker(<<"21:30">>, Css, []) end,
+    Has(aihtml:render_binary(TP([])), <<"value=\"9:30 PM\"">>),
+    Z = Zh(fun() -> aihtml:render_binary(TP([inline])) end),
+    {P, _} = binary:match(Z, <<"ah-timepicker-header-period">>),
+    {H, _} = binary:match(Z, <<"ah-timepicker-header-hours">>),
+    ?assert(P < H),
+    Has(Zh(fun() -> aihtml:render_binary(TP([])) end), <<"value=\"下午9:30\""/utf8>>).
+
 render_uses_current_test() ->
     ?assertEqual(<<"en">>, aihtml:render_binary(#i18n_probe{})),
     ?assertEqual(<<"zh">>, ?M:with(zh, fun() -> aihtml:render_binary(#i18n_probe{}) end)).
