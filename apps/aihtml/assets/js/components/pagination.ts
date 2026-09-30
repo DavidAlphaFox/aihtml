@@ -31,6 +31,7 @@ interface Entry {
   gap: boolean; info: boolean; item: boolean; nav: boolean; link: boolean;
   active: boolean; disabled: boolean; first_last: boolean; href: string;
   number: number; tabindex: number; type: string; label: string; icon: string; text: string;
+  page_label: string;
 }
 
 const NAV_ICONS: Record<NavType, string> = { prev: "‹", next: "›", first: "«", last: "»" };
@@ -93,7 +94,7 @@ function fmt(t: string, args: readonly unknown[]): string {
 function entry(m: Partial<Entry>): Entry {
   return { gap: false, info: false, item: false, nav: false, link: false,
            active: false, disabled: false, first_last: false, href: "",
-           number: 0, tabindex: 0, type: "", label: "", icon: "", text: "", ...m };
+           number: 0, tabindex: 0, type: "", label: "", icon: "", text: "", page_label: "", ...m };
 }
 
 // The view data of templates/pagination_items.mustache; mirrors
@@ -113,6 +114,7 @@ function view(cur: number, pages: number, max: number, size: number, cfg: ViewCo
       if (!p) { return entry({ gap: true }); }
       const url = link(p);
       return entry({ item: true, number: p, active: p === cur, tabindex: p === cur ? -1 : 0,
+                     page_label: AH.t("common", "page_n", "Page {0}", [p]),
                      link: url !== null, href: url || "" });
     });
   const fl = cfg.first_last && !cfg.simple;

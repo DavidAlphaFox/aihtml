@@ -155,6 +155,7 @@ pagination_view(Cur, Pages, Max, Size, #{labels := L, first_last := FL, simple :
                           gap -> entry(#{gap => true});
                           _ -> Url = Link(P),
                                entry(#{item => true, number => P, active => P =:= Cur,
+                                       page_label => aihtml_i18n:text(common, page_n, [P]),
                                        tabindex => tabindex(P =/= Cur),
                                        link => Url =/= null, href => url(Url)})
                       end || P <- visible_pages(Cur, Pages, Max)]
@@ -170,7 +171,7 @@ entry(M) ->
     maps:merge(#{gap => false, info => false, item => false, nav => false, link => false,
                  active => false, disabled => false, first_last => false, href => <<>>,
                  number => 0, tabindex => 0, type => <<>>, label => <<>>, icon => <<>>,
-                 text => <<>>}, M).
+                 text => <<>>, page_label => <<>>}, M).
 
 tabindex(true) -> 0;
 tabindex(false) -> -1.
