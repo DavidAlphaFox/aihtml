@@ -36,24 +36,25 @@ type Check = (v: string, el: HTMLElement, a: readonly unknown[]) => boolean;
 
 type Native = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
 
-const MESSAGES: Record<string, string> = {
-  required: "This field is required",
-  email: "Please enter a valid email address",
-  number: "Please enter a number",
-  integer: "Please enter a whole number",
-  phone: "Please enter a phone number like (555)555-5555",
-  zip_code: "Please enter a valid ZIP code",
-  ssn: "Please enter a valid SSN",
-  not_number: "Digits are not allowed",
-  starts_with_letter: "Must start with a letter",
-  min_length: "Please enter at least {0} characters",
-  max_length: "Please enter at most {0} characters",
-  length: "Please enter {0} to {1} characters",
-  min: "Must be at least {0}",
-  max: "Must be at most {0}",
-  range: "Must be between {0} and {1}",
-  pattern: "Please match the requested format",
-  same_as: "The values do not match"
+// the messages of the rules, in the page's language
+const MESSAGES: Record<string, () => string> = {
+  required: () => AH.t("field", "required", "This field is required"),
+  email: () => AH.t("field", "email", "Please enter a valid email address"),
+  number: () => AH.t("field", "number", "Please enter a number"),
+  integer: () => AH.t("field", "integer", "Please enter a whole number"),
+  phone: () => AH.t("field", "phone", "Please enter a phone number like (555)555-5555"),
+  zip_code: () => AH.t("field", "zip_code", "Please enter a valid ZIP code"),
+  ssn: () => AH.t("field", "ssn", "Please enter a valid SSN"),
+  not_number: () => AH.t("field", "not_number", "Digits are not allowed"),
+  starts_with_letter: () => AH.t("field", "starts_with_letter", "Must start with a letter"),
+  min_length: () => AH.t("field", "min_length", "Please enter at least {0} characters"),
+  max_length: () => AH.t("field", "max_length", "Please enter at most {0} characters"),
+  length: () => AH.t("field", "length", "Please enter {0} to {1} characters"),
+  min: () => AH.t("field", "min", "Must be at least {0}"),
+  max: () => AH.t("field", "max", "Must be at most {0}"),
+  range: () => AH.t("field", "range", "Must be between {0} and {1}"),
+  pattern: () => AH.t("field", "pattern", "Please match the requested format"),
+  same_as: () => AH.t("field", "same_as", "The values do not match")
 };
 
 function trim(s: unknown): string { return String(s === null || s === undefined ? "" : s).trim(); }
@@ -279,7 +280,8 @@ class Validator {
     for (const r of this.rulesOf(el)) {
       const f = RULES[r.rule];
       if (f && !f(v, el, r.args)) {
-        return r.msg || fmt(MESSAGES[r.rule] || "Invalid value", r.args);
+        const message = MESSAGES[r.rule];
+        return r.msg || fmt(message ? message() : AH.t("field", "invalid", "Invalid value"), r.args);
       }
     }
     return null;
