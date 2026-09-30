@@ -72,10 +72,10 @@ render(#ah_slider{range = {Min, Max, Step}, value = Value, disabled = Disabled,
         case {Range, Values} of
             {true, [A, B]} ->
                 {[Thumb(<<"start">>, A,
-                        [{role, slider}, {tabindex, tab(Disabled)}, {aria_label, <<"Minimum">>},
+                        [{role, slider}, {tabindex, tab(Disabled)}, {aria_label, aihtml_i18n:text(common, minimum)},
                          {aria_valuenow, num(A)}, {aria_valuetext, num(A)} | Base]),
                   Thumb(<<"end">>, B,
-                        [{role, slider}, {tabindex, tab(Disabled)}, {aria_label, <<"Maximum">>},
+                        [{role, slider}, {tabindex, tab(Disabled)}, {aria_label, aihtml_i18n:text(common, maximum)},
                          {aria_valuenow, num(B)}, {aria_valuetext, num(B)} | Base])],
                  range_style(Vertical, Ratio(A), Ratio(B)),
                  [{role, group}, {aria_orientation, orientation(Vertical)}]};
@@ -95,8 +95,8 @@ render(#ah_slider{range = {Min, Max, Step}, value = Value, disabled = Disabled,
                   el(button, el(span, Icon, [<<"ah-slider-button-icon">>], []),
                      [<<"ah-slider-button">>, <<"ah-slider-button-", Which/binary>>],
                      [{type, button}, {tabindex, -1},
-                      {aria_label, case Which of <<"prev">> -> <<"Decrease">>;
-                                                 _ -> <<"Increase">> end}])
+                      {aria_label, case Which of <<"prev">> -> aihtml_i18n:text(common, decrease);
+                                                 _ -> aihtml_i18n:text(common, increase) end}])
           end,
     ButtonsHtml = case {Buttons, Vertical} of
                       {false, _} -> [];

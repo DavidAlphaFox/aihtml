@@ -59,8 +59,7 @@ render(#ah_input_otp{length = Length, value = Value0, name = Name, disabled = Di
                            {maxlength, 1}, {data_index, I},
                            {data_filled, atom_to_binary(Ch =/= <<>>)},
                            {value, Ch}, {disabled, Disabled},
-                           {aria_label, <<"Character ", (integer_to_binary(I + 1))/binary,
-                                          " of ", (integer_to_binary(Length))/binary>>}]),
+                           {aria_label, aihtml_i18n:text(input_otp, character, [I + 1, Length])}]),
                   [?H:el(span, <<"-">>, [<<"ah-input-otp__separator">>],
                          [{aria_hidden, <<"true">>}])
                    || Sep =:= I + 1, I + 1 < Length]]

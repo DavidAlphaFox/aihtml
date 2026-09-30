@@ -25,8 +25,9 @@
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
--define(RADIXES, [{2, <<"BIN">>, <<"Binary">>}, {8, <<"OCT">>, <<"Octal">>},
-                  {10, <<"DEC">>, <<"Decimal">>}, {16, <<"HEX">>, <<"Hexadecimal">>}]).
+%% {Radix, short label, key of its name in the catalog (aihtml_i18n)}
+-define(RADIXES, [{2, <<"BIN">>, binary}, {8, <<"OCT">>, octal},
+                  {10, <<"DEC">>, decimal}, {16, <<"HEX">>, hexadecimal}]).
 
 %% Radix of a formatted_input: binary, octal, decimal, hexadecimal.
 -type radix() :: 2 | 8 | 10 | 16.
@@ -74,14 +75,15 @@ render(#ah_formatted_input{value = Value0, name = Name, disabled = Disabled,
     Popup = ?H:el('div',
                   [?H:el('div',
                          [?H:el(span, Label, [<<"ah-fmt-popup-item-label">>], []),
-                          ?H:el(span, Desc, [<<"ah-fmt-popup-item-desc">>], [])],
+                          ?H:el(span, aihtml_i18n:text(formatted_input, Desc),
+                                [<<"ah-fmt-popup-item-desc">>], [])],
                          [<<"ah-fmt-popup-item">>, [<<"ah-fmt-popup-item-active">> || X =:= Radix]],
                          [{role, option}, {id, <<ListId/binary, "-", (integer_to_binary(X))/binary>>},
                           {aria_selected, atom_to_binary(X =:= Radix)},
                           {data_radix, integer_to_binary(X)}])
                    || {X, Label, Desc} <- ?RADIXES],
                   [<<"ah-fmt-popup">>],
-                  [{id, ListId}, {role, listbox}, {aria_label, <<"Radix">>},
+                  [{id, ListId}, {role, listbox}, {aria_label, aihtml_i18n:text(formatted_input, radix)},
                    {style, case R#ah_formatted_input.drop_down_width of
                                W when is_integer(W) ->
                                    [<<"width:">>, integer_to_binary(W), <<"px">>];
@@ -103,7 +105,7 @@ render(#ah_formatted_input{value = Value0, name = Name, disabled = Disabled,
                           ?H:el(span, <<"▼"/utf8>>, [<<"ah-fmt-spin-down">>], [])],
                          [<<"ah-fmt-spin-buttons">>], [{aria_hidden, <<"true">>}]) || Spin],
                   [?H:el(span, <<"▼"/utf8>>, [<<"ah-fmt-dropdown-btn">>],
-                         [{role, button}, {aria_label, <<"Radix">>},
+                         [{role, button}, {aria_label, aihtml_i18n:text(formatted_input, radix)},
                           {aria_haspopup, listbox}, {aria_expanded, <<"false">>},
                           {aria_controls, ListId}]) || Drop]],
                  [<<"ah-fmt-input-row">>], []),

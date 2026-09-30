@@ -61,7 +61,7 @@ addon(Side, Html) ->
 
 clear_button() ->
     ?H:el(button, {safe, <<"&times;">>}, [<<"ah-input-clear">>],
-          [{type, button}, {tabindex, <<"-1">>}, {aria_label, <<"Clear">>}]).
+          [{type, button}, {tabindex, <<"-1">>}, {aria_label, aihtml_i18n:text(common, clear)}]).
 
 -spec catalog() -> [aihtml_catalog:entry()].
 catalog() ->
