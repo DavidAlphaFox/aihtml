@@ -16,6 +16,8 @@ const SHOTS = [
   { name: "datagrid", path: "/components/datagrid" },
   { name: "node-graph-dark", path: "/components/node_graph", theme: { appearance: "dark" } },
   { name: "calendar-arctic", path: "/components/calendar", theme: { palette: "arctic" } },
+  // the same page in Chinese (?lang=zh, aihtml_example_site:lang/1)
+  { name: "calendar-zh", path: "/components/calendar?lang=zh" },
   { name: "bar-chart-editorial", path: "/components/bar_chart", theme: { palette: "editorial" } },
   { name: "markdown-editor-island", path: "/components/markdown_editor",
     theme: { palette: "island", skin: "island" } },
