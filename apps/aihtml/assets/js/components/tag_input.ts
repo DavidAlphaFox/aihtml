@@ -87,6 +87,7 @@ class TagInputController extends AH.Controller {
       color: el.getAttribute("data-chip-color") || "primary",
       index: i,
       label: tag,
+      txt_remove: AH.t("common", "remove_item", "Remove {0}", [tag]),
       disabled: el.getAttribute("data-disabled") === "true"
     });
   }

@@ -111,7 +111,7 @@ render(#ah_cascader{items = Items0, value = Value0, name = Name,
                      {aria_expanded, <<"false">>}, {aria_controls, MenusId},
                      {aria_autocomplete, Filterable andalso list}]),
     Clear = [?H:el(span, <<"×"/utf8>>, [<<"ah-cascader-clear">>],
-                   [{role, button}, {aria_label, <<"Clear">>}, {hidden, Path =:= []}])
+                   [{role, button}, {aria_label, aihtml_i18n:text(common, clear)}, {hidden, Path =:= []}])
              || not R#ah_cascader.no_clear],
     Arrow = [?H:el(span, ?H:el(span, <<"▼"/utf8>>, [<<"ah-cascader-arrow-icon">>], []),
                    [<<"ah-cascader-arrow">>], [{aria_hidden, <<"true">>}])

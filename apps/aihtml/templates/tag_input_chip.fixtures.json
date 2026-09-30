@@ -1,4 +1,4 @@
 [
-  {"variant": "soft", "color": "primary", "index": 0, "label": "erlang", "disabled": false},
-  {"variant": "filled", "color": "error", "index": 3, "label": "<b>&\"'", "disabled": true}
+  {"variant": "soft", "color": "primary", "index": 0, "label": "erlang", "disabled": false, "txt_remove": "Remove erlang"},
+  {"variant": "filled", "color": "error", "index": 3, "label": "<b>&\"'", "disabled": true, "txt_remove": "Remove <b>&\"'"}
 ]

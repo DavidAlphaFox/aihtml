@@ -59,7 +59,7 @@ class CascaderController extends AH.Controller {
   private loader: HTMLElement | null = null;
   // settings
   private sep = " / ";
-  private emptyText = "No results found";
+  private emptyText = AH.t("common", "no_results", "No results found");
   private cos = false;
   private filterable = false;
   // state
@@ -89,7 +89,7 @@ class CascaderController extends AH.Controller {
     this.search = kids(this.popup, ".ah-cascader-search-panel")[0] || null;
     this.loader = kids(el, ".ah-cascader-loader")[0] || null;
     this.sep = el.getAttribute("data-ah-separator") || " / ";
-    this.emptyText = el.getAttribute("data-ah-empty") || "No results found";
+    this.emptyText = el.getAttribute("data-ah-empty") || AH.t("common", "no_results", "No results found");
     this.cos = el.hasAttribute("data-ah-change-on-select");
     this.filterable = el.classList.contains("ah-cascader-filterable");
     this.value = split(el.getAttribute("data-ah-value"));
@@ -300,7 +300,7 @@ class CascaderController extends AH.Controller {
       this.pending = { path: join(path), kbd: kbd };
       const loading = document.createElement("div");
       loading.className = "ah-cascader-loading";
-      loading.textContent = "Loading…";
+      loading.textContent = AH.t("common", "loading_items", "Loading…");
       this.menus.appendChild(loading);
       this.position();
       this.loader.setAttribute("data-ah-value", join(path));
