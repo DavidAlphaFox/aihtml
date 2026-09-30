@@ -18,7 +18,7 @@
                       events = [] :: [aihtml_calendar:event()],
                       view = month :: aihtml_calendar:view(),
                       views = [month, week, day, list] :: [aihtml_calendar:view()],
-                      first_day = 0 :: 0..6,
+                      first_day :: 0..6 | undefined,   % undefined: the language's
                       agenda_days = 30 :: pos_integer(),
                       day_max_events = 3 :: pos_integer(),
                       slot_duration = 30 :: pos_integer(),

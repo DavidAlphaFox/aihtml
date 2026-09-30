@@ -114,13 +114,14 @@ ah_calendar(Value, Css, Attrs) ->
 fields(ah_calendar) -> record_info(fields, ah_calendar).
 
 -spec render(element()) -> aihtml_html:html().
-render(#ah_calendar{view = View, views = Views, first_day = First,
+render(#ah_calendar{view = View, views = Views, first_day = First0,
                     height = Height, name = Name} = R0) ->
     {Id, R} = ensure_id(R0),
     Classes = ?E:classes(?MODULE, R),           % checks the flag fields first
     lists:member(View, ?VIEWS) orelse error({aihtml, {bad_calendar_view, View}}),
     (is_list(Views) andalso lists:all(fun(V) -> lists:member(V, ?VIEWS) end, Views))
         orelse error({aihtml, {bad_calendar_views, Views}}),
+    First = aihtml_lib_date:first_day(First0),
     check_first_day(First),
     [check_pos(K, V) || {K, V} <- [{agenda_days, R#ah_calendar.agenda_days},
                                    {day_max_events, R#ah_calendar.day_max_events},
@@ -666,7 +667,7 @@ catalog() ->
                          "status (confirmed, tentative, cancelled).">>,
              view => <<"The first view: month (default), week, day or list.">>,
              views => <<"The view buttons in the toolbar (default [month, week, day, list]).">>,
-             first_day => <<"First day of the week, 0 = Sunday (default) .. 6.">>,
+             first_day => <<"First day of the week, 0 = Sunday .. 6 (default: the page language's, Sunday in English, Monday in Chinese).">>,
              agenda_days => <<"Days shown by the list view (default 30).">>,
              day_max_events => <<"Event rows per month cell before \"+n more\" (default 3).">>,
              slot_duration => <<"Minutes per time slot in week and day views (default 30).">>,
