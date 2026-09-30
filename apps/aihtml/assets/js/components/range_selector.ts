@@ -85,7 +85,7 @@ function rsFormat(v: number, f: Format): string {
     case "fixed": s = v.toFixed(f.n); break;
     case "currency": {
       const d = erlRound(v);
-      s = "$" + (d < 0 ? "-" : "") + String(Math.abs(d)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      s = "$" + (d < 0 ? "-" : "") + String(Math.abs(d)).replace(/\B(?=(\d{3})+(?!\d))/g, AH.format("group", ","));
       break;
     }
     case "date": {
@@ -98,7 +98,7 @@ function rsFormat(v: number, f: Format): string {
       const d = new Date(Math.floor(v));
       const h = d.getUTCHours();
       s = ((h % 12) || 12) + ":" + (d.getUTCMinutes() < 10 ? "0" : "") + d.getUTCMinutes() +
-        (h >= 12 ? " PM" : " AM");
+        " " + (h >= 12 ? AH.format("pm", "PM") : AH.format("am", "AM"));
       break;
     }
     default:

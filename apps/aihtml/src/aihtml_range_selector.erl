@@ -203,14 +203,14 @@ format(V, time) ->
     {_, {H, Mi, _}} = utc(V),
     H12 = case H rem 12 of 0 -> 12; X -> X end,
     iolist_to_binary([integer_to_binary(H12), $:, pad2(Mi), $\s,
-                      case H >= 12 of true -> <<"PM">>; false -> <<"AM">> end]).
+                      case H >= 12 of true -> aihtml_i18n:format(pm); false -> aihtml_i18n:format(am) end]).
 
 fixed(V, N) -> float_to_binary(float(V), [{decimals, N}]).
 
 group3(Digits) ->
     case byte_size(Digits) of
         L when L =< 3 -> Digits;
-        L -> <<(group3(binary:part(Digits, 0, L - 3)))/binary, ",",
+        L -> <<(group3(binary:part(Digits, 0, L - 3)))/binary, (aihtml_i18n:format(group))/binary,
                (binary:part(Digits, L - 3, 3))/binary>>
     end.
 
