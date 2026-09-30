@@ -146,7 +146,7 @@ placeholders_test() ->
       end).
 
 labels_override_test() ->
-    ?assertEqual(#{close => <<"X">>, loading => <<"Loading...">>},
+    ?assertMatch(#{close := <<"X">>, loading := <<"Loading...">>},
                  ?M:texts(common, #{close => "X"})),
     %% a misspelt label fails instead of being ignored
     ?assertError({aihtml, {unknown_label, common, clsoe}}, ?M:texts(common, #{clsoe => <<"X">>})).
@@ -177,6 +177,37 @@ page_test() ->
     ?assertMatch({_, _}, binary:match(H2, <<"<html lang=\"en\"">>)),
     ?assertMatch({_, _}, binary:match(H2, <<"en<script">>)),
     ?assertEqual(<<"en">>, ?M:locale()).
+
+%% A page carries the browser's texts when its language has any other than
+%% English, and nothing otherwise.
+page_client_texts_test() ->
+    Script = fun(H) ->
+                     case re:run(H, <<"<script type=\"application/json\" id=\"ah-labels\">(.*?)</script>">>,
+                                 [{capture, all_but_first, binary}]) of
+                         {match, [J]} -> json:decode(J);
+                         nomatch -> none
+                     end
+             end,
+    Page = fun(Lang) -> iolist_to_binary(aihtml:page(<<"x">>, #{lang => Lang})) end,
+    ?assertEqual(none, Script(Page(<<"en">>))),
+    %% zh translates nothing the browser uses yet (only pivotgrid)
+    ?assertEqual(none, Script(Page(<<"zh">>))),
+    with_catalogs(
+      #{<<"xx">> => #{<<"messages">> => #{<<"common">> => #{<<"close">> => <<"</script> XX">>}},
+                      <<"format">> => #{<<"am">> => <<"a.m.">>}}},
+      fun() ->
+              H = Page(<<"xx">>),
+              %% "<" is written as \u003c, so the text cannot end the script
+              ?assertEqual(nomatch, binary:match(H, <<"</script> XX">>)),
+              #{<<"messages">> := #{<<"common">> := C} = M, <<"format">> := F} = Script(H),
+              ?assertEqual(<<"</script> XX">>, maps:get(<<"close">>, C)),
+              ?assertEqual(<<"Loading...">>, maps:get(<<"loading">>, C)),
+              ?assertEqual(<<"a.m.">>, maps:get(<<"am">>, F)),
+              ?assertEqual(<<"PM">>, maps:get(<<"pm">>, F)),
+              %% only the scopes en.json lists under "client"
+              ?assertNot(is_map_key(<<"pivotgrid">>, M)),
+              ?assert(is_map_key(<<"node_graph">>, M))
+      end).
 
 render_uses_current_test() ->
     ?assertEqual(<<"en">>, aihtml:render_binary(#i18n_probe{})),

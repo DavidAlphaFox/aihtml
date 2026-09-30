@@ -20,6 +20,12 @@
 %%% Lookups fall back text by text: "zh-tw", then "zh", then "en", so a
 %%% partly translated catalog still works.
 %%%
+%%% What the browser builds itself (menus, validation messages ...) takes
+%%% its texts from the scopes en.json lists under "client": a page in
+%%% another language carries them (`client_script/0', written by
+%%% aihtml_page), and the browser falls back to the English text each call
+%%% site gives (assets/js/runtime/i18n.ts).
+%%%
 %%% Application environment:
 %%%
 %%%   default_locale  the language when none is set, default <<"en">>
@@ -33,7 +39,8 @@
 -module(aihtml_i18n).
 
 -export([locale/0, with/2, normalize/1, locales/0,
-         text/2, text/3, texts/1, texts/2, format/1, formats/1, reload/0]).
+         text/2, text/3, texts/1, texts/2, format/1, formats/1, client/0, client_script/0,
+         reload/0]).
 
 -export_type([lang/0, scope/0]).
 
@@ -143,6 +150,36 @@ format(Key) ->
 %% weekday names a date component merges into its texts).
 -spec formats([atom()]) -> #{atom() => term()}.
 formats(Keys) -> maps:from_list([{K, format(K)} || K <- Keys]).
+
+%% @doc What the browser needs in the current language: the texts of the
+%% scopes en.json lists under "client", and all formatting settings.
+-spec client() -> #{messages := #{atom() => #{atom() => binary()}}, format := map()}.
+client() ->
+    Scopes = case find([<<"client">>], maps:get(?FALLBACK, catalogs(), #{})) of
+                 {ok, L} when is_list(L) -> [binary_to_atom(S) || S <- L];
+                 _ -> []
+             end,
+    Format = lists:foldl(fun(C, Acc) ->
+                                 case find([<<"format">>], C) of
+                                     {ok, F} when is_map(F) -> maps:merge(Acc, F);
+                                     _ -> Acc
+                                 end
+                         end, #{}, lists:reverse(chain())),
+    #{messages => maps:from_list([{S, texts(S)} || S <- Scopes]), format => Format}.
+
+%% @doc The `<script type="application/json" id="ah-labels">' a page
+%% carries for the browser, or nothing when `client()' is the same as in
+%% English (the browser's own fallbacks are the English texts).
+-spec client_script() -> aihtml_html:html().
+client_script() ->
+    C = client(),
+    case C =:= with(?FALLBACK, fun client/0) of
+        true -> [];
+        false ->
+            Json = iolist_to_binary(aihtml_json:encode(C)),
+            aihtml_html:el(script, {safe, binary:replace(Json, <<"<">>, <<"\\u003c">>, [global])},
+                           [], [{type, <<"application/json">>}, {id, <<"ah-labels">>}])
+    end.
 
 %% @doc Read the catalogs again (after changing their files or the
 %% `locales' setting).

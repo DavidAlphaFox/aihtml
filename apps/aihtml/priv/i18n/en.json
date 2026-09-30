@@ -1,4 +1,5 @@
 {
+  "client": ["calendar", "chart_table", "common", "datepicker", "datetime_input", "datetime_parts", "dock_layout", "dragdrop", "field", "markdown_editor", "node_graph", "password_input", "ribbon", "sortable", "time_ago", "toolbar", "upload"],
   "format": {
     "am": "AM",
     "decimal": ".",
@@ -31,9 +32,70 @@
       "today": "Today",
       "week": "Week"
     },
+    "chart_table": {
+      "category": "Category",
+      "children": "Children",
+      "indicator": "Indicator",
+      "links_to": "Links to",
+      "more_rows": "And {0} more rows.",
+      "name": "Name",
+      "node": "Node",
+      "series": "Series",
+      "series_n": "Series {0}",
+      "share": "Share",
+      "value": "Value"
+    },
+    "colorpicker": {
+      "alpha": "Alpha",
+      "blue": "Blue",
+      "dialog": "Choose color",
+      "green": "Green",
+      "hex": "Hex",
+      "hue": "Hue",
+      "picker": "Color Picker",
+      "red": "Red",
+      "saturation": "Saturation and brightness",
+      "swatches": "Swatches"
+    },
+    "command": {
+      "empty": "No results found.",
+      "palette": "Command palette"
+    },
     "common": {
+      "add_tag": "Add tag",
+      "choose_date": "Choose date",
+      "choose_time": "Choose time",
+      "clear": "Clear",
       "close": "Close",
-      "loading": "Loading..."
+      "collapse": "Collapse",
+      "decrease": "Decrease",
+      "decrement": "Decrement",
+      "filter": "Filter",
+      "filter_placeholder": "Filter...",
+      "hide_password": "Hide password",
+      "hours": "Hours",
+      "increase": "Increase",
+      "increment": "Increment",
+      "loading": "Loading...",
+      "loading_items": "Loading…",
+      "maximum": "Maximum",
+      "menu": "Menu",
+      "minimum": "Minimum",
+      "minutes": "Minutes",
+      "navigation": "Navigation",
+      "no_data": "No data",
+      "no_results": "No results found",
+      "open_menu": "Open menu",
+      "page_n": "Page {0}",
+      "pages": "Pages",
+      "remove": "Remove",
+      "remove_item": "Remove {0}",
+      "resize": "Resize",
+      "select_all_rows": "Select all rows",
+      "select_row": "Select row",
+      "show_password": "Show password",
+      "toggle_navigation": "Toggle navigation",
+      "week_short": "Wk"
     },
     "datagrid": {
       "avg": "Avg",
@@ -72,6 +134,31 @@
       "unpin": "Unpin",
       "yes": "Yes"
     },
+    "datatable": {
+      "columns": "Columns",
+      "contains": "Contains",
+      "details": "Details",
+      "empty": "Empty",
+      "ends_with": "Ends With",
+      "equals": "Equals",
+      "filter": "Filter...",
+      "gt": "Greater Than",
+      "gte": "Greater or Equal",
+      "info": "{start}-{end} of {total}",
+      "lt": "Less Than",
+      "lte": "Less or Equal",
+      "next": "Next page",
+      "not_contains": "Not Contains",
+      "not_empty": "Not Empty",
+      "not_equals": "Not Equals",
+      "page_size": "Rows per page",
+      "prev": "Previous page",
+      "search": "Search...",
+      "select_all": "Select all rows",
+      "select_row": "Select row",
+      "starts_with": "Starts With",
+      "value": "Value..."
+    },
     "datepicker": {
       "clear": "Clear",
       "next_month": "Next month",
@@ -87,6 +174,16 @@
       "time": "Time",
       "title": "MMMM yyyy"
     },
+    "datetime_parts": {
+      "ampm": "AM/PM",
+      "day": "Day",
+      "hint": "Arrow keys change the selected part",
+      "hour": "Hour",
+      "minute": "Minute",
+      "month": "Month",
+      "second": "Second",
+      "year": "Year"
+    },
     "dock_layout": {
       "auto_hide": "Auto Hide",
       "close": "Close",
@@ -97,9 +194,46 @@
       "close": "Close",
       "collapse": "Collapse"
     },
+    "dragdrop": {
+      "cancelled": "Cancelled.",
+      "dropped": "{0} dropped on {1}.",
+      "no_zone": "No drop zone takes {0}.",
+      "picked": "Picked up {0}. Arrow keys choose one of {1} drop zones, Space drops, Escape cancels.",
+      "zone": "{0}, drop zone {1} of {2}."
+    },
+    "field": {
+      "email": "Please enter a valid email address",
+      "integer": "Please enter a whole number",
+      "invalid": "Invalid value",
+      "length": "Please enter {0} to {1} characters",
+      "max": "Must be at most {0}",
+      "max_length": "Please enter at most {0} characters",
+      "min": "Must be at least {0}",
+      "min_length": "Please enter at least {0} characters",
+      "not_number": "Digits are not allowed",
+      "number": "Please enter a number",
+      "pattern": "Please match the requested format",
+      "phone": "Please enter a phone number like (555)555-5555",
+      "range": "Must be between {0} and {1}",
+      "required": "This field is required",
+      "same_as": "The values do not match",
+      "ssn": "Please enter a valid SSN",
+      "starts_with_letter": "Must start with a letter",
+      "zip_code": "Please enter a valid ZIP code"
+    },
+    "formatted_input": {
+      "binary": "Binary",
+      "decimal": "Decimal",
+      "hexadecimal": "Hexadecimal",
+      "octal": "Octal",
+      "radix": "Radix"
+    },
     "gantt": {
       "task": "Task",
       "tasks": "{n} tasks"
+    },
+    "input_otp": {
+      "character": "Character {0} of {1}"
     },
     "markdown_editor": {
       "block_add": "Add Block",
@@ -128,6 +262,40 @@
       "task_list": "Task List",
       "words": "Words"
     },
+    "node_graph": {
+      "actions": "Actions",
+      "add_node": "Add node",
+      "add_reroute": "Add reroute point here",
+      "canvas": "Canvas",
+      "collapse": "Collapse",
+      "collapse_node": "Collapse node",
+      "copy_node": "Copy node",
+      "copy_nodes": "Copy {0} nodes",
+      "delete_group": "Delete group",
+      "delete_group_frame": "Delete group frame",
+      "delete_group_title": "Delete group frame (nodes stay)",
+      "delete_link": "Delete link",
+      "delete_node": "Delete node",
+      "delete_nodes": "Delete {0} nodes",
+      "delete_selection": "Delete selection (Del)",
+      "duplicate_node": "Duplicate node",
+      "duplicate_nodes": "Duplicate {0} nodes",
+      "expand": "Expand",
+      "expand_node": "Expand node",
+      "fit": "Fit to view",
+      "frame_only": "frame only",
+      "group": "Group",
+      "new_group_frame": "New group frame",
+      "no_match": "No matching node",
+      "pan": "Pan the canvas (or hold Space / middle-drag)",
+      "redo": "Redo",
+      "search_nodes": "Search nodes…",
+      "title": "Title",
+      "tools": "Graph tools",
+      "undo": "Undo",
+      "zoom_in": "Zoom in",
+      "zoom_out": "Zoom out"
+    },
     "pagination": {
       "aria_label": "Pagination",
       "first": "First",
@@ -141,6 +309,13 @@
       "per_page_aria": "Items per page",
       "prev": "Previous",
       "total": "Total {0}"
+    },
+    "password_input": {
+      "fair": "Fair",
+      "good": "Good",
+      "strong": "Strong",
+      "too_short": "Too short",
+      "weak": "Weak"
     },
     "pivotgrid": {
       "avg": "Average",
@@ -177,6 +352,20 @@
       "sum": "Sum",
       "values": "Values"
     },
+    "relation_graph": {
+      "fit": "Fit view",
+      "refresh": "Refresh"
+    },
+    "ribbon": {
+      "collapse": "Collapse the ribbon",
+      "collapse_title": "Collapse the ribbon (Ctrl+F1)",
+      "expand": "Expand the ribbon",
+      "scroll_down": "Scroll down",
+      "scroll_left": "Scroll left",
+      "scroll_right": "Scroll right",
+      "scroll_up": "Scroll up",
+      "tabs": "Ribbon tabs"
+    },
     "scheduler": {
       "agenda": "Agenda",
       "agenda_date": "MMMM d, yyyy",
@@ -204,6 +393,11 @@
       "today": "Today",
       "week": "Week"
     },
+    "sortable": {
+      "cancelled": "Cancelled, {0} is back at position {1}.",
+      "dropped": "{0} dropped at position {1}.",
+      "picked": "Picked up {0}, position {1}. Arrow keys move it, Space drops it, Escape cancels."
+    },
     "status_bar": {
       "chars": "Chars",
       "chars_no_space": "No spaces",
@@ -228,6 +422,14 @@
       "just_now": "just now",
       "minutes": "{n}m ago",
       "months": "{n}mo ago"
+    },
+    "toolbar": {
+      "more": "More tools",
+      "overflow": "Overflow tools"
+    },
+    "transfer": {
+      "to_source": "Move to source",
+      "to_target": "Move to target"
     },
     "upload": {
       "network_error": "Network error",

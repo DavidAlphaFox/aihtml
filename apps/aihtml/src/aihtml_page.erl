@@ -90,6 +90,7 @@
 
 -spec render(aihtml_html:html(), opts()) -> iodata().
 render(Body, Opts) ->
+    Lang = maps:get(lang, Opts, aihtml_i18n:locale()),
     Theme = maps:get(theme, Opts, #{}),
     Assets = iolist_to_binary(maps:get(assets, Opts, <<"/aihtml/">>)),
     {Runtime, Preload} = runtime(Assets, maps:get(runtime, Opts, default)),
@@ -103,6 +104,8 @@ render(Body, Opts) ->
                el(title, maps:get(title, Opts, <<>>), [], []),
                seo(Opts),
                [el(script, {safe, ?BOOT}, [], []) || maps:get(persist, Opts, true)],
+               %% texts for what the browser builds, when not English
+               aihtml_i18n:with(Lang, fun aihtml_i18n:client_script/0),
                [void(link, [], [{rel, modulepreload}, {href, U}]) || U <- Preload],
                [void(link, [], [{rel, stylesheet}, {href, iolist_to_binary(U)}])
                 || U <- maps:get(css, Opts, [<<Assets/binary, "css/", (aihtml_assets:css())/binary>>])],
@@ -114,7 +117,6 @@ render(Body, Opts) ->
                 [{data_ah_action, iolist_to_binary(maps:get(action, Opts, <<"/aihtml/action">>))},
                  {data_ah_events, iolist_to_binary(maps:get(events, Opts, <<"/aihtml/events">>))},
                  maps:get(body_attrs, Opts, [])]),
-    Lang = maps:get(lang, Opts, aihtml_i18n:locale()),
     Html = el(html, [Head, BodyEl], [], [{lang, Lang}, aihtml_theme:attrs(Theme)]),
     %% records render lazily, so the body's components see the language
     [<<"<!DOCTYPE html>\n">>, aihtml_i18n:with(Lang, fun() -> aihtml_html:render(Html) end)].
