@@ -78,7 +78,8 @@ card_matches_template_test() ->
     {safe, B} = aihtml_tpl:safe(aihtml_lib_overlay:tpl_notification(
                                   #{variant => <<"info">>, info => true, success => false,
                                     warning => false, error => false, clickable => true,
-                                    closable => true, width => null, content => <<"x">>})),
+                                    closable => true, width => null, content => <<"x">>,
+                                    txt_close => <<"Close">>})),
     has(?M:ah_notification(<<"x">>, [], []), B).
 
 %%%===================================================================

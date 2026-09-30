@@ -125,6 +125,7 @@ card(Opts, ContentHtml) ->
         end,
     aihtml_tpl:safe(tpl_notification(
         #{variant => atom_to_binary(V),
+          txt_close => aihtml_i18n:text(common, close),
           info => V =:= info, success => V =:= success,
           warning => V =:= warning, error => V =:= error,
           clickable => maps:get(close_on_click, Opts, true) =/= false,

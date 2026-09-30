@@ -553,6 +553,8 @@ export interface CardView {
   closable: boolean;
   width: string | null;
   content: string;
+  /** the close button's name, in the page's language */
+  txt_close: string;
 }
 
 /** The view for templates/notification.mustache; aihtml_lib_overlay:card/2
@@ -567,7 +569,8 @@ export function cardView(o: CardOptions, contentHtml: string): CardView {
     closable: o.closable !== false && o.closable !== "false",
     width: w === undefined || w === null || w === "" ? null
       : (typeof w === "number" ? w + "px" : String(w)),
-    content: contentHtml
+    content: contentHtml,
+    txt_close: AH.t("common", "close", "Close")
   };
 }
 

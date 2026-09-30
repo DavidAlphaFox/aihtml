@@ -25,7 +25,8 @@
          parse(AH.tpl.notification({ variant: "success", info: false, success: true, warning: false,
                                      error: false, clickable: true, closable: true, width: null,
                                      content: AH.tpl.toast({ has_title: true, title: "<b>T</b>",
-                                                             has_description: true, description: "d" }) })).outerHTML);
+                                                             has_description: true, description: "d" }),
+                                     txt_close: "Close" })).outerHTML);
     T.ok(card.parentNode.matches(".ah-notify-container.ah-notify-top-right"), "in its corner");
     cleanup();
   });

@@ -1,11 +1,11 @@
 [
-  {"variant": "info", "info": true, "success": false, "warning": false, "error": false,
+  {"txt_close": "Close", "variant": "info", "info": true, "success": false, "warning": false, "error": false,
    "clickable": true, "closable": true, "width": null,
    "content": "<div class=\"ah-toast__title\">Heads up</div>"},
-  {"variant": "success", "info": false, "success": true, "warning": false, "error": false,
+  {"txt_close": "Close", "variant": "success", "info": false, "success": true, "warning": false, "error": false,
    "clickable": false, "closable": false, "width": "320px", "content": "<strong>Done</strong> 3 files"},
-  {"variant": "warning", "info": false, "success": false, "warning": true, "error": false,
+  {"txt_close": "Close", "variant": "warning", "info": false, "success": false, "warning": true, "error": false,
    "clickable": true, "closable": true, "width": "20rem\"><x", "content": ""},
-  {"variant": "error", "info": false, "success": false, "warning": false, "error": true,
+  {"txt_close": "Close", "variant": "error", "info": false, "success": false, "warning": false, "error": true,
    "clickable": false, "closable": true, "width": null, "content": "Server &lt;down&gt;"}
 ]
