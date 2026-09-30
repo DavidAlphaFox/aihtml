@@ -1,0 +1,39 @@
+{
+  "messages": {
+    "pivotgrid": {
+      "avg": "平均值",
+      "blank": "（空白）",
+      "collapse_all": "全部折叠",
+      "columns": "列",
+      "count": "计数",
+      "drop": "拖入字段",
+      "empty": "暂无数据",
+      "expand_all": "全部展开",
+      "export_csv": "导出 CSV",
+      "export_xlsx": "导出 Excel",
+      "fields": "字段",
+      "grand_total": "合计",
+      "max": "最大值",
+      "min": "最小值",
+      "move_columns": "移到列",
+      "move_left": "左移",
+      "move_right": "右移",
+      "move_rows": "移到行",
+      "move_values": "添加到值",
+      "pivot": "透视表",
+      "product": "乘积",
+      "remove": "移除",
+      "rows": "行",
+      "sort_asc": "行升序排列",
+      "sort_clear": "清除排序",
+      "sort_cols_asc": "列升序排列",
+      "sort_cols_desc": "列降序排列",
+      "sort_desc": "行降序排列",
+      "sort_value_asc": "按此列升序排列行",
+      "sort_value_desc": "按此列降序排列行",
+      "subtotal": "小计",
+      "sum": "求和",
+      "values": "值"
+    }
+  }
+}
