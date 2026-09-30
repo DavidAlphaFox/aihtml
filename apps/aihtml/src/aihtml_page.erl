@@ -31,7 +31,8 @@
 %%%                default true (the runtime saves it)
 %%%   assets       URL where aihtml's priv/static is served, default
 %%%                <<"/aihtml/">>
-%%%   css          stylesheet URLs, default [<<"/aihtml/aihtml.css">>]
+%%%   css          stylesheet URLs, default the prebuilt stylesheet under
+%%%                `assets' (css/aihtml-<hash>.css, see aihtml_assets:css/0)
 %%%   runtime      URL of the runtime's entry module, default the bundle
 %%%                in priv/static/js (aihtml_assets), or false to leave it
 %%%                out
@@ -47,7 +48,7 @@
 %%%
 %%% The default URLs assume `priv/static' of the aihtml application is
 %%% served under `/aihtml/' (see the example application); change `assets'
-%%% when it is served elsewhere. The runtime is an ES module; scripts in
+%%% when it is served elsewhere, and the stylesheet and runtime follow. The runtime is an ES module; scripts in
 %%% `js' are deferred so they run after it, in order.
 %%% @end
 %%%-------------------------------------------------------------------
@@ -109,7 +110,7 @@ render(Body, Opts) ->
                [el(script, {safe, ?BOOT}, [], []) || maps:get(persist, Opts, true)],
                [void(link, [], [{rel, modulepreload}, {href, U}]) || U <- Preload],
                [void(link, [], [{rel, stylesheet}, {href, iolist_to_binary(U)}])
-                || U <- maps:get(css, Opts, [<<"/aihtml/aihtml.css">>])],
+                || U <- maps:get(css, Opts, [<<Assets/binary, "css/", (aihtml_assets:css())/binary>>])],
                maps:get(head, Opts, [])],
               [], []),
     BodyEl = el(body,

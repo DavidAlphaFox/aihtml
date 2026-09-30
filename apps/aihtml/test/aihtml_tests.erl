@@ -169,7 +169,10 @@ page_test() ->
     ?assertMatch(<<"<!DOCTYPE html>\n<html lang=\"en\" data-theme=\"light\""
                    " data-palette=\"green\"", _/binary>>, H),
     ?assertMatch({_, _}, binary:match(H, <<"<title>T</title>">>)),
-    ?assertMatch({_, _}, binary:match(H, <<"<link rel=\"stylesheet\" href=\"/aihtml/aihtml.css\">">>)),
+    %% the stylesheet has a content hash, found in its manifest
+    Css = aihtml_assets:css(),
+    ?assertMatch(<<"aihtml-", _:8/binary, ".css">>, Css),
+    ?assertMatch({_, _}, binary:match(H, <<"<link rel=\"stylesheet\" href=\"/aihtml/css/", Css/binary, "\">">>)),
     %% the runtime is the bundle's entry module, found in its manifest
     #{file := Entry, imports := Imports} = aihtml_assets:entry(),
     ?assertMatch({_, _}, binary:match(H, <<"<body class=\"ah-body\" data-ah-action=\"/aihtml/action\" data-ah-events=\"/aihtml/events\"><p>x</p>"
@@ -183,6 +186,12 @@ page_test() ->
                                                     jquery => <<"/j.js">>, js => [<<"/app.js">>]})),
     ?assertMatch({_, _}, binary:match(H2, <<"<script src=\"/j.js\"></script><script type=\"module\" src=\"/static/ah/js/",
                                             Entry/binary, "\"></script><script src=\"/app.js\" defer></script>">>)),
+    %% the stylesheet follows `assets' unless `css' is given
+    ?assertMatch({_, _}, binary:match(H2, <<"<link rel=\"stylesheet\" href=\"/static/ah/css/", Css/binary, "\">">>)),
+    H4 = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{assets => <<"/static/ah/">>,
+                                                    css => [<<"/app.css">>]})),
+    ?assertMatch({_, _}, binary:match(H4, <<"<link rel=\"stylesheet\" href=\"/app.css\">">>)),
+    ?assertEqual(nomatch, binary:match(H4, Css)),
     H3 = iolist_to_binary(aihtml:page(ah_p(<<"x">>), #{runtime => false})),
     ?assertEqual(nomatch, binary:match(H3, <<"<script type=\"module\"">>)).
 
