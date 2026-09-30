@@ -1,5 +1,5 @@
 [
-  {"title_id": "dp-title", "title": "February 2026", "prev_year": "Previous year", "prev_month": "Previous month",
+  {"txt_week": "Wk", "title_id": "dp-title", "title": "February 2026", "prev_year": "Previous year", "prev_month": "Previous month",
    "next_month": "Next month", "next_year": "Next year", "today": "Today", "week_numbers": false,
    "weekdays": [{"label": "Su"}, {"label": "Mo"}, {"label": "Tu"}, {"label": "We"}, {"label": "Th"}, {"label": "Fr"}, {"label": "Sa"}],
    "weeks": [
@@ -10,7 +10,7 @@
        {"empty": true},
        {"empty": false, "cls": "ah-datepicker-day ah-datepicker-day-other-month", "id": "dp-d2026-03-01", "date": "2026-03-01", "selected": "false", "disabled": "false", "label": "1 March 2026", "day": "1"}]}
    ]},
-  {"title_id": "x-title", "title": "2026年 <九月> & \"q\"", "prev_year": "上一年", "prev_month": "上月",
+  {"txt_week": "Wk", "title_id": "x-title", "title": "2026年 <九月> & \"q\"", "prev_year": "上一年", "prev_month": "上月",
    "next_month": "下月", "next_year": "下一年", "today": "今天", "week_numbers": true,
    "weekdays": [{"label": "一"}, {"label": "日"}],
    "weeks": [{"num": "40", "days": [{"empty": true}]}]}

@@ -125,7 +125,7 @@ render(#ah_datepicker{value = Value0, name = Name, disabled = Disabled,
                  end,
                  [<<"ah-datepicker-popup">>],
                  [{role, case Inline of true -> group; false -> dialog end},
-                  {aria_label, <<"Choose date">>}])],
+                  {aria_label, aihtml_i18n:text(common, choose_date)}])],
           [Classes,
            [<<"ah-datepicker-range">> || Range, not R#ah_datepicker.range]],
           %% the id comes first, as before; root_attrs repeats it in place
@@ -294,6 +294,7 @@ month_view(#{id := Id, value := Value, first_day := First, labels := L} = O) ->
       next_month => maps:get(<<"next_month">>, L), next_year => maps:get(<<"next_year">>, L),
       today => maps:get(<<"today">>, L),
       week_numbers => maps:get(week_numbers, O),
+      txt_week => aihtml_i18n:text(common, week_short),
       weekdays => [#{label => lists:nth((First + I) rem 7 + 1, maps:get(<<"weekdays">>, L))}
                    || I <- lists:seq(0, 6)],
       weeks => [#{num => integer_to_binary(week_number(W, First)),

@@ -12,16 +12,25 @@ const DAY = 86400000;
 
 type LabelValue = string | string[];
 
-const DEFAULT_LABELS = {
-  months: ["January", "February", "March", "April", "May", "June", "July",
-           "August", "September", "October", "November", "December"],
-  months_short: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
-  weekdays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
-  title: "MMMM yyyy", today: "Today", clear: "Clear",
-  prev_month: "Previous month", next_month: "Next month",
-  prev_year: "Previous year", next_year: "Next year"
-};
-type Labels = typeof DEFAULT_LABELS;
+// The defaults in the page's language, overridden by data-ah-labels.
+function defaultLabels() {
+  return {
+    months: AH.format<string[]>("months", ["January", "February", "March", "April", "May", "June",
+                                    "July", "August", "September", "October", "November",
+                                    "December"]),
+    months_short: AH.format<string[]>("months_short", ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+                                                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]),
+    weekdays: AH.format<string[]>("weekdays_min", ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]),
+    title: AH.t("datepicker", "title", "MMMM yyyy"),
+    today: AH.t("datepicker", "today", "Today"),
+    clear: AH.t("datepicker", "clear", "Clear"),
+    prev_month: AH.t("datepicker", "prev_month", "Previous month"),
+    next_month: AH.t("datepicker", "next_month", "Next month"),
+    prev_year: AH.t("datepicker", "prev_year", "Previous year"),
+    next_year: AH.t("datepicker", "next_year", "Next year")
+  };
+}
+type Labels = ReturnType<typeof defaultLabels>;
 
 // The defaults, overridden by the labels of data-ah-labels of the same
 // kind (a text or a list of texts).
@@ -108,7 +117,7 @@ class DatepickerController extends AH.Controller {
   #weekNumbers = false;
   #weekends = false;
   #otherMonth = true;
-  #L: Labels = DEFAULT_LABELS;
+  #L: Labels = defaultLabels();
   #inline = false;
   // state
   #open = false;
@@ -140,7 +149,7 @@ class DatepickerController extends AH.Controller {
     this.#weekNumbers = el.hasAttribute("data-ah-week-numbers");
     this.#weekends = el.hasAttribute("data-ah-weekends");
     this.#otherMonth = el.getAttribute("data-ah-other-month-days") !== "false";
-    this.#L = readLabels(el, DEFAULT_LABELS);
+    this.#L = readLabels(el, defaultLabels());
     this.#inline = el.classList.contains("ah-datepicker-inline");
     this.#open = false;
     this.#value = this.#from = this.#to = this.#pending = this.#focus = null;
@@ -338,6 +347,7 @@ class DatepickerController extends AH.Controller {
       next_month: L.next_month, next_year: L.next_year,
       today: L.today,
       week_numbers: this.#weekNumbers,
+      txt_week: AH.t("common", "week_short", "Wk"),
       weekdays,
       weeks
     };
