@@ -197,11 +197,13 @@ function compare(a: string, b: string): number {
   return la < lb ? -1 : (la > lb ? 1 : 0);
 }
 
+// with the separators of the page's language (format_value/3 in Erlang)
 function thousands(n: number, d: number): string {
   let s = n.toFixed(d), sign = "";
   if (s.charAt(0) === "-") { sign = "-"; s = s.slice(1); }
   const parts = s.split(".");
-  return sign + parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",") + (parts[1] ? "." + parts[1] : "");
+  return sign + parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, AH.format("group", ",")) +
+    (parts[1] ? AH.format("decimal", ".") + parts[1] : "");
 }
 
 function pad(n: number, w: number): string {

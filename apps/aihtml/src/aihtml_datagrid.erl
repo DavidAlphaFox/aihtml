@@ -821,8 +821,9 @@ thousands(Num, D) ->
                       <<"-", Rest/binary>> -> {<<"-">>, Rest};
                       _ -> {<<>>, Fixed}
                   end,
+    %% the separators of the current language (aihtml_i18n format)
     {Int, Frac} = case binary:split(Abs, <<".">>) of
-                      [I, F] -> {I, <<".", F/binary>>};
+                      [I, F] -> {I, <<(aihtml_i18n:format(decimal))/binary, F/binary>>};
                       [I] -> {I, <<>>}
                   end,
     <<Sign/binary, (group3(Int))/binary, Frac/binary>>.
@@ -831,7 +832,8 @@ group3(Int) ->
     N = byte_size(Int),
     First = case N rem 3 of 0 -> 3; R -> R end,
     <<Head:First/binary, Tail/binary>> = Int,
-    iolist_to_binary([Head | [[$,, G] || <<G:3/binary>> <= Tail]]).
+    Sep = aihtml_i18n:format(group),
+    iolist_to_binary([Head | [[Sep, G] || <<G:3/binary>> <= Tail]]).
 
 %%%===================================================================
 %%% HTML: header, filter row, body, status bar, toolbar, pager
