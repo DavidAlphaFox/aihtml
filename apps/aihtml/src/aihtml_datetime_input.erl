@@ -70,9 +70,10 @@ fields(ah_datetime_input) -> record_info(fields, ah_datetime_input).
 -spec render(element()) -> aihtml_html:html().
 render(#ah_datetime_input{value = Value0, format = Format0, name = Name,
                           disabled = Disabled, placeholder = Placeholder,
-                          first_day = First} = R0) ->
+                          first_day = First0} = R0) ->
     {Id, R} = ensure_id(R0),
     Classes = ?E:classes(?MODULE, R),           % checks the flag fields first
+    First = aihtml_lib_date:first_day(First0),
     check_first_day(First),
     Format = text(Format0),
     Segs = segments(Format),
@@ -306,7 +307,7 @@ catalog() ->
                          "HH:mm[:ss] accordingly.">>,
              min => <<"Earliest value; later edits are clamped on blur.">>,
              max => <<"Latest value.">>,
-             first_day => <<"First day of the calendar week, 0 = Sunday (default) .. 6.">>,
+             first_day => <<"First day of the week, 0 = Sunday .. 6 (default: the page language's, Sunday in English, Monday in Chinese).">>,
              labels => <<"Map of months, weekdays (from Sunday), title (a format), time, "
                          "prev_month, next_month.">>},
        methods =>

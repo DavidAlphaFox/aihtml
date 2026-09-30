@@ -23,7 +23,7 @@
                             format = <<"yyyy-MM-dd">> :: unicode:chardata(),
                             min = undefined :: aihtml_datetime_input:value(),
                             max = undefined :: aihtml_datetime_input:value(),
-                            first_day = 0 :: 0..6,
+                            first_day :: 0..6 | undefined,   % undefined: the language's
                             labels = #{} :: aihtml_datetime_input:labels(),
                             name = undefined :: undefined | atom() | iodata()}).
 
