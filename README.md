@@ -36,7 +36,7 @@ login() ->
 
 ## 截图
 
-以下截图都来自仓库里的示例站（`rebar3 shell` 后打开 http://localhost:8080/），由 `npm run screenshots` 生成。每个组件文档页上方是渲染效果，下方是生成它的 Erlang 代码；右上角的四个下拉框切换外观、配色、排版、外形四个主题轴，下面几张用了不同的组合。页面地址加上 `?lang=zh` 就按中文渲染（见「国际化」）。
+以下截图都来自仓库里的示例站（`rebar3 shell` 后打开 http://localhost:8080/），由 `npm run screenshots` 生成。每个组件文档页上方是渲染效果，下方是生成它的 Erlang 代码；右上角的四个下拉框切换外观、配色、排版、外形四个主题轴，下面几张用了不同的组合。顶栏和文档页右上角的「中文 / English」切换组件的语言（见「国际化」）。
 
 <table>
   <tr>
@@ -560,7 +560,7 @@ $list.append(AH.tpl.my_badge({ color: "primary", label: name, count: n }));
 aihtml:page(Body, #{lang => <<"zh-CN">>})   %% <html lang="zh-CN">，组件用中文
 ```
 
-示例站的首页和组件文档页可以在地址后加 `?lang=zh` 看中文效果（`aihtml_example_site:lang/1`，只接受有文案的语言），例如 http://localhost:8080/components/calendar?lang=zh 。
+示例站的顶栏和组件文档页右上角有「中文 / English」切换，组件随之换成对应语言；演示站自己的说明文字不翻译，仍是中英混合。切换就是在地址后加 `?lang=zh` 或 `?lang=en`（例如 http://localhost:8080/components/calendar?lang=zh ），选择记在 cookie `aihtml_lang` 里，之后打开的页面沿用，服务端仍然无状态。只接受有文案的语言，其它值忽略（`aihtml_example_site:lang/1`）。
 
 - **默认语言**：不写 `lang` 时用应用环境的 `default_locale`（默认 `<<"en">>`）。单一语言的站点设置它就够了，页面、推送和 `aihtml:render/1` 都用它：
 
