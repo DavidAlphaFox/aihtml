@@ -551,12 +551,12 @@ fmt_time(Min, #{hour_format := F, labels := L}) ->
     H = Min rem ?DAY div 60, M = ?D:pad(Min rem 60),
     case F of
         24 -> <<(?D:pad(H))/binary, ":", M/binary>>;
-        12 -> <<(integer_to_binary(h12(H)))/binary, ":", M/binary, " ",
-                (ampm(H, L))/binary>>
+        12 -> aihtml_lib_date:time_12h(<<(integer_to_binary(h12(H)))/binary, ":", M/binary>>,
+                                       ampm(H, L))
     end.
 
 slot_label(H, #{hour_format := 24}) -> <<(?D:pad(H))/binary, ":00">>;
-slot_label(H, #{labels := L}) -> <<(integer_to_binary(h12(H)))/binary, " ", (ampm(H, L))/binary>>.
+slot_label(H, #{labels := L}) -> aihtml_lib_date:time_12h(integer_to_binary(h12(H)), ampm(H, L)).
 
 h12(0) -> 12;
 h12(H) when H > 12 -> H - 12;

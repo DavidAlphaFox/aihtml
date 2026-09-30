@@ -22,7 +22,7 @@
  * the link's URL, modified clicks are left to the browser. */
 import AH from "../core.ts";
 import {
-  DAY, addMonths, dnum, dow, isoDate, isoTime, lastDay, pad, parseDate, parseTime, sow, todayNum, ymd
+  DAY, addMonths, dnum, dow, isoDate, isoTime, lastDay, pad, parseDate, parseTime, sow, time12, todayNum, ymd
 } from "./_lib_date.ts";
 import type { DayNum, Minutes } from "./_lib_date.ts";
 import { expand, parse as parseRule, stamp } from "./_lib_rrule.ts";
@@ -213,7 +213,7 @@ function cls(base: string, opts: [boolean, string][]): string {
 function h12(h: number): number { return h === 0 ? 12 : (h > 12 ? h - 12 : h); }
 function fmtClock(t: Minutes, cf: CalConf): string {
   const r = ((t % DAY) + DAY) % DAY, h = Math.floor(r / 60), m = pad(r % 60);
-  return cf.hour24 ? pad(h) + ":" + m : h12(h) + ":" + m + " " + (h < 12 ? cf.L.am : cf.L.pm);
+  return cf.hour24 ? pad(h) + ":" + m : time12(h12(h) + ":" + m, h < 12 ? cf.L.am : cf.L.pm);
 }
 function srcColor(src: CalendarEvent): string { return src.color || DEFAULT_COLOR; }
 
@@ -339,7 +339,7 @@ function calTimegrid(cf: CalConf, rs: DayNum, re: DayNum, insts: readonly Inst[]
   const slots: unknown[] = [];
   for (let h = 0; h < 24; h++) {
     slots.push({ slot_height: String(Math.round(60 * sh / dur)),
-                 label: cf.hour24 ? pad(h) + ":00" : h12(h) + " " + (h < 12 ? L.am : L.pm) });
+                 label: cf.hour24 ? pad(h) + ":00" : time12(String(h12(h)), h < 12 ? L.am : L.pm) });
   }
   const days: unknown[] = [];
   for (let d = rs; d < re; d++) {
