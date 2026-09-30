@@ -51,14 +51,14 @@ render(#ah_dropdownlist{items = Items, value = Value, disabled = Disabled,
                  true ->
                      el('div', aihtml_html:void(input, [<<"ah-listbox-filter-input">>],
                                                 [{type, text}, {autocomplete, off},
-                                                 {aria_label, <<"Filter">>},
+                                                 {aria_label, aihtml_i18n:text(common, filter)},
                                                  {placeholder, R#ah_dropdownlist.filter_placeholder}]),
                         [<<"ah-listbox-filter">>], []);
                  false -> []
              end,
     Height = R#ah_dropdownlist.dropdown_height,
     List = case Norm of
-               [] -> el('div', <<"No data">>, [<<"ah-listbox-empty">>], []);
+               [] -> el('div', aihtml_i18n:text(common, no_data), [<<"ah-listbox-empty">>], []);
                _ -> el(ul, list_items(Norm, Val), [<<"ah-listbox-list">>], [{role, listbox}])
            end,
     Popup = el('div',

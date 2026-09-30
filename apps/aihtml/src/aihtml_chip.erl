@@ -58,7 +58,7 @@ render(#ah_chip{body = Content, removable = Removable, clickable = Clickable,
                 [?H:el(span, Icon, [<<"ah-chip__icon">>], []) || not blank(Icon)],
                 ?H:el(span, Content, [<<"ah-chip__label">>], []),
                 [?H:el(button, <<"×"/utf8>>, [<<"ah-chip__delete">>],
-                       [{type, button}, {aria_label, <<"Remove">>}, {tabindex, -1}])
+                       [{type, button}, {aria_label, aihtml_i18n:text(common, remove)}, {tabindex, -1}])
                  || Removable]],
     Focusable = (Clickable orelse Removable) andalso not Disabled,
     Event = case Removable andalso not Clickable of
