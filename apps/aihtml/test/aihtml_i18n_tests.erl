@@ -45,9 +45,9 @@ default_is_en_test() ->
     ?assertEqual(<<"en">>, ?M:locale()),
     ?assertEqual([<<"en">>, <<"zh">>], ?M:locales()).
 
-%% A bundled catalog only translates what en has: every scope, key and
-%% format setting of another language exists in en, and list values (month
-%% and weekday names) keep their length.
+%% A bundled catalog translates exactly what en has: the same scopes, keys
+%% and format settings, the same placeholders, and list values (month and
+%% weekday names) of the same length.
 bundled_catalogs_match_en_test() ->
     Dir = filename:join(code:priv_dir(aihtml), "i18n"),
     Read = fun(L) -> {ok, B} = file:read_file(filename:join(Dir, L ++ ".json")), json:decode(B) end,
@@ -58,8 +58,22 @@ bundled_catalogs_match_en_test() ->
          [?assertEqual({L, K, length(maps:get(K, maps:get(<<"format">>, En)))}, {L, K, length(V)})
           || K := V <- maps:get(<<"format">>, C, #{}), is_list(V)],
          [?assertEqual({L, S, K, true}, {L, S, K, is_map_key(K, maps:get(S, maps:get(<<"messages">>, En), #{}))})
-          || S := M <- maps:get(<<"messages">>, C, #{}), K := _ <- M]
+          || S := M <- maps:get(<<"messages">>, C, #{}), K := _ <- M],
+         %% complete: nothing of en is missing
+         ?assertEqual({L, lists:sort(maps:keys(maps:get(<<"format">>, En)))},
+                      {L, lists:sort(maps:keys(maps:get(<<"format">>, C, #{})))}),
+         [?assertEqual({L, S, K, true}, {L, S, K, is_map_key(K, maps:get(S, maps:get(<<"messages">>, C), #{}))})
+          || S := M <- maps:get(<<"messages">>, En), K := _ <- M],
+         %% the same placeholders ({0}, {n}, {start} ...)
+         [?assertEqual({L, S, K, placeholders(V)}, {L, S, K, placeholders(maps:get(K, maps:get(S, maps:get(<<"messages">>, C))))})
+          || S := M <- maps:get(<<"messages">>, En), K := V <- M]
      end || L <- ["zh"]].
+
+placeholders(T) ->
+    case re:run(T, <<"\\{\\w+\\}">>, [global, {capture, all, binary}]) of
+        {match, Ms} -> lists:usort([X || [X] <- Ms]);
+        nomatch -> []
+    end.
 
 normalize_test() ->
     ?assertEqual(<<"zh-cn">>, ?M:normalize(<<"zh-CN">>)),
@@ -190,8 +204,8 @@ page_client_texts_test() ->
              end,
     Page = fun(Lang) -> iolist_to_binary(aihtml:page(<<"x">>, #{lang => Lang})) end,
     ?assertEqual(none, Script(Page(<<"en">>))),
-    %% zh translates nothing the browser uses yet (only pivotgrid)
-    ?assertEqual(none, Script(Page(<<"zh">>))),
+    #{<<"messages">> := #{<<"common">> := #{<<"close">> := <<"关闭"/utf8>>}},
+      <<"format">> := #{<<"first_day">> := 1}} = Script(Page(<<"zh-CN">>)),
     with_catalogs(
       #{<<"xx">> => #{<<"messages">> => #{<<"common">> => #{<<"close">> => <<"</script> XX">>}},
                       <<"format">> => #{<<"am">> => <<"a.m.">>}}},
