@@ -13,19 +13,44 @@ site_test_() ->
       %% each renders every docs page (about 90), longer than eunit's 5 s
       {"every docs page renders", {timeout, 60, fun docs_pages_render/0}},
       {"the home page renders", fun home_renders/0},
-      {"?lang= picks a language with a catalog", fun lang_param/0},
+      {"?lang= picks a language with a catalog, remembered in a cookie", fun lang_param/0},
+      {"the language switch marks the page's language", fun lang_switch_marks_current/0},
       {"the API tab shows each component's record", {timeout, 60, fun records_shown/0}}]}.
 
 components() ->
     [N || #{name := N} <- aihtml_example_site:components()].
 
 lang_param() ->
-    L = fun(Qs) -> aihtml_example_site:lang(#{qs => Qs}) end,
-    ?assertEqual(#{lang => <<"zh">>}, L(<<"lang=zh">>)),
-    ?assertEqual(#{lang => <<"zh-cn">>}, L(<<"lang=zh-CN">>)),
-    ?assertEqual(#{lang => <<"en">>}, L(<<"lang=en">>)),
-    %% no catalog, malformed, or absent: the default language
-    [?assertEqual(#{}, L(Q)) || Q <- [<<"lang=fr">>, <<"lang=%3Cscript%3E">>, <<"lang=">>, <<>>, <<"x=1">>]].
+    Req = fun(Qs, Cookie) ->
+                  #{qs => Qs, headers => case Cookie of
+                                             undefined -> #{};
+                                             C -> #{<<"cookie">> => <<"aihtml_lang=", C/binary>>}
+                                         end}
+          end,
+    Lang = fun(Qs, Cookie) -> element(1, aihtml_example_site:lang(Req(Qs, Cookie))) end,
+    Remembered = fun(Qs, Cookie) ->
+                         maps:is_key(<<"aihtml_lang">>,
+                                     maps:get(resp_cookies, element(2, aihtml_example_site:lang(Req(Qs, Cookie))), #{}))
+                 end,
+    %% ?lang= switches and is remembered in a cookie
+    ?assertEqual(<<"zh">>, Lang(<<"lang=zh">>, undefined)),
+    ?assertEqual(<<"zh-cn">>, Lang(<<"lang=zh-CN">>, undefined)),
+    ?assert(Remembered(<<"lang=zh">>, undefined)),
+    ?assertEqual(<<"en">>, Lang(<<"lang=en">>, <<"zh">>)),
+    %% later pages read the cookie, and do not set it again
+    ?assertEqual(<<"zh">>, Lang(<<>>, <<"zh">>)),
+    ?assertNot(Remembered(<<>>, <<"zh">>)),
+    %% no catalog, malformed, or absent: the cookie, else the default
+    ?assertEqual(<<"zh">>, Lang(<<"lang=fr">>, <<"zh">>)),
+    [?assertEqual(<<"en">>, Lang(Q, C))
+     || {Q, C} <- [{<<"lang=fr">>, undefined}, {<<"lang=%3Cscript%3E">>, undefined},
+                   {<<"lang=">>, undefined}, {<<>>, undefined}, {<<"x=1">>, <<"xx">>}]].
+
+%% the switch marks the page's language
+lang_switch_marks_current() ->
+    Html = fun(L) -> aihtml_i18n:with(L, fun() -> aihtml:render_binary(aihtml_example_site:lang_switch()) end) end,
+    ?assertMatch({_, _}, binary:match(Html(<<"zh">>), <<"href=\"?lang=zh\" hreflang=\"zh\" lang=\"zh\" aria-current=\"true\"">>)),
+    ?assertMatch({_, _}, binary:match(Html(<<"en">>), <<"href=\"?lang=en\" hreflang=\"en\" lang=\"en\" aria-current=\"true\"">>)).
 
 every_component_has_demos() ->
     Missing = [N || N <- components(), aihtml_example_demos:for(N) =:= []],
