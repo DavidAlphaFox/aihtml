@@ -25,3 +25,6 @@ __pycache__/
 node_modules/
 _checkouts/
 .playwright-mcp/
+
+# written by `npm run watch:example`; builds hash it (scripts/hash-css.mjs)
+apps/aihtml_example/priv/static/css/example.css
