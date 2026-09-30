@@ -47,7 +47,7 @@ class ComboboxController extends AH.Controller {
   private remote = false;
   private mode = "contains_ignore_case";
   private minLength = 0;
-  private emptyText = "No results found";
+  private emptyText = AH.t("common", "no_results", "No results found");
   private placeholder = "";
   // state
   private items: Item[] = [];
@@ -79,7 +79,7 @@ class ComboboxController extends AH.Controller {
     this.remote = el.hasAttribute("data-ah-remote");
     this.mode = el.getAttribute("data-ah-search-mode") || "contains_ignore_case";
     this.minLength = parseInt(el.getAttribute("data-ah-min-length") || "0", 10) || 0;
-    this.emptyText = el.getAttribute("data-ah-empty") || "No results found";
+    this.emptyText = el.getAttribute("data-ah-empty") || AH.t("common", "no_results", "No results found");
     this.placeholder = el.getAttribute("data-ah-placeholder") || "";
     this.items = []; this.labels = {}; this.selected = []; this.visible = [];
     this.query = ""; this.isOpen = false; this.active = -1; this.loading = false;
@@ -270,7 +270,7 @@ class ComboboxController extends AH.Controller {
     this.mark();
     kids(this.popup, ".ah-combobox-empty, .ah-combobox-loading").forEach((m) => { m.remove(); });
     if (this.loading) {
-      this.popup.appendChild(message("ah-combobox-loading", "Loading…"));
+      this.popup.appendChild(message("ah-combobox-loading", AH.t("common", "loading_items", "Loading…")));
     } else if (!this.visible.length) {
       this.popup.appendChild(message("ah-combobox-empty", this.emptyText));
     }
@@ -329,7 +329,8 @@ class ComboboxController extends AH.Controller {
       });
     }
     this.selected.forEach((v) => {
-      input.insertAdjacentHTML("beforebegin", AH.tpl.combobox_tag({ value: v, label: this.label(v) }));
+      input.insertAdjacentHTML("beforebegin", AH.tpl.combobox_tag({ value: v, label: this.label(v),
+        txt_remove: AH.t("common", "remove_item", "Remove {0}", [this.label(v)]) }));
     });
     input.setAttribute("placeholder", this.selected.length ? "" : this.placeholder);
   }

@@ -177,7 +177,8 @@ label_of(V, Items) ->
 
 %% Same markup as tags the browser adds: templates/combobox_tag.mustache
 tag(Value, Label) ->
-    aihtml_tpl:safe(tpl_combobox_tag(#{value => Value, label => Label})).
+    aihtml_tpl:safe(tpl_combobox_tag(#{value => Value, label => Label,
+                                       txt_remove => aihtml_i18n:text(common, remove_item, [Label])})).
 
 %% Grouped like sigil (group-by, in order of first appearance); the JS
 %% renders the same markup from the same data.

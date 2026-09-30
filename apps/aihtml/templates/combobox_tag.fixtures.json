@@ -1,4 +1,4 @@
 [
-  {"value": "apple", "label": "Apple"},
-  {"value": "a\"b", "label": "<b>&'x</b>"}
+  {"value": "apple", "label": "Apple", "txt_remove": "Remove Apple"},
+  {"value": "a\"b", "label": "<b>&'x</b>", "txt_remove": "Remove <b>&'x</b>"}
 ]
