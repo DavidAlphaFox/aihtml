@@ -130,11 +130,7 @@ visible_pages(Cur, Total, Max0) ->
     end.
 
 labels() ->
-    #{prev => <<"Previous">>, next => <<"Next">>, first => <<"First">>, last => <<"Last">>,
-      per_page => <<"{0} / page">>, total => <<"Total {0}">>, goto => <<"Go to">>,
-      goto_suffix => <<" / {0} pages">>, goto_confirm => <<"Go">>,
-      page_info => <<"Page {0} / {1}">>, aria_label => <<"Pagination">>,
-      per_page_aria => <<"Items per page">>}.
+    aihtml_i18n:texts(pagination).
 
 %% @doc The view data of templates/pagination_items.mustache: the entries
 %% of the page list (first/prev navs, pages and gaps or the simple-mode

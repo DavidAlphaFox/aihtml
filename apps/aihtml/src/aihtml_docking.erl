@@ -71,7 +71,6 @@
 -type saved() :: undefined | binary() | map().
 -type orientation() :: horizontal | vertical.
 
--define(DK_LABELS, #{collapse => <<"Collapse">>, close => <<"Close">>}).
 
 %%%===================================================================
 %%% Builder
@@ -314,11 +313,13 @@ docking_value(Placed, Floating, Closed) ->
           ++ [W || #{id := W, collapsed := true} <- Floating],
       closed => Closed}.
 
+%% The defaults are the current language's (aihtml_i18n, scope docking).
 dk_labels(Custom) when is_map(Custom) ->
-    maps:foreach(fun(K, _) -> maps:is_key(K, ?DK_LABELS)
+    Defaults = aihtml_i18n:texts(docking),
+    maps:foreach(fun(K, _) -> maps:is_key(K, Defaults)
                                   orelse error({aihtml, {bad_docking_label, K}})
                  end, Custom),
-    maps:map(fun(_, V) -> ?L:text(V) end, maps:merge(?DK_LABELS, Custom));
+    maps:map(fun(_, V) -> ?L:text(V) end, maps:merge(Defaults, Custom));
 dk_labels(Other) ->
     error({aihtml, {bad_option, labels, Other}}).
 

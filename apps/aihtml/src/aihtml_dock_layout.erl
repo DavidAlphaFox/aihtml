@@ -107,8 +107,6 @@
 -type label_key() :: auto_hide | float | dock | close.
 -type labels() :: #{label_key() => unicode:chardata()}.
 
--define(DL_LABELS, #{auto_hide => <<"Auto Hide">>, float => <<"Float">>,
-                     dock => <<"Dock">>, close => <<"Close">>}).
 -define(FLOAT_DEFAULTS, #{x => 100, y => 80, width => 260, height => 180}).
 -define(AUTOHIDE_SIZE, 250).
 
@@ -549,11 +547,13 @@ node_value(#{kind := autohide, edge := E} = G, _) ->
 group_value(#{id := Id, items := Items, active := A}) ->
     #{id => Id, items => [P || #{id := P} <- Items], active => A}.
 
+%% The defaults are the current language's (aihtml_i18n, scope dock_layout).
 dl_labels(Custom) when is_map(Custom) ->
-    maps:foreach(fun(K, _) -> maps:is_key(K, ?DL_LABELS)
+    Defaults = aihtml_i18n:texts(dock_layout),
+    maps:foreach(fun(K, _) -> maps:is_key(K, Defaults)
                                   orelse error({aihtml, {bad_dock_layout_label, K}})
                  end, Custom),
-    maps:map(fun(_, V) -> ?L:text(V) end, maps:merge(?DL_LABELS, Custom));
+    maps:map(fun(_, V) -> ?L:text(V) end, maps:merge(Defaults, Custom));
 dl_labels(Other) ->
     error({aihtml, {bad_option, labels, Other}}).
 

@@ -512,27 +512,12 @@ pin_offsets(Cols) ->
 %%% Labels
 %%%===================================================================
 
-%% @doc The texts of the grid; `labels' in Attrs overrides any of them.
-%% `total' and `per_page' take the number for {0}.
+%% @doc The texts of the grid in the current language (aihtml_i18n, scope
+%% datagrid); `labels' in Attrs overrides any of them. `total' and
+%% `per_page' take the number for {0}.
 -spec default_labels() -> #{atom() => binary()}.
 default_labels() ->
-    #{total => <<"Total {0}">>, per_page => <<"{0} / page">>,
-      empty => <<"No data">>, loading => <<"Loading...">>,
-      yes => <<"Yes">>, no => <<"No">>,
-      sum => <<"Sum">>, count => <<"Count">>, avg => <<"Avg">>, min => <<"Min">>,
-      max => <<"Max">>,
-      sort_asc => <<"Sort ascending">>, sort_desc => <<"Sort descending">>,
-      sort_clear => <<"Clear sort">>, hide_column => <<"Hide column">>,
-      pin => <<"Pin to left">>, unpin => <<"Unpin">>,
-      group_by => <<"Group by this column">>, ungroup => <<"Ungroup this column">>,
-      clear_groups => <<"Clear all groups">>, columns => <<"Columns">>,
-      column_menu => <<"Column menu">>,
-      filter => <<"Filter...">>, search => <<"Search...">>,
-      export_csv => <<"CSV">>, export_xlsx => <<"Excel">>, export_pdf => <<"PDF">>,
-      pages => <<"Pages">>, first_page => <<"First page">>, prev_page => <<"Previous page">>,
-      next_page => <<"Next page">>, last_page => <<"Last page">>,
-      page_size => <<"Rows per page">>, select_all => <<"Select all rows">>,
-      select_row => <<"Select row">>}.
+    aihtml_i18n:texts(datagrid).
 
 labels(Over) ->
     D = default_labels(),

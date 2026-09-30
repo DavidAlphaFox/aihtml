@@ -54,21 +54,6 @@
 -type labels() :: #{label_key() => unicode:chardata()}.
 -type element() :: #ah_markdown_editor{}.
 
--define(LABELS, #{editor => <<"Markdown editor">>,
-                  group_text => <<"Heading">>, group_list => <<"List">>,
-                  group_other => <<"Other">>,
-                  paragraph => <<"Paragraph">>, heading_1 => <<"Heading 1">>,
-                  heading_2 => <<"Heading 2">>, heading_3 => <<"Heading 3">>,
-                  blockquote => <<"Quote">>, horizontal_rule => <<"Horizontal Rule">>,
-                  bullet_list => <<"Bullet List">>, ordered_list => <<"Ordered List">>,
-                  task_list => <<"Task List">>, image => <<"Image">>,
-                  code_block => <<"Code Block">>, table => <<"Table">>,
-                  block_add => <<"Add Block">>, block_drag => <<"Drag to Sort">>,
-                  chars => <<"Chars">>, words => <<"Words">>,
-                  paragraphs => <<"Paragraphs">>, limit => <<"Limit">>,
-                  exceeded => <<"Limit exceeded">>,
-                  enter_url => <<"Enter URL:">>, enter_image_url => <<"Image URL:">>}).
-
 %% The labels the behaviour needs itself (the rest is rendered here).
 -define(JS_LABELS, [editor, enter_url, enter_image_url]).
 
@@ -232,12 +217,15 @@ stats(Max, L) ->
                     [{hidden, true}]) || Max =/= undefined],
           [<<"ah-pm-stats">>], []).
 
+%% The defaults are the current language's (aihtml_i18n, scope
+%% markdown_editor).
 labels(Custom) ->
     is_map(Custom) orelse error({aihtml, {bad_markdown_editor_labels, Custom}}),
-    maps:foreach(fun(K, _) -> maps:is_key(K, ?LABELS)
+    Defaults = aihtml_i18n:texts(markdown_editor),
+    maps:foreach(fun(K, _) -> maps:is_key(K, Defaults)
                                   orelse error({aihtml, {bad_markdown_editor_label, K}})
                  end, Custom),
-    maps:map(fun(_, V) -> text(V) end, maps:merge(?LABELS, Custom)).
+    maps:map(fun(_, V) -> text(V) end, maps:merge(Defaults, Custom)).
 
 height(undefined) -> undefined;
 height(N) when is_integer(N), N > 0 -> <<"height:", (integer_to_binary(N))/binary, "px">>;

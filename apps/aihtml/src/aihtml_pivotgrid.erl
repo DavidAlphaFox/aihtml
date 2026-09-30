@@ -422,45 +422,10 @@ dir(<<"asc">>) -> <<"asc">>;
 dir(<<"desc">>) -> <<"desc">>;
 dir(Other) -> error({aihtml, {bad_option, view, Other}}).
 
--define(LABELS_EN,
-        #{pivot => <<"Pivot table">>, subtotal => <<"Subtotal">>,
-          grand_total => <<"Grand Total">>, empty => <<"No data to display">>,
-          blank => <<"(blank)">>, values => <<"Values">>, fields => <<"Fields">>,
-          rows => <<"Rows">>, columns => <<"Columns">>, drop => <<"Drop fields here">>,
-          sort_asc => <<"Sort rows A to Z">>, sort_desc => <<"Sort rows Z to A">>,
-          sort_value_asc => <<"Sort rows by this column, ascending">>,
-          sort_value_desc => <<"Sort rows by this column, descending">>,
-          sort_cols_asc => <<"Sort columns A to Z">>, sort_cols_desc => <<"Sort columns Z to A">>,
-          sort_clear => <<"Clear sort">>, expand_all => <<"Expand all">>,
-          collapse_all => <<"Collapse all">>, export_xlsx => <<"Export to Excel">>,
-          export_csv => <<"Export to CSV">>, move_rows => <<"Move to rows">>,
-          move_columns => <<"Move to columns">>, move_values => <<"Add to values">>,
-          move_left => <<"Move left">>, move_right => <<"Move right">>, remove => <<"Remove">>,
-          sum => <<"Sum">>, count => <<"Count">>, avg => <<"Average">>, min => <<"Min">>,
-          max => <<"Max">>, product => <<"Product">>}).
-
--define(LABELS_ZH,
-        #{pivot => <<"透视表"/utf8>>, subtotal => <<"小计"/utf8>>,
-          grand_total => <<"合计"/utf8>>, empty => <<"暂无数据"/utf8>>,
-          blank => <<"（空白）"/utf8>>, values => <<"值"/utf8>>, fields => <<"字段"/utf8>>,
-          rows => <<"行"/utf8>>, columns => <<"列"/utf8>>, drop => <<"拖入字段"/utf8>>,
-          sort_asc => <<"行升序排列"/utf8>>, sort_desc => <<"行降序排列"/utf8>>,
-          sort_value_asc => <<"按此列升序排列行"/utf8>>,
-          sort_value_desc => <<"按此列降序排列行"/utf8>>,
-          sort_cols_asc => <<"列升序排列"/utf8>>, sort_cols_desc => <<"列降序排列"/utf8>>,
-          sort_clear => <<"清除排序"/utf8>>, expand_all => <<"全部展开"/utf8>>,
-          collapse_all => <<"全部折叠"/utf8>>, export_xlsx => <<"导出 Excel"/utf8>>,
-          export_csv => <<"导出 CSV"/utf8>>, move_rows => <<"移到行"/utf8>>,
-          move_columns => <<"移到列"/utf8>>, move_values => <<"添加到值"/utf8>>,
-          move_left => <<"左移"/utf8>>, move_right => <<"右移"/utf8>>, remove => <<"移除"/utf8>>,
-          sum => <<"求和"/utf8>>, count => <<"计数"/utf8>>, avg => <<"平均值"/utf8>>,
-          min => <<"最小值"/utf8>>, max => <<"最大值"/utf8>>, product => <<"乘积"/utf8>>}).
-
+%% The defaults are the catalog's (aihtml_i18n, scope pivotgrid) in the
+%% language the `locale' option names.
 labels(Locale, Custom) when is_map(Custom) ->
-    Defaults = case Locale of
-                   en -> ?LABELS_EN;
-                   zh -> ?LABELS_ZH
-               end,
+    Defaults = aihtml_i18n:with(Locale, fun() -> aihtml_i18n:texts(pivotgrid) end),
     maps:foreach(fun(K, _) -> maps:is_key(K, Defaults)
                                   orelse error({aihtml, {bad_option, labels, K}})
                  end, Custom),
