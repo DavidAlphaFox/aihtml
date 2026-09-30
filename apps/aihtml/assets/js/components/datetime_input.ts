@@ -14,14 +14,20 @@ import "virtual:ah-tpl/datetime_input_calendar";
 
 type LabelValue = string | string[];
 
-const DTI_LABELS = {
-  months: ["January", "February", "March", "April", "May", "June", "July",
-           "August", "September", "October", "November", "December"],
-  weekdays: ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"],
-  title: "MMMM yyyy", time: "Time",
-  prev_month: "Previous month", next_month: "Next month"
-};
-type Labels = typeof DTI_LABELS;
+// The defaults in the page's language, overridden by data-ah-labels.
+function dtiLabels() {
+  return {
+    months: AH.format<string[]>("months", ["January", "February", "March", "April", "May", "June",
+                                    "July", "August", "September", "October", "November",
+                                    "December"]),
+    weekdays: AH.format<string[]>("weekdays_min", ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"]),
+    title: AH.t("datetime_input", "title", "MMMM yyyy"),
+    time: AH.t("datetime_input", "time", "Time"),
+    prev_month: AH.t("datetime_input", "prev_month", "Previous month"),
+    next_month: AH.t("datetime_input", "next_month", "Next month")
+  };
+}
+type Labels = ReturnType<typeof dtiLabels>;
 
 // The defaults, overridden by the labels of data-ah-labels of the same
 // kind (a text or a list of texts).
@@ -70,9 +76,13 @@ const TOKENS: [string, SegType, number, number][] = [
   ["h", "hour12", 1, 12], ["mm", "minute", 0, 59], ["m", "minute", 0, 59],
   ["ss", "second", 0, 59], ["s", "second", 0, 59], ["aa", "ampm", 0, 1],
   ["a", "ampm", 0, 1]];
-const SEG_NAMES: Record<SegType, string> = {
-  year: "Year", year2: "Year", month: "Month", day: "Day", hour: "Hour",
-  hour12: "Hour", minute: "Minute", second: "Second", ampm: "AM/PM"
+// the spoken names of the parts, in the page's language
+const SEG_NAMES: Record<SegType, () => string> = {
+  year: () => AH.t("datetime_parts", "year", "Year"), year2: () => AH.t("datetime_parts", "year", "Year"),
+  month: () => AH.t("datetime_parts", "month", "Month"), day: () => AH.t("datetime_parts", "day", "Day"),
+  hour: () => AH.t("datetime_parts", "hour", "Hour"), hour12: () => AH.t("datetime_parts", "hour", "Hour"),
+  minute: () => AH.t("datetime_parts", "minute", "Minute"), second: () => AH.t("datetime_parts", "second", "Second"),
+  ampm: () => AH.t("datetime_parts", "ampm", "AM/PM")
 };
 
 function cls(base: string, opts: [boolean, string][]): string {
@@ -202,7 +212,7 @@ class DatetimeInputController extends AH.Controller {
   #max: Val | null = null;
   #first = 0;
   #showTime = false;
-  #L: Labels = DTI_LABELS;
+  #L: Labels = dtiLabels();
   // state
   #value: Val | null = null;
   #committed = "";
@@ -229,7 +239,7 @@ class DatetimeInputController extends AH.Controller {
     this.#max = dtiParse(el.getAttribute("data-ah-max"), kind);
     this.#first = first >= 0 && first <= 6 ? first : 0;
     this.#showTime = el.hasAttribute("data-ah-show-time");
-    this.#L = readLabels(el, DTI_LABELS);
+    this.#L = readLabels(el, dtiLabels());
     this.#active = null;
     this.#buf = "";
     this.#open = false;
@@ -456,7 +466,7 @@ class DatetimeInputController extends AH.Controller {
   private announce(): void {
     const seg = this.activeSeg(), v = this.#value;
     if (seg && seg.type !== "literal" && v) {
-      const text = SEG_NAMES[seg.type] + " " + segText(v, seg);
+      const text = SEG_NAMES[seg.type]() + " " + segText(v, seg);
       this.element.querySelectorAll(".ah-dti-live").forEach((l) => { l.textContent = text; });
     }
   }
@@ -601,7 +611,9 @@ class DatetimeInputController extends AH.Controller {
       t === "yyyy" ? String(y) : t === "MMMM" ? L.months[m - 1] : t === "MM" ? pad(m) : String(m));
     return { title, prev_month: L.prev_month, next_month: L.next_month, weekdays,
              days, show_time: this.#showTime && !!v, time_label: L.time,
-             hours: v ? pad(v.h) : "", minutes: v ? pad(v.mi) : "" };
+             hours: v ? pad(v.h) : "", minutes: v ? pad(v.mi) : "",
+             txt_hours: AH.t("common", "hours", "Hours"),
+             txt_minutes: AH.t("common", "minutes", "Minutes") };
   }
 
   private renderCal(): void {

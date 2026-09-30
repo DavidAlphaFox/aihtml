@@ -1,5 +1,5 @@
 [
-  {
+  {"txt_hours": "Hours", "txt_minutes": "Minutes", 
     "days": [
       {
         "cls": "ah-dti-cal-day ah-dti-cal-day-other ah-dti-cal-day-disabled",
@@ -117,7 +117,7 @@
       { "label": "Sa" }
     ]
   },
-  {
+  {"txt_hours": "Hours", "txt_minutes": "Minutes", 
     "days": [
       {
         "cls": "ah-dti-cal-day ah-dti-cal-day-other ah-dti-cal-day-disabled",
