@@ -17,6 +17,8 @@
  *   AH.fetch(el)                      run an element's data-ah-fetch
  *   AH.float(popup, anchor, opts)     pin a popup next to its anchor
  *   AH.vendor(name)                   load an optional third-party library
+ *   AH.t(scope, key, english, args)   a text in the page's language
+ *   AH.format(key, english)           a formatting setting (month names ...)
  *
  * Functions taking elements accept an element, a selector, an array of
  * elements or any array-like of elements (runtime/dom.ts, Targets).
@@ -55,6 +57,7 @@ import { SETTLE_MS, Swapper } from "./runtime/swap.ts";
 import type { SwapMode } from "./runtime/swap.ts";
 import { Theme } from "./runtime/theme.ts";
 import { vendor } from "./runtime/vendor.ts";
+import { format, reloadTexts, t } from "./runtime/i18n.ts";
 import type { Application } from "@hotwired/stimulus";
 
 export type { Op, Reply, EventPayload, ActionError } from "./runtime/actions.ts";
@@ -85,6 +88,13 @@ export interface AHApi {
   float(popup: Targets, anchor: Targets, opts?: FloatOptions): FloatHandle;
   theme: Theme;
   vendor: typeof vendor;
+  /** A text in the page's language, else the English one given
+   *  (runtime/i18n.ts). */
+  t: typeof t;
+  /** A formatting setting of the page's language, else the fallback. */
+  format: typeof format;
+  /** Read the page's texts again (tests). */
+  reloadTexts: typeof reloadTexts;
   Controller: typeof Controller;
   start(registry?: Registry): void;
   loadAll(): Promise<unknown[]>;
@@ -124,6 +134,9 @@ const AH: AHApi = {
   float: (popup, anchor, opts) => new FloatingPopup(popup, anchor, opts),
   theme,
   vendor,
+  t,
+  format,
+  reloadTexts,
   Controller,
   start: (registry) => { behaviours.start(registry); },
   loadAll: () => behaviours.loadAll(),
