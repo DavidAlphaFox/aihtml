@@ -61,6 +61,7 @@ login() ->
 | `apps/aihtml/src` | 核心模块（`aihtml`、`aihtml_html`、`aihtml_action`……），每个组件一个模块 `aihtml_<组件名>`，以及组件共用的 `aihtml_lib_*` |
 | `apps/aihtml/include` | `aihtml.hrl`（导入全部构建函数和 record）、每个组件一个 record 头文件 `aihtml_<组件名>.hrl`、自定义组件用的 `aihtml_element.hrl` |
 | `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
+| `apps/aihtml/priv/i18n` | 文案：每种语言一个 JSON 文件（`en.json`、`zh.json`），见「国际化」 |
 | `apps/aihtml/priv/static` | 预构建产物（只派发这些）：`css/`（`aihtml-<哈希>.css` + `manifest.json`）、`js/`（Vite 打包的运行时：入口 + 每个组件一个代码块 + `manifest.json`），echarts、xlsx、jspdf 是按需加载的代码块，ProseMirror 在 markdown_editor 的代码块里（见「第三方库」） |
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
 | `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
@@ -546,6 +547,44 @@ $list.append(AH.tpl.my_badge({ color: "primary", label: name, count: n }));
 | skin | `data-skin` | default、brutal、island、phoqus | 圆角、边框、阴影 |
 
 服务端通过 `aihtml:page(Body, #{theme => #{...}})` 设置初始值。浏览器端用 `AH.theme.set(Axis, Value)` 切换，选择保存在 localStorage，首屏绘制前恢复。Tailwind 的 `bg-primary`、`text-muted`、`rounded-control` 等工具类同样跟随四轴变化。
+
+## 国际化
+
+组件的界面文字、日期名称、一周起始日、数字分隔符、12 小时制时间的写法、短日期和默认货币符号都跟随页面语言。自带英文（`en`）和简体中文（`zh`），文案在 `apps/aihtml/priv/i18n/<语言>.json`。设计见 `designs/07-i18n.md`。
+
+```erlang
+aihtml:page(Body, #{lang => <<"zh-CN">>})   %% <html lang="zh-CN">，组件用中文
+```
+
+- **默认语言**：不写 `lang` 时用应用环境的 `default_locale`（默认 `<<"en">>`）。单一语言的站点设置它就够了，页面、推送和 `aihtml:render/1` 都用它：
+
+  ```erlang
+  {aihtml, [{default_locale, <<"zh">>}]}
+  ```
+- **回退**：语言标签统一成小写（`zh_CN`、`zh-CN` → `zh-cn`），逐条回退：`zh-tw` → `zh` → `en`，所以只翻译了一部分的语言也能用。来自浏览器的标签格式不对时按默认语言处理。
+- **action**：浏览器在请求里带上页面的 `<html lang>`，action 按它渲染，`aihtml_action:lang(Ctx)` 可以读到。
+- **推送**：HTML 只渲染一次、发给所有订阅者，所以用发布时指定的语言，默认是默认语言（不是调用它的 action 的语言）。多语言站点按语言分主题：
+
+  ```erlang
+  aihtml_push:publish({todos, Lang}, fun(C) -> ... end, #{lang => Lang})
+  ```
+- **URL 片段**：`fetch/3,4` 的请求带 `X-Aihtml-Lang` 请求头，路由用它包住渲染：`aihtml_i18n:with(Lang, fun() -> aihtml:render(Html) end)`。直接调用 `aihtml:render/1` 时也用 `with/2` 指定语言。
+- **单个组件**：`labels` 选项照常覆盖文字；`first_day`（calendar、datepicker、datetime_input）、pivotgrid 的 `locale` 显式写了就不跟随语言；range_selector 的金额用 `{currency, Symbol}` 固定货币符号（`currency` 用语言的默认符号：英文 `$`，中文 `¥`）。
+- **增加或改写语言**：在应用环境的 `locales` 里给出 JSON 文件（路径，或 `{priv_dir, App, 相对路径}`）。文件只写需要的条目，与同名的自带语言逐项合并，缺的逐条回退：
+
+  ```erlang
+  {aihtml, [{locales, #{<<"ja">> => {priv_dir, myapp, "i18n/ja.json"},
+                        <<"zh">> => "/etc/myapp/zh.json"}}]}
+  ```
+
+  ```json
+  {"format":   {"first_day": 1, "time_12h": "{ampm}{time}"},
+   "messages": {"common": {"close": "閉じる"}, "datagrid": {"total": "全 {0} 件"}}}
+  ```
+
+  分组和键与 `en.json` 相同；`format` 里是月份和星期名称、上午/下午、`first_day`、小数点和千位分隔符、`time_12h`、`date_short`、`currency`。文件在第一次用到时读入，`aihtml_i18n:reload/0` 重新读取。
+- **浏览器端**：页面语言不是英文时，`aihtml:page/2` 在 `<head>` 写一段 `<script type="application/json" id="ah-labels">`，放浏览器生成界面时用的文字（`en.json` 的 `client` 列出的分组）和格式设置；英文页面不写。页面脚本也可以用 `AH.t(分组, 键, 英文)` 和 `AH.format(键, 英文)` 取这些文字。echarts 的界面、time_ago 的悬停提示同样跟随页面语言。
+- **给组件加界面文字**：文字放进 `en.json` 和 `zh.json`，Erlang 用 `aihtml_i18n:text/2,3`，浏览器用 `AH.t(分组, 键, 英文)`，共享模板用 `txt_` 开头的变量。`aihtml_i18n_sources_tests` 检查 JS 里的英文与 `en.json` 一致，并拒绝写死在代码里的界面文字；`aihtml_i18n_tests` 检查 `zh.json` 与 `en.json` 的键和占位符完全对应。
 
 ## 作为依赖使用
 

@@ -61,6 +61,7 @@ The screenshots below all come from the demo site in the repo (open http://local
 | `apps/aihtml/src` | Core modules (`aihtml`, `aihtml_html`, `aihtml_action`...), one module per component `aihtml_<component-name>`, plus the shared `aihtml_lib_*` |
 | `apps/aihtml/include` | `aihtml.hrl` (imports all builder functions and records), one record header per component `aihtml_<component-name>.hrl`, and `aihtml_element.hrl` for custom components |
 | `apps/aihtml/priv/css/aihtml.css` | Source styles: tokens, the four axes, and prefabs; consumed by the consumer's Tailwind build |
+| `apps/aihtml/priv/i18n` | Text catalogs: one JSON file per language (`en.json`, `zh.json`); see "Internationalization" |
 | `apps/aihtml/priv/static` | Prebuilt artifacts (only these are shipped): `css/` (`aihtml-<hash>.css` + `manifest.json`), `js/` (the Vite-bundled runtime: entry point + one chunk per component + `manifest.json`). echarts, xlsx, and jspdf are on-demand-loading chunks; ProseMirror lives in the markdown_editor chunk (see "Third-party libraries") |
 | `apps/aihtml_cowboy` | cowboy integration: action endpoint, static-asset routing, whole-page replies |
 | `apps/aihtml/templates` | Shared Mustache templates, compiled to both Erlang and JS at build time |
@@ -546,6 +547,44 @@ $list.append(AH.tpl.my_badge({ color: "primary", label: name, count: n }));
 | skin | `data-skin` | default, brutal, island, phoqus | corner radius, borders, shadows |
 
 The server sets the initial values via `aihtml:page(Body, #{theme => #{...}})`. The browser switches with `AH.theme.set(Axis, Value)`; the choice is saved in localStorage and restored before the first paint. Tailwind utility classes such as `bg-primary`, `text-muted`, and `rounded-control` also follow the four axes.
+
+## Internationalization
+
+Component texts, month and weekday names, the first day of the week, number separators, how 12-hour times are written, short dates and the default currency symbol all follow the page's language. English (`en`) and Simplified Chinese (`zh`) are built in; the catalogs live in `apps/aihtml/priv/i18n/<lang>.json`. The design is in `designs/07-i18n.md`.
+
+```erlang
+aihtml:page(Body, #{lang => <<"zh-CN">>})   %% <html lang="zh-CN">, components in Chinese
+```
+
+- **Default language**: without `lang`, the application environment's `default_locale` is used (default `<<"en">>`). A single-language site only needs to set it; pages, pushes and `aihtml:render/1` all use it:
+
+  ```erlang
+  {aihtml, [{default_locale, <<"zh">>}]}
+  ```
+- **Fallback**: language tags are normalised to lower case (`zh_CN`, `zh-CN` → `zh-cn`) and fall back text by text: `zh-tw` → `zh` → `en`, so a partly translated language still works. A malformed tag from the browser means the default language.
+- **Actions**: the browser sends the page's `<html lang>` with each request; the action renders in it, and `aihtml_action:lang(Ctx)` reads it.
+- **Push**: the HTML is rendered once and sent to every subscriber, so it uses the language given when publishing, by default the default language (not the calling action's). A multilingual site gives each language its own topic:
+
+  ```erlang
+  aihtml_push:publish({todos, Lang}, fun(C) -> ... end, #{lang => Lang})
+  ```
+- **URL fragments**: `fetch/3,4` requests carry an `X-Aihtml-Lang` header; the route wraps its rendering with it: `aihtml_i18n:with(Lang, fun() -> aihtml:render(Html) end)`. Use `with/2` too when calling `aihtml:render/1` directly.
+- **Single components**: the `labels` option still overrides texts; an explicit `first_day` (calendar, datepicker, datetime_input) or pivotgrid `locale` does not follow the language; range_selector amounts use `{currency, Symbol}` to fix the currency symbol (`currency` uses the language's default: `$` in English, `¥` in Chinese).
+- **Adding or overriding languages**: give JSON files in the application environment's `locales` (a path, or `{priv_dir, App, RelativePath}`). A file holds only the entries it needs; it is merged entry by entry into the built-in language of the same name, and missing texts fall back:
+
+  ```erlang
+  {aihtml, [{locales, #{<<"ja">> => {priv_dir, myapp, "i18n/ja.json"},
+                        <<"zh">> => "/etc/myapp/zh.json"}}]}
+  ```
+
+  ```json
+  {"format":   {"first_day": 1, "time_12h": "{ampm}{time}"},
+   "messages": {"common": {"close": "閉じる"}, "datagrid": {"total": "全 {0} 件"}}}
+  ```
+
+  Scopes and keys are those of `en.json`; `format` holds the month and weekday names, AM/PM, `first_day`, the decimal and grouping separators, `time_12h`, `date_short` and `currency`. Files are read on first use; `aihtml_i18n:reload/0` reads them again.
+- **Browser side**: when the page's language is not English, `aihtml:page/2` writes a `<script type="application/json" id="ah-labels">` into `<head>` with the texts the browser uses when it builds UI (the scopes listed under `client` in `en.json`) and the formatting settings; English pages carry nothing. Page scripts can read them with `AH.t(scope, key, english)` and `AH.format(key, english)`. echarts' own UI and time_ago's hover title follow the page's language too.
+- **Adding UI text to a component**: put it in `en.json` and `zh.json`; Erlang uses `aihtml_i18n:text/2,3`, the browser `AH.t(scope, key, english)`, shared templates a `txt_` variable. `aihtml_i18n_sources_tests` checks that the English texts in the JS match `en.json` and rejects UI text written into the code; `aihtml_i18n_tests` checks that `zh.json` has exactly the keys and placeholders of `en.json`.
 
 ## Use as a dependency
 
