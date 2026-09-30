@@ -236,18 +236,18 @@ height_style(H) -> error({aihtml, {bad_height, H}}).
 
 toolbar(RO) ->
     ?H:el('div',
-          [tool(<<"hand">>, <<"Pan the canvas (or hold Space / middle-drag)">>, ic(hand),
+          [tool(<<"hand">>, aihtml_i18n:text(node_graph, pan), ic(hand),
                 [{aria_pressed, <<"false">>}]),
-           tool(<<"zoom-in">>, <<"Zoom in">>, ic(plus), []),
+           tool(<<"zoom-in">>, aihtml_i18n:text(node_graph, zoom_in), ic(plus), []),
            ?H:el(span, <<"100%">>, [<<"ah-node-graph-zoom">>], [{aria_live, polite}]),
-           tool(<<"zoom-out">>, <<"Zoom out">>, ic(minus), []),
-           tool(<<"fit">>, <<"Fit to view">>, ic(fit), []),
-           tool(<<"undo">>, <<"Undo">>, ic(undo), [{disabled, true}]),
-           tool(<<"redo">>, <<"Redo">>, ic(redo), [{disabled, true}]),
-           [tool(<<"delete">>, <<"Delete selection (Del)">>, ic(trash), [{disabled, true}])
+           tool(<<"zoom-out">>, aihtml_i18n:text(node_graph, zoom_out), ic(minus), []),
+           tool(<<"fit">>, aihtml_i18n:text(node_graph, fit), ic(fit), []),
+           tool(<<"undo">>, aihtml_i18n:text(node_graph, undo), ic(undo), [{disabled, true}]),
+           tool(<<"redo">>, aihtml_i18n:text(node_graph, redo), ic(redo), [{disabled, true}]),
+           [tool(<<"delete">>, aihtml_i18n:text(node_graph, delete_selection), ic(trash), [{disabled, true}])
             || not RO]],
           [<<"ah-node-graph-toolbar">>],
-          [{role, toolbar}, {aria_label, <<"Graph tools">>}]).
+          [{role, toolbar}, {aria_label, aihtml_i18n:text(node_graph, tools)}]).
 
 tool(Action, Label, D, Extra) ->
     ?H:el(button,
@@ -294,8 +294,8 @@ node_view(#{id := Id, inputs := Ins, outputs := Outs, collapsed := Collapsed} = 
       sized => Height =/= undefined andalso not Collapsed,
       expanded => atom_to_binary(not Collapsed),
       toggle_label => case Collapsed of
-                          true -> <<"Expand node">>;
-                          false -> <<"Collapse node">>
+                          true -> aihtml_i18n:text(node_graph, expand_node);
+                          false -> aihtml_i18n:text(node_graph, collapse_node)
                       end,
       stub_in => stub(Collapsed, Ins),
       stub_out => stub(Collapsed, Outs),
@@ -355,12 +355,14 @@ link_view(#{id := Id, points := Points} = L, ById, Mode) ->
 
 group_view(#{id := Id, title := Title, bounds := {X, Y, W, H}, color := Color}, RO) ->
     #{id => Id,
-      title => case Title of undefined -> <<"Group">>; _ -> Title end,
+      title => case Title of undefined -> aihtml_i18n:text(node_graph, group); _ -> Title end,
       style => iolist_to_binary(
                  [<<"transform:translate3d(">>, num(X), <<"px,">>, num(Y), <<"px,0);">>,
                   <<"width:">>, num(W), <<"px;height:">>, num(H), <<"px;">>,
                   [[<<"--ah-ng-group-color:">>, Color, <<";">>] || Color =/= undefined]]),
-      editable => not RO}.
+      editable => not RO,
+      txt_delete_group => aihtml_i18n:text(node_graph, delete_group),
+      txt_delete_group_title => aihtml_i18n:text(node_graph, delete_group_title)}.
 
 title(#{title := T}) when T =/= undefined -> T;
 title(#{type := T}) when T =/= undefined -> T;

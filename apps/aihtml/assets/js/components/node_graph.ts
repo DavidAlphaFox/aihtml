@@ -501,7 +501,8 @@ function nodeView(n: GraphNode, conn: Record<string, Conn>, readOnly: boolean, h
     collapsed,
     sized: !!n.height && !collapsed,
     expanded: collapsed ? "false" : "true",
-    toggle_label: collapsed ? "Expand node" : "Collapse node",
+    toggle_label: collapsed ? AH.t("node_graph", "expand_node", "Expand node")
+                            : AH.t("node_graph", "collapse_node", "Collapse node"),
     stub_in: collapsed && in0 ? [{ color: linkColor(in0.type) }] : [],
     stub_out: collapsed && out0 ? [{ color: linkColor(out0.type) }] : [],
     inputs: n.inputs.map((s, i) => slotView(n.id, "input", i, s, c.in[i])),
@@ -518,11 +519,13 @@ function groupView(gr: GraphGroup, readOnly: boolean): Rec {
   const b = gr.bounds, c = safeColor(gr.color);
   return {
     id: gr.id,
-    title: gr.title ? String(gr.title) : "Group",
+    title: gr.title ? String(gr.title) : AH.t("node_graph", "group", "Group"),
     style: "transform:translate3d(" + num(b[0]) + "px," + num(b[1]) + "px,0);" +
       "width:" + num(b[2]) + "px;height:" + num(b[3]) + "px;" +
       (c ? "--ah-ng-group-color:" + c + ";" : ""),
-    editable: !readOnly
+    editable: !readOnly,
+    txt_delete_group: AH.t("node_graph", "delete_group", "Delete group"),
+    txt_delete_group_title: AH.t("node_graph", "delete_group_title", "Delete group frame (nodes stay)")
   };
 }
 
@@ -1421,7 +1424,8 @@ class NodeGraphController extends AH.Controller {
 
   private contextMenu(at: Point, entries: (MenuItem | null)[]): void {
     const items = entries.filter((it): it is MenuItem => !!it);
-    const el = parseOne('<div class="ah-node-graph-ctxmenu" role="menu" aria-label="Actions"></div>');
+    const el = parseOne('<div class="ah-node-graph-ctxmenu" role="menu"></div>');
+    el.setAttribute("aria-label", AH.t("node_graph", "actions", "Actions"));
     el.innerHTML = (AH.tpl["node_graph_menu"] as (v: unknown) => string)({
       items: items.map((it, i) => ({ index: String(i), label: it.label, danger: !!it.danger,
                                      has_hint: !!it.hint, hint: it.hint || "" }))
@@ -1450,13 +1454,16 @@ class NodeGraphController extends AH.Controller {
   // The node search menu: right click on the canvas, or a link dropped on
   // empty canvas (origin set: the new node gets connected).
   private searchMenu(at: Point, graphPt: Point, origin: LinkOrigin | null): void {
-    const canvas: LibraryItem[] = origin ? [] : [{ kind: "group", label: "New group frame", category: "Canvas" }];
+    const canvas: LibraryItem[] = origin ? [] : [{ kind: "group", label: AH.t("node_graph", "new_group_frame", "New group frame"),
+                                                               category: AH.t("node_graph", "canvas", "Canvas") }];
     const items = this.#library;
     const listId = this.element.id + "-search-" + (++NodeGraphController.#seq);
     const s = { q: "", active: 0 };
-    const el = parseOne('<div class="ah-node-graph-search" role="dialog" aria-label="Add node"></div>');
+    const el = parseOne('<div class="ah-node-graph-search" role="dialog"></div>');
+    el.setAttribute("aria-label", AH.t("node_graph", "add_node", "Add node"));
     const input = parseOne<HTMLInputElement>('<input class="ah-node-graph-search-input" type="text" role="combobox" ' +
-                                             'aria-autocomplete="list" aria-expanded="true" placeholder="Search nodes…">');
+                                             'aria-autocomplete="list" aria-expanded="true">');
+    input.setAttribute("placeholder", AH.t("node_graph", "search_nodes", "Search nodes…"));
     input.setAttribute("aria-controls", listId);
     const body = parseOne('<div class="ah-node-graph-search-body"></div>');
     el.appendChild(input);
@@ -1465,7 +1472,7 @@ class NodeGraphController extends AH.Controller {
     const paint = (): void => {
       const l = entries(), n = l.length, idx = n ? ((s.active % n) + n) % n : 0;
       body.innerHTML = (AH.tpl["node_graph_search"] as (v: unknown) => string)({
-        list_id: listId, empty: n === 0, empty_text: "No matching node",
+        list_id: listId, empty: n === 0, empty_text: AH.t("node_graph", "no_match", "No matching node"),
         items: l.map((it, i) => ({ index: String(i), label: String(it.label || it.type), active: i === idx,
                                    has_category: !!it.category, category: it.category ? String(it.category) : "" }))
       });
@@ -1481,7 +1488,8 @@ class NodeGraphController extends AH.Controller {
       const x = Math.round(graphPt[0]), y = Math.round(graphPt[1]);
       if (it.kind === "group") {
         this.mutate("group-add", (g) => {
-          g.groups.push({ id: freshId(ids(g.groups), "g"), title: "Group", bounds: [x, y, 340, 260] });
+          g.groups.push({ id: freshId(ids(g.groups), "g"), title: AH.t("node_graph", "group", "Group"),
+                          bounds: [x, y, 340, 260] });
         });
         return;
       }
@@ -1566,7 +1574,7 @@ class NodeGraphController extends AH.Controller {
     input.type = "text";
     input.className = span.className + "-input";
     input.value = old;
-    input.setAttribute("aria-label", "Title");
+    input.setAttribute("aria-label", AH.t("node_graph", "title", "Title"));
     if (span.parentNode) { span.parentNode.replaceChild(input, span); }
     input.focus();
     input.select();
@@ -1781,17 +1789,20 @@ class NodeGraphController extends AH.Controller {
     if (this.#sel.indexOf(id) < 0) { this.select([id], "replace"); }
     const many = xs.length > 1, ro = this.#opts.readOnly;
     this.contextMenu(at, [
-      ro ? null : { label: n.collapsed ? "Expand" : "Collapse",
+      ro ? null : { label: n.collapsed ? AH.t("node_graph", "expand", "Expand") : AH.t("node_graph", "collapse", "Collapse"),
                     run: () => {
                       const card = this.cardOf(id);
                       const btn = card && card.querySelector<HTMLElement>(".ah-node-graph-collapse");
                       if (btn) { btn.click(); }
                     } },
-      ro ? null : { label: many ? "Duplicate " + xs.length + " nodes" : "Duplicate node", hint: "Ctrl+D",
+      ro ? null : { label: many ? AH.t("node_graph", "duplicate_nodes", "Duplicate {0} nodes", [xs.length])
+                                : AH.t("node_graph", "duplicate_node", "Duplicate node"), hint: "Ctrl+D",
                     run: () => { this.duplicate(xs); } },
-      { label: many ? "Copy " + xs.length + " nodes" : "Copy node", hint: "Ctrl+C",
+      { label: many ? AH.t("node_graph", "copy_nodes", "Copy {0} nodes", [xs.length])
+                    : AH.t("node_graph", "copy_node", "Copy node"), hint: "Ctrl+C",
         run: () => { this.copy(xs); } },
-      ro ? null : { label: many ? "Delete " + xs.length + " nodes" : "Delete node", hint: "Del", danger: true,
+      ro ? null : { label: many ? AH.t("node_graph", "delete_nodes", "Delete {0} nodes", [xs.length])
+                                : AH.t("node_graph", "delete_node", "Delete node"), hint: "Del", danger: true,
                     run: () => { this.mutate("remove", (g) => { removeNodes(g, xs); }); } }
     ]);
   }
@@ -1818,8 +1829,8 @@ class NodeGraphController extends AH.Controller {
       this.setSelection([], [id]);
       if (this.#opts.readOnly) { return; }
       this.contextMenu(this.clientToHost(p[0], p[1]), [
-        { label: "Add reroute point here", run: () => { this.addWaypoint(id, gp); } },
-        { label: "Delete link", hint: "Del", danger: true,
+        { label: AH.t("node_graph", "add_reroute", "Add reroute point here"), run: () => { this.addWaypoint(id, gp); } },
+        { label: AH.t("node_graph", "delete_link", "Delete link"), hint: "Del", danger: true,
           run: () => { this.mutate("disconnect", (g) => {
             g.links = g.links.filter((l) => l.id !== id);
           }); } }
@@ -1957,7 +1968,9 @@ class NodeGraphController extends AH.Controller {
       if (this.#opts.readOnly) { return; }
       const id = groupIdOf(frame), p = point(e);
       this.contextMenu(this.clientToHost(p[0], p[1]), [
-        { label: "Delete group frame", hint: "frame only", danger: true,
+        { label: AH.t("node_graph", "delete_group_frame", "Delete group frame"),
+          hint: AH.t("node_graph", "frame_only", "frame only"),
+          danger: true,
           run: () => { this.removeGroup(id); } }
       ]);
     });

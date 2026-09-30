@@ -1,4 +1,4 @@
 [
-  {"id": "g1", "title": "Conditioning", "style": "transform:translate3d(320px,10px,0);width:280px;height:300px;--ah-ng-group-color:#7c6ff0;", "editable": true},
-  {"id": "g<2>", "title": "Group & co", "style": "transform:translate3d(0px,0px,0);width:120px;height:80px;", "editable": false}
+  {"txt_delete_group": "Delete group", "txt_delete_group_title": "Delete group frame (nodes stay)", "id": "g1", "title": "Conditioning", "style": "transform:translate3d(320px,10px,0);width:280px;height:300px;--ah-ng-group-color:#7c6ff0;", "editable": true},
+  {"txt_delete_group": "Delete group", "txt_delete_group_title": "Delete group frame (nodes stay)", "id": "g<2>", "title": "Group & co", "style": "transform:translate3d(0px,0px,0);width:120px;height:80px;", "editable": false}
 ]
