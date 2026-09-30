@@ -56,7 +56,7 @@ render(#ah_alert{body = Children, variant = Variant, title = Title} = R) ->
                          ?H:el('div', Children, [<<"ah-alert-body">>], [])],
                  [<<"ah-alert-content">>], []),
            [?H:el(button, <<"×"/utf8>>, [<<"ah-alert-close">>],
-                  [{type, button}, {aria_label, <<"Close">>}])
+                  [{type, button}, {aria_label, aihtml_i18n:text(common, close)}])
             || R#ah_alert.dismissible]],
           Cls, [[{role, <<"alert">>}, {data_ah, <<"alert">>}], ?E:root_attrs(R, 'ah:dismiss')]).
 

@@ -320,13 +320,13 @@ render(#ah_relation_graph{layout = Layout, loading = Loading, selected = Sel0,
                false -> [];
                true ->
                    ?H:el('div',
-                         [tool(<<"fit">>, <<"Fit view">>, ?ICON_FIT),
-                          tool(<<"refresh">>, <<"Refresh">>, ?ICON_REFRESH)],
+                         [tool(<<"fit">>, aihtml_i18n:text(relation_graph, fit), ?ICON_FIT),
+                          tool(<<"refresh">>, aihtml_i18n:text(relation_graph, refresh), ?ICON_REFRESH)],
                          [<<"ah-relation-graph__toolbar">>], [{role, toolbar}])
            end,
            ?H:el('div',
                  [?H:el(button, {safe, ?ICON_CLOSE}, [<<"ah-relation-graph__detail-close">>],
-                        [{type, button}, {aria_label, <<"Close">>}]),
+                        [{type, button}, {aria_label, aihtml_i18n:text(common, close)}]),
                   ?H:el('div',
                         [?H:el('div', Html, [<<"ah-relation-graph__detail-item">>],
                                [{data_node, Id}, {hidden, Id =/= Sel}])
