@@ -328,8 +328,10 @@ is_action_module(Mod) ->
     case code:ensure_loaded(Mod) of
         {module, Mod} ->
             Attrs = Mod:module_info(attributes),
-            lists:member(?MODULE, proplists:get_value(behaviour, Attrs, []) ++
-                                  proplists:get_value(behavior, Attrs, []))
+            %% every -behaviour attribute: a component module may also
+            %% declare aihtml_element before this one
+            lists:member(?MODULE, lists:append(proplists:get_all_values(behaviour, Attrs) ++
+                                               proplists:get_all_values(behavior, Attrs)))
                 andalso erlang:function_exported(Mod, action, 4);
         _ ->
             false
