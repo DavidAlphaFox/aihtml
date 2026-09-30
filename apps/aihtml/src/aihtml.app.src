@@ -1,5 +1,5 @@
 {application, aihtml,
- [{description, "Erlang prefabs that render HTML for jQuery + TailwindCSS"},
+ [{description, "Erlang prefabs that render HTML for TailwindCSS and a Stimulus runtime"},
   {vsn, "0.1.0"},
   {registered, [aihtml_sup, aihtml_push]},
   {mod, {aihtml_app, []}},

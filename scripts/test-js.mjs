@@ -53,8 +53,8 @@ window.AHTest = (function () {
   }
   return {
     test: function (name, fn) { tests.push({ name: name, fn: fn }); },
-    // Native events (components listen with addEventListener, which
-    // jQuery's .trigger does not reach). fire(el, type, init) builds the
+    // Native events (components listen with addEventListener).
+    // fire(el, type, init) builds the
     // right event class for the type; key(el, "Enter", {shiftKey: true})
     // is a keydown; ready(root) waits until the components in root are
     // loaded and connected (await it after inserting a fixture).
