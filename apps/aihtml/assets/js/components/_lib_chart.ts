@@ -864,7 +864,10 @@ class ChartController extends AH.Controller {
     // a morph of the root lines them up with the new markup)
     const own = detachServerNodes(el);
     const renderer = el.getAttribute("data-ah-renderer") === "svg" ? "svg" : "canvas";
-    const chart = this.#chart = echarts.init(el, theme, { renderer });
+    // echarts' own texts (toolbox ...) in the page's language, not the
+    // browser's: it has English and Chinese built in
+    const locale = /^zh\b/i.test(document.documentElement.lang) ? "ZH" : "EN";
+    const chart = this.#chart = echarts.init(el, theme, { renderer, locale });
     restore(el, own);
     chart.setOption(ec(withAria(el, this.resolveOption(this.#option))), { notMerge: true });
     EVENTS.forEach((ev) => {
