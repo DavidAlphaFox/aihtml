@@ -223,6 +223,30 @@ page_client_texts_test() ->
               ?assert(is_map_key(<<"node_graph">>, M))
       end).
 
+%% A page in Chinese: texts, week start and date formats follow it; options
+%% given explicitly still win.
+zh_rendering_test() ->
+    Zh = fun(El) -> ?M:with(<<"zh-CN">>, fun() -> aihtml:render_binary(El) end) end,
+    Has = fun(Bin, Part) -> ?assertMatch({_, _}, binary:match(Bin, Part)) end,
+    %% texts, server side
+    Has(Zh(aihtml:ah_pagination(3, 10, [], [])), <<"上一页"/utf8>>),
+    Has(Zh(aihtml:ah_input(<<>>, [clearable], [])), <<"aria-label=\"清除\""/utf8>>),
+    Has(Zh(aihtml:ah_alert(<<"x">>, [dismissible], [])), <<"关闭"/utf8>>),
+    %% the week starts on Monday unless first_day is given
+    Has(Zh(aihtml:ah_calendar(<<"2026-09-30">>, [], [])), <<"data-ah-first-day=\"1\"">>),
+    Has(Zh(aihtml:ah_calendar(<<"2026-09-30">>, [], [{first_day, 0}])), <<"data-ah-first-day=\"0\"">>),
+    Has(Zh(aihtml:ah_datepicker(<<"2026-09-30">>, [inline], [])), <<"data-ah-first-day=\"1\"">>),
+    Has(aihtml:render_binary(aihtml:ah_datepicker(<<"2026-09-30">>, [], [])), <<"data-ah-first-day=\"0\"">>),
+    Has(Zh(aihtml:ah_datetime_input(<<"2026-09-30">>, [], [])), <<"data-ah-first-day=\"1\"">>),
+    %% Chinese month and date formats
+    Has(Zh(aihtml:ah_datepicker(<<"2026-09-30">>, [inline], [])), <<"2026年9月"/utf8>>),
+    %% pivotgrid follows the page unless its locale is given
+    Rows = [#{<<"k">> => <<"a">>, <<"v">> => 1}],
+    Layout = #{rows => [<<"k">>], values => [{<<"v">>, sum}]},
+    Has(Zh(aihtml:ah_pivotgrid(Rows, Layout, [], [])), <<"合计"/utf8>>),
+    Has(Zh(aihtml:ah_pivotgrid(Rows, Layout, [], [{locale, en}])), <<"Grand Total">>),
+    ?assertEqual(<<"en">>, ?M:locale()).
+
 render_uses_current_test() ->
     ?assertEqual(<<"en">>, aihtml:render_binary(#i18n_probe{})),
     ?assertEqual(<<"zh">>, ?M:with(zh, fun() -> aihtml:render_binary(#i18n_probe{}) end)).
