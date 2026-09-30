@@ -119,7 +119,7 @@ render_treegrid(#ah_treegrid{items = Items, value = Value, name = Name,
                                   ?H:el(tr,
                                         [[?H:el(th, ?H:void(input, [<<"ah-tg-header-checkbox">>],
                                                              [{type, checkbox}, {tabindex, -1},
-                                                              {aria_label, <<"Select all rows">>}]),
+                                                              {aria_label, aihtml_i18n:text(common, select_all_rows)}]),
                                                 [<<"ah-tg-th">>, <<"ah-tg-th-checkbox">>],
                                                 [{role, columnheader}])
                                           || Mode =:= checkbox],
@@ -304,7 +304,7 @@ tg_row(#{id := RowId, key := K, row := Row, index := I, level := Level, parent :
     ?H:el(tr,
           [[?H:el(td, ?H:void(input, [<<"ah-tg-row-checkbox">>],
                               [{type, checkbox}, {tabindex, -1}, {checked, Selected},
-                               {aria_label, <<"Select row">>}]),
+                               {aria_label, aihtml_i18n:text(common, select_row)}]),
                   [<<"ah-tg-cell">>, <<"ah-tg-checkbox-cell">>], [{role, gridcell}])
             || Mode =:= checkbox],
            Cells],

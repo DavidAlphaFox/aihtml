@@ -818,17 +818,9 @@ catalog() ->
 %%% Internal
 %%%===================================================================
 
+%% The texts of the current language (aihtml_i18n, scope datatable).
 default_texts() ->
-    #{filter => <<"Filter...">>, search => <<"Search...">>, value => <<"Value...">>,
-      info => <<"{start}-{end} of {total}">>, columns => <<"Columns">>,
-      prev => <<"Previous page">>, next => <<"Next page">>, page_size => <<"Rows per page">>,
-      select_all => <<"Select all rows">>, select_row => <<"Select row">>,
-      details => <<"Details">>,
-      contains => <<"Contains">>, not_contains => <<"Not Contains">>, equals => <<"Equals">>,
-      not_equals => <<"Not Equals">>, starts_with => <<"Starts With">>,
-      ends_with => <<"Ends With">>, gt => <<"Greater Than">>, gte => <<"Greater or Equal">>,
-      lt => <<"Less Than">>, lte => <<"Less or Equal">>, empty => <<"Empty">>,
-      not_empty => <<"Not Empty">>}.
+    aihtml_i18n:texts(datatable).
 
 texts(M) ->
     is_map(M) orelse error({aihtml, {bad_option, texts, M}}),
