@@ -64,6 +64,9 @@ export class Fetcher {
       "X-Aihtml": "1", "X-Aihtml-Target": sel,
       "X-Requested-With": "XMLHttpRequest", "Accept": "text/html, */*; q=0.01"
     };
+    // the page's language, for the route to render the fragment in
+    // (aihtml_i18n:with/2, designs/07-i18n.md)
+    if (document.documentElement.lang) { headers["X-Aihtml-Lang"] = document.documentElement.lang; }
     const init: RequestInit = { method, credentials: "same-origin", headers };
     let href = url;
     if (method === "GET" || method === "HEAD") {

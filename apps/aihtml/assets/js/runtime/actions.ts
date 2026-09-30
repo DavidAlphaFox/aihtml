@@ -2,7 +2,7 @@
 // reply is the DOM operations to apply.
 //
 // Elements carry data-ah-on="click:TOKEN input:TOKEN:300" (event:signed
-// action[:debounce ms]). The event POSTs {action, event, stream} to <body
+// action[:debounce ms]). The event POSTs {action, event, stream, lang} to <body
 // data-ah-action>. The reply is JSON {"ops": [...]}, or, when the action
 // sends progressive updates, NDJSON: one {"ops": [...]} per line, then
 // {"done": true} or {"error": ...}. Errors are HTTP statuses with
@@ -323,7 +323,9 @@ export class Actions {
       method: "POST",
       credentials: "same-origin",
       headers: { "Content-Type": "application/json", "Accept": "application/json, application/x-ndjson" },
-      body: JSON.stringify({ action: spec.token, event: body, stream: this.push.id }),
+      // lang: the page's language, which the action renders in (designs/07-i18n.md)
+      body: JSON.stringify({ action: spec.token, event: body, stream: this.push.id,
+                             lang: document.documentElement.lang || null }),
       signal: ctrl.signal
     }).then((resp) => {
       const type = resp.headers.get("Content-Type") || "";
