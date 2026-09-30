@@ -65,13 +65,6 @@
                    | too_many | network_error.
 -type labels() :: #{label_key() => unicode:chardata()}.
 
--define(LABELS, #{remove => <<"Remove">>,
-                  upload_failed => <<"Upload failed">>,
-                  type_mismatch => <<"File type not accepted">>,
-                  too_large => <<"File too large">>,
-                  too_many => <<"Too many files">>,
-                  network_error => <<"Network error">>}).
-
 %%%===================================================================
 %%% upload
 %%%===================================================================
@@ -266,13 +259,15 @@ json_map(K, M) ->
 json_value(_, N) when is_number(N) -> N;
 json_value(K, V) -> text_or_error(K, V).
 
+%% The defaults are the current language's (aihtml_i18n, scope upload).
 labels(M) ->
     is_map(M) orelse error({aihtml, {bad_option, labels, M}}),
+    Defaults = aihtml_i18n:texts(upload),
     maps:fold(fun(K, V, Acc) ->
-                      maps:is_key(K, ?LABELS) orelse error({aihtml, {bad_upload_label, K}}),
+                      maps:is_key(K, Defaults) orelse error({aihtml, {bad_upload_label, K}}),
                       Acc#{atom_to_binary(K) => text_or_error(labels, V)}
               end,
-              #{atom_to_binary(K) => V || K := V <- ?LABELS}, M).
+              #{atom_to_binary(K) => V || K := V <- Defaults}, M).
 
 json_attr(_, M) when map_size(M) =:= 0 -> undefined;
 json_attr(K, M) -> encode(K, M).

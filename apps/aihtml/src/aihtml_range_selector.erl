@@ -25,8 +25,6 @@
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
--define(MONTHS, [<<"Jan">>, <<"Feb">>, <<"Mar">>, <<"Apr">>, <<"May">>, <<"Jun">>,
-                 <<"Jul">>, <<"Aug">>, <<"Sep">>, <<"Oct">>, <<"Nov">>, <<"Dec">>]).
 
 %% How a range_selector writes a value: `number' (integers as is, others
 %% with 2 decimals), `{fixed, Decimals}', `currency' ($1,234), `date'
@@ -200,7 +198,7 @@ format(V, date) ->
     iolist_to_binary([integer_to_binary(M), $/, integer_to_binary(D), $/, integer_to_binary(Y)]);
 format(V, month) ->
     {{_, M, _}, _} = utc(V),
-    lists:nth(M, ?MONTHS);
+    lists:nth(M, aihtml_i18n:format(months_short));
 format(V, time) ->
     {_, {H, Mi, _}} = utc(V),
     H12 = case H rem 12 of 0 -> 12; X -> X end,

@@ -98,8 +98,8 @@ fields(ah_swimlane) -> record_info(fields, ah_swimlane).
 render(#ah_swimlane{items = Items, editable = Editable} = R0) ->
     {Id, R} = ensure_id(R0),
     Classes = ?E:classes(?MODULE, R),
-    L = labels(#{corner => <<"Lane / Phase">>, start => <<"Start">>, task => <<"Task">>,
-                 decision => <<"Decision">>, 'end' => <<"End">>}, R#ah_swimlane.labels, swimlane),
+    %% the defaults are the current language's (aihtml_i18n)
+    L = labels(aihtml_i18n:texts(swimlane), R#ah_swimlane.labels, swimlane),
     LH = pos_int(lane_height, R#ah_swimlane.lane_height),
     PW = pos_int(phase_width, R#ah_swimlane.phase_width),
     NW = pos_int(node_width, R#ah_swimlane.node_width),

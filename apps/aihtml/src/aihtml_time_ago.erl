@@ -74,8 +74,7 @@ render(#ah_time_ago{timestamp = Timestamp, labels = Custom} = R) ->
            ?E:root_attrs(R, none)]).
 
 default_labels() ->
-    #{just_now => <<"just now">>, minutes => <<"{n}m ago">>, hours => <<"{n}h ago">>,
-      days => <<"{n}d ago">>, months => <<"{n}mo ago">>}.
+    aihtml_i18n:texts(time_ago).
 
 format_ago(Secs, L) ->
     Mins = Secs div 60, Hours = Mins div 60, Days = Hours div 24, Months = Days div 30,

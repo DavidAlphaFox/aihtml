@@ -34,7 +34,8 @@
 %% `#{count, label, details => [{Label, Value}]}' whose details show on
 %% hover. Options: `content' (text: adds sigil's CJK-aware word count
 %% segment), `dirty' (true | false: adds the saved/unsaved dot on the
-%% right), `labels' (map overriding the default English labels).
+%% right), `labels' (map overriding the labels of the current language, see
+%% aihtml_i18n).
 -spec ah_status_bar([segment()], aihtml_html:css(), aihtml_html:attrs()) -> #ah_status_bar{}.
 ah_status_bar(Segments, Css, Attrs) ->
     ?EL:build(?MODULE, #ah_status_bar{segments = Segments}, Css, Attrs).
@@ -107,9 +108,7 @@ segment(#{content := Html}, _Labels) ->
     aihtml_html:el('div', Html, [<<"ah-status-bar__extra">>], []).
 
 default_labels() ->
-    #{count => <<"words">>, cjk => <<"CJK">>, words => <<"EN words">>,
-      chars => <<"Chars">>, chars_no_space => <<"No spaces">>, lines => <<"Lines">>,
-      paragraphs => <<"Paragraphs">>, saved => <<"Saved">>, unsaved => <<"Unsaved">>}.
+    aihtml_i18n:texts(status_bar).
 
 %% sigil's compute-stats: count = CJK characters + English words.
 word_count_segment(Text0, Labels) ->
@@ -142,7 +141,7 @@ catalog() ->
        behavior => <<"status-bar">>,
        option_docs => #{content => <<"Text to count: adds a CJK-aware word count with details on hover.">>,
                        dirty => <<"true or false: adds the unsaved (amber) or saved (green) dot.">>,
-                       labels => <<"Map overriding the English labels (count, cjk, words, chars, chars_no_space, lines, paragraphs, saved, unsaved).">>},
+                       labels => <<"Map overriding the labels of the page language (count, cjk, words, chars, chars_no_space, lines, paragraphs, saved, unsaved).">>},
        methods => [],
        doc => <<"Bottom status bar with left and right segments, word count "
                 "details and a saved/unsaved dot.">>}].

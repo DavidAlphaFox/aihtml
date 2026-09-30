@@ -78,15 +78,6 @@
 -define(DAY, 1440).
 -define(VIEWS, [day, week, month, agenda, timeline_day, timeline_week, timeline_month]).
 -define(PRIMARY, <<"var(--ah-color-primary)">>).
--define(MONTHS, [<<"January">>, <<"February">>, <<"March">>, <<"April">>, <<"May">>,
-                 <<"June">>, <<"July">>, <<"August">>, <<"September">>, <<"October">>,
-                 <<"November">>, <<"December">>]).
--define(MONTHS_SHORT, [<<"Jan">>, <<"Feb">>, <<"Mar">>, <<"Apr">>, <<"May">>, <<"Jun">>,
-                       <<"Jul">>, <<"Aug">>, <<"Sep">>, <<"Oct">>, <<"Nov">>, <<"Dec">>]).
--define(WEEKDAYS, [<<"Sunday">>, <<"Monday">>, <<"Tuesday">>, <<"Wednesday">>,
-                   <<"Thursday">>, <<"Friday">>, <<"Saturday">>]).
--define(WEEKDAYS_SHORT, [<<"Sun">>, <<"Mon">>, <<"Tue">>, <<"Wed">>, <<"Thu">>,
-                         <<"Fri">>, <<"Sat">>]).
 
 -type status() :: free | busy | tentative | out_of_office.
 %% A scheduler appointment. `start' is required; `end' defaults to one day
@@ -147,21 +138,10 @@ ah_scheduler(Events, Value, Css, Attrs) ->
 -spec fields(atom()) -> [atom()].
 fields(ah_scheduler) -> record_info(fields, ah_scheduler).
 
+%% The texts and date names of the current language (aihtml_i18n).
 sch_label_defaults() ->
-    #{today => <<"Today">>, prev => <<"Previous">>, next => <<"Next">>,
-      day => <<"Day">>, week => <<"Week">>, month => <<"Month">>, agenda => <<"Agenda">>,
-      timeline_day => <<"Timeline Day">>, timeline_week => <<"Timeline Week">>,
-      timeline_month => <<"Timeline Month">>,
-      all_day => <<"All day">>, all_day_short => <<"all-day">>, more => <<"+{n} more">>,
-      no_events => <<"No appointments">>,
-      hint_navigate => <<"Try navigating to a different date range">>,
-      edit => <<"Edit">>, delete => <<"Delete">>, copy => <<"Copy">>,
-      new => <<"New appointment">>, am => <<"AM">>, pm => <<"PM">>,
-      months => ?MONTHS, months_short => ?MONTHS_SHORT,
-      weekdays => ?WEEKDAYS, weekdays_short => ?WEEKDAYS_SHORT,
-      title_day => <<"yyyy-MM-dd EEEE">>, title_month => <<"MMMM yyyy">>,
-      range_start => <<"MMM d">>, range_end => <<"MMM d, yyyy">>,
-      agenda_date => <<"MMMM d, yyyy">>, popover_date => <<"yyyy-MM-dd EEE">>}.
+    maps:merge(aihtml_i18n:formats([months, months_short, weekdays, weekdays_short, am, pm]),
+               aihtml_i18n:texts(scheduler)).
 
 -spec render(element()) -> aihtml_html:html().
 render(#ah_scheduler{view = View, views = Views, editable = Editable} = R0) ->
