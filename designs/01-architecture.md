@@ -75,5 +75,5 @@ sigil 的原则是标记里只写语义 class，主题切换时不改 HTML。本
 ## 构建
 
 - beamai_render 目前没有 git tag，依赖按提交哈希固定。
-- Tailwind CLI v4 负责构建。`priv/static/aihtml.css` 是类库的预构建产物，示例有自己的 `example.css`。
-- 浏览器端代码由 Vite 打包到 `priv/static/js`（入口 + 每个组件一个代码块 + manifest），第三方库 echarts、xlsx、jspdf 是其中按需 `import()` 的代码块，ProseMirror 由 markdown_editor 直接 import、在它的代码块里；`priv/static/vendor` 只放给页面脚本用的 jQuery。产物提交进仓库，纯 Erlang 使用方无需运行 npm。详见 [06-bundling.md](06-bundling.md)。
+- Tailwind CLI v4 负责构建。`priv/static/css/aihtml-<哈希>.css` 是类库的预构建产物（`scripts/hash-css.mjs` 按内容命名，`css/manifest.json` 记录文件名，`aihtml_assets:css/0` 读取），示例有自己的 `css/example-<哈希>.css`（同一个脚本命名，`aihtml_example_site:css/0` 读取）。
+- 浏览器端代码由 Vite 打包到 `priv/static/js`（入口 + 每个组件一个代码块 + manifest），第三方库 echarts、xlsx、jspdf 是其中按需 `import()` 的代码块，ProseMirror 由 markdown_editor 直接 import、在它的代码块里。产物提交进仓库，纯 Erlang 使用方无需运行 npm。详见 [06-bundling.md](06-bundling.md)。

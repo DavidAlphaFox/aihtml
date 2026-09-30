@@ -1,5 +1,7 @@
 # aihtml
 
+[English](README.en.md) | 简体中文
+
 用 Erlang 函数直接编写 HTML 页面。页面由"预制件"拼装而成，服务端输出完整的静态 HTML，浏览器端由 Stimulus 控制器增强，样式用 TailwindCSS。
 
 ![aihtml 示例站首页](docs/screenshots/home.png)
@@ -59,12 +61,12 @@ login() ->
 | `apps/aihtml/src` | 核心模块（`aihtml`、`aihtml_html`、`aihtml_action`……），每个组件一个模块 `aihtml_<组件名>`，以及组件共用的 `aihtml_lib_*` |
 | `apps/aihtml/include` | `aihtml.hrl`（导入全部构建函数和 record）、每个组件一个 record 头文件 `aihtml_<组件名>.hrl`、自定义组件用的 `aihtml_element.hrl` |
 | `apps/aihtml/priv/css/aihtml.css` | 源样式：令牌、四轴、预制件，供使用方的 Tailwind 构建引入 |
-| `apps/aihtml/priv/static` | 预构建产物（只派发这些）：`aihtml.css`、`js/`（Vite 打包的运行时：入口 + 每个组件一个代码块 + `manifest.json`），echarts、xlsx、jspdf 是按需加载的代码块，ProseMirror 在 markdown_editor 的代码块里（见「第三方库」）；`vendor/` 只放给页面脚本用的 jQuery |
+| `apps/aihtml/priv/static` | 预构建产物（只派发这些）：`css/`（`aihtml-<哈希>.css` + `manifest.json`）、`js/`（Vite 打包的运行时：入口 + 每个组件一个代码块 + `manifest.json`），echarts、xlsx、jspdf 是按需加载的代码块，ProseMirror 在 markdown_editor 的代码块里（见「第三方库」） |
 | `apps/aihtml_cowboy` | cowboy 接入：action 端点、静态资源路由、整页回复 |
 | `apps/aihtml/templates` | 共享 Mustache 模板，构建时同时编译为 Erlang 和 JS |
 | `apps/aihtml/assets/js` | 浏览器端 TypeScript 源码（不派发）：入口 `main.ts`、运行时 `core.ts` 和 `runtime/`、各组件行为 `components/<组件名>.ts`（控制器类，共用部分在 `_lib_*.ts`），由 Vite（`vite.config.mjs`）打包到 `priv/static/js`；`npm run typecheck` 做类型检查 |
 | `apps/aihtml_example` | cowboy 示例站：`/` 首页，`/components/:name` 组件文档（演示、代码、API），`/demo` 实时演示，`/fetch` URL 片段模式。组件示例 `aihtml_example_demo_*` 也在这里，不在库里 |
-| `scripts/` | 构建与测试脚本：样式移植、JS 构建、模板编译器、门面生成、预览 |
+| `scripts/` | 构建与测试脚本：样式移植、JS 构建、样式哈希命名（`hash-css.mjs`）、模板编译器、门面生成、预览、截图 |
 | `designs/` | 设计文档 |
 | `docs/screenshots/` | README 用的示例站截图 |
 
@@ -329,8 +331,8 @@ ah_button(<<"更多">>, more, [outlined],
 带 `data-ah="<名字>"` 的根元素由同名的 Stimulus 控制器增强，例如 tabs 切换、alert 关闭。
 
 - **按需加载**：页面只加载运行时入口（gzip 后约 23 KB）。页面上第一次出现某个组件时，才加载它的代码块；服务端之后插入的组件也一样，Stimulus 会自动连接，不需要手动挂载。
-- **页面引入**：`aihtml_page` 读取打包产物的 `manifest.json`，写出 `<script type="module" src="/aihtml/js/main-<哈希>.js">`。静态资源不挂在 `/aihtml/` 时用 `assets` 选项指定路径；`js` 选项里的页面脚本会加上 `defer`，在运行时之后按顺序执行。
-- **全局变量**：运行时在 `window.AH` 上。页面自己的脚本需要 jQuery 时，用 `aihtml_page` 的 `jquery` 选项单独引入（`priv/static/vendor/jquery.min.js`）。
+- **页面引入**：`aihtml_page` 读取打包产物的 `manifest.json`，写出 `<script type="module" src="/aihtml/js/main-<哈希>.js">`，样式同样从 `css/manifest.json` 读出 `<link href="/aihtml/css/aihtml-<哈希>.css">`。静态资源不挂在 `/aihtml/` 时用 `assets` 选项指定路径，脚本和样式都跟着改；`js` 选项里的页面脚本会加上 `defer`，在运行时之后按顺序执行。
+- **全局变量**：运行时在 `window.AH` 上。aihtml 不带 jQuery；页面自己的脚本需要它时，自行提供文件，用 `js` 选项引入（`js => [<<"/static/jquery.min.js">>, <<"/static/app.js">>]`，按顺序执行）。
 - **事件是原生的**：组件和运行时派发的都是冒泡的原生事件（`change`、`ah:close`、`ah:theme` 等），附带的数据在 `e.detail` 里。页面脚本用 `addEventListener` 监听即可；用 jQuery 监听时，数据要从 `e.originalEvent.detail` 读取，而不是处理函数的第二个参数。服务端 `aihtml_action:trigger/4` 的 `Detail` 同样成为 `e.detail`。
 
 ### 替换方式与形变替换
@@ -486,7 +488,6 @@ h.stop();
   AH.vendor(["jspdf", "jspdf-autotable"]).then(function (libs) { ... });   // [{jsPDF, ...}, autoTable]
   ```
   可用的名字：`echarts`、`xlsx`、`jspdf`、`jspdf-autotable`（解析为 `autoTable(doc, options)` 函数）。库不再作为全局变量出现（`window.echarts` 等），页面上自己引入的同名全局变量也不会被使用。
-- **jQuery**：运行时不用 jQuery。`npm run vendor` 只把 `jquery.min.js` 和它的许可证复制到 `priv/static/vendor`，供 `aihtml_page` 的 `jquery` 选项使用。
 - **PDF 中的中文**：jsPDF 的默认字体不含中文，导出的 PDF 里中文显示不出来，和 sigil 相同。
 
 ## 共享模板
@@ -556,6 +557,8 @@ $list.append(AH.tpl.my_badge({ color: "primary", label: name, count: n }));
                          {branch, "master"}, "apps/aihtml_cowboy"}}]}.
 ```
 
+两个应用要指向同一个版本。正式项目建议把 `{branch, "master"}` 换成 `{ref, "<提交>"}` 或 `{tag, "<标签>"}` 固定版本，`rebar.lock` 会记下实际的提交。页面模块 `-include_lib("aihtml/include/aihtml.hrl")` 后即可使用全部构建函数和 record；应用的 `.app.src` 里把 `aihtml`（以及用到时的 `aihtml_cowboy`）列进 `applications`，它们会随 release 打包，包括 `priv/static` 下的预构建前端产物，使用方不需要 Node.js。
+
 `aihtml_cowboy:routes/1` 提供三条路由：action 端点 `/aihtml/action`、推送流 `/aihtml/events`、静态资源 `/aihtml/[...]`。前两者默认只接受同源请求。推送流在 HTTP/1.1 下关闭了空闲超时，并每 25 秒发送一次心跳。
 
 核心库不依赖 cowboy。其它服务器需要实现两个端点：
@@ -569,20 +572,31 @@ $list.append(AH.tpl.my_badge({ color: "primary", label: name, count: n }));
   4. 之后把收到的 `{aihtml_push, Except, Json}` 写成 `event: ops`，但 `Except` 等于自己的流 id 时跳过；收到 `{aihtml_push_topics, Topics}` 时加入和退出主题。
   5. 同一路径接受 `POST {"stream", "topics"}`，用 `aihtml_push:set_topics/2` 转给流进程。
 
-**静态资源**：不用 `aihtml_cowboy` 时，把 aihtml 的 `priv/static` 挂到 `/aihtml/`，cowboy 写法如下：
+**静态资源**：`priv/static` 里是预构建的前端产物，`aihtml:page/2` 默认从 `/aihtml/` 引用它们。挂载方式三选一：
 
-```erlang
-{"/aihtml/[...]", cowboy_static, {priv_dir, aihtml, "static"}}
-```
+- 用 `aihtml_cowboy:routes/1`，它自带 `/aihtml/[...]` 路由，不需要其它配置。
+- 挂到别的路径：路由传 `static => false`，自己加一条静态路由，页面用 `assets` 选项指过去，脚本和样式都会跟着改：
 
-**样式**：只用预制件时直接用预构建的 `aihtml.css`。自己写 Tailwind 工具类时，在自己的入口 CSS 里引入源样式并扫描 Erlang 源码：
+  ```erlang
+  aihtml_cowboy:routes(#{static => false}) ++
+      [{"/static/ah/[...]", cowboy_static, {priv_dir, aihtml, "static"}}]
+
+  aihtml:page(Body, #{assets => <<"/static/ah/">>})
+  ```
+- 交给 nginx、CDN 等：把 `code:priv_dir(aihtml)` 下的 `static` 目录原样发布（release 里是 `lib/aihtml-<版本>/priv/static`），`assets` 写成对应的地址，例如 `<<"https://cdn.example.com/aihtml/">>`。
+
+`js/` 和 `css/` 下的文件名带内容哈希（`main-<哈希>.js`、`aihtml-<哈希>.css`），内容变了文件名就变，页面引用的总是当前构建。所以使用方可以放心地在自己的服务器或 CDN 上给这些文件设置长期缓存（例如 `Cache-Control: public, max-age=31536000, immutable`）；两个 `manifest.json` 和 `THIRD-PARTY-LICENSES.txt` 不带哈希，不要这样缓存。aihtml 自己不设置缓存头，`aihtml_cowboy` 的静态路由就是普通的 `cowboy_static`。
+
+**样式**：只用预制件时直接用预构建的 `css/aihtml-<哈希>.css`，`aihtml:page/2` 会自动引入。自己写 Tailwind 工具类时，在自己的入口 CSS 里引入源样式并扫描 Erlang 源码：
 
 ```css
 @import "tailwindcss" source(none);
-@import "../_build/default/lib/aihtml/priv/css/aihtml.css";
-@source "../_build/default/lib/aihtml/src";
+@import "../_build/default/lib/aihtml/apps/aihtml/priv/css/aihtml.css";
+@source "../_build/default/lib/aihtml/apps/aihtml/src";
 @source "../src";
 ```
+
+`git_subdir` 依赖在 `_build` 里保留仓库内的子目录路径（`lib/aihtml/apps/aihtml`），所以上面的路径里有 `apps/aihtml`。Erlang 代码不受影响：`code:priv_dir(aihtml)` 和打出的 release（`lib/aihtml-<版本>/priv`）都是正常的路径。
 
 Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字面量，不能在运行时拼接。
 
@@ -601,7 +615,7 @@ Tailwind 按字面扫描 `.erl` 文件，所以 class 必须写成完整的字�
 | `/fetch` | `aihtml_example_page`、`aihtml_example_api`、`aihtml_example_views` | URL 片段模式的同类演示；片段接口是 `/counter`、`/greet`、`/todos`、`/todos/:id`、`/todos/:id/toggle` |
 | `/upload` | `aihtml_example_upload` | upload 组件演示的上传接口：读取 multipart 请求，返回文件名、大小和类型的 JSON，不保存文件内容（默认上限 5 MB） |
 | `/aihtml/action`、`/aihtml/events`、`/aihtml/[...]` | `aihtml_cowboy:routes/1` | action 端点、推送流、库的静态资源 |
-| `/static/[...]` | cowboy_static | 演示站自己的样式 `example.css` |
+| `/static/[...]` | cowboy_static | 演示站自己的样式 `css/example-<哈希>.css` |
 
 所有页面共用 `aihtml_example_site:topbar/1` 顶栏，导航到组件、实时演示和片段模式。
 
@@ -677,7 +691,7 @@ action(search, _Args, #{value := Query} = Event, Ctx) ->
   - 首页链接到所有组件。
   - 每个组件的 API 页都展示了它的 record（theme_switcher 和 toast 没有 record）。
 - **数据层测试**：`aihtml_example_store_tests` 覆盖数据层。
-- **样式**：演示站的样式入口是 `apps/aihtml_example/assets/example.css`。它引入库的样式，扫描库和示例应用的 Erlang 源码生成 Tailwind 工具类，并包含首页主视觉、代码块高亮和 API 表格的少量样式。`npm run build` 会一起构建它。
+- **样式**：演示站的样式入口是 `apps/aihtml_example/assets/example.css`。它引入库的样式，扫描库和示例应用的 Erlang 源码生成 Tailwind 工具类，并包含首页主视觉、代码块高亮和 API 表格的少量样式。`npm run build`（或单独的 `npm run css:example`）把它构建成带哈希的 `priv/static/css/example-<哈希>.css`，页面通过 `aihtml_example_site:css/0` 从 `css/manifest.json` 读出文件名。开发时 `npm run watch:example` 持续写出不带哈希的 `css/example.css`（已加入 `.gitignore`），这个文件存在时页面优先用它，改样式刷新即可看到；之后跑一次构建会把它改名成带哈希的文件。
 
 ### 数据层
 
@@ -739,7 +753,9 @@ rebar3 eunit --app aihtml
 rebar3 dialyzer && rebar3 xref
 
 npm install
-npm run build          # 复制并打包第三方库，Vite 打包运行时到 priv/static/js，构建 aihtml.css 与 example.css
+npm run build          # Vite 打包运行时到 priv/static/js，构建带哈希的 aihtml-<哈希>.css 与 example-<哈希>.css
+npm run css            # 只构建样式（库和演示站），改了 Erlang 源码里的 class 后运行
+npm run watch:example  # 开发时：持续重建演示站样式（不带哈希的 css/example.css，页面优先用它）
 npm run js:dev         # 开发时：未压缩、带 source map，文件变化时重新打包
 npm run typecheck      # TypeScript 类型检查（strict），并确认 types/catalog.d.ts 是最新的
 npm test               # 模板编译器的 Mustache 规范用例 + 类型检查 + 浏览器端测试（无头 Chromium）
@@ -755,7 +771,7 @@ rebar3 shell           # 启动示例站：http://localhost:8080/（首页）、
 - **模板一致性**由 EUnit 的 `aihtml_tpl_tests` 检查，需要能调用 `node`。
 - **浏览器端测试**放在 `apps/aihtml/test/js/*.test.js`，由 `scripts/test-js.mjs` 运行：它先打包一份运行时，用本地 HTTP 服务提供测试页（ES 模块不能从 `file://` 加载），加载全部组件后再运行测试。
 - **截图**：README 的截图由 `npm run screenshots` 从正在运行的示例站（先 `rebar3 shell`）重新生成到 `docs/screenshots/`；清单（页面和主题）在 `scripts/screenshots.mjs` 里，也可以只截其中几张：`node scripts/screenshots.mjs datagrid live-demo`，`--base=` 指定别的地址。
-- **打包产物要提交**：改了 `assets/js` 或模板后运行 `npm run js`，把 `priv/static/js` 一起提交，使用方不需要运行 npm。组件文件的按需加载条件由构建时扫描得到，写法见 `designs/04-components.md` 的「TypeScript 约定」。
+- **打包产物要提交**：改了 `assets/js` 或模板后运行 `npm run js`，把 `priv/static/js` 一起提交，使用方不需要运行 npm；改了样式或 Erlang 源码里的 class 后运行 `npm run css`，把 `apps/aihtml/priv/static/css` 和 `apps/aihtml_example/priv/static/css`（新的带哈希文件和 manifest，旧文件会被删掉）一起提交。组件文件的按需加载条件由构建时扫描得到，写法见 `designs/04-components.md` 的「TypeScript 约定」。
 
 ## 许可证
 

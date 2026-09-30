@@ -22,7 +22,8 @@
      写入 data-ah-on="click:TOKEN[:debounce]"
 
 点击
-  └─ POST /aihtml/action  {"action": TOKEN, "event": {...}, "stream": 推送流 id（可省）}
+  └─ POST /aihtml/action  {"action": TOKEN, "event": {...}, "stream": 推送流 id（可省）,
+                           "lang": 页面的 <html lang>（可省，见 07-i18n）}
        ├─ Origin 不同源               → 403 {"error":"forbidden_origin"}
        ├─ 请求体不对                   → 400 {"error":"bad_request"}
        ├─ 签名不符或模块未声明 behaviour → 403 {"error":"invalid_action"}

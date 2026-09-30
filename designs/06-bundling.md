@@ -7,7 +7,7 @@
 - **静态 HTML 为本**：服务端渲染全部内容，JS 只做增强。这一点不变，也是 SEO 的基础。
 - **只派发打包产物**：源码在 `apps/aihtml/assets/js/`，打包结果在 `apps/aihtml/priv/static/js/`（压缩、带内容哈希、附 `manifest.json`）。release 只带 `priv`，所以派发的就是打包后的代码；产物提交进仓库，纯 Erlang 的使用方不需要 npm。
 - **按需加载**：每个页面只加载入口（运行时核心 + Stimulus），组件代码在页面上出现对应组件时才加载。
-- **最终去掉 jQuery**：控制器用原生 DOM API。使用方自己的页面脚本需要 jQuery 时，仍可由 `aihtml_page` 的 `jquery` 选项单独引入。
+- **最终去掉 jQuery**：控制器用原生 DOM API，库里不再附带 jQuery。使用方自己的页面脚本需要 jQuery 时，自行提供文件，用 `aihtml_page` 的 `js` 选项引入。
 
 ## 结构
 
@@ -36,11 +36,15 @@ vite.config.mjs           构建配置：
 apps/aihtml/priv/static/js/
   main-<hash>.js, <chunk>-<hash>.js, vendor-<库>-<hash>.js, .vite/manifest.json,
   preload-<hash>.js, tpl_runtime-<hash>.js, THIRD-PARTY-LICENSES.txt
+apps/aihtml/priv/static/css/
+  aihtml-<hash>.css, manifest.json       Tailwind 构建后由 scripts/hash-css.mjs 命名
 ```
 
 **文件名稳定**：代码块之间按带哈希的文件名互相引用，被引用的块一改名，引用它的块也跟着改名；入口又列出了全部代码块的文件名（注册表）。所以组件不直接 import 入口：源码写 `import AH from "../core.ts"`（类型照常检查），构建时改写成 `const AH = window.AH`（`main.ts` 在加载任何组件之前设置它，写法不对时构建报错；`import type` 不受限制）。Vite 预加载动态 import 依赖的辅助函数、模板运行时也各放一个小代码块，不留在入口里。结果：改一个组件只改名它自己和 `main`，改运行时只改名 `main`（原来两种情况都会让 110 多个文件全部改名）。
 
-`aihtml_page` 读取 manifest，写出 `<script type="module" src=".../main-<hash>.js">` 和入口依赖的 `<link rel="modulepreload">`。代码块之间用相对路径引用，静态资源挂在 `/aihtml/` 或别的路径下都能工作。
+`aihtml_page` 读取 manifest，写出 `<script type="module" src=".../main-<hash>.js">` 和入口依赖的 `<link rel="modulepreload">`；样式同样由 `aihtml_assets:css/0` 从 `css/manifest.json` 读出带哈希的文件名。代码块之间用相对路径引用，静态资源挂在 `/aihtml/` 或别的路径下都能工作（`assets` 选项，脚本和样式一起跟着改）。
+
+**缓存由使用方决定**：带哈希的文件内容永不变化，适合长期缓存，但 aihtml 自己不设置 `Cache-Control`，`aihtml_cowboy` 的静态路由是普通的 `cowboy_static`。要不要缓存、缓存多久，由使用方在自己的服务器或 CDN 上配置。
 
 ## Stimulus
 
@@ -79,7 +83,7 @@ apps/aihtml/priv/static/js/
    - 每个组件改写成原生 Stimulus 控制器：`connect`/`disconnect`、原生 DOM、原生事件、`AbortController` 统一解绑；共用代码同样改写。
    - 对应的浏览器测试改用原生事件。
    - **结果**：110 个组件文件、18 个共享文件和运行时核心全部改成原生写法；浏览器测试从 216 个增加到 429 个，每个有行为的组件都有测试；服务端 HTML 不变（455 个演示比对）。
-3. **移除 jQuery（已完成）**：入口里不再有 jQuery 和 `window.jQuery`，旧写法的适配层 `AH.define` 已删除，action 事件监听改为原生。入口 82 KB（gzip 后 23 KB）。`aihtml_page` 默认不引入 jQuery，页面脚本需要时用 `jquery` 选项。
+3. **移除 jQuery（已完成）**：入口里不再有 jQuery 和 `window.jQuery`，旧写法的适配层 `AH.define` 已删除，action 事件监听改为原生。入口 82 KB（gzip 后 23 KB）。`aihtml_page` 默认不引入 jQuery，页面脚本需要时用 `jquery` 选项。之后（2026-09-30）连同 npm 依赖、`scripts/vendor.mjs`、`priv/static/vendor/` 和 `jquery` 选项一起删除，页面脚本需要 jQuery 时用 `js` 选项引入自己的文件。
 4. **SEO 补强与第三方库（已完成）**：
    - 页面元信息：`aihtml_page` 的 `description`、`robots`、`canonical`、`alternates`、`og`、`meta`、`json_ld` 选项。
    - markdown_view：服务端渲染 Markdown（`aihtml_lib_markdown` 移植 markdown-it，输出与浏览器端逐字节一致，由固定用例检查）。
