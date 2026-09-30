@@ -1,6 +1,6 @@
 [
-  {"hours": "2", "minutes": "30", "hours_active": true, "minutes_active": false, "twelve": true, "am": false, "pm": true, "disabled": false, "tabindex": 0},
-  {"hours": "12", "minutes": "05", "hours_active": false, "minutes_active": true, "twelve": true, "am": true, "pm": false, "disabled": false, "tabindex": 0},
-  {"hours": "21", "minutes": "00", "hours_active": true, "minutes_active": false, "twelve": false, "am": false, "pm": true, "disabled": false, "tabindex": 0},
-  {"hours": "09", "minutes": "45", "hours_active": false, "minutes_active": true, "twelve": false, "am": true, "pm": false, "disabled": true, "tabindex": -1}
+  {"txt_hours": "Hours", "txt_minutes": "Minutes", "txt_am": "AM", "txt_pm": "PM", "hours": "2", "minutes": "30", "hours_active": true, "minutes_active": false, "twelve": true, "am": false, "pm": true, "disabled": false, "tabindex": 0},
+  {"txt_hours": "Hours", "txt_minutes": "Minutes", "txt_am": "AM", "txt_pm": "PM", "hours": "12", "minutes": "05", "hours_active": false, "minutes_active": true, "twelve": true, "am": true, "pm": false, "disabled": false, "tabindex": 0},
+  {"txt_hours": "Hours", "txt_minutes": "Minutes", "txt_am": "AM", "txt_pm": "PM", "hours": "21", "minutes": "00", "hours_active": true, "minutes_active": false, "twelve": false, "am": false, "pm": true, "disabled": false, "tabindex": 0},
+  {"txt_hours": "Hours", "txt_minutes": "Minutes", "txt_am": "AM", "txt_pm": "PM", "hours": "09", "minutes": "45", "hours_active": false, "minutes_active": true, "twelve": false, "am": true, "pm": false, "disabled": true, "tabindex": -1}
 ]

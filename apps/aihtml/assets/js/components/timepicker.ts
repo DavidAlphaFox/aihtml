@@ -255,7 +255,11 @@ class TimepickerController extends AH.Controller {
       am: p.period === "am",
       pm: p.period === "pm",
       disabled: isDisabled,
-      tabindex: isDisabled ? -1 : 0
+      tabindex: isDisabled ? -1 : 0,
+      txt_hours: AH.t("common", "hours", "Hours"),
+      txt_minutes: AH.t("common", "minutes", "Minutes"),
+      txt_am: AH.format("am", "AM"),
+      txt_pm: AH.format("pm", "PM")
     };
   }
 
@@ -325,7 +329,7 @@ class TimepickerController extends AH.Controller {
       sel.setAttribute("cy", String(round2(end.y)));
     }
     const hoursMode = this.#mode === "hours";
-    svg.setAttribute("aria-label", hoursMode ? "Hours" : "Minutes");
+    svg.setAttribute("aria-label", hoursMode ? AH.t("common", "hours", "Hours") : AH.t("common", "minutes", "Minutes"));
     svg.setAttribute("aria-valuemax", hoursMode ? "23" : "59");
     svg.setAttribute("aria-valuenow", String(hoursMode ? this.#h : this.#m));
     svg.setAttribute("aria-valuetext", hoursMode ? String(selected) : pad2(this.#m));

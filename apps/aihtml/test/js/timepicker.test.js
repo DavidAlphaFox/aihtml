@@ -47,7 +47,8 @@
     T.eq(el.querySelector(".ah-timepicker-header").innerHTML,
          AH.tpl.timepicker_header({ hours: "21", minutes: "05", hours_active: true,
                                     minutes_active: false, twelve: false, am: false, pm: true,
-                                    disabled: false, tabindex: 0 }));
+                                    disabled: false, tabindex: 0,
+                                    txt_hours: "Hours", txt_minutes: "Minutes", txt_am: "AM", txt_pm: "PM" }));
     var texts = el.querySelectorAll(".ah-timepicker-numbers text");
     T.eq(texts.length, 24);
     T.eq(texts[0].namespaceURI, "http://www.w3.org/2000/svg");

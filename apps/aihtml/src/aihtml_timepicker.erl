@@ -114,7 +114,7 @@ render(#ah_timepicker{value = Value0, name = Name, inline = Inline, disabled = D
                                  [{aria_hidden, <<"true">>}])],
                           [<<"ah-timepicker-input-area">>], []),
                     ?H:el('div', Panel, [<<"ah-timepicker-popup">>],
-                          [{role, dialog}, {aria_label, <<"Choose time">>}, {hidden, true}])]
+                          [{role, dialog}, {aria_label, aihtml_i18n:text(common, choose_time)}, {hidden, true}])]
            end,
     ?H:el('div', [Body, hidden_input(Name, ValueBin, Disabled)],
           Classes,
@@ -217,7 +217,10 @@ time_header(H, M, Period, Format, Disabled) ->
                         twelve => Format =:= '12h',
                         am => Period =:= am, pm => Period =:= pm,
                         disabled => Disabled,
-                        tabindex => case Disabled of true -> -1; false -> 0 end})).
+                        tabindex => case Disabled of true -> -1; false -> 0 end,
+                        txt_hours => aihtml_i18n:text(common, hours),
+                        txt_minutes => aihtml_i18n:text(common, minutes),
+                        txt_am => aihtml_i18n:format(am), txt_pm => aihtml_i18n:format(pm)})).
 
 %% The clock in hours mode; the browser redraws the numbers on mode changes.
 %% Drawing order differs from sigil: the selection circle goes under the
@@ -260,7 +263,7 @@ clock_svg(H, Format, Period, Step, Min, Max) ->
                  [<<"ah-timepicker-numbers">>], [])],
           [<<"ah-timepicker-svg">>],
           [{viewBox, <<"0 0 260 260">>}, {xmlns, <<"http://www.w3.org/2000/svg">>},
-           {role, slider}, {tabindex, 0}, {aria_label, <<"Hours">>},
+           {role, slider}, {tabindex, 0}, {aria_label, aihtml_i18n:text(common, hours)},
            {aria_valuemin, 0}, {aria_valuemax, 23}, {aria_valuenow, H},
            {aria_valuetext, integer_to_binary(Selected)}]).
 
@@ -296,7 +299,7 @@ hidden_input(Name, Value, Disabled) ->
 
 clear_button(Cls, Hidden) ->
     ?H:el(button, {safe, <<"&times;">>}, [Cls],
-          [{type, button}, {tabindex, <<"-1">>}, {aria_label, <<"Clear">>},
+          [{type, button}, {tabindex, <<"-1">>}, {aria_label, aihtml_i18n:text(common, clear)},
            {hidden, Hidden}]).
 
 -spec catalog() -> [aihtml_catalog:entry()].
