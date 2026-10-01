@@ -1,10 +1,14 @@
 /* Behaviour of expander (value "true" / "false"; fires change).
  * Events on the root: ah:expanding / ah:collapsing when a change starts,
- * ah:expanded / ah:collapsed when its animation ends (no detail). */
+ * ah:expanded / ah:collapsed when its animation ends (no detail).
+ * Follows data-ah-value: setting it opens or closes the expander, and a
+ * morph keeps the behaviour set up. */
 import AH from "../core.ts";
 import { fade, hide, setValue, show, slide, stop } from "./_lib_layout.ts";
 
 class ExpanderController extends AH.Controller {
+  static override attrs = { value: Boolean };
+
   override setup(): void {
     const el = this.element;
     const mode = el.getAttribute("data-toggle-mode") || "click";
@@ -31,6 +35,9 @@ class ExpanderController extends AH.Controller {
   close(): void { ExpanderController.set(this.element, false, false); }
   toggle(): void { ExpanderController.set(this.element, !ExpanderController.isOpen(this.element), false); }
   isOpen(): boolean { return ExpanderController.isOpen(this.element); }
+
+  // data-ah-value changed: open or close to match (no change event).
+  valueValueChanged(open: boolean): void { ExpanderController.set(this.element, open, false); }
 
   private static header(el: Element): HTMLElement | null {
     return el.querySelector<HTMLElement>(":scope > .ah-expander-header");

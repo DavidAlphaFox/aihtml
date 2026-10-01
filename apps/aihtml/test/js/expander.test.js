@@ -112,4 +112,16 @@
     head(el).click();
     T.eq(changes, ["true"]);
   });
+  T.test("expander: setting data-ah-value opens or closes it, without change", async function (fx) {
+    var el = await mount(fx, "exps");
+    var changes = events(el, "change");
+    var header = q(el, ".ah-expander-header");
+    el.setAttribute("data-ah-value", "true");
+    await wait(0);
+    T.eq(header.getAttribute("aria-expanded"), "true");
+    el.setAttribute("data-ah-value", "false");
+    await wait(0);
+    T.eq(header.getAttribute("aria-expanded"), "false");
+    T.eq(changes, []);
+  });
 })(window.AHTest, window.AH);
