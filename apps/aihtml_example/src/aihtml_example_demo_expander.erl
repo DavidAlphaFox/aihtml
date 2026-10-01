@@ -8,7 +8,8 @@
 -import(aihtml_example_fixture_layout, [col/1]).
 
 -export([demos/0]).
--export([expander_basic/0, expander_structured/0, expander_icons/0, expander_styles/0, expander_accordion/0]).
+-export([expander_basic/0, expander_structured/0, expander_icons/0, expander_styles/0, expander_accordion/0,
+         expander_local/0]).
 
 -spec demos() -> [map()].
 demos() ->
@@ -18,7 +19,8 @@ demos() ->
                  {<<"结构化标题与左侧箭头"/utf8>>, expander_structured},
                  {<<"加减号图标与淡入动画"/utf8>>, expander_icons},
                  {<<"标题在下、无边距、禁用"/utf8>>, expander_styles},
-                 {<<"手风琴：同名的只展开一个"/utf8>>, expander_accordion}]}].
+                 {<<"手风琴：同名的只展开一个"/utf8>>, expander_accordion},
+                 {<<"不发请求的按钮：全部展开、全部收起"/utf8>>, expander_local}]}].
 
 -spec expander_basic() -> aihtml:html().
 expander_basic() ->
@@ -58,3 +60,17 @@ expander_accordion() ->
                      [{header, <<"Can I cancel?">>}, {accordion, faq}, {expanded, false}]),
          ah_expander(ah_p(<<"Email support@example.com.">>), [],
                      [{header, <<"Where is support?">>}, {accordion, faq}, {expanded, false}])]).
+
+-spec expander_local() -> aihtml:html().
+expander_local() ->
+    All = <<"#faq-local [data-ah=expander]">>,
+    Open = fun(C) -> aihtml_action:call(C, All, open, []) end,
+    Close = fun(C) -> aihtml_action:attr(C, All, 'data-ah-value', <<"false">>) end,
+    col([ah_div([ah_button(<<"Expand all">>, expand, [outlined, sm], [on_client(click, Open)]),
+                 ah_button(<<"Collapse all">>, collapse, [outlined, sm], [on_client(click, Close)])],
+                [<<"flex gap-2">>], []),
+         ah_div([ah_expander(ah_p(<<"Create an account first.">>), [],
+                             [{header, <<"How do I start?">>}, {expanded, false}]),
+                 ah_expander(ah_p(<<"Yes, any time from settings.">>), [],
+                             [{header, <<"Can I cancel?">>}, {expanded, false}])],
+                [<<"flex flex-col gap-2">>], [{id, <<"faq-local">>}])]).
