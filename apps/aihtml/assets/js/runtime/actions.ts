@@ -7,6 +7,11 @@
 // sends progressive updates, NDJSON: one {"ops": [...]} per line, then
 // {"done": true} or {"error": ...}. Errors are HTTP statuses with
 // {"error": code}. Nothing is kept on the server between requests.
+//
+// Elements may also carry data-ah-on-client='{"click": [op, ...]}' (aihtml:on_client/2):
+// operations of the same kind, recorded when the page was rendered and
+// applied here when the event fires, without a request. They run before
+// the element's data-ah-on action.
 import type { Behaviours } from "./behaviours.ts";
 import { delegateDocument, fire, withSelf } from "./dom.ts";
 import type { Root } from "./dom.ts";
@@ -65,6 +70,8 @@ export interface ActionError { status: number; error?: string; }
 
 const ACTION_EVENTS = ["click", "dblclick", "change", "input", "submit", "keydown",
                        "keyup", "focusin", "focusout", "mouseenter", "mouseleave"];
+// Elements that bind events: actions, local operations or both.
+const BOUND = "[data-ah-on], [data-ah-on-client]";
 // Latest-wins events: a new one cancels the request still in flight.
 const LATEST_WINS: Record<string, boolean> = { input: true, change: true, keyup: true, keydown: true };
 
@@ -94,6 +101,25 @@ export class Actions {
     this.push = new PushStream(this);
     this.#ops = this.#handlers();
     ACTION_EVENTS.forEach((type) => { this.#listen(type); });
+  }
+
+  /** The operations data-ah-on-client binds to each event; {} when it has none
+   *  or cannot be read. */
+  static localOps(el: Element): Record<string, Op[]> {
+    const src = el.getAttribute("data-ah-on-client");
+    if (!src) { return {}; }
+    try {
+      const v = JSON.parse(src) as unknown;
+      return v && typeof v === "object" && !Array.isArray(v) ? v as Record<string, Op[]> : {};
+    } catch {
+      console.error("aihtml: bad data-ah-on-client on", el);
+      return {};
+    }
+  }
+
+  /** The events el binds: its data-ah-on actions and data-ah-on-client ops. */
+  static boundEvents(el: Element): string[] {
+    return Actions.specs(el).map((s) => s.event).concat(Object.keys(Actions.localOps(el)));
   }
 
   // "event:token[:debounce]"; the event itself may contain a colon
@@ -350,7 +376,8 @@ export class Actions {
     }).then(done, done);
   }
 
-  // What an event of `type` on an element with data-ah-on does.
+  // What an event of `type` on an element with data-ah-on or data-ah-on-client
+  // does: its local operations first, then its actions.
   #onEvent(el: Element, e: Event, type: string): void {
     // A value-bearing component reports its own change/input from its
     // root; the same events bubbling up from controls inside it (an input
@@ -358,12 +385,21 @@ export class Actions {
     if ((type === "change" || type === "input") && e.target !== el && el.hasAttribute("data-ah-value")) {
       return;
     }
-    Actions.specs(el).forEach((s) => {
-      if (s.event !== type) { return; }
+    // The element handles the event itself: no navigation or native submit.
+    const handled = (): void => {
       if (type === "submit" ||
           (type === "click" && (el.tagName === "A" || (el as HTMLButtonElement).type === "submit"))) {
         e.preventDefault();
       }
+    };
+    const local = Actions.localOps(el)[type];
+    if (Array.isArray(local)) {
+      handled();
+      this.apply(local);
+    }
+    Actions.specs(el).forEach((s) => {
+      if (s.event !== type) { return; }
+      handled();
       const question = el.getAttribute("data-ah-confirm");
       if (question && !window.confirm(question)) { return; }
       const ev = { type: e.type, key: (e as KeyboardEvent).key };
@@ -388,17 +424,17 @@ export class Actions {
     if (type === "mouseenter" || type === "mouseleave") {
       document.addEventListener(type, (e) => {
         const el = e.target;
-        if (el instanceof Element && el.matches("[data-ah-on]")) { this.#onEvent(el, e, type); }
+        if (el instanceof Element && el.matches(BOUND)) { this.#onEvent(el, e, type); }
       }, true);
     } else {
-      delegateDocument(type, "[data-ah-on]", (e, el) => { this.#onEvent(el, e, type); });
+      delegateDocument(type, BOUND, (e, el) => { this.#onEvent(el, e, type); });
     }
   }
 
   /** Listen for the events the elements in root bind. */
   listenFor(root: Root): void {
-    withSelf(root, "[data-ah-on]").forEach((el) => {
-      Actions.specs(el).forEach((s) => { this.#listen(s.event); });
+    withSelf(root, BOUND).forEach((el) => {
+      Actions.boundEvents(el).forEach((type) => { this.#listen(type); });
     });
   }
 }

@@ -25,7 +25,9 @@
  *
  * Actions (runtime/actions.ts): elements with data-ah-on="event:token"
  * call Erlang; each event is one POST, the reply the DOM operations to
- * apply (JSON, or NDJSON for progressive updates). Push
+ * apply (JSON, or NDJSON for progressive updates); data-ah-on-client holds
+ * such operations for the browser to apply itself, without a request
+ * (aihtml:on_client/2). Push
  * (runtime/push.ts): data-ah-subscribe="token" opens one EventSource per
  * page. Round trips (runtime/fetch.ts): data-ah-fetch.
  *
