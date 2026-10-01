@@ -65,4 +65,24 @@
     AH.invoke(el, "setValue", 45);
     T.eq(el.getAttribute("data-ah-value"), "45");
   });
+  T.test("progressbar: setting data-ah-value draws it, without events", async function (fx) {
+    var el = await mount(fx, bar(10));
+    var seen = log(el);
+    el.setAttribute("data-ah-value", "40");
+    await tick();
+    T.eq(el.querySelector(".ah-progressbar-value").style.width, "40%");
+    T.eq(el.getAttribute("aria-valuenow"), "40");
+    el.setAttribute("data-ah-value", "250");                 // clamped
+    await tick();
+    await tick();
+    T.eq(el.getAttribute("data-ah-value"), "100");
+    T.eq(seen, []);
+  });
+
+  T.test("progressbar: setValue's own attribute change does not redraw its custom text", async function (fx) {
+    var el = await mount(fx, bar(10));
+    AH.invoke(el, "setValue", 30, "Step 2 of 5");
+    await tick();
+    T.eq(el.querySelector(".ah-progressbar-text").textContent, "Step 2 of 5");
+  });
 })(window.AHTest, window.AH);
