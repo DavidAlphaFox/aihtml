@@ -141,4 +141,79 @@
     T.eq(s.textContent, "2");
     T.eq(box().getAttribute("data-x"), "y");
   });
+  // ---- attrs: typed values that follow data-ah-* attributes ----------
+
+  function settle() { return new Promise(function (r) { setTimeout(r, 0); }); }
+
+  T.test("attrs: typed accessors, defaults, and the setter writes the attribute", async function (fx) {
+    AH.register("t-attrs", class extends AH.Controller {
+      static attrs = { count: Number, label: { type: String, default: "none" }, open: Boolean,
+                       maxDepth: Number, opts: Object };
+      read() { return [this.countValue, this.labelValue, this.openValue, this.maxDepthValue, this.optsValue]; }
+      write() { this.countValue = 5; this.optsValue = { a: 1 }; this.labelValue = null; }
+    });
+    await html(fx, '<div id="a" data-ah="t-attrs" data-ah-count="3" data-ah-open="false"' +
+                   ' data-ah-max-depth="2" data-ah-opts=\'{"x":true}\'></div>');
+    var a = document.getElementById("a");
+    T.eq(AH.invoke(a, "read"), [3, "none", false, 2, { x: true }]);
+    AH.invoke(a, "write");
+    T.eq(a.getAttribute("data-ah-count"), "5");
+    T.eq(a.getAttribute("data-ah-opts"), '{"a":1}');
+    T.ok(!a.hasAttribute("data-ah-label"), "null removes");
+  });
+
+  T.test("attrs: <key>ValueChanged runs for changes after setup, not for the initial value", async function (fx) {
+    var log = [];
+    AH.register("t-changed", class extends AH.Controller {
+      static attrs = { count: Number };
+      setup() { log.push("setup"); this.element.setAttribute("data-ah-count", "1"); }
+      countValueChanged(v, old) { log.push(old + "->" + v); }
+    });
+    await html(fx, '<div id="c" data-ah="t-changed" data-ah-count="0"></div>');
+    await settle();
+    T.eq(log, ["setup"]);
+    var c = document.getElementById("c");
+    c.setAttribute("data-ah-count", "2");
+    c.setAttribute("data-ah-count", "4");      // one report for both
+    await settle();
+    T.eq(log, ["setup", "1->4"]);
+    c.setAttribute("data-ah-count", "4");
+    await settle();
+    T.eq(log.length, 2);
+    AH.destroy(c);
+    c.setAttribute("data-ah-count", "9");
+    await settle();
+    T.eq(log.length, 2, "nothing after teardown");
+  });
+
+  T.test("morph keeps a component that declares attrs set up and reports its values", async function (fx) {
+    var log = [];
+    AH.register("t-follow", class extends AH.Controller {
+      static attrs = { value: String };
+      setup() { log.push("setup"); }
+      teardown() { log.push("teardown"); }
+      valueValueChanged(v, old) { log.push(old + "->" + v); }
+    });
+    await html(fx, '<div id="box"><div id="f" data-ah="t-follow" data-ah-value="a"><p>a</p></div></div>');
+    AH.swap(box(), '<div id="box"><div id="f" data-ah="t-follow" data-ah-value="b"><p>b</p><p>more</p></div></div>', "morph");
+    await settle();
+    await T.ready(fx);
+    T.eq(log, ["setup", "a->b"]);
+    T.eq(document.querySelectorAll("#f p").length, 2);
+  });
+
+  T.test("morph re-initialises a component with attrs that becomes another behaviour", async function (fx) {
+    var log = [];
+    AH.register("t-follow-a", class extends AH.Controller {
+      static attrs = { value: String };
+      setup() { log.push("setup a"); }
+      teardown() { log.push("teardown a"); }
+    });
+    AH.register("t-follow-b", class extends AH.Controller { setup() { log.push("setup b"); } });
+    await html(fx, '<div id="box"><div id="f" data-ah="t-follow-a" data-ah-value="1"></div></div>');
+    AH.swap(box(), '<div id="box"><div id="f" data-ah="t-follow-b" data-ah-value="1"></div></div>', "morph");
+    await settle();
+    await T.ready(fx);
+    T.eq(log.slice().sort(), ["setup a", "setup b", "teardown a"]);
+  });
 })(window.AHTest, window.AH);

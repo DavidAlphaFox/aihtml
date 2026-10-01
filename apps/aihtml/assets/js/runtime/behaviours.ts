@@ -36,9 +36,13 @@ export type PageFunction = (...args: never[]) => unknown;
 type Callback = () => void;
 
 // Stimulus reads data-ah (not data-controller), so the server's HTML stays
-// the same, and data-ah-do for in-browser actions (data-action is used by
-// the components themselves).
-const SCHEMA = { ...defaultSchema, controllerAttribute: "data-ah", actionAttribute: "data-ah-do" };
+// the same. Stimulus actions are not used: they call a method with the
+// event, where the components' methods take the server's arguments, and
+// only reach an ancestor's controller. Bindings in the HTML are aihtml's
+// own (data-ah-on, data-ah-on-client in runtime/actions.ts), so the action
+// attribute is one no element carries (data-action is used by the
+// components themselves).
+const SCHEMA = { ...defaultSchema, controllerAttribute: "data-ah", actionAttribute: "data-ah-stimulus-action" };
 
 export class Behaviours {
   #app: Application | null = null;
@@ -93,6 +97,13 @@ export class Behaviours {
     const name = el.getAttribute("data-ah") || "";
     const c = this.#classes.has(name) ? this.controllerOf(el, name) : null;
     return c && c.ahLive ? c : null;
+  }
+
+  /** True when el's behaviour is set up and follows its attributes
+   *  (declares attrs), so a morph keeps it set up. */
+  followsAttributes(el: Element): boolean {
+    const c = this.liveController(el);
+    return !!c && (c.constructor as typeof Controller).followsAttributes;
   }
 
   isMounted(el: Element): boolean {

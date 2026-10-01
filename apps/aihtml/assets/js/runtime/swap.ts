@@ -244,7 +244,10 @@ export class Swapper {
   // controls take the server's value unless they have the focus, where the
   // user is typing. A mounted component whose subtree changed is
   // re-initialised on its existing nodes (destroy, then mount: teardown
-  // and setup); added nodes are mounted; removed ones are destroyed first.
+  // and setup), unless it follows its attributes (declares attrs, see
+  // runtime/controller.ts): that one stays set up, and its
+  // <key>ValueChanged callbacks see the new attributes. Added nodes are
+  // mounted; removed ones are destroyed first.
 
   /** Patch target (outer: the element itself, else its children) towards html. */
   morph(target: Element, html: string, outer: boolean): void {
@@ -304,6 +307,10 @@ export class Swapper {
       return false;
     }
     const n = neu as Element;
+    // Read before the sync: a component that becomes another one is
+    // re-initialised even when it follows its attributes.
+    const keep = old.getAttribute("data-ah") === n.getAttribute("data-ah") &&
+      this.#behaviours.followsAttributes(old);
     let changed = Swapper.#syncAttributes(old, n);
     if (old instanceof HTMLTextAreaElement) {
       changed = Swapper.#syncValue(old, n.textContent || "") || changed;
@@ -315,7 +322,7 @@ export class Swapper {
     } else if (old instanceof HTMLSelectElement && old !== document.activeElement) {
       Array.from(old.options).forEach((o) => { o.selected = o.hasAttribute("selected"); });
     }
-    if (changed && this.#behaviours.isMounted(old) && ctx.changed.indexOf(old) < 0) {
+    if (changed && !keep && this.#behaviours.isMounted(old) && ctx.changed.indexOf(old) < 0) {
       ctx.changed.push(old);
     }
     return changed;

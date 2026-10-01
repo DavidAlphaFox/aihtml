@@ -1,8 +1,53 @@
 // The base class of every component behaviour (designs/06-bundling.md).
 import { Controller as StimulusController } from "@hotwired/stimulus";
+import type { Context } from "@hotwired/stimulus";
 import { fire } from "./dom.ts";
 
 type Listener<E extends Event> = (e: E) => void;
+
+/** The type of a declared value, written as in Stimulus: String, Number,
+ *  Boolean, or Object / Array for JSON. */
+export type ValueType = StringConstructor | NumberConstructor | BooleanConstructor
+  | ObjectConstructor | ArrayConstructor;
+
+/** A declared value: its type, or its type and the value used while the
+ *  attribute is absent. */
+export type ValueSpec = ValueType | { type: ValueType; default?: unknown };
+
+/** data-ah-<key>, the key dasherised: maxDepth -> data-ah-max-depth. */
+export function valueAttribute(key: string): string {
+  return "data-ah-" + key.replace(/[A-Z]/g, (c) => "-" + c.toLowerCase());
+}
+
+function specType(spec: ValueSpec): ValueType {
+  return typeof spec === "function" ? spec : spec.type;
+}
+
+function emptyOf(type: ValueType): unknown {
+  return type === String ? "" : type === Number ? 0 : type === Boolean ? false
+    : type === Array ? [] : {};
+}
+
+/** The typed value of an attribute (raw: null when absent). */
+function readValue(spec: ValueSpec, raw: string | null): unknown {
+  const type = specType(spec);
+  if (raw === null) {
+    return typeof spec === "function" || spec.default === undefined ? emptyOf(type) : spec.default;
+  }
+  if (type === Number) { return Number(raw); }
+  if (type === Boolean) { return !(raw === "false" || raw === "0"); }
+  if (type === Object || type === Array) {
+    try { return JSON.parse(raw) as unknown; } catch { return emptyOf(type); }
+  }
+  return raw;
+}
+
+function writeValue(type: ValueType, v: unknown): string {
+  return type === Object || type === Array ? JSON.stringify(v) : String(v);
+}
+
+// The classes whose <key>Value accessors are defined.
+const blessed = new WeakSet<object>();
 
 /**
  * A Stimulus controller with what every aihtml component needs:
@@ -27,13 +72,93 @@ type Listener<E extends Event> = (e: E) => void;
  * Public methods are what aihtml_action:call/4 and AH.invoke(el, method,
  * ...args) reach; the catalog (types/catalog.d.ts) lists the ones the
  * server calls.
+ *
+ * Values, as in Stimulus but on the element's data-ah-* attributes (and
+ * declared as attrs: Stimulus's own static values would bind
+ * data-<identifier>-<key>-value):
+ *
+ *   static override attrs = { value: String, max: { type: Number, default: 100 } };
+ *   declare readonly maxValue: number;      // data-ah-max, typed
+ *   valueValueChanged(value, old) {...}     // data-ah-value changed
+ *
+ * <key>Value reads the attribute (the default while it is absent) and,
+ * assigned, writes it. <key>ValueChanged(value, old) runs, after setup,
+ * whenever the attribute changes, whoever changed it: the component
+ * itself, a morph, the server's attr operation, a data-ah-on-client. Unlike
+ * Stimulus it does not run for the initial value; setup reads that.
+ * It may run for the component's own changes, so it compares with what
+ * the element shows and does nothing when they agree.
+ *
+ * A component that declares attrs follows its attributes, so a morph
+ * that changes it patches its DOM and keeps it set up (its state, its
+ * listeners) instead of running teardown and setup again. Declare attrs
+ * only when setup does not depend on the DOM the server renders inside
+ * the element beyond what it reads again when it needs it.
  */
 export class Controller<E extends Element = HTMLElement> extends StimulusController<E> {
   /** Runtime hooks (set by core.ts): after setup starts, after connect. */
   static onStart: (el: Element) => void = () => {};
   static onConnect: (el: Element) => void = () => {};
 
+  /** The values this behaviour reads from data-ah-* attributes. */
+  static attrs: Record<string, ValueSpec> = {};
+
+  /** True when the behaviour declares attrs (a morph keeps it set up). */
+  static get followsAttributes(): boolean { return Object.keys(this.attrs).length > 0; }
+
   #abort: AbortController | null = null;
+  #observer: MutationObserver | null = null;
+  // attribute -> its text when last reported
+  readonly #seen = new Map<string, string | null>();
+
+  constructor(context: Context) {
+    super(context);
+    Controller.#bless(this.constructor as typeof Controller);
+  }
+
+  // Define <key>Value on the class's prototype, once per class.
+  static #bless(klass: typeof Controller): void {
+    if (blessed.has(klass)) { return; }
+    blessed.add(klass);
+    Object.entries(klass.attrs).forEach(([key, spec]) => {
+      const attr = valueAttribute(key);
+      const name = key + "Value";
+      if (Object.prototype.hasOwnProperty.call(klass.prototype, name)) { return; }
+      Object.defineProperty(klass.prototype, name, {
+        configurable: true,
+        get(this: Controller<Element>) { return readValue(spec, this.element.getAttribute(attr)); },
+        set(this: Controller<Element>, v: unknown) {
+          if (v === undefined || v === null) {
+            this.element.removeAttribute(attr);
+          } else {
+            this.element.setAttribute(attr, writeValue(specType(spec), v));
+          }
+        }
+      });
+    });
+  }
+
+  // Report changed values to <key>ValueChanged: from now on, for changes
+  // after the current attributes.
+  #observe(): void {
+    const specs = (this.constructor as typeof Controller).attrs;
+    const attrs = new Map(Object.entries(specs).map(([key, spec]) => [valueAttribute(key), { key, spec }]));
+    if (!attrs.size) { return; }
+    attrs.forEach((_v, attr) => { this.#seen.set(attr, this.element.getAttribute(attr)); });
+    this.#observer = new MutationObserver(() => {
+      attrs.forEach(({ key, spec }, attr) => {
+        const raw = this.element.getAttribute(attr);
+        const old = this.#seen.get(attr) ?? null;
+        if (raw === old || !this.#abort) { return; }
+        this.#seen.set(attr, raw);
+        const cb = (this as unknown as Record<string, unknown>)[key + "ValueChanged"];
+        if (typeof cb === "function") {
+          (cb as (v: unknown, o: unknown) => void).call(this, readValue(spec, raw), readValue(spec, old));
+        }
+      });
+    });
+    this.#observer.observe(this.element, { attributes: true, attributeFilter: Array.from(attrs.keys()) });
+  }
 
   /** Once, when the element enters the page. */
   setup(): void {}
@@ -48,7 +173,10 @@ export class Controller<E extends Element = HTMLElement> extends StimulusControl
   override disconnect(): void {
     const el = this.element;
     queueMicrotask(() => {
-      if (!el.isConnected) { this.ahStop(); }
+      // Gone from the page, or no longer this behaviour (its data-ah
+      // changed); a move reconnects before this runs.
+      const names = (el.getAttribute("data-ah") || "").split(/\s+/);
+      if (!el.isConnected || names.indexOf(this.identifier) < 0) { this.ahStop(); }
     });
   }
 
@@ -57,6 +185,7 @@ export class Controller<E extends Element = HTMLElement> extends StimulusControl
     this.#abort = new AbortController();
     Controller.onStart(this.element);
     this.setup();
+    this.#observe();
   }
 
   /** @internal tear the behaviour down (the runtime calls it). */
@@ -64,6 +193,11 @@ export class Controller<E extends Element = HTMLElement> extends StimulusControl
     if (!this.#abort) { return; }
     this.#abort.abort();
     this.#abort = null;
+    if (this.#observer) {
+      this.#observer.disconnect();
+      this.#observer = null;
+    }
+    this.#seen.clear();
     this.teardown();
   }
 
