@@ -305,6 +305,17 @@ end, #{except => Ctx})     %% skip the originator, it has already updated via th
 - **Topics** can be any plain term, for example `todos` or `{room, 42}`. Topics are also signed; a page can only subscribe to topics the server rendered for it, so deciding per user which topics to render gives authorization. Topic names are visible to the page.
 - **The aihtml application must be running**, since it starts the `pg` scope. Add `aihtml` to your application's `applications` list.
 
+### Local operations
+
+Interactions that need no server use `on_client/2`: they run in the browser on the event, without a request. The function calls the same operation functions an action uses; they are recorded when the page is rendered:
+
+```erlang
+All = <<"#faq [data-ah=expander]">>,
+ah_button(<<"Expand all">>, expand, [], [on_client(click, fun(C) -> aihtml_action:call(C, All, open, []) end)])
+```
+
+An element may bind both `on_client` and `on`: the local operations run first, then the action is sent. tabs, expander and progressbar follow `data-ah-value`, so `aihtml_action:attr(C, Target, 'data-ah-value', V)` switches them too. The operations are part of the page, so the user can read them. See `designs/02-actions.md`.
+
 ### fetch mode
 
 Attributes produced by `fetch/3,4` make an element request a URL that you route yourself; the returned HTML fragment replaces the target location. Fits scenarios with REST routes you already have:

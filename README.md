@@ -305,6 +305,17 @@ end, #{except => Ctx})     %% 跳过发起者，它已经通过 action 响应更
 - **主题**可以是任意纯数据，比如 `todos`、`{room, 42}`。主题同样签名，页面只能订阅服务端为它渲染的主题，所以按用户决定渲染哪些主题即可实现权限控制。主题名对页面可见。
 - **需要运行 aihtml 应用**，由它启动 `pg` scope。把 `aihtml` 写进你的应用的 `applications` 列表即可。
 
+### 本地操作
+
+不需要服务端参与的交互用 `on_client/2`，点击时直接在浏览器里执行，不发请求。函数里调用的是 action 用的同一套操作函数，渲染页面时被记录下来：
+
+```erlang
+All = <<"#faq [data-ah=expander]">>,
+ah_button(<<"全部展开"/utf8>>, expand, [], [on_client(click, fun(C) -> aihtml_action:call(C, All, open, []) end)])
+```
+
+同一元素可以同时绑定 `on_client` 和 `on`，先执行本地操作，再发送 action。tabs、expander、progressbar 跟随 `data-ah-value`，所以 `aihtml_action:attr(C, Target, 'data-ah-value', V)` 也能切换它们。操作写在页面里，用户看得到。见 `designs/02-actions.md`。
+
 ### fetch 模式
 
 `fetch/3,4` 生成的属性让元素请求开发者自己路由的 URL，返回的 HTML 片段替换到目标位置。适合已有 REST 路由的场景：

@@ -86,6 +86,24 @@ action 响应不是 AG-UI 事件流：按钮点击不是"一次 agent 运行"，
 - agent 要更新页面时，在 AG-UI 流里发 `CUSTOM` 事件，名字为 `aihtml.ops`，值就是这里的操作列表，客户端组件收到后调用 `AH.apply(ops)`；要更新其它页面，直接调用 `aihtml_push:publish`。
 这是两者唯一的交汇点，其余格式互不相干。
 
+## 本地操作 on_client/2
+
+不需要服务端的交互（展开、收起、切换组件，加减 class，把一个值抄到另一个字段）用 `aihtml:on_client/2`，不发请求：
+
+```erlang
+All = <<"#faq [data-ah=expander]">>,
+ah_button(<<"全部展开"/utf8>>, expand, [], [on_client(click, fun(C) -> aihtml_action:call(C, All, open, []) end)])
+```
+
+- **同一套操作**：`Fun(Ctx)` 里调用的就是 action 用的操作函数（`call/4`、`add_class/3`、`attr/4`、`set_value/3`、`trigger/4`……）。它们在渲染页面时由 `aihtml_action:render_ops/1` 记录下来，写成 `data-ah-on-client='{"click": [操作...]}'`；事件发生时由运行时直接 `apply`，格式与 action 响应、推送完全相同。
+- **与 on/2 并存**：同一元素可以同时有 `on_client` 和 `on`，事件发生时先应用本地操作，再发送 action（适合先给出即时反馈）。多次 `do` 同一事件，操作按绑定顺序合并。本地操作不受 `confirm`、`sync`、`indicator` 影响，这些选项只管请求。
+- **链接与提交**：绑定了 click 的链接、提交按钮，以及绑定了 submit 的表单，不再执行浏览器的默认行为，与 `on/2` 一致。
+- **安全**：操作写在页面里，用户看得到，也能改；不能当作权限判断，用户不该看到的数据放在 action 里。
+- **为什么不用 Stimulus 的 action**：Stimulus 的 `data-action` 只能调用祖先元素上的控制器，并且把事件对象当作第一个参数传给方法，而组件的公开方法接收的是服务端传来的参数。所以 Stimulus 的 action 属性配置成一个不会出现的名字（`runtime/behaviours.ts`），页面上的绑定只用 aihtml 自己的 `data-ah-on` 和 `data-ah-on-client`。
+- 配合跟随属性的组件（见 [04-components.md](04-components.md)「跟随属性」），`attr/4` 改 `data-ah-value` 就能切换 tabs、展开或收起 expander。
+
+测试见 `apps/aihtml/test/js/on_client.test.js` 和 `aihtml_action_tests`。
+
 ## 借鉴 htmx 的补充能力
 
 这些能力借鉴 htmx 的设计，但由运行时（`runtime/swap.ts`、`actions.ts`、`requests.ts`）自行实现，不依赖 htmx。
