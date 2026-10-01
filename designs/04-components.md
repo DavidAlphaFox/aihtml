@@ -152,6 +152,13 @@ AH.fn("toast", (opts: ToastOptions) => { ... });   // 页面级函数
 - **共享代码**：`_lib_<topic>.ts` 用具名导出，组件直接 import。页面脚本和测试要用的（`values`、`chart`）另外挂在 `AH.lib` 上。
 - **挂载**：根元素写 `data-ah="<behavior>"`，它就是 Stimulus 控制器。页面上出现这个组件时加载代码块并连接控制器。元素被移动（形变替换、`preserve()`）时控制器保留，`setup`/`teardown` 不会重复运行。
 - **`AH.Controller` 提供的工具**：`this.listen(target, type, handler)`（卸载时自动解绑，document、window 上的也一样）；`this.delegate(type, selector, handler)`（委托监听，mouseenter/mouseleave 要用 mouseover/mouseout 代替）；`this.fire(type, detail)`（冒泡、可取消的原生 CustomEvent）；`this.signal`（给 fetch 用的 AbortSignal）。每个元素的状态放在控制器实例上；几个组件共享、按元素保存的状态放在 lib 里的 `WeakMap`。
+- **跟随属性**：取值由属性决定的组件，可以像 Stimulus 的 values 那样声明 `static override attrs = { value: String, max: { type: Number, default: 100 } }`。读的是 `data-ah-<键>`（键转成连字符形式，`maxDepth` 对应 `data-ah-max-depth`），不用 Stimulus 自己的 `static values`，因为那会绑定 `data-<行为名>-<键>-value`，改变服务端输出。声明后：
+  - `this.<键>Value` 按类型读属性（缺省时用默认值），赋值则写属性，赋 `null` 删除；TS 里用 `declare readonly maxValue: number;` 声明类型。
+  - setup 之后属性每次变化，都调用 `<键>ValueChanged(新值, 旧值)`，不管是谁改的：组件自己、形变替换、服务端的 `attr` 操作、`on_client/2`。与 Stimulus 不同，初始值不会触发它，初始状态由 setup 读取。组件自己改属性也会触发，所以回调要先和界面上显示的状态比较，一致就什么都不做。
+  - 形变替换改到这个组件时，只打补丁、保留控制器（状态和监听都在），不再 teardown 再 setup。只有当 setup 不依赖服务端渲染在组件内部的 DOM（或用到时重新查询）时才声明。
+  - 现在声明了的：tabs、expander、progressbar（都是 `value`）。
+
+  实现见 `runtime/controller.ts`，测试见 `test/js/morph.test.js` 以及这几个组件的测试。
 - **事件**：组件之间、组件和服务端 action 之间都用原生事件，数据放在 `e.detail`；在文件头注释里写明每个事件的 detail 结构。
 - **按需加载的条件**：构建时扫描 `components/*.ts` 得到。`AH.register("名字")`、`AH.fn("名字")` 自动识别；通过辅助函数注册、名字是算出来的行为，在文件里写 `// ah-define: 名字`；不靠 `data-ah` 根元素、而是作用于某个属性的文件（tooltip、浮层开关、表单校验），写 `// ah-load: 选择器`。`aihtml_tests` 会检查目录里的每个行为名都能在 JS 源码里找到。
 - **服务端驱动**：控制器的公开方法可由服务端 `aihtml_action:call(Ctx, Target, Method, Args)` 调用，客户端用 `AH.invoke(el, method, ...)`；组件还没加载或还没连接时，调用会排队。页面级函数用 `AH.fn`，服务端写 `call(Ctx, global, Name, Args)`。

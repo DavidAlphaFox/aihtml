@@ -77,7 +77,7 @@ apps/aihtml/priv/static/css/
    - **验收**：服务端 HTML 不变（455 个演示比对），216 个浏览器测试照常通过。
    - **结果**：入口 155 KB（gzip 后 49 KB，其中 jQuery 约一半），原来是每页 1.4 MB（gzip 后 268 KB）；每个组件一个代码块，共享代码和模板随用到它的代码块加载。
    - **实现要点**：
-     - Stimulus 的动作属性配置成 `data-ah-do`，因为 `data-action` 已经被组件内部使用。
+     - Stimulus 的动作属性配置成 `data-ah-do`，因为 `data-action` 已经被组件内部使用。（之后 Stimulus 的动作不再使用，动作属性改成不会出现的 `data-ah-stimulus-action`；页面上的本地绑定是 `aihtml:on_client/2` 写出的 `data-ah-on-client`，见 02-actions.md「本地操作 on_client/2」。）
      - 通过辅助函数注册、名字是算出来的行为，用 `// ah-define: <name>` 声明，`aihtml_tests` 会检查每个行为都能找到。
      - 共享模板每个一个虚拟模块 `virtual:ah-tpl/<name>`，由组件自己 import。
 2. **去 jQuery（第二阶段，已完成）**：
