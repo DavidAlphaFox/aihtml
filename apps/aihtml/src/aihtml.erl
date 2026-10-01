@@ -46,7 +46,7 @@
 %% Server round trips for the browser runtime.
 -export([fetch/3, fetch/4]).
 %% Browser events that call Erlang actions (see aihtml_action).
--export([on/2, on/3, preserve/0]).
+-export([on/2, on/3, on_client/2, preserve/0]).
 %% Server push (see aihtml_push).
 -export([subscribe/1, subscribe/2]).
 %% Theme switcher; the component exports are generated below.
@@ -499,10 +499,7 @@ on(Event, Action) -> on(Event, Action, #{}).
            confirm => iodata(), sync => drop | replace | queue, sync_scope => iodata(),
            indicator => iodata() | this, disable => iodata() | this}) -> attrs().
 on(Event, Action, Opts) when is_map(Opts) ->
-    E = beamai_html_escape:to_binary(Event, aihtml),
-    %% DOM events (click, change, ...) or component events (ah:close, ...)
-    re:run(E, <<"^(ah:)?[a-z][a-z-]*$">>) =/= nomatch
-        orelse error({aihtml, {bad_event_name, Event}}),
+    E = event_name(Event),
     is_function(Action) andalso error({aihtml, {action_must_be_mfa, Action}}),
     lists:member(maps:get(sync, Opts, drop), [drop, replace, queue])
         orelse error({aihtml, {bad_sync, maps:get(sync, Opts)}}),
@@ -513,6 +510,34 @@ on(Event, Action, Opts) when is_map(Opts) ->
      {data_ah_sync, maps:get(sync, Opts, undefined)},
      {data_ah_sync_scope, maps:get(sync_scope, Opts, undefined)},
      request_attrs(Opts)].
+
+%% @doc Apply DOM operations in the browser when `Event' fires, without a
+%% request: the client-side counterpart of `on/2'. `Fun' gets a context
+%% and calls the same operation functions an action does (aihtml_action:
+%% call/4, add_class/3, attr/4, set_value/3, trigger/4, ...); they are
+%% recorded when the page is rendered and written into the element:
+%%
+%% ```
+%% ah_button(<<"Expand all">>, expand, [], [on_client(click, fun(C) ->
+%%     aihtml_action:call(C, <<".faq [data-ah=expander]">>, open, [])
+%% end)])
+%% '''
+%%
+%% Use it for what needs no server: open, close or switch a component,
+%% toggle a class, copy a value into a field. An element may carry both:
+%% its `on_client' operations run first, then its `on' action is sent. The
+%% operations are part of the page, so the user can read them; data they
+%% must not see belongs in an action.
+-spec on_client(atom() | binary(), fun((aihtml_action:ctx()) -> any())) -> attrs().
+on_client(Event, Fun) when is_function(Fun, 1) ->
+    [{<<"data-ah-on-client">>, {local, [{event_name(Event), aihtml_action:render_ops(Fun)}]}}].
+
+%% DOM events (click, change, ...) or component events (ah:close, ...)
+event_name(Event) ->
+    E = beamai_html_escape:to_binary(Event, aihtml),
+    re:run(E, <<"^(ah:)?[a-z][a-z-]*$">>) =/= nomatch
+        orelse error({aihtml, {bad_event_name, Event}}),
+    E.
 
 %% indicator and disable, shared with fetch/4
 request_attrs(Opts) ->

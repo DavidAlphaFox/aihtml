@@ -295,8 +295,10 @@ render_ops(Fun) -> render_ops(Fun, aihtml_i18n:locale()).
 -spec render_ops(fun((ctx()) -> any()), aihtml_i18n:lang()) -> [op()].
 render_ops(Fun, Lang0) ->
     Lang = aihtml_i18n:normalize(Lang0),
+    %% Nested calls (aihtml:on_client/2 in the HTML an outer call renders) keep
+    %% the outer call's buffers.
     Saved = put(?BUF, []),
-    put(?COLLECT, []),
+    SavedCollect = put(?COLLECT, []),
     Ctx = {aihtml_ctx, self(), fun(Ops) -> put(?COLLECT, get(?COLLECT) ++ Ops) end,
            #{}, undefined, Lang},
     try
@@ -304,12 +306,12 @@ render_ops(Fun, Lang0) ->
         flush(Ctx),
         get(?COLLECT)
     after
-        erase(?COLLECT),
-        case Saved of
-            undefined -> erase(?BUF);
-            _ -> put(?BUF, Saved)
-        end
+        restore(?COLLECT, SavedCollect),
+        restore(?BUF, Saved)
     end.
+
+restore(Key, undefined) -> erase(Key);
+restore(Key, Value) -> put(Key, Value).
 
 %%%===================================================================
 %%% Internal

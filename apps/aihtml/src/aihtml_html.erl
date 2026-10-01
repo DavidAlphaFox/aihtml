@@ -32,7 +32,7 @@
 -export([el/4, void/3, render/1, render_binary/1,
          classes/1, attrs/1, merge_attrs/2]).
 
--export_type([html/0, element/0, css/0, attrs/0, attr/0, action/0]).
+-export_type([html/0, element/0, css/0, attrs/0, attr/0, action/0, local/0]).
 
 -type element() :: #ah_el{}.
 -type html() :: element() | aihtml_element:element() | binary() | number() | atom()
@@ -41,9 +41,12 @@
 %% Attributes are a proplist or a map. Nested lists are flattened, which
 %% lets helpers such as `aihtml:fetch/3' return a list that is spliced in.
 -type attrs() :: [{atom() | binary(), term()} | attrs()] | #{atom() | binary() => term()}.
--type attr() :: {binary(), binary() | true | {actions, [action()]}}.
+-type attr() :: {binary(), binary() | true | {actions, [action()]} | {local, [local()]}}.
 %% {Event, SignedToken, Opts}, built by aihtml:on/2,3.
 -type action() :: {binary(), binary(), #{debounce => pos_integer()}}.
+%% {Event, Ops}, built by aihtml:on_client/2: operations the browser applies
+%% itself when Event fires.
+-type local() :: {binary(), [aihtml_action:op()]}.
 
 %% HTML elements that never have content or a closing tag.
 -define(IS_VOID(T), (T =:= <<"area">> orelse T =:= <<"base">> orelse
@@ -155,6 +158,11 @@ render_attr({K, true}) -> [$\s, K];
 render_attr({K, {actions, As}}) ->
     %% Actions bound with aihtml:on/2,3: event:token[:debounce]
     [$\s, K, "=\"", lists:join($\s, [action_spec(E, Tok, Opts) || {E, Tok, Opts} <- As]), $"];
+render_attr({K, {local, Ls}}) ->
+    %% Operations bound with aihtml:on_client/2: {"event": [op, ...], ...}, the
+    %% ops of one event in the order they were bound
+    Events = lists:foldl(fun({E, Ops}, M) -> M#{E => maps:get(E, M, []) ++ Ops} end, #{}, Ls),
+    [$\s, K, "=\"", beamai_html_escape:escape(iolist_to_binary(aihtml_json:encode(Events))), $"];
 render_attr({K, V}) -> [$\s, K, "=\"", beamai_html_escape:escape(V), $"].
 
 action_spec(Event, Token, #{debounce := Ms}) ->
@@ -195,6 +203,13 @@ add_attr({<<"data-ah-on">>, {actions, As}}, Acc) ->
         {_, {actions, Old}} ->
             lists:keyreplace(<<"data-ah-on">>, 1, Acc,
                              {<<"data-ah-on">>, {actions, Old ++ As}})
+    end;
+add_attr({<<"data-ah-on-client">>, {local, Ls}}, Acc) ->
+    case lists:keyfind(<<"data-ah-on-client">>, 1, Acc) of
+        false -> [{<<"data-ah-on-client">>, {local, Ls}} | Acc];
+        {_, {local, Old}} ->
+            lists:keyreplace(<<"data-ah-on-client">>, 1, Acc,
+                             {<<"data-ah-on-client">>, {local, Old ++ Ls}})
     end;
 add_attr({<<"data-ah-include">>, {selectors, Sels}}, Acc) ->
     case lists:keyfind(<<"data-ah-include">>, 1, Acc) of

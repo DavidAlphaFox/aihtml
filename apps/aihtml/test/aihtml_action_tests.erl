@@ -113,6 +113,56 @@ static_render_carries_signed_actions_test() ->
     ?assertMatch({match, _}, re:run(Html, <<"data-ah-include=\"#a, .b\"">>)),
     ?assertMatch({match, _}, re:run(Html, <<"data-ah-confirm=\"Sure\\?\"">>)).
 
+%% The data-ah-on-client attribute of a rendered element, decoded.
+local_ops(Html) ->
+    {match, [Src]} = re:run(aihtml:render_binary(Html), <<"data-ah-on-client=\"([^\"]*)\"">>,
+                            [{capture, all_but_first, binary}]),
+    json:decode(lists:foldl(fun({E, C}, B) -> binary:replace(B, E, C, [global]) end, Src,
+                            [{<<"&quot;">>, <<"\"">>}, {<<"&lt;">>, <<"<">>}, {<<"&gt;">>, <<">">>},
+                             {<<"&#39;">>, <<"'">>}, {<<"&amp;">>, <<"&">>}])).
+
+do_renders_the_operations_per_event_test() ->
+    Html = ah_button(<<"x">>, x, [], [on_client(click, fun(C) ->
+                                                     aihtml_action:call(C, {id, faq}, open, []),
+                                                     aihtml_action:add_class(C, <<".row">>, [on])
+                                                 end),
+                                      on_client('ah:close', fun(C) -> aihtml_action:focus(C, {id, q}) end),
+                                      on_client(click, fun(C) -> aihtml_action:set_value(C, {id, n}, 3) end)]),
+    ?assertEqual(#{<<"click">> => [#{<<"op">> => <<"call">>, <<"id">> => <<"faq">>,
+                                     <<"method">> => <<"open">>, <<"args">> => []},
+                                   #{<<"op">> => <<"class">>, <<"sel">> => <<".row">>, <<"add">> => <<"on">>},
+                                   #{<<"op">> => <<"val">>, <<"id">> => <<"n">>, <<"value">> => <<"3">>}],
+                   <<"ah:close">> => [#{<<"op">> => <<"focus">>, <<"id">> => <<"q">>}]},
+                 local_ops(Html)).
+
+do_escapes_its_json_test() ->
+    Html = aihtml:render_binary(
+             ah_span([], [], [on_client(click, fun(C) -> aihtml_action:attr(C, {id, t}, title, <<"a\"<b>'">>) end)])),
+    ?assertEqual(nomatch, binary:match(Html, [<<"<b>">>, <<"\"<">>])),
+    ?assertMatch(#{<<"click">> := [#{<<"value">> := <<"a\"<b>'">>}]},
+                 local_ops(ah_span([], [], [on_client(click, fun(C) ->
+                                                            aihtml_action:attr(C, {id, t}, title, <<"a\"<b>'">>)
+                                                        end)]))).
+
+do_checks_the_event_name_test() ->
+    ?assertError({aihtml, {bad_event_name, _}}, on_client(<<"Click">>, fun(_) -> ok end)),
+    ?assertError(function_clause, on_client(click, not_a_fun)).
+
+%% on_client/2 in HTML an outer render_ops renders (a push, an action's html op):
+%% the outer call keeps its own operations.
+do_inside_render_ops_test() ->
+    Ops = aihtml_action:render_ops(
+            fun(C) ->
+                    aihtml_action:title(C, <<"t">>),
+                    aihtml_action:flush(C),
+                    aihtml_action:html(C, {id, box},
+                                       ah_span([], [], [on_client(click, fun(C2) -> aihtml_action:focus(C2, {id, q}) end)])),
+                    aihtml_action:remove(C, {id, old})
+            end),
+    ?assertMatch([#{op := title}, #{op := html, html := _}, #{op := remove}], Ops),
+    [_, #{html := H}, _] = Ops,
+    ?assertMatch({_, _}, binary:match(iolist_to_binary(H), <<"data-ah-on-client">>)).
+
 page_points_at_the_action_endpoint_test() ->
     H = iolist_to_binary(aihtml:page(<<"x">>, #{action => <<"/act">>})),
     ?assertMatch({match, _}, re:run(H, <<"<body class=\"ah-body\" data-ah-action=\"/act\"">>)).

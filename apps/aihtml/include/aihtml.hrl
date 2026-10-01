@@ -26,7 +26,7 @@
          ah_table/1, ah_table/3, ah_thead/1, ah_thead/3, ah_tbody/1, ah_tbody/3,
          ah_tr/1, ah_tr/3, ah_th/1, ah_th/3, ah_td/1, ah_td/3,
          ah_br/0, ah_hr/2, ah_img/2, ah_theme_switcher/2,
-         text/1, safe/1, fetch/3, fetch/4, on/2, on/3, preserve/0, subscribe/1, subscribe/2]).
+         text/1, safe/1, fetch/3, fetch/4, on/2, on/3, on_client/2, preserve/0, subscribe/1, subscribe/2]).
 %% BEGIN GENERATED COMPONENT IMPORTS
 -import(aihtml,
         [ah_button/4,
