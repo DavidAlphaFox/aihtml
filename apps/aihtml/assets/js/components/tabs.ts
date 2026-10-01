@@ -1,9 +1,13 @@
-/* Behaviour of tabs (value: the active key; fires change). */
+/* Behaviour of tabs (value: the active key; fires change). Follows
+ * data-ah-value: setting it (the server's attr operation, a data-ah-on-client)
+ * selects that tab, and a morph keeps the behaviour set up. */
 import AH from "../core.ts";
 import { fade, hide, listKeys, setValue, stop } from "./_lib_layout.ts";
 import { hover } from "./_lib_nav.ts";
 
 class TabsController extends AH.Controller {
+  static override attrs = { value: String };
+
   override setup(): void {
     const el = this.element;
     const header = el.querySelector(":scope > .ah-tabs-header");
@@ -50,6 +54,15 @@ class TabsController extends AH.Controller {
     }
   }
   value(): string | null { return this.element.getAttribute("data-ah-value"); }
+
+  // data-ah-value changed: show that tab (it fires no change). A key that
+  // cannot be selected (unknown, disabled) gives way to the shown one.
+  valueValueChanged(key: string): void {
+    if (this.choose(this.indexOf(key), false)) { return; }
+    const shown = this.items().find((it) => it.classList.contains("ah-tabs-item-selected"));
+    const cur = shown ? shown.getAttribute("data-key") || "" : "";
+    if (shown && cur !== key) { setValue(this.element, cur); }
+  }
 
   private items(): HTMLElement[] {
     return Array.from(this.element.querySelectorAll<HTMLElement>(":scope > .ah-tabs-header > .ah-tabs-item"));

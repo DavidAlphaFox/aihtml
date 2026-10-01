@@ -102,4 +102,42 @@
     T.fire(items(el)[0], "mouseover");
     T.eq(changes, ["day"]);
   });
+  T.test("tabs: setting data-ah-value selects that tab, without change", async function (fx) {
+    var el = await mount(fx, "tabs");
+    var changes = events(el, "change");
+    el.setAttribute("data-ah-value", "overview");
+    await wait(260);
+    T.eq(items(el)[0].getAttribute("aria-selected"), "true");
+    T.eq(shownPanels(el), [true, false, false, false]);
+    T.eq(q(el, "input[type=hidden]").value, "overview");
+    T.eq(changes, []);
+  });
+
+  T.test("tabs: a key that cannot be selected gives way to the shown one", async function (fx) {
+    var el = await mount(fx, "tabs");
+    el.setAttribute("data-ah-value", "reviews");          // disabled
+    await wait(0);
+    T.eq(el.getAttribute("data-ah-value"), "specs");
+    T.eq(items(el)[1].getAttribute("aria-selected"), "true");
+    el.setAttribute("data-ah-value", "nope");
+    await wait(0);
+    T.eq(el.getAttribute("data-ah-value"), "specs");
+  });
+
+  T.test("tabs: a morph to another active tab keeps the controller", async function (fx) {
+    var el = await mount(fx, "tabs");
+    var before = AH.stimulus().getControllerForElementAndIdentifier(el, "tabs");
+    var html = SERVER.tabs.replace('data-ah-value="specs"', 'data-ah-value="faq"')
+      .replace('class="ah-tabs-item ah-tabs-item-selected" id="ah-tabs-22018-tab-1" role="tab" data-key="specs" tabindex="0" aria-selected="true"',
+               'class="ah-tabs-item" id="ah-tabs-22018-tab-1" role="tab" data-key="specs" tabindex="-1" aria-selected="false"')
+      .replace('class="ah-tabs-item" id="ah-tabs-22018-tab-3" role="tab" data-key="faq" tabindex="-1" aria-selected="false"',
+               'class="ah-tabs-item ah-tabs-item-selected" id="ah-tabs-22018-tab-3" role="tab" data-key="faq" tabindex="0" aria-selected="true"');
+    AH.morph(el, html);
+    await wait(0);
+    T.ok(AH.stimulus().getControllerForElementAndIdentifier(el, "tabs") === before, "same controller");
+    T.eq(el.getAttribute("data-ah-value"), "faq");
+    T.eq(items(el)[3].getAttribute("aria-selected"), "true");
+    items(el)[0].click();
+    T.eq(el.getAttribute("data-ah-value"), "overview", "still answers clicks");
+  });
 })(window.AHTest, window.AH);
