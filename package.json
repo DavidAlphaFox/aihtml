@@ -39,7 +39,7 @@
     "prosemirror-view": "^1.42.6",
     "tailwindcss": "^4.3.3",
     "typescript": "^7.0.2",
-    "vite": "^8.3.1",
+    "vite": "^8.3.3",
     "xlsx": "^0.18.5"
   }
 }
