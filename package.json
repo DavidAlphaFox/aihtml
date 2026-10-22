@@ -23,7 +23,7 @@
     "echarts": "^6.1.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
-    "markdown-it": "^14.3.2",
+    "markdown-it": "^14.3.3",
     "prosemirror-commands": "^1.7.2",
     "prosemirror-dropcursor": "^1.8.4",
     "prosemirror-gapcursor": "^1.4.1",
