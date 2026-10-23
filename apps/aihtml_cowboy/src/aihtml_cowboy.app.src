@@ -1,6 +1,6 @@
 {application, aihtml_cowboy,
  [{description, "Cowboy endpoint for aihtml actions"},
-  {vsn, "0.1.0"},
+  {vsn, "1.0.0"},
   {registered, []},
   {applications, [kernel, stdlib, cowboy, aihtml]},
   {env, []},
