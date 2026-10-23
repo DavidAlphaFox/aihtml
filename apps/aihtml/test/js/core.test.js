@@ -70,6 +70,24 @@
     T.eq(sent[0].event.id, "go");
   });
 
+  T.test("event payloads carry modifiers, pointer offsets and custom detail", async function (fx) {
+    sent = [];
+    fx.innerHTML = '<img id="shot" style="width:300px;height:20px" src="data:image/gif;base64,R0lGODlhAQABAAAAACw=" data-ah-on="click:' + TOKEN + '">' +
+      '<span id="custom" data-ah-on="ah:close:' + TOKEN + '"></span>';
+    AH.mount(fx);
+    Object.defineProperty(document.getElementById("shot"), "naturalWidth", { value: 640, configurable: true });
+    Object.defineProperty(document.getElementById("shot"), "naturalHeight", { value: 400, configurable: true });
+    T.fire(document.getElementById("shot"), "click", { clientX: 25, clientY: 11,
+                                   ctrlKey: true, shiftKey: false, altKey: false, metaKey: true });
+    T.fire(document.getElementById("custom"), "ah:close", { detail: { result: "ok" } });
+    await wait(20);
+    var p = sent[0].event;
+    T.eq(p.mods, { ctrl: true, shift: false, alt: false, meta: true });
+    T.eq(p.pointer.w, 300);
+    T.eq(p.pointer.natural_w, 640);
+    T.eq(sent[1].event.detail, { result: "ok" });
+  });
+
   T.test("mouseenter actions fire on the element, not for its children", async function (fx) {
     sent = [];
     fx.innerHTML = '<div id="h" data-ah-on="mouseenter:' + TOKEN + '"><span id="hc">x</span></div>';

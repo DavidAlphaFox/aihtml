@@ -21,14 +21,18 @@
 
 -spec init(cowboy_req:req(), map()) -> {ok, cowboy_req:req(), map()}.
 init(Req0, #{origins := Origins} = State) ->
-    Req = case cowboy_req:method(Req0) of
-              <<"POST">> ->
-                  case origin_ok(Req0, Origins) of
-                      true -> handle(Req0);
-                      false -> refuse(403, <<"forbidden_origin">>, Req0)
-                  end;
-              _ ->
-                  cowboy_req:reply(405, #{<<"allow">> => <<"POST">>}, Req0)
+    Req = case aihtml_cowboy:authorize(Req0, State) of
+              {deny, Status} -> refuse(Status, <<"unauthorized">>, Req0);
+              ok ->
+                  case cowboy_req:method(Req0) of
+                      <<"POST">> ->
+                          case origin_ok(Req0, Origins) of
+                              true -> handle(Req0);
+                              false -> refuse(403, <<"forbidden_origin">>, Req0)
+                          end;
+                      _ ->
+                          cowboy_req:reply(405, #{<<"allow">> => <<"POST">>}, Req0)
+                  end
           end,
     {ok, Req, State}.
 
@@ -46,25 +50,34 @@ handle(Req0) ->
     end.
 
 stream(Ref, In, Req0) ->
-    %% flush/1 turns the reply into an NDJSON stream; the streaming Req is
-    %% kept here (this process runs the action).
-    Send = fun(Ops) -> line(started(Req0), #{ops => Ops}) end,
+    %% Headers and cookies registered by the action are known before the
+    %% first flush in the normal case; flush/1 turns the reply into an
+    %% NDJSON stream, whose streaming Req is kept here.
+    {Headers, Cookies} = aihtml_action:take_response(),
+    Req1 = apply_response(Cookies, Headers, Req0),
+    Send = fun(Ops) -> line(started(Req1), #{ops => Ops}) end,
     Result = aihtml_action:execute(Ref, maps:get(<<"event">>, In, #{}),
                                    #{send => Send,
-                                     meta => #{req => Req0},
+                                     meta => #{req => Req1},
                                      stream_id => stream_id(maps:get(<<"stream">>, In, null)),
                                      lang => maps:get(<<"lang">>, In, null)}),
     case {erase(aihtml_cowboy_stream), Result} of
         {undefined, {ok, Ops}} ->
-            json(200, #{ops => Ops}, Req0);
+            json(200, #{ops => Ops}, Req1);
         {undefined, error} ->
-            json(500, #{error => action_failed}, Req0);
+            json(500, #{error => action_failed}, Req1);
         {Req, {ok, Ops}} ->
             _ = [line(Req, #{ops => Ops}) || Ops =/= []],
             finish(Req, #{done => true});
         {Req, error} ->
             finish(Req, #{error => action_failed})
     end.
+
+apply_response(Cookies, Headers, Req0) ->
+    Req1 = lists:foldl(fun({Name, Value, Opts}, Acc) ->
+                               cowboy_req:set_resp_cookie(Name, Value, Acc, Opts)
+                       end, Req0, Cookies),
+    cowboy_req:set_resp_headers(Headers, Req1).
 
 %% The streaming reply, started on the first flush.
 started(Req0) ->

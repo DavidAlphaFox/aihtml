@@ -10,6 +10,9 @@ action(inc, #{n := N}, _Ev, Ctx) ->
     aihtml_action:html(Ctx, {id, n}, N + 1);
 action(echo, _, #{value := V, values := Vs}, Ctx) ->
     aihtml_action:html(Ctx, <<"#out">>, [V, <<"|">>, maps:get(<<"a">>, Vs, <<>>)]);
+action(details, _, #{detail := D, mods := M, pointer := P}, Ctx) ->
+    aihtml_action:html(Ctx, <<"#out">>, {safe, aihtml_json:encode(#{detail => D, mods => M,
+                                                                    pointer => P})});
 action(steps, _, _Ev, Ctx) ->
     aihtml_action:html(Ctx, {id, s}, <<"loading">>),
     aihtml_action:flush(Ctx),

@@ -53,6 +53,18 @@ module_without_behaviour_is_refused_test() ->
     Tok = aihtml_action:token({lists, reverse, []}),
     ?assertEqual({error, invalid_action}, aihtml_action:verify(Tok)).
 
+token_lifetime_is_checked_test() ->
+    Tok = aihtml_action:token({?M, inc, #{n => 1}}, 1),
+    ?assertEqual({ok, {?M, inc, #{n => 1}}}, aihtml_action:verify(Tok)),
+    timer:sleep(1100),
+    ?assertEqual({error, invalid_action}, aihtml_action:verify(Tok)).
+
+undated_tokens_still_work_test() ->
+    Tok = aihtml_action:sign({?M, inc, #{n => 1}}),
+    ?assertEqual({ok, {?M, inc, #{n => 1}}}, aihtml_action:unsign(Tok)),
+    ?assertEqual({ok, {?M, inc, #{n => 1}}},
+                 aihtml_action:unsign(Tok, os:system_time(second))).
+
 args_must_be_data_test() ->
     ?assertError({aihtml, {action_args_not_data, _}},
                  aihtml_action:token({?M, inc, #{pid => self()}})),
@@ -69,8 +81,23 @@ request_options_render_as_attributes_test() ->
               <<"data-ah-indicator=\"#spin\"">>, <<"data-ah-disable=\"this\"">>,
               <<" data-ah-preserve[ >]">>]],
     ?assertError({aihtml, {bad_sync, later}}, on(click, {?M, inc, #{}}, #{sync => later})),
+    P = aihtml:render_binary(
+          ah_span([], [], [on(keydown, {?M, inc, #{}},
+                              #{sync => fifo, prevent_default => [<<"Tab">>, <<"Backspace">>]})])),
+    [?assertMatch({match, _}, re:run(P, RX))
+     || RX <- [<<"data-ah-sync=\"fifo\"">>,
+               <<"data-ah-prevent-default=\"Tab Backspace\"">>]],
+    True = aihtml:render_binary(
+             ah_span([], [], [on(keydown, {?M, inc, #{}}, #{prevent_default => true})])),
+    ?assertMatch({_, _}, binary:match(True, <<" data-ah-prevent-default">>)),
     F = aihtml:render_binary(ah_span([], [], [fetch(get, <<"/x">>, this, #{indicator => this})])),
     ?assertMatch({match, _}, re:run(F, <<"data-ah-indicator=\"this\"">>)).
+
+poll_renders_a_signed_interval_test() ->
+    Tok = aihtml_action:token({?M, inc, #{n => 1}}),
+    Html = aihtml:render_binary(
+             ah_img([], [{id, shot}, aihtml:poll(2000, {?M, inc, #{n => 1}})])),
+    ?assertMatch({match, _}, re:run(Html, <<"data-ah-poll=\"", (Tok)/binary, ":2000\"">>)).
 
 trigger_and_history_ops_test() ->
     {ok, Batches} = run_fun(fun(Ctx) ->
@@ -86,6 +113,30 @@ trigger_and_history_ops_test() ->
                    #{<<"op">> => <<"url">>, <<"mode">> => <<"push">>, <<"value">> => <<"/items?page=3">>},
                    #{<<"op">> => <<"url">>, <<"mode">> => <<"replace">>, <<"value">> => <<"/items">>}]],
                  Batches).
+
+text_ops_do_not_render_html_test() ->
+    {ok, Batches} = run_fun(fun(Ctx) ->
+                                aihtml_action:text(Ctx, {id, line}, <<"a<b>">>),
+                                aihtml_action:text(Ctx, {id, line}, <<">">>, append)
+                            end),
+    ?assertEqual([[#{<<"op">> => <<"text">>, <<"id">> => <<"line">>,
+                     <<"swap">> => <<"replace">>, <<"value">> => <<"a<b>">>},
+                   #{<<"op">> => <<"text">>, <<"id">> => <<"line">>,
+                     <<"swap">> => <<"append">>, <<"value">> => <<">">>}]], Batches).
+
+response_headers_and_cookies_are_taken_once_test() ->
+    put(aihtml_action_buf, []),
+    try
+        ok = aihtml_action:set_resp_headers(#{<<"x-a">> => <<"1">>}),
+        ok = aihtml_action:set_resp_cookie(<<"sid">>, <<"v">>, #{http_only => true}),
+        ?assertEqual({#{<<"x-a">> => <<"1">>},
+                      [{<<"sid">>, <<"v">>, #{http_only => true}}]},
+                     aihtml_action:take_response()),
+        ?assertEqual({#{}, []}, aihtml_action:take_response())
+    after
+        erase(aihtml_action_buf),
+        _ = aihtml_action:take_response()
+    end.
 
 %% Ops produced by a fun, through the same path pushes use.
 run_fun(Fun) ->
@@ -181,6 +232,21 @@ event_fields_reach_the_action_test() ->
     Tok = aihtml_action:token({?M, echo, #{}}),
     {ok, Batches} = run(Tok, #{<<"value">> => <<"<i>">>, <<"values">> => #{<<"a">> => <<"7">>}}),
     ?assertMatch([[#{<<"sel">> := <<"#out">>, <<"html">> := <<"&lt;i&gt;|7">>}]], Batches).
+
+event_detail_mods_and_pointer_reach_the_action_test() ->
+    Tok = aihtml_action:token({?M, details, #{}}),
+    {ok, Batches} = run(Tok, #{<<"detail">> => #{<<"result">> => <<"ok">>},
+                               <<"mods">> => #{<<"ctrl">> => true, <<"shift">> => false,
+                                               <<"alt">> => false, <<"meta">> => true},
+                               <<"pointer">> => #{<<"x">> => 12, <<"y">> => 34,
+                                                  <<"w">> => 1280, <<"h">> => 800}}),
+    [[#{<<"html">> := Html}]] = Batches,
+    ?assertEqual(#{<<"detail">> => #{<<"result">> => <<"ok">>},
+                   <<"mods">> => #{<<"ctrl">> => true, <<"shift">> => false,
+                                   <<"alt">> => false, <<"meta">> => true},
+                   <<"pointer">> => #{<<"x">> => 12, <<"y">> => 34,
+                                      <<"w">> => 1280, <<"h">> => 800}},
+                 json:decode(Html)).
 
 flush_streams_progressively_test() ->
     {ok, Batches} = run(aihtml_action:token({?M, steps, #{}}), #{}),

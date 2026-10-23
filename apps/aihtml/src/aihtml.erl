@@ -48,7 +48,7 @@
 %% Browser events that call Erlang actions (see aihtml_action).
 -export([on/2, on/3, on_client/2, preserve/0]).
 %% Server push (see aihtml_push).
--export([subscribe/1, subscribe/2]).
+-export([subscribe/1, subscribe/2, poll/2]).
 %% Theme switcher; the component exports are generated below.
 -export([ah_theme_switcher/2]).
 %% BEGIN GENERATED EXPORTS
@@ -495,18 +495,26 @@ on(Event, Action) -> on(Event, Action, #{}).
 %% sync, sync_scope, indicator and disable are attributes of the element,
 %% so they apply to every action bound on it.
 -spec on(atom() | binary(), aihtml_action:ref(),
-         #{debounce => pos_integer(), include => [iodata() | {id, iodata() | atom()}],
-           confirm => iodata(), sync => drop | replace | queue, sync_scope => iodata(),
+         #{debounce => pos_integer(), max_age => pos_integer(),
+           include => [iodata() | {id, iodata() | atom()}],
+           confirm => iodata(),
+           prevent_default => boolean() | [iodata()],
+           sync => drop | replace | queue | fifo, sync_scope => iodata(),
            indicator => iodata() | this, disable => iodata() | this}) -> attrs().
 on(Event, Action, Opts) when is_map(Opts) ->
     E = event_name(Event),
     is_function(Action) andalso error({aihtml, {action_must_be_mfa, Action}}),
-    lists:member(maps:get(sync, Opts, drop), [drop, replace, queue])
+    lists:member(maps:get(sync, Opts, drop), [drop, replace, queue, fifo])
         orelse error({aihtml, {bad_sync, maps:get(sync, Opts)}}),
-    [{<<"data-ah-on">>, {actions, [{E, aihtml_action:token(Action), maps:with([debounce], Opts)}]}},
+    Token = case maps:get(max_age, Opts, undefined) of
+                undefined -> aihtml_action:token(Action);
+                MaxAge -> aihtml_action:token(Action, MaxAge)
+            end,
+    [{<<"data-ah-on">>, {actions, [{E, Token, maps:with([debounce], Opts)}]}},
      [{<<"data-ah-include">>, {selectors, [include_sel(S) || S <- Sels]}}
       || #{include := Sels} <- [Opts], Sels =/= []],
      {data_ah_confirm, maps:get(confirm, Opts, undefined)},
+     {data_ah_prevent_default, prevent_default(maps:get(prevent_default, Opts, undefined))},
      {data_ah_sync, maps:get(sync, Opts, undefined)},
      {data_ah_sync_scope, maps:get(sync_scope, Opts, undefined)},
      request_attrs(Opts)].
@@ -548,6 +556,10 @@ sel_opt(undefined) -> undefined;
 sel_opt(this) -> <<"this">>;
 sel_opt(S) -> text(S).
 
+prevent_default(undefined) -> undefined;
+prevent_default(true) -> true;
+prevent_default(Keys) -> iolist_to_binary(lists:join(<<" ">>, [text(K) || K <- Keys])).
+
 %% @doc Keep this element (it needs an id) as it is when new content from
 %% a swap brings an element with the same id: the existing node is moved
 %% into place, with its state (a playing video, typed text, a mounted
@@ -564,10 +576,24 @@ subscribe(Topic) -> subscribe(Topic, #{}).
 
 %% @doc Options: `refresh' is an action run after every reconnect of the
 %% stream (not the first connect), to reload what may have been missed.
--spec subscribe(aihtml_push:topic(), #{refresh => aihtml_action:ref()}) -> attrs().
+-spec subscribe(aihtml_push:topic(),
+                #{refresh => aihtml_action:ref(), max_age => pos_integer()}) -> attrs().
 subscribe(Topic, Opts) when is_map(Opts) ->
-    [{data_ah_subscribe, aihtml_push:token(Topic)},
+    Token = case maps:get(max_age, Opts, undefined) of
+                undefined -> aihtml_push:token(Topic);
+                MaxAge -> aihtml_push:token(Topic, MaxAge)
+            end,
+    [{data_ah_subscribe, Token},
      [{data_ah_refresh, aihtml_action:token(Ref)} || #{refresh := Ref} <- [Opts]]].
+
+%% @doc Run an action every `Ms' milliseconds, spliced into the Attrs of the
+%% element it refreshes: `ah_img([], [{src, Url}, {id, shot},
+%% poll(2000, {?M, shot, #{}})])'. The request follows the element's normal
+%% `sync' rules, and is paused while the page is hidden and stopped when the
+%% element is removed.
+-spec poll(pos_integer(), aihtml_action:ref()) -> attrs().
+poll(Ms, Action) when is_integer(Ms), Ms > 0 ->
+    [{data_ah_poll, [aihtml_action:token(Action), $:, integer_to_binary(Ms)]}].
 
 include_sel({id, Id}) -> <<"#", (text(Id))/binary>>;
 include_sel(Sel) -> text(Sel).

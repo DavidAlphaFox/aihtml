@@ -27,6 +27,7 @@ interface OpTarget { id?: string; sel?: string; }
 /** A DOM operation from the server (aihtml_action's ops). */
 export type Op = OpTarget & (
   | { op: "html"; html: string; swap?: string }
+  | { op: "text"; value: string; swap?: "replace" | "append" | "prepend" }
   | { op: "remove" }
   | { op: "attr"; name: string; value: string | null }
   | { op: "class"; add?: string; remove?: string }
@@ -59,10 +60,15 @@ export interface EventPayload {
   form: Record<string, string>;
   values: Record<string, string | string[] | boolean>;
   data: Record<string, string | undefined>;
+  detail?: unknown;
+  mods?: Record<"ctrl" | "shift" | "alt" | "meta", boolean>;
+  pointer?: { x: number; y: number; w: number; h: number;
+              natural_w?: number; natural_h?: number };
 }
 
 /** One binding of data-ah-on. */
-export interface ActionSpec { event: string; token: string; debounce: number; }
+export interface ActionSpec { event: string; token: string; debounce: number;
+                              interval?: number; }
 
 /** Detail of ah:error from an action: the HTTP status and the server's
  *  error code (invalid_action, action_failed, ...), when it sent one. */
@@ -71,16 +77,22 @@ export interface ActionError { status: number; error?: string; }
 const ACTION_EVENTS = ["click", "dblclick", "change", "input", "submit", "keydown",
                        "keyup", "focusin", "focusout", "mouseenter", "mouseleave"];
 // Elements that bind events: actions, local operations or both.
-const BOUND = "[data-ah-on], [data-ah-on-client]";
+const BOUND = "[data-ah-on], [data-ah-on-client], [data-ah-poll]";
 // Latest-wins events: a new one cancels the request still in flight.
 const LATEST_WINS: Record<string, boolean> = { input: true, change: true, keyup: true, keydown: true };
+const MODS: Array<["ctrl" | "shift" | "alt" | "meta", "ctrlKey" | "shiftKey" | "altKey" | "metaKey"]> = [
+  ["ctrl", "ctrlKey"], ["shift", "shiftKey"], ["alt", "altKey"], ["meta", "metaKey"]
+];
 
 function classList(s: string | undefined): string[] {
   return String(s || "").split(/\s+/).filter(Boolean);
 }
 
-/** A running request of a coordination key and the one waiting after it. */
-interface Running { ctrl: AbortController; queued: (() => void) | null; }
+/** One request waiting for its coordination key. */
+interface Pending { el: Element; spec: ActionSpec; body: EventPayload; }
+
+/** A running request of a coordination key and the ones waiting after it. */
+interface Running { ctrl: AbortController; queued: Pending[]; }
 
 export class Actions {
   readonly #behaviours: Behaviours;
@@ -91,6 +103,7 @@ export class Actions {
   readonly #timers = new Map<string, ReturnType<typeof setTimeout>>();
   readonly #syncs = new Map<string, Running>();
   readonly #listening = new Set<string>();
+  readonly #polls = new Map<string, { el: Element; spec: ActionSpec; timer: ReturnType<typeof setTimeout> }>();
   readonly #ops: OpHandlers;
 
   /** api: the AH object, handed to the js operation's code. */
@@ -122,6 +135,11 @@ export class Actions {
     return Actions.specs(el).map((s) => s.event).concat(Object.keys(Actions.localOps(el)));
   }
 
+  static poll(el: Element): ActionSpec | null {
+    const m = /^([A-Za-z0-9_-]+\.[A-Za-z0-9_-]+):(\d+)$/.exec(el.getAttribute("data-ah-poll") || "");
+    return m ? { event: "poll", token: m[1], debounce: 0, interval: parseInt(m[2], 10) } : null;
+  }
+
   // "event:token[:debounce]"; the event itself may contain a colon
   // (ah:close), the token never does.
   static specs(el: Element): ActionSpec[] {
@@ -134,8 +152,9 @@ export class Actions {
 
   #newElementId(): string { return "ah-e" + (++this.#seq); }
 
-  #eventPayload(el: Element, e: { type: string; key?: string }): EventPayload {
+  #eventPayload(el: Element, e: Event): EventPayload {
     if (!el.id) { el.id = this.#newElementId(); }
+    const key = e instanceof KeyboardEvent ? e.key : null;
     const form = el instanceof HTMLFormElement ? el : isControl(el) ? el.form : null;
     const fields: Record<string, string> = {};
     if (form) {
@@ -165,16 +184,34 @@ export class Actions {
     // designs/04-components.md.
     const value = el.hasAttribute("data-ah-value") ? el.getAttribute("data-ah-value")
       : (isControl(el) ? valueOf(el) : null);
-    return {
+    const payload: EventPayload = {
       type: e.type,
       id: el.id,
       value,
       checked: check ? (el as HTMLInputElement).checked : null,
-      key: e.key || null,
+      key,
       form: fields,
       values,
       data
     };
+    if (e instanceof CustomEvent) { payload.detail = e.detail; }
+    if (e instanceof MouseEvent || e instanceof KeyboardEvent) {
+      payload.mods = Object.fromEntries(MODS.map(([name, prop]) => [name, Boolean(e[prop])])) as
+        NonNullable<EventPayload["mods"]>;
+    }
+    if (e instanceof MouseEvent) {
+      const r = el.getBoundingClientRect();
+      const pointer: NonNullable<EventPayload["pointer"]> = {
+        x: Math.round(e.clientX - r.left), y: Math.round(e.clientY - r.top),
+        w: Math.round(r.width), h: Math.round(r.height)
+      };
+      if (el instanceof HTMLImageElement && el.naturalWidth) {
+        pointer.natural_w = el.naturalWidth;
+        pointer.natural_h = el.naturalHeight;
+      }
+      payload.pointer = pointer;
+    }
+    return payload;
   }
 
   static #targets(op: OpTarget): Element[] {
@@ -191,6 +228,13 @@ export class Actions {
       html: (op, ts) => {
         this.#swapper.swap(ts, op.html, op.swap).forEach((n) => {
           if (n.nodeType === 1) { b.mount(n as Element); }
+        });
+      },
+      text: (op, ts) => {
+        ts.forEach((el) => {
+          if (op.swap === "append") { el.append(document.createTextNode(op.value)); }
+          else if (op.swap === "prepend") { el.prepend(document.createTextNode(op.value)); }
+          else { el.textContent = op.value; }
         });
       },
       remove: (_op, ts) => {
@@ -311,9 +355,10 @@ export class Actions {
   //            input, change, keyup, keydown)
   //   queue    send the new one when the running one ends; a later one
   //            replaces a waiting one (only the latest waits)
+  //   fifo     keep every waiting one and send them in arrival order
 
   /** Run the action of spec for an event on el. */
-  run(el: Element, spec: ActionSpec, e: { type: string; key?: string }): void {
+  run(el: Element, spec: ActionSpec, e: Event): void {
     const body = this.#eventPayload(el, e);          // also gives el an id
     const scopeSel = el.getAttribute("data-ah-sync-scope");
     const scope = scopeSel ? (el.closest(scopeSel) || el) : el;
@@ -323,8 +368,12 @@ export class Actions {
     const running = this.#syncs.get(key);
     if (running) {
       if (strategy === "drop") { return; }
+      if (strategy === "fifo") {
+        running.queued.push({ el, spec, body });
+        return;
+      }
       if (strategy === "queue") {
-        running.queued = () => { void this.#send(el, spec, body, key); };
+        running.queued = [{ el, spec, body }];
         return;
       }
       running.ctrl.abort();
@@ -335,14 +384,20 @@ export class Actions {
   #send(el: Element, spec: ActionSpec, body: EventPayload, key: string): Promise<void> {
     const url = document.body.getAttribute("data-ah-action") || "/aihtml/action";
     const ctrl = new AbortController();
-    const st: Running = { ctrl, queued: null };
+    const st: Running = { ctrl, queued: [] };
     this.#syncs.set(key, st);
     const end = requestStart(el);
     const done = () => {
       end();
       if (this.#syncs.get(key) === st) {
         this.#syncs.delete(key);
-        if (st.queued) { st.queued(); }
+        if (st.queued.length) {
+          const rest = st.queued;
+          const [next] = rest.splice(0, 1);
+          void this.#send(next.el, next.spec, next.body, key);
+          const runningNext = this.#syncs.get(key);
+          if (runningNext) { runningNext.queued = [...rest, ...runningNext.queued]; }
+        }
       }
     };
     return window.fetch(url, {
@@ -385,10 +440,14 @@ export class Actions {
     if ((type === "change" || type === "input") && e.target !== el && el.hasAttribute("data-ah-value")) {
       return;
     }
-    // The element handles the event itself: no navigation or native submit.
+    // The element handles the event itself: no navigation, native submit,
+    // or (when the binding asks for it) the keyboard's own action.
     const handled = (): void => {
       if (type === "submit" ||
           (type === "click" && (el.tagName === "A" || (el as HTMLButtonElement).type === "submit"))) {
+        e.preventDefault();
+      }
+      if (type === "keydown" && this.#preventsDefault(el, (e as KeyboardEvent).key)) {
         e.preventDefault();
       }
     };
@@ -402,15 +461,21 @@ export class Actions {
       handled();
       const question = el.getAttribute("data-ah-confirm");
       if (question && !window.confirm(question)) { return; }
-      const ev = { type: e.type, key: (e as KeyboardEvent).key };
       if (s.debounce) {
         const k = el.id + s.token;
         clearTimeout(this.#timers.get(k));
-        this.#timers.set(k, setTimeout(() => { this.run(el, s, ev); }, s.debounce));
+        this.#timers.set(k, setTimeout(() => { this.run(el, s, e); }, s.debounce));
       } else {
-        this.run(el, s, ev);
+        this.run(el, s, e);
       }
     });
+  }
+
+  #preventsDefault(el: Element, key: string | undefined): boolean {
+    const v = el.getAttribute("data-ah-prevent-default");
+    if (v === null) { return false; }
+    if (v === "") { return true; }
+    return v.split(/\s*,\s*|\s+/).includes(key || "");
   }
 
   // One delegated listener per event type, registered on first use: the
@@ -435,6 +500,34 @@ export class Actions {
   listenFor(root: Root): void {
     withSelf(root, BOUND).forEach((el) => {
       Actions.boundEvents(el).forEach((type) => { this.#listen(type); });
+      const poll = Actions.poll(el);
+      if (poll) { this.#poll(el, poll); }
     });
+  }
+
+  #poll(el: Element, spec: ActionSpec): void {
+    if (!el.id) { el.id = this.#newElementId(); }
+    const key = el.id + "/" + spec.token;
+    if (this.#polls.has(key)) { return; }
+    const tick = (): void => {
+      if (!el.isConnected) {
+        this.#polls.delete(key);
+        return;
+      }
+      if (!document.hidden) { this.run(el, spec, new Event("poll")); }
+      const poll = this.#polls.get(key);
+      if (poll) { poll.timer = setTimeout(tick, spec.interval); }
+    };
+    this.#polls.set(key, { el, spec, timer: setTimeout(tick, spec.interval) });
+    if (!this.#listening.has("ah:visibility")) {
+      this.#listening.add("ah:visibility");
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          this.#polls.forEach((poll) => { clearTimeout(poll.timer); });
+        } else {
+          Array.from(this.#polls.values()).forEach((poll) => { this.#poll(poll.el, poll.spec); });
+        }
+      });
+    }
   }
 }

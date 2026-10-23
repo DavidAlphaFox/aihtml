@@ -112,6 +112,34 @@
     pending[1].finish(); await tick();
   });
 
+  T.test("fifo keeps and sends every key in arrival order", async function (fx) {
+    pending = [];
+    fx.innerHTML = '<input id="i" data-ah-sync="fifo" data-ah-on="keydown:' + TOK + '">';
+    AH.mount(fx);
+    var i = document.getElementById("i");
+    for (var v of ["1", "2", "3"]) { i.value = v; T.fire(i, "keydown", { key: v }); await tick(); }
+    T.eq(pending.length, 1, "only the first runs");
+    pending[0].finish(); await tick();
+    T.eq(pending.length, 2, "the second starts");
+    T.eq(pending[1].body.event.key, "2", "arrival order is kept");
+    pending[1].finish(); await tick();
+    T.eq(pending.length, 3);
+    T.eq(pending[2].body.event.key, "3", "the third was not overwritten");
+    pending[2].finish(); await tick();
+  });
+
+  T.test("keyboard prevent_default can be all keys or selected keys", function (fx) {
+    fx.innerHTML = '<input id="all" data-ah-on="keydown:' + TOK + '" data-ah-prevent-default>' +
+      '<input id="tab" data-ah-on="keydown:' + TOK + '" data-ah-prevent-default="Tab Backspace">';
+    AH.mount(fx);
+    var all = T.fire($id("all"), "keydown", { key: "Tab", cancelable: true });
+    var tab = T.fire($id("tab"), "keydown", { key: "Tab", cancelable: true });
+    var letter = T.fire($id("tab"), "keydown", { key: "a", cancelable: true });
+    T.ok(!all, "every key is captured");
+    T.ok(!tab, "a listed key is captured");
+    T.ok(letter, "an unlisted key is not");
+  });
+
   T.test("a sync scope makes several elements share one queue", async function (fx) {
     pending = [];
     fx.innerHTML = '<form id="f"><button type="button" id="x" data-ah-sync-scope="form" data-ah-on="click:' + TOK +
@@ -121,6 +149,24 @@
     click("y"); await tick();
     T.eq(pending.length, 1, "y dropped while x runs");
     pending[0].finish(); await tick();
+  });
+
+  T.test("poll runs its action periodically and stops when removed", async function (fx) {
+    pending = [];
+    fx.innerHTML = '<img id="shot" data-ah-poll="' + TOK + ':10">';
+    AH.mount(fx);
+    await wait(80);
+    var n = pending.length;
+    T.ok(n >= 1, "ran, got " + n + "; hidden=" + document.hidden);
+    T.eq(pending[0].body.event.type, "poll");
+    pending[n - 1].finish(); await tick();
+    await wait(30);
+    T.ok(pending.length > n, "ran again after the first ended");
+    pending[pending.length - 1].finish(); await tick();
+    var stopped = pending.length;
+    $id("shot").remove();
+    await wait(50);
+    T.eq(pending.length, stopped, "removed elements stop polling");
   });
 
   // ---- indicators ------------------------------------------------------
@@ -216,6 +262,14 @@
     T.eq(fx.querySelectorAll(".gone").length, 0);
     T.eq(document.title, "T-title");
     document.title = title;
+  });
+
+  T.test("text ops write text without parsing HTML", function (fx) {
+    fx.innerHTML = '<p id="p"></p>';
+    AH.apply([{ op: "text", id: "p", value: "<b>x</b>", swap: "replace" },
+              { op: "text", id: "p", value: "!", swap: "append" }]);
+    T.eq($id("p").textContent, "<b>x</b>!");
+    T.eq($id("p").children.length, 0);
   });
 
   T.test("a failing op is logged and the next ones still run", function (fx) {

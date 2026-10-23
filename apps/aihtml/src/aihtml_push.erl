@@ -43,7 +43,7 @@
 
 -export([publish/2, publish/3, call/4, call/5, trigger/4, trigger/5, subscribers/1]).
 %% For templates and transports.
--export([token/1, verify/1, join/1, leave/1, new_stream_id/0, register_stream/1, set_topics/2,
+-export([token/1, token/2, verify/1, join/1, leave/1, new_stream_id/0, register_stream/1, set_topics/2,
          max_topics/0]).
 
 -export_type([topic/0]).
@@ -111,6 +111,13 @@ subscribers(Topic) -> length(members(Topic)).
 token(Topic) ->
     aihtml_action:plain(Topic) orelse error({aihtml, {topic_not_data, Topic}}),
     aihtml_action:sign({aihtml_topic, Topic}).
+
+%% @doc Like token/1, with a subscription-token lifetime in seconds. A page
+%% whose stream reconnects after that time must reload for fresh tokens.
+-spec token(topic(), pos_integer()) -> binary().
+token(Topic, MaxAge) when is_integer(MaxAge), MaxAge > 0 ->
+    aihtml_action:plain(Topic) orelse error({aihtml, {topic_not_data, Topic}}),
+    aihtml_action:sign({aihtml_topic, Topic}, MaxAge).
 
 %% @doc Check topic tokens from the browser; all must be valid.
 -spec verify([binary()]) -> {ok, [topic()]} | {error, invalid_topic}.

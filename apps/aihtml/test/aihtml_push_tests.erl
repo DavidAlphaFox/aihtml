@@ -119,6 +119,12 @@ topic_token_round_trip_test() ->
     Toks = [aihtml_push:token(todos), aihtml_push:token({room, 42}), aihtml_push:token(todos)],
     ?assertEqual({ok, [todos, {room, 42}]}, aihtml_push:verify(Toks)).
 
+topic_token_lifetime_test() ->
+    Tok = aihtml_push:token({room, 42}, 1),
+    ?assertEqual({ok, [{room, 42}]}, aihtml_push:verify([Tok])),
+    timer:sleep(1100),
+    ?assertEqual({error, invalid_topic}, aihtml_push:verify([Tok])).
+
 tokens_do_not_cross_test() ->
     Action = aihtml_action:token({?M, inc, #{n => 1}}),
     Topic = aihtml_push:token(todos),

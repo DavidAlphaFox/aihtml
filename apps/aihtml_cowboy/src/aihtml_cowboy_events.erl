@@ -30,11 +30,16 @@
 -spec init(cowboy_req:req(), map()) ->
           {cowboy_loop, cowboy_req:req(), map(), hibernate} | {ok, cowboy_req:req(), map()}.
 init(Req0, #{origins := Origins} = State) ->
-    case {cowboy_req:method(Req0), aihtml_cowboy_action:origin_ok(Req0, Origins)} of
-        {_, false} -> {ok, error_reply(403, forbidden_origin, Req0), State};
-        {<<"GET">>, true} -> open(Req0, State);
-        {<<"POST">>, true} -> {ok, topics(Req0), State};
-        _ -> {ok, cowboy_req:reply(405, #{<<"allow">> => <<"GET, POST">>}, Req0), State}
+    case aihtml_cowboy:authorize(Req0, State) of
+        {deny, Status} ->
+            {ok, error_reply(Status, unauthorized, Req0), State};
+        ok ->
+            case {cowboy_req:method(Req0), aihtml_cowboy_action:origin_ok(Req0, Origins)} of
+                {_, false} -> {ok, error_reply(403, forbidden_origin, Req0), State};
+                {<<"GET">>, true} -> open(Req0, State);
+                {<<"POST">>, true} -> {ok, topics(Req0), State};
+                _ -> {ok, cowboy_req:reply(405, #{<<"allow">> => <<"GET, POST">>}, Req0), State}
+            end
     end.
 
 open(Req0, State) ->
@@ -99,9 +104,16 @@ info({aihtml_push_topics, New}, Req, #{topics := Old} = State) ->
     ok = aihtml_push:join(New -- Old),
     {ok, Req, State#{topics => New}, hibernate};
 info(aihtml_ping, Req, State) ->
-    ok = cowboy_req:stream_body(<<": ping\n\n">>, nofin, Req),
-    _ = erlang:send_after(?PING, self(), aihtml_ping),
-    {ok, Req, State, hibernate};
+    %% A logged-out or expired page does not keep its old stream forever:
+    %% the host hook is asked again at every heartbeat.
+    case aihtml_cowboy:authorize(Req, State) of
+        ok ->
+            ok = cowboy_req:stream_body(<<": ping\n\n">>, nofin, Req),
+            _ = erlang:send_after(?PING, self(), aihtml_ping),
+            {ok, Req, State, hibernate};
+        {deny, _Status} ->
+            {stop, Req, State}
+    end;
 info(_Msg, Req, State) ->
     {ok, Req, State, hibernate}.
 

@@ -46,13 +46,15 @@
 -module(aihtml_action).
 
 %% Rendering and transports.
--export([token/1, verify/1, execute/3]).
+-export([token/1, token/2, verify/1, execute/3]).
 %% Shared with aihtml_push.
--export([sign/1, unsign/1, render_ops/1, render_ops/2, stream_id/1, plain/1, check_secret/0]).
+-export([sign/1, sign/2, unsign/1, unsign/2, render_ops/1, render_ops/2,
+         stream_id/1, plain/1, check_secret/0]).
 %% Operations inside an action.
 -export([html/3, html/4, remove/2, attr/4, add_class/3, remove_class/3,
          set_value/3, focus/2, title/2, redirect/2, js/2, call/4,
-         trigger/4, push_url/2, replace_url/2, flush/1, meta/1, lang/1]).
+         text/3, text/4, trigger/4, push_url/2, replace_url/2, flush/1,
+         meta/1, lang/1, set_resp_headers/1, set_resp_cookie/3, take_response/0]).
 
 -export_type([ref/0, event/0, ctx/0, target/0, run_opts/0, op/0]).
 
@@ -68,7 +70,13 @@
 -type event() :: #{type := binary(), id := binary(), value := term(),
                    checked := boolean() | null, key := binary() | null,
                    form := #{binary() => binary()}, values := #{binary() => term()},
-                   data := #{binary() => binary()}}.
+                   data := #{binary() => binary()},
+                   detail => term(),
+                   mods => null | #{ctrl := boolean(), shift := boolean(),
+                                    alt := boolean(), meta := boolean()},
+                   pointer => null | #{x := integer(), y := integer(),
+                                       w := integer(), h := integer(),
+                                       natural_w => integer(), natural_h => integer()}}.
 -opaque ctx() :: {aihtml_ctx, pid(), fun(([op()]) -> any()), map(), binary() | undefined,
                   binary()}.
 %% A DOM operation, as sent to the browser (JSON object).
@@ -87,6 +95,7 @@
 
 -define(BUF, aihtml_action_buf).
 -define(COLLECT, aihtml_action_collect).
+-define(RESP, aihtml_action_response).
 -define(SECRET_KEY, {aihtml, action_secret}).
 
 %%%===================================================================
@@ -100,6 +109,16 @@ token({Mod, Name, Args} = Ref) when is_atom(Mod), is_atom(Name) ->
     plain(Args) orelse error({aihtml, {action_args_not_data, Ref}}),
     sign(Ref);
 token(Other) ->
+    error({aihtml, {bad_action, Other}}).
+
+%% @doc Like token/1, with a token lifetime in seconds. The browser can use
+%% the token until then; a page reload gets a fresh one.
+-spec token(ref(), pos_integer()) -> binary().
+token({Mod, Name, Args} = Ref, MaxAge) when is_atom(Mod), is_atom(Name),
+                                            is_integer(MaxAge), MaxAge > 0 ->
+    plain(Args) orelse error({aihtml, {action_args_not_data, Ref}}),
+    sign(Ref, MaxAge);
+token(Other, _) ->
     error({aihtml, {bad_action, Other}}).
 
 %% @doc Check a token from the browser. Fails unless the signature is ours
@@ -120,22 +139,50 @@ verify(Token) ->
 %% base64url(term_to_binary(T)) "." base64url(HMAC-SHA256).
 -spec sign(term()) -> binary().
 sign(Term) ->
-    Payload = term_to_binary(Term, [{minor_version, 2}]),
-    <<(b64(Payload))/binary, ".", (b64(mac(Payload)))/binary>>.
+    signed(term_to_binary(Term, [{minor_version, 2}])).
+
+%% @doc Like sign/1, wrapping the term with an expiry time `MaxAge' seconds
+%% from now. `unsign/1' rejects the token after that time.
+-spec sign(term(), pos_integer()) -> binary().
+sign(Term, MaxAge) when is_integer(MaxAge), MaxAge > 0 ->
+    Expires = system_time(second) + MaxAge,
+    signed(term_to_binary({aihtml_signed, Term, Expires}, [{minor_version, 2}])).
 
 %% @doc The term inside a token made by `sign/1', if the signature holds.
 %% The payload is only decoded after the signature checks out.
 -spec unsign(term()) -> {ok, term()} | error.
-unsign(Token) when is_binary(Token) ->
+unsign(Token) ->
+    unsigned(Token, system_time(second)).
+
+%% @doc Like unsign/1, also requiring a signed expiry at least `Now' seconds
+%% since the Unix epoch. Tokens made by `sign/1' are accepted; expired ones
+%% are not.
+-spec unsign(term(), integer()) -> {ok, term()} | error.
+unsign(Token, Now) when is_integer(Now) ->
+    unsigned(Token, Now).
+
+signed(Payload) ->
+    <<(b64(Payload))/binary, ".", (b64(mac(Payload)))/binary>>.
+
+unsigned(Token, Now) when is_binary(Token) ->
     try
         [P, M] = binary:split(Token, <<".">>),
         Payload = unb64(P),
         true = crypto:hash_equals(mac(Payload), unb64(M)),
-        {ok, binary_to_term(Payload, [safe])}
+        Term = binary_to_term(Payload, [safe]),
+        case Term of
+            {aihtml_signed, T, Expires} ->
+                case Expires > Now of
+                    true -> {ok, T};
+                    false -> error
+                end;
+            T when not is_tuple(T); element(1, T) =/= aihtml_signed -> {ok, T};
+            _ -> error
+        end
     catch
         _:_ -> error
     end;
-unsign(_) ->
+unsigned(_, _) ->
     error.
 
 %%%===================================================================
@@ -184,6 +231,20 @@ html(Ctx, Target, Html, Swap) when Swap =:= inner; Swap =:= outer;
                                    Swap =:= morph; Swap =:= morph_inner ->
     push(Ctx, target(Target, #{op => html, swap => Swap,
                                html => iolist_to_binary(aihtml_html:render(Html))})).
+
+%% @doc Replace the text content of `Target'. Unlike `html', it does not
+%% parse HTML or scan the new content for components.
+-spec text(ctx(), target(), iodata()) -> ok.
+text(Ctx, Target, Value) -> text(Ctx, Target, Value, replace).
+
+%% @doc Put `Value' at `Target' as text: `replace' sets `textContent',
+%% `append' and `prepend' add a text node to its content. Use it for fast
+%% streaming text; HTML belongs in `html/3,4'.
+-spec text(ctx(), target(), iodata(), replace | append | prepend) -> ok.
+text(Ctx, Target, Value, Swap) when Swap =:= replace; Swap =:= append;
+                                    Swap =:= prepend ->
+    push(Ctx, target(Target, #{op => text, swap => Swap,
+                               value => iolist_to_binary(Value)})).
 
 -spec remove(ctx(), target()) -> ok.
 remove(Ctx, Target) -> push(Ctx, target(Target, #{op => remove})).
@@ -279,6 +340,42 @@ meta({aihtml_ctx, _, _, Meta, _, _}) -> Meta.
 -spec lang(ctx()) -> binary().
 lang({aihtml_ctx, _, _, _, _, Lang}) -> Lang.
 
+%% @doc Add response headers for the transport to send with this action's
+%% reply. Headers are a map or list of lowercase binary names and values;
+%% `set-cookie' must use `set_resp_cookie/3'.
+-spec set_resp_headers(#{binary() => iodata()} | [{binary(), iodata()}]) -> ok.
+set_resp_headers(Headers) ->
+    {Old, Cookies} = response(),
+    New = lists:foldl(fun({K, V}, Acc) -> Acc#{text(K) => V} end, Old, headers(Headers)),
+    put(?RESP, {New, Cookies}),
+    ok.
+
+%% @doc Ask the transport to set a cookie on this action's reply. `Opts' is
+%% Cowboy's `cow_cookie:cookie_opts()' (for example
+%% `#{path => <<"/">>, http_only => true}').
+-spec set_resp_cookie(iodata(), iodata(), map()) -> ok.
+set_resp_cookie(Name, Value, Opts) when is_map(Opts) ->
+    {Headers, Cookies} = response(),
+    put(?RESP, {Headers, Cookies ++ [{text(Name), text(Value), Opts}]}),
+    ok.
+
+%% The pending response, taken by the transport; taking clears it so one
+%% action's headers cannot leak to another request in the same process.
+-spec take_response() -> {#{binary() => iodata()}, [{binary(), binary(), map()}]}.
+take_response() ->
+    R = response(),
+    erase(?RESP),
+    R.
+
+response() ->
+    case get(?RESP) of
+        {H, C} when is_map(H), is_list(C) -> {H, C};
+        _ -> {#{}, []}
+    end.
+
+headers(M) when is_map(M) -> lists:sort(maps:to_list(M));
+headers(L) when is_list(L) -> L.
+
 %% @doc The push stream of the page that sent this request, or
 %% `undefined' when it has none.
 -spec stream_id(ctx()) -> binary() | undefined.
@@ -338,7 +435,10 @@ event(Ev) when is_map(Ev) ->
       key => maps:get(<<"key">>, Ev, null),
       form => maps:get(<<"form">>, Ev, #{}),
       values => maps:get(<<"values">>, Ev, #{}),
-      data => maps:get(<<"data">>, Ev, #{})};
+      data => maps:get(<<"data">>, Ev, #{}),
+      detail => maps:get(<<"detail">>, Ev, null),
+      mods => maps:get(<<"mods">>, Ev, null),
+      pointer => maps:get(<<"pointer">>, Ev, null)};
 event(_) ->
     event(#{}).
 
@@ -404,6 +504,8 @@ secret() ->
 
 b64(B) -> base64:encode(B, #{mode => urlsafe, padding => false}).
 unb64(B) -> base64:decode(B, #{mode => urlsafe, padding => false}).
+
+system_time(second) -> os:system_time(second).
 
 text(V) when is_binary(V) -> V;
 text(V) when is_list(V) -> unicode:characters_to_binary(V);
