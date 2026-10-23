@@ -53,6 +53,7 @@ HTML 在发布时只渲染一次，发给所有订阅者，所以用发布时指
 ## 主题令牌
 
 - **签名**：`aihtml_push:token(Topic)` 对 `{aihtml_topic, Topic}` 签名，使用与 action 相同的密钥和格式。
+- **寿命**：`aihtml_push:token(Topic, MaxAge)` 与 `aihtml:subscribe(Topic, #{max_age => MaxAge})` 写入 Unix 秒过期时间；SSE 建连、主题变更和心跳前的宿主 `authorize` 挂点都会拒绝失效会话。
 - **互不通用**：action 令牌是 3 元组，主题令牌是 2 元组，二者不能互相冒充。
 - **权限**：页面只能订阅服务端为它渲染过的主题，权限在渲染时决定。令牌只签名不加密，主题名对页面可见。
 - **上限**：每条流最多 32 个主题（`aihtml_push:max_topics/0`）。

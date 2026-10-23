@@ -45,7 +45,8 @@
 - **参数限制**：参数只签名不加密，必须是纯数据，不能包含 fun、pid、port、reference。渲染时会检查。
 - **来源检查**：端点默认只接受同源 Origin。请求体是 JSON，跨站表单无法构造这样的请求。
 - **授权**：令牌只证明"这个 action 是我们生成的"，不能证明"当前用户有权执行"。用户身份与权限必须在 action 中根据请求检查。
-- **没有过期时间**：令牌不过期，只要密钥不变，页面上的按钮就一直可用。需要失效时轮换密钥，旧页面会收到 403。
+- **宿主鉴权挂点**：Cowboy 路由可配 `authorize => fun((Req) -> ok | {deny, Status})`，在读取 body、验签和执行 action 前调用。
+- **过期时间**：令牌默认不过期；`aihtml_action:sign(Term, MaxAge)`、`token(Ref, MaxAge)` 和 `aihtml:on(..., #{max_age => MaxAge})` 会写入 Unix 秒过期时间。验签通过后，过期令牌按无效处理；无过期时间的旧令牌仍然兼容。
 
 ## 密钥
 
@@ -62,8 +63,9 @@
 
 - **事件委托**：对 click、dblclick、change、input、submit、keydown、keyup、focusin、focusout、mouseenter、mouseleave 统一委托处理。
 - **收集事件数据**：元素没有 id 时先补一个，然后收集 value、checked、key、所在表单字段、`data-ah-include` 选中控件的值和 `data-*` 属性。
+- **事件细节**：CustomEvent 带 `detail`；键盘和鼠标事件带 `mods`；鼠标事件带相对元素的 `pointer`（`x,y,w,h`，图片另有 `natural_w,natural_h`）。
 - **读取响应**：用 `fetch` 发送请求。`application/json` 直接解析；`application/x-ndjson` 从 `ReadableStream` 逐行读取，每行一到就应用。
-- **并发**：click、submit 在请求进行中忽略重复触发。input、change、keyup、keydown 以最新为准，用 `AbortController` 取消旧请求。
+- **并发**：click、submit 在请求进行中忽略重复触发。input、change、keyup、keydown 以最新为准，用 `AbortController` 取消旧请求；`sync => fifo` 保留并按序发送全部等待请求。键盘绑定可配 `data-ah-prevent-default`（布尔或键名列表）。
 - **错误**：请求被拒或出错时，在元素上触发 `ah:error`，detail 是 `{status, error}`（HTTP 状态和服务端的错误码）。
 
 ## 取舍
@@ -112,6 +114,8 @@ ah_button(<<"全部展开"/utf8>>, expand, [], [on_client(click, fun(C) -> aihtm
 - **元素保留**：带 `data-ah-preserve` 且有 id 的元素在替换时移动而不重建。浏览器支持时用 `moveBefore`，不支持时用 `insertBefore`。形变替换会跳过这类元素。
 - **settle 过渡**：新加入的顶层元素带 `ah-added`，替换目标带 `ah-settling`，20 毫秒后移除。同 id 元素先沿用旧的 class、style、width、height，再换成新值。组件根元素不参与。
 - **请求协调**：按"元素加事件"协调；设置了 `data-ah-sync-scope` 时按最近的匹配祖先协调。策略有 drop、replace、queue 三种，queue 只保留最新一个等待的请求。
+- **策略扩展**：`fifo` 与 queue 一样不打断在途请求，但保留全部等待请求并按到达顺序发送；适合键盘逐键转发。
+- **定时刷新**：`data-ah-poll="TOKEN:Ms"` 周期触发 action；页面隐藏时暂停，元素移除时停止。
 - **加载状态**：请求期间元素带 `aria-busy`，元素和 `data-ah-indicator` 指向的元素带 `ah-request`，`data-ah-disable` 指向的元素被禁用。重叠的请求按计数处理。
 - **新操作**：
   - `trigger`：在目标元素或 document 上触发事件，带 detail。

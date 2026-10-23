@@ -250,14 +250,15 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 每个事件发一次 POST，响应是要应用的 DOM 操作。服务端在请求之间不保存任何东西，状态全部在数据层。请求可以落到任意节点，负载均衡不需要粘性，服务器重启后已打开的页面照常可用。
 
-- **绑定**：`on(Event, {Module, Action, Args})`，可加选项 `#{debounce => Ms, include => [选择器], confirm => 提问}`，以及下面"请求协调与加载指示"一节的 `sync`、`sync_scope`、`indicator`、`disable`。
+- **绑定**：`on(Event, {Module, Action, Args})`，可加选项 `#{debounce => Ms, max_age => 秒, include => [选择器], confirm => 提问, prevent_default => true | [键名]}`，以及下面"请求协调与加载指示"一节的 `sync`、`sync_scope`、`indicator`、`disable`。
 - **签名**：`{Module, Action, Args}` 用应用密钥做 HMAC 签名后写进 HTML。浏览器无法伪造 action，也改不了参数。Args 只签名不加密，页面能看到内容，所以只放 id 这类数据。
 - **执行**：`Module:action(Action, Args, Event, Ctx)` 在请求进程中运行。只有声明了 `-behaviour(aihtml_action)` 的模块才能被调用。
-- **Event**：包含元素 `id`、`value`、`checked`、`key`、所在表单的全部字段 `form`、`include` 指定的其它控件值 `values`、`data-*` 属性 `data`。
-- **页面操作**：`aihtml_action:html/3,4`、`remove/2`、`attr/4`、`add_class/3`、`remove_class/3`、`set_value/3`、`focus/2`、`title/2`、`redirect/2`、`js/2`、`call/4`、`trigger/4`、`push_url/2`、`replace_url/2`。操作先缓冲，action 返回时一起发送。`flush/1` 可以提前发送，用来先显示加载状态、再显示数据。
+- **Event**：包含元素 `id`、`value`、`checked`、`key`、所在表单的全部字段 `form`、`include` 指定的其它控件值 `values`、`data-*` 属性 `data`。键盘和鼠标事件还有 `mods`；鼠标事件有相对元素的 `pointer`（`x,y,w,h`，图片另带自然尺寸）；CustomEvent 还有 `detail`。字段存在才出现。
+- **页面操作**：`aihtml_action:html/3,4`、`text/3,4`、`remove/2`、`attr/4`、`add_class/3`、`remove_class/3`、`set_value/3`、`focus/2`、`title/2`、`redirect/2`、`js/2`、`call/4`、`trigger/4`、`push_url/2`、`replace_url/2`。操作先缓冲，action 返回时一起发送。`flush/1` 可以提前发送；流式纯文本用 `text(Ctx, Target, Delta, append)`，避免每块都解析 HTML。
 - **响应**：一般是 `application/json` 的 `{"ops": [操作...]}`。调用过 `flush/1` 的 action 回 `application/x-ndjson`，每次 flush 一行 `{"ops": [...]}`，最后一行 `{"done": true}`。出错用 HTTP 状态和 `{"error": 错误码}`：403 `invalid_action`、400 `bad_request`、500 `action_failed`（action 崩溃，只记日志，不向浏览器泄露细节）；浏览器在元素上触发 `ah:error`，detail 为 `{status, error}`。格式见 `designs/02-actions.md`，它不是 AG-UI 事件流，和 AG-UI 的关系也在那里。
+- **响应头与 Cookie**：`aihtml_action:set_resp_headers(#{...})` 和 `set_resp_cookie(Name, Value, Opts)` 登记要随本次 action 回复发送的头和 cookie，Cowboy 传输负责应用。应在第一次 `flush/1` 前调用。
 - **并发**：同一元素的 click、submit 在请求进行中会忽略重复触发。input、change 等事件以最新一次为准，旧请求会被取消。
-- **授权**：认证与授权在 action 里做，请求可以从 `aihtml_action:meta(Ctx)` 取得，cowboy 下是 `#{req => Req}`。
+- **授权**：端点可配宿主鉴权挂点：`aihtml_cowboy:routes(#{authorize => fun(Req) -> ok | {deny, Status} end})`。它在 action 执行、SSE 建连、主题变更和 SSE 心跳前调用；action 内仍应按 `aihtml_action:meta(Ctx)` 做具体授权。令牌可选寿命：`on(..., #{max_age => 3600})`、`subscribe(..., #{max_age => 3600})`。
 
 ```erlang
 -module(todo_page).
@@ -300,9 +301,11 @@ end, #{except => Ctx})     %% 跳过发起者，它已经通过 action 响应更
 - **推数据**：推送能做 action 能做的所有操作。`aihtml_push:call(Topic, Target, Method, Args)` 调用组件方法（比如给图表 `setData`），`aihtml_push:trigger(Topic, Target, Event, Detail)` 触发带数据的 DOM 事件；两者都有带 `#{except => Ctx}` 的 5 参数版本。
 - **一条流**：每个页面只开一个 EventSource，访问 `GET /aihtml/events?t=...`，带上页面上所有主题的签名令牌。流是 SSE 的具名事件：先是 `hello`（流 id），之后每次推送一个 `ops`（操作列表）。页面内容变化导致订阅集合改变时，页面把新的主题集合 POST 给同一路径，流进程直接加入和退出主题，不断开连接。
 - **慢客户端**：读得太慢、积压超过 1000 条的流会被服务端断开，浏览器重连后由 `refresh` 补齐。
+- **定时刷新**：`aihtml:poll(Ms, Action)` 把声明式轮询写进元素属性；页面隐藏时暂停，元素移除时停止。
 - **跨节点分发**：连接进程加入 OTP `pg` 进程组，只负责转发，不保存业务状态。`pg` 覆盖所有已连接的节点，任意节点发布，全集群的订阅者都会收到。
 - **至多一次送达**：断线期间的推送会丢失。EventSource 会自动重连，重连后运行订阅上的 `refresh` action，从数据层补齐。
 - **主题**可以是任意纯数据，比如 `todos`、`{room, 42}`。主题同样签名，页面只能订阅服务端为它渲染的主题，所以按用户决定渲染哪些主题即可实现权限控制。主题名对页面可见。
+- **主题寿命**：`aihtml:subscribe(Topic, #{max_age => 秒})` 写入会过期的订阅令牌；过期后重连或改主题会被拒绝，页面需要重新渲染才能拿到新令牌。
 - **需要运行 aihtml 应用**，由它启动 `pg` scope。把 `aihtml` 写进你的应用的 `applications` 列表即可。
 
 ### 本地操作
@@ -422,6 +425,7 @@ ah_div(Player, [], [{id, player}, preserve()])
 | `sync => drop` | 同一元素的请求还在进行时忽略新的请求。click、submit 默认如此。 |
 | `sync => replace` | 中止进行中的请求，发送新的。input、change、键盘事件默认如此。 |
 | `sync => queue` | 等进行中的请求结束再发送。排队的只保留最新一个。 |
+| `sync => fifo` | 等进行中的请求结束再按到达顺序发送全部等待请求。适合逐键转发。 |
 | `sync_scope => Selector` | 以最近的匹配祖先为单位协调，例如 `<<"form">>` 让整个表单共用一个队列。 |
 | `indicator => Selector` | 请求期间给匹配元素加 `ah-request` 类。带 `ah-indicator` 类的元素只在此时显示。 |
 | `disable => Selector` | 请求期间禁用匹配元素；原本就禁用的保持禁用。 |
@@ -429,6 +433,16 @@ ah_div(Player, [], [{id, player}, preserve()])
 选择器可以写 `this` 或 `<<"closest 选择器">>`。多个请求同时占用一个指示器时，要等全部结束它才消失。`fetch/4` 也支持 `indicator` 和 `disable`。
 
 组件事件（`ah:` 开头，例如 datagrid 的 `ah:edit`、scheduler 的 `ah:event-change`）默认是 `drop`：上一次请求还没结束时，新的事件会被丢掉。用户可能很快连续编辑时，绑定这类事件要写 `sync => queue`，例如 `on('ah:edit', {?MODULE, save_cell, #{}}, #{sync => queue})`。
+
+键盘捕获可阻止浏览器默认行为：`on(keydown, Action, #{prevent_default => true})` 捕获全部按键，`#{prevent_default => [<<"Tab">>, <<"Backspace">>]}` 只按键名过滤。
+
+### 声明式轮询
+
+```erlang
+ah_img([], [{id, shot}, aihtml:poll(2000, {?MODULE, screenshot, #{}})])
+```
+
+`poll/2` 每 `Ms` 毫秒向 action 发一次 `type => <<"poll">>` 的 Event，受元素的 `sync` 选项约束。页面隐藏时不发请求，元素移除后定时器停止。
 
 ```erlang
 ah_button(<<"Save">>, save, [],

@@ -250,14 +250,15 @@ The server renders all HTML, and pages are produced by ordinary HTTP handlers. T
 
 Each event issues a POST, and the response is the DOM operations to apply. The server keeps nothing between requests; all state lives in the data layer. Requests can land on any node, the load balancer doesn't need stickiness, and pages that are already open keep working after a server restart.
 
-- **Binding**: `on(Event, {Module, Action, Args})`, with optional `#{debounce => Ms, include => [Selector], confirm => Prompt}`, plus the `sync`, `sync_scope`, `indicator`, `disable` options from the "Request coordination and loading indicators" section below.
+- **Binding**: `on(Event, {Module, Action, Args})`, with optional `#{debounce => Ms, max_age => Seconds, include => [Selector], confirm => Prompt, prevent_default => true | [Key]}`, plus the `sync`, `sync_scope`, `indicator`, `disable` options from the "Request coordination and loading indicators" section below.
 - **Signature**: `{Module, Action, Args}` is HMAC-signed with the application secret and written into the HTML. The browser cannot forge actions or tamper with arguments. Args are signed but not encrypted, so the page can read them; put only ids and similar data in there.
 - **Execution**: `Module:action(Action, Args, Event, Ctx)` runs in the request process. Only modules that declare `-behaviour(aihtml_action)` can be called.
-- **Event**: includes the element's `id`, `value`, `checked`, `key`, the whole containing form's fields in `form`, the values of other controls named by `include` in `values`, and `data-*` attributes in `data`.
-- **Page operations**: `aihtml_action:html/3,4`, `remove/2`, `attr/4`, `add_class/3`, `remove_class/3`, `set_value/3`, `focus/2`, `title/2`, `redirect/2`, `js/2`, `call/4`, `trigger/4`, `push_url/2`, `replace_url/2`. Operations are buffered and sent together when the action returns. `flush/1` sends them early, useful for showing a loading state before the data arrives.
+- **Event**: includes the element's `id`, `value`, `checked`, `key`, the whole containing form's fields in `form`, the values of other controls named by `include` in `values`, and `data-*` attributes in `data`. Keyboard and mouse events also carry `mods`; mouse events carry `pointer` offsets and size (`x,y,w,h`, plus image natural size); CustomEvents carry `detail`. Optional fields are present only when they apply.
+- **Page operations**: `aihtml_action:html/3,4`, `text/3,4`, `remove/2`, `attr/4`, `add_class/3`, `remove_class/3`, `set_value/3`, `focus/2`, `title/2`, `redirect/2`, `js/2`, `call/4`, `trigger/4`, `push_url/2`, `replace_url/2`. Operations are buffered and sent together when the action returns. `flush/1` sends them early; stream pure text with `text(Ctx, Target, Delta, append)` to avoid parsing HTML for every chunk.
 - **Response**: normally `application/json` with `{"ops": [Operations...]}`. Actions that called `flush/1` return `application/x-ndjson`, one `{"ops": [...]}` line per flush, with a final `{"done": true}` line. Errors use HTTP status plus `{"error": Code}`: 403 `invalid_action`, 400 `bad_request`, 500 `action_failed` (action crashed, logged only, no details leaked to the browser). The browser fires `ah:error` on the element, with detail `{status, error}`. The format is described in `designs/02-actions.md`; it is not an AG-UI event stream, and the relationship to AG-UI is documented there.
+- **Response headers and cookies**: `aihtml_action:set_resp_headers(#{...})` and `set_resp_cookie(Name, Value, Opts)` register headers and cookies to send with that action's reply; the Cowboy transport applies them. Call them before the first `flush/1`.
 - **Concurrency**: repeated clicks and submits on the same element are ignored while a request is in flight. Events such as `input` and `change` follow the latest value and cancel older requests.
-- **Authorization**: authentication and authorization happen inside the action; the request is reachable via `aihtml_action:meta(Ctx)`, which under cowboy is `#{req => Req}`.
+- **Authorization**: endpoints accept a host hook: `aihtml_cowboy:routes(#{authorize => fun(Req) -> ok | {deny, Status} end})`. It runs before action execution, SSE connect, topic changes, and SSE heartbeats; actions should still authorize the operation via `aihtml_action:meta(Ctx)`. Tokens can have a lifetime with `on(..., #{max_age => 3600})` and `subscribe(..., #{max_age => 3600})`.
 
 ```erlang
 -module(todo_page).
@@ -300,9 +301,11 @@ end, #{except => Ctx})     %% skip the originator, it has already updated via th
 - **Pushing data**: push can do every operation an action can. `aihtml_push:call(Topic, Target, Method, Args)` calls a component method (for example `setData` on a chart); `aihtml_push:trigger(Topic, Target, Event, Detail)` fires a DOM event with data. Both have a 5-argument form that takes `#{except => Ctx}`.
 - **One stream**: each page opens a single EventSource, hitting `GET /aihtml/events?t=...` with signed tokens for every topic on the page. The stream is SSE named events: first a `hello` (stream id), then one `ops` (operations list) per push. When the page's subscription set changes, the page POSTs the new topic set to the same path; the stream process joins and leaves topics in place without breaking the connection.
 - **Slow clients**: streams where the reader falls behind by more than 1000 buffered operations are closed by the server; the browser reconnects and `refresh` catches up.
+- **Declarative polling**: `aihtml:poll(Ms, Action)` writes a polling attribute; it pauses while the page is hidden and stops when the element is removed.
 - **Cross-node distribution**: connection processes join an OTP `pg` process group and only forward, holding no business state. `pg` spans every connected node: publish from any node and every subscriber in the cluster receives it.
 - **At-most-once delivery**: pushes sent while a client is disconnected are lost. EventSource reconnects automatically, then runs the subscription's `refresh` action to catch up from the data layer.
 - **Topics** can be any plain term, for example `todos` or `{room, 42}`. Topics are also signed; a page can only subscribe to topics the server rendered for it, so deciding per user which topics to render gives authorization. Topic names are visible to the page.
+- **Topic lifetime**: `aihtml:subscribe(Topic, #{max_age => Seconds})` writes an expiring subscription token. Reconnects and topic changes are refused after expiry; the page must be rendered again for fresh tokens.
 - **The aihtml application must be running**, since it starts the `pg` scope. Add `aihtml` to your application's `applications` list.
 
 ### Local operations
@@ -422,6 +425,7 @@ These `on/3` options are written as element attributes and apply to every action
 | `sync => drop` | Ignore new requests while a previous request on the same element is in flight. This is the default for click and submit. |
 | `sync => replace` | Abort the in-flight request and send a new one. This is the default for input, change, and keyboard events. |
 | `sync => queue` | Wait for the in-flight request to finish before sending. At most one is queued, and only the most recent one is kept. |
+| `sync => fifo` | Wait for the in-flight request, then send every waiting request in arrival order. Use this for key-by-key forwarding. |
 | `sync_scope => Selector` | Coordinate per closest matching ancestor; for example `<<"form">>` makes the whole form share one queue. |
 | `indicator => Selector` | Add the `ah-request` class to matching elements while the request is in flight. Elements carrying the `ah-indicator` class are only visible during that window. |
 | `disable => Selector` | Disable matching elements while the request is in flight; elements that were already disabled stay disabled. |
@@ -429,6 +433,16 @@ These `on/3` options are written as element attributes and apply to every action
 Selectors can be written as `this` or `<<"closest selector">>`. When several requests share an indicator at once, it stays visible until all of them finish. `fetch/4` also supports `indicator` and `disable`.
 
 Component events (those starting with `ah:`, such as datagrid's `ah:edit` or scheduler's `ah:event-change`) default to `drop`: while a previous request has not finished, new ones are discarded. When users may edit in quick succession, bind these events with `sync => queue`, for example `on('ah:edit', {?MODULE, save_cell, #{}}, #{sync => queue})`.
+
+Keyboard capture can prevent the browser's default action: `on(keydown, Action, #{prevent_default => true})` captures every key; `#{prevent_default => [<<"Tab">>, <<"Backspace">>]}` filters by key name.
+
+### Declarative polling
+
+```erlang
+ah_img([], [{id, shot}, aihtml:poll(2000, {?MODULE, screenshot, #{}})])
+```
+
+`poll/2` sends an Event with `type => <<"poll">>` every `Ms` milliseconds, subject to the element's `sync` options. No requests are sent while the page is hidden; removal stops the timer.
 
 ```erlang
 ah_button(<<"Save">>, save, [],
