@@ -19,6 +19,9 @@ init(Req0, State) ->
         true ->
             Title = case Page of
                         <<"dashboard">> -> <<"Dashboard — aihtml examples"/utf8>>;
+                        <<"calendar">> -> <<"Calendar — aihtml examples"/utf8>>;
+                        <<"mail">> -> <<"Mail — aihtml examples"/utf8>>;
+                        <<"file-manager">> -> <<"File manager — aihtml examples"/utf8>>;
                         _ -> <<"aihtml examples"/utf8>>
                     end,
             {ok, ?SITE:reply(Req0, Title, fun() -> render(Page) end, #{}), State};
@@ -29,9 +32,15 @@ init(Req0, State) ->
 
 -spec render(binary()) -> aihtml:html().
 render(<<"dashboard">>) -> dashboard();
+render(<<"calendar">>) -> aihtml_example_calendar_app:page();
+render(<<"mail">>) -> aihtml_example_mail_app:page();
+render(<<"file-manager">>) -> aihtml_example_file_manager:page();
 render(<<"index">>) -> index().
 
 valid(<<"dashboard">>) -> true;
+valid(<<"calendar">>) -> true;
+valid(<<"mail">>) -> true;
+valid(<<"file-manager">>) -> true;
 valid(<<"index">>) -> true;
 valid(_) -> false.
 
@@ -40,14 +49,20 @@ valid(_) -> false.
 %%%===================================================================
 
 index() ->
+    Cards = [example(<<"Dashboard"/utf8>>, <<"/examples/dashboard">>,
+                     <<"仪表盘"/utf8>>,
+                     <<"侧边导航、指标拖拽、目标进度、图表、应用排行、消息、任务、订单、转化与区域汇总。"/utf8>>),
+             example(<<"Calendar"/utf8>>, <<"/examples/calendar">>, <<"日历"/utf8>>,
+                     <<"日历视图、我的日历、近期安排，以及无刷新新建事件。"/utf8>>),
+             example(<<"Mail"/utf8>>, <<"/examples/mail">>, <<"邮件"/utf8>>,
+                     <<"文件夹、邮件列表、阅读窗格、星标、归档、回复与撰写。"/utf8>>),
+             example(<<"File manager"/utf8>>, <<"/examples/file-manager">>, <<"文件"/utf8>>,
+                     <<"文件夹与文件卡片、搜索过滤、列表/网格切换和上传弹层。"/utf8>>)],
     ah_main([aihtml_example_site:topbar(examples),
              ah_div([ah_h1(<<"Examples"/utf8>>, [<<"text-4xl font-bold">>], []),
                      ah_p(<<"不止是组件沙盒：这些页面按真实业务布局组合组件。"/utf8>>,
                           [<<"mt-3 text-lg text-muted">>], []),
-                     ah_div([example(<<"Dashboard"/utf8>>, <<"/examples/dashboard">>,
-                                     <<"仪表盘"/utf8>>,
-	                                    <<"侧边导航、指标拖拽、目标进度、图表、应用排行、消息、任务、"
-	                                      "订单、转化与区域汇总。"/utf8>>)],
+                     ah_div(Cards,
                             [<<"mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">>], [])],
                     [<<"max-w-6xl mx-auto px-6 py-16">>], [])],
             [<<"min-h-screen">>], []).

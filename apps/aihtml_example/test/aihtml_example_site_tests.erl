@@ -85,7 +85,10 @@ examples_render() ->
          ?assert(byte_size(Html) > 0),
          ?assertMatch({_, _}, binary:match(Html, Expect))
      end || {Page, Expect} <- [{<<"index">>, <<"/examples/dashboard">>},
-                               {<<"dashboard">>, <<"Revenue trend"/utf8>>}]].
+                               {<<"dashboard">>, <<"Revenue trend"/utf8>>},
+                               {<<"calendar">>, <<"New event"/utf8>>},
+                               {<<"mail">>, <<"A focused inbox"/utf8>>},
+                               {<<"file-manager">>, <<"Search files…"/utf8>>}]].
 
 %% Components without an element record: the theme switcher and toast
 %% (an action, not an element).
