@@ -20,9 +20,11 @@
 %% @doc Attributes that pop a toast when the element is clicked, without a
 %% server round trip. Opts: `description', `variant' (info | success |
 %% warning | error), `duration' (ms, default 4000, 0 keeps it), `position'
-%% (top_right ...), `closable'.
+%% (top_right ...), `closable', `action' (#{label, href}: a link in the
+%% toast; clicking it closes the card).
 -spec shows_toast(iodata(), map()) -> aihtml_html:attrs().
 shows_toast(Message, Opts) when is_map(Opts) ->
+    Action = toast_action(Opts),
     [{data_ah_toast, ?L:text(Message)},
      {data_ah_toast_description, case maps:get(description, Opts, undefined) of
                                      undefined -> undefined;
@@ -34,11 +36,16 @@ shows_toast(Message, Opts) when is_map(Opts) ->
                                   undefined -> undefined;
                                   P -> ?L:dash(P)
                               end},
-     {data_ah_toast_closable, ?L:opt_bin(closable, Opts)}].
+     {data_ah_toast_closable, ?L:opt_bin(closable, Opts)},
+     {data_ah_toast_action_label, case Action of undefined -> undefined;
+                                      #{label := L} -> ?L:text(L) end},
+     {data_ah_toast_action_href, case Action of undefined -> undefined;
+                                     #{href := H} -> ?L:text(H) end}].
 
 %% @doc In an action: pop a toast (sigil's toast/show!): title `Message'
 %% plus Opts `description', `variant', `duration' (ms, default 4000, 0
-%% keeps it), `position', `closable', `close_on_click', `width'.
+%% keeps it), `position', `closable', `close_on_click', `width', `action'
+%% (#{label, href}: a link in the toast; clicking it closes the card).
 -spec ah_toast(aihtml_action:ctx(), iodata(), map()) -> ok.
 ah_toast(Ctx, Message, Opts) when is_map(Opts) ->
     Title = ?L:text(Message),
@@ -46,10 +53,34 @@ ah_toast(Ctx, Message, Opts) when is_map(Opts) ->
                undefined -> <<>>;
                D -> ?L:text(D)
            end,
+    Action = toast_action(Opts),
     {safe, Content} = aihtml_tpl:safe(tpl_toast(#{has_title => Title =/= <<>>, title => Title,
                                                   has_description => Desc =/= <<>>,
-                                                  description => Desc})),
+                                                  description => Desc,
+                                                  has_action => Action =/= undefined,
+                                                  action_label => case Action of
+                                                                      undefined -> <<>>;
+                                                                      #{label := L} -> ?L:text(L)
+                                                                  end,
+                                                  action_href => case Action of
+                                                                     undefined -> <<>>;
+                                                                     #{href := H} -> ?L:text(H)
+                                                                 end})),
     ?L:send_card(Ctx, Opts, 4000, Content).
+
+%% Internal: validate the `action' option: a map with `label' and `href'
+%% (both iodata), or absent. Unknown maps fail loudly instead of silently
+%% ignoring a typo like `lable'.
+-spec toast_action(map()) -> #{label => iodata(), href => iodata()} | undefined.
+toast_action(Opts) ->
+    case maps:get(action, Opts, undefined) of
+        undefined -> undefined;
+        #{label := L, href := H} = A when is_map(A), map_size(A) =:= 2 ->
+            true = (is_binary(L) orelse is_list(L)) andalso (is_binary(H) orelse is_list(H))
+                orelse error({aihtml, {bad_option, action, A}}),
+            A;
+        A -> error({aihtml, {bad_option, action, A}})
+    end.
 
 %% @doc Attribute helpers re-exported by the aihtml facade.
 -spec facade_extras() -> [{atom(), arity()}].
@@ -71,7 +102,9 @@ catalog() ->
                        position => <<"top_right (default) | top_left | bottom_right | bottom_left.">>,
                        closable => <<"Close button (true).">>,
                        close_on_click => <<"A click on the card closes it (true).">>,
-                       width => <<"Card width.">>},
+                       width => <<"Card width.">>,
+                       action => <<"#{label, href}: a link in the toast; clicking it "
+                                   "closes the card.">>},
        methods => [],
        behavior => none, events => Events,
        doc => <<"Page-level API, not an element: ah_toast/3 in an action or "

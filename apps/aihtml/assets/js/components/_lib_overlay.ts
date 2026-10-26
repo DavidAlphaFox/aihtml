@@ -655,6 +655,11 @@ export class NotifyCard {
         this.close();
         return;
       }
+      if (closest(e.target, ".ah-toast__action")) {
+        e.stopPropagation();
+        this.close();
+        return;               // let the link navigate
+      }
       if (card.classList.contains("ah-notify-clickable")) {
         fire(this.#target, "ah:click");
         this.close();

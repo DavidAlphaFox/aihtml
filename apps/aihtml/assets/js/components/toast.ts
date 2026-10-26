@@ -20,6 +20,8 @@ export interface ToastOptions extends CardOptions {
   description?: unknown;
   position?: string | null;
   duration?: number | string | null;
+  action_label?: unknown;
+  action_href?: unknown;
 }
 
 /** AH.fn("toast", opts): sigil's toast/show!, for client-side triggers
@@ -28,8 +30,12 @@ export function toast(opts?: ToastOptions | string | null): HTMLElement | undefi
   const o: ToastOptions = typeof opts === "string" ? { title: opts } : (opts || {});
   const title = o.title === undefined || o.title === null ? "" : String(o.title);
   const desc = o.description === undefined || o.description === null ? "" : String(o.description);
+  const alabel = o.action_label === undefined || o.action_label === null ? "" : String(o.action_label);
+  const ahref = o.action_href === undefined || o.action_href === null ? "" : String(o.action_href);
   const content = AH.tpl.toast({ has_title: title !== "", title: title,
-                                 has_description: desc !== "", description: desc });
+                                 has_description: desc !== "", description: desc,
+                                 has_action: alabel !== "" && ahref !== "",
+                                 action_label: alabel, action_href: ahref });
   return NotifyCard.show(AH.tpl.notification(cardView(o, content)),
                          { position: o.position, duration: duration(o.duration, 4000) });
 }
@@ -56,7 +62,9 @@ document.addEventListener("click", (e) => {
       variant: a("data-ah-toast-variant"),
       duration: a("data-ah-toast-duration"),
       position: a("data-ah-toast-position"),
-      closable: a("data-ah-toast-closable")
+      closable: a("data-ah-toast-closable"),
+      action_label: a("data-ah-toast-action-label"),
+      action_href: a("data-ah-toast-action-href")
     });
   });
 });

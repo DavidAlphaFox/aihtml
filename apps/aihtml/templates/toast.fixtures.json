@@ -2,5 +2,9 @@
   {"has_title": true, "title": "Saved", "has_description": true, "description": "Your changes are live."},
   {"has_title": true, "title": "<b>&\"'", "has_description": false, "description": ""},
   {"has_title": false, "title": "", "has_description": true, "description": "Only a description"},
-  {"has_title": false, "title": null, "has_description": false, "description": null}
+  {"has_title": false, "title": null, "has_description": false, "description": null},
+  {"has_title": true, "title": "Uploaded", "has_description": true, "description": "report.pdf",
+   "has_action": true, "action_label": "Open", "action_href": "/documents/1"},
+  {"has_title": true, "title": "Done", "has_description": false, "description": "",
+   "has_action": false, "action_label": "", "action_href": ""}
 ]

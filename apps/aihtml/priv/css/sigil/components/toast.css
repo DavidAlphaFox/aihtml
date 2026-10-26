@@ -23,5 +23,15 @@
 /* 标题与描述同在时留出呼吸；仅描述时不塌陷 */
 .ah-toast__title + .ah-toast__description { margin-top: 4px; }
 
+.ah-toast__action {
+  display: inline-block;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ah-color-primary);
+  text-decoration: none;
+}
+.ah-toast__action:hover { text-decoration: underline; }
+
 /* 隐藏模板元素永不可见（toast 的模板挂在 body 上） */
 .ah-toast-tpl { display: none !important; }

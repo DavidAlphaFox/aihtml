@@ -51,6 +51,12 @@ shows_toast_test() ->
              "data-ah-toast-variant=\"success\" data-ah-toast-duration=\"0\" "
              "data-ah-toast-position=\"bottom-right\"">>).
 
+shows_toast_action_test() ->
+    B = aihtml_html:el(button, <<"b">>, [],
+                       ?M:shows_toast(<<"Saved">>, #{action => #{label => <<"Open">>,
+                                                                 href => <<"/documents/1">>}})),
+    has(B, <<"data-ah-toast-action-label=\"Open\" data-ah-toast-action-href=\"/documents/1\"">>).
+
 toast_op_test() ->
     [Op] = ops(fun(Ctx) ->
                        ?M:ah_toast(Ctx, <<"Saved <b>">>, #{variant => success, duration => 0,
@@ -68,6 +74,24 @@ toast_op_test() ->
     %% the default duration of a toast
     [#{<<"args">> := [#{<<"duration">> := 4000, <<"position">> := <<"top-right">>}]}] =
         ops(fun(Ctx) -> ?M:ah_toast(Ctx, <<"t">>, #{}) end).
+
+toast_action_op_test() ->
+    [Op] = ops(fun(Ctx) ->
+                       ?M:ah_toast(Ctx, <<"Saved">>,
+                                   #{action => #{label => <<"Open <b>">>, href => <<"/docs/1?a=1&b=2">>}})
+               end),
+    #{<<"args">> := [#{<<"card">> := Card}]} = Op,
+    ?assertMatch({_, _}, binary:match(Card, <<"<a class=\"ah-toast__action\" "
+                                               "href=\"/docs/1?a=1&amp;b=2\">Open &lt;b&gt;</a>">>)).
+
+toast_bad_action_test() ->
+    ?assertError({aihtml, {bad_option, action, #{label := <<"x">>}}},
+                 ops(fun(Ctx) -> ?M:ah_toast(Ctx, <<"t">>, #{action => #{label => <<"x">>}}) end)),
+    ?assertError({aihtml, {bad_option, action, <<"nope">>}},
+                 ops(fun(Ctx) -> ?M:ah_toast(Ctx, <<"t">>, #{action => <<"nope">>}) end)),
+    ?assertError({aihtml, {bad_option, action, #{}}},
+                 ops(fun(Ctx) -> ?M:ah_toast(Ctx, <<"t">>, #{action => #{lable => <<"x">>,
+                                                                          href => <<"/">>}}) end)).
 
 facade_extras_test() ->
     [?assert(erlang:function_exported(?M, F, A)) || {F, A} <- ?M:facade_extras()].

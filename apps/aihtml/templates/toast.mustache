@@ -1,1 +1,2 @@
-{{! Toast content inside a notification card (sigil overlay/toast). View: has_title, title, has_description, description (text, escaped). }}{{#has_title}}<div class="ah-toast__title">{{title}}</div>{{/has_title}}{{#has_description}}<div class="ah-toast__description">{{description}}</div>{{/has_description}}
+{{! Toast content inside a notification card (sigil overlay/toast). View: has_title, title, has_description, description (text, escaped), has_action, action_label, action_href. }}{{#has_title}}<div class="ah-toast__title">{{title}}</div>{{/has_title}}{{#has_description}}<div class="ah-toast__description">{{description}}</div>{{/has_description}}
+{{#has_action}}<a class="ah-toast__action" href="{{action_href}}">{{action_label}}</a>{{/has_action}}

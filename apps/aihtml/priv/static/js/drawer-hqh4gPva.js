@@ -1,0 +1,1 @@
+import{SlideController as e}from"./_lib_overlay-D8prceEy.js";var t=window.AH,n=class extends e{kind=`drawer`};t.register(`drawer`,n);

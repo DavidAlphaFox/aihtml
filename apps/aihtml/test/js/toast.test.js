@@ -40,6 +40,20 @@
     T.eq(document.querySelectorAll(".ah-notify-bottom-left").length, 0);
   });
 
+  T.test("toast: renders an action link; clicking it closes the card", async function (fx) {
+    cleanup();
+    var card = AH.toast({ title: "Saved", description: "report.pdf", duration: 0,
+                          action_label: "Open", action_href: "#" });
+    var link = card.querySelector(".ah-toast__action");
+    T.ok(link, "action link rendered");
+    T.eq(link.getAttribute("href"), "#");
+    T.eq(link.textContent, "Open");
+    link.click();
+    await wait(400);
+    T.ok(!document.body.contains(card), "card closed by the action link");
+    cleanup();
+  });
+
   T.test("toast: a [data-ah-toast] click pops a card; its close button closes it", async function (fx) {
     cleanup();
     fx.innerHTML = '<button id="tt" data-ah-toast="Saved" data-ah-toast-description="ok"' +
