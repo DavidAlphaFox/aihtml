@@ -87,7 +87,7 @@ css() ->
            end,
     <<"/static/css/", Name/binary>>.
 
-%% @doc The site's top bar; Active is home | components | demo | fetch.
+%% @doc The site's top bar; Active is home | components | demo | examples | fetch.
 -spec topbar(atom()) -> aihtml:element().
 topbar(Active) ->
     Link = fun(Key, Href, Label) ->
@@ -98,6 +98,7 @@ topbar(Active) ->
     ah_header(ah_div([ah_a(<<"aihtml">>, [<<"text-xl font-bold text-primary">>], [{href, <<"/">>}]),
                       ah_nav([Link(components, <<"/components">>, <<"组件"/utf8>>),
                               Link(demo, <<"/demo">>, <<"实时演示"/utf8>>),
+                              Link(examples, <<"/examples">>, <<"示例"/utf8>>),
                               Link(fetch, <<"/fetch">>, <<"片段模式"/utf8>>),
                               lang_switch(),
                               ah_a(<<"GitHub">>, [<<"px-3 py-2 text-sm hover:text-primary">>],

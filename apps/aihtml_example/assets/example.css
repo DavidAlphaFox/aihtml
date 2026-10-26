@@ -14,6 +14,8 @@
 }
 .component-card { transition: transform .15s, box-shadow .15s, border-color .15s; }
 .component-card:hover { transform: translateY(-2px); box-shadow: var(--ah-shadow-md); border-color: var(--ah-color-primary); }
+.example-card { transition: transform .15s, box-shadow .15s, border-color .15s; }
+.example-card:hover { transform: translateY(-2px); box-shadow: var(--ah-shadow-lg); border-color: var(--ah-color-primary); }
 
 .source-block { position: relative; border: 1px solid var(--ah-color-border); border-radius: var(--ah-radius-md); background: var(--ah-color-bg-subtle); }
 .source-lang { position: absolute; top: .4rem; right: .75rem; font-size: var(--ah-font-size-xs); color: var(--ah-color-text-secondary); }

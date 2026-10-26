@@ -13,6 +13,7 @@ site_test_() ->
       %% each renders every docs page (about 90), longer than eunit's 5 s
       {"every docs page renders", {timeout, 60, fun docs_pages_render/0}},
       {"the home page renders", fun home_renders/0},
+      {"the examples pages render", fun examples_render/0},
       {"?lang= picks a language with a catalog, remembered in a cookie", fun lang_param/0},
       {"the language switch marks the page's language", fun lang_switch_marks_current/0},
       {"the API tab shows each component's record", {timeout, 60, fun records_shown/0}}]}.
@@ -77,6 +78,14 @@ home_renders() ->
     Html = aihtml:render_binary(aihtml_example_home:render()),
     [?assertMatch({_, _}, binary:match(Html, <<"/components/", (atom_to_binary(N))/binary, "\"">>))
      || N <- components()].
+
+examples_render() ->
+    [begin
+         Html = aihtml:render_binary(aihtml_example_examples:render(Page)),
+         ?assert(byte_size(Html) > 0),
+         ?assertMatch({_, _}, binary:match(Html, Expect))
+     end || {Page, Expect} <- [{<<"index">>, <<"/examples/dashboard">>},
+                               {<<"dashboard">>, <<"Revenue trend"/utf8>>}]].
 
 %% Components without an element record: the theme switcher and toast
 %% (an action, not an element).

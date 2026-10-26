@@ -16,7 +16,9 @@ start(_Type, _Args) ->
                {"/components", aihtml_example_docs, #{}},
                {"/components/:name", aihtml_example_docs, #{}},
                {"/components/:name/state", aihtml_example_state, #{}},
-               {"/demo", aihtml_example_actions, #{}} | aihtml_cowboy:routes(#{})],
+               {"/demo", aihtml_example_actions, #{}},
+               {"/examples", aihtml_example_examples, #{}},
+               {"/examples/:page", aihtml_example_examples, #{}} | aihtml_cowboy:routes(#{})],
     %% "/fetch" is the lower-level variant: HTML fragments from plain URLs.
     Fetch = [{"/fetch", aihtml_example_page, #{}},
              {"/counter", aihtml_example_api, counter},
