@@ -45,8 +45,11 @@ export interface CalendarEvent {
   status?: string;
 }
 
-/** Detail of ah:event-click: the series id and the clicked occurrence. */
-export interface CalendarEventClick { event: string; raw: CalendarEvent; }
+/** Detail of ah:event-click: the series id and the clicked occurrence
+ *  (occurrenceStart / occurrenceEnd also land in data-* so an action's
+ *  Event.data can tell which occurrence of a recurring event was clicked). */
+export interface CalendarEventClick { event: string; occurrenceStart: string;
+                                       occurrenceEnd: string; raw: CalendarEvent; }
 /** Detail of ah:range: the visible range to load again. */
 export interface CalendarRange { view: string; start: string; end: string; }
 /** Detail of ah:more-click (cancelable). */
@@ -443,7 +446,8 @@ function ghost(evEl: HTMLElement, e: MouseEvent): Ghost {
 
 // Details of an interaction as data-* on the root (Event.data of a
 // postback), then the component event (detail: the details).
-const DETAIL_ATTRS = ["data-event", "data-from", "data-to", "data-days", "data-all-day", "data-date"];
+const DETAIL_ATTRS = ["data-event", "data-from", "data-to", "data-days", "data-all-day", "data-date",
+                      "data-occurrence-start", "data-occurrence-end"];
 
 class CalendarController extends AH.Controller {
   static #seq = 0;
@@ -716,6 +720,8 @@ class CalendarController extends AH.Controller {
     if (!inst) { return; }
     this.report<CalendarEventClick>("ah:event-click", {
       event: inst.src.id,
+      occurrenceStart: isoTime(inst.s, inst.allDay),
+      occurrenceEnd: isoTime(inst.e, inst.allDay),
       raw: { ...inst.src, start: isoTime(inst.s, inst.allDay), end: isoTime(inst.e, inst.allDay) }
     });
   }

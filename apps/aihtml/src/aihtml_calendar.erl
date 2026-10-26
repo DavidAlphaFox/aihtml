@@ -33,7 +33,11 @@
 %%% Interactions fire component events on the root, after writing their
 %%% details to data attributes (so that `Event.data' carries them):
 %%%
-%%%   ah:event-click    event (the event's id)
+%%%   ah:event-click    event (the event's id), occurrence_start,
+%%%                     occurrence_end (the clicked occurrence; for a
+%%%                     recurring event these differ from the series;
+%%%                     data-occurrence-start / data-occurrence-end on
+%%%                     the root)
 %%%   ah:event-drop     event, from, to (new start and end), days, allDay
 %%%   ah:event-resize   event, from, to
 %%%   ah:select         from, to (end exclusive), allDay

@@ -56,6 +56,8 @@
     var el = await mount(fx, FX.month), clicks = events(el, "ah:event-click");
     q(el, '[data-eventid="a_20300306T090000"]').click();
     T.eq(clicks[0].event, "a");
+    T.eq(clicks[0].occurrenceStart, "2030-03-06T09:00", "which occurrence of the series");
+    T.eq(el.getAttribute("data-occurrence-start"), "2030-03-06T09:00");
     T.key(q(el, '[data-eventid="b"]'), "Enter");
     T.eq(clicks[1].event, "b");
     var more = events(el, "ah:more-click");
@@ -85,12 +87,15 @@
     el.addEventListener("ah:more-click", function (e) { got.push(e.detail); e.preventDefault(); });
     q(el, '[data-eventid="b"]').click();
     T.eq(got[0].event, "b");
+    T.eq([got[0].occurrenceStart, got[0].occurrenceEnd], ["2030-03-08", "2030-03-13"]);
     T.eq([got[0].raw.title, got[0].raw.start, got[0].raw.end], ["Trip", "2030-03-08", "2030-03-13"]);
-    T.eq(el.getAttribute("data-event"), "b");
+    T.eq([el.getAttribute("data-event"), el.getAttribute("data-occurrence-start"),
+          el.getAttribute("data-occurrence-end")], ["b", "2030-03-08", "2030-03-13"]);
     T.key(q(el, '.ah-calendar-day-more[data-date="2030-03-11"]'), "Enter");
     T.eq(got[1], { date: "2030-03-11" });
     T.eq(el.dataset.view, "month", "preventDefault keeps the month");
-    T.eq(el.hasAttribute("data-event"), false, "details of the last event only");
+    T.eq([el.hasAttribute("data-event"), el.hasAttribute("data-occurrence-start")],
+         [false, false], "details of the last event only");
   });
 
   T.test("calendar: prev/next/today methods; removed and re-inserted, it still works", async function (fx) {

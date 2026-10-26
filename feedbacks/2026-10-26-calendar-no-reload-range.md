@@ -48,6 +48,6 @@ beamai_muse 的 `/calendar`：日历的 `change` 动作按 `data-start` / `data-
 `data-start` / `data-end`。懒加载动作可直接绑 `ah:range` 并调用 `set_events/3`，不会触发
 `change`，也不会借用导航语义。
 
-顺带：`ah:event-click` 对重复日程只在 `detail.raw` 里有被点的那一次的起止时间，`data-*` 里
-只有系列 id（`event`）。要「只改这一次」的页面拿不到是哪一次（`detail` 能用，但 `data` 里
-缺一个 `occurrence` 字段会更顺手）。
+顺带（已实现）：`ah:event-click` 现在把被点那一次的起止时间同时写进
+`data-occurrence-start` / `data-occurrence-end`（进动作的 `Event.data`）和
+`detail.occurrenceStart` / `detail.occurrenceEnd`，不再只藏在 `detail.raw` 里。
