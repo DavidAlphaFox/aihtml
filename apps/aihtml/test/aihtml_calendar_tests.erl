@@ -157,13 +157,15 @@ set_events_test() ->
                     ?M:set_events(Ctx, #{id => <<"cal">>}, [#{title => <<"x">>,
                                                                start => {2030, 1, 2}}]),
                     ?M:add_event(Ctx, {id, <<"cal">>}, #{id => 7, start => <<"2030-01-02T10:00">>})
+            , ?M:reload(Ctx, {id, <<"cal">>})
             end),
     ?assertMatch([#{op := call, id := <<"cal">>, method := <<"setEvents">>,
                     args := [[#{<<"id">> := <<"ev1">>, <<"start">> := <<"2030-01-02">>,
                                 <<"end">> := <<"2030-01-03">>, <<"allDay">> := true}]]},
                   #{op := call, id := <<"cal">>, method := <<"addEvent">>,
                     args := [#{<<"id">> := <<"7">>, <<"end">> := <<"2030-01-02T11:00">>,
-                               <<"allDay">> := false}]}], Ops).
+                               <<"allDay">> := false}]},
+                  #{op := call, id := <<"cal">>, method := <<"reload">>, args := []}], Ops).
 
 %%%===================================================================
 %%% Catalog
@@ -171,7 +173,7 @@ set_events_test() ->
 
 catalog_test() ->
     [#{name := calendar}] = ?M:catalog(),
-    ?assertEqual([{set_events, 3}, {add_event, 3}], ?M:facade_extras()),
+    ?assertEqual([{set_events, 3}, {add_event, 3}, {reload, 2}], ?M:facade_extras()),
     [?assert(erlang:function_exported(?M, F, A)) || {F, A} <- ?M:facade_extras()],
     %% every option and flag is documented, every behaviour method listed
     #{flags := Fl, options := Op, option_docs := Docs, methods := Ms} =

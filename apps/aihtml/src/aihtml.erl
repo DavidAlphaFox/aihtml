@@ -89,6 +89,7 @@
          ah_calendar/3,
          set_events/3,
          add_event/3,
+         reload/2,
          ah_datetime_input/3,
          ah_cascader/4,
          cascader_children/3,
@@ -148,6 +149,7 @@
          ah_toast/3,
          ah_notification/3,
          ah_window/3,
+         set_title/3,
          ah_avatar/3,
          ah_badge/3,
          ah_chip/3,
@@ -900,6 +902,10 @@ set_events(A1, A2, A3) -> aihtml_calendar:set_events(A1, A2, A3).
                 aihtml_calendar:event()) ->
                    ok.
 add_event(A1, A2, A3) -> aihtml_calendar:add_event(A1, A2, A3).
+-spec reload(aihtml_action:ctx(),
+             {id, iodata() | atom()} | aihtml_action:event()) ->
+                ok.
+reload(A1, A2) -> aihtml_calendar:reload(A1, A2).
 
 %% aihtml_datetime_input
 -spec ah_datetime_input(aihtml_datetime_input:value(),
@@ -1302,6 +1308,9 @@ ah_notification(A1, A2, A3) -> aihtml_notification:ah_notification(A1, A2, A3).
                 aihtml_html:attrs()) ->
                    #ah_window{}.
 ah_window(A1, A2, A3) -> aihtml_window:ah_window(A1, A2, A3).
+-spec set_title(aihtml_action:ctx(), {id, iodata() | atom()}, iodata()) ->
+                   ok.
+set_title(A1, A2, A3) -> aihtml_window:set_title(A1, A2, A3).
 
 %% aihtml_avatar
 -spec ah_avatar(aihtml_html:html(),

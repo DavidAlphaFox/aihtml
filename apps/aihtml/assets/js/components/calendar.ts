@@ -10,12 +10,13 @@
  * same templates (calendar_month, calendar_timegrid, calendar_list).
  * Recurring events are expanded by _lib_rrule.
  *
- * Events: `change` when the date or view changed; ah:event-click (detail
- * CalendarEventClick: {event, raw}), ah:more-click (CalendarMoreClick:
- * {date}; cancelable: preventDefault keeps the view), ah:event-drop /
- * ah:event-resize (CalendarEventDrop: {event, from, to, allDay, days?}),
- * ah:select (CalendarSelect: {from, to, allDay}). Their fields are also
- * written to the root as data-* (Event.data of a postback).
+ * Events: `change` when the date or view changed; ah:range (CalendarRange:
+ * {view, start, end}) asks for a reload of the current range;
+ * ah:event-click (CalendarEventClick: {event, raw}), ah:more-click
+ * (CalendarMoreClick: {date}; cancelable: preventDefault keeps the view),
+ * ah:event-drop / ah:event-resize (CalendarEventDrop: {event, from, to,
+ * allDay, days?}), ah:select (CalendarSelect: {from, to, allDay}). Their
+ * fields are also written to the root as data-* (Event.data of a postback).
  *
  * With the href option (data-ah-href) the toolbar entries are links to
  * the state they lead to; a plain click still navigates here and pushes
@@ -46,6 +47,8 @@ export interface CalendarEvent {
 
 /** Detail of ah:event-click: the series id and the clicked occurrence. */
 export interface CalendarEventClick { event: string; raw: CalendarEvent; }
+/** Detail of ah:range: the visible range to load again. */
+export interface CalendarRange { view: string; start: string; end: string; }
 /** Detail of ah:more-click (cancelable). */
 export interface CalendarMoreClick { date: string | null; }
 /** Detail of ah:event-drop and ah:event-resize. */
@@ -532,6 +535,13 @@ class CalendarController extends AH.Controller {
   today(): void { this.go(todayNum(), this.#view); }
   changeView(v: string): void {
     if (VIEWS.indexOf(v) >= 0) { this.go(this.#cur, v); }
+  }
+  reload(): void {
+    this.render();
+    const [start, end] = this.#range;
+    this.fire<CalendarRange>("ah:range", {
+      view: this.#view, start: isoDate(start), end: isoDate(end)
+    });
   }
   setValue(v: unknown): void {
     const d = parseDate(String(v || "").slice(0, 10));

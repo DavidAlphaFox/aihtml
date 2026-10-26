@@ -24,6 +24,8 @@
 | [2026-10-23](2026-10-23-action-cannot-set-response-headers.md) | 动作里 `cowboy_req:set_resp_cookie/3` **无效**：回复是用 handler 自己手里的 `Req0` 发的 | beamai_muse | 🟢 登录改走原生表单 POST 即可；但不报错，容易白写 | ✅ 已回 |
 | [2026-10-23](2026-10-23-no-poll-attribute.md) | 没有声明式的定时刷新（htmx `every Ns` 那种）：周期刷新只能靠服务端定时推送或自写控制器 | beamai_muse | 🟢 锦上添花 | ✅ 已回 |
 | [2026-10-26](2026-10-26-confirm-uses-window-confirm.md) | `confirm` 选项弹的是浏览器原生 `window.confirm()`：标题是「某某网址显示」、按钮跟浏览器语言，**完全不吃主题**；没有页面内确认对话框的选项或挂点 | beamai_muse | 🟡 不报错，体验与主题脱节；下游只能捕获阶段拦截再重放 | ✅ 已回 |
+| [2026-10-26](2026-10-26-calendar-no-reload-range.md) | `ah_calendar` 没有「按当前可见范围重新加载」的方法：服务端推送想让各页面刷新自己显示的那段，只能 `trigger(…, change, null)` 借用导航语义 | beamai_muse | 🟢 能绕，不报错 | ✅ 已实现 |
+| [2026-10-26](2026-10-26-window-title-not-settable.md) | `ah_window` 的标题没有公开的改法：复用窗口做「新建 / 编辑」只能按内部 id `<id>-title` 写字 | beamai_muse | 🟢 能绕，依赖内部 id | ✅ 已实现 |
 
 > 背景：beamai_muse（OpenMuse 的 Erlang 重写）用 aihtml 做全部前端：聊天流式输出、
 > 任务时间线实时更新、审批卡片、浏览器「接管」控制台（截图 + 点击 + 输入）、Linux

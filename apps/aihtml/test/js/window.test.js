@@ -62,6 +62,14 @@
     T.eq(ev, [["ah:open", null], ["ah:close", { result: "ok" }]]);
   });
 
+  T.test("window: setTitle replaces the title text", async function (fx) {
+    var w = await mount(fx, "w-title", false);
+    AH.invoke(w, "setTitle", "Editing");
+    T.eq(w.querySelector(".ah-window-title").textContent, "Editing");
+    AH.invoke(w, "setTitle", null);
+    T.eq(w.querySelector(".ah-window-title").textContent, "");
+  });
+
   T.test("window: drag by the title bar, resize from a handle, keyboard move and resize", async function (fx) {
     var w = await mount(fx, "w2", false), ev = log(w, ["ah:moved", "ah:resize"]);
     AH.invoke(w, "open");

@@ -111,6 +111,14 @@
     T.eq(seen.length, 4, "one listener: one change");
   });
 
+  T.test("calendar: reload asks for the current range without change", async function (fx) {
+    var el = await mount(fx, FX.week), changes = events(el, "change"), got = [];
+    el.addEventListener("ah:range", function (e) { got.push(e.detail); });
+    AH.invoke(el, "reload");
+    T.eq(got, [{ view: "week", start: el.getAttribute("data-start"), end: el.getAttribute("data-end") }]);
+    T.eq(changes.length, 0, "reload does not navigate");
+  });
+
   // ---- links (href option) --------------------------------------------
 
   // Actions POST through fetch: record them instead (this page only).

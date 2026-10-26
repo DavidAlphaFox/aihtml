@@ -175,6 +175,10 @@ class WindowController extends AH.Controller {
   toggle(): void { if (this.isOpen()) { this.close(); } else { this.open(); } }
   collapse(): void { this.#setCollapsed(true); }
   expand(): void { this.#setCollapsed(false); }
+  setTitle(title: unknown): void {
+    const el = this.element.querySelector<HTMLElement>(".ah-window-title");
+    if (el) { el.textContent = title === undefined || title === null ? "" : String(title); }
+  }
 
   move(x: number, y: number): void {
     const el = this.element;

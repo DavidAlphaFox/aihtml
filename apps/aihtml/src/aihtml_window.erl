@@ -22,7 +22,7 @@
 
 -include("aihtml_window.hrl").
 
--export([ah_window/3, render/1, fields/1, catalog/0]).
+-export([ah_window/3, render/1, fields/1, catalog/0, set_title/3, facade_extras/0]).
 
 -define(H, aihtml_html).
 -define(E, aihtml_element).
@@ -110,6 +110,17 @@ render(#ah_window{body = Children, title = Title, footer = Footer, width = Width
           {data_ah_initial, ?L:if_(?L:bool(open, W#ah_window.open), <<"open">>)}],
          ?E:root_attrs(W, 'ah:close')]).
 
+%% @doc Replace the title of a window from inside an action. `Target' is
+%% `{id, Id}'; unlike writing to `<Id>-title', this does not depend on how
+%% the title element is identified.
+-spec set_title(aihtml_action:ctx(), {id, iodata() | atom()}, iodata()) -> ok.
+set_title(Ctx, {id, _} = Target, Title) ->
+    aihtml_action:call(Ctx, Target, setTitle, [unicode:characters_to_binary(Title)]).
+
+%% @doc Functions besides the component that the aihtml facade re-exports.
+-spec facade_extras() -> [{atom(), arity()}].
+facade_extras() -> [{set_title, 3}].
+
 %%%===================================================================
 %%% Catalog
 %%%===================================================================
@@ -141,6 +152,8 @@ catalog() ->
                    #{name => expand, args => <<"()">>, doc => <<"Expand again.">>},
                    #{name => move, args => <<"(X, Y)">>, doc => <<"Move to viewport coordinates.">>},
                    #{name => resize, args => <<"(W, H)">>, doc => <<"Resize, px.">>},
+                   #{name => setTitle, args => <<"(Text)">>,
+                     doc => <<"Replace the title text (set_title/3 sends this).">>},
                    #{name => bringToFront, args => <<"()">>, doc => <<"Raise above other overlays.">>}],
        behavior => <<"window">>,
        events => Events ++ [<<"ah:collapse">>, <<"ah:expand">>, <<"ah:moved">>,

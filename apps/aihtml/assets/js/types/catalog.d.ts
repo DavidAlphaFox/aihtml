@@ -9,7 +9,7 @@ export interface Behaviours {
   "avatar": never;
   "badge": "setCount";
   "button-group": "clear" | "getValue" | "setValue";
-  "calendar": "addEvent" | "changeView" | "getEvents" | "getValue" | "next" | "prev" | "removeEvent" | "setEvents" | "setValue" | "today" | "updateEvent";
+  "calendar": "addEvent" | "changeView" | "getEvents" | "getValue" | "next" | "prev" | "reload" | "removeEvent" | "setEvents" | "setValue" | "today" | "updateEvent";
   "cascader": "childrenLoaded" | "clear" | "close" | "getLabels" | "getValue" | "open" | "setValue";
   "chart": "dispatchAction" | "getDataURL" | "getOption" | "hideLoading" | "resize" | "saveAsImage" | "setData" | "setOption" | "showLoading" | "toggleSeries";
   "checkbox": "getValue" | "setChecked" | "setDisabled";
@@ -96,5 +96,5 @@ export interface Behaviours {
   "tree": "childrenLoaded" | "collapse" | "collapseAll" | "ensureVisible" | "expand" | "expandAll" | "getValue" | "setValue";
   "treegrid": "childrenLoaded" | "clearSelection" | "collapse" | "collapseAll" | "ensureVisible" | "expand" | "expandAll" | "getValue" | "setValue" | "sort" | "toggle";
   "upload": "clear" | "disable" | "enable" | "getFiles" | "getValue" | "open" | "remove" | "setValue" | "upload" | "uploadAll";
-  "window": "bringToFront" | "close" | "collapse" | "expand" | "isOpen" | "move" | "open" | "resize" | "toggle";
+  "window": "bringToFront" | "close" | "collapse" | "expand" | "isOpen" | "move" | "open" | "resize" | "setTitle" | "toggle";
 }

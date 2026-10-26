@@ -49,7 +49,7 @@
 
 -include("aihtml_calendar.hrl").
 
--export([ah_calendar/3, set_events/3, add_event/3,
+-export([ah_calendar/3, set_events/3, add_event/3, reload/2,
          render/1, fields/1, catalog/0, facade_extras/0]).
 
 -export_type([element/0, event/0, status/0, view/0, label_key/0, labels/0]).
@@ -613,12 +613,21 @@ add_event(Ctx, Target, Event) ->
     [E] = normalize_events([Event]),
     aihtml_action:call(Ctx, target(Target), addEvent, [E]).
 
+%% @doc Ask a calendar to reload the events it is showing now, typically
+%% after data changed elsewhere (another tab, a push, a JSON API). Each
+%% page answers with `ah:range' (whose `Event.detail' and `Event.data'
+%% hold `view', `start' and `end'); usually the action calls
+%% `set_events/3'. Does not navigate or fire `change'.
+-spec reload(aihtml_action:ctx(), {id, iodata() | atom()} | aihtml_action:event()) -> ok.
+reload(Ctx, Target) ->
+    aihtml_action:call(Ctx, target(Target), reload, []).
+
 target(#{id := Id}) -> {id, Id};
 target({id, _} = T) -> T.
 
 %% @doc Functions besides the component that the aihtml facade re-exports.
 -spec facade_extras() -> [{atom(), arity()}].
-facade_extras() -> [{set_events, 3}, {add_event, 3}].
+facade_extras() -> [{set_events, 3}, {add_event, 3}, {reload, 2}].
 
 %%%-------------------------------------------------------------------
 %%% Internal
@@ -652,7 +661,7 @@ catalog() ->
        options => [events, view, views, first_day, agenda_days, day_max_events,
                    slot_duration, slot_height, height, hour_format, href, labels],
        behavior => <<"calendar">>,
-       events => [<<"change">>, <<"ah:event-click">>, <<"ah:event-drop">>,
+       events => [<<"change">>, <<"ah:range">>, <<"ah:event-click">>, <<"ah:event-drop">>,
                   <<"ah:event-resize">>, <<"ah:select">>, <<"ah:more-click">>],
        doc => <<"An event calendar with month, week, day and agenda views, recurring and "
                 "multi-day events; value in data-ah-value is the date shown, change fires "
@@ -689,6 +698,9 @@ catalog() ->
             #{name => today, args => <<"()">>, doc => <<"Go to today (fires change).">>},
             #{name => changeView, args => <<"(\"month\" | \"week\" | \"day\" | \"list\")">>,
               doc => <<"Switch the view (fires change).">>},
+            #{name => reload, args => <<"()">>,
+              doc => <<"Reload the current range: render it and fire ah:range "
+                       "(reload/2 sends this).">>},
             #{name => setValue, args => <<"(Iso)">>,
               doc => <<"Show the period holding a date, without firing change.">>},
             #{name => getValue, args => <<"()">>, doc => <<"Return data-ah-value.">>},

@@ -66,6 +66,16 @@ window_plain_test() ->
     lacks(H, <<"header-draggable">>),
     lacks(H, <<"data-ah-modal">>).
 
+set_title_test() ->
+    Ops = aihtml_action:render_ops(
+            fun(Ctx) -> ?M:set_title(Ctx, {id, <<"w">>}, <<"Editing"/utf8>>) end),
+    ?assertMatch([#{op := call, id := <<"w">>, method := <<"setTitle">>,
+                    args := [<<"Editing"/utf8>>]}], Ops).
+
+facade_extras_test() ->
+    ?assertEqual([{set_title, 3}], ?M:facade_extras()),
+    ?assert(erlang:function_exported(?M, set_title, 3)).
+
 %%%===================================================================
 %%% element records (designs/05-records.md)
 %%%===================================================================
