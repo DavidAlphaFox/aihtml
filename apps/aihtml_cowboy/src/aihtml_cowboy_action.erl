@@ -53,19 +53,23 @@ stream(Ref, In, Req0) ->
     %% Headers and cookies registered by the action are known before the
     %% first flush in the normal case; flush/1 turns the reply into an
     %% NDJSON stream, whose streaming Req is kept here.
-    {Headers, Cookies} = aihtml_action:take_response(),
-    Req1 = apply_response(Cookies, Headers, Req0),
+    {Headers0, Cookies0} = aihtml_action:take_response(),
+    Req1 = apply_response(Cookies0, Headers0, Req0),
     Send = fun(Ops) -> line(started(Req1), #{ops => Ops}) end,
     Result = aihtml_action:execute(Ref, maps:get(<<"event">>, In, #{}),
                                    #{send => Send,
                                      meta => #{req => Req1},
                                      stream_id => stream_id(maps:get(<<"stream">>, In, null)),
                                      lang => maps:get(<<"lang">>, In, null)}),
+    %% An action that never flushed can register headers and cookies as it
+    %% runs; those are still available for the ordinary reply.
+    {Headers, Cookies} = aihtml_action:take_response(),
     case {erase(aihtml_cowboy_stream), Result} of
         {undefined, {ok, Ops}} ->
-            json(200, #{ops => Ops}, Req1);
+            json(200, #{ops => Ops}, apply_response(Cookies, Headers, Req1));
         {undefined, error} ->
-            json(500, #{error => action_failed}, Req1);
+            json(500, #{error => action_failed},
+                 apply_response(Cookies, Headers, Req1));
         {Req, {ok, Ops}} ->
             _ = [line(Req, #{ops => Ops}) || Ops =/= []],
             finish(Req, #{done => true});
