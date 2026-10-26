@@ -47,6 +47,11 @@
       "share": "占比",
       "value": "数值"
     },
+    "confirm": {
+      "title": "确认",
+      "ok": "确定",
+      "cancel": "取消"
+    },
     "colorpicker": {
       "alpha": "透明度",
       "blue": "蓝",

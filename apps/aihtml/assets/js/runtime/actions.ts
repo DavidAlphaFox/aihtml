@@ -13,6 +13,8 @@
 // applied here when the event fires, without a request. They run before
 // the element's data-ah-on action.
 import type { Behaviours } from "./behaviours.ts";
+import { parseConfirm } from "./confirm.ts";
+import type { ConfirmOptions } from "./confirm.ts";
 import { delegateDocument, fire, withSelf } from "./dom.ts";
 import type { Root } from "./dom.ts";
 import { formFields, isControl, setVal, valueOf } from "./forms.ts";
@@ -105,6 +107,7 @@ export class Actions {
   readonly #listening = new Set<string>();
   readonly #polls = new Map<string, { el: Element; spec: ActionSpec; timer: ReturnType<typeof setTimeout> }>();
   readonly #ops: OpHandlers;
+  readonly #confirming = new WeakSet<Element>();
 
   /** api: the AH object, handed to the js operation's code. */
   constructor(behaviours: Behaviours, swapper: Swapper, api: () => unknown) {
@@ -456,18 +459,31 @@ export class Actions {
       handled();
       this.apply(local);
     }
-    Actions.specs(el).forEach((s) => {
-      if (s.event !== type) { return; }
-      handled();
-      const question = el.getAttribute("data-ah-confirm");
-      if (question && !window.confirm(question)) { return; }
-      if (s.debounce) {
-        const k = el.id + s.token;
-        clearTimeout(this.#timers.get(k));
-        this.#timers.set(k, setTimeout(() => { this.run(el, s, e); }, s.debounce));
-      } else {
-        this.run(el, s, e);
-      }
+    const specs = Actions.specs(el).filter((s) => s.event === type);
+    if (!specs.length) { return; }
+    handled();
+    const run = (): void => {
+      specs.forEach((s) => {
+        if (s.debounce) {
+          const k = el.id + s.token;
+          clearTimeout(this.#timers.get(k));
+          this.#timers.set(k, setTimeout(() => { this.run(el, s, e); }, s.debounce));
+        } else {
+          this.run(el, s, e);
+        }
+      });
+    };
+    const question = el.getAttribute("data-ah-confirm");
+    if (!question) { run(); return; }
+    if (this.#confirming.has(el)) { return; }
+    this.#confirming.add(el);
+    const confirm = (this.#api() as { confirm?: unknown }).confirm;
+    const answered = typeof confirm === "function"
+      ? Promise.resolve((confirm as (q: string | ConfirmOptions, el?: Element | null) => Promise<boolean>)
+          (parseConfirm(question), el)).catch(() => false)
+      : Promise.resolve(false);
+    void answered.finally(() => this.#confirming.delete(el)).then((ok) => {
+      if (ok) { run(); }
     });
   }
 

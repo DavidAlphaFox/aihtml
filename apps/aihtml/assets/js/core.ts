@@ -15,6 +15,7 @@
  *   AH.swap(target, html, mode)       put server HTML into the page
  *   AH.theme.get() / .set(axis, v)    the four theme axes on <html>
  *   AH.fetch(el)                      run an element's data-ah-fetch
+ *   AH.confirm(question, el)          the dialog data-ah-confirm waits for
  *   AH.float(popup, anchor, opts)     pin a popup next to its anchor
  *   AH.vendor(name)                   load an optional third-party library
  *   AH.t(scope, key, english, args)   a text in the page's language
@@ -49,6 +50,8 @@ import type { Op } from "./runtime/actions.ts";
 import { Behaviours } from "./runtime/behaviours.ts";
 import type { BehaviourName, ControllerClass, PageFunction, Registry } from "./runtime/behaviours.ts";
 import { Controller } from "./runtime/controller.ts";
+import { defaultConfirm } from "./runtime/confirm.ts";
+import type { Confirm } from "./runtime/confirm.ts";
 import { one } from "./runtime/dom.ts";
 import type { Root, Targets } from "./runtime/dom.ts";
 import { Fetcher } from "./runtime/fetch.ts";
@@ -66,6 +69,7 @@ export type { Op, Reply, EventPayload, ActionError } from "./runtime/actions.ts"
 export type { BehaviourName, ControllerClass, Loader, PageFunction, Registry } from "./runtime/behaviours.ts";
 export type { Root, Targets } from "./runtime/dom.ts";
 export type { FetchError, FetchEvent } from "./runtime/fetch.ts";
+export type { Confirm, ConfirmOptions } from "./runtime/confirm.ts";
 export type { FloatHandle, FloatOptions, Placement } from "./runtime/float.ts";
 export type { SwapMode } from "./runtime/swap.ts";
 export type { Axis, ThemeEvent, ThemeValues } from "./runtime/theme.ts";
@@ -87,6 +91,9 @@ export interface AHApi {
   morph(target: Targets, html: string): void;
   apply(ops: Op[]): void;
   fetch(el: Targets): Promise<boolean>;
+  /** The themed confirmation used by confirm options; replaceable by
+   *  page code with any async (question, el) => boolean function. */
+  confirm: Confirm;
   float(popup: Targets, anchor: Targets, opts?: FloatOptions): FloatHandle;
   theme: Theme;
   vendor: typeof vendor;
@@ -112,8 +119,8 @@ export interface AHApi {
 
 const behaviours = new Behaviours();
 const swapper = new Swapper(behaviours);
-const fetcher = new Fetcher(behaviours, swapper);
 const actions: Actions = new Actions(behaviours, swapper, () => AH);
+const fetcher = new Fetcher(behaviours, swapper, () => AH);
 const theme = new Theme();
 
 Controller.onStart = (el) => { actions.listenFor(el); };
@@ -133,6 +140,7 @@ const AH: AHApi = {
   },
   apply: (ops) => { actions.apply(ops); },
   fetch: (el) => fetcher.fetch(el),
+  confirm: defaultConfirm,
   float: (popup, anchor, opts) => new FloatingPopup(popup, anchor, opts),
   theme,
   vendor,

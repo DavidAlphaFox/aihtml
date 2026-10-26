@@ -1,5 +1,5 @@
 {
-  "client": ["calendar", "chart_table", "common", "datepicker", "datetime_input", "datetime_parts", "dock_layout", "dragdrop", "field", "markdown_editor", "node_graph", "password_input", "ribbon", "sortable", "time_ago", "toolbar", "upload"],
+  "client": ["calendar", "chart_table", "common", "confirm", "datepicker", "datetime_input", "datetime_parts", "dock_layout", "dragdrop", "field", "markdown_editor", "node_graph", "password_input", "ribbon", "sortable", "time_ago", "toolbar", "upload"],
   "format": {
     "am": "AM",
     "currency": "$",
@@ -47,6 +47,11 @@
       "series_n": "Series {0}",
       "share": "Share",
       "value": "Value"
+    },
+    "confirm": {
+      "title": "Confirm",
+      "ok": "OK",
+      "cancel": "Cancel"
     },
     "colorpicker": {
       "alpha": "Alpha",

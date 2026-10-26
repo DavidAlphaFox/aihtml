@@ -250,7 +250,8 @@ render(#myapp_card{title = T, body = B} = R) ->
 
 每个事件发一次 POST，响应是要应用的 DOM 操作。服务端在请求之间不保存任何东西，状态全部在数据层。请求可以落到任意节点，负载均衡不需要粘性，服务器重启后已打开的页面照常可用。
 
-- **绑定**：`on(Event, {Module, Action, Args})`，可加选项 `#{debounce => Ms, max_age => 秒, include => [选择器], confirm => 提问, prevent_default => true | [键名]}`，以及下面"请求协调与加载指示"一节的 `sync`、`sync_scope`、`indicator`、`disable`。
+- **绑定**：`on(Event, {Module, Action, Args})`，可加选项 `#{debounce => Ms, max_age => 秒, include => [选择器], confirm => 提问 | 确认框选项, prevent_default => true | [键名]}`，以及下面"请求协调与加载指示"一节的 `sync`、`sync_scope`、`indicator`、`disable`。
+- **确认框**：`confirm` 先弹 aihtml 主题化的页面内模态框，等待用户选择后再发送请求（`on_client` 仍按原语义先行）。除提问文本外，也可写 `#{title, body, ok, cancel, variant => default | danger}`；页面脚本可用 `AH.confirm = async (Question, Element) => Boolean` 替换宿主自己的实现。fetch 模式的 `confirm` 选项同样生效。
 - **签名**：`{Module, Action, Args}` 用应用密钥做 HMAC 签名后写进 HTML。浏览器无法伪造 action，也改不了参数。Args 只签名不加密，页面能看到内容，所以只放 id 这类数据。
 - **执行**：`Module:action(Action, Args, Event, Ctx)` 在请求进程中运行。只有声明了 `-behaviour(aihtml_action)` 的模块才能被调用。
 - **Event**：包含元素 `id`、`value`、`checked`、`key`、所在表单的全部字段 `form`、`include` 指定的其它控件值 `values`、`data-*` 属性 `data`。键盘和鼠标事件还有 `mods`；鼠标事件有相对元素的 `pointer`（`x,y,w,h`，图片另带自然尺寸）；CustomEvent 还有 `detail`。字段存在才出现。
@@ -327,6 +328,8 @@ ah_button(<<"全部展开"/utf8>>, expand, [], [on_client(click, fun(C) -> aihtm
 ah_button(<<"更多">>, more, [outlined],
           [fetch(get, <<"/items?page=2">>, <<"#items">>, #{swap => append})])
 ```
+
+`fetch/4` 的 `confirm` 选项与 action 模式一致，同样使用可替换的主题化确认框。
 
 ### 文件上传
 

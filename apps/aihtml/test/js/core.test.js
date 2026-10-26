@@ -54,6 +54,50 @@
     T.eq(sent[0].event.type, "ah:close");
   });
 
+  T.test("confirm options use one themed dialog and gate the action", async function (fx) {
+    sent = [];
+    fx.innerHTML = '<button id="archive" data-ah-confirm="Archive this?" ' +
+      'data-ah-on="click:' + TOKEN + '">Archive</button>';
+    AH.mount(fx);
+    var b = document.getElementById("archive");
+    b.click();
+    await wait(0);
+    T.eq(sent.length, 0, "the action waits for the user");
+    var dlg = document.querySelector("dialog.ah-confirm");
+    T.ok(dlg, "an in-page dialog");
+    T.eq(dlg.querySelector(".ah-confirm-body").textContent, "Archive this?");
+    T.eq(document.activeElement, dlg.querySelector(".ah-confirm-cancel"), "cancel is focused");
+    dlg.querySelector(".ah-confirm-cancel").click();
+    await wait(0);
+    T.eq(sent.length, 0, "cancel drops the action");
+    T.eq(document.querySelector("dialog.ah-confirm"), null, "dialog removed");
+    b.click();
+    await wait(0);
+    dlg = document.querySelector("dialog.ah-confirm");
+    dlg.querySelector(".ah-confirm-ok").click();
+    await wait(20);
+    T.eq(sent.length, 1, "ok runs the action");
+    T.eq(document.querySelector("dialog.ah-confirm"), null);
+  });
+
+  T.test("confirm options can be replaced by the host", async function (fx) {
+    sent = [];
+    var before = AH.confirm;
+    AH.confirm = function (question, el) {
+      return Promise.resolve(question.body === "Go?" && el.id === "confirm-host");
+    };
+    fx.innerHTML = '<button id="confirm-host" data-ah-confirm="{&quot;body&quot;:&quot;Go?&quot;}" ' +
+      'data-ah-on="click:' + TOKEN + '">Go</button>';
+    AH.mount(fx);
+    try {
+      document.getElementById("confirm-host").click();
+      await wait(20);
+      T.eq(sent.length, 1);
+    } finally {
+      AH.confirm = before;
+    }
+  });
+
   T.test("the event payload carries the form, included values and data", async function (fx) {
     sent = [];
     fx.innerHTML = '<form><input name="q" value="x y"><input type="checkbox" name="c" value="on">' +
@@ -227,6 +271,30 @@
     T.eq(document.getElementById("out").textContent, "found");
     T.eq(events, [["before", { url: "/t/search", method: "GET" }], ["after", { url: "/t/search" }]]);
     T.eq(document.getElementById("f").getAttribute("aria-busy"), null, "request state cleared");
+  });
+
+  T.test("fetch: data-ah-confirm gates the round trip with the themed dialog", async function (fx) {
+    fetched = [];
+    pages["/t/archive"] = { status: 200, body: "<p>gone</p>" };
+    fx.innerHTML = '<button id="fd" data-ah-fetch="delete" data-ah-url="/t/archive" ' +
+      'data-ah-target="#fd-out" data-ah-confirm="Delete?"></button><div id="fd-out"></div>';
+    AH.mount(fx);
+    document.getElementById("fd").click();
+    await wait(0);
+    T.eq(fetched.length, 0);
+    var dlg = document.querySelector("dialog.ah-confirm");
+    T.ok(dlg);
+    dlg.querySelector(".ah-confirm-cancel").click();
+    await wait(0);
+    T.eq(fetched.length, 0);
+    T.eq(document.querySelector("dialog.ah-confirm"), null);
+    document.getElementById("fd").click();
+    await wait(0);
+    document.querySelector(".ah-confirm-ok").click();
+    await wait(20);
+    T.eq(fetched.length, 1);
+    T.eq(fetched[0].init.method, "DELETE");
+    T.eq(document.getElementById("fd-out").textContent, "gone");
   });
 
   T.test("fetch: POST sends a form-encoded body, outer swap mounts the new content", async function (fx) {

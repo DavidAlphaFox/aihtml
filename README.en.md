@@ -250,7 +250,8 @@ The server renders all HTML, and pages are produced by ordinary HTTP handlers. T
 
 Each event issues a POST, and the response is the DOM operations to apply. The server keeps nothing between requests; all state lives in the data layer. Requests can land on any node, the load balancer doesn't need stickiness, and pages that are already open keep working after a server restart.
 
-- **Binding**: `on(Event, {Module, Action, Args})`, with optional `#{debounce => Ms, max_age => Seconds, include => [Selector], confirm => Prompt, prevent_default => true | [Key]}`, plus the `sync`, `sync_scope`, `indicator`, `disable` options from the "Request coordination and loading indicators" section below.
+- **Binding**: `on(Event, {Module, Action, Args})`, with optional `#{debounce => Ms, max_age => Seconds, include => [Selector], confirm => Prompt | DialogOptions, prevent_default => true | [Key]}`, plus the `sync`, `sync_scope`, `indicator`, `disable` options from the "Request coordination and loading indicators" section below.
+- **Confirmation**: `confirm` opens aihtml's themed in-page modal and waits for the user before a request is sent (`on_client` still runs first, as before). Besides prompt text, it accepts `#{title, body, ok, cancel, variant => default | danger}`; page scripts can replace it with their host implementation using `AH.confirm = async (Question, Element) => Boolean`. The fetch mode's `confirm` option uses the same dialog.
 - **Signature**: `{Module, Action, Args}` is HMAC-signed with the application secret and written into the HTML. The browser cannot forge actions or tamper with arguments. Args are signed but not encrypted, so the page can read them; put only ids and similar data in there.
 - **Execution**: `Module:action(Action, Args, Event, Ctx)` runs in the request process. Only modules that declare `-behaviour(aihtml_action)` can be called.
 - **Event**: includes the element's `id`, `value`, `checked`, `key`, the whole containing form's fields in `form`, the values of other controls named by `include` in `values`, and `data-*` attributes in `data`. Keyboard and mouse events also carry `mods`; mouse events carry `pointer` offsets and size (`x,y,w,h`, plus image natural size); CustomEvents carry `detail`. Optional fields are present only when they apply.
@@ -327,6 +328,8 @@ Attributes produced by `fetch/3,4` make an element request a URL that you route 
 ah_button(<<"More">>, more, [outlined],
           [fetch(get, <<"/items?page=2">>, <<"#items">>, #{swap => append})])
 ```
+
+`fetch/4`'s `confirm` option matches action mode and uses the same replaceable themed dialog.
 
 ### File upload
 

@@ -142,6 +142,19 @@ fetch_attrs_test() ->
                                                                #{swap => append,
                                                                  confirm => <<"Sure?">>})]))).
 
+fetch_confirm_map_test() ->
+    H = r(aihtml:ah_el(button, <<"Archive">>, [],
+                       [fetch(delete, <<"/archive">>, this,
+                              #{confirm => #{title => <<"Archive">>, body => <<"Archive this?">>,
+                                             ok => <<"Archive">>, cancel => <<"Keep">>,
+                                             variant => danger}})])),
+    Expected = <<"data-ah-confirm=\"{&quot;body&quot;:&quot;Archive this?&quot;,&quot;cancel&quot;:&quot;Keep&quot;,&quot;ok&quot;:&quot;Archive&quot;,&quot;title&quot;:&quot;Archive&quot;,&quot;variant&quot;:&quot;danger&quot;}\"">>,
+    ?assert(binary:match(H, Expected) =/= nomatch).
+
+confirm_bad_option_test() ->
+    ?assertError({aihtml, {bad_confirm_option, colour}},
+                 on(click, {?MODULE, ping, #{}}, #{confirm => #{colour => <<"red">>}})).
+
 fetch_bad_method_test() ->
     ?assertError({aihtml, {bad_fetch_method, head}}, fetch(head, <<"/">>, this)).
 

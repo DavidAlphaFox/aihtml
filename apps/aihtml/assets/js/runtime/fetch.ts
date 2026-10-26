@@ -5,6 +5,8 @@
 // data-ah-swap, and the new content is mounted. Requests carry the header
 // "X-Aihtml: 1".
 import type { Behaviours } from "./behaviours.ts";
+import { parseConfirm } from "./confirm.ts";
+import type { ConfirmOptions } from "./confirm.ts";
 import { delegateDocument, elements, fire, one } from "./dom.ts";
 import type { Targets } from "./dom.ts";
 import { payload } from "./forms.ts";
@@ -25,10 +27,12 @@ function defaultTrigger(el: Element): string {
 export class Fetcher {
   readonly #behaviours: Behaviours;
   readonly #swapper: Swapper;
+  readonly #api: () => unknown;
 
-  constructor(behaviours: Behaviours, swapper: Swapper) {
+  constructor(behaviours: Behaviours, swapper: Swapper, api: () => unknown) {
     this.#behaviours = behaviours;
     this.#swapper = swapper;
+    this.#api = api;
     // One delegated listener per event type covers content added later.
     ["click", "change", "submit", "input"].forEach((type) => {
       delegateDocument(type, "[data-ah-fetch]", (e, el) => {
@@ -55,7 +59,16 @@ export class Fetcher {
     const targets = sel === "this" ? [el] : elements(sel);
     const question = el.getAttribute("data-ah-confirm");
 
-    if (question && !window.confirm(question)) { return Promise.resolve(false); }
+    const confirm = (this.#api() as { confirm: (q: string | ConfirmOptions, el?: Element | null) => Promise<boolean> })
+      .confirm;
+    const confirmed = question
+      ? Promise.resolve(confirm(parseConfirm(question), el)).catch(() => false)
+      : Promise.resolve(true);
+    return confirmed.then((ok) => ok && this.#roundTrip(el, method, url, sel, targets));
+  }
+
+  #roundTrip(el: Element, method: string, url: string, sel: string,
+             targets: Element[]): Promise<boolean> {
     if (!fire<FetchEvent>(el, "ah:before-fetch", { url, method })) { return Promise.resolve(false); }
 
     const end = requestStart(el);

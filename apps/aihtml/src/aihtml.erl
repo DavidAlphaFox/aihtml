@@ -447,11 +447,15 @@ fetch(Method, Url, Target) -> fetch(Method, Url, Target, #{}).
 
 %% @doc Options: `swap' (inner | outer | append | prepend | none | morph |
 %% morph_inner, default inner; see aihtml_action:html/4), `trigger' (a DOM event name; default submit for forms, change
-%% for inputs, click otherwise), `confirm' (a question asked first),
+%% for inputs, click otherwise), `confirm' (a question or dialog map asked
+%% first),
 %% `indicator' and `disable' (as for on/3).
 -spec fetch(get | post | put | patch | delete, iodata(), iodata() | this,
             #{swap => inner | outer | append | prepend | none | morph | morph_inner,
-              trigger => atom() | binary(), confirm => iodata(),
+              trigger => atom() | binary(),
+              confirm => iodata() |
+                         #{title => iodata(), body => iodata(), ok => iodata(),
+                           cancel => iodata(), variant => default | danger},
               indicator => iodata() | this, disable => iodata() | this}) -> attrs().
 fetch(Method, Url, Target, Opts) ->
     lists:member(Method, [get, post, put, patch, delete])
@@ -464,7 +468,7 @@ fetch(Method, Url, Target, Opts) ->
      {data_ah_target, target(Target)},
      {data_ah_swap, Swap},
      {data_ah_trigger, maps:get(trigger, Opts, undefined)},
-     {data_ah_confirm, maps:get(confirm, Opts, undefined)},
+     {data_ah_confirm, confirm(maps:get(confirm, Opts, undefined))},
      request_attrs(Opts)].
 
 %% @doc Bind an event to an action, spliced into Attrs like `fetch/3':
@@ -481,7 +485,7 @@ on(Event, Action) -> on(Event, Action, #{}).
 %% one, for `input' and `keyup';
 %% `include' is a list of selectors (or `{id, Id}') whose controls' values
 %% are sent along in the event's `values';
-%% `confirm' asks the user first;
+%% `confirm' (a question or dialog map) asks the user first;
 %% `sync' decides what happens when a request of the same element (or
 %% scope) is still running: drop the new one (default for click, submit),
 %% replace the running one (default for input, change, key events) or
@@ -497,7 +501,9 @@ on(Event, Action) -> on(Event, Action, #{}).
 -spec on(atom() | binary(), aihtml_action:ref(),
          #{debounce => pos_integer(), max_age => pos_integer(),
            include => [iodata() | {id, iodata() | atom()}],
-           confirm => iodata(),
+           confirm => iodata() |
+                      #{title => iodata(), body => iodata(), ok => iodata(),
+                        cancel => iodata(), variant => default | danger},
            prevent_default => boolean() | [iodata()],
            sync => drop | replace | queue | fifo, sync_scope => iodata(),
            indicator => iodata() | this, disable => iodata() | this}) -> attrs().
@@ -513,7 +519,7 @@ on(Event, Action, Opts) when is_map(Opts) ->
     [{<<"data-ah-on">>, {actions, [{E, Token, maps:with([debounce], Opts)}]}},
      [{<<"data-ah-include">>, {selectors, [include_sel(S) || S <- Sels]}}
       || #{include := Sels} <- [Opts], Sels =/= []],
-     {data_ah_confirm, maps:get(confirm, Opts, undefined)},
+     {data_ah_confirm, confirm(maps:get(confirm, Opts, undefined))},
      {data_ah_prevent_default, prevent_default(maps:get(prevent_default, Opts, undefined))},
      {data_ah_sync, maps:get(sync, Opts, undefined)},
      {data_ah_sync_scope, maps:get(sync_scope, Opts, undefined)},
@@ -551,6 +557,22 @@ event_name(Event) ->
 request_attrs(Opts) ->
     [{data_ah_indicator, sel_opt(maps:get(indicator, Opts, undefined))},
      {data_ah_disable, sel_opt(maps:get(disable, Opts, undefined))}].
+
+%% A confirmation question, or the dialog options as JSON for the browser.
+confirm(undefined) ->
+    undefined;
+confirm(Question) when is_binary(Question); is_list(Question) ->
+    text(Question);
+confirm(Options) when is_map(Options) ->
+    Allowed = [title, body, ok, cancel, variant],
+    maps:fold(fun(K, _, _) ->
+                      lists:member(K, Allowed)
+                          orelse error({aihtml, {bad_confirm_option, K}})
+              end, ok, Options),
+    Variant = maps:get(variant, Options, default),
+    lists:member(Variant, [default, danger])
+        orelse error({aihtml, {bad_confirm_variant, Variant}}),
+    iolist_to_binary(aihtml_json:encode(maps:map(fun(_K, V) -> text(V) end, Options))).
 
 sel_opt(undefined) -> undefined;
 sel_opt(this) -> <<"this">>;
