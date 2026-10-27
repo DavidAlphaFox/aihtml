@@ -14,6 +14,9 @@ site_test_() ->
       {"every docs page renders", {timeout, 60, fun docs_pages_render/0}},
       {"the home page renders", fun home_renders/0},
       {"the examples pages render", fun examples_render/0},
+      {"examples index keeps shell apps in the dashboard sidebar", fun examples_index_hides_shell_apps/0},
+      {"dashboard shell applications share the Sigil sidebar", fun dashboard_shell_applications/0},
+      {"every dashboard sidebar link renders", fun dashboard_sidebar_links_render/0},
       {"?lang= picks a language with a catalog, remembered in a cookie", fun lang_param/0},
       {"the language switch marks the page's language", fun lang_switch_marks_current/0},
       {"the API tab shows each component's record", {timeout, 60, fun records_shown/0}}]}.
@@ -87,8 +90,82 @@ examples_render() ->
      end || {Page, Expect} <- [{<<"index">>, <<"/examples/dashboard">>},
                                {<<"dashboard">>, <<"Revenue trend"/utf8>>},
                                {<<"calendar">>, <<"New event"/utf8>>},
-                               {<<"mail">>, <<"A focused inbox"/utf8>>},
-                               {<<"file-manager">>, <<"Search files…"/utf8>>}]].
+                               {<<"mail">>, <<"ml-card"/utf8>>},
+                               {<<"file-manager">>, <<"fm-toolbar"/utf8>>}]].
+
+examples_index_hides_shell_apps() ->
+    Html = aihtml:render_binary(aihtml_example_examples:render(<<"index">>)),
+    [?assertEqual(nomatch, binary:match(Html, Needle))
+     || Needle <- [<<"/examples/calendar"/utf8>>,
+                   <<"/examples/mail"/utf8>>,
+                   <<"/examples/file-manager"/utf8>>],
+        true].
+
+dashboard_shell_applications() ->
+    [begin
+         Html = aihtml:render_binary(aihtml_example_examples:render(Page)),
+         [?assertMatch({_, _}, binary:match(Html, Needle))
+          || Needle <- [<<"class=\"dash\""/utf8>>,
+                        <<"dash-sidenav"/utf8>>,
+                        <<"dash-topbar"/utf8>>,
+                        [<<"<a class=\"dash-nav-item is-active\" href=\"">>, Href, <<"\"">>]],
+            true]
+     end || {Page, Href} <- [{<<"calendar">>, <<"/examples/calendar">>},
+                             {<<"mail">>, <<"/examples/mail">>},
+                             {<<"file-manager">>, <<"/examples/file-manager">>}]].
+
+dashboard_sidebar_links_render() ->
+    Html = aihtml:render_binary(aihtml_example_examples:render(<<"dashboard">>)),
+    Pages = lists:usort(sidebar_pages(Html)),
+    ?assert(length(Pages) >= 40),
+    %% Management groups are expanded by default: every child page is not
+    %% merely addressable, it is visible and clickable from the dashboard.
+    ?assertEqual(7, length(binary:matches(Html,
+                                          <<"<details class=\"dash-nav-node\" open>">>))),
+    ?assertEqual(nomatch, binary:match(Html, <<"<details class=\"dash-nav-node\">">>)),
+    [begin
+         Rendered = aihtml:render_binary(aihtml_example_examples:render(Page)),
+         ActiveNeedle = iolist_to_binary(
+                          [<<"<a class=\"dash-nav-item is-active\" href=\"/examples/">>,
+                           Page,
+                           <<"\"">>]),
+         ?assertMatch({_, _},
+                      binary:match(Rendered, ActiveNeedle))
+     end || Page <- Pages].
+
+dashboard_migration_test() ->
+    Html = aihtml:render_binary(aihtml_example_examples:render(<<"dashboard">>)),
+    %% One sentinel per sigil dashboard feature family: shell, three charts,
+    %% all list/card sections, and client-side layout behaviour.
+    [?assertMatch({_, _}, binary:match(Html, Needle))
+     || Needle <- [<<"dash-sidenav"/utf8>>,
+                   <<"dash-topbar"/utf8>>,
+                   <<"dash-stat">>,
+                   <<"dash-hero"/utf8>>,
+                   <<"data-ah=\"chart\""/utf8>>,
+                   <<"dash-app"/utf8>>,
+                   <<"dash-author"/utf8>>,
+                   <<"dash-country"/utf8>>,
+                   <<"dash-inbox"/utf8>>,
+                   <<"dash-task"/utf8>>,
+                   <<"dash-tx"/utf8>>,
+                   <<"dash-tl"/utf8>>,
+                   <<"dash-prod"/utf8>>,
+                   <<"dash-traffic"/utf8>>,
+                   <<"dash-conv"/utf8>>,
+                   <<"dash-sales"/utf8>>,
+                   <<"dash-summary"/utf8>>,
+                   <<"dash-board"/utf8>>],
+       true].
+
+sidebar_pages(Html) ->
+    Prefix = <<"href=\"/examples/">>,
+    [begin
+         Rest = binary:part(Html, Start + byte_size(Prefix),
+                            byte_size(Html) - Start - byte_size(Prefix)),
+         [Page | _] = binary:split(Rest, <<"\"">>),
+         Page
+     end || {Start, _} <- binary:matches(Html, Prefix)].
 
 %% Components without an element record: the theme switcher and toast
 %% (an action, not an element).

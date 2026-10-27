@@ -17,9 +17,9 @@ page() ->
                    ah_button(<<"Upload"/utf8>>, undefined, [primary, sm],
                              opens({id, <<"upload-window">>}))],
                   [<<"flex flex-wrap items-end justify-between gap-4 pt-6">>], []),
-    aihtml_example_app_shell:page(files, Head,
-                                  [toolbar(), folders(), file_section(grid, <<>>, all, all),
-                                   upload_window()]).
+    aihtml_example_dashboard:shell(file_manager, Head,
+                                   [toolbar(), folders(), file_section(grid, <<>>, all, all),
+                                    upload_window()]).
 
 toolbar() ->
     Include = #{include => [{id, file_search}, {id, type_filter}, {id, date_filter}]},

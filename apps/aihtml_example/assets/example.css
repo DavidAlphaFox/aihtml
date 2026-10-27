@@ -2,6 +2,7 @@
    written in the library's and the example's Erlang sources. */
 @import "tailwindcss" source(none);
 @import "../../aihtml/priv/css/aihtml.css";
+@import "./dashboard.css";
 @source "../../aihtml/src";
 @source "../src";
 

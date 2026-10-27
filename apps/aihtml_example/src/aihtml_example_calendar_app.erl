@@ -18,10 +18,10 @@ page() ->
                    ah_button(<<"New event"/utf8>>, undefined, [primary, sm],
                              opens({id, <<"event-window">>}))],
                   [<<"flex flex-wrap items-end justify-between gap-4 pt-6">>], []),
-    aihtml_example_app_shell:page(calendar, Head,
-                                  [ah_div([calendar_rail(), calendar_canvas()],
-                                          [<<"grid grid-cols-1 gap-6 xl:grid-cols-[20rem_minmax(0,1fr)]">>], []),
-                                   event_window()]).
+    aihtml_example_dashboard:shell(calendar_app, Head,
+                                   [ah_div([calendar_rail(), calendar_canvas()],
+                                           [<<"grid grid-cols-1 gap-6 xl:grid-cols-[20rem_minmax(0,1fr)]">>], []),
+                                    event_window()]).
 
 calendar_canvas() ->
     ah_card([ah_calendar(<<"2026-10-26">>, [editable, selectable],

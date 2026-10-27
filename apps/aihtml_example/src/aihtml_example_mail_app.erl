@@ -22,7 +22,7 @@ page() ->
                    [<<"grid grid-cols-1 gap-6 items-start 2xl:grid-cols-[16rem_minmax(20rem,1fr)_minmax(24rem,1.1fr)]">>],
                    []),
             compose_window()],
-    aihtml_example_app_shell:page(mail, Head, Body).
+    aihtml_example_dashboard:shell(mail, Head, Body).
 
 folders(Active) ->
     Items = [{inbox, <<"Inbox"/utf8>>}, {sent, <<"Sent"/utf8>>}, {drafts, <<"Drafts"/utf8>>},
